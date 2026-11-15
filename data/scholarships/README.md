@@ -68,6 +68,12 @@ own page shows that its top tier meets one of these:
 3. A waiver of the nonresident tuition differential attached to the award
    (out-of-state tier only). Record it as a waiver, per sourcing rule 8.
 
+Rule 2 is read broadly: a program the school calls full tuition, a full ride
+or total cost of attendance qualifies even when the wording is hedged ("valued
+up to"), the value is stated for a group of scholarships, or a component is
+capped or unpublished. Keep the school's exact wording, and leave coverage
+`partial` or `unknown` where the page does not promise the charge in full.
+
 Test the top tier only, then record every tier of a qualifying program. Never
 add components or multiply an amount to reach the floor. Do not submit a
 program whose value the school does not publish. Reviewers check the floor;

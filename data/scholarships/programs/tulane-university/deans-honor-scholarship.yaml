@@ -13,18 +13,19 @@ awarding_authority: institution
 related_programs: []
 status: active
 versions:
-- version_id: deans-honor-tulane-guide-2025-26
+- version_id: deans-honor-tulane-admission-page-2026-11
   supersedes: null
-  entry_year: 2025
-  entry_year_label: Terms are from the 2025-2026 aid guide (file dated April 2025, about 19 months old)
-    and an aid page marked last updated 10/07/2020 (about 6 years old)
+  entry_year: null
+  entry_year_label: The admission page names no entering class. Coverage, application route and award
+    count are from that page as read on 2026-11-15; renewal and stacking terms are from the 2025-2026
+    aid guide and aid pages
   entry_terms:
   - unspecified
-  source_cohort_text: The current admissions page could not be read (bot challenge)
-  verification_status: unverified
+  source_cohort_text: null
+  verification_status: verified
   last_reviewed_at: '2026-11-15'
-  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b1
-  owner_spot_checked: false
+  reviewed_by: agent:claude-fable-5-2 from an owner-read page, 2026-11-15
+  owner_spot_checked: true
   program_status_for_entry: active
   offers:
   - offer_id: o-main
@@ -32,7 +33,7 @@ versions:
     variant_name: null
     residency: any
     selection_mode: competitive
-    consideration_route: separate_application
+    consideration_route: admission_application
     aid_basis: unclear
     need_role: unknown
     funds_limited: null
@@ -51,9 +52,7 @@ versions:
       first_generation_rule: unknown
       eligibility_notes: Typical recipients rank in the top 5 percent of the class, have a rigorous academic
         program with honors and advanced placement courses, and score near the top of the range in a college
-        admission test (typical profile, not a minimum). The Tulane admissions merit scholarships page
-        (admission.tulane.edu/tuition-aid/merit-scholarships) answered with a bot-challenge page and was
-        not read, so the current-cycle terms there are unconfirmed.
+        admission test (typical profile from the aid page, not a minimum).
     benefits:
     - benefit_id: b-tuition
       category: tuition
@@ -73,24 +72,18 @@ versions:
       conditions_text: null
     advertised_totals: []
   application:
-    separate_application: required
-    milestones:
-    - kind: application_deadline
-      requirement: required
-      date: null
-      recurring: null
-      precision: day
-      source_date_text: null
-    admission_plan_requirement: Admission application and supporting documents, plus a scholarship application
-      per the admissions website
+    separate_application: no_form_other_steps_required
+    milestones: []
+    admission_plan_requirement: Complete the four steps listed on the admission merit scholarships page;
+      those steps were not captured in the page as read, so they are not listed here
     prerequisites: []
     interview_mode: unknown
     finalist_event_required: null
-    notes: 'The 2025-26 aid guide gives two different dates for the Deans'' Honors application: December
-      5 (in the Stamps paragraph) and ''on or before November 15'' (in the Deans'' Honor paragraph). The
-      aid page (marked last updated 10/07/2020) says an application for the scholarship is required. The
-      Tulane admissions merit scholarships page (admission.tulane.edu/tuition-aid/merit-scholarships)
-      answered with a bot-challenge page and was not read, so the current-cycle terms there are unconfirmed.'
+    notes: 'The admission page says students no longer need a separate application: all who complete the
+      four steps on that page are considered, and may upload an optional supplement to the Green Wave
+      Portal. Winners are notified when they are offered admission. The 2025-26 aid guide and an older
+      aid page still describe a scholarship application with November 15 and December 5 dates; the admission
+      page says that requirement has ended.'
   renewal_rules:
   - applies_to: []
     gpa_min: 3.0
@@ -125,6 +118,12 @@ versions:
     claim: target
     denominator: null
   sources:
+  - source_id: s-admit
+    url: https://admission.tulane.edu/tuition-aid/merit-scholarships
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: null
+    archive_url: null
   - source_id: s-guide
     url: https://financialaid.tulane.edu/sites/default/files/2025-04/GUIDE2526Undergraduate%20041525.pdf
     authority: official_aid_policy
@@ -145,11 +144,12 @@ versions:
     archive_url: null
   field_evidence:
   - field_path: entry_year
-    source_ref: s-guide
-    locator: Guide cover page, edition line
-    short_excerpt: 2025-2026
-    value_status: reported
-    reported_value: 2025
+    source_ref: s-admit
+    locator: Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot),
+      no entering class in the scholarship sections
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
   - field_path: renewal_rules/0/credit_load_min_per_term
     source_ref: s-gpa
     locator: Merit scholarship continuation page, Merit Scholarships list
@@ -163,20 +163,6 @@ versions:
       freshmen applicants by the Office of Undergraduate Admission.
     value_status: reported
     reported_value: competitive
-  - field_path: offers/0/consideration_route
-    source_ref: s-dhs
-    locator: Aid page, Application Procedure
-    short_excerpt: as well as an application for the scholarship according to deadlines and criteria provided
-      on the Tulane Undergraduate Admission website
-    value_status: reported
-    reported_value: separate_application
-  - field_path: application/separate_application
-    source_ref: s-dhs
-    locator: Aid page, Application Procedure
-    short_excerpt: as well as an application for the scholarship according to deadlines and criteria provided
-      on the Tulane Undergraduate Admission website
-    value_status: reported
-    reported_value: required
   - field_path: offers/0/benefits/0/coverage
     source_ref: s-dhs
     locator: Aid page, opening paragraphs
@@ -189,19 +175,6 @@ versions:
     short_excerpt: null
     value_status: not_published
     reported_value: null
-  - field_path: application/milestones/0/date
-    source_ref: s-guide
-    locator: Aid guide, Stamps Tulane Scholarships paragraph
-    short_excerpt: Applicants must apply for the Deans’ Honors Scholarship (see below) by December 5
-    value_status: conflicting
-    reported_value: December 5
-  - field_path: application/milestones/0/date
-    source_ref: s-guide
-    locator: Aid guide, Deans' Honor Scholarships paragraph
-    short_excerpt: Applications, which are due on or before November 15, are available from the Office
-      of Undergraduate Admission.
-    value_status: conflicting
-    reported_value: November 15
   - field_path: renewal_rules/0/gpa_min
     source_ref: s-gpa
     locator: Merit scholarship continuation page, Minimum GPA by Scholarship
@@ -233,3 +206,17 @@ versions:
     short_excerpt: approximately 50 superior new freshmen
     value_status: reported
     reported_value: 50
+  - field_path: offers/0/consideration_route
+    source_ref: s-admit
+    locator: Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot),
+      Dean's Honor Scholarship
+    short_excerpt: Students who complete the four steps above will all be considered
+    value_status: reported
+    reported_value: admission_application
+  - field_path: application/separate_application
+    source_ref: s-admit
+    locator: Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot),
+      Dean's Honor Scholarship
+    short_excerpt: students no longer need to complete a separate application for this full-tuition scholarship
+    value_status: reported
+    reported_value: no_form_other_steps_required

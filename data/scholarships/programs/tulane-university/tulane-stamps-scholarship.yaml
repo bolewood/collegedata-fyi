@@ -3,28 +3,28 @@ program_id: tulane-stamps-scholarship
 school_id: tulane-university
 ipeds_id: '160755'
 applicable_campuses: []
-official_name: Stamps Tulane Scholarship
+official_name: Stamps Scholarship
 aliases:
-- Stamps Scholarship
+- Stamps Tulane Scholarship
 - Stamps Tulane Scholars
 program_family: stamps
 awarding_authority: cofunded
 related_programs: []
 status: active
 versions:
-- version_id: stamps-tulane-guide-2025-26
+- version_id: stamps-tulane-admission-page-2026-11
   supersedes: null
-  entry_year: 2025
-  entry_year_label: Terms are from the 2025-2026 undergraduate financial aid guide (file dated April 2025,
-    about 19 months old); the cover page says 2025-2026 and does not use the words entering class
+  entry_year: null
+  entry_year_label: The admission page names no entering class. Coverage, application route and award
+    count are from that page as read on 2026-11-15; renewal and stacking terms are from the 2025-2026
+    aid guide and aid pages
   entry_terms:
   - unspecified
-  source_cohort_text: The current admissions page could not be read (bot challenge); terms come from the
-    2025-26 aid guide and aid pages
-  verification_status: unverified
+  source_cohort_text: null
+  verification_status: verified
   last_reviewed_at: '2026-11-15'
-  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b1
-  owner_spot_checked: false
+  reviewed_by: agent:claude-fable-5-2 from an owner-read page, 2026-11-15
+  owner_spot_checked: true
   program_status_for_entry: active
   offers:
   - offer_id: o-main
@@ -32,7 +32,7 @@ versions:
     variant_name: null
     residency: any
     selection_mode: competitive
-    consideration_route: separate_application
+    consideration_route: admission_application
     aid_basis: unclear
     need_role: unknown
     funds_limited: null
@@ -49,8 +49,7 @@ versions:
       major_change_restrictions: null
       honors_requirement: null
       first_generation_rule: unknown
-      eligibility_notes: For new freshmen. The Tulane admissions merit scholarships page (admission.tulane.edu/tuition-aid/merit-scholarships)
-        answered with a bot-challenge page and was not read, so the current-cycle terms there are unconfirmed.
+      eligibility_notes: For new freshmen.
     benefits:
     - benefit_id: b-coa
       category: cost_of_attendance
@@ -64,8 +63,9 @@ versions:
         period: null
       duration_terms: Up to four years of undergraduate study (five for architecture)
       exclusions: null
-      scope_text: '''Tulane''s specified total costs of attendance''; the guide gives no dollar amount'
-      advertised_coverage_label: Tulane's specified total costs of attendance
+      scope_text: '''total cost of attendance (including tuition, mandatory fees, housing, and meals)'';
+        no dollar amount is given'
+      advertised_coverage_label: total cost of attendance
       conditions_text: null
     - benefit_id: b-enrich
       category: enrichment
@@ -85,35 +85,27 @@ versions:
       conditions_text: null
     advertised_totals: []
   application:
-    separate_application: required
+    separate_application: no_form_other_steps_required
     milestones:
-    - kind: admission_deadline
-      requirement: required
+    - kind: supporting_materials_deadline
+      requirement: invitation_only
       date: null
       recurring:
-        month: 11
-        day: 15
+        month: 1
+        day: 5
       precision: day
-      source_date_text: submit an Early Action or Single Choice Early Action admission application by
-        November 15
-    - kind: application_deadline
-      requirement: required
-      date: null
-      recurring: null
-      precision: day
-      source_date_text: null
-    admission_plan_requirement: Early Action or Single Choice Early Action admission application by November
-      15
+      source_date_text: Semifinalists will be invited to submit supplements by January 5th
+    admission_plan_requirement: Complete the four steps listed on the admission merit scholarships page;
+      those steps were not captured in the page as read. The 2025-26 aid guide required an Early Action
+      or Single Choice Early Action application by November 15; whether that still applies is not confirmed
     prerequisites: []
     interview_mode: unknown
     finalist_event_required: null
-    notes: There is no Stamps-specific form ('No separate application is required'), but the guide says
-      applicants must apply for the Deans' Honors Scholarship, so that application is a condition of consideration.
-      The Deans' Honors due date is December 5 in this paragraph and 'on or before November 15' in the
-      Deans' Honor paragraph of the same guide; the date is left empty as a conflict. The guide is the
-      2025-2026 edition (file dated April 2025) and gives no interview details. The Tulane admissions
-      merit scholarships page (admission.tulane.edu/tuition-aid/merit-scholarships) answered with a bot-challenge
-      page and was not read, so the current-cycle terms there are unconfirmed.
+    notes: The admission page says no materials beyond its four steps are required for scholarship review;
+      students may upload optional supporting documents to the Green Wave Portal. Semifinalists are invited
+      to submit supplements by January 5 and finalists to interview in the spring. The 2025-26 aid guide
+      said applicants must also apply for the Deans' Honor Scholarship and gave about five awards a year;
+      the admission page says the Deans' Honor application has ended and gives about 10.
   renewal_rules:
   - applies_to: []
     gpa_min: 3.0
@@ -136,12 +128,18 @@ versions:
   award_counts:
   - metric: new_recipients
     qualifier: approximate
-    value: 5
+    value: 10
     cohort_year: null
-    source_ref: s-guide
+    source_ref: s-admit
     claim: target
     denominator: null
   sources:
+  - source_id: s-admit
+    url: https://admission.tulane.edu/tuition-aid/merit-scholarships
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: null
+    archive_url: null
   - source_id: s-guide
     url: https://financialaid.tulane.edu/sites/default/files/2025-04/GUIDE2526Undergraduate%20041525.pdf
     authority: official_aid_policy
@@ -162,11 +160,12 @@ versions:
     archive_url: null
   field_evidence:
   - field_path: entry_year
-    source_ref: s-guide
-    locator: Guide cover page, edition line
-    short_excerpt: 2025-2026
-    value_status: reported
-    reported_value: 2025
+    source_ref: s-admit
+    locator: Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot),
+      no entering class in the scholarship sections
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
   - field_path: /awarding_authority
     source_ref: s-guide
     locator: Aid guide, Stamps Tulane Scholarships paragraph
@@ -181,57 +180,6 @@ versions:
       scholarship, service, and innovation
     value_status: reported
     reported_value: competitive
-  - field_path: offers/0/consideration_route
-    source_ref: s-guide
-    locator: Aid guide, Stamps Tulane Scholarships paragraph
-    short_excerpt: Applicants must apply for the Deans’ Honors Scholarship (see below) by December 5
-    value_status: reported
-    reported_value: separate_application
-  - field_path: application/separate_application
-    source_ref: s-guide
-    locator: Aid guide, Stamps Tulane Scholarships paragraph
-    short_excerpt: Applicants must apply for the Deans’ Honors Scholarship (see below) by December 5
-    value_status: reported
-    reported_value: required
-  - field_path: offers/0/benefits/0/coverage
-    source_ref: s-guide
-    locator: Aid guide, Stamps Tulane Scholarships paragraph
-    short_excerpt: the scholarship covers Tulane’s specified total costs of attendance for up to four
-      years of undergraduate study (five for architecture)
-    value_status: reported
-    reported_value: full
-  - field_path: offers/0/benefits/0/amount
-    source_ref: s-guide
-    locator: 'Aid guide: no dollar amount'
-    short_excerpt: null
-    value_status: not_published
-    reported_value: null
-  - field_path: offers/0/benefits/1/amount
-    source_ref: s-guide
-    locator: 'Aid guide, Stamps Tulane Scholarships paragraph: enrichment amount not given'
-    short_excerpt: null
-    value_status: not_published
-    reported_value: null
-  - field_path: application/milestones/0
-    source_ref: s-guide
-    locator: Aid guide, Stamps Tulane Scholarships paragraph
-    short_excerpt: submit an Early Action or Single Choice Early Action admission application by November
-      15
-    value_status: reported
-    reported_value: 11-15
-  - field_path: application/milestones/1/date
-    source_ref: s-guide
-    locator: Aid guide, Stamps Tulane Scholarships paragraph
-    short_excerpt: Applicants must apply for the Deans’ Honors Scholarship (see below) by December 5
-    value_status: conflicting
-    reported_value: December 5
-  - field_path: application/milestones/1/date
-    source_ref: s-guide
-    locator: Aid guide, Deans' Honor Scholarships paragraph
-    short_excerpt: Applications, which are due on or before November 15, are available from the Office
-      of Undergraduate Admission.
-    value_status: conflicting
-    reported_value: November 15
   - field_path: stacking_rules/0
     source_ref: s-guide
     locator: Aid guide, merit scholarship policies
@@ -251,9 +199,55 @@ versions:
     short_excerpt: 3.000 – Stamps, Deans Honors, Paul Tulane, Global, Louisiana Excellence
     value_status: reported
     reported_value: 3.0
-  - field_path: award_counts/0
-    source_ref: s-guide
-    locator: Aid guide, Stamps Tulane Scholarships paragraph
-    short_excerpt: to approximately five exceptional new freshmen
+  - field_path: offers/0/consideration_route
+    source_ref: s-admit
+    locator: Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot),
+      paragraph above Stamps Scholarship
+    short_excerpt: While no additional materials beyond the 4 steps outlined above are required, students
+      may upload supporting documents
     value_status: reported
-    reported_value: 5
+    reported_value: admission_application
+  - field_path: application/separate_application
+    source_ref: s-admit
+    locator: Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot),
+      paragraph above Stamps Scholarship
+    short_excerpt: While no additional materials beyond the 4 steps outlined above are required, students
+      may upload supporting documents
+    value_status: reported
+    reported_value: no_form_other_steps_required
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-admit
+    locator: Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot),
+      Stamps Scholarship
+    short_excerpt: covers our total cost of attendance (including tuition, mandatory fees, housing, and
+      meals)
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-admit
+    locator: 'Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot),
+      Stamps Scholarship: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-admit
+    locator: 'Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot),
+      Stamps Scholarship: enrichment amount not given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-admit
+    locator: Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot),
+      Stamps Scholarship
+    short_excerpt: Semifinalists will be invited to submit supplements by January 5th
+    value_status: reported
+    reported_value: 01-05
+  - field_path: award_counts/0
+    source_ref: s-admit
+    locator: Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot),
+      Stamps Scholarship
+    short_excerpt: Approximately 10 Stamps Scholarships are awarded each year
+    value_status: reported
+    reported_value: 10

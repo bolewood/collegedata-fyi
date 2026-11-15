@@ -1,13 +1,13 @@
 {
   "meta": {
-    "dataset_id": "collegedata-scholarships-v1-7af51cae1e92",
+    "dataset_id": "collegedata-scholarships-v1-2abbd5cbed5d",
     "version": 1,
     "license": "CC-BY-SA-4.0",
     "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
     "attribution": "Scholarship program data from collegedata.fyi (https://collegedata.fyi/scholarships), CC BY-SA 4.0. Terms as published by each school; see the source link on each record.",
     "generated_at": "2026-11-15",
     "source_repository": "https://github.com/bolewood/collegedata-fyi",
-    "record_count": 85
+    "record_count": 93
   },
   "programs": [
     {
@@ -1749,6 +1749,726 @@
           "field_path": "award_counts/0",
           "source_ref": "s-duke",
           "locator": "James B. Duke page, opening paragraph",
+          "value_status": "reported"
+        }
+      ]
+    },
+    {
+      "program_id": "ab-duke-scholars",
+      "school_id": "duke",
+      "ipeds_id": "198419",
+      "participating_school_ids": [
+        "duke"
+      ],
+      "official_name": "A.B. Duke Scholarship",
+      "aliases": [
+        "A.B. Duke Scholars",
+        "Angier B. Duke Scholarship"
+      ],
+      "program_family": "other",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "ab-duke-scholars-undated",
+      "entry_year": null,
+      "entry_year_label": "Pages name no entering class",
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": "Duke's OUSF and financial aid pages describe the current merit scholarship program without an entering class",
+      "verification_status": "verified",
+      "cycle_basis": "none",
+      "cycle_through_date": null,
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b1",
+      "owner_spot_checked": true,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "full_tuition_fees"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "any"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "no_form_other_steps_required",
+      "deadline_months": [],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "any",
+          "selection_mode": "competitive",
+          "consideration_route": "admission_application",
+          "aid_basis": "unclear",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "unknown",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "The Angier B. Duke Scholarship recognizes students who demonstrate intellectual accomplishment and exceptional potential for academic leadership. No residency, GPA or test rule is stated. Not covered by Duke merit scholarships, per the aid page: residential program fees, Quad/1st year housing fees, parking permits, course fees, books and supplies, summer school (except the A.B. Duke Summer at Oxford), health insurance (except for international students), and all other non-mandatory expenses."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "Listed under what all Duke merit scholarships cover; stated for the merit scholarship group",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-fees",
+              "category": "mandatory_fees",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "Mandatory fees (student activity, student service, student health, recreation, dining hall, post office box, registration)",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-housing",
+              "category": "housing",
+              "instrument": "scholarship",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": [
+                "Quad/1st year housing fees",
+                "Residential program fees"
+              ],
+              "scope_text": "Exact on-campus housing charges for fall and spring; first-year Quad housing fees are listed as not covered",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-meals",
+              "category": "meals",
+              "instrument": "scholarship",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "A standard meal plan",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-health",
+              "category": "health_insurance",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "Duke health insurance costs for international students receiving merit scholarships",
+              "advertised_coverage_label": null,
+              "conditions_text": "International students only"
+            },
+            {
+              "benefit_id": "b-oxford",
+              "category": "study_abroad",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "One summer",
+              "exclusions": null,
+              "scope_text": "A.B. Duke Summer at Oxford",
+              "advertised_coverage_label": null,
+              "conditions_text": "Offered the summer before sophomore year; the page says 'offered the opportunity to study at Oxford University at no cost'"
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "full_tuition_fees"
+        }
+      ],
+      "application": {
+        "separate_application": "no_form_other_steps_required",
+        "milestones": [],
+        "admission_plan_requirement": "Apply to Duke; the Duke application is the basis for merit scholarship eligibility",
+        "prerequisites": [],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "No separate scholarship application. Finalists are notified by email in the spring and interview with selection committees; awards follow shortly after the interviews. The pages give no dates, interview format or entering class."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": null,
+          "gpa_scale": null,
+          "credit_load_min_per_term": null,
+          "credit_load_min_per_year": null,
+          "evaluation_timing": null,
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": null,
+          "notes": "Merit scholarships are described as covering four years of full-time undergraduate study. The pages give no renewal GPA or credit-load rule for this scholarship."
+        }
+      ],
+      "stacking_rules": [
+        {
+          "other_aid_type": "outside_scholarship",
+          "relation": "allowed",
+          "note": "Outside scholarships may be added up to the total cost to attend Duke; funds beyond that reduce the Duke merit scholarship."
+        }
+      ],
+      "award_counts": [],
+      "sources": [
+        {
+          "source_id": "s-aid",
+          "url": "https://financialaid.duke.edu/types-aid/merit-scholarships/merit-scholars/",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-inc",
+          "url": "https://ousf.duke.edu/merit-scholarships/merit-scholarships-incoming-first-year-students/",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-ousf",
+          "url": "https://ousf.duke.edu/merit-scholarships/",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-prog",
+          "url": "https://ousf.duke.edu/merit-scholarships/ab-duke-scholars-program/",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-inc",
+          "locator": "Merit Scholarships for Incoming First Year Students: no entering class named",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-inc",
+          "locator": "Incoming first-year page, opening paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-inc",
+          "locator": "Incoming first-year page, opening paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-inc",
+          "locator": "Incoming first-year page, opening paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/coverage",
+          "source_ref": "s-ousf",
+          "locator": "Merit Scholarships landing page, opening paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-ousf",
+          "locator": "Merit Scholarships landing page: no dollar amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/1/coverage",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, What's Covered list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, What's Covered: no dollar amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/2/coverage",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, What's Covered list and exclusions list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/2/amount",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, What's Covered: no dollar amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/3/coverage",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, Housing and Meal Expenses",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/3/amount",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, What's Covered: no dollar amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/4/amount",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, Health Insurance section: no dollar amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/4/conditions_text",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, Health Insurance section",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/4/coverage",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, Health Insurance section",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/eligibility_notes",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, list of costs not covered",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/0",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, outside scholarships section",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/5/amount",
+          "source_ref": "s-prog",
+          "locator": "A.B. Duke Scholars Program page: no dollar amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/5/conditions_text",
+          "source_ref": "s-prog",
+          "locator": "A.B. Duke Scholars Program page, opening paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/eligibility_notes",
+          "source_ref": "s-inc",
+          "locator": "Incoming first-year page, scholarship list",
+          "value_status": "reported"
+        }
+      ]
+    },
+    {
+      "program_id": "bn-duke-scholars",
+      "school_id": "duke",
+      "ipeds_id": "198419",
+      "participating_school_ids": [
+        "duke"
+      ],
+      "official_name": "B.N. Duke Scholarship",
+      "aliases": [
+        "B.N. Duke Scholars",
+        "Benjamin N. Duke Scholarship"
+      ],
+      "program_family": "other",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "bn-duke-scholars-undated",
+      "entry_year": null,
+      "entry_year_label": "Pages name no entering class",
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": "Duke's OUSF and financial aid pages describe the current merit scholarship program without an entering class",
+      "verification_status": "verified",
+      "cycle_basis": "none",
+      "cycle_through_date": null,
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b1",
+      "owner_spot_checked": true,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "full_tuition_fees"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "unknown"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "no_form_other_steps_required",
+      "deadline_months": [],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "unknown",
+          "selection_mode": "competitive",
+          "consideration_route": "admission_application",
+          "aid_basis": "unclear",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "unknown",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "The Benjamin N. Duke Scholarship recognizes students from North or South Carolina who excel academically, engage their communities, and aspire to become leaders. The pages do not define 'from' (residence or school location). Rising sophomores complete the Carolina Summer of Service project. Not covered by Duke merit scholarships, per the aid page: residential program fees, Quad/1st year housing fees, parking permits, course fees, books and supplies, summer school, health insurance (except for international students), and all other non-mandatory expenses."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "Listed under what all Duke merit scholarships cover; stated for the merit scholarship group",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-fees",
+              "category": "mandatory_fees",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "Mandatory fees (student activity, student service, student health, recreation, dining hall, post office box, registration)",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-housing",
+              "category": "housing",
+              "instrument": "scholarship",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": [
+                "Quad/1st year housing fees",
+                "Residential program fees"
+              ],
+              "scope_text": "Exact on-campus housing charges for fall and spring; first-year Quad housing fees are listed as not covered",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-meals",
+              "category": "meals",
+              "instrument": "scholarship",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "A standard meal plan",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-health",
+              "category": "health_insurance",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "Duke health insurance costs for international students receiving merit scholarships",
+              "advertised_coverage_label": null,
+              "conditions_text": "International students only"
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "full_tuition_fees"
+        }
+      ],
+      "application": {
+        "separate_application": "no_form_other_steps_required",
+        "milestones": [],
+        "admission_plan_requirement": "Apply to Duke; the Duke application is the basis for merit scholarship eligibility",
+        "prerequisites": [],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "No separate scholarship application. Finalists are notified by email in the spring and interview with selection committees; awards follow shortly after the interviews. The pages give no dates, interview format or entering class."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": null,
+          "gpa_scale": null,
+          "credit_load_min_per_term": null,
+          "credit_load_min_per_year": null,
+          "evaluation_timing": null,
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": null,
+          "notes": "Merit scholarships are described as covering four years of full-time undergraduate study. The pages give no renewal GPA or credit-load rule for this scholarship."
+        }
+      ],
+      "stacking_rules": [
+        {
+          "other_aid_type": "outside_scholarship",
+          "relation": "allowed",
+          "note": "Outside scholarships may be added up to the total cost to attend Duke; funds beyond that reduce the Duke merit scholarship."
+        }
+      ],
+      "award_counts": [],
+      "sources": [
+        {
+          "source_id": "s-aid",
+          "url": "https://financialaid.duke.edu/types-aid/merit-scholarships/merit-scholars/",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-inc",
+          "url": "https://ousf.duke.edu/merit-scholarships/merit-scholarships-incoming-first-year-students/",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-ousf",
+          "url": "https://ousf.duke.edu/merit-scholarships/",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-prog",
+          "url": "https://ousf.duke.edu/merit-scholarships/bn-duke-scholars-program/",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-inc",
+          "locator": "Merit Scholarships for Incoming First Year Students: no entering class named",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-inc",
+          "locator": "Incoming first-year page, opening paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-inc",
+          "locator": "Incoming first-year page, opening paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-inc",
+          "locator": "Incoming first-year page, opening paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/coverage",
+          "source_ref": "s-ousf",
+          "locator": "Merit Scholarships landing page, opening paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-ousf",
+          "locator": "Merit Scholarships landing page: no dollar amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/1/coverage",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, What's Covered list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, What's Covered: no dollar amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/2/coverage",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, What's Covered list and exclusions list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/2/amount",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, What's Covered: no dollar amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/3/coverage",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, Housing and Meal Expenses",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/3/amount",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, What's Covered: no dollar amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/4/amount",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, Health Insurance section: no dollar amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/4/conditions_text",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, Health Insurance section",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/4/coverage",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, Health Insurance section",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/eligibility_notes",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, list of costs not covered",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/0",
+          "source_ref": "s-aid",
+          "locator": "For Merit Scholars, outside scholarships section",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/eligibility_notes",
+          "source_ref": "s-inc",
+          "locator": "Incoming first-year page, scholarship list",
           "value_status": "reported"
         }
       ]
@@ -10376,6 +11096,392 @@
       ]
     },
     {
+      "program_id": "pvamu-regents-student-merit-scholarship",
+      "school_id": "prairie-view-a-and-m-university",
+      "ipeds_id": "227526",
+      "participating_school_ids": [
+        "prairie-view-a-and-m-university"
+      ],
+      "official_name": "Regents' Student Merit Scholarship",
+      "aliases": [
+        "Regents' Scholarship",
+        "Regents' Student Merit Scholarship"
+      ],
+      "program_family": "other",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "regents-student-merit-undated",
+      "entry_year": null,
+      "entry_year_label": "The page names no entering class",
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": null,
+      "verification_status": "verified",
+      "cycle_basis": "none",
+      "cycle_through_date": null,
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b6",
+      "owner_spot_checked": true,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "other"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "any"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "not_required",
+      "deadline_months": [],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "any",
+          "selection_mode": "competitive",
+          "consideration_route": "admission_application",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": true,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": {
+              "min": 3.5,
+              "scale": 4.0,
+              "basis": "unknown"
+            },
+            "test_rules": [
+              {
+                "exam": "SAT",
+                "min": 1260,
+                "scoring": "single_sitting",
+                "official_required": null
+              },
+              {
+                "exam": "ACT",
+                "min": 27,
+                "scoring": "single_sitting",
+                "official_required": null
+              }
+            ],
+            "tests_policy_for_scholarship": "required",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "Graduated from high school within 12 months of enrolling; not a transfer student. The page lists 1260 (new SAT) or 27 ACT composite, from same-day testing; scores from multiple sittings are not combined. Awards are limited and given by admission date and competitiveness."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Every academic year, excluding summer; renewable up to four years (eight semesters)",
+              "exclusions": null,
+              "scope_text": "School words: 'covers up tuition and mandatory fees, on campus housing, meals and books ($600 per semester)'; the wording has no 'to', so whether 'up' is a typo or a cap is unclear",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-fees",
+              "category": "mandatory_fees",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Every academic year, excluding summer",
+              "exclusions": null,
+              "scope_text": "School words: 'covers up tuition and mandatory fees, on campus housing, meals and books ($600 per semester)'; the wording has no 'to', so whether 'up' is a typo or a cap is unclear. The page adds '*Fees do not cover fines and deposits.'",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-housing",
+              "category": "housing",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Every academic year, excluding summer",
+              "exclusions": null,
+              "scope_text": "On-campus housing, listed in the same sentence; no rate or cap given",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-meals",
+              "category": "meals",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Every academic year, excluding summer",
+              "exclusions": null,
+              "scope_text": "Meals, listed in the same sentence; no rate or cap given",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-books",
+              "category": "books",
+              "instrument": "unknown",
+              "coverage": "fixed_amount",
+              "amount": {
+                "qualifier": "exact",
+                "value": 600,
+                "min": null,
+                "max": null,
+                "period": "semester"
+              },
+              "duration_terms": "Every academic year, excluding summer",
+              "exclusions": null,
+              "scope_text": "School words: 'books ($600 per semester)'",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-waiver",
+              "category": "nonresident_differential",
+              "instrument": "tuition_waiver",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "'Regents' Scholars who are non-residents are eligible for an out-of-state tuition waiver'; no dollar value or limits given",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "other"
+        }
+      ],
+      "application": {
+        "separate_application": "not_required",
+        "milestones": [],
+        "admission_plan_requirement": "Admission to the university; the page says admitted students meeting the criteria are automatically considered",
+        "prerequisites": [],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "No deadline is published. The Office of Scholarship Services menu lists a separate 'General Scholarship Application' page that was not read; whether it affects this award is not known."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": 3.2,
+          "gpa_scale": 4.0,
+          "credit_load_min_per_term": null,
+          "credit_load_min_per_year": 30,
+          "evaluation_timing": null,
+          "summer_courses_can_fix_shortfall": false,
+          "max_semesters": 8,
+          "notes": "Renewable up to four years (eight semesters). Summer coursework cannot be used to meet the credit load or GPA requirement."
+        }
+      ],
+      "stacking_rules": null,
+      "award_counts": [],
+      "sources": [
+        {
+          "source_id": "s-merit",
+          "url": "https://www.pvamu.edu/oss/university-scholarships/",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-merit",
+          "locator": "University Merit Scholarships, intro paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-merit",
+          "locator": "University Merit Scholarships, intro paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/funds_limited",
+          "source_ref": "s-merit",
+          "locator": "University Merit Scholarships, intro paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-merit",
+          "locator": "The Regents' Student Merit Scholarship, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1",
+          "source_ref": "s-merit",
+          "locator": "The Regents' Student Merit Scholarship, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/2",
+          "source_ref": "s-merit",
+          "locator": "The Regents' Student Merit Scholarship, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/3",
+          "source_ref": "s-merit",
+          "locator": "The Regents' Student Merit Scholarship, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/4",
+          "source_ref": "s-merit",
+          "locator": "The Regents' Student Merit Scholarship, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-merit",
+          "locator": "Regents' paragraph: no dollar amount for this component",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-merit",
+          "locator": "Regents' paragraph: no dollar amount for this component",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/2/amount",
+          "source_ref": "s-merit",
+          "locator": "Regents' paragraph: no dollar amount for this component",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/3/amount",
+          "source_ref": "s-merit",
+          "locator": "Regents' paragraph: no dollar amount for this component",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/4/amount",
+          "source_ref": "s-merit",
+          "locator": "The Regents' Student Merit Scholarship, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/5",
+          "source_ref": "s-merit",
+          "locator": "The Regents' Student Merit Scholarship, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/5/amount",
+          "source_ref": "s-merit",
+          "locator": "Regents' paragraph: no dollar value for the waiver",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/eligibility/gpa",
+          "source_ref": "s-merit",
+          "locator": "Regents' criteria list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/test_rules",
+          "source_ref": "s-merit",
+          "locator": "Regents' criteria list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/tests_policy_for_scholarship",
+          "source_ref": "s-merit",
+          "locator": "Regents' criteria list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-merit",
+          "locator": "University Merit Scholarships, intro paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones",
+          "source_ref": "s-merit",
+          "locator": "University Merit Scholarships page: no scholarship deadline",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-merit",
+          "locator": "Regents' criteria list, renewal sentence",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules",
+          "source_ref": "s-merit",
+          "locator": "University Merit Scholarships page: no rule on other aid for the Regents' award",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "award_counts",
+          "source_ref": "s-merit",
+          "locator": "University Merit Scholarships page: no award count",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-merit",
+          "locator": "University Merit Scholarships page: no entering class named",
+          "value_status": "not_published"
+        }
+      ]
+    },
+    {
       "program_id": "presidential-scholarship",
       "school_id": "purdue",
       "ipeds_id": "243780",
@@ -14899,6 +16005,541 @@
       ]
     },
     {
+      "program_id": "deans-honor-scholarship",
+      "school_id": "tulane-university",
+      "ipeds_id": "160755",
+      "participating_school_ids": [
+        "tulane-university"
+      ],
+      "official_name": "Deans' Honor Scholarship",
+      "aliases": [
+        "Dean's Honor Scholarship",
+        "Deans’ Honors Scholarship",
+        "DHS"
+      ],
+      "program_family": "other",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "deans-honor-tulane-admission-page-2026-11",
+      "entry_year": null,
+      "entry_year_label": "The admission page names no entering class. Coverage, application route and award count are from that page as read on 2026-11-15; renewal and stacking terms are from the 2025-2026 aid guide and aid pages",
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": null,
+      "verification_status": "verified",
+      "cycle_basis": "none",
+      "cycle_through_date": null,
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-fable-5-2 from an owner-read page, 2026-11-15",
+      "owner_spot_checked": true,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "full_tuition"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "any"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "no_form_other_steps_required",
+      "deadline_months": [],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "any",
+          "selection_mode": "competitive",
+          "consideration_route": "admission_application",
+          "aid_basis": "unclear",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "unknown",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "Typical recipients rank in the top 5 percent of the class, have a rigorous academic program with honors and advanced placement courses, and score near the top of the range in a college admission test (typical profile from the aid page, not a minimum)."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Four years (five for the five-year accredited professional program track in Architecture)",
+              "exclusions": null,
+              "scope_text": "Guaranteed to match the full-time tuition cost each year provided the student meets renewal criteria",
+              "advertised_coverage_label": "full tuition",
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "full_tuition"
+        }
+      ],
+      "application": {
+        "separate_application": "no_form_other_steps_required",
+        "milestones": [],
+        "admission_plan_requirement": "Complete the four steps listed on the admission merit scholarships page; those steps were not captured in the page as read, so they are not listed here",
+        "prerequisites": [],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "The admission page says students no longer need a separate application: all who complete the four steps on that page are considered, and may upload an optional supplement to the Green Wave Portal. Winners are notified when they are offered admission. The 2025-26 aid guide and an older aid page still describe a scholarship application with November 15 and December 5 dates; the admission page says that requirement has ended."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": 3.0,
+          "gpa_scale": null,
+          "credit_load_min_per_term": 12,
+          "credit_load_min_per_year": null,
+          "evaluation_timing": null,
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": null,
+          "notes": "Renewable for four years (five for architecture) with a 3.00 cumulative GPA and continuous primary undergraduate enrollment in a Newcomb-Tulane College school; the guide adds a full-time load, and the continuation page says 12 or more credits each fall and spring. Students found responsible for Code of Student Conduct or Code of Academic Conduct violations forfeit all remaining portions (aid page)."
+        }
+      ],
+      "stacking_rules": [
+        {
+          "other_aid_type": "institutional_merit",
+          "relation": "not_allowed",
+          "note": "May not be combined with any other Tulane merit scholarship."
+        },
+        {
+          "other_aid_type": "tuition_waiver",
+          "relation": "not_allowed",
+          "note": "May not be combined with a Faculty-Staff Tuition Waiver or Tuition Exchange Scholarship (ROTC scholarships are also listed)."
+        },
+        {
+          "other_aid_type": "athletic",
+          "relation": "allowed",
+          "note": "May be combined with a partial athletic scholarship."
+        }
+      ],
+      "award_counts": [
+        {
+          "metric": "new_recipients",
+          "qualifier": "approximate",
+          "value": 50,
+          "cohort_year": null,
+          "source_ref": "s-guide",
+          "claim": "target",
+          "denominator": null
+        }
+      ],
+      "sources": [
+        {
+          "source_id": "s-admit",
+          "url": "https://admission.tulane.edu/tuition-aid/merit-scholarships",
+          "authority": "official_admissions",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-dhs",
+          "url": "https://financialaid.tulane.edu/types-of-aid/gifts/undergraduate/dhs",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-gpa",
+          "url": "https://financialaid.tulane.edu/resources/how-financial-aid-works/maintaining-eligibility/merit-scholarship-continuation-requirements",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-guide",
+          "url": "https://financialaid.tulane.edu/sites/default/files/2025-04/GUIDE2526Undergraduate%20041525.pdf",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-admit",
+          "locator": "Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot), no entering class in the scholarship sections",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "renewal_rules/0/credit_load_min_per_term",
+          "source_ref": "s-gpa",
+          "locator": "Merit scholarship continuation page, Merit Scholarships list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-dhs",
+          "locator": "Aid page, opening paragraphs",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/coverage",
+          "source_ref": "s-dhs",
+          "locator": "Aid page, opening paragraphs",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-dhs",
+          "locator": "Aid page: no dollar amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "renewal_rules/0/gpa_min",
+          "source_ref": "s-gpa",
+          "locator": "Merit scholarship continuation page, Minimum GPA by Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/0",
+          "source_ref": "s-dhs",
+          "locator": "Aid page, third paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/1",
+          "source_ref": "s-dhs",
+          "locator": "Aid page, third paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/2",
+          "source_ref": "s-dhs",
+          "locator": "Aid page, third paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "award_counts/0",
+          "source_ref": "s-guide",
+          "locator": "Aid guide, Deans' Honor Scholarships paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-admit",
+          "locator": "Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot), Dean's Honor Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-admit",
+          "locator": "Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot), Dean's Honor Scholarship",
+          "value_status": "reported"
+        }
+      ]
+    },
+    {
+      "program_id": "tulane-stamps-scholarship",
+      "school_id": "tulane-university",
+      "ipeds_id": "160755",
+      "participating_school_ids": [
+        "tulane-university"
+      ],
+      "official_name": "Stamps Scholarship",
+      "aliases": [
+        "Stamps Tulane Scholarship",
+        "Stamps Tulane Scholars"
+      ],
+      "program_family": "stamps",
+      "awarding_authority": "cofunded",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "stamps-tulane-admission-page-2026-11",
+      "entry_year": null,
+      "entry_year_label": "The admission page names no entering class. Coverage, application route and award count are from that page as read on 2026-11-15; renewal and stacking terms are from the 2025-2026 aid guide and aid pages",
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": null,
+      "verification_status": "verified",
+      "cycle_basis": "none",
+      "cycle_through_date": null,
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-fable-5-2 from an owner-read page, 2026-11-15",
+      "owner_spot_checked": true,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "full_school_coa"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "any"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "no_form_other_steps_required",
+      "deadline_months": [],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "any",
+          "selection_mode": "competitive",
+          "consideration_route": "admission_application",
+          "aid_basis": "unclear",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "unknown",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "For new freshmen."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-coa",
+              "category": "cost_of_attendance",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Up to four years of undergraduate study (five for architecture)",
+              "exclusions": null,
+              "scope_text": "'total cost of attendance (including tuition, mandatory fees, housing, and meals)'; no dollar amount is given",
+              "advertised_coverage_label": "total cost of attendance",
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-enrich",
+              "category": "enrichment",
+              "instrument": "restricted_fund",
+              "coverage": "variable",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "Additional enrichment funds for endeavors such as study abroad, undergraduate research, academic or co-curricular conferences and unpaid internships; amount not published",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "full_school_coa"
+        }
+      ],
+      "application": {
+        "separate_application": "no_form_other_steps_required",
+        "milestones": [
+          {
+            "kind": "supporting_materials_deadline",
+            "requirement": "invitation_only",
+            "date": null,
+            "recurring": {
+              "month": 1,
+              "day": 5
+            },
+            "precision": "day",
+            "source_date_text": "Semifinalists will be invited to submit supplements by January 5th"
+          }
+        ],
+        "admission_plan_requirement": "Complete the four steps listed on the admission merit scholarships page; those steps were not captured in the page as read. The 2025-26 aid guide required an Early Action or Single Choice Early Action application by November 15; whether that still applies is not confirmed",
+        "prerequisites": [],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "The admission page says no materials beyond its four steps are required for scholarship review; students may upload optional supporting documents to the Green Wave Portal. Semifinalists are invited to submit supplements by January 5 and finalists to interview in the spring. The 2025-26 aid guide said applicants must also apply for the Deans' Honor Scholarship and gave about five awards a year; the admission page says the Deans' Honor application has ended and gives about 10."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": 3.0,
+          "gpa_scale": null,
+          "credit_load_min_per_term": 12,
+          "credit_load_min_per_year": null,
+          "evaluation_timing": null,
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": null,
+          "notes": "Renewable provided the student maintains a 3.00 cumulative GPA with a full-time load, maintains continuous enrollment at Tulane, and upholds the codes of academic and student conduct. The aid page also lists 3.000 as the minimum GPA for Stamps. Up to four years (five for architecture). Full-time with 12 or more credits each fall and spring; a leave of absence longer than 2 years ends the scholarship (continuation page)."
+        }
+      ],
+      "stacking_rules": [
+        {
+          "other_aid_type": "institutional_merit",
+          "relation": "not_allowed",
+          "note": "With very few exceptions, students offered more than one Tulane scholarship may not combine the scholarships."
+        }
+      ],
+      "award_counts": [
+        {
+          "metric": "new_recipients",
+          "qualifier": "approximate",
+          "value": 10,
+          "cohort_year": null,
+          "source_ref": "s-admit",
+          "claim": "target",
+          "denominator": null
+        }
+      ],
+      "sources": [
+        {
+          "source_id": "s-admit",
+          "url": "https://admission.tulane.edu/tuition-aid/merit-scholarships",
+          "authority": "official_admissions",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-dhs",
+          "url": "https://financialaid.tulane.edu/types-of-aid/gifts/undergraduate/dhs",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-gpa",
+          "url": "https://financialaid.tulane.edu/resources/how-financial-aid-works/maintaining-eligibility/merit-scholarship-continuation-requirements",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-guide",
+          "url": "https://financialaid.tulane.edu/sites/default/files/2025-04/GUIDE2526Undergraduate%20041525.pdf",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-admit",
+          "locator": "Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot), no entering class in the scholarship sections",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "/awarding_authority",
+          "source_ref": "s-guide",
+          "locator": "Aid guide, Stamps Tulane Scholarships paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-guide",
+          "locator": "Aid guide, Stamps Tulane Scholarships paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/0",
+          "source_ref": "s-guide",
+          "locator": "Aid guide, merit scholarship policies",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0/credit_load_min_per_term",
+          "source_ref": "s-gpa",
+          "locator": "Merit scholarship continuation page, Merit Scholarships list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0/gpa_min",
+          "source_ref": "s-gpa",
+          "locator": "Merit scholarship continuation page, Minimum GPA by Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-admit",
+          "locator": "Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot), paragraph above Stamps Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-admit",
+          "locator": "Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot), paragraph above Stamps Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/coverage",
+          "source_ref": "s-admit",
+          "locator": "Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot), Stamps Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-admit",
+          "locator": "Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot), Stamps Scholarship: no dollar amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-admit",
+          "locator": "Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot), Stamps Scholarship: enrichment amount not given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "application/milestones/0",
+          "source_ref": "s-admit",
+          "locator": "Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot), Stamps Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "award_counts/0",
+          "source_ref": "s-admit",
+          "locator": "Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot), Stamps Scholarship",
+          "value_status": "reported"
+        }
+      ]
+    },
+    {
       "program_id": "distinguished-presidential-scholarship",
       "school_id": "tuskegee-university",
       "ipeds_id": "102377",
@@ -15678,6 +17319,290 @@
           "field_path": "entry_year",
           "source_ref": "s-hon",
           "locator": "Honors College page: the Nov. 1 deadline and 'late January' invitations carry no year; no entering class is named",
+          "value_status": "not_published"
+        }
+      ]
+    },
+    {
+      "program_id": "uf-stamps-scholars",
+      "school_id": "uf",
+      "ipeds_id": "134130",
+      "participating_school_ids": [
+        "uf"
+      ],
+      "official_name": "Stamps Scholars (University of Florida Honors Program)",
+      "aliases": [
+        "UF Stamps Scholars",
+        "Stamps Scholarship"
+      ],
+      "program_family": "stamps",
+      "awarding_authority": "unknown",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "uf-stamps-undated",
+      "entry_year": null,
+      "entry_year_label": "Pages show January and March 2026 dates and 'Class of 2030'; no entering class is named and the next cycle is not posted",
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": "Overview page: Class of 2030 Scholars; Application Information page: January 2026 and March 2026 dates",
+      "verification_status": "verified",
+      "cycle_basis": "milestone_dates",
+      "cycle_through_date": "2026-03-06",
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b3",
+      "owner_spot_checked": true,
+      "program_status_for_entry": null,
+      "coverages": [
+        "partial_or_fixed"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "any"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "required",
+      "deadline_months": [],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "any",
+          "selection_mode": "competitive",
+          "consideration_route": "separate_application",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "unknown",
+            "citizenship_eligible": null,
+            "citizenship_text": "Non-Florida residents and international students are welcome to apply.",
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": true,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "Must be admitted to UF and the Honors Program; the Early Action route is the one the application page describes. Transfer students are not eligible; students who earn a high school diploma and an A.A. or 60 college credits concurrently and are admitted as freshmen are eligible. The selection committee reviews only the Preeminent Scholar application materials, not the UF Common Application. Summer enrichment experiences are mandatory."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-coa",
+              "category": "cost_of_attendance",
+              "instrument": "scholarship",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Up to four years",
+              "exclusions": null,
+              "scope_text": "'Funding valued up to the full cost of attendance for up to four years' (school's words); an upper bound, not a promise of the full charge",
+              "advertised_coverage_label": "valued up to the full cost of attendance",
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-experiential",
+              "category": "enrichment",
+              "instrument": "restricted_fund",
+              "coverage": "fixed_amount",
+              "amount": {
+                "qualifier": "exact",
+                "value": 10000,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "Experiential funding (conferences, research expenses, support during unpaid internships, study abroad)",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-summer",
+              "category": "enrichment",
+              "instrument": "restricted_fund",
+              "coverage": "fixed_amount",
+              "amount": {
+                "qualifier": "exact",
+                "value": 18000,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "Four fully funded summer enrichment experiences 'valued at $18,000'; shared with Lombardi Scholars. The summer experiences are mandatory",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-stipend",
+              "category": "stipend",
+              "instrument": "cash_stipend",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "The overview page mentions a semesterly cash stipend; no amount is given",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "partial_or_fixed"
+        }
+      ],
+      "application": {
+        "separate_application": "required",
+        "milestones": [
+          {
+            "kind": "application_open",
+            "requirement": "recommended",
+            "date": "2026-01-01",
+            "recurring": null,
+            "precision": "month",
+            "source_date_text": "Link emailed one week after admissions decisions are released in January 2026"
+          },
+          {
+            "kind": "finalist_event",
+            "requirement": "required",
+            "date": "2026-03-06",
+            "recurring": null,
+            "precision": "day",
+            "source_date_text": "Preeminent Scholars Weekend, March 6 - 7, 2026; interviews Saturday, March 7, 2026"
+          }
+        ],
+        "admission_plan_requirement": "Admitted to UF and the Honors Program via Early Action",
+        "prerequisites": [],
+        "interview_mode": "in_person",
+        "finalist_event_required": true,
+        "notes": "Summer enrichment experiences are mandatory (the Class of 2030 schedule starts July 27 - August 3, 2026). Both pages carry the prior cycle's dates (January and March 2026); UF has not posted dates for the next entering class on these pages. High school nomination and letters of recommendation are no longer required."
+      },
+      "renewal_rules": null,
+      "stacking_rules": null,
+      "award_counts": [
+        {
+          "metric": "new_recipients",
+          "qualifier": "exact",
+          "value": 10,
+          "cohort_year": null,
+          "source_ref": "s-ov",
+          "claim": "target",
+          "denominator": null
+        }
+      ],
+      "sources": [
+        {
+          "source_id": "s-app",
+          "url": "https://www.honors.ufl.edu/admissions/stamps-scholars-program/application-information/",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-faq",
+          "url": "https://www.honors.ufl.edu/admissions/stamps-scholars-program/scholarship-faq/",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-ov",
+          "url": "https://www.honors.ufl.edu/admissions/stamps-scholars-program/overview/",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-app",
+          "locator": "Application Information page, final paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-faq",
+          "locator": "Scholarship FAQ, 'What is the difference between the Lombardi Scholarship and the Stamps Scholarship?'",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-faq",
+          "locator": "Scholarship FAQ, same answer",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/2/amount",
+          "source_ref": "s-faq",
+          "locator": "Scholarship FAQ, 'What other benefits come with...' area",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-app",
+          "locator": "Application Information page, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/0",
+          "source_ref": "s-app",
+          "locator": "Application Information page, second paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/1",
+          "source_ref": "s-faq",
+          "locator": "Scholarship FAQ, 'How do I apply?'",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/interview_mode",
+          "source_ref": "s-app",
+          "locator": "Application Information page, final paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/finalist_event_required",
+          "source_ref": "s-faq",
+          "locator": "Scholarship FAQ, 'How do I apply?'",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "award_counts/0",
+          "source_ref": "s-ov",
+          "locator": "Overview page, 'A Personalized Honors Experience'",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-ov",
+          "locator": "Overview page: 'Class of 2030 Scholars are expected to participate...'; the application page gives January and March 2026 dates; no entering class is named",
           "value_status": "not_published"
         }
       ]
@@ -19669,6 +21594,293 @@
           "source_ref": "s-pol",
           "locator": "Policies, Excess of Funds",
           "value_status": "reported"
+        }
+      ]
+    },
+    {
+      "program_id": "uh-manoa-regents-scholarship",
+      "school_id": "university-of-hawaii-at-manoa",
+      "ipeds_id": "141574",
+      "participating_school_ids": [
+        "university-of-hawaii-at-manoa"
+      ],
+      "official_name": "Regents Scholarship",
+      "aliases": [
+        "Regents and Presidential Scholars (RAPS)",
+        "UH Regents Scholarship"
+      ],
+      "program_family": "other",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [
+        "Manoa"
+      ],
+      "related_programs": [],
+      "version_id": "regents-undated",
+      "entry_year": null,
+      "entry_year_label": "The Manoa pages name no entering class",
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": null,
+      "verification_status": "verified",
+      "cycle_basis": "none",
+      "cycle_through_date": null,
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b6",
+      "owner_spot_checked": true,
+      "program_status_for_entry": null,
+      "coverages": [
+        "other"
+      ],
+      "selection_modes": [
+        "unknown"
+      ],
+      "residencies": [
+        "in_state"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "unknown",
+      "deadline_months": [],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": "Regents Scholarship (incoming first-year students)",
+          "residency": "in_state",
+          "selection_mode": "unknown",
+          "consideration_route": "honors_application",
+          "aid_basis": "unclear",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "unknown",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": true,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "Hawaii residents; incoming first-year students. The student must apply and be accepted to the Honors Program to receive the scholarship. Scholars also complete 10 hours of service each fall or spring semester. The Manoa pages state no GPA minimum, citizenship rule or test rule."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "tuition_waiver",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Four years of undergraduate study",
+              "exclusions": null,
+              "scope_text": "School words: 'full tuition waivers'; the Manoa pages give no cap or exclusions",
+              "advertised_coverage_label": "full tuition waivers",
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-stipend",
+              "category": "stipend",
+              "instrument": "cash_stipend",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Each fall and spring semester",
+              "exclusions": null,
+              "scope_text": "The Manoa pages say a stipend is paid each fall and spring semester and give no amount",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-travel",
+              "category": "enrichment",
+              "instrument": "unknown",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "One time",
+              "exclusions": null,
+              "scope_text": "The Manoa pages list a one-time travel grant and give no amount",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "other"
+        }
+      ],
+      "application": {
+        "separate_application": "unknown",
+        "milestones": [
+          {
+            "kind": "other",
+            "requirement": "priority",
+            "date": null,
+            "recurring": {
+              "month": 5,
+              "day": 1
+            },
+            "precision": "day",
+            "source_date_text": "May 1: Students accepted by this date (including Honors interview) have priority registration"
+          },
+          {
+            "kind": "other",
+            "requirement": "recommended",
+            "date": null,
+            "recurring": {
+              "month": 6,
+              "day": 15
+            },
+            "precision": "day",
+            "source_date_text": "June 15: Students accepted by this date can join the Honors program in the fall"
+          }
+        ],
+        "admission_plan_requirement": null,
+        "prerequisites": [],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "These two dates are the Honors Program's acceptance dates, not a published scholarship deadline: the Honors page says it accepts applications year-round and that an Honors interview is part of every date. The scholarship's own application and its deadline are described on pages of the UH System Office (www.hawaii.edu), which is not an allowed source domain for this school, so they are not recorded."
+      },
+      "renewal_rules": null,
+      "stacking_rules": null,
+      "award_counts": [],
+      "sources": [
+        {
+          "source_id": "s-apply",
+          "url": "https://manoa.hawaii.edu/undergrad/honors/apply-as-a-first-year-2/",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-raps",
+          "url": "https://manoa.hawaii.edu/undergrad/honors/regents-and-presidential-scholars-2/",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-raps",
+          "locator": "Regents and Presidential Scholars page, Regents Scholarship list, third bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-raps",
+          "locator": "Regents and Presidential Scholars page, Regents Scholarship list, third bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-raps",
+          "locator": "Regents page lists no tuition dollar amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/1",
+          "source_ref": "s-raps",
+          "locator": "Regents and Presidential Scholars page, Regents Scholarship list, third bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-raps",
+          "locator": "Regents page lists no stipend amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/2",
+          "source_ref": "s-raps",
+          "locator": "Regents and Presidential Scholars page, Regents Scholarship list, fourth bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/2/amount",
+          "source_ref": "s-raps",
+          "locator": "Regents page lists no travel grant amount",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/eligibility/honors_requirement",
+          "source_ref": "s-raps",
+          "locator": "Regents and Presidential Scholars page, Regents Scholarship list, third bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/residency",
+          "source_ref": "s-raps",
+          "locator": "Regents and Presidential Scholars page, Regents Scholarship list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/0",
+          "source_ref": "s-apply",
+          "locator": "Apply to Honors, first-year deadlines paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/1",
+          "source_ref": "s-apply",
+          "locator": "Apply to Honors, first-year deadlines paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/interview_mode",
+          "source_ref": "s-apply",
+          "locator": "Apply to Honors, scheduling paragraph: an interview is required, no format is named",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-raps",
+          "locator": "Regents and Presidential Scholars page: no entering class named",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "renewal_rules",
+          "source_ref": "s-raps",
+          "locator": "Regents and Presidential Scholars page: no renewal GPA or credit rule on the Manoa pages",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "stacking_rules",
+          "source_ref": "s-raps",
+          "locator": "Regents and Presidential Scholars page: no rule on other aid",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "award_counts",
+          "source_ref": "s-raps",
+          "locator": "Regents and Presidential Scholars page: no award count",
+          "value_status": "not_published"
         }
       ]
     },
@@ -27787,6 +29999,305 @@
           "source_ref": "s-sch",
           "locator": "Scholarships page: the National Merit paragraph names no entering class",
           "value_status": "not_published"
+        }
+      ]
+    },
+    {
+      "program_id": "usc-trustee-scholarship",
+      "school_id": "usc",
+      "ipeds_id": "123961",
+      "participating_school_ids": [
+        "usc"
+      ],
+      "official_name": "Trustee Scholarship",
+      "aliases": [
+        "USC Trustee Scholarship",
+        "Trustee Scholar"
+      ],
+      "program_family": "other",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [
+        {
+          "program_id": "national-merit-scholarship",
+          "relation": "mutually_exclusive_with"
+        }
+      ],
+      "version_id": "trustee-undated",
+      "entry_year": null,
+      "entry_year_label": "Award guide is labeled First-Year Students 2026-2027 and may be the prior cycle's terms; no entering class is named for Trustee",
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": null,
+      "verification_status": "verified",
+      "cycle_basis": "none",
+      "cycle_through_date": null,
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b6",
+      "owner_spot_checked": true,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "other"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "any"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "unknown",
+      "deadline_months": [
+        11,
+        12
+      ],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "any",
+          "selection_mode": "competitive",
+          "consideration_route": "admission_application",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "unknown",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "First-year admission merit scholarship. The pages do not state a GPA, test or citizenship rule for Trustee, or how many are awarded. The Admission Merit Scholarships are awarded 'based on academic excellence, leadership, service and talent'."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Eight semesters (ten in the five-year Bachelor of Architecture program)",
+              "exclusions": null,
+              "scope_text": "Per a USC Dornsife FAQ question: 'my USC tuition is already covered in full by my Trustee Scholarship'. The guide says Trustee value is based on flat-rate tuition (12-18 units per semester). The award is reduced if state tuition grants such as the Cal Grant would push total aid past tuition and mandatory fees.",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "other"
+        }
+      ],
+      "application": {
+        "separate_application": "unknown",
+        "milestones": [
+          {
+            "kind": "admission_deadline",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 11,
+              "day": 1
+            },
+            "precision": "day",
+            "source_date_text": "Early Decision (most majors) — November 1; Early Action (most majors) — November 1"
+          },
+          {
+            "kind": "admission_deadline",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 12,
+              "day": 1
+            },
+            "precision": "day",
+            "source_date_text": "Regular Decision (performing arts majors) — December 1"
+          }
+        ],
+        "admission_plan_requirement": "Early Decision or Early Action by November 1 (most majors), or Regular Decision by December 1 (performing arts majors), to be considered for USC Merit Scholarships",
+        "prerequisites": [],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "The dates carry no year on the first-year dates page. The same page lists Regular Decision for most majors by January 10 but does not say those applicants are considered for merit scholarships. The guide says the merit scholarship 'will be applied automatically as long as your enrollment commitment deposit is received by May 1'; that is about accepting an award already offered, not a promise of selection. The Dornsife FAQ question is the only place found where Trustee is described as covering tuition in full, and it is the premise of a student question, so coverage is recorded as unknown. The guide section is labeled 2026-2027 and may carry the prior cycle's terms; the dates page is for the cycle with a January 10, 2027 deadline."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": null,
+          "gpa_scale": null,
+          "credit_load_min_per_term": null,
+          "credit_load_min_per_year": 30,
+          "evaluation_timing": null,
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": null,
+          "notes": "Renewable for each subsequent year, up to six additional semesters (eight for the five-year Bachelor of Architecture program), if the student keeps USC academic standing, completes at least 30 units a year and meets conduct standards. Full-time enrollment is required each semester. Shortfall: scholarship probation for a maximum of two semesters (16 units per semester)."
+        }
+      ],
+      "stacking_rules": [
+        {
+          "other_aid_type": "institutional_merit",
+          "relation": "not_allowed",
+          "note": "Admission Merit Scholarships are mutually exclusive; the student receives only the one with the greatest value."
+        },
+        {
+          "other_aid_type": "outside_scholarship",
+          "relation": "counts_within_package",
+          "note": "Tuition-restricted awards from other non-need sources may be combined if the total does not exceed USC tuition by more than $8,000."
+        },
+        {
+          "other_aid_type": "institutional_need",
+          "relation": "counts_within_package",
+          "note": "The guide says merit scholarships may reduce need-based aid depending on source and need; combined scholarships and need-based aid cannot exceed USC-determined need."
+        }
+      ],
+      "award_counts": [],
+      "sources": [
+        {
+          "source_id": "s-dates",
+          "url": "https://admission.usc.edu/prospective-students/how-to-apply/first-year-students/",
+          "authority": "official_admissions",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-faq",
+          "url": "https://dornsife.usc.edu/css/faq/",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-guide",
+          "url": "https://admission.usc.edu/scholarship-guide/",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-sch",
+          "url": "https://admission.usc.edu/cost-and-financial-aid/scholarships/",
+          "authority": "official_admissions",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-sch",
+          "locator": "Scholarships page, USC Merit Scholarships, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-dates",
+          "locator": "First-Year Dates and Deadlines, Early Decision and Early Action",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/aid_basis",
+          "source_ref": "s-sch",
+          "locator": "Scholarships page, General Information",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-faq",
+          "locator": "FAQ, Application Components section, Trustee Scholar question",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-guide",
+          "locator": "Scholarship guide, USC Undergraduate Admission Merit Scholarships: values stated relative to tuition, no dollar amount for Trustee",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/0/scope_text",
+          "source_ref": "s-guide",
+          "locator": "Scholarship guide, First-Year Students 2026-2027, merit scholarships paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-sch",
+          "locator": "Scholarships page, General Information: states that no need-based application is needed; does not say whether any other form is needed",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "application/milestones/0",
+          "source_ref": "s-dates",
+          "locator": "First-Year Dates and Deadlines, Early Decision (most majors)",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/1",
+          "source_ref": "s-dates",
+          "locator": "First-Year Dates and Deadlines, Regular Decision (performing arts majors)",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-guide",
+          "locator": "Scholarship guide, Renewing Your USC Undergraduate Admission Merit Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/0",
+          "source_ref": "s-guide",
+          "locator": "Scholarship guide, USC Undergraduate Admission Merit Scholarships",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/1",
+          "source_ref": "s-guide",
+          "locator": "Scholarship guide, Coordinating with Funds from Other Non-Need-Based Sources",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/2",
+          "source_ref": "s-guide",
+          "locator": "Scholarship guide, Coordinating with Need-Based Financial Aid",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "award_counts",
+          "source_ref": "s-guide",
+          "locator": "Scholarship guide and scholarships page: no Trustee award count",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-guide",
+          "locator": "Scholarship guide: the 2026-2027 award guide names no entering class for Trustee, and the dates pages show 2026 and 2027 dates",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "/related_programs/0",
+          "source_ref": "s-guide",
+          "locator": "Scholarship guide, USC Undergraduate Admission Merit Scholarships",
+          "value_status": "reported"
         }
       ]
     },
