@@ -57,7 +57,9 @@ permissions:
 jobs:
   monitor:
     name: Check scholarship sources
-    runs-on: ubuntu-latest
+    # Pinned: Playwright 1.60.0 cannot install Chromium on ubuntu 26.04, which
+    # ubuntu-latest now resolves to. Revisit when Playwright supports it.
+    runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
