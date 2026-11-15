@@ -1,0 +1,128 @@
+schema_version: 1
+program_id: stamps-scholars
+school_id: uga
+ipeds_id: '139959'
+applicable_campuses: []
+official_name: Stamps Scholars at the University of Georgia
+aliases:
+- UGA Stamps Scholars
+program_family: stamps
+awarding_authority: cofunded
+related_programs:
+- program_id: foundation-fellowship
+  relation: component_of
+status: active
+versions:
+- version_id: stamps-scholars-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Entering class not named; the Foundation Fellowship deadline is a recurring November 1
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: verified
+  last_reviewed_at: '2026-11-14'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-canary-B
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: nomination
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: true
+      first_generation_rule: unknown
+      eligibility_notes: 'Selected within the Foundation Fellowship process: six first-year Fellows are nominated to interview for the Stamps Scholarship each year, and three second-year Honors students
+        are chosen as "walk-on" Stamps Scholars through the Mid-Term Foundation Fellowship process.'
+    benefits: null
+  application:
+    separate_application: no_form_other_steps_required
+    milestones:
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: November 1 (Foundation Fellowship application)
+    admission_plan_requirement: Selected from that year's Foundation Fellows, via the Foundation Fellowship application (due November 1); six Fellows are nominated to interview
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: The Stamps designation sits inside the Foundation Fellowship; see that record for benefits and the application. Each February, finalists are interviewed by UGA administrators, faculty, alumni,
+      and trustees.
+  renewal_rules: null
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-stamps
+    url: https://honors.uga.edu/scholarships/prospective-students/foundation-fellowship/stamps-scholars/
+    authority: official_program
+    retrieved_at: '2026-11-14'
+    content_sha256: 3af3fbae463bf9b40e97faf7c9671f14b0d4f82a9c8a6a2d40e4bbabdd29b202
+    archive_url: null
+  - source_id: s-apply
+    url: https://honors.uga.edu/scholarships/prospective-students/foundation-fellowship/applying-for-the-foundation-fellowship/
+    authority: official_program
+    retrieved_at: '2026-11-14'
+    content_sha256: 4ded337391468d393ccb92f4c48eb92bc6cb2373b85375ce534736de62bedad2
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-stamps
+    locator: Stamps Scholars page; no entering class named
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: /awarding_authority
+    source_ref: s-stamps
+    locator: Stamps Scholars page, "About the Stamps Scholars Program"
+    short_excerpt: The Stamps Scholars Program and partner schools, such as the University of Georgia, share the costs of the awards.
+    value_status: reported
+    reported_value: cofunded
+  - field_path: offers/0/selection_mode
+    source_ref: s-stamps
+    locator: Stamps Scholars page, "Selection"
+    short_excerpt: From each year’s class of Foundation Fellows, six students are nominated to interview for the Stamps Scholarship each year.
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/benefits
+    source_ref: s-stamps
+    locator: Stamps Scholars page, "Benefits"
+    short_excerpt: Read more about the benefits that Stamps Scholars receive as Foundation Fellows at the University of Georgia.
+    value_status: not_published
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-stamps
+    locator: Stamps Scholars page, "Selection"
+    short_excerpt: UGA Stamps Scholars are part of the Foundation Fellowship and are selected through the Foundation Fellowship application process.
+    value_status: reported
+    reported_value: no_form_other_steps_required
+  - field_path: application/milestones/0
+    source_ref: s-apply
+    locator: 'Applying page, "Deadline: November 1"'
+    short_excerpt: The deadline to submit the Foundation Fellowship application is November 1.
+    value_status: reported
+    reported_value: November 1
+  - field_path: /related_programs/0
+    source_ref: s-stamps
+    locator: Stamps Scholars page, "Selection"
+    short_excerpt: null
+    value_status: reported
+    reported_value: foundation-fellowship component_of

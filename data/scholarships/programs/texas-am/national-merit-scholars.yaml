@@ -1,0 +1,511 @@
+schema_version: 1
+program_id: national-merit-scholars
+school_id: texas-am
+ipeds_id: '228723'
+applicable_campuses:
+- College Station
+official_name: National Merit Scholars (Texas A&M National Scholars)
+aliases:
+- National Scholars
+program_family: national_merit
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: national-merit-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Page names no entering class (describes 'College Station fall freshman admits')
+  entry_terms:
+  - fall
+  source_cohort_text: Page does not name a year or a cohort
+  verification_status: verified
+  last_reviewed_at: '2026-11-14'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-canary-A
+  owner_spot_checked: false
+  program_status_for_entry: null
+  offers:
+  - offer_id: o-semifinalist
+    parent_offer_id: null
+    variant_name: National Merit Semifinalist
+    residency: unknown
+    selection_mode: automatic_guaranteed
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - semifinalist
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: For College Station fall freshman admits. Students with multiple designations
+        receive only the offer that leads to the highest-valued package.
+    benefits:
+    - benefit_id: b-pes
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 3000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: 4 years
+      exclusions: null
+      scope_text: President's Endowed Scholarship; the page's table also shows a total of $12,000
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-abroad
+      category: study_abroad
+      instrument: cash_stipend
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 1000
+        min: null
+        max: null
+        period: one_time
+      duration_terms: 1 year
+      exclusions: null
+      scope_text: Study Abroad Stipend
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: exact
+        value: 12000
+        min: null
+        max: null
+        period: total_program
+      scope_text: Total Amount column for the President's Endowed Scholarship line (4 years)
+  - offer_id: o-finalist
+    parent_offer_id: null
+    variant_name: National Merit Finalist
+    residency: unknown
+    selection_mode: automatic_guaranteed
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - finalist
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: The page states no first-choice condition for the President's Endowed Scholarship,
+        the Sponsorship or the stipend; the first-choice condition applies only to the National Merit
+        Recognition Scholarship (see child offer). Students with multiple designations receive only the
+        offer that leads to the highest-valued package.
+    benefits:
+    - benefit_id: b-pes
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 3000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: 4 years
+      exclusions: null
+      scope_text: President's Endowed Scholarship; the page's table also shows a total of $12,000
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-sponsor
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 500
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: 4 years
+      exclusions: null
+      scope_text: Listed as 'National Merit Sponsorship'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-abroad
+      category: study_abroad
+      instrument: cash_stipend
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 1000
+        min: null
+        max: null
+        period: one_time
+      duration_terms: 1 year
+      exclusions: null
+      scope_text: Study Abroad Stipend
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: exact
+        value: 12000
+        min: null
+        max: null
+        period: total_program
+      scope_text: Total Amount column for the President's Endowed Scholarship line (4 years)
+    - amount:
+        qualifier: exact
+        value: 2000
+        min: null
+        max: null
+        period: total_program
+      scope_text: Total Amount column for the National Merit Sponsorship line (4 years)
+  - offer_id: o-finalist-nmrs
+    parent_offer_id: o-finalist
+    variant_name: National Merit Recognition Scholarship (first choice required)
+    residency: unknown
+    selection_mode: automatic_guaranteed
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - finalist
+      status_required_for_award: null
+      first_choice_required: true
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Finalists must name Texas A&M first choice in the National Merit Scholarship
+        portal to receive this scholarship. Students with multiple designations receive only the offer
+        that leads to the highest-valued package.
+    benefits:
+    - benefit_id: b-nmrs
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 7000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: 4 years
+      exclusions: null
+      scope_text: National Merit Recognition Scholarship
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: exact
+        value: 28000
+        min: null
+        max: null
+        period: total_program
+      scope_text: Total Amount column for the National Merit Recognition Scholarship line (4 years)
+  - offer_id: o-finalist-fifth-year
+    parent_offer_id: o-finalist-nmrs
+    variant_name: Finalist fifth-year supplement (conditional)
+    residency: unknown
+    selection_mode: unknown
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - finalist
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Not part of the guaranteed offers; the page says eligible Finalists 'may be eligible'.
+    benefits:
+    - benefit_id: b-fifth-year
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 3000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: One fifth year of undergraduate study
+      exclusions: null
+      scope_text: 5th Year National Merit Recognition Supplemental Scholarship, paid $1,500 per semester
+      advertised_coverage_label: null
+      conditions_text: Only for Finalists who attend Texas A&M for more than 4 calendar years and have
+        used all payments of their National Merit Recognition Scholarship; the page says they 'may be
+        eligible'.
+    advertised_totals: []
+  - offer_id: o-nonres-waiver
+    parent_offer_id: null
+    variant_name: Competitive Scholarship non-resident tuition waiver
+    residency: out_of_state
+    selection_mode: unknown
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: State waiver for non-Texas residents who hold competitive scholarships of at
+        least $4,000 per academic year (no single one under $1,000). The National Scholars page says the
+        President's Endowed and National Merit Recognition scholarships count toward that minimum; it
+        does not say whether the Semifinalist package alone reaches it. Granted at the university's discretion
+        within the state's cap. Lawfully-present documentation is required (rule effective Spring 2026);
+        male students must file a Selective Service statement before the waiver posts; receipt of the
+        waiver may result in adjustments to other financial aid offers; there is no minimum GPA to keep
+        it while the student makes satisfactory academic progress and keeps the qualifying scholarships.
+    benefits:
+    - benefit_id: b-waiver
+      category: nonresident_differential
+      instrument: tuition_waiver
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: A waiver of the non-resident rate; not a scholarship and not tuition coverage
+      advertised_coverage_label: null
+      conditions_text: Needs competitive scholarships of at least $4,000 per academic year, awarded and
+        maintained; at the discretion of the University and within the state's limit on waivers.
+    advertised_totals: []
+  application: null
+  renewal_rules: null
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: allowed
+    note: Admitted National Merit scholars also compete for other freshman scholarships offered in early
+      February of senior year; those can be added to the guaranteed ones.
+  award_counts: []
+  sources:
+  - source_id: s-ns
+    url: https://aggie.tamu.edu/paying-for-college/apply-for-scholarships/national-scholars.html
+    authority: official_aid_policy
+    retrieved_at: '2026-11-14'
+    content_sha256: 5e35d0849f9748f8317bd79c5c62cb20c0c84d323f7635a35cd9f64027155b68
+    archive_url: null
+  - source_id: s-waiver
+    url: https://aggie.tamu.edu/paying-for-college/apply-for-financial-aid/competitive-scholarship-non-resident-tuition-waiver.html
+    authority: official_aid_policy
+    retrieved_at: '2026-11-14'
+    content_sha256: 26de63468537057e6142b636c5ade35e238341a079d50352ed1563a5af0e4ce4
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-ns
+    locator: National Scholars page, National Merit Scholars section, table heading
+    short_excerpt: 'National Merit Semifinalists Guaranteed Offers:'
+    value_status: reported
+    reported_value: automatic_guaranteed
+  - field_path: offers/0/eligibility/national_merit_statuses
+    source_ref: s-ns
+    locator: National Scholars page, National Merit Scholars section, table heading
+    short_excerpt: 'National Merit Semifinalists Guaranteed Offers:'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/selection_mode
+    source_ref: s-ns
+    locator: National Scholars page, National Merit Scholars section, table heading
+    short_excerpt: 'National Merit Finalists Guaranteed Offers:'
+    value_status: reported
+    reported_value: automatic_guaranteed
+  - field_path: offers/1/eligibility/national_merit_statuses
+    source_ref: s-ns
+    locator: National Scholars page, National Merit Scholars section, table heading
+    short_excerpt: 'National Merit Finalists Guaranteed Offers:'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/selection_mode
+    source_ref: s-ns
+    locator: National Scholars page, National Merit Scholars section, table heading
+    short_excerpt: 'National Merit Finalists Guaranteed Offers:'
+    value_status: reported
+    reported_value: automatic_guaranteed
+  - field_path: offers/2/eligibility/national_merit_statuses
+    source_ref: s-ns
+    locator: National Scholars page, National Merit Scholars section, table heading
+    short_excerpt: 'National Merit Finalists Guaranteed Offers:'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-ns
+    locator: National Scholars page, National Merit Scholars section, Semifinalists table, President's
+      Endowed Scholarship row
+    short_excerpt: President's Endowed Scholarship $3,000 4 $12,000
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-ns
+    locator: National Scholars page, National Merit Scholars section, Semifinalists table, Study Abroad
+      Stipend row
+    short_excerpt: Study Abroad Stipend $1,000 1 $1,000
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/advertised_totals/0/amount
+    source_ref: s-ns
+    locator: National Scholars page, National Merit Scholars section, Semifinalists table, President's
+      Endowed Scholarship row
+    short_excerpt: President's Endowed Scholarship $3,000 4 $12,000
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/0/amount
+    source_ref: s-ns
+    locator: National Scholars page, National Merit Scholars section, Finalists table, President's Endowed
+      Scholarship row
+    short_excerpt: President's Endowed Scholarship $3,000 4 $12,000
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/1/amount
+    source_ref: s-ns
+    locator: National Scholars page, National Merit Scholars section, Finalists table, National Merit
+      Sponsorship row
+    short_excerpt: National Merit Sponsorship $500 4 $2,000
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/2/amount
+    source_ref: s-ns
+    locator: National Scholars page, National Merit Scholars section, Finalists table, Study Abroad Stipend
+      row
+    short_excerpt: Study Abroad Stipend $1,000 1 $1,000
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/advertised_totals/0/amount
+    source_ref: s-ns
+    locator: National Scholars page, National Merit Scholars section, Finalists table, President's Endowed
+      Scholarship row
+    short_excerpt: President's Endowed Scholarship $3,000 4 $12,000
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/advertised_totals/1/amount
+    source_ref: s-ns
+    locator: National Scholars page, National Merit Scholars section, Finalists table, National Merit
+      Sponsorship row
+    short_excerpt: National Merit Sponsorship $500 4 $2,000
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/benefits/0/amount
+    source_ref: s-ns
+    locator: National Scholars page, National Merit Scholars section, Finalists table, National Merit
+      Recognition Scholarship row
+    short_excerpt: National Merit Recognition Scholarship $7,000 4 $28,000
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/advertised_totals/0/amount
+    source_ref: s-ns
+    locator: National Scholars page, National Merit Scholars section, Finalists table, National Merit
+      Recognition Scholarship row
+    short_excerpt: National Merit Recognition Scholarship $7,000 4 $28,000
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/eligibility/first_choice_required
+    source_ref: s-ns
+    locator: National Scholars page, National Merit Scholars section, sentence under the Finalists table
+    short_excerpt: must name Texas A&M University as their first choice institution in the National Merit
+      Scholarship portal
+    value_status: reported
+    reported_value: null
+  - field_path: offers/3/eligibility/national_merit_statuses
+    source_ref: s-ns
+    locator: National Scholars page, National Merit Scholars section, 5th Year National Merit Recognition
+      table and note
+    short_excerpt: National Merit Finalists who attend Texas A&M for more than 4 calendar years
+    value_status: reported
+    reported_value: null
+  - field_path: offers/3/benefits/0
+    source_ref: s-ns
+    locator: National Scholars page, National Merit Scholars section, 5th year note
+    short_excerpt: may be eligible to receive this funding ($1,500 per semester) during a 5th year of
+      undergraduate study
+    value_status: reported
+    reported_value: null
+  - field_path: offers/3/benefits/0/amount
+    source_ref: s-ns
+    locator: National Scholars page, National Merit Scholars section, 5th year table
+    short_excerpt: 5th Year National Merit Recognition Scholarship Supplemental Scholarship $3,000 1 $3,000
+    value_status: reported
+    reported_value: null
+  - field_path: offers/3/benefits/0/conditions_text
+    source_ref: s-ns
+    locator: National Scholars page, National Merit Scholars section, 5th year note
+    short_excerpt: who attend Texas A&M for more than 4 calendar years and have utilized all payments
+      of their National Merit Recognition Scholarship may be eligible
+    value_status: reported
+    reported_value: null
+  - field_path: offers/4/selection_mode
+    source_ref: s-waiver
+    locator: Competitive Scholarship Non-Resident Tuition Waiver page, paragraph beginning 'Students may
+      receive this waiver'
+    short_excerpt: Students may receive this waiver at the discretion of the University
+    value_status: reported
+    reported_value: unknown
+  - field_path: offers/4/benefits/0
+    source_ref: s-waiver
+    locator: Competitive Scholarship Non-Resident Tuition Waiver page, paragraph 'Undergraduate students
+      must be awarded...'
+    short_excerpt: Undergraduate students must be awarded and maintain competitive scholarships of at
+      least $4,000 per academic year in order to qualify for this waiver.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/4/benefits/0/amount
+    source_ref: s-waiver
+    locator: 'Waiver page: no dollar value of the waiver published'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/4/benefits/0/conditions_text
+    source_ref: s-waiver
+    locator: Competitive Scholarship Non-Resident Tuition Waiver page, paragraph 'Undergraduate students
+      must be awarded...'
+    short_excerpt: Undergraduate students must be awarded and maintain competitive scholarships of at
+      least $4,000 per academic year
+    value_status: reported
+    reported_value: null

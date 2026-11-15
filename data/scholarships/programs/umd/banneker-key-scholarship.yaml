@@ -1,0 +1,492 @@
+schema_version: 1
+program_id: banneker-key-scholarship
+school_id: umd
+ipeds_id: '163286'
+applicable_campuses:
+- College Park
+official_name: Banneker/Key Scholarship
+aliases:
+- Banneker/Key Scholars
+program_family: honors
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: banneker-key-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Pages give 2026-2027 estimates and 'as of Fall 2026' amounts but name no entering
+    class
+  entry_terms:
+  - unspecified
+  source_cohort_text: Policy page estimates are labeled 2026-2027; honors page says '(as of Fall 2026)'
+  verification_status: conflicting
+  last_reviewed_at: '2026-11-14'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-canary-A
+  owner_spot_checked: false
+  program_status_for_entry: null
+  offers:
+  - offer_id: o-full
+    parent_offer_id: null
+    variant_name: Full Banneker/Key
+    residency: any
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Selected by the Banneker/Key committee from freshmen who meet the Nov. 1 early
+        action deadline and are invited to the Honors College; semifinalists interview. The policy page
+        estimates 2026-2027 tuition at $11,014 (resident) and $42,266 (non-resident) and standard mandatory
+        fees at $1,820; the award is capped at the cost components listed.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Up to eight consecutive semesters
+      exclusions: null
+      scope_text: Full tuition
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions:
+      - Miscellaneous fees (vehicle registration, parking, study abroad, health insurance, lab fees)
+      - Required departmental fees
+      scope_text: Tuition-associated mandatory fees
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Capped at the on-campus Traditional Double with AC rate; more expensive options are
+        paid by the student; the housing amount is lower for students living with family ($1,620 in the
+        policy page's with-parent table)
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-food
+      category: meals
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Capped at the Base Plus meal plan; the amount depends on where the student lives
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-books
+      category: books
+      instrument: cash_stipend
+      coverage: fixed_amount
+      amount:
+        qualifier: approximate
+        value: 1250
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: null
+      exclusions: null
+      scope_text: Book allowance, 2026-2027 estimate on the policy page
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: approximate
+        value: 31554
+        min: null
+        max: null
+        period: academic_year
+      scope_text: 'Policy page 2026-2027 estimate, Full Banneker/Key, resident, living on or off campus:
+        ''Total Cost of Attendance'' row'
+    - amount:
+        qualifier: approximate
+        value: 62806
+        min: null
+        max: null
+        period: academic_year
+      scope_text: 'Policy page 2026-2027 estimate, Full Banneker/Key, non-resident, living on or off campus:
+        ''Total Cost of Attendance'' row'
+    - amount:
+        qualifier: approximate
+        value: 18494
+        min: null
+        max: null
+        period: academic_year
+      scope_text: 'Policy page 2026-2027 estimate, Full Banneker/Key, resident, living with parent: ''Total
+        Cost of Attendance'' row'
+    - amount:
+        qualifier: approximate
+        value: 49746
+        min: null
+        max: null
+        period: academic_year
+      scope_text: 'Policy page 2026-2027 estimate, Full Banneker/Key, non-resident, living with parent:
+        ''Total Cost of Attendance'' row'
+  - offer_id: o-partial-in-state
+    parent_offer_id: null
+    variant_name: Partial Banneker/Key (Maryland resident)
+    residency: in_state
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Selection process is the same as for the full award; the campus makes no distinction
+        between full and partial scholars.
+    benefits:
+    - benefit_id: b-award
+      category: tuition
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 8000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: Up to eight consecutive semesters
+      exclusions: null
+      scope_text: 'Honors page: ''towards tuition'' (as of Fall 2026); policy page: ''2026-2027 estimate'''
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-books
+      category: books
+      instrument: cash_stipend
+      coverage: fixed_amount
+      amount:
+        qualifier: approximate
+        value: 1250
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: null
+      exclusions: null
+      scope_text: Book allowance, 2026-2027 estimate on the policy page
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  - offer_id: o-partial-out-of-state
+    parent_offer_id: null
+    variant_name: Partial Banneker/Key (non-resident)
+    residency: out_of_state
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Selection process is the same as for the full award. The two UMD pages disagree
+        on the annual amount; see field_evidence.
+    benefits:
+    - benefit_id: b-award
+      category: tuition
+      instrument: scholarship
+      coverage: fixed_amount
+      amount: null
+      duration_terms: Up to eight consecutive semesters
+      exclusions: null
+      scope_text: 'Amount in conflict: the honors page says $20,000 towards tuition (as of Fall 2026);
+        the policy page''s 2026-2027 estimate says $12,000'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-books
+      category: books
+      instrument: cash_stipend
+      coverage: fixed_amount
+      amount:
+        qualifier: approximate
+        value: 1250
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: null
+      exclusions: null
+      scope_text: Book allowance, 2026-2027 estimate on the policy page
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: not_required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: early action deadline of November 1
+    admission_plan_requirement: Early action admission application by November 1 and an invitation to
+      the Honors College
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: Semifinalists are invited to interview as part of final selection; no date or format is given.
+      The page names no year for November 1.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.2
+    gpa_scale: null
+    credit_load_min_per_term: 12
+    credit_load_min_per_year: 30
+    evaluation_timing: OSFA reviews cumulative GPA at the conclusion of each fall and spring semester
+    summer_courses_can_fix_shortfall: true
+    max_semesters: 8
+    notes: Also 30 credits per academic year (no probationary term for the credit requirement). One probationary
+      semester for GPA below 3.20; the scholarship can be reinstated on request once GPA returns to 3.20.
+      Winter and summer courses can be used to make up GPA or credits but are not covered by the scholarship.
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: not_allowed
+    note: 'Only one of these five may be held: Banneker/Key, Frederick Douglass, Maryland Transfer, President''s
+      or Dean''s Scholarship. The policy page says they can be combined with other grants and scholarships.'
+  - other_aid_type: outside_scholarship
+    relation: allowed
+    note: Up to the cost of attendance; the scholarship can be reduced if total aid exceeds it. Full scholars
+      may be reduced by other merit funds.
+  award_counts:
+  - metric: new_recipients
+    qualifier: approximate
+    value: 125
+    cohort_year: null
+    source_ref: s-honors
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-honors
+    url: https://honors.umd.edu/scholarships-financial-aid/banneker-key-scholars/
+    authority: official_program
+    retrieved_at: '2026-11-14'
+    content_sha256: 3495a4d1faf3404f5e6da35c592a0b6ba192df8ff1ada7f6ac3e4f9cef0b36ac
+    archive_url: null
+  - source_id: s-policy
+    url: https://financialaid.umd.edu/resources-policies/bannekerkey-scholarship-policy
+    authority: official_aid_policy
+    retrieved_at: '2026-11-14'
+    content_sha256: 506f34efaca902a08ed33066f69c7372bfd5b26ec67ec8e3d4b4c95e9f4912a0
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-honors
+    locator: Honors page, Overview, second paragraph
+    short_excerpt: The Banneker/Key Scholarship Selection Committee members carefully review the entire
+      application of each Banneker/Key Scholarship nominee.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/selection_mode
+    source_ref: s-honors
+    locator: Honors page, Overview, second paragraph
+    short_excerpt: The Banneker/Key Scholarship Selection Committee members carefully review the entire
+      application of each Banneker/Key Scholarship nominee.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/selection_mode
+    source_ref: s-honors
+    locator: Honors page, Overview, second paragraph
+    short_excerpt: The Banneker/Key Scholarship Selection Committee members carefully review the entire
+      application of each Banneker/Key Scholarship nominee.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-honors
+    locator: Honors page, What is Banneker/Key, 1. Overview
+    short_excerpt: The full Banneker/Key provides full tuition, room, board, and a book allowance.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-policy
+    locator: 'Policy page, Award Amount: components are listed as estimates, no single annual amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-policy
+    locator: 'Policy page, Award Amount: no single annual amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-policy
+    locator: 'Policy page, Award Amount: no single annual amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-policy
+    locator: 'Policy page, Award Amount: no single annual amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-policy
+    locator: Policy page, Award Amount, estimated Full Banneker/Key table, Book Allowance row
+    short_excerpt: Book Allowance $1,250
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/advertised_totals/0/amount
+    source_ref: s-policy
+    locator: Policy page, Award Amount, estimated Full Banneker/Key tables, Total Cost of Attendance row
+    short_excerpt: Total Cost of Attendance $31,554 $62,806
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/advertised_totals/1/amount
+    source_ref: s-policy
+    locator: Policy page, Award Amount, estimated Full Banneker/Key tables, Total Cost of Attendance row
+    short_excerpt: Total Cost of Attendance $31,554 $62,806
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/advertised_totals/2/amount
+    source_ref: s-policy
+    locator: Policy page, Award Amount, estimated Full Banneker/Key tables, Total Cost of Attendance row
+    short_excerpt: Total Cost of Attendance $18,494 $49,746
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/advertised_totals/3/amount
+    source_ref: s-policy
+    locator: Policy page, Award Amount, estimated Full Banneker/Key tables, Total Cost of Attendance row
+    short_excerpt: Total Cost of Attendance $18,494 $49,746
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/0/amount
+    source_ref: s-honors
+    locator: Honors page, What is Banneker/Key, 1. Overview, second paragraph
+    short_excerpt: provides $8,000 for in-state students
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/1/amount
+    source_ref: s-policy
+    locator: Policy page, Award Amount, estimated Partial table, Book Allowance row
+    short_excerpt: Book Allowance $1,250 $1,250
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/benefits/0/amount
+    source_ref: s-honors
+    locator: Honors page, What is Banneker/Key, 1. Overview, second paragraph
+    short_excerpt: $20,000 towards tuition for out-of-state students annually (as of Fall 2026)
+    value_status: conflicting
+    reported_value: 20000
+  - field_path: offers/2/benefits/0/amount
+    source_ref: s-policy
+    locator: Policy page, Award Amount, estimated Partial Banneker/Key table, Banneker/Key Amount row
+    short_excerpt: Banneker/Key Amount $8,000 $12,000
+    value_status: conflicting
+    reported_value: 12000
+  - field_path: offers/2/benefits/1/amount
+    source_ref: s-policy
+    locator: Policy page, Award Amount, estimated Partial table, Book Allowance row
+    short_excerpt: Book Allowance $1,250 $1,250
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-honors
+    locator: Honors page, Overview, second paragraph
+    short_excerpt: No additional application materials are required.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-honors
+    locator: Honors page, Overview, second paragraph
+    short_excerpt: All freshman applicants to the University of Maryland who meet the early action deadline
+      of November 1
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-policy
+    locator: Policy page, Eligibility
+    short_excerpt: maintain a minimum 3.20 cumulative grade point average (GPA)
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-policy
+    locator: Policy page, Receipt of More Than One Award
+    short_excerpt: 'Students may receive only one of the following scholarships:'
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/1
+    source_ref: s-honors
+    locator: Honors page, 7. Rules for Accepting Multiple Scholarships
+    short_excerpt: Partial Banneker/Key Scholars are able to accept all outside scholarships up to the
+      University of Maryland’s Cost of Attendance.
+    value_status: reported
+    reported_value: null
+  - field_path: award_counts/0
+    source_ref: s-honors
+    locator: Honors page, Overview, second paragraph
+    short_excerpt: Each fall, we welcome about 125 new Banneker/Key Scholars to campus.
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-honors
+    locator: 'Honors page, What is Banneker/Key: amounts ''as of Fall 2026''; policy page amounts labeled
+      ''2026-2027''; no entering class named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null

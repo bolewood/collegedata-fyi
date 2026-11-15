@@ -1,0 +1,287 @@
+schema_version: 1
+program_id: national-merit-semifinalist-package
+school_id: university-of-tulsa
+ipeds_id: '207971'
+applicable_campuses: []
+official_name: National Merit Semifinalist Package
+aliases: []
+program_family: national_merit
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: nmsf-package-2027
+  supersedes: null
+  entry_year: 2027
+  entry_year_label: null
+  entry_terms:
+  - fall
+  source_cohort_text: National Merit Semifinalists Package recipients entering UTulsa in Fall 2027
+  verification_status: verified
+  last_reviewed_at: '2026-11-14'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-canary-A
+  owner_spot_checked: false
+  program_status_for_entry: null
+  offers:
+  - offer_id: o-nmsf
+    parent_offer_id: null
+    variant_name: National Merit Semifinalist Package
+    residency: unknown
+    selection_mode: competitive
+    consideration_route: multiple
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - semifinalist
+      status_required_for_award: null
+      first_choice_required: true
+      gpa:
+        min: 4.0
+        scale: 4.0
+        basis: weighted
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: 'Also required: an official in-person campus visit, an on-campus in-person National
+        Merit Semifinalist interview and two letters of recommendation (one academic, one non-academic),
+        each by Nov. 1. Schools that do not provide a weighted GPA are considered individually.'
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years, excluding summers; students may petition for a fifth year to complete
+        an undergraduate degree
+      exclusions: null
+      scope_text: Full tuition excluding summers
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Capped at basic housing; upgrades are available at the student's expense. If the student
+        receives the $750 university-sponsored National Merit award, that amount applies toward the room
+        portion of the package; it is not an extra benefit.
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: no_form_other_steps_required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: Nov. 1
+    - kind: other
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: Official campus visit by Nov. 1
+    - kind: interview
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: On-campus in-person interview by Nov. 1
+    - kind: supporting_materials_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: Two recommendation letters by Nov. 1
+    - kind: acceptance_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 5
+        day: 1
+      precision: day
+      source_date_text: May 1, the National Decision Deadline
+    admission_plan_requirement: All required application materials for admission by Nov. 1 for the fall
+      entry term
+    prerequisites:
+    - kind: recommendation
+      minimum_lead_days: null
+      notes: Two letters, one academic and one non-academic, sent via Common App or apply@utulsa.edu;
+        the Common App School Report Form does not satisfy this requirement.
+    - kind: other
+      minimum_lead_days: null
+      notes: Official in-person campus visit and in-person National Merit Semifinalist interview, both
+        by Nov. 1.
+    interview_mode: in_person
+    finalist_event_required: null
+    notes: Students designate UTulsa as first choice with National Merit by the final National Merit deadline
+      (no date on the page). Admitted students are notified by email once UTulsa confirms Semifinalist
+      status.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: 12
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: 'Required: minimum 12 credit hours per semester (15 recommended); positive progress toward
+      a degree as determined by the Center for Advising and Student Success Coaching.'
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: not_allowed
+    note: Cannot be combined with other UTulsa funding or scholarships.
+  - other_aid_type: outside_scholarship
+    relation: allowed
+    note: If permitted by the awarding organization.
+  award_counts: []
+  sources:
+  - source_id: s-nmsf
+    url: https://utulsa.edu/tuition-aid/scholarships/nmsf/
+    authority: official_program
+    retrieved_at: '2026-11-14'
+    content_sha256: 8bdd318d18607210dc1ea7a918ef1fe030400ee4e644bddecd00da070821ea36
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-nmsf
+    locator: National Merit Semifinalist Package page, intro paragraph
+    short_excerpt: award selected National Merit Semifinalists its highest academic scholarship
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/national_merit_statuses
+    source_ref: s-nmsf
+    locator: National Merit Semifinalist Package page, intro and Award section
+    short_excerpt: 'National Merit Semifinalists Package recipients entering UTulsa in Fall 2027 will
+      receive the following:'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/first_choice_required
+    source_ref: s-nmsf
+    locator: National Merit Semifinalist Package page, Requirements to qualify, last-but-one item
+    short_excerpt: Students must designate The University of Tulsa as their first choice school with the
+      National Merit Corporation
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/gpa
+    source_ref: s-nmsf
+    locator: National Merit Semifinalist Package page, Requirements to qualify
+    short_excerpt: Students must have a minimum weighted GPA of 4.0 (on a 4.0 scale).
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-nmsf
+    locator: National Merit Semifinalist Package page, Award section, first bullet
+    short_excerpt: Full tuition (excluding summers) for four years. Students may petition for a fifth
+      year if needed to complete an undergraduate degree
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-nmsf
+    locator: 'National Merit Semifinalist Package page, Award section: no dollar amount published'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-nmsf
+    locator: National Merit Semifinalist Package page, Award section, Basic housing bullet
+    short_excerpt: Basic housing (upgrades are available at your expense)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-nmsf
+    locator: 'National Merit Semifinalist Package page, Award section: no dollar amount published'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-nmsf
+    locator: 'National Merit Semifinalist Package page, Requirements to qualify: no scholarship form is
+      named; visit, interview and recommendations are required'
+    short_excerpt: Applicants are required to attend an on-campus, in-person National Merit Semifinalist
+      interview by Nov. 1.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-nmsf
+    locator: National Merit Semifinalist Package page, Requirements to qualify, first item
+    short_excerpt: no later than Nov. 1 for the fall entry term
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-nmsf
+    locator: National Merit Semifinalist Package page, Requirements to qualify, campus visit item
+    short_excerpt: Students must make an official campus visit by Nov. 1.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-nmsf
+    locator: National Merit Semifinalist Package page, Requirements to qualify, interview item
+    short_excerpt: Applicants are required to attend an on-campus, in-person National Merit Semifinalist
+      interview by Nov. 1.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-nmsf
+    locator: National Merit Semifinalist Package page, Requirements to qualify, recommendation item
+    short_excerpt: two letters of recommendation, one academic and one non-academic, submitted by the
+      recommender by Nov. 1
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/4
+    source_ref: s-nmsf
+    locator: National Merit Semifinalist Package page, Requirements to qualify, last item
+    short_excerpt: Students must commit to The University of Tulsa by submitting their Intent to Enroll
+      form no later than May 1, the National Decision Deadline.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-nmsf
+    locator: National Merit Semifinalist Package page, Award section, enrollment bullets
+    short_excerpt: 'Required enrollment: Minimum of 12 credit hours per semester'
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-nmsf
+    locator: National Merit Semifinalist Package page, Award section, Stacking policy bullet
+    short_excerpt: The National Merit Semifinalist Package cannot be combined with other UTulsa funding
+      or scholarships
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/1
+    source_ref: s-nmsf
+    locator: National Merit Semifinalist Package page, Award section, Outside scholarships bullet
+    short_excerpt: May be combined with the National Merit Semifinalist package if permitted by the awarding
+      organization
+    value_status: reported
+    reported_value: null

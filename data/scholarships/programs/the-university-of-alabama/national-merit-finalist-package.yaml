@@ -1,0 +1,425 @@
+schema_version: 1
+program_id: national-merit-finalist-package
+school_id: the-university-of-alabama
+ipeds_id: '100751'
+applicable_campuses: []
+official_name: National Merit Finalist Package and Semifinalist Presidential Scholarship
+aliases:
+- National Merit Scholars
+program_family: national_merit
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: national-merit-2027
+  supersedes: null
+  entry_year: 2027
+  entry_year_label: null
+  entry_terms:
+  - unspecified
+  source_cohort_text: Page cites 'before May 1, 2027' and the 2027 automatic scholarship grids; it does
+    not use the words 'entering class'
+  verification_status: verified
+  last_reviewed_at: '2026-11-14'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-canary-A
+  owner_spot_checked: false
+  program_status_for_entry: null
+  offers:
+  - offer_id: o-finalist
+    parent_offer_id: null
+    variant_name: National Merit Finalist Package
+    residency: unknown
+    selection_mode: unknown
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - finalist
+      status_required_for_award: null
+      first_choice_required: true
+      gpa:
+        min: 3.5
+        scale: null
+        basis: unknown
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: GPA is measured after completion of junior year; the page gives no GPA scale.
+        Students submitting after December 4 but by May 1 are considered for admission on a space-available
+        basis. The scholarship pages state automatic merit awards need test scores; the Finalist section
+        does not mention test scores.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Up to five years or 10 semesters; degree-seeking undergraduate, graduate or law
+        studies
+      exclusions: null
+      scope_text: Described as the value of tuition
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years of on-campus housing
+      exclusions: null
+      scope_text: 'Capped at the regular room rate: the cost of the largest room option in the assigned
+        dorm, based on Housing assignment'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-supplement
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 4000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: Four years
+      exclusions: null
+      scope_text: Undergraduate supplemental scholarship; a portion paid by the National Merit Scholarship
+        Corporation is applied to the student account within the first six weeks of each semester
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-allowance
+      category: enrichment
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 2000
+        min: null
+        max: null
+        period: one_time
+      duration_terms: One time, after completing one year of undergraduate study at UA
+      exclusions: null
+      scope_text: Allowance for research or international study
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  - offer_id: o-semifinalist-presidential-in-state
+    parent_offer_id: null
+    variant_name: 'National Merit Semifinalist: Presidential Scholarship (in-state)'
+    residency: in_state
+    selection_mode: unknown
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - semifinalist
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: 3.5
+        scale: null
+        basis: unknown
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Admitted Semifinalists with at least a 3.5 GPA after completion of junior year
+        are 'automatically eligible'; the page says to see the in-state freshman page for values. The
+        in-state grid lists Presidential at ACT 30-36 / SAT 1360-1600 / GPA 3.50+.
+    benefits:
+    - benefit_id: b-presidential
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: In-state automatic grid lists the Presidential yearly value as 'Tuition'
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  - offer_id: o-semifinalist-presidential-out-of-state
+    parent_offer_id: null
+    variant_name: 'National Merit Semifinalist: Presidential Scholarship (out-of-state)'
+    residency: out_of_state
+    selection_mode: unknown
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - semifinalist
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: 3.5
+        scale: null
+        basis: unknown
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Admitted Semifinalists with at least a 3.5 GPA after completion of junior year
+        are 'automatically eligible'. The out-of-state and international grid lists Presidential at ACT
+        32-36 / SAT 1420-1600 / GPA 3.50+ and says values are identical for out-of-state and international
+        students.
+    benefits:
+    - benefit_id: b-presidential
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 28000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: null
+      exclusions: null
+      scope_text: Yearly value in the out-of-state and international automatic grid; the page does not
+        say which charges it applies to
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: unknown
+    milestones:
+    - kind: admission_deadline
+      requirement: priority
+      date: null
+      recurring:
+        month: 12
+        day: 4
+      precision: day
+      source_date_text: December 4 priority deadline
+    - kind: other
+      requirement: required
+      date: '2027-05-01'
+      recurring: null
+      precision: day
+      source_date_text: List UA as college of choice with NMSC before May 1, 2027
+    admission_plan_requirement: null
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: Students who submit after December 4 but by May 1 are considered for admission on a space-available
+      basis. The page names no year for December 4.
+  renewal_rules: null
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-nm
+    url: https://afford.ua.edu/scholarships/national-merit/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-14'
+    content_sha256: 30fad455093c9eec1fe099d4ed81cda1c598d275cd8b9ef7be9a2ae6ebf0f8d9
+    archive_url: null
+  - source_id: s-oos
+    url: https://afford.ua.edu/scholarships/oos-international-freshman/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-14'
+    content_sha256: 2f0697a8a64c610ac611a87b465aeb9643fa8a6134aea2e7cc5826db794c2c74
+    archive_url: null
+  - source_id: s-in
+    url: https://afford.ua.edu/scholarships/in-state-freshman/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-14'
+    content_sha256: f37e46b4da4a87208a3b2a527e87ad1e757ee1ab301dbc098194c6cb61b837bb
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-nm
+    locator: 'National Merit Scholars page, Finalist Package, Eligibility: awards depend on a December
+      4 priority application; no explicit promise of the award'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/eligibility/national_merit_statuses
+    source_ref: s-nm
+    locator: National Merit Scholars page, Finalist Package, Eligibility, first bullet
+    short_excerpt: Recognized as a National Merit Finalist by the National Merit Scholarship Corporation
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/first_choice_required
+    source_ref: s-nm
+    locator: National Merit Scholars page, Finalist Package, Eligibility, last bullet
+    short_excerpt: List The University of Alabama as college of choice with the National Merit Scholarship
+      Corporation before May 1, 2027
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/gpa
+    source_ref: s-nm
+    locator: National Merit Scholars page, Finalist Package, Eligibility
+    short_excerpt: 3.5 or higher GPA after completion of junior year
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-nm
+    locator: National Merit Scholars page, Finalist Package, Award, first bullet
+    short_excerpt: Value of tuition for up to five years or 10 semesters for degree-seeking undergraduate
+      and graduate or law studies
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-nm
+    locator: 'National Merit Scholars page, Finalist Package, Award: no dollar value published for tuition'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-nm
+    locator: National Merit Scholars page, Finalist Package, Award, second bullet
+    short_excerpt: Four years of on-campus housing at regular room rate*
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-nm
+    locator: 'National Merit Scholars page, Finalist Package, Award: no dollar value published for housing'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-nm
+    locator: National Merit Scholars page, Finalist Package, Award, third bullet
+    short_excerpt: $4,000/year undergraduate supplemental scholarship for four years**
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-nm
+    locator: National Merit Scholars page, Finalist Package, Award, third bullet
+    short_excerpt: $4,000/year undergraduate supplemental scholarship for four years**
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3
+    source_ref: s-nm
+    locator: National Merit Scholars page, Finalist Package, Award, fourth bullet
+    short_excerpt: $2,000 one-time allowance for research or international study (after completing one
+      year of undergraduate study at UA)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-nm
+    locator: National Merit Scholars page, Finalist Package, Award, fourth bullet
+    short_excerpt: $2,000 one-time allowance for research or international study
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/selection_mode
+    source_ref: s-nm
+    locator: 'National Merit Scholars page, National Merit Semifinalist Scholarship: ''automatically eligible''
+      is eligibility, not a promise of the award'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/eligibility/national_merit_statuses
+    source_ref: s-nm
+    locator: National Merit Scholars page, National Merit Semifinalist Scholarship
+    short_excerpt: Admitted National Merit Semifinalists with at least a 3.5 GPA after completion of junior
+      year are automatically eligible for the Presidential Scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/eligibility/gpa
+    source_ref: s-nm
+    locator: National Merit Scholars page, National Merit Semifinalist Scholarship
+    short_excerpt: Admitted National Merit Semifinalists with at least a 3.5 GPA after completion of junior
+      year
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/0
+    source_ref: s-in
+    locator: In-state freshman page, 2027 In-State Freshman Automatic Merit Scholarships table, Presidential
+      row
+    short_excerpt: Presidential 30–36 1360–1600 3.50+ Tuition
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/0/amount
+    source_ref: s-in
+    locator: 'In-state freshman page, automatic grid, Presidential row: yearly value is ''Tuition'' with
+      no dollar figure'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/2/selection_mode
+    source_ref: s-nm
+    locator: 'National Merit Scholars page, National Merit Semifinalist Scholarship: ''automatically eligible''
+      is eligibility, not a promise of the award'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/2/eligibility/national_merit_statuses
+    source_ref: s-nm
+    locator: National Merit Scholars page, National Merit Semifinalist Scholarship
+    short_excerpt: Admitted National Merit Semifinalists with at least a 3.5 GPA after completion of junior
+      year are automatically eligible for the Presidential Scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/eligibility/gpa
+    source_ref: s-nm
+    locator: National Merit Scholars page, National Merit Semifinalist Scholarship
+    short_excerpt: Admitted National Merit Semifinalists with at least a 3.5 GPA after completion of junior
+      year
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/benefits/0
+    source_ref: s-oos
+    locator: Out-of-state freshman page, 2027 automatic merit table, Presidential row
+    short_excerpt: Presidential 32–36 1420–1600 3.50+ $28,000
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/benefits/0/amount
+    source_ref: s-oos
+    locator: Out-of-state freshman page, 2027 automatic merit table, Presidential row, Yearly Value column
+    short_excerpt: Presidential 32–36 1420–1600 3.50+ $28,000
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-nm
+    locator: National Merit Scholars page, Finalist Package, Eligibility, third bullet
+    short_excerpt: Submit an application and all supporting documents by the December 4 priority deadline*
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-nm
+    locator: National Merit Scholars page, Finalist Package, Eligibility, last bullet
+    short_excerpt: before May 1, 2027
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-nm
+    locator: National Merit Scholars page, Finalist Package, Eligibility, last bullet; 2027 grids on in-state
+      and out-of-state pages
+    short_excerpt: before May 1, 2027
+    value_status: reported
+    reported_value: null

@@ -1,0 +1,227 @@
+schema_version: 1
+program_id: presidential-scholarship
+school_id: purdue
+ipeds_id: '243780'
+applicable_campuses:
+- West Lafayette
+official_name: Presidential Scholarship
+aliases: []
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: first-year-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Page names no entering class for these awards
+  entry_terms:
+  - unspecified
+  source_cohort_text: Page names no cohort
+  verification_status: verified
+  last_reviewed_at: '2026-11-14'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-canary-A
+  owner_spot_checked: false
+  program_status_for_entry: null
+  offers:
+  - offer_id: o-nonresident
+    parent_offer_id: null
+    variant_name: Presidential Scholarship (nonresident)
+    residency: out_of_state
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: Domestic students include United States citizens, U.S. nationals, permanent resident
+        aliens and aliens lawfully present in and able to establish domicile in the U.S. per federal immigration
+        laws.
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Only domestic students are eligible. Holistic review of the admission application.
+        About 15% of applicants receive a merit award (all merit awards, not this one).
+    benefits:
+    - benefit_id: b-award
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 10000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: Up to four years (eight semesters) of eligibility while pursuing a first undergraduate
+        degree
+      exclusions: null
+      scope_text: The total amount may be adjusted if the overall financial aid package exceeds Purdue's
+        cost of attendance
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  - offer_id: o-resident
+    parent_offer_id: null
+    variant_name: Presidential Scholarship (Indiana resident)
+    residency: in_state
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: Domestic students include United States citizens, U.S. nationals, permanent resident
+        aliens and aliens lawfully present in and able to establish domicile in the U.S. per federal immigration
+        laws.
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Only domestic students are eligible. Holistic review of the admission application.
+        About 15% of applicants receive a merit award (all merit awards, not this one).
+    benefits:
+    - benefit_id: b-award
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 4000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: Up to four years (eight semesters) of eligibility while pursuing a first undergraduate
+        degree
+      exclusions: null
+      scope_text: The total amount may be adjusted if the overall financial aid package exceeds Purdue's
+        cost of attendance
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: not_required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: Nov. 1 (firm)
+    admission_plan_requirement: Admission application complete (all required items received) by the Nov.
+      1 Early Action deadline
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: The page says all university merit-based scholarships have a firm deadline of Nov. 1 and notification
+      comes with the admission decision. No year is named for Nov. 1.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.0
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Renewable with a Purdue cumulative GPA of 3.00 or higher; requires continuous full-time enrollment
+      and enrollment in the academic year the scholarship was awarded.
+  stacking_rules:
+  - other_aid_type: other
+    relation: counts_within_package
+    note: Total may be adjusted if the overall financial aid package exceeds Purdue's cost of attendance.
+  award_counts: []
+  sources:
+  - source_id: s-sch
+    url: https://admission.purdue.edu/cost-financial-aid/scholarships/
+    authority: official_admissions
+    retrieved_at: '2026-11-14'
+    content_sha256: d3068f9a2224980c37c54d399f06d0e7732b821339a92c8acc2dec0d8c4db45f
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-sch
+    locator: First-year Scholarships page, Presidential Scholarship, Criteria
+    short_excerpt: Holistic review
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-sch
+    locator: First-year Scholarships page, Presidential Scholarship, Value
+    short_excerpt: $10,000 per year (nonresidents)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/citizenship_text
+    source_ref: s-sch
+    locator: First-year Scholarships page, Important Information, domestic students paragraph
+    short_excerpt: Domestic students include United States citizens, U.S. nationals, permanent resident
+      aliens and aliens lawfully present in and able to establish domicile
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/selection_mode
+    source_ref: s-sch
+    locator: First-year Scholarships page, Presidential Scholarship, Criteria
+    short_excerpt: Holistic review
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/1/benefits/0/amount
+    source_ref: s-sch
+    locator: First-year Scholarships page, Presidential Scholarship, Value
+    short_excerpt: $4,000 per year (Indiana residents)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/eligibility/citizenship_text
+    source_ref: s-sch
+    locator: First-year Scholarships page, Important Information, domestic students paragraph
+    short_excerpt: Domestic students include United States citizens, U.S. nationals, permanent resident
+      aliens and aliens lawfully present in and able to establish domicile
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-sch
+    locator: First-year Scholarships page, Maximize Your Scholarship Consideration, Apply by Nov. 1
+    short_excerpt: are automatically considered for university-wide merit scholarships
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-sch
+    locator: First-year Scholarships page, Presidential Scholarship, Deadline
+    short_excerpt: Nov. 1 (firm)
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-sch
+    locator: First-year Scholarships page, Presidential Scholarship, Criteria
+    short_excerpt: Renewable with Purdue Cumulative GPA of 3.00 or higher
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-sch
+    locator: First-year Scholarships page, University-wide Scholarships, Value
+    short_excerpt: the total amount may be adjusted if your overall financial aid package exceeds Purdue’s
+      cost of attendance
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-sch
+    locator: 'First-year Scholarships page: no entering class named for the award terms'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null

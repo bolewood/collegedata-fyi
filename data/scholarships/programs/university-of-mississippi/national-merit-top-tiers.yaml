@@ -1,0 +1,357 @@
+schema_version: 1
+program_id: national-merit-top-tiers
+school_id: university-of-mississippi
+ipeds_id: '176017'
+applicable_campuses: []
+official_name: Non-Resident National Merit awards (Academic Excellence, National Merit Finalist, Barnard)
+aliases: []
+program_family: national_merit
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: nr-national-merit-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Page names no entering class for these awards (the Academic Merit chart on the same
+    page is headed 2026-2027)
+  entry_terms:
+  - unspecified
+  source_cohort_text: Non-resident freshman merit page; no cohort named for the National Merit sections
+  verification_status: verified
+  last_reviewed_at: '2026-11-14'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-canary-A
+  owner_spot_checked: false
+  program_status_for_entry: null
+  offers:
+  - offer_id: o-academic-excellence
+    parent_offer_id: null
+    variant_name: Academic Excellence National Merit Finalist/Semifinalist Scholarship
+    residency: out_of_state
+    selection_mode: unknown
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - semifinalist
+      - finalist
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: &id001
+        min: 3.0
+        scale: null
+        basis: unknown
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Requires admission and documentation of National Merit standing. The page sits
+        under the Non-Resident section, and the award text says it 'also covers full non-resident fee,
+        if applicable'. The resident page was not fetched. The page says these awards cannot be stacked
+        with the Academic Merit awards (this applies to this offer only, not to the other two). A freshman
+        has earned no more than 18 college credit hours after high school graduation (dual enrollment
+        excluded).
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Renewable for up to four years as long as all terms and conditions are met
+      exclusions: null
+      scope_text: Full tuition scholarship
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-room
+      category: housing
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Capped at the standard cost of a double occupancy room in a campus residence hall
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-nr-fee
+      category: nonresident_differential
+      instrument: unknown
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Covers the full non-resident fee, if applicable; the page does not call it a waiver
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  - offer_id: o-nmf-scholarship
+    parent_offer_id: null
+    variant_name: National Merit Finalist Scholarship
+    residency: out_of_state
+    selection_mode: unknown
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - finalist
+      status_required_for_award: null
+      first_choice_required: true
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Not for students receiving a National Merit Corporate award; requires selecting
+        Ole Miss as first choice with the National Merit office.
+    benefits:
+    - benefit_id: b-nmf
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 1000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: null
+      exclusions: null
+      scope_text: 'Page text: ''$4,000 ($1,000 per year)'''
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: exact
+        value: 4000
+        min: null
+        max: null
+        period: total_program
+      scope_text: 'School-quoted total: ''$4,000 ($1,000 per year)'''
+  - offer_id: o-barnard
+    parent_offer_id: null
+    variant_name: Barnard Scholarship
+    residency: out_of_state
+    selection_mode: unknown
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - finalist
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: *id001
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Requires admission and documentation of National Merit standing.
+    benefits:
+    - benefit_id: b-barnard
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 5000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: null
+      exclusions: null
+      scope_text: 'Page text: ''$20,000 ($5,000/year)'''
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: exact
+        value: 20000
+        min: null
+        max: null
+        period: total_program
+      scope_text: 'School-quoted total: ''$20,000 ($5,000/year)'''
+  application:
+    separate_application: unknown
+    milestones: []
+    admission_plan_requirement: null
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: 'How to apply: gain admission to the University of Mississippi and provide documentation of
+      National Merit standing. The deadline follows the National Merit announcement timeline; no date
+      is given.'
+  renewal_rules:
+  - applies_to:
+    - offer_id: o-academic-excellence
+      benefit_id: null
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: Renewable for up to four years as long as all terms and conditions are met. The page does not
+      state a GPA or credit rule.
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-nr
+    url: https://olemiss.edu/finaid/types-of-aid/scholarships/non-resident/entering-freshman/awards-automatic-consideration/nr-freshman-merit/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-14'
+    content_sha256: 97c62b152604e715869739170691a3830edeaf66e7476dfde5d680eeba04da22
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/eligibility/national_merit_statuses
+    source_ref: s-nr
+    locator: Non-Resident Freshman page, Academic Excellence National Merit Finalist/Semifinalist Scholarship,
+      Eligibility
+    short_excerpt: Entering freshmen with National Merit Semifinalist/Finalist status and a 3.0 or higher
+      GPA.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/gpa
+    source_ref: s-nr
+    locator: Non-Resident Freshman page, Academic Excellence National Merit section, Eligibility
+    short_excerpt: Entering freshmen with National Merit Semifinalist/Finalist status and a 3.0 or higher
+      GPA.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-nr
+    locator: Non-Resident Freshman page, Academic Excellence National Merit section, Award Amount
+    short_excerpt: Includes full tuition scholarship and the standard cost of a double occupancy room
+      in a campus residence hall.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-nr
+    locator: 'Non-Resident Freshman page, Academic Excellence National Merit section: no dollar figure'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-nr
+    locator: Non-Resident Freshman page, Academic Excellence National Merit section, Award Amount
+    short_excerpt: the standard cost of a double occupancy room in a campus residence hall
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-nr
+    locator: 'Non-Resident Freshman page, Academic Excellence National Merit section: no dollar figure'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-nr
+    locator: Non-Resident Freshman page, Academic Excellence National Merit section, Award Amount
+    short_excerpt: Also covers full non-resident fee, if applicable.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-nr
+    locator: 'Non-Resident Freshman page, Academic Excellence National Merit section: no dollar figure'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/eligibility/national_merit_statuses
+    source_ref: s-nr
+    locator: Non-Resident Freshman page, National Merit Finalist Scholarship, Eligibility
+    short_excerpt: Entering freshman with finalist status and selection of Ole Miss as first choice
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/eligibility/first_choice_required
+    source_ref: s-nr
+    locator: Non-Resident Freshman page, National Merit Finalist Scholarship, Eligibility
+    short_excerpt: selection of Ole Miss as first choice
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/0/amount
+    source_ref: s-nr
+    locator: Non-Resident Freshman page, National Merit Finalist Scholarship, Award Amount
+    short_excerpt: 'Award Amount: $4,000 ($1,000 per year)'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/eligibility/national_merit_statuses
+    source_ref: s-nr
+    locator: Non-Resident Freshman page, Barnard Scholarship, Eligibility
+    short_excerpt: Entering freshmen who have achieved National Merit Finalist status and have a 3.0 or
+      higher high school GPA.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/eligibility/gpa
+    source_ref: s-nr
+    locator: Non-Resident Freshman page, Barnard Scholarship, Eligibility
+    short_excerpt: have a 3.0 or higher high school GPA
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/benefits/0/amount
+    source_ref: s-nr
+    locator: Non-Resident Freshman page, Barnard Scholarship, Award Amount
+    short_excerpt: 'Award Amount: $20,000 ($5,000/year)'
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-nr
+    locator: Non-Resident Freshman page, Academic Excellence National Merit section, Award Amount
+    short_excerpt: these awards are renewable for up to four years as long as all terms and conditions
+      are met
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/eligibility_notes
+    source_ref: s-nr
+    locator: Non-Resident Freshman page, Academic Excellence National Merit section, Award Amount
+    short_excerpt: These cannot be stacked with the Academic Merit awards.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/advertised_totals/0/amount
+    source_ref: s-nr
+    locator: Non-Resident Freshman page, National Merit Finalist Scholarship, Award Amount
+    short_excerpt: 'Award Amount: $4,000 ($1,000 per year)'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/advertised_totals/0/amount
+    source_ref: s-nr
+    locator: Non-Resident Freshman page, Barnard Scholarship, Award Amount
+    short_excerpt: 'Award Amount: $20,000 ($5,000/year)'
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-nr
+    locator: 'Non-Resident Freshman page: only the Academic Merit chart is headed 2026-2027; the National
+      Merit sections name no year'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
