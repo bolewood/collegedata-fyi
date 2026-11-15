@@ -1,0 +1,295 @@
+schema_version: 1
+program_id: fordham-presidential-scholarship
+school_id: fordham-university
+ipeds_id: '191241'
+applicable_campuses: []
+official_name: Fordham Presidential Scholarship
+aliases:
+- Presidential Scholarship
+program_family: presidential
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: presidential-scholarship-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Page names no entering class or year
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b4
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: unknown
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: you must be a US citizen or eligible non-citizen to qualify for the scholarships
+        and grants listed below
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Entering traditional first-year students who generally rank in the top 1 to 2
+        percent of their high school class (a typical profile, not a stated minimum). Fordham requires
+        the FAFSA to disburse all types of aid, including merit scholarships.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Up to eight fall and spring semesters
+      exclusions: null
+      scope_text: 'School wording: ''augments gift aid from all sources to cover the cost of full tuition
+        and fees each year'''
+      advertised_coverage_label: null
+      conditions_text: Amount equals tuition (and fees) less Federal Pell Grant, state assistance and
+        other tuition-specific resources; applies only to Fordham tuition charges
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Up to eight fall and spring semesters
+      exclusions: null
+      scope_text: 'School wording: ''full tuition and fees'''
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Up to eight fall and spring semesters
+      exclusions: null
+      scope_text: 'For students living on campus: up to the average cost of a double room or actual charges;
+        adjusts each year for increases'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Up to eight fall and spring semesters
+      exclusions: null
+      scope_text: 'For students living on campus: the average meal plan; adjusts each year for increases'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-enrichment
+      category: enrichment
+      instrument: restricted_fund
+      coverage: variable
+      amount:
+        qualifier: up_to
+        value: 20000
+        min: null
+        max: null
+        period: total_program
+      duration_terms: null
+      exclusions: null
+      scope_text: Maximum of $20,000 over four years for academic enrichment experiences
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: not_required
+    milestones: []
+    admission_plan_requirement: null
+    prerequisites:
+    - kind: other
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Fordham requires the FAFSA to disburse all types of aid, including merit-based scholarships.
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: Undergraduate applicants are considered for all Fordham scholarships; the page gives no scholarship
+      deadline.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.0
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Renewable annually on filing the FAFSA by the Fordham deadline, full-time enrollment, Satisfactory
+      Academic Progress, a 3.0 cumulative GPA and compliance with University policies and the Code of
+      Conduct. The page says four-year scholarships may be received for up to eight fall and spring semesters.
+  stacking_rules:
+  - other_aid_type: federal_or_state_need
+    relation: counts_within_package
+    note: Amount equals tuition and fees less any Federal Pell Grant, state assistance and other tuition-specific
+      resources or scholarships.
+  - other_aid_type: outside_scholarship
+    relation: counts_within_package
+    note: Adjusted for half of other non-tuition-specific outside resources or scholarships; the remaining
+      half may be used for other educational expenses.
+  award_counts: []
+  sources:
+  - source_id: s-aid
+    url: https://www.fordham.edu/student-financial-services/types-of-financial-aid/undergraduate-scholarships-and-grants/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 77b9d7e26bfe414688e2cde482eef61935b5adeeef144dc1e8fa8ad333863a27
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-aid
+    locator: 'Undergraduate Scholarships and Grants: no entering class or year is named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-aid
+    locator: Page intro, before the scholarship list
+    short_excerpt: The first five scholarships below are the most competitive. They are awarded to our
+      top applicants upon admission.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-aid
+    locator: Fordham Presidential Scholarship, second paragraph
+    short_excerpt: The scholarship is awarded on the basis of excellent academic achievement in high school,
+      test scores (if submitted), and personal characteristics.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-aid
+    locator: Fordham Presidential Scholarship, third paragraph
+    short_excerpt: This scholarship augments gift aid from all sources to cover the cost of full tuition
+      and fees each year
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-aid
+    locator: 'Fordham Presidential Scholarship: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-aid
+    locator: Fordham Presidential Scholarship, third paragraph
+    short_excerpt: This scholarship augments gift aid from all sources to cover the cost of full tuition
+      and fees each year
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-aid
+    locator: 'Fordham Presidential Scholarship: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/0/conditions_text
+    source_ref: s-aid
+    locator: Fordham Presidential Scholarship, third paragraph, second sentence
+    short_excerpt: will equal the total tuition and fees, less any Federal Pell Grant, state assistance,
+      and any other tuition specific resources
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-aid
+    locator: Fordham Presidential Scholarship, on-campus living paragraph
+    short_excerpt: the Presidential Scholarship covers up to the average cost of a double room or actual
+      charges and the average meal plan
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-aid
+    locator: 'Fordham Presidential Scholarship: no dollar amount is given for room or meal plan'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3
+    source_ref: s-aid
+    locator: Fordham Presidential Scholarship, on-campus living paragraph
+    short_excerpt: the Presidential Scholarship covers up to the average cost of a double room or actual
+      charges and the average meal plan
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-aid
+    locator: 'Fordham Presidential Scholarship: no dollar amount is given for room or meal plan'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-aid
+    locator: Fordham Presidential Scholarship, enrichment sentence
+    short_excerpt: Recipients are also eligible for a maximum of $20,000 over four years to use for academic
+      enrichment experiences.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/citizenship_text
+    source_ref: s-aid
+    locator: Requirements block above the scholarship list
+    short_excerpt: you must be a US citizen or eligible non-citizen to qualify for the scholarships and
+      grants listed below
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-aid
+    locator: Page heading area, Undergraduate Scholarships and Grants
+    short_excerpt: Your application for admission is also the application for these awards.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-aid
+    locator: Fordham Presidential Scholarship, renewal paragraph
+    short_excerpt: renewable annually based on filing the FAFSA by the Fordham deadline, maintaining full-time
+      enrollment, Satisfactory Academic Progress, a minimum cumulative GPA of 3.0
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-aid
+    locator: Fordham Presidential Scholarship, third paragraph
+    short_excerpt: will equal the total tuition and fees, less any Federal Pell Grant, state assistance,
+      and any other tuition specific resources
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/1
+    source_ref: s-aid
+    locator: Fordham Presidential Scholarship, third paragraph, last sentences
+    short_excerpt: The scholarship will be adjusted for half of other non-tuition specific outside resources
+      or scholarships.
+    value_status: reported
+    reported_value: null

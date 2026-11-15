@@ -1,13 +1,13 @@
 {
   "meta": {
-    "dataset_id": "collegedata-scholarships-v1-e9ffaabb4f9c",
+    "dataset_id": "collegedata-scholarships-v1-fa291350e26c",
     "version": 1,
     "license": "CC-BY-SA-4.0",
     "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
     "attribution": "Scholarship program data from collegedata.fyi (https://collegedata.fyi/scholarships), CC BY-SA 4.0. Terms as published by each school; see the source link on each record.",
     "generated_at": "2026-11-15",
     "source_repository": "https://github.com/bolewood/collegedata-fyi",
-    "record_count": 42
+    "record_count": 55
   },
   "programs": [
     {
@@ -2432,6 +2432,654 @@
       ]
     },
     {
+      "program_id": "fordham-presidential-scholarship",
+      "school_id": "fordham-university",
+      "ipeds_id": "191241",
+      "participating_school_ids": [
+        "fordham-university"
+      ],
+      "official_name": "Fordham Presidential Scholarship",
+      "aliases": [
+        "Presidential Scholarship"
+      ],
+      "program_family": "presidential",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "presidential-scholarship-undated",
+      "entry_year": null,
+      "entry_year_label": "Page names no entering class or year",
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": null,
+      "verification_status": "verified",
+      "cycle_basis": "none",
+      "cycle_through_date": null,
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b4",
+      "owner_spot_checked": false,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "partial_or_fixed"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "unknown"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "not_required",
+      "deadline_months": [],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "unknown",
+          "selection_mode": "competitive",
+          "consideration_route": "admission_application",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "optional",
+            "citizenship_eligible": null,
+            "citizenship_text": "you must be a US citizen or eligible non-citizen to qualify for the scholarships and grants listed below",
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "Entering traditional first-year students who generally rank in the top 1 to 2 percent of their high school class (a typical profile, not a stated minimum). Fordham requires the FAFSA to disburse all types of aid, including merit scholarships."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Up to eight fall and spring semesters",
+              "exclusions": null,
+              "scope_text": "School wording: 'augments gift aid from all sources to cover the cost of full tuition and fees each year'",
+              "advertised_coverage_label": null,
+              "conditions_text": "Amount equals tuition (and fees) less Federal Pell Grant, state assistance and other tuition-specific resources; applies only to Fordham tuition charges"
+            },
+            {
+              "benefit_id": "b-fees",
+              "category": "mandatory_fees",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Up to eight fall and spring semesters",
+              "exclusions": null,
+              "scope_text": "School wording: 'full tuition and fees'",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-housing",
+              "category": "housing",
+              "instrument": "scholarship",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Up to eight fall and spring semesters",
+              "exclusions": null,
+              "scope_text": "For students living on campus: up to the average cost of a double room or actual charges; adjusts each year for increases",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-meals",
+              "category": "meals",
+              "instrument": "scholarship",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Up to eight fall and spring semesters",
+              "exclusions": null,
+              "scope_text": "For students living on campus: the average meal plan; adjusts each year for increases",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-enrichment",
+              "category": "enrichment",
+              "instrument": "restricted_fund",
+              "coverage": "variable",
+              "amount": {
+                "qualifier": "up_to",
+                "value": 20000,
+                "min": null,
+                "max": null,
+                "period": "total_program"
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "Maximum of $20,000 over four years for academic enrichment experiences",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "partial_or_fixed"
+        }
+      ],
+      "application": {
+        "separate_application": "not_required",
+        "milestones": [],
+        "admission_plan_requirement": null,
+        "prerequisites": [
+          {
+            "kind": "other",
+            "minimum_lead_days": null,
+            "maximum_lead_days": null,
+            "notes": "Fordham requires the FAFSA to disburse all types of aid, including merit-based scholarships."
+          }
+        ],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "Undergraduate applicants are considered for all Fordham scholarships; the page gives no scholarship deadline."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": 3.0,
+          "gpa_scale": null,
+          "credit_load_min_per_term": null,
+          "credit_load_min_per_year": null,
+          "evaluation_timing": null,
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": 8,
+          "notes": "Renewable annually on filing the FAFSA by the Fordham deadline, full-time enrollment, Satisfactory Academic Progress, a 3.0 cumulative GPA and compliance with University policies and the Code of Conduct. The page says four-year scholarships may be received for up to eight fall and spring semesters."
+        }
+      ],
+      "stacking_rules": [
+        {
+          "other_aid_type": "federal_or_state_need",
+          "relation": "counts_within_package",
+          "note": "Amount equals tuition and fees less any Federal Pell Grant, state assistance and other tuition-specific resources or scholarships."
+        },
+        {
+          "other_aid_type": "outside_scholarship",
+          "relation": "counts_within_package",
+          "note": "Adjusted for half of other non-tuition-specific outside resources or scholarships; the remaining half may be used for other educational expenses."
+        }
+      ],
+      "award_counts": [],
+      "sources": [
+        {
+          "source_id": "s-aid",
+          "url": "https://www.fordham.edu/student-financial-services/types-of-financial-aid/undergraduate-scholarships-and-grants/",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-aid",
+          "locator": "Undergraduate Scholarships and Grants: no entering class or year is named",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-aid",
+          "locator": "Page intro, before the scholarship list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/tests_policy_for_scholarship",
+          "source_ref": "s-aid",
+          "locator": "Fordham Presidential Scholarship, second paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-aid",
+          "locator": "Fordham Presidential Scholarship, third paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-aid",
+          "locator": "Fordham Presidential Scholarship: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/1",
+          "source_ref": "s-aid",
+          "locator": "Fordham Presidential Scholarship, third paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-aid",
+          "locator": "Fordham Presidential Scholarship: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/0/conditions_text",
+          "source_ref": "s-aid",
+          "locator": "Fordham Presidential Scholarship, third paragraph, second sentence",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/2",
+          "source_ref": "s-aid",
+          "locator": "Fordham Presidential Scholarship, on-campus living paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/2/amount",
+          "source_ref": "s-aid",
+          "locator": "Fordham Presidential Scholarship: no dollar amount is given for room or meal plan",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/3",
+          "source_ref": "s-aid",
+          "locator": "Fordham Presidential Scholarship, on-campus living paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/3/amount",
+          "source_ref": "s-aid",
+          "locator": "Fordham Presidential Scholarship: no dollar amount is given for room or meal plan",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/4/amount",
+          "source_ref": "s-aid",
+          "locator": "Fordham Presidential Scholarship, enrichment sentence",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/citizenship_text",
+          "source_ref": "s-aid",
+          "locator": "Requirements block above the scholarship list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-aid",
+          "locator": "Page heading area, Undergraduate Scholarships and Grants",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-aid",
+          "locator": "Fordham Presidential Scholarship, renewal paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/0",
+          "source_ref": "s-aid",
+          "locator": "Fordham Presidential Scholarship, third paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/1",
+          "source_ref": "s-aid",
+          "locator": "Fordham Presidential Scholarship, third paragraph, last sentences",
+          "value_status": "reported"
+        }
+      ]
+    },
+    {
+      "program_id": "furman-james-b-duke-scholarship",
+      "school_id": "furman-university",
+      "ipeds_id": "218070",
+      "participating_school_ids": [
+        "furman-university"
+      ],
+      "official_name": "James B. Duke Scholarship",
+      "aliases": [
+        "James B. Duke Scholarships",
+        "Duke Scholarship"
+      ],
+      "program_family": "other",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "james-b-duke-undated",
+      "entry_year": null,
+      "entry_year_label": "Page names no entering class or year ('Priority deadline: November 1' has no year)",
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": null,
+      "verification_status": "verified",
+      "cycle_basis": "none",
+      "cycle_through_date": null,
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b4",
+      "owner_spot_checked": false,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "tuition_housing_meals"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "unknown"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "no_form_other_steps_required",
+      "deadline_months": [
+        11
+      ],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "unknown",
+          "selection_mode": "competitive",
+          "consideration_route": "admission_application",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "optional",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "Page says finalists typically have standardized test scores above 34 ACT or 1500 SAT, challenging coursework and significant leadership; these are described as typical, not as minimums. The page does not state citizenship or residency rules for this award. Award also includes participation in the Riley Institute Advantage Scholars program and membership in Furman's Community of Scholars."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Renewable for four years or eight semesters",
+              "exclusions": null,
+              "scope_text": "Page words: \"Full scholarship covering tuition, room, board, and all fees\"",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-fees",
+              "category": "mandatory_fees",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "Page words: \"all fees\"",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-housing",
+              "category": "housing",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "Page words: \"room\"; no rate or cap is given",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-meals",
+              "category": "meals",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "Page words: \"board\"; no rate or cap is given",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "tuition_housing_meals"
+        }
+      ],
+      "application": {
+        "separate_application": "no_form_other_steps_required",
+        "milestones": [
+          {
+            "kind": "application_deadline",
+            "requirement": "priority",
+            "date": null,
+            "recurring": {
+              "month": 11,
+              "day": 1
+            },
+            "precision": "day",
+            "source_date_text": "Priority deadline: November 1"
+          },
+          {
+            "kind": "interview",
+            "requirement": "invitation_only",
+            "date": null,
+            "recurring": {
+              "month": 3,
+              "day": 1
+            },
+            "precision": "month",
+            "source_date_text": "invited in early February to attend a Scholarship Interview Event in March"
+          }
+        ],
+        "admission_plan_requirement": null,
+        "prerequisites": [],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "Application for admission doubles as the scholarship application. The November 1 priority date sits under 'PREMIER SCHOLARSHIPS' for all premier awards; the page does not say whether it is the admission or the scholarship date. The page says interviews are 'held in late March' and that premier candidates 'may be asked to interview on campus'; the Interview Event's format is not otherwise stated."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": null,
+          "gpa_scale": null,
+          "credit_load_min_per_term": null,
+          "credit_load_min_per_year": null,
+          "evaluation_timing": null,
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": 8,
+          "notes": "Renewable for four years or eight semesters; the page gives no GPA or credit threshold."
+        }
+      ],
+      "stacking_rules": [
+        {
+          "other_aid_type": "institutional_merit",
+          "relation": "replaces",
+          "note": "Winners receive the Duke Scholarship in lieu of any Bell Tower Scholarship previously awarded."
+        }
+      ],
+      "award_counts": [],
+      "sources": [
+        {
+          "source_id": "s-merit",
+          "url": "https://www.furman.edu/financial-aid/aid-types/merit-based-scholarships/",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-merit",
+          "locator": "Merit-Based Scholarships page: no entering class or year is named anywhere on the page",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-merit",
+          "locator": "James B. Duke Scholarships section, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-merit",
+          "locator": "James B. Duke Scholarships, Award Benefits, first bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-merit",
+          "locator": "James B. Duke Scholarships, Award Benefits: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/1",
+          "source_ref": "s-merit",
+          "locator": "James B. Duke Scholarships, Award Benefits, first bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-merit",
+          "locator": "James B. Duke Scholarships, Award Benefits: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/2",
+          "source_ref": "s-merit",
+          "locator": "James B. Duke Scholarships, Award Benefits, first bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/2/amount",
+          "source_ref": "s-merit",
+          "locator": "James B. Duke Scholarships, Award Benefits: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/3",
+          "source_ref": "s-merit",
+          "locator": "James B. Duke Scholarships, Award Benefits, first bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/3/amount",
+          "source_ref": "s-merit",
+          "locator": "James B. Duke Scholarships, Award Benefits: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/eligibility/tests_policy_for_scholarship",
+          "source_ref": "s-merit",
+          "locator": "Page intro, list of what the committee considers",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-merit",
+          "locator": "Page intro, below the list of selection factors",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/0",
+          "source_ref": "s-merit",
+          "locator": "PREMIER SCHOLARSHIPS box, below the Bell Tower Scholarships section",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/1",
+          "source_ref": "s-merit",
+          "locator": "James B. Duke Scholarships, Selection Process, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-merit",
+          "locator": "James B. Duke Scholarships, Award Benefits, second bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/0",
+          "source_ref": "s-merit",
+          "locator": "James B. Duke Scholarships, Learn more about the selection process, second paragraph",
+          "value_status": "reported"
+        }
+      ]
+    },
+    {
       "program_id": "stamps-presidents-scholars",
       "school_id": "georgia-tech",
       "ipeds_id": "139755",
@@ -3413,6 +4061,176 @@
           "field_path": "award_counts/1",
           "source_ref": "s-dom",
           "locator": "Domestic Student Deadlines, \"Notification of Status\"",
+          "value_status": "reported"
+        }
+      ]
+    },
+    {
+      "program_id": "founders-scholarship",
+      "school_id": "lehigh",
+      "ipeds_id": "213543",
+      "participating_school_ids": [
+        "lehigh"
+      ],
+      "official_name": "Lehigh University Founders Scholarship",
+      "aliases": [
+        "Founders Scholarship"
+      ],
+      "program_family": "other",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "founders-scholarship-undated",
+      "entry_year": null,
+      "entry_year_label": "Catalog page ('2026-27 Catalog') names no entering class for this award",
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": "2026-27 Catalog",
+      "verification_status": "verified",
+      "cycle_basis": "none",
+      "cycle_through_date": null,
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b4",
+      "owner_spot_checked": false,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "partial_or_fixed"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "unknown"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "not_required",
+      "deadline_months": [],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "unknown",
+          "selection_mode": "competitive",
+          "consideration_route": "admission_application",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "unknown",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "Merit awards are selected by the Admissions Office from all admitted full-time students 'solely on a merit basis' and holistically; recipients are notified at the time of admission. The page states no GPA or test minimum for selection."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Renewable annually for up to eight consecutive semesters (ten for students in a bona-fide five-year program)",
+              "exclusions": null,
+              "scope_text": "School wording: 'valued at full tuition'; the page does not promise tuition 'in full'",
+              "advertised_coverage_label": "valued at full tuition",
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "partial_or_fixed"
+        }
+      ],
+      "application": {
+        "separate_application": "not_required",
+        "milestones": [],
+        "admission_plan_requirement": null,
+        "prerequisites": [],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "All full-time admitted students are considered by the Committee on Admissions; recipients are notified at the time of admission. The same catalog lists the Trustees Scholarship (half tuition) and Deans Scholarship ($15,000 - $25,000) separately; they are not part of this record."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": 3.0,
+          "gpa_scale": null,
+          "credit_load_min_per_term": null,
+          "credit_load_min_per_year": null,
+          "evaluation_timing": null,
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": 8,
+          "notes": "Renewable annually for up to eight consecutive semesters, or ten consecutive semesters in a bona-fide five-year program, if the recipient keeps a 3.0 cumulative GPA and full-time undergraduate enrollment."
+        }
+      ],
+      "stacking_rules": null,
+      "award_counts": [],
+      "sources": [
+        {
+          "source_id": "s-cat",
+          "url": "https://catalog.lehigh.edu/informationofgeneralinterest/financialaid/sourcesofuniversityaid/",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-cat",
+          "locator": "Sources of University Aid (2026-27 Catalog): the catalog names no entering class for this award",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-cat",
+          "locator": "Lehigh University Founders Scholarship, first sentence",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-cat",
+          "locator": "Lehigh University Founders Scholarship, second sentence",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-cat",
+          "locator": "Lehigh University Founders Scholarship: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-cat",
+          "locator": "Lehigh University Founders Scholarship, last paragraph sentences",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-cat",
+          "locator": "Lehigh University Founders Scholarship, second sentence",
           "value_status": "reported"
         }
       ]
@@ -6398,6 +7216,945 @@
       ]
     },
     {
+      "program_id": "presidents-scholars",
+      "school_id": "southern-methodist-university",
+      "ipeds_id": "228246",
+      "participating_school_ids": [
+        "southern-methodist-university"
+      ],
+      "official_name": "President's Scholars Program",
+      "aliases": [
+        "President's Scholarship",
+        "President's Scholars"
+      ],
+      "program_family": "presidential",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "presidents-scholars-class-2031",
+      "entry_year": 2027,
+      "entry_year_label": null,
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": "President's Scholars Class of 2031",
+      "verification_status": "verified",
+      "cycle_basis": "entry_year",
+      "cycle_through_date": null,
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b4",
+      "owner_spot_checked": false,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "full_tuition_fees"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "unknown"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "required",
+      "deadline_months": [
+        11
+      ],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "unknown",
+          "selection_mode": "competitive",
+          "consideration_route": "separate_application",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "required",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "The application page says a candidate should have 20 high school academic units in a challenging curriculum, a top-10-percent class rank (or a strong record if the school does not rank), and demonstrated engagement. It calls SAT above 1400 and ACT above 32 'competitive' and says the median student invited to interview had a 4.0 unweighted GPA; these are typical ranges, not stated minimums."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Eight consecutive fall and spring semesters or graduation, whichever comes first",
+              "exclusions": [
+                "Books",
+                "Computers",
+                "Mandatory health insurance",
+                "Parking",
+                "Summer and Jan Term courses"
+              ],
+              "scope_text": "Cannot be extended to a fifth year; may cover graduate courses in the 4+1 program within the eight semesters with advance permission",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-fees",
+              "category": "mandatory_fees",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": [
+                "Special fees included with some course work"
+              ],
+              "scope_text": "General fees",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-abroad",
+              "category": "study_abroad",
+              "instrument": "scholarship",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "Tuition for an SMU-approved program and round-trip airfare; scholars pay deposits, commitment fees, and room and board abroad",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-housing",
+              "category": "housing",
+              "instrument": "scholarship",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "Residential Commons double occupancy, Thomas House, Multicultural House or Service House only; not Greek housing, SMU apartments, single rooms or off-campus living",
+              "advertised_coverage_label": null,
+              "conditions_text": "Paid by the separate Campus Community Award, not by the President's Scholarship itself, under certain conditions including active engagement in community life"
+            },
+            {
+              "benefit_id": "b-meals",
+              "category": "meals",
+              "instrument": "scholarship",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "SMU meal plans: The Works plus $200 Flex or Block 150 plus $500 Flex (first-years and sophomores must choose The Works plus $200 Flex); seniors may also choose Senior Block 50 plus $500 Flex",
+              "advertised_coverage_label": null,
+              "conditions_text": "Paid by the separate Campus Community Award, not by the President's Scholarship itself, under certain conditions including active engagement in community life"
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "full_tuition_fees"
+        }
+      ],
+      "application": {
+        "separate_application": "required",
+        "milestones": [
+          {
+            "kind": "admission_deadline",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 11,
+              "day": 4
+            },
+            "precision": "day",
+            "source_date_text": "extended SMU Deadline of November 4th"
+          },
+          {
+            "kind": "application_deadline",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 11,
+              "day": 16
+            },
+            "precision": "day",
+            "source_date_text": "President’s Scholars Application Essay by November 16, 11:59 P.M. (CST)"
+          },
+          {
+            "kind": "interview",
+            "requirement": "invitation_only",
+            "date": null,
+            "recurring": {
+              "month": 3,
+              "day": 1
+            },
+            "precision": "month",
+            "source_date_text": "first Friday of March"
+          },
+          {
+            "kind": "notification",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 3,
+              "day": 1
+            },
+            "precision": "month",
+            "source_date_text": "notified during the month of March"
+          }
+        ],
+        "admission_plan_requirement": null,
+        "prerequisites": [
+          {
+            "kind": "admission_application",
+            "minimum_lead_days": null,
+            "maximum_lead_days": null,
+            "notes": "The essay can be submitted only after the application for admission has been submitted, through the SMU Admissions student portal."
+          }
+        ],
+        "interview_mode": "in_person",
+        "finalist_event_required": null,
+        "notes": "Dates on the page carry no year; the banner names the 'Class of 2031', which this record reads as the fall 2027 entering class. The application page still says 'Submit your SMU Application by November 1' while the program page banner says the SMU deadline is extended to November 4; the banner is read as the current value and November 1 as the pre-extension passage. The admissions-aid page lists November 1 as the Early Action / Early Decision I date. Finalists are notified in February and invited to campus for interviews, which are required; SMU pays meals and lodging."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": null,
+          "gpa_scale": null,
+          "credit_load_min_per_term": null,
+          "credit_load_min_per_year": null,
+          "evaluation_timing": null,
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": 8,
+          "notes": "Tuition and fees for eight consecutive fall and spring semesters or graduation, whichever comes first; the pages give no GPA threshold. The Campus Community Award (room and board) has its own conditions, including active engagement in community life."
+        }
+      ],
+      "stacking_rules": null,
+      "award_counts": [],
+      "sources": [
+        {
+          "source_id": "s-aid",
+          "url": "https://www.smu.edu/admission/financial-aid-resources/scholarships-assistance",
+          "authority": "official_admissions",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-app",
+          "url": "https://www.smu.edu/provost/saes/academic-enrichment/honors-and-scholars-programs/presidents-scholars/scholarship-information/application",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-ben",
+          "url": "https://www.smu.edu/provost/saes/academic-enrichment/honors-and-scholars-programs/presidents-scholars/scholarship-information/benefits",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-prog",
+          "url": "https://www.smu.edu/provost/saes/academic-enrichment/honors-and-scholars-programs/presidents-scholars",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-prog",
+          "locator": "Program page banner at the top",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-app",
+          "locator": "Application Information, Timeline and Selection Process, February and March",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-app",
+          "locator": "Application Information, How to Apply",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/tests_policy_for_scholarship",
+          "source_ref": "s-app",
+          "locator": "Application Information, Eligibility, fourth bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-ben",
+          "locator": "Financial Benefits, Tuition and General Fees: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-ben",
+          "locator": "Financial Benefits, Tuition and General Fees",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-ben",
+          "locator": "Financial Benefits, Tuition and General Fees: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/1",
+          "source_ref": "s-ben",
+          "locator": "Financial Benefits, Tuition and General Fees",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/2/amount",
+          "source_ref": "s-ben",
+          "locator": "Financial Benefits, Education Abroad: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/2",
+          "source_ref": "s-ben",
+          "locator": "Financial Benefits, Education Abroad",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/3/amount",
+          "source_ref": "s-ben",
+          "locator": "Financial Benefits, The Campus Community Award: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/3/conditions_text",
+          "source_ref": "s-ben",
+          "locator": "Financial Benefits, The Campus Community Award, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/4/amount",
+          "source_ref": "s-ben",
+          "locator": "Financial Benefits, The Campus Community Award: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/4/conditions_text",
+          "source_ref": "s-ben",
+          "locator": "Financial Benefits, The Campus Community Award, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-app",
+          "locator": "Application Information, How to Apply",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/0",
+          "source_ref": "s-prog",
+          "locator": "Program page banner: DEADLINE EXTENDED",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/1",
+          "source_ref": "s-app",
+          "locator": "Application Information, Timeline and Selection Process",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/2",
+          "source_ref": "s-app",
+          "locator": "Application Information, Timeline and Selection Process, March",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/3",
+          "source_ref": "s-app",
+          "locator": "Application Information, Timeline and Selection Process, March",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-ben",
+          "locator": "Financial Benefits, Tuition and General Fees",
+          "value_status": "reported"
+        }
+      ]
+    },
+    {
+      "program_id": "dovey-johnson-roundtree-presidential-scholarship",
+      "school_id": "spelman-college",
+      "ipeds_id": "141060",
+      "participating_school_ids": [
+        "spelman-college"
+      ],
+      "official_name": "Dovey Johnson Roundtree, Class of 38, Presidential Scholarship",
+      "aliases": [
+        "Roundtree Presidential Scholarship",
+        "Dovey Johnson Rountree, Class of 38, Presidential Scholarship"
+      ],
+      "program_family": "presidential",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "dovey-johnson-roundtree-presidential-scholarship-undated",
+      "entry_year": null,
+      "entry_year_label": "Page names no entering class or year",
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": null,
+      "verification_status": "verified",
+      "cycle_basis": "none",
+      "cycle_through_date": null,
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b4",
+      "owner_spot_checked": false,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "full_tuition_fees"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "unknown"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "not_required",
+      "deadline_months": [],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "unknown",
+          "selection_mode": "competitive",
+          "consideration_route": "admission_application",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "optional",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "The page says the committee considers grade point average, standardized test scores (if applicable), community service and leadership, and that decisions are made by the Office of Admissions, not Financial Aid. It states no minimum GPA or score. The page spells the name 'Roundtree' in the heading and 'Rountree' in the description; the heading spelling is used here. The same page lists a separate 'Presidential Scholarship' (five scholars), recorded as its own program; the page does not say how the two relate."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Next four academic years",
+              "exclusions": null,
+              "scope_text": "School wording: 'includes the cost of tuition, fees, and the equivalent cost of room and board whether living on or off campus'",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-fees",
+              "category": "mandatory_fees",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Next four academic years",
+              "exclusions": null,
+              "scope_text": "School wording: 'fees'",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-housing",
+              "category": "housing",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Next four academic years",
+              "exclusions": null,
+              "scope_text": "School wording: 'the equivalent cost of room and board whether living on or off campus'; the page gives no rate or cap",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-meals",
+              "category": "meals",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Next four academic years",
+              "exclusions": null,
+              "scope_text": "School wording: 'the equivalent cost of room and board whether living on or off campus'; the page gives no rate or cap",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "full_tuition_fees"
+        }
+      ],
+      "application": {
+        "separate_application": "not_required",
+        "milestones": [],
+        "admission_plan_requirement": null,
+        "prerequisites": [],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "Applying for admission is the application for merit scholarships; recipients are notified at the time of admission on the SpelCheck portal. The Early Action / Early Decision requirement on the page applies only to the Bonner, UPS and Ralph Lauren Civic Scholar programs, not to this award."
+      },
+      "renewal_rules": null,
+      "stacking_rules": null,
+      "award_counts": [
+        {
+          "metric": "new_recipients",
+          "qualifier": "exact",
+          "value": 20,
+          "cohort_year": null,
+          "source_ref": "s-future",
+          "claim": "target",
+          "denominator": null
+        }
+      ],
+      "sources": [
+        {
+          "source_id": "s-future",
+          "url": "https://www.spelman.edu/financial-aid/explore-types-of-financial-aid/scholarships/scholarships-for-future-students.html",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-future",
+          "locator": "Scholarships for Future Students: no entering class or year is named",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-future",
+          "locator": "Page intro, What types of scholarships are available, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-future",
+          "locator": "Types of Scholarships, Dovey Johnson Roundtree, Class of 38, Presidential Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-future",
+          "locator": "Types of Scholarships, Dovey Johnson Roundtree, Class of 38, Presidential Scholarship: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/1",
+          "source_ref": "s-future",
+          "locator": "Types of Scholarships, Dovey Johnson Roundtree, Class of 38, Presidential Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-future",
+          "locator": "Types of Scholarships, Dovey Johnson Roundtree, Class of 38, Presidential Scholarship: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/2",
+          "source_ref": "s-future",
+          "locator": "Types of Scholarships, Dovey Johnson Roundtree, Class of 38, Presidential Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/2/amount",
+          "source_ref": "s-future",
+          "locator": "Types of Scholarships, Dovey Johnson Roundtree, Class of 38, Presidential Scholarship: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/3",
+          "source_ref": "s-future",
+          "locator": "Types of Scholarships, Dovey Johnson Roundtree, Class of 38, Presidential Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/3/amount",
+          "source_ref": "s-future",
+          "locator": "Types of Scholarships, Dovey Johnson Roundtree, Class of 38, Presidential Scholarship: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/eligibility/tests_policy_for_scholarship",
+          "source_ref": "s-future",
+          "locator": "Page intro, What types of scholarships are available, second paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-future",
+          "locator": "Page intro, How do scholarships work at Spelman",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "award_counts/0",
+          "source_ref": "s-future",
+          "locator": "Types of Scholarships, Dovey Johnson Roundtree, Class of 38, Presidential Scholarship",
+          "value_status": "reported"
+        }
+      ]
+    },
+    {
+      "program_id": "spelman-presidential-scholarship",
+      "school_id": "spelman-college",
+      "ipeds_id": "141060",
+      "participating_school_ids": [
+        "spelman-college"
+      ],
+      "official_name": "Presidential Scholarship",
+      "aliases": [
+        "Spelman Presidential Scholarship"
+      ],
+      "program_family": "presidential",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "spelman-presidential-scholarship-undated",
+      "entry_year": null,
+      "entry_year_label": "Page names no entering class or year",
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": null,
+      "verification_status": "verified",
+      "cycle_basis": "none",
+      "cycle_through_date": null,
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b4",
+      "owner_spot_checked": false,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "full_tuition_fees"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "unknown"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "not_required",
+      "deadline_months": [],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "unknown",
+          "selection_mode": "competitive",
+          "consideration_route": "admission_application",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "optional",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "The page says the committee considers grade point average, standardized test scores (if applicable), community service and leadership, and that decisions are made by the Office of Admissions, not Financial Aid. It states no minimum GPA or score. The page also lists a separate 'Dovey Johnson Roundtree, Class of 38, Presidential Scholarship' (twenty scholars), recorded as its own program."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Next four academic years",
+              "exclusions": null,
+              "scope_text": "School wording: 'includes the cost of your tuition, fees, and the equivalent cost of room and board whether living on or off campus'",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-fees",
+              "category": "mandatory_fees",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Next four academic years",
+              "exclusions": null,
+              "scope_text": "School wording: 'fees'",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-housing",
+              "category": "housing",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Next four academic years",
+              "exclusions": null,
+              "scope_text": "School wording: 'the equivalent cost of room and board whether living on or off campus'; the page gives no rate or cap",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-meals",
+              "category": "meals",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Next four academic years",
+              "exclusions": null,
+              "scope_text": "School wording: 'the equivalent cost of room and board whether living on or off campus'; the page gives no rate or cap",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "full_tuition_fees"
+        }
+      ],
+      "application": {
+        "separate_application": "not_required",
+        "milestones": [],
+        "admission_plan_requirement": null,
+        "prerequisites": [],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "Applying for admission is the application for merit scholarships; recipients are notified at the time of admission on the SpelCheck portal. The Early Action / Early Decision requirement on the page applies only to the Bonner, UPS and Ralph Lauren Civic Scholar programs, not to this award."
+      },
+      "renewal_rules": null,
+      "stacking_rules": null,
+      "award_counts": [
+        {
+          "metric": "new_recipients",
+          "qualifier": "exact",
+          "value": 5,
+          "cohort_year": null,
+          "source_ref": "s-future",
+          "claim": "target",
+          "denominator": null
+        }
+      ],
+      "sources": [
+        {
+          "source_id": "s-future",
+          "url": "https://www.spelman.edu/financial-aid/explore-types-of-financial-aid/scholarships/scholarships-for-future-students.html",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-future",
+          "locator": "Scholarships for Future Students: no entering class or year is named",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-future",
+          "locator": "Page intro, What types of scholarships are available, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-future",
+          "locator": "Types of Scholarships, Presidential Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-future",
+          "locator": "Types of Scholarships, Presidential Scholarship: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/1",
+          "source_ref": "s-future",
+          "locator": "Types of Scholarships, Presidential Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-future",
+          "locator": "Types of Scholarships, Presidential Scholarship: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/2",
+          "source_ref": "s-future",
+          "locator": "Types of Scholarships, Presidential Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/2/amount",
+          "source_ref": "s-future",
+          "locator": "Types of Scholarships, Presidential Scholarship: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/3",
+          "source_ref": "s-future",
+          "locator": "Types of Scholarships, Presidential Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/3/amount",
+          "source_ref": "s-future",
+          "locator": "Types of Scholarships, Presidential Scholarship: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/eligibility/tests_policy_for_scholarship",
+          "source_ref": "s-future",
+          "locator": "Page intro, What types of scholarships are available, second paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-future",
+          "locator": "Page intro, How do scholarships work at Spelman",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "award_counts/0",
+          "source_ref": "s-future",
+          "locator": "Types of Scholarships, Presidential Scholarship",
+          "value_status": "reported"
+        }
+      ]
+    },
+    {
       "program_id": "national-merit-scholars",
       "school_id": "texas-am",
       "ipeds_id": "228723",
@@ -6975,6 +8732,298 @@
           "field_path": "offers/4/benefits/0/conditions_text",
           "source_ref": "s-waiver",
           "locator": "Competitive Scholarship Non-Resident Tuition Waiver page, paragraph 'Undergraduate students must be awarded...'",
+          "value_status": "reported"
+        }
+      ]
+    },
+    {
+      "program_id": "tcu-chancellors-scholarship",
+      "school_id": "texas-christian-university",
+      "ipeds_id": "228875",
+      "participating_school_ids": [
+        "texas-christian-university"
+      ],
+      "official_name": "Chancellor's Scholarship",
+      "aliases": [
+        "Chancellor's Scholars",
+        "Chancellor's Scholars Program"
+      ],
+      "program_family": "other",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "tcu-chancellors-fall-2027",
+      "entry_year": 2027,
+      "entry_year_label": null,
+      "entry_terms": [
+        "fall"
+      ],
+      "source_cohort_text": "Fall 2027 applicants",
+      "verification_status": "verified",
+      "cycle_basis": "entry_year",
+      "cycle_through_date": "2027-02-16",
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b4",
+      "owner_spot_checked": false,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "full_tuition"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "unknown"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "required",
+      "deadline_months": [
+        11
+      ],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-first-year",
+          "parent_offer_id": null,
+          "variant_name": "First-year",
+          "residency": "unknown",
+          "selection_mode": "competitive",
+          "consideration_route": "separate_application",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "not_considered",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "First-year track only; the page also describes a separate transfer track (minimum 3.85 GPA and 60 transferable hours, six semesters), which is not recorded here. Page says successful candidates have near-perfect grades in the most rigorous curriculum, writing samples, academic references and co-curricular involvement; no minimum GPA is stated for first-year applicants. The first-year page reports the middle 50% of 2026 scholarship recipients (all scholarship levels) at 3.8-3.98 GPA, which is not a minimum for this award. Students who complete the FAFSA and CSS Profile are notified if eligible for additional need-based aid."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Eight semesters for first-year students (the first-year table says: Full tuition for four years; up to 8 semesters of undergraduate coursework)",
+              "exclusions": null,
+              "scope_text": null,
+              "advertised_coverage_label": "full-tuition",
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "full_tuition"
+        }
+      ],
+      "application": {
+        "separate_application": "required",
+        "milestones": [
+          {
+            "kind": "admission_deadline",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 11,
+              "day": 1
+            },
+            "precision": "day",
+            "source_date_text": "November 1: Early Action / Early Decision I application deadline"
+          },
+          {
+            "kind": "application_deadline",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 11,
+              "day": 15
+            },
+            "precision": "day",
+            "source_date_text": "November 15: John V. Roach Honors College application deadline"
+          },
+          {
+            "kind": "notification",
+            "requirement": "invitation_only",
+            "date": "2027-01-15",
+            "recurring": null,
+            "precision": "day",
+            "source_date_text": "invitation to Chancellor’s Scholars Experience by January 15, 2027"
+          },
+          {
+            "kind": "finalist_event",
+            "requirement": "invitation_only",
+            "date": "2027-02-14",
+            "recurring": null,
+            "precision": "day",
+            "source_date_text": "February 14-16, 2027"
+          },
+          {
+            "kind": "interview",
+            "requirement": "invitation_only",
+            "date": "2027-02-16",
+            "recurring": null,
+            "precision": "day",
+            "source_date_text": "Interview Day on Tuesday, February 16, 2027"
+          }
+        ],
+        "admission_plan_requirement": "Apply by the Early Action / Early Decision I deadline of November 1",
+        "prerequisites": [
+          {
+            "kind": "recommendation",
+            "minimum_lead_days": null,
+            "maximum_lead_days": null,
+            "notes": "Committee review uses resume, writing samples and letters of recommendation."
+          }
+        ],
+        "interview_mode": "in_person",
+        "finalist_event_required": true,
+        "notes": "The John V. Roach Honors College application is completed in the TCU portal. November 1 and November 15 appear without a year; the January 15, February 14-16 and February 16 dates carry 2027 on the page. Finalists get about one week to register. In-person participation in Interview Day is expected for finalists residing in the United States; finalists residing internationally may request a video interview. The earlier TCU lead's 'three or four years' wording did not appear on either page read; the first-year table says 'Full tuition for four years' and 'Up to 8 semesters', consistent with the eight-semester wording."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": null,
+          "gpa_scale": null,
+          "credit_load_min_per_term": null,
+          "credit_load_min_per_year": null,
+          "evaluation_timing": null,
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": 8,
+          "notes": "Page gives the duration (eight semesters for first-year students) and no GPA or credit threshold."
+        }
+      ],
+      "stacking_rules": null,
+      "award_counts": [
+        {
+          "metric": "new_recipients",
+          "qualifier": "exact",
+          "value": 40,
+          "cohort_year": null,
+          "source_ref": "s-prog",
+          "claim": "target",
+          "denominator": null
+        }
+      ],
+      "sources": [
+        {
+          "source_id": "s-fy",
+          "url": "https://admissions.tcu.edu/afford/scholarship-aid/first-year-student.php",
+          "authority": "official_admissions",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-prog",
+          "url": "https://admissions.tcu.edu/chancellors-scholars.php",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-prog",
+          "locator": "First-year dates: finalist invitation paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-prog",
+          "locator": "FAQ, What are my chances of receiving the Chancellor’s Scholarship?",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-prog",
+          "locator": "First-year applicants requirements",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/tests_policy_for_scholarship",
+          "source_ref": "s-prog",
+          "locator": "FAQ, Are test scores required",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-prog",
+          "locator": "FAQ, What is the value of the Chancellor’s Scholarship?",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-fy",
+          "locator": "First-Year Students, Academic Scholarships table, Chancellor's Scholarship row (Yearly Value: Full tuition for four years)",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-prog",
+          "locator": "First-year applicants requirements",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/0",
+          "source_ref": "s-prog",
+          "locator": "First-year dates list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/1",
+          "source_ref": "s-prog",
+          "locator": "First-year dates list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/2",
+          "source_ref": "s-prog",
+          "locator": "First-year applicants requirements, finalist paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/3",
+          "source_ref": "s-prog",
+          "locator": "First-year dates list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/4",
+          "source_ref": "s-prog",
+          "locator": "First-year dates list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-prog",
+          "locator": "FAQ, What is the value of the Chancellor’s Scholarship?",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "award_counts/0",
+          "source_ref": "s-prog",
+          "locator": "FAQ, What are my chances of receiving the Chancellor’s Scholarship?",
           "value_status": "reported"
         }
       ]
@@ -10039,6 +12088,726 @@
       ]
     },
     {
+      "program_id": "uconn-nutmeg-scholarship",
+      "school_id": "university-of-connecticut",
+      "ipeds_id": "129020",
+      "participating_school_ids": [
+        "university-of-connecticut"
+      ],
+      "official_name": "Nutmeg Scholarship",
+      "aliases": [
+        "UConn Nutmeg Scholarship"
+      ],
+      "program_family": "other",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [
+        "Storrs"
+      ],
+      "related_programs": [],
+      "version_id": "uconn-nutmeg-fall-2027",
+      "entry_year": 2027,
+      "entry_year_label": null,
+      "entry_terms": [
+        "fall"
+      ],
+      "source_cohort_text": "enroll at the University of Connecticut beginning fall semester 2027",
+      "verification_status": "verified",
+      "cycle_basis": "entry_year",
+      "cycle_through_date": "2026-11-08",
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b4",
+      "owner_spot_checked": false,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "partial_or_fixed"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "in_state"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "required",
+      "deadline_months": [
+        11
+      ],
+      "key_deadline": "2026-11-01",
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "in_state",
+          "selection_mode": "competitive",
+          "consideration_route": "separate_application",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": {
+              "min": 3.7,
+              "scale": 4.0,
+              "basis": "unknown"
+            },
+            "test_rules": [
+              {
+                "exam": "SAT (combined)",
+                "min": 1370,
+                "scoring": "unknown",
+                "official_required": null
+              },
+              {
+                "exam": "ACT (composite)",
+                "min": 30,
+                "scoring": "unknown",
+                "official_required": null
+              }
+            ],
+            "tests_policy_for_scholarship": "optional",
+            "citizenship_eligible": null,
+            "citizenship_text": "a U.S. citizen or a U.S. Permanent Resident Alien (copy of alien registration card is required and/or proof of immigration status in the USA), or an undocumented student who has resided in Connecticut for two or more years",
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "Connecticut resident enrolled in and expected to graduate from a Connecticut secondary school system. The score minimums apply only to applicants who choose to submit scores. The page also says applicants should rank in the top 10% of their class (if rank is available), be involved in leadership, and have shown a commitment to community service. Applicants may be considered for either a Nutmeg, Stamps or Day of Pride scholarship, 'not all three'. Limited to 20 recipients statewide."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-coa",
+              "category": "cost_of_attendance",
+              "instrument": "scholarship",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Renewable up to eight semesters of full-time undergraduate study",
+              "exclusions": null,
+              "scope_text": "School wording: 'Full Scholarship (Includes direct and indirect cost of attendance. Some restrictions may apply.)'; the policies page limits housing to the prior-year average housing cost and food to the Value Meal Plan, for on-campus residents only",
+              "advertised_coverage_label": "Full Scholarship (Includes direct and indirect cost of attendance. Some restrictions may apply.)",
+              "conditions_text": "Housing and food are covered only for students who live on campus, based on cost-of-attendance components; the scholarship covers up to the Value Meal Plan; tuition already covered by a tuition waiver is not covered again"
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "partial_or_fixed"
+        }
+      ],
+      "application": {
+        "separate_application": "required",
+        "milestones": [
+          {
+            "kind": "admission_deadline",
+            "requirement": "required",
+            "date": "2026-11-01",
+            "recurring": null,
+            "precision": "day",
+            "source_date_text": "November 1, 2026"
+          },
+          {
+            "kind": "application_deadline",
+            "requirement": "required",
+            "date": "2026-11-08",
+            "recurring": null,
+            "precision": "day",
+            "source_date_text": "November 8, 2026"
+          },
+          {
+            "kind": "notification",
+            "requirement": "recommended",
+            "date": null,
+            "recurring": {
+              "month": 2,
+              "day": 1
+            },
+            "precision": "month",
+            "source_date_text": "early February"
+          }
+        ],
+        "admission_plan_requirement": null,
+        "prerequisites": [
+          {
+            "kind": "recommendation",
+            "minimum_lead_days": null,
+            "maximum_lead_days": null,
+            "notes": "Two letters of recommendation are required; the same two may serve the admission application."
+          },
+          {
+            "kind": "portal_credentials",
+            "minimum_lead_days": null,
+            "maximum_lead_days": null,
+            "notes": "The supplemental application is in the applicant portal, which needs an activated NetID; the page says most applicants receive a NetID within five days of applying, and August applicants in mid-September."
+          }
+        ],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "Interview 'determined by the Scholarship Selection Committee'; no date or format is given. Early Decision applicants who apply for the Nutmeg Scholarship are not notified of the award at the time of admission. Supplemental application: three short answers, a resume and two letters of recommendation."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": 3.0,
+          "gpa_scale": null,
+          "credit_load_min_per_term": null,
+          "credit_load_min_per_year": null,
+          "evaluation_timing": "Reviewed annually for compliance with the SAP/GPA requirements",
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": 8,
+          "notes": "Renewable annually for up to eight semesters of full-time undergraduate study on a 3.0 cumulative GPA; housing and food are covered only while the student lives on campus; the Honors College is required for the first two semesters; winter and summer courses are not covered."
+        }
+      ],
+      "stacking_rules": [
+        {
+          "other_aid_type": "tuition_waiver",
+          "relation": "counts_within_package",
+          "note": "A student receiving a tuition waiver does not also receive the equivalent tuition value from the scholarship; the award is then applied to University and student fees, housing and/or meals."
+        },
+        {
+          "other_aid_type": "federal_or_state_need",
+          "relation": "counts_within_package",
+          "note": "Merit scholarship plus a Pell Grant may not exceed the cost of attendance; with other need-based aid, may not exceed federally defined need or the cost of attendance."
+        }
+      ],
+      "award_counts": [
+        {
+          "metric": "new_recipients",
+          "qualifier": "up_to",
+          "value": 20,
+          "cohort_year": null,
+          "source_ref": "s-merit",
+          "claim": "target",
+          "denominator": null
+        }
+      ],
+      "sources": [
+        {
+          "source_id": "s-app",
+          "url": "https://admissions.uconn.edu/nutmeg-applicants/",
+          "authority": "official_admissions",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-merit",
+          "url": "https://admissions.uconn.edu/cost-aid/scholarship/",
+          "authority": "official_admissions",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-pol",
+          "url": "https://admissions.uconn.edu/cost-aid/scholarship/policies/",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "/applicable_campuses/0",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships, Nutmeg Scholarship heading",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-app",
+          "locator": "Nutmeg Scholarship Eligibility & Selection",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/residency",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships, Nutmeg Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-app",
+          "locator": "Nutmeg Scholarship Applicants, second paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships, intro, second paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/gpa",
+          "source_ref": "s-app",
+          "locator": "Nutmeg Scholarship Eligibility & Selection, last bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/test_rules",
+          "source_ref": "s-app",
+          "locator": "Nutmeg Scholarship Eligibility & Selection, test score bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/tests_policy_for_scholarship",
+          "source_ref": "s-app",
+          "locator": "Nutmeg Scholarship Eligibility & Selection, test score bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships, Nutmeg Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships, Nutmeg Scholarship: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/0/conditions_text",
+          "source_ref": "s-pol",
+          "locator": "Policies, Nutmeg, Day of Pride, Stamps Scholarships, Eligibility Requirements",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships, intro, second paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/0",
+          "source_ref": "s-app",
+          "locator": "Nutmeg Scholarship Applicants, Deadlines table",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/1",
+          "source_ref": "s-app",
+          "locator": "Nutmeg Scholarship Applicants, Deadlines table",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/2",
+          "source_ref": "s-app",
+          "locator": "Nutmeg Scholarship Applicants, third paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-pol",
+          "locator": "Policies, Renewal and Satisfactory Academic Progress",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/0",
+          "source_ref": "s-pol",
+          "locator": "Policies, Nutmeg, Day of Pride, Stamps Scholarships",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/1",
+          "source_ref": "s-pol",
+          "locator": "Policies, Excess of Funds",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "award_counts/0",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships, Nutmeg Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/citizenship_text",
+          "source_ref": "s-app",
+          "locator": "Nutmeg Scholarship Eligibility & Selection, first bullet",
+          "value_status": "reported"
+        }
+      ]
+    },
+    {
+      "program_id": "uconn-stamps-scholarship",
+      "school_id": "university-of-connecticut",
+      "ipeds_id": "129020",
+      "participating_school_ids": [
+        "university-of-connecticut"
+      ],
+      "official_name": "Stamps Scholarship",
+      "aliases": [
+        "Stamps Scholarship at UConn",
+        "Stamps Scholars"
+      ],
+      "program_family": "stamps",
+      "awarding_authority": "cofunded",
+      "program_status": "active",
+      "applicable_campuses": [
+        "Storrs"
+      ],
+      "related_programs": [],
+      "version_id": "uconn-stamps-fall-2027",
+      "entry_year": 2027,
+      "entry_year_label": null,
+      "entry_terms": [
+        "fall"
+      ],
+      "source_cohort_text": "enroll at the University of Connecticut beginning fall semester 2027",
+      "verification_status": "verified",
+      "cycle_basis": "entry_year",
+      "cycle_through_date": "2026-11-08",
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b4",
+      "owner_spot_checked": false,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "partial_or_fixed"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "any"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "required",
+      "deadline_months": [
+        11
+      ],
+      "key_deadline": "2026-11-01",
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "any",
+          "selection_mode": "competitive",
+          "consideration_route": "separate_application",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": {
+              "min": 3.8,
+              "scale": 4.0,
+              "basis": "unknown"
+            },
+            "test_rules": [
+              {
+                "exam": "SAT (combined)",
+                "min": 1420,
+                "scoring": "unknown",
+                "official_required": null
+              },
+              {
+                "exam": "ACT (composite)",
+                "min": 32,
+                "scoring": "unknown",
+                "official_required": null
+              }
+            ],
+            "tests_policy_for_scholarship": "optional",
+            "citizenship_eligible": [
+              "any"
+            ],
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "The score minimums apply only to applicants who choose to submit scores. The page also says applicants should rank in the top 10% of their class (if rank is available), be involved in leadership, and have shown a commitment to community service. The page says interested and eligible students 'must choose to apply to either the Nutmeg, Day of Pride, or Stamps Scholarship and may not apply for all three'. Recipients are guaranteed admission to the Honors College. The Honors page lists 'Full support (tuition, room and board, fees, books, transportation, miscellaneous)'; the admissions page says 'full cost-of-attendance'."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-coa",
+              "category": "cost_of_attendance",
+              "instrument": "scholarship",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Four years (eight academic semesters)",
+              "exclusions": null,
+              "scope_text": "School wording: 'full cost-of-attendance scholarship'; the policies page limits housing to the prior-year average housing cost and food to the Value Meal Plan, for on-campus residents only",
+              "advertised_coverage_label": "full cost-of-attendance scholarship",
+              "conditions_text": "Housing and food are covered only for students who live on campus, based on cost-of-attendance components; the scholarship covers up to the Value Meal Plan; tuition already covered by a tuition waiver is not covered again"
+            },
+            {
+              "benefit_id": "b-enrichment",
+              "category": "enrichment",
+              "instrument": "restricted_fund",
+              "coverage": "variable",
+              "amount": {
+                "qualifier": "up_to",
+                "value": 12000,
+                "min": null,
+                "max": null,
+                "period": "one_time"
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "Enrichment funding for research and experiential learning. Admissions page: 'a one-time enrichment award of $12,000'; Honors page: 'access to up to $12,000'. Recorded as up to $12,000, which fits both wordings",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "partial_or_fixed"
+        }
+      ],
+      "application": {
+        "separate_application": "required",
+        "milestones": [
+          {
+            "kind": "admission_deadline",
+            "requirement": "required",
+            "date": "2026-11-01",
+            "recurring": null,
+            "precision": "day",
+            "source_date_text": "November 1, 2026"
+          },
+          {
+            "kind": "application_deadline",
+            "requirement": "required",
+            "date": "2026-11-08",
+            "recurring": null,
+            "precision": "day",
+            "source_date_text": "November 8, 2026"
+          },
+          {
+            "kind": "notification",
+            "requirement": "recommended",
+            "date": null,
+            "recurring": {
+              "month": 2,
+              "day": 1
+            },
+            "precision": "month",
+            "source_date_text": "early February"
+          }
+        ],
+        "admission_plan_requirement": null,
+        "prerequisites": [
+          {
+            "kind": "recommendation",
+            "minimum_lead_days": null,
+            "maximum_lead_days": null,
+            "notes": "Two letters of recommendation are required; the same two may serve the admission application."
+          },
+          {
+            "kind": "portal_credentials",
+            "minimum_lead_days": null,
+            "maximum_lead_days": null,
+            "notes": "The supplemental application is in the applicant portal, which needs an activated NetID; the page says most applicants receive a NetID within five days of applying, and August applicants in mid-September."
+          }
+        ],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "Selected applicants have a required interview with the Admissions Committee and the Stamps Scholars Program; no date or format is given. Early Decision applicants who apply for the Stamps Scholarship are not notified of the award at the time of admission. The page says students 'must choose to apply to either the Nutmeg, Day of Pride, or Stamps Scholarship and may not apply for all three'. Supplemental application: three short answers, a resume and two letters of recommendation."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": 3.0,
+          "gpa_scale": null,
+          "credit_load_min_per_term": null,
+          "credit_load_min_per_year": null,
+          "evaluation_timing": "Reviewed annually for compliance with the SAP/GPA requirements",
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": 8,
+          "notes": "Renewable annually for up to eight semesters of full-time undergraduate study on a 3.0 cumulative GPA (2.5 for most other UConn merit scholarships); housing and food are covered only while the student lives on campus; the Honors College is required for the first two semesters; winter and summer courses are not covered."
+        }
+      ],
+      "stacking_rules": [
+        {
+          "other_aid_type": "tuition_waiver",
+          "relation": "counts_within_package",
+          "note": "A student receiving a tuition waiver does not also receive the equivalent tuition value from the scholarship; the award is then applied to University and student fees, housing and/or meals."
+        },
+        {
+          "other_aid_type": "federal_or_state_need",
+          "relation": "counts_within_package",
+          "note": "Merit scholarship plus a Pell Grant may not exceed the cost of attendance; with other need-based aid, may not exceed federally defined need or the cost of attendance."
+        }
+      ],
+      "award_counts": [],
+      "sources": [
+        {
+          "source_id": "s-app",
+          "url": "https://admissions.uconn.edu/stamps-applicants/",
+          "authority": "official_admissions",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-hon",
+          "url": "https://honors-scholar.uconn.edu/stamps-scholarship/",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-merit",
+          "url": "https://admissions.uconn.edu/cost-aid/scholarship/",
+          "authority": "official_admissions",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-pol",
+          "url": "https://admissions.uconn.edu/cost-aid/scholarship/policies/",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "/awarding_authority",
+          "source_ref": "s-hon",
+          "locator": "Stamps Scholarship page, Stamps Scholars Enrichment Funds paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "/applicable_campuses/0",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships, Stamps Scholarship heading",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-app",
+          "locator": "Stamps Scholarship Applicants, To be eligible",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships, Stamps Scholarship, Applicant Information",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships, intro, second paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/gpa",
+          "source_ref": "s-app",
+          "locator": "Stamps Scholarship Applicants, To be eligible, last bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/test_rules",
+          "source_ref": "s-app",
+          "locator": "Stamps Scholarship Applicants, To be eligible, test score bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/tests_policy_for_scholarship",
+          "source_ref": "s-app",
+          "locator": "Stamps Scholarship Applicants, To be eligible, test score bullet",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships, Stamps Scholarship, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships, Stamps Scholarship: no dollar amount is given for the scholarship itself",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/0/conditions_text",
+          "source_ref": "s-pol",
+          "locator": "Policies, Nutmeg, Day of Pride, Stamps Scholarships, Eligibility Requirements",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships, Stamps Scholarship, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-hon",
+          "locator": "Stamps Scholarship page, Stamps Scholars Enrichment Award",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-merit",
+          "locator": "Merit Scholarships, intro, second paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/0",
+          "source_ref": "s-app",
+          "locator": "Stamps Scholarship Applicants, Deadlines table",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/1",
+          "source_ref": "s-app",
+          "locator": "Stamps Scholarship Applicants, Deadlines table",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/2",
+          "source_ref": "s-app",
+          "locator": "Stamps Scholarship Applicants, second paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-pol",
+          "locator": "Policies, Renewal and Satisfactory Academic Progress",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/0",
+          "source_ref": "s-pol",
+          "locator": "Policies, Nutmeg, Day of Pride, Stamps Scholarships",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/1",
+          "source_ref": "s-pol",
+          "locator": "Policies, Excess of Funds",
+          "value_status": "reported"
+        }
+      ]
+    },
+    {
       "program_id": "stamps-scholarship",
       "school_id": "university-of-illinois-urbana-champaign",
       "ipeds_id": "145637",
@@ -10260,6 +13029,198 @@
           "field_path": "renewal_rules/0/max_semesters",
           "source_ref": "s-sel",
           "locator": "Selection and Renewal, \"Renewal Criteria\"",
+          "value_status": "reported"
+        }
+      ]
+    },
+    {
+      "program_id": "umass-chancellors-award",
+      "school_id": "university-of-massachusetts-amherst",
+      "ipeds_id": "166629",
+      "participating_school_ids": [
+        "university-of-massachusetts-amherst"
+      ],
+      "official_name": "Chancellor's Award",
+      "aliases": [
+        "UMass Amherst Chancellor's Award"
+      ],
+      "program_family": "other",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "chancellors-award-undated",
+      "entry_year": null,
+      "entry_year_label": "Page names no entering class or year",
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": null,
+      "verification_status": "verified",
+      "cycle_basis": "none",
+      "cycle_through_date": null,
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b4",
+      "owner_spot_checked": false,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "partial_or_fixed"
+      ],
+      "selection_modes": [
+        "unknown"
+      ],
+      "residencies": [
+        "out_of_state"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "not_required",
+      "deadline_months": [],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "out_of_state",
+          "selection_mode": "unknown",
+          "consideration_route": "admission_application",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": {
+              "min": null,
+              "scale": null,
+              "basis": "recalculated_by_school"
+            },
+            "test_rules": null,
+            "tests_policy_for_scholarship": "unknown",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "Admitted first-year students from outside Massachusetts 'whose academic and personal achievements are especially strong'. The page does not describe the selection process beyond that. UMass Amherst recalculates every applicant's GPA with uniform weighting for honors, AP and college coursework, following Massachusetts Board of Higher Education standards."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-award",
+              "category": "other",
+              "instrument": "scholarship",
+              "coverage": "variable",
+              "amount": {
+                "qualifier": "range",
+                "value": null,
+                "min": 10000,
+                "max": 18000,
+                "period": "academic_year"
+              },
+              "duration_terms": "Renewable up to an aggregate total of four years (eight consecutive semesters) of full-time undergraduate enrollment",
+              "exclusions": null,
+              "scope_text": "Amount set at admission 'based on information you provided with your application' and 'not negotiable'; the page does not say which charges it applies to",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "partial_or_fixed"
+        }
+      ],
+      "application": {
+        "separate_application": "not_required",
+        "milestones": [],
+        "admission_plan_requirement": null,
+        "prerequisites": [],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "Notification: the Admissions Office notifies recipients at the time of acceptance. The page gives no deadline."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": null,
+          "gpa_scale": null,
+          "credit_load_min_per_term": null,
+          "credit_load_min_per_year": null,
+          "evaluation_timing": null,
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": 8,
+          "notes": "Renewal requires the minimum satisfactory academic progress set in the Academic Regulations of the Registrar, and full-time enrollment, for up to eight consecutive semesters. Any change in residency status that reduces the cost of attendance, including university-initiated changes tied to military, veterans or Massachusetts state employee benefits, eliminates the award."
+        }
+      ],
+      "stacking_rules": [
+        {
+          "other_aid_type": "other",
+          "relation": "allowed",
+          "note": "The page says these scholarships and awards 'may be combined with a tuition credit' and refers to its FAQ."
+        }
+      ],
+      "award_counts": [],
+      "sources": [
+        {
+          "source_id": "s-aid",
+          "url": "https://www.umass.edu/financialaid/umass-admissions-scholarships-and-awards",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-aid",
+          "locator": "UMass Admissions Scholarships and Awards, For Our Non-Massachusetts Applicants: no entering class or year is named",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/residency",
+          "source_ref": "s-aid",
+          "locator": "For Our Non-Massachusetts Applicants, UMass Amherst Chancellor's Award",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-aid",
+          "locator": "UMass Amherst Chancellor's Award, Award application",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-aid",
+          "locator": "UMass Amherst Chancellor's Award, award amount line",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/gpa",
+          "source_ref": "s-aid",
+          "locator": "UMass Amherst Chancellor's Award, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-aid",
+          "locator": "UMass Amherst Chancellor's Award, Award application",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-aid",
+          "locator": "UMass Amherst Chancellor's Award, Renewal requirement",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/0",
+          "source_ref": "s-aid",
+          "locator": "UMass Amherst Chancellor's Award, first paragraph",
           "value_status": "reported"
         }
       ]
@@ -12505,6 +15466,449 @@
       ]
     },
     {
+      "program_id": "handler-scholarship",
+      "school_id": "university-of-rochester",
+      "ipeds_id": "195030",
+      "participating_school_ids": [
+        "university-of-rochester"
+      ],
+      "official_name": "Alan and Jane Handler Scholarship",
+      "aliases": [
+        "Alan and Jane Handler Endowed Scholarship",
+        "Handler Scholarship"
+      ],
+      "program_family": "other",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "handler-undated",
+      "entry_year": null,
+      "entry_year_label": "Pages name no entering class or year (nominations September 15 - November 30 and December 1 have no year)",
+      "entry_terms": [
+        "fall"
+      ],
+      "source_cohort_text": null,
+      "verification_status": "conflicting",
+      "cycle_basis": "none",
+      "cycle_through_date": null,
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b4",
+      "owner_spot_checked": false,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "partial_or_fixed"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "unknown"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "required"
+      ],
+      "separate_application": "unknown",
+      "deadline_months": [],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "unknown",
+          "selection_mode": "competitive",
+          "consideration_route": "unknown",
+          "aid_basis": "merit_and_need",
+          "need_role": "required",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "unknown",
+            "citizenship_eligible": [
+              "any"
+            ],
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "Need condition as the page words it: 'highly academically qualified students with substantial levels of financial need, as demonstrated on their CSS Profile and FAFSA, who have overcome significant obstacles in their lives'. The scholarships page says 'highly qualified students with substantial levels of financial need'. Selection is on academic excellence, potential to be future leaders and mastery of complex challenges. First-year, fall-term applicants only; transfer and spring applicants are not eligible. Recipients are described as receiving 'assured, complete financial support' (tuition, fees, housing, food, books, personal expenses and transportation); the admissions page also calls it 'a more-than-full-tuition, four-year scholarship'."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Up to eight semesters or until first bachelor degree requirements are met, whichever comes first",
+              "exclusions": null,
+              "scope_text": "School wording: 'A four-year scholarship ... in the amount of the cost of attendance'",
+              "advertised_coverage_label": null,
+              "conditions_text": "Combined with any federal and state grants and scholarships"
+            },
+            {
+              "benefit_id": "b-fees",
+              "category": "mandatory_fees",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "Up to eight semesters or until first bachelor degree requirements are met, whichever comes first",
+              "exclusions": null,
+              "scope_text": "Mandatory fees; required course-related fees must be reported to the Handler financial aid counselor so awards can be adjusted",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-housing",
+              "category": "housing",
+              "instrument": "scholarship",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "On campus: based on housing selection under standard University housing policies. Off campus: a standard allowance for all off-campus expenses; the student pays any difference",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-meals",
+              "category": "meals",
+              "instrument": "scholarship",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "On campus: based on meal plan selection; the Rocky Bucks/Flex account is not covered. Off campus: part of the standard living allowance",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-books",
+              "category": "books",
+              "instrument": "restricted_fund",
+              "coverage": "fixed_amount",
+              "amount": {
+                "qualifier": "exact",
+                "value": 100,
+                "min": null,
+                "max": null,
+                "period": "academic_year"
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "Academic Supply grant for supplies at the University bookstore; unused amounts are not refundable",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-personal",
+              "category": "other",
+              "instrument": "scholarship",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "Annual allowance for personal and transportation expenses (travel based on distance from hometown); the page says it may not cover every expense",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-health",
+              "category": "health_insurance",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": null,
+              "advertised_coverage_label": null,
+              "conditions_text": "Covered if applicable"
+            },
+            {
+              "benefit_id": "b-enrichment",
+              "category": "enrichment",
+              "instrument": "restricted_fund",
+              "coverage": "variable",
+              "amount": {
+                "qualifier": "up_to",
+                "value": 5000,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "School wording: 'Enrichment fund of up to $5,000'; the page also calls it 'a support fund of up to $5,000 ... over the course of a four-year experience' and '$5,000 in guaranteed funding'; summer school, academic or professional endeavors, study abroad or needs related to the academic program",
+              "advertised_coverage_label": null,
+              "conditions_text": "Requests must be submitted prior to the last date of the term to be considered"
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "partial_or_fixed"
+        }
+      ],
+      "application": {
+        "separate_application": "unknown",
+        "milestones": [
+          {
+            "kind": "admission_deadline",
+            "requirement": "recommended",
+            "date": null,
+            "recurring": {
+              "month": 12,
+              "day": 1
+            },
+            "precision": "day",
+            "source_date_text": "should be submitted by December 1"
+          },
+          {
+            "kind": "interview",
+            "requirement": "invitation_only",
+            "date": null,
+            "recurring": {
+              "month": 2,
+              "day": 15
+            },
+            "precision": "approximate",
+            "source_date_text": "mid- February"
+          }
+        ],
+        "admission_plan_requirement": null,
+        "prerequisites": [],
+        "interview_mode": "virtual",
+        "finalist_event_required": true,
+        "notes": "CONFLICT on route: the scholarships page says the award 'requires a nomination from a recommender who is not related to the prospective student'; the Handler admissions page says every first-year applicant is reviewed 'simply by submitting an application ... no additional materials are required' while also inviting counselors, teachers and community officials to nominate (not students or parents). Nominations open September 15 and close November 30 (recurring, no year); they are not recorded as milestones because whether that step is required is exactly what the two pages disagree on. The admissions page says the application need not be Early Decision. Finalists are invited to a two-part virtual interview event in mid-February; recipients may be invited to River Campus in late spring."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": null,
+          "gpa_scale": null,
+          "credit_load_min_per_term": null,
+          "credit_load_min_per_year": null,
+          "evaluation_timing": "Financial aid application due annually by March 15 for full consideration",
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": 8,
+          "notes": "Renewal requires Satisfactory Academic Progress under the University and Federal SAP policy and an annual financial aid application by March 15 'for full consideration'. No GPA is stated."
+        }
+      ],
+      "stacking_rules": [
+        {
+          "other_aid_type": "federal_or_state_need",
+          "relation": "counts_within_package",
+          "note": "The scholarship is combined with federal and state grants and scholarships to cover tuition and mandatory fees."
+        }
+      ],
+      "award_counts": [],
+      "sources": [
+        {
+          "source_id": "s-adm",
+          "url": "https://admissions.rochester.edu/handler-scholarship/",
+          "authority": "official_admissions",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-fa",
+          "url": "https://www.rochester.edu/financial-aid/scholarships/",
+          "authority": "official_aid_policy",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-adm",
+          "locator": "Handler page: nominations window and December 1 date carry no year; no entering class is named",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-adm",
+          "locator": "Handler page, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/aid_basis",
+          "source_ref": "s-adm",
+          "locator": "Handler page, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/need_role",
+          "source_ref": "s-adm",
+          "locator": "Handler page, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-fa",
+          "locator": "Scholarships page, Specialized Scholarships, Alan and Jane Handler Scholarship",
+          "value_status": "conflicting"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-adm",
+          "locator": "Handler page, How to apply",
+          "value_status": "conflicting"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-fa",
+          "locator": "Scholarships page, Specialized Scholarships, Alan and Jane Handler Scholarship",
+          "value_status": "conflicting"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-adm",
+          "locator": "Handler page, How to apply",
+          "value_status": "conflicting"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-adm",
+          "locator": "Handler page, Scholarship coverage, Tuition and fees",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/conditions_text",
+          "source_ref": "s-adm",
+          "locator": "Handler page, Scholarship coverage, Tuition and fees",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1",
+          "source_ref": "s-adm",
+          "locator": "Handler page, Scholarship coverage, Tuition and fees",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/2",
+          "source_ref": "s-adm",
+          "locator": "Handler page, Scholarship coverage, Housing and food",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/3",
+          "source_ref": "s-adm",
+          "locator": "Handler page, Scholarship coverage, Housing and food",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/4/amount",
+          "source_ref": "s-adm",
+          "locator": "Handler page, Scholarship coverage, Books & supplies",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/5",
+          "source_ref": "s-adm",
+          "locator": "Handler page, Scholarship coverage, Transportation & personal expenses",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/6/conditions_text",
+          "source_ref": "s-adm",
+          "locator": "Handler page, Scholarship benefits list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/7/amount",
+          "source_ref": "s-adm",
+          "locator": "Handler page, financial award details, Scholarship benefits list",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/7/conditions_text",
+          "source_ref": "s-adm",
+          "locator": "Handler page, Handler enrichment fund paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/0",
+          "source_ref": "s-adm",
+          "locator": "Handler page, How to apply",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/1",
+          "source_ref": "s-adm",
+          "locator": "Handler page, Finalist interviews",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/finalist_event_required",
+          "source_ref": "s-adm",
+          "locator": "Handler page, FAQ",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-adm",
+          "locator": "Handler page, Scholarship stipulations, Renewal",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/citizenship_eligible",
+          "source_ref": "s-adm",
+          "locator": "Handler page, How to apply, Ideal candidates",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/0",
+          "source_ref": "s-adm",
+          "locator": "Handler page, Scholarship coverage, Tuition and fees",
+          "value_status": "reported"
+        }
+      ]
+    },
+    {
       "program_id": "national-merit-semifinalist-package",
       "school_id": "university-of-tulsa",
       "ipeds_id": "207971",
@@ -12840,6 +16244,326 @@
           "field_path": "stacking_rules/1",
           "source_ref": "s-nmsf",
           "locator": "National Merit Semifinalist Package page, Award section, Outside scholarships bullet",
+          "value_status": "reported"
+        }
+      ]
+    },
+    {
+      "program_id": "pitt-rees-chancellors-scholars-program",
+      "school_id": "upitt",
+      "ipeds_id": "215293",
+      "participating_school_ids": [
+        "upitt"
+      ],
+      "official_name": "Rees-Chancellor's Scholars Program",
+      "aliases": [
+        "Rees-Chancellor's Scholarship",
+        "Chancellor's Scholarship (former name)"
+      ],
+      "program_family": "honors",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "rees-chancellors-fall-2027",
+      "entry_year": 2027,
+      "entry_year_label": null,
+      "entry_terms": [
+        "fall"
+      ],
+      "source_cohort_text": "will premiere and welcome its first cohort in Fall 2027",
+      "verification_status": "verified",
+      "cycle_basis": "entry_year",
+      "cycle_through_date": null,
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b4",
+      "owner_spot_checked": false,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "full_tuition"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "unknown"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "no_form_other_steps_required",
+      "deadline_months": [
+        12
+      ],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "unknown",
+          "selection_mode": "competitive",
+          "consideration_route": "honors_application",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "unknown",
+            "citizenship_eligible": null,
+            "citizenship_text": "U.S. residents or DACA recipients",
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "Factors for review include weighted GPA, rigor of curriculum, SAT/ACT scores (if applicable), class rank (if applicable), extracurricular activities and the quality of the Common Application essay or Pitt personal statement; high school research experience and leadership are highly recommended. The page states no minimum GPA or score, and the test-policy wording ('if applicable') is not specific enough to record. The program was renamed and expanded from the Chancellor's Scholarship."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": null,
+              "advertised_coverage_label": "full tuition coverage",
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-housing",
+              "category": "housing",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "School wording: 'room and board'; the page gives no rate or cap",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-meals",
+              "category": "meals",
+              "instrument": "scholarship",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "School wording: 'room and board'; the page gives no rate or cap",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-experiential",
+              "category": "enrichment",
+              "instrument": "restricted_fund",
+              "coverage": "unknown",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "School wording: 'guaranteed funding for experiential learning, including study abroad, internship, and research opportunities'; no amount is given",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "full_tuition"
+        }
+      ],
+      "application": {
+        "separate_application": "no_form_other_steps_required",
+        "milestones": [
+          {
+            "kind": "application_deadline",
+            "requirement": "priority",
+            "date": null,
+            "recurring": {
+              "month": 12,
+              "day": 1
+            },
+            "precision": "day",
+            "source_date_text": "submit all required application materials by December 1"
+          },
+          {
+            "kind": "notification",
+            "requirement": "invitation_only",
+            "date": null,
+            "recurring": {
+              "month": 12,
+              "day": 1
+            },
+            "precision": "month",
+            "source_date_text": "Semifinalists will be notified in December"
+          },
+          {
+            "kind": "notification",
+            "requirement": "invitation_only",
+            "date": null,
+            "recurring": {
+              "month": 2,
+              "day": 1
+            },
+            "precision": "month",
+            "source_date_text": "Finalists will be notified in February"
+          },
+          {
+            "kind": "notification",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 3,
+              "day": 1
+            },
+            "precision": "month",
+            "source_date_text": "recipients will be notified in early March"
+          }
+        ],
+        "admission_plan_requirement": "Apply to the University of Pittsburgh, be accepted into the Frederick Honors College and indicate interest in it",
+        "prerequisites": [],
+        "interview_mode": "unknown",
+        "finalist_event_required": null,
+        "notes": "Two interview rounds (semifinalists in December, finalists in February); the page does not give dates or formats for them. The December 1 date has no year on the page. No renewal terms are stated."
+      },
+      "renewal_rules": null,
+      "stacking_rules": null,
+      "award_counts": [],
+      "sources": [
+        {
+          "source_id": "s-prog",
+          "url": "https://www.frederickhonors.pitt.edu/rees-chancellors-scholars-program",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-prog",
+          "locator": "Rees-Chancellor's Scholars Program, first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-prog",
+          "locator": "Eligibility paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-prog",
+          "locator": "Eligibility paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-prog",
+          "locator": "Second paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-prog",
+          "locator": "Second paragraph: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/1",
+          "source_ref": "s-prog",
+          "locator": "Second paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-prog",
+          "locator": "Second paragraph: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/2",
+          "source_ref": "s-prog",
+          "locator": "Second paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/2/amount",
+          "source_ref": "s-prog",
+          "locator": "Second paragraph: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/3",
+          "source_ref": "s-prog",
+          "locator": "Second paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/3/amount",
+          "source_ref": "s-prog",
+          "locator": "Second paragraph: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-prog",
+          "locator": "Application timeline paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/0",
+          "source_ref": "s-prog",
+          "locator": "Application timeline paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/1",
+          "source_ref": "s-prog",
+          "locator": "Application timeline paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/2",
+          "source_ref": "s-prog",
+          "locator": "Application timeline paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/3",
+          "source_ref": "s-prog",
+          "locator": "Application timeline paragraph",
           "value_status": "reported"
         }
       ]
@@ -13594,6 +17318,421 @@
           "source_ref": "s-prog",
           "locator": "Program page, Student Benefits",
           "value_status": "reported"
+        }
+      ]
+    },
+    {
+      "program_id": "villanova-presidential-scholarship",
+      "school_id": "villanova-university",
+      "ipeds_id": "216597",
+      "participating_school_ids": [
+        "villanova-university"
+      ],
+      "official_name": "Presidential Scholarship",
+      "aliases": [
+        "Presidential Scholars Program",
+        "Villanova Presidential Scholarship"
+      ],
+      "program_family": "presidential",
+      "awarding_authority": "institution",
+      "program_status": "active",
+      "applicable_campuses": [],
+      "related_programs": [],
+      "version_id": "villanova-presidential-2027",
+      "entry_year": 2027,
+      "entry_year_label": null,
+      "entry_terms": [
+        "unspecified"
+      ],
+      "source_cohort_text": "2027 Presidential Scholarship Interview Program; test-optional through the 2026-27 admission cycle (Class of 2031)",
+      "verification_status": "verified",
+      "cycle_basis": "entry_year",
+      "cycle_through_date": "2027-03-21",
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b4",
+      "owner_spot_checked": false,
+      "program_status_for_entry": "active",
+      "coverages": [
+        "full_tuition_fees"
+      ],
+      "selection_modes": [
+        "competitive"
+      ],
+      "residencies": [
+        "unknown"
+      ],
+      "national_merit_statuses": [],
+      "statuses_required": [],
+      "need_roles": [
+        "unknown"
+      ],
+      "separate_application": "invitation_only",
+      "deadline_months": [
+        1
+      ],
+      "key_deadline": null,
+      "source_retrieved_at": "2026-11-15",
+      "offers": [
+        {
+          "offer_id": "o-main",
+          "parent_offer_id": null,
+          "variant_name": null,
+          "residency": "unknown",
+          "selection_mode": "competitive",
+          "consideration_route": "invitation",
+          "aid_basis": "merit_only",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": null,
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": null,
+            "test_rules": null,
+            "tests_policy_for_scholarship": "optional",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "The criteria page says there are no minimum GPA or standardized test score requirements, but nominees must be competitive applicants to Villanova. As of September 2024 nominations are no longer required. Selection is holistic on eight criteria (academic achievement, passion and commitment, civic engagement, creativity, leadership, resiliency, response to systemic challenges, vision for the future). Recipients are expected to take part in the University Honors Program."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-tuition",
+              "category": "tuition",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "To completion of one undergraduate degree or up to eight semesters, whichever comes first",
+              "exclusions": null,
+              "scope_text": "Fall and spring semesters",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-fees",
+              "category": "mandatory_fees",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "To completion of one undergraduate degree or up to eight semesters, whichever comes first",
+              "exclusions": null,
+              "scope_text": "General fee",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-housing",
+              "category": "housing",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "To completion of one undergraduate degree or up to eight semesters, whichever comes first",
+              "exclusions": null,
+              "scope_text": "On-campus housing",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-meals",
+              "category": "meals",
+              "instrument": "scholarship",
+              "coverage": "partial",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "To completion of one undergraduate degree or up to eight semesters, whichever comes first",
+              "exclusions": null,
+              "scope_text": "A meal plan that includes up to 21 meals per week",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            },
+            {
+              "benefit_id": "b-books",
+              "category": "books",
+              "instrument": "scholarship",
+              "coverage": "full",
+              "amount": {
+                "qualifier": "not_published",
+                "value": null,
+                "min": null,
+                "max": null,
+                "period": null
+              },
+              "duration_terms": "To completion of one undergraduate degree or up to eight semesters, whichever comes first",
+              "exclusions": null,
+              "scope_text": "The Villanova Textbook Access Program book fee",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "full_tuition_fees"
+        }
+      ],
+      "application": {
+        "separate_application": "invitation_only",
+        "milestones": [
+          {
+            "kind": "admission_deadline",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 1,
+              "day": 15
+            },
+            "precision": "day",
+            "source_date_text": "by 11:59 PM (EST) January 15"
+          },
+          {
+            "kind": "application_open",
+            "requirement": "invitation_only",
+            "date": null,
+            "recurring": {
+              "month": 1,
+              "day": 15
+            },
+            "precision": "approximate",
+            "source_date_text": "in the middle of January for Early Action and Early Decision I applicants and in February for Regular Decision and Early Decision II candidates"
+          },
+          {
+            "kind": "finalist_event",
+            "requirement": "invitation_only",
+            "date": "2027-03-21",
+            "recurring": null,
+            "precision": "day",
+            "source_date_text": "Sunday, March 21—Tuesday, March 23 (2027 Interview Program)"
+          },
+          {
+            "kind": "acceptance_deadline",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 4,
+              "day": 1
+            },
+            "precision": "month",
+            "source_date_text": "in April"
+          }
+        ],
+        "admission_plan_requirement": "Complete application for admission through the Common Application or Coalition Application by January 15",
+        "prerequisites": [],
+        "interview_mode": "in_person",
+        "finalist_event_required": true,
+        "notes": "Every applicant is considered; Villanova selects candidates and invites them to submit the Presidential Scholars Program application, which includes short-answer essays. The invitation carries that application's deadline, which the page does not state. Finalists are required to attend an on-campus Interview Program in March and are notified of the decision after it. The January 15 date has no year on the page; the Class of 2031 and the 2027 Interview Program dates are the page's own cohort wording. A separate Caritas Presidential Scholarship exists and is not recorded here."
+      },
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": 3.33,
+          "gpa_scale": null,
+          "credit_load_min_per_term": null,
+          "credit_load_min_per_year": null,
+          "evaluation_timing": null,
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": 8,
+          "notes": "Minimum overall GPA of 3.33. Scholars cannot be placed on probation in the first year; once on probation a scholar has three semesters to reach 3.33 before losing the scholarship; exceptions are at the program director's discretion. Scholarships are renewable annually and renewal decisions rest with the Director of the Presidential Scholars Program."
+        }
+      ],
+      "stacking_rules": null,
+      "award_counts": [
+        {
+          "metric": "offers",
+          "qualifier": "exact",
+          "value": 25,
+          "cohort_year": null,
+          "source_ref": "s-prog",
+          "claim": "target",
+          "denominator": null
+        }
+      ],
+      "sources": [
+        {
+          "source_id": "s-apply",
+          "url": "https://www.villanova.edu/university/research-scholarship/crf/presidential-scholars/apply.html",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-crit",
+          "url": "https://www.villanova.edu/university/research-scholarship/crf/presidential-scholars/criteria.html",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-merit",
+          "url": "https://www.villanova.edu/university/undergraduate-admission/Financial-Assistance-and-scholarship/merit-based-scholarships.html",
+          "authority": "official_admissions",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-pol",
+          "url": "https://www.villanova.edu/university/research-scholarship/crf/presidential-scholars/policies.html",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-prog",
+          "url": "https://www.villanova.edu/university/research-scholarship/crf/presidential-scholars.html",
+          "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        }
+      ],
+      "evidence": [
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-apply",
+          "locator": "Scholar Selection Process, finalist paragraphs",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-apply",
+          "locator": "Scholar Selection Process, third paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-apply",
+          "locator": "Scholar Selection Process, second and third paragraphs",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/tests_policy_for_scholarship",
+          "source_ref": "s-crit",
+          "locator": "Selection Criteria, Academic Achievement",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-apply",
+          "locator": "Scholar Selection Process, third paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/0",
+          "source_ref": "s-apply",
+          "locator": "Scholar Selection Process, second paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/1",
+          "source_ref": "s-apply",
+          "locator": "Scholar Selection Process, third paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/2",
+          "source_ref": "s-apply",
+          "locator": "Scholar Selection Process, finalist paragraphs",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/3",
+          "source_ref": "s-apply",
+          "locator": "Scholar Selection Process, finalist paragraphs",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-pol",
+          "locator": "Program Policies, Academic Standing",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "award_counts/0",
+          "source_ref": "s-prog",
+          "locator": "Scholarship Details",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-prog",
+          "locator": "Scholarship Details",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/amount",
+          "source_ref": "s-prog",
+          "locator": "Scholarship Details: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/1",
+          "source_ref": "s-prog",
+          "locator": "Scholarship Details",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-prog",
+          "locator": "Scholarship Details: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/2",
+          "source_ref": "s-prog",
+          "locator": "Scholarship Details",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/2/amount",
+          "source_ref": "s-prog",
+          "locator": "Scholarship Details: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/3",
+          "source_ref": "s-prog",
+          "locator": "Scholarship Details",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/3/amount",
+          "source_ref": "s-prog",
+          "locator": "Scholarship Details: no dollar amount is given",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/benefits/4",
+          "source_ref": "s-prog",
+          "locator": "Scholarship Details",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/4/amount",
+          "source_ref": "s-prog",
+          "locator": "Scholarship Details: no dollar amount is given",
+          "value_status": "not_published"
         }
       ]
     },

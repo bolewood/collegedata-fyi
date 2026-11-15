@@ -1,0 +1,246 @@
+schema_version: 1
+program_id: tcu-chancellors-scholarship
+school_id: texas-christian-university
+ipeds_id: '228875'
+applicable_campuses: []
+official_name: Chancellor's Scholarship
+aliases:
+- Chancellor's Scholars
+- Chancellor's Scholars Program
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: tcu-chancellors-fall-2027
+  supersedes: null
+  entry_year: 2027
+  entry_year_label: null
+  entry_terms:
+  - fall
+  source_cohort_text: Fall 2027 applicants
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b4
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-first-year
+    parent_offer_id: null
+    variant_name: First-year
+    residency: unknown
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: not_considered
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: First-year track only; the page also describes a separate transfer track (minimum
+        3.85 GPA and 60 transferable hours, six semesters), which is not recorded here. Page says successful
+        candidates have near-perfect grades in the most rigorous curriculum, writing samples, academic
+        references and co-curricular involvement; no minimum GPA is stated for first-year applicants.
+        The first-year page reports the middle 50% of 2026 scholarship recipients (all scholarship levels)
+        at 3.8-3.98 GPA, which is not a minimum for this award. Students who complete the FAFSA and CSS
+        Profile are notified if eligible for additional need-based aid.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: 'Eight semesters for first-year students (the first-year table says: Full tuition
+        for four years; up to 8 semesters of undergraduate coursework)'
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: full-tuition
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: 'November 1: Early Action / Early Decision I application deadline'
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 15
+      precision: day
+      source_date_text: 'November 15: John V. Roach Honors College application deadline'
+    - kind: notification
+      requirement: invitation_only
+      date: '2027-01-15'
+      recurring: null
+      precision: day
+      source_date_text: invitation to Chancellor’s Scholars Experience by January 15, 2027
+    - kind: finalist_event
+      requirement: invitation_only
+      date: '2027-02-14'
+      recurring: null
+      precision: day
+      source_date_text: February 14-16, 2027
+    - kind: interview
+      requirement: invitation_only
+      date: '2027-02-16'
+      recurring: null
+      precision: day
+      source_date_text: Interview Day on Tuesday, February 16, 2027
+    admission_plan_requirement: Apply by the Early Action / Early Decision I deadline of November 1
+    prerequisites:
+    - kind: recommendation
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Committee review uses resume, writing samples and letters of recommendation.
+    interview_mode: in_person
+    finalist_event_required: true
+    notes: The John V. Roach Honors College application is completed in the TCU portal. November 1 and
+      November 15 appear without a year; the January 15, February 14-16 and February 16 dates carry 2027
+      on the page. Finalists get about one week to register. In-person participation in Interview Day
+      is expected for finalists residing in the United States; finalists residing internationally may
+      request a video interview. The earlier TCU lead's 'three or four years' wording did not appear on
+      either page read; the first-year table says 'Full tuition for four years' and 'Up to 8 semesters',
+      consistent with the eight-semester wording.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Page gives the duration (eight semesters for first-year students) and no GPA or credit threshold.
+  stacking_rules: null
+  award_counts:
+  - metric: new_recipients
+    qualifier: exact
+    value: 40
+    cohort_year: null
+    source_ref: s-prog
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-prog
+    url: https://admissions.tcu.edu/chancellors-scholars.php
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 4c69f9dd065405921e1418bd002d426eb74a6b641d15de005f904022d1949f0e
+    archive_url: null
+  - source_id: s-fy
+    url: https://admissions.tcu.edu/afford/scholarship-aid/first-year-student.php
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: 83508aa439211341cdd393008c1072979a3f92f74a65572c9bda7a792ad29d47
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-prog
+    locator: 'First-year dates: finalist invitation paragraph'
+    short_excerpt: Fall 2027 applicants who advance to the finalist stage will receive their invitation
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-prog
+    locator: FAQ, What are my chances of receiving the Chancellor’s Scholarship?
+    short_excerpt: No combination of academic credentials guarantees an applicant an invitation to interview
+      for the award.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-prog
+    locator: First-year applicants requirements
+    short_excerpt: Complete the John V. Roach Honors College application by the November 15 deadline.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-prog
+    locator: FAQ, Are test scores required
+    short_excerpt: Test scores are not considered in any phase of Chancellor’s Scholars review.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-prog
+    locator: FAQ, What is the value of the Chancellor’s Scholarship?
+    short_excerpt: The Chancellor’s Scholarship covers full-tuition for eight semesters for first-year
+      students
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-fy
+    locator: 'First-Year Students, Academic Scholarships table, Chancellor''s Scholarship row (Yearly
+      Value: Full tuition for four years)'
+    short_excerpt: Full tuition for four years
+    value_status: not_published
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-prog
+    locator: First-year applicants requirements
+    short_excerpt: Complete the John V. Roach Honors College application by the November 15 deadline.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-prog
+    locator: First-year dates list
+    short_excerpt: 'November 1: Early Action / Early Decision I application deadline'
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-prog
+    locator: First-year dates list
+    short_excerpt: 'November 15: John V. Roach Honors College application deadline'
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-prog
+    locator: First-year applicants requirements, finalist paragraph
+    short_excerpt: will receive their invitation to Chancellor’s Scholars Experience by January 15, 2027
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-prog
+    locator: First-year dates list
+    short_excerpt: 'February 14-16: Chancellor’s Scholars Experience'
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/4
+    source_ref: s-prog
+    locator: First-year dates list
+    short_excerpt: 'Tuesday, February 16: Chancellor’s Scholars Interview Day'
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-prog
+    locator: FAQ, What is the value of the Chancellor’s Scholarship?
+    short_excerpt: full-tuition for eight semesters for first-year students
+    value_status: reported
+    reported_value: null
+  - field_path: award_counts/0
+    source_ref: s-prog
+    locator: FAQ, What are my chances of receiving the Chancellor’s Scholarship?
+    short_excerpt: We aim to enroll 40 first-year and five transfer Chancellor’s Scholars each year.
+    value_status: reported
+    reported_value: null

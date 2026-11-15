@@ -1,0 +1,410 @@
+schema_version: 1
+program_id: handler-scholarship
+school_id: university-of-rochester
+ipeds_id: '195030'
+applicable_campuses: []
+official_name: Alan and Jane Handler Scholarship
+aliases:
+- Alan and Jane Handler Endowed Scholarship
+- Handler Scholarship
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: handler-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Pages name no entering class or year (nominations September 15 - November 30 and December
+    1 have no year)
+  entry_terms:
+  - fall
+  source_cohort_text: null
+  verification_status: conflicting
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b4
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: unknown
+    selection_mode: competitive
+    consideration_route: unknown
+    aid_basis: merit_and_need
+    need_role: required
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible:
+      - any
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: 'Need condition as the page words it: ''highly academically qualified students
+        with substantial levels of financial need, as demonstrated on their CSS Profile and FAFSA, who
+        have overcome significant obstacles in their lives''. The scholarships page says ''highly qualified
+        students with substantial levels of financial need''. Selection is on academic excellence, potential
+        to be future leaders and mastery of complex challenges. First-year, fall-term applicants only;
+        transfer and spring applicants are not eligible. Recipients are described as receiving ''assured,
+        complete financial support'' (tuition, fees, housing, food, books, personal expenses and transportation);
+        the admissions page also calls it ''a more-than-full-tuition, four-year scholarship''.'
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Up to eight semesters or until first bachelor degree requirements are met, whichever
+        comes first
+      exclusions: null
+      scope_text: 'School wording: ''A four-year scholarship ... in the amount of the cost of attendance'''
+      advertised_coverage_label: null
+      conditions_text: Combined with any federal and state grants and scholarships
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Up to eight semesters or until first bachelor degree requirements are met, whichever
+        comes first
+      exclusions: null
+      scope_text: Mandatory fees; required course-related fees must be reported to the Handler financial
+        aid counselor so awards can be adjusted
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'On campus: based on housing selection under standard University housing policies. Off
+        campus: a standard allowance for all off-campus expenses; the student pays any difference'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'On campus: based on meal plan selection; the Rocky Bucks/Flex account is not covered.
+        Off campus: part of the standard living allowance'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-books
+      category: books
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 100
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: null
+      exclusions: null
+      scope_text: Academic Supply grant for supplies at the University bookstore; unused amounts are not
+        refundable
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-personal
+      category: other
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Annual allowance for personal and transportation expenses (travel based on distance
+        from hometown); the page says it may not cover every expense
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-health
+      category: health_insurance
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: null
+      conditions_text: Covered if applicable
+    - benefit_id: b-enrichment
+      category: enrichment
+      instrument: restricted_fund
+      coverage: variable
+      amount:
+        qualifier: up_to
+        value: 5000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School wording: ''Enrichment fund of up to $5,000''; the page also calls it ''a support
+        fund of up to $5,000 ... over the course of a four-year experience'' and ''$5,000 in guaranteed
+        funding''; summer school, academic or professional endeavors, study abroad or needs related to
+        the academic program'
+      advertised_coverage_label: null
+      conditions_text: Requests must be submitted prior to the last date of the term to be considered
+    advertised_totals: []
+  application:
+    separate_application: unknown
+    milestones:
+    - kind: admission_deadline
+      requirement: recommended
+      date: null
+      recurring:
+        month: 12
+        day: 1
+      precision: day
+      source_date_text: should be submitted by December 1
+    - kind: interview
+      requirement: invitation_only
+      date: null
+      recurring:
+        month: 2
+        day: 15
+      precision: approximate
+      source_date_text: mid- February
+    admission_plan_requirement: null
+    prerequisites: []
+    interview_mode: virtual
+    finalist_event_required: true
+    notes: 'CONFLICT on route: the scholarships page says the award ''requires a nomination from a recommender
+      who is not related to the prospective student''; the Handler admissions page says every first-year
+      applicant is reviewed ''simply by submitting an application ... no additional materials are required''
+      while also inviting counselors, teachers and community officials to nominate (not students or parents).
+      Nominations open September 15 and close November 30 (recurring, no year); they are not recorded
+      as milestones because whether that step is required is exactly what the two pages disagree on. The
+      admissions page says the application need not be Early Decision. Finalists are invited to a two-part
+      virtual interview event in mid-February; recipients may be invited to River Campus in late spring.'
+  renewal_rules:
+  - applies_to: []
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: Financial aid application due annually by March 15 for full consideration
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Renewal requires Satisfactory Academic Progress under the University and Federal SAP policy
+      and an annual financial aid application by March 15 'for full consideration'. No GPA is stated.
+  stacking_rules:
+  - other_aid_type: federal_or_state_need
+    relation: counts_within_package
+    note: The scholarship is combined with federal and state grants and scholarships to cover tuition
+      and mandatory fees.
+  award_counts: []
+  sources:
+  - source_id: s-fa
+    url: https://www.rochester.edu/financial-aid/scholarships/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 087bc9d40e1819a13c2774e469cd8a5416a301e53e79fea52c83850fa69901f0
+    archive_url: null
+  - source_id: s-adm
+    url: https://admissions.rochester.edu/handler-scholarship/
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: 33fab1e94027188fecadfd20ce7a755d34a69197c23107b81fb48485749fd3ce
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-adm
+    locator: 'Handler page: nominations window and December 1 date carry no year; no entering class is
+      named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-adm
+    locator: Handler page, first paragraph
+    short_excerpt: Scholars are selected on the basis of academic excellence, outstanding potential to
+      be future leaders, and demonstrated mastery of complex challenges.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/aid_basis
+    source_ref: s-adm
+    locator: Handler page, first paragraph
+    short_excerpt: highly academically qualified students with substantial levels of financial need, as
+      demonstrated on their CSS Profile and FAFSA
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/need_role
+    source_ref: s-adm
+    locator: Handler page, first paragraph
+    short_excerpt: highly academically qualified students with substantial levels of financial need, as
+      demonstrated on their CSS Profile and FAFSA
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-fa
+    locator: Scholarships page, Specialized Scholarships, Alan and Jane Handler Scholarship
+    short_excerpt: The Handler Scholarship requires a nomination from a recommender who is not related
+      to the prospective student.
+    value_status: conflicting
+    reported_value: nomination
+  - field_path: offers/0/consideration_route
+    source_ref: s-adm
+    locator: Handler page, How to apply
+    short_excerpt: All University of Rochester first-year applicants are reviewed for the Handler Scholarship
+      simply by submitting an application
+    value_status: conflicting
+    reported_value: admission_application
+  - field_path: application/separate_application
+    source_ref: s-fa
+    locator: Scholarships page, Specialized Scholarships, Alan and Jane Handler Scholarship
+    short_excerpt: The Handler Scholarship requires a nomination from a recommender who is not related
+      to the prospective student.
+    value_status: conflicting
+    reported_value: no_form_other_steps_required
+  - field_path: application/separate_application
+    source_ref: s-adm
+    locator: Handler page, How to apply
+    short_excerpt: no additional materials are required.
+    value_status: conflicting
+    reported_value: not_required
+  - field_path: offers/0/benefits/0
+    source_ref: s-adm
+    locator: Handler page, Scholarship coverage, Tuition and fees
+    short_excerpt: will cover your tuition and mandatory fees for up to eight semesters or until your
+      first bachelor degree requirements are met
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/conditions_text
+    source_ref: s-adm
+    locator: Handler page, Scholarship coverage, Tuition and fees
+    short_excerpt: The Handler Scholarship (combined with any federal and state grants/scholarships)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-adm
+    locator: Handler page, Scholarship coverage, Tuition and fees
+    short_excerpt: will cover your tuition and mandatory fees for up to eight semesters or until your
+      first bachelor degree requirements are met
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-adm
+    locator: Handler page, Scholarship coverage, Housing and food
+    short_excerpt: 'On campus: Based on your housing and meal plan selection'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3
+    source_ref: s-adm
+    locator: Handler page, Scholarship coverage, Housing and food
+    short_excerpt: 'On campus: Based on your housing and meal plan selection'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-adm
+    locator: Handler page, Scholarship coverage, Books & supplies
+    short_excerpt: You will have an Academic Supply grant of $100 per year to purchase supplies needed
+      for class at the University bookstore.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/5
+    source_ref: s-adm
+    locator: Handler page, Scholarship coverage, Transportation & personal expenses
+    short_excerpt: Your cost of attendance for the academic year includes an annual allowance for personal
+      and transportation expenses.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/6/conditions_text
+    source_ref: s-adm
+    locator: Handler page, Scholarship benefits list
+    short_excerpt: Health insurance is covered if applicable.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/7/amount
+    source_ref: s-adm
+    locator: Handler page, financial award details, Scholarship benefits list
+    short_excerpt: Enrichment fund of up to $5,000 to support other enhancements or needs related to the
+      academic experience.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/7/conditions_text
+    source_ref: s-adm
+    locator: Handler page, Handler enrichment fund paragraph
+    short_excerpt: Requests must be submitted prior to the last date of the term to be considered.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-adm
+    locator: Handler page, How to apply
+    short_excerpt: should be submitted by December 1
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-adm
+    locator: Handler page, Finalist interviews
+    short_excerpt: two-part virtual interview event
+    value_status: reported
+    reported_value: null
+  - field_path: application/finalist_event_required
+    source_ref: s-adm
+    locator: Handler page, FAQ
+    short_excerpt: Participating in the virtual interview event is a mandatory part of the scholarship
+      process.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-adm
+    locator: Handler page, Scholarship stipulations, Renewal
+    short_excerpt: you must apply for financial aid annually by March 15 for full consideration.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/citizenship_eligible
+    source_ref: s-adm
+    locator: Handler page, How to apply, Ideal candidates
+    short_excerpt: First-year, fall term domestic and international applicants
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-adm
+    locator: Handler page, Scholarship coverage, Tuition and fees
+    short_excerpt: The Handler Scholarship (combined with any federal and state grants/scholarships)
+    value_status: reported
+    reported_value: null

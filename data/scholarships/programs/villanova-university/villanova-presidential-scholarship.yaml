@@ -1,0 +1,371 @@
+schema_version: 1
+program_id: villanova-presidential-scholarship
+school_id: villanova-university
+ipeds_id: '216597'
+applicable_campuses: []
+official_name: Presidential Scholarship
+aliases:
+- Presidential Scholars Program
+- Villanova Presidential Scholarship
+program_family: presidential
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: villanova-presidential-2027
+  supersedes: null
+  entry_year: 2027
+  entry_year_label: null
+  entry_terms:
+  - unspecified
+  source_cohort_text: 2027 Presidential Scholarship Interview Program; test-optional through the 2026-27
+    admission cycle (Class of 2031)
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b4
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: unknown
+    selection_mode: competitive
+    consideration_route: invitation
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: The criteria page says there are no minimum GPA or standardized test score requirements,
+        but nominees must be competitive applicants to Villanova. As of September 2024 nominations are
+        no longer required. Selection is holistic on eight criteria (academic achievement, passion and
+        commitment, civic engagement, creativity, leadership, resiliency, response to systemic challenges,
+        vision for the future). Recipients are expected to take part in the University Honors Program.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: To completion of one undergraduate degree or up to eight semesters, whichever comes
+        first
+      exclusions: null
+      scope_text: Fall and spring semesters
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: To completion of one undergraduate degree or up to eight semesters, whichever comes
+        first
+      exclusions: null
+      scope_text: General fee
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: To completion of one undergraduate degree or up to eight semesters, whichever comes
+        first
+      exclusions: null
+      scope_text: On-campus housing
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: To completion of one undergraduate degree or up to eight semesters, whichever comes
+        first
+      exclusions: null
+      scope_text: A meal plan that includes up to 21 meals per week
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-books
+      category: books
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: To completion of one undergraduate degree or up to eight semesters, whichever comes
+        first
+      exclusions: null
+      scope_text: The Villanova Textbook Access Program book fee
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: invitation_only
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 1
+        day: 15
+      precision: day
+      source_date_text: by 11:59 PM (EST) January 15
+    - kind: application_open
+      requirement: invitation_only
+      date: null
+      recurring:
+        month: 1
+        day: 15
+      precision: approximate
+      source_date_text: in the middle of January for Early Action and Early Decision I applicants and
+        in February for Regular Decision and Early Decision II candidates
+    - kind: finalist_event
+      requirement: invitation_only
+      date: '2027-03-21'
+      recurring: null
+      precision: day
+      source_date_text: Sunday, March 21—Tuesday, March 23 (2027 Interview Program)
+    - kind: acceptance_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 4
+        day: 1
+      precision: month
+      source_date_text: in April
+    admission_plan_requirement: Complete application for admission through the Common Application or Coalition
+      Application by January 15
+    prerequisites: []
+    interview_mode: in_person
+    finalist_event_required: true
+    notes: Every applicant is considered; Villanova selects candidates and invites them to submit the
+      Presidential Scholars Program application, which includes short-answer essays. The invitation carries
+      that application's deadline, which the page does not state. Finalists are required to attend an
+      on-campus Interview Program in March and are notified of the decision after it. The January 15 date
+      has no year on the page; the Class of 2031 and the 2027 Interview Program dates are the page's own
+      cohort wording. A separate Caritas Presidential Scholarship exists and is not recorded here.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.33
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Minimum overall GPA of 3.33. Scholars cannot be placed on probation in the first year; once
+      on probation a scholar has three semesters to reach 3.33 before losing the scholarship; exceptions
+      are at the program director's discretion. Scholarships are renewable annually and renewal decisions
+      rest with the Director of the Presidential Scholars Program.
+  stacking_rules: null
+  award_counts:
+  - metric: offers
+    qualifier: exact
+    value: 25
+    cohort_year: null
+    source_ref: s-prog
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-merit
+    url: https://www.villanova.edu/university/undergraduate-admission/Financial-Assistance-and-scholarship/merit-based-scholarships.html
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: 8c18fb7353a9acda5294a2eabc1e7ed8dae4a7b1a082c6d618840c46f7aedf65
+    archive_url: null
+  - source_id: s-prog
+    url: https://www.villanova.edu/university/research-scholarship/crf/presidential-scholars.html
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 743242d7ecc6f3e2fc5edcbb65a0fe6df1ee39f1cdbf8e4f3925129285ec35f1
+    archive_url: null
+  - source_id: s-apply
+    url: https://www.villanova.edu/university/research-scholarship/crf/presidential-scholars/apply.html
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: b63b32eac94e29f12ea5374ed7298b0a4736e72cc8d90d41d7dc7a80041c5f83
+    archive_url: null
+  - source_id: s-pol
+    url: https://www.villanova.edu/university/research-scholarship/crf/presidential-scholars/policies.html
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 7e5e73271d3949f440ae62ee8ae029ceee5bc0a753e044df1f32bc7d9b2989bf
+    archive_url: null
+  - source_id: s-crit
+    url: https://www.villanova.edu/university/research-scholarship/crf/presidential-scholars/criteria.html
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: ec98c1a268fa9c9f56b97e43a08a70537842645528fc3e5c6efd9c4a60bde82d
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-apply
+    locator: Scholar Selection Process, finalist paragraphs
+    short_excerpt: The 2027 Presidential Scholarship Interview Program will take place Sunday, March 21—Tuesday,
+      March 23.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-apply
+    locator: Scholar Selection Process, third paragraph
+    short_excerpt: Candidates will be selected by Villanova and invited to apply for this award
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-apply
+    locator: Scholar Selection Process, second and third paragraphs
+    short_excerpt: all applicants to Villanova will be considered for the Presidential Scholarship as
+      part of our application review process.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-crit
+    locator: Selection Criteria, Academic Achievement
+    short_excerpt: SAT/ACT scores are not required for Presidential Scholarship consideration.
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-apply
+    locator: Scholar Selection Process, third paragraph
+    short_excerpt: invited to apply for this award through their Applicant Status Page
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-apply
+    locator: Scholar Selection Process, second paragraph
+    short_excerpt: Application by 11:59 PM (EST) January 15
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-apply
+    locator: Scholar Selection Process, third paragraph
+    short_excerpt: in the middle of January for Early Action and Early Decision I applicants and in February
+      for Regular Decision and Early Decision II candidates
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-apply
+    locator: Scholar Selection Process, finalist paragraphs
+    short_excerpt: The 2027 Presidential Scholarship Interview Program will take place Sunday, March 21—Tuesday,
+      March 23.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-apply
+    locator: Scholar Selection Process, finalist paragraphs
+    short_excerpt: The deadline for recipients to accept the Presidential Scholarship is in April.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-pol
+    locator: Program Policies, Academic Standing
+    short_excerpt: Each Scholar is required to maintain a minimum overall GPA of 3.33.
+    value_status: reported
+    reported_value: null
+  - field_path: award_counts/0
+    source_ref: s-prog
+    locator: Scholarship Details
+    short_excerpt: Twenty-five Presidential Scholarships are offered annually.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-prog
+    locator: Scholarship Details
+    short_excerpt: a renewable, merit-based award covering undergraduate Villanova University tuition
+      (fall and spring semesters), on-campus housing
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-prog
+    locator: 'Scholarship Details: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-prog
+    locator: Scholarship Details
+    short_excerpt: a meal plan that includes up to 21 meals per week, the general fee, and the Villanova
+      Textbook Access Program book fee
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-prog
+    locator: 'Scholarship Details: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-prog
+    locator: Scholarship Details
+    short_excerpt: a renewable, merit-based award covering undergraduate Villanova University tuition
+      (fall and spring semesters), on-campus housing
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-prog
+    locator: 'Scholarship Details: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3
+    source_ref: s-prog
+    locator: Scholarship Details
+    short_excerpt: a meal plan that includes up to 21 meals per week, the general fee, and the Villanova
+      Textbook Access Program book fee
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-prog
+    locator: 'Scholarship Details: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4
+    source_ref: s-prog
+    locator: Scholarship Details
+    short_excerpt: a meal plan that includes up to 21 meals per week, the general fee, and the Villanova
+      Textbook Access Program book fee
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-prog
+    locator: 'Scholarship Details: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
