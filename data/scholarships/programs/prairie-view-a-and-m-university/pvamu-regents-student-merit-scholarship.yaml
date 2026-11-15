@@ -19,10 +19,10 @@ versions:
   entry_terms:
   - unspecified
   source_cohort_text: null
-  verification_status: unverified
+  verification_status: verified
   last_reviewed_at: '2026-11-15'
   reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b6
-  owner_spot_checked: false
+  owner_spot_checked: true
   program_status_for_entry: active
   offers:
   - offer_id: o-main

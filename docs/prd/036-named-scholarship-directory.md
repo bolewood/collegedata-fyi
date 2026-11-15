@@ -83,6 +83,7 @@ The directory starts with the largest awards. A program qualifies when the schoo
 Rules for applying it:
 
 - The test is on the top tier only. Once a program qualifies, all of its tiers are recorded, including small ones, so a family sees the whole program.
+- Rule 2 is read broadly (owner clarification, 2026-11-15): a program the school describes as full tuition, a full ride or total cost of attendance qualifies even when the wording is hedged ("valued up to", "fully funded"), the school states the value only for a group of scholarships, or a component is capped or has no published amount. The dollar floor is for awards smaller than that, and is not a reason to hold such a program back. The record still carries the school's exact wording, and coverage stays `partial` or `unknown` where the page does not promise the charge in full.
 - We never add components or multiply to reach the floor (principle 5). Only amounts and totals the school states are used.
 - A program whose value the school does not publish is not picked as a new candidate. One that is already listed stays until the next annual review.
 - A program that drops below the floor in a later cycle gets a new version for that cycle and is then left out of the next one. Published versions are not deleted.

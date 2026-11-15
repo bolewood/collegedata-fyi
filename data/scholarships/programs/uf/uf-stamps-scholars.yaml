@@ -21,10 +21,10 @@ versions:
   - unspecified
   source_cohort_text: 'Overview page: Class of 2030 Scholars; Application Information page: January 2026
     and March 2026 dates'
-  verification_status: unverified
+  verification_status: verified
   last_reviewed_at: '2026-11-15'
   reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b3
-  owner_spot_checked: false
+  owner_spot_checked: true
   program_status_for_entry: null
   offers:
   - offer_id: o-main
