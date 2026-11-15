@@ -1,0 +1,400 @@
+schema_version: 1
+program_id: otis-a-singletary-scholarship
+school_id: university-of-kentucky
+ipeds_id: '157085'
+applicable_campuses: []
+official_name: Otis A. Singletary Scholarship
+aliases:
+- Singletary Scholars
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: otis-a-singletary-fall-2027
+  supersedes: null
+  entry_year: 2027
+  entry_year_label: null
+  entry_terms:
+  - fall
+  source_cohort_text: 'Incoming Freshmen Scholarships page: ''Fall 2027 Freshmen'''
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b3
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-resident
+    parent_offer_id: null
+    variant_name: Kentucky resident
+    residency: in_state
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: 3.8
+        scale: null
+        basis: unweighted
+      test_rules:
+      - exam: ACT
+        min: 33
+        scoring: single_sitting
+        official_required: null
+      - exam: SAT
+        min: 1450
+        scoring: single_sitting
+        official_required: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Traditional criteria are a 3.80 unweighted GPA and a 33 ACT / 1450 SAT; the test-optional
+        criterion is a 4.00 unweighted GPA (the single gpa field holds only the traditional criterion).
+        Superscored tests are not considered. Students must be admitted; first-time freshmen. Each Singletary
+        Scholar is admitted to the Lewis Honors College. The page says funds are limited and that a limited
+        number of awards will be offered.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four-year renewable scholarship
+      exclusions: null
+      scope_text: Full in-state tuition
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four-year renewable scholarship
+      exclusions: null
+      scope_text: Mandatory fees, plus course and program fees
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing-dining
+      category: stipend
+      instrument: cash_stipend
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: First two years of enrollment only
+      exclusions: null
+      scope_text: Housing and dining stipend; no amount is published on the pages read
+      advertised_coverage_label: null
+      conditions_text: Only for Singletary Scholars living on campus in a UK residence hall
+    advertised_totals: []
+  - offer_id: o-nonresident
+    parent_offer_id: null
+    variant_name: Out-of-state
+    residency: out_of_state
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: 3.8
+        scale: null
+        basis: unweighted
+      test_rules:
+      - exam: ACT
+        min: 33
+        scoring: single_sitting
+        official_required: null
+      - exam: SAT
+        min: 1450
+        scoring: single_sitting
+        official_required: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Traditional criteria are a 3.80 unweighted GPA and a 33 ACT / 1450 SAT; the test-optional
+        criterion is a 4.00 unweighted GPA (the single gpa field holds only the traditional criterion).
+        Superscored tests are not considered. Students must be admitted; first-time freshmen. Each Singletary
+        Scholar is admitted to the Lewis Honors College. The page says funds are limited and that a limited
+        number of awards will be offered.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four-year renewable scholarship
+      exclusions: null
+      scope_text: Full out-of-state tuition
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four-year renewable scholarship
+      exclusions: null
+      scope_text: Mandatory fees, plus course and program fees
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing-dining
+      category: stipend
+      instrument: cash_stipend
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: First two years of enrollment only
+      exclusions: null
+      scope_text: Housing and dining stipend; no amount is published on the pages read
+      advertised_coverage_label: null
+      conditions_text: Only for Singletary Scholars living on campus in a UK residence hall
+    advertised_totals: []
+  application:
+    separate_application: no_form_other_steps_required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: '2026-12-01'
+      recurring: null
+      precision: day
+      source_date_text: December 1, 2026 (admission application and all supporting documents, including
+        transcript)
+    - kind: interview
+      requirement: invitation_only
+      date: '2027-01-01'
+      recurring: null
+      precision: month
+      source_date_text: Interviews beginning in January through mid-February
+    - kind: acceptance_deadline
+      requirement: recommended
+      date: '2027-05-01'
+      recurring: null
+      precision: day
+      source_date_text: Incoming freshmen for Fall 2027 are encouraged to accept scholarship offers by
+        May 1, 2027
+    admission_plan_requirement: Complete the competitive scholarship section of the admission application
+      by Dec. 1, 2026
+    prerequisites: []
+    interview_mode: in_person
+    finalist_event_required: null
+    notes: 'There is no separate scholarship form: applicants complete the competitive scholarship section
+      of the admission application. If a deadline falls on a weekend it moves to the following Monday.
+      The page warns funds have run out before December 1 in previous years. Interview format is not stated
+      beyond ''invited to campus''.'
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.4
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: Credit hours are checked each semester; cumulative GPA is checked at the end of
+      the spring terms
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: The page lists a 3.40 cumulative GPA for Singletary recipients. It states a full-time (minimum
+      12 hours each semester) rule for four-year renewable scholarships 'such as' other named awards;
+      Singletary is not named in that sentence.
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: not_allowed
+    note: Students may receive only one of the listed scholarships
+  - other_aid_type: institutional_merit
+    relation: replaces
+    note: A selective or competitive scholarship offer replaces an academic scholarship offer
+  award_counts:
+  - metric: new_recipients
+    qualifier: up_to
+    value: 25
+    cohort_year: null
+    source_ref: s-hon
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-ifs
+    url: https://studentsuccess.uky.edu/financial-aid-and-scholarships/academic-scholarships/incoming-freshmen-scholarships
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 6e5fb375dd9b3f81357eddf3c9aa8da9f8375ff532431af34be82bd393efea34
+    archive_url: null
+  - source_id: s-hon
+    url: https://honors.uky.edu/opportunities/singletary-scholars
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: fc8253860bc795472c93aea178b8d6b50a484d3875b9ca4ade5630174ec89d58
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-ifs
+    locator: Incoming Freshmen Scholarships, note ** under the Kentucky resident table
+    short_excerpt: Applicants for the Presidential Scholarship and the Otis A. Singletary Scholarship
+      must complete the competitive scholarship section of the admission application
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/selection_mode
+    source_ref: s-ifs
+    locator: Incoming Freshmen Scholarships, note ** under the out-of-state table
+    short_excerpt: Applicants for the Presidential Scholarship and the Otis A. Singletary Scholarship
+      must complete the competitive scholarship section of the admission application
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits
+    source_ref: s-ifs
+    locator: Resident table, Otis A. Singletary row, Annual Amount
+    short_excerpt: Full in-state tuition & mandatory fees, course & program fees, + housing & dining stipend***
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits
+    source_ref: s-ifs
+    locator: Out-of-state table, Otis A. Singletary row, Annual Amount
+    short_excerpt: Full out-of-state tuition & mandatory fees, course & program fees, + housing & dining
+      stipend***
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/conditions_text
+    source_ref: s-ifs
+    locator: Note *** under the resident table
+    short_excerpt: Housing and dining stipend is available for Singletary Scholars living on campus in
+      a UK residence hall during the first two years of enrollment only.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/2/conditions_text
+    source_ref: s-ifs
+    locator: Note *** under the out-of-state table
+    short_excerpt: Housing & dining stipend is available for Singletary Scholars living on campus in a
+      UK residence hall during the first two years of enrollment only.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/gpa
+    source_ref: s-ifs
+    locator: Resident table, Otis A. Singletary row, Traditional criteria (unweighted GPA)
+    short_excerpt: 3.80 & 33 ACT/1450 SAT | 4.00
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/eligibility/gpa
+    source_ref: s-ifs
+    locator: Out-of-state table, Otis A. Singletary row, Traditional criteria (unweighted GPA)
+    short_excerpt: 3.80 & 33 ACT/1450 SAT | 4.00
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/test_rules
+    source_ref: s-ifs
+    locator: Incoming Freshmen Scholarships, introductory paragraph
+    short_excerpt: Combined test scores (superscore) are not considered.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/eligibility/test_rules
+    source_ref: s-ifs
+    locator: Incoming Freshmen Scholarships, introductory paragraph
+    short_excerpt: Combined test scores (superscore) are not considered.
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-ifs
+    locator: Incoming Freshmen Scholarships, note ** under the resident table
+    short_excerpt: Applicants for the Presidential Scholarship and the Otis A. Singletary Scholarship
+      must complete the competitive scholarship section of the admission application
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-ifs
+    locator: Incoming Freshmen Scholarships, introductory paragraph
+    short_excerpt: by no later than December 1, 2026*, for scholarship consideration
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-hon
+    locator: Singletary Scholars page, 'Still Have Questions?'
+    short_excerpt: UK schedules and conducts competitive scholarship interviews beginning in January through
+      mid-February
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-ifs
+    locator: Incoming Freshmen Scholarships, 'Fall 2027 Freshmen'
+    short_excerpt: Incoming freshmen for Fall 2027 are encouraged to accept scholarship offers by May
+      1, 2027.
+    value_status: reported
+    reported_value: null
+  - field_path: application/interview_mode
+    source_ref: s-ifs
+    locator: Incoming Freshmen Scholarships, application procedure paragraph
+    short_excerpt: Selected applicants may be invited to campus for interviews.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-ifs
+    locator: Incoming Freshmen Scholarships, Scholarship Renewal
+    short_excerpt: Singletary Scholarship recipients are required to achieve a 3.40 cumulative GPA.
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-ifs
+    locator: Incoming Freshmen Scholarships, after the tables
+    short_excerpt: For all scholarships listed, students may receive only one award.
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/1
+    source_ref: s-ifs
+    locator: Incoming Freshmen Scholarships, after the tables
+    short_excerpt: A selective or competitive scholarship offer would replace an academic scholarship
+      offer.
+    value_status: reported
+    reported_value: null
+  - field_path: award_counts/0
+    source_ref: s-hon
+    locator: Singletary Scholars page, 'What is a Singletary Scholar?'
+    short_excerpt: Each year, up to 25 Singletary Scholars receive a prestigious merit scholarship
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-ifs
+    locator: Incoming Freshmen Scholarships, heading and first line
+    short_excerpt: Incoming freshmen for Fall 2027 are encouraged to accept scholarship offers by May
+      1, 2027.
+    value_status: reported
+    reported_value: null

@@ -1,0 +1,277 @@
+schema_version: 1
+program_id: vt-stamps-scholars
+school_id: virginia-tech
+ipeds_id: '233921'
+applicable_campuses: []
+official_name: Stamps Scholars (Virginia Tech Honors College)
+aliases:
+- VT Stamps Scholarship
+program_family: stamps
+awarding_authority: unknown
+related_programs: []
+status: active
+versions:
+- version_id: vt-stamps-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Recruitment page dates are September 1, 2026 and January 8, 2027; no entering class
+    is named
+  entry_terms:
+  - unspecified
+  source_cohort_text: Recruitment Scholarships page, introduction
+  verification_status: conflicting
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b3
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: multiple
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Freshman applicants who indicated an interest in the Honors College on their
+        undergraduate application. Applicants after the Early Action deadline cannot be considered. The
+        same page both says all Early Action applicants are considered and tells applicants to complete
+        a Stamps Scholarship application on Scholarship Central; see application.notes.
+    benefits:
+    - benefit_id: b-coa
+      category: cost_of_attendance
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years
+      exclusions: null
+      scope_text: '''Estimated cost of attendance for four years filling in after any other scholarships
+        won''; the Stamps page says estimated cost of attendance ''includes tuition, fees, room, and board'''
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-enrichment
+      category: enrichment
+      instrument: restricted_fund
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Enrichment fund for experiential learning (undergraduate research, internships, study
+        abroad, conferences); no amount is published
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: unknown
+    milestones:
+    - kind: application_open
+      requirement: recommended
+      date: '2026-09-01'
+      recurring: null
+      precision: day
+      source_date_text: September 1, 2026 (recruitment scholarship applications open)
+    - kind: application_deadline
+      requirement: required
+      date: '2027-01-08'
+      recurring: null
+      precision: day
+      source_date_text: January 8, 2027 (recruitment scholarship applications close; Stamps also needs
+        Early Action admission)
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 15
+      precision: day
+      source_date_text: Early Action (November 15 deadline)
+    - kind: other
+      requirement: invitation_only
+      date: null
+      recurring:
+        month: 1
+        day: 1
+      precision: month
+      source_date_text: mid-January (semi-finalists contacted for additional information)
+    - kind: interview
+      requirement: invitation_only
+      date: null
+      recurring:
+        month: 2
+        day: 1
+      precision: month
+      source_date_text: February (finalists interviewed)
+    - kind: notification
+      requirement: recommended
+      date: null
+      recurring:
+        month: 3
+        day: 1
+      precision: month
+      source_date_text: early March (selected Stamps Scholars notified)
+    admission_plan_requirement: Virginia Tech Early Action (November 15) with interest in the Honors College
+      indicated
+    prerequisites: []
+    interview_mode: virtual
+    finalist_event_required: null
+    notes: Whether a separate Stamps form is required is in conflict on the Stamps page (all Early Action
+      applicants are considered, yet applicants must complete the Stamps application on Scholarship Central).
+      The recruitment page says its applications close January 8, 2027 and strongly recommends Early Action;
+      the Stamps page says anyone applying after Early Action cannot be considered. Finalists also have
+      a virtual interview with a Stamps Scholars Program representative. Years are named only for September
+      1, 2026 and January 8, 2027.
+  renewal_rules: null
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: not_allowed
+    note: An individual student may not receive more than one of the listed Honors recruitment scholarships
+  - other_aid_type: outside_scholarship
+    relation: counts_within_package
+    note: Stamps covers estimated cost of attendance filling in after any other scholarships won
+  award_counts: []
+  sources:
+  - source_id: s-stamps
+    url: https://honorscollege.vt.edu/Scholarships/recruitment/Stamps.html
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 1780bb504f99459cf68fd763ba32a7654f6de5907e031085d0a22043371f037b
+    archive_url: null
+  - source_id: s-rec
+    url: https://honorscollege.vt.edu/Scholarships/recruitment.html
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 9aa308b93e1a9b9d94a901f849dd74ab8e968aeef5fb663fbf3fdc6f8b5a4e7c
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-stamps
+    locator: Stamps Scholars page, opening paragraphs
+    short_excerpt: All students applying to Virginia Tech Early Action (November 15 deadline) will be
+      considered for the Stamps Scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-stamps
+    locator: Stamps Scholars page, fourth paragraph
+    short_excerpt: Virginia Tech Stamps Scholars receive funding for four years for estimated cost of
+      attendance which includes tuition, fees, room, and board.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/scope_text
+    source_ref: s-rec
+    locator: Recruitment Scholarships page, Stamps Scholarships
+    short_excerpt: This scholarship covers estimated cost of attendance for four years filling in after
+      any other scholarships won.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-stamps
+    locator: Stamps Scholars page, fourth paragraph
+    short_excerpt: Each scholar will receive a generous enrichment fund for experiential learning opportunities
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-stamps
+    locator: Stamps Scholars page, opening paragraphs
+    short_excerpt: All students applying to Virginia Tech Early Action (November 15 deadline) will be
+      considered for the Stamps Scholarship.
+    value_status: conflicting
+    reported_value: not_required
+  - field_path: application/separate_application
+    source_ref: s-stamps
+    locator: Stamps Scholars page, application paragraph
+    short_excerpt: Applicants will need to complete the Stamps Scholarship application on VT's Scholarship
+      Central by the posted deadline each year.
+    value_status: conflicting
+    reported_value: required
+  - field_path: application/milestones/0
+    source_ref: s-rec
+    locator: Recruitment Scholarships page, introduction
+    short_excerpt: Applications for our recruitment scholarships open September 1, 2026, and close January
+      8, 2027.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-rec
+    locator: Recruitment Scholarships page, introduction
+    short_excerpt: Applications for our recruitment scholarships open September 1, 2026, and close January
+      8, 2027.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-stamps
+    locator: Stamps Scholars page, opening paragraphs
+    short_excerpt: All students applying to Virginia Tech Early Action (November 15 deadline) will be
+      considered for the Stamps Scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-stamps
+    locator: Stamps Scholars page, opening paragraphs
+    short_excerpt: Candidates identified as semi-finalists will be contacted in mid-January to provide
+      additional information.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/4
+    source_ref: s-stamps
+    locator: Stamps Scholars page, opening paragraphs
+    short_excerpt: Finalists will be interviewed in February.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/5
+    source_ref: s-stamps
+    locator: Stamps Scholars page, opening paragraphs
+    short_excerpt: Selected VT Stamps Scholars will be notified in early March.
+    value_status: reported
+    reported_value: null
+  - field_path: application/interview_mode
+    source_ref: s-stamps
+    locator: Stamps Scholars page, application paragraph
+    short_excerpt: The Honors College will contact selected candidates for a virtual interview with the
+      faculty scholarship committee.
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-rec
+    locator: Recruitment Scholarships page, introduction
+    short_excerpt: An individual student may not receive more than one of the scholarships listed below.
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/1
+    source_ref: s-rec
+    locator: Recruitment Scholarships page, Stamps Scholarships
+    short_excerpt: This scholarship covers estimated cost of attendance for four years filling in after
+      any other scholarships won.
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-rec
+    locator: 'Recruitment Scholarships page: dates are September 1, 2026 and January 8, 2027; the Stamps
+      page names no entering class'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null

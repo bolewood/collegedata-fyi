@@ -1,0 +1,255 @@
+schema_version: 1
+program_id: eugene-du-pont-memorial-scholars
+school_id: udel
+ipeds_id: '130943'
+applicable_campuses: []
+official_name: Eugene du Pont Memorial Distinguished Scholar Scholarship
+aliases:
+- Eugene du Pont Scholars
+- Du Pont Scholars
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: eugene-du-pont-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Honors page names no entering class; Nov. 1 and late January carry no year
+  entry_terms:
+  - unspecified
+  source_cohort_text: Honors College page, Distinguished Scholars
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b3
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: invitation
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Invitation only, for select students admitted to the UD Honors College. Honors
+        applicants complete the Common or Coalition application with early action by the early-action
+        deadline; qualified candidates are invited to join. Students who show potential to be leaders
+        and a high degree of intellectual curiosity are invited to campus to interview. UD's other Distinguished
+        Scholar awards on the same page (Marichu C. Valencia Scholars, 1743 Scholars) are separate programs
+        and are not recorded here.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four-year scholarship
+      exclusions: null
+      scope_text: Full tuition; funds may also be used toward UD study abroad
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four-year scholarship
+      exclusions: null
+      scope_text: Standard on-campus room and board (school's words); no rate or cap is given
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four-year scholarship
+      exclusions: null
+      scope_text: Standard on-campus room and board (school's words); no rate or cap is given
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four-year scholarship
+      exclusions: null
+      scope_text: 'Named fees only: comprehensive health fee and student center fees; other mandatory
+        fees are not listed'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-books
+      category: books
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 625
+        min: null
+        max: null
+        period: semester
+      duration_terms: null
+      exclusions: null
+      scope_text: $625 each fall and spring semester, to be used toward textbooks
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-enrichment
+      category: enrichment
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 5000
+        min: null
+        max: null
+        period: one_time
+      duration_terms: null
+      exclusions: null
+      scope_text: One-time grant toward an approved enrichment activity
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: invitation_only
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: early-action deadline of Nov. 1
+    - kind: notification
+      requirement: recommended
+      date: null
+      recurring:
+        month: 1
+        day: 1
+      precision: month
+      source_date_text: late January (invitations to join the Honors College)
+    admission_plan_requirement: Early action application with all materials by the Nov. 1 early-action
+      deadline
+    prerequisites: []
+    interview_mode: in_person
+    finalist_event_required: null
+    notes: The pages name no year for Nov. 1 or late January. Interview dates are not given.
+  renewal_rules: null
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-hon
+    url: https://www.udel.edu/apply/undergraduate-admissions/explore-majors-and-enrichment/honors/
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: 57a3b9fec2a274a0c8baf78e1cd2689bb0e9784d6fdd88fb028992a0a039870e
+    archive_url: null
+  - source_id: s-oos
+    url: https://www.udel.edu/apply/undergraduate-admissions/financing-your-degree/out-of-state-freshmen/
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: 3d7b5de7893a492f14451bf6eb6311188d614627635117e17437db6c7bfa9fff
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-hon
+    locator: 'Honors College page, Honors College Scholarships: Distinguished Scholars'
+    short_excerpt: are invited to campus to participate in interviews for UD's top scholarships
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-hon
+    locator: Honors College page, Eugene du Pont Memorial Distinguished Scholar Scholarship
+    short_excerpt: Eugene du Pont Scholars receive a four-year scholarship that covers full tuition, standard
+      on-campus room and board, and comprehensive health and student center fees.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-hon
+    locator: Honors College page, Eugene du Pont paragraph
+    short_excerpt: students receive $625 each fall and spring semester to be used toward textbooks
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/5/amount
+    source_ref: s-hon
+    locator: Honors College page, Eugene du Pont paragraph
+    short_excerpt: a one-time grant of $5,000 to be used toward an approved enrichment activity
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-hon
+    locator: 'Honors College page, Honors College Scholarships: Distinguished Scholars'
+    short_excerpt: Distinguished Scholar Awards are invitation only
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-oos
+    locator: Out-of-State Freshmen page, Honors College Scholarships
+    short_excerpt: Distinguished Scholar Awards are invitation-only for select students admitted to the
+      UD Honors College
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-hon
+    locator: Honors College page, How to Apply to the Honors College
+    short_excerpt: selecting early action and submitting all application materials by the early-action
+      deadline of Nov. 1
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-hon
+    locator: Honors College page, How to Apply to the Honors College
+    short_excerpt: Invitations to join the Honors College will be released in late January following admission
+      to the University.
+    value_status: reported
+    reported_value: null
+  - field_path: application/interview_mode
+    source_ref: s-hon
+    locator: Honors College page, Distinguished Scholars
+    short_excerpt: are invited to campus to participate in interviews for UD's top scholarships
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-hon
+    locator: 'Honors College page: the Nov. 1 deadline and ''late January'' invitations carry no year;
+      no entering class is named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null

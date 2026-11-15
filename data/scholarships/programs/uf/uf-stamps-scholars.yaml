@@ -1,0 +1,251 @@
+schema_version: 1
+program_id: uf-stamps-scholars
+school_id: uf
+ipeds_id: '134130'
+applicable_campuses: []
+official_name: Stamps Scholars (University of Florida Honors Program)
+aliases:
+- UF Stamps Scholars
+- Stamps Scholarship
+program_family: stamps
+awarding_authority: unknown
+related_programs: []
+status: active
+versions:
+- version_id: uf-stamps-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Pages show January and March 2026 dates and 'Class of 2030'; no entering class is
+    named and the next cycle is not posted
+  entry_terms:
+  - unspecified
+  source_cohort_text: 'Overview page: Class of 2030 Scholars; Application Information page: January 2026
+    and March 2026 dates'
+  verification_status: unverified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b3
+  owner_spot_checked: false
+  program_status_for_entry: null
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: Non-Florida residents and international students are welcome to apply.
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: true
+      first_generation_rule: unknown
+      eligibility_notes: Must be admitted to UF and the Honors Program; the Early Action route is the
+        one the application page describes. Transfer students are not eligible; students who earn a high
+        school diploma and an A.A. or 60 college credits concurrently and are admitted as freshmen are
+        eligible. The selection committee reviews only the Preeminent Scholar application materials, not
+        the UF Common Application.
+    benefits:
+    - benefit_id: b-coa
+      category: cost_of_attendance
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Up to four years
+      exclusions: null
+      scope_text: '''Funding valued up to the full cost of attendance'' (school''s words); an upper bound,
+        not a promise of the full charge'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-experiential
+      category: enrichment
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 10000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Experiential funding (conferences, research expenses, support during unpaid internships,
+        study abroad)
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-summer
+      category: enrichment
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: approximate
+        value: 18000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Four fully funded summer enrichment experiences 'valued at $18,000'; shared with Lombardi
+        Scholars
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-stipend
+      category: stipend
+      instrument: cash_stipend
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: The overview page mentions a semesterly cash stipend; no amount is given
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: encouraged
+    milestones:
+    - kind: application_open
+      requirement: recommended
+      date: '2026-01-01'
+      recurring: null
+      precision: month
+      source_date_text: Link emailed one week after admissions decisions are released in January 2026
+    - kind: finalist_event
+      requirement: required
+      date: '2026-03-06'
+      recurring: null
+      precision: day
+      source_date_text: Preeminent Scholars Weekend, March 6 - 7, 2026; interviews Saturday, March 7,
+        2026
+    admission_plan_requirement: Admitted to UF and the Honors Program via Early Action
+    prerequisites: []
+    interview_mode: in_person
+    finalist_event_required: true
+    notes: Both pages carry the prior cycle's dates (January and March 2026); UF has not posted dates
+      for the next entering class on these pages. High school nomination and letters of recommendation
+      are no longer required.
+  renewal_rules: null
+  stacking_rules: null
+  award_counts:
+  - metric: new_recipients
+    qualifier: exact
+    value: 10
+    cohort_year: null
+    source_ref: s-ov
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-faq
+    url: https://www.honors.ufl.edu/admissions/stamps-scholars-program/scholarship-faq/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 9116979958429f443c146d9221784d899a92c22270e4b4b0476db9d7f750f8ec
+    archive_url: null
+  - source_id: s-app
+    url: https://www.honors.ufl.edu/admissions/stamps-scholars-program/application-information/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 54d1e25c98a19a55085c4e23034eb17eaf2a70298fb85ce5150c45a2127ee8a3
+    archive_url: null
+  - source_id: s-ov
+    url: https://www.honors.ufl.edu/admissions/stamps-scholars-program/overview/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: b8114c4ebe2602283df329bbf1377d7fd1d0fccf760a5b6639440c00b7a48e2b
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-app
+    locator: Application Information page, final paragraph
+    short_excerpt: Finalists must participate in mandatory in-person interviews with the faculty selection
+      committee on the UF campus on Saturday, March 7, 2026.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-faq
+    locator: Scholarship FAQ, 'What is the difference between the Lombardi Scholarship and the Stamps
+      Scholarship?'
+    short_excerpt: Stamps Scholars receive funding valued up to the full cost of attendance for up to
+      four years in addition to $10,000 in experiential funding.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-faq
+    locator: Scholarship FAQ, same answer
+    short_excerpt: in addition to $10,000 in experiential funding
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-faq
+    locator: Scholarship FAQ, 'What other benefits come with...' area
+    short_excerpt: Stamps Scholars and Lombardi Scholars receive four fully funded summer enrichment experiences
+      valued at $18,000.
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-app
+    locator: Application Information page, first paragraph
+    short_excerpt: Students admitted to UF and the Honors Program via Early Action (EA) are encouraged
+      to apply for the John V. Lombardi Scholarship and Stamps Scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-app
+    locator: Application Information page, second paragraph
+    short_excerpt: A link to the scholarship application will be emailed to all students admitted to the
+      UF Honors Program
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-faq
+    locator: Scholarship FAQ, 'How do I apply?'
+    short_excerpt: Mandatory interviews for finalists will take place during Preeminent Scholars Weekend,
+      March 6 - 7, 2026
+    value_status: reported
+    reported_value: null
+  - field_path: application/interview_mode
+    source_ref: s-app
+    locator: Application Information page, final paragraph
+    short_excerpt: Finalists must participate in mandatory in-person interviews with the faculty selection
+      committee on the UF campus on Saturday, March 7, 2026.
+    value_status: reported
+    reported_value: null
+  - field_path: application/finalist_event_required
+    source_ref: s-faq
+    locator: Scholarship FAQ, 'How do I apply?'
+    short_excerpt: Mandatory interviews for finalists will take place during Preeminent Scholars Weekend,
+      March 6 - 7, 2026
+    value_status: reported
+    reported_value: true
+  - field_path: award_counts/0
+    source_ref: s-ov
+    locator: Overview page, 'A Personalized Honors Experience'
+    short_excerpt: Class cohorts of 20 scholars (10 Stamps Scholars and 10 John V. Lombardi Scholars)
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-ov
+    locator: 'Overview page: ''Class of 2030 Scholars are expected to participate...''; the application
+      page gives January and March 2026 dates; no entering class is named'
+    short_excerpt: Class of 2030 Scholars are expected to participate in the following summer enrichment
+      experiences
+    value_status: not_published
+    reported_value: null

@@ -1,0 +1,261 @@
+schema_version: 1
+program_id: mcconnell-scholars
+school_id: university-of-louisville
+ipeds_id: '157289'
+applicable_campuses: []
+official_name: McConnell Scholars Program
+aliases:
+- McConnell Scholars
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: mcconnell-scholars-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Dates are December 1, 2026 and 2027 dates; no entering class is named
+  entry_terms:
+  - unspecified
+  source_cohort_text: Prospective Students page, Important Dates
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b3
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: Kentucky high school seniors
+    residency: in_state
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Must be a Kentucky resident and high school senior at the time of application,
+        with a minimum 3.5 GPA and 26 ACT / 1230 SAT, and must at least minor in political science at
+        UofL. Application needs one essay, a resume and two letters of recommendation (one from a high
+        school teacher). Scholars can also apply for internship and professional development grants, funds
+        permitting.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four-year renewable scholarship
+      exclusions: null
+      scope_text: Guaranteed full in-state tuition. The page adds that exact amounts vary with the student's
+        overall university scholarship package
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-travel
+      category: enrichment
+      instrument: restricted_fund
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Fully funded domestic and international travel packages designed by the Center (Washington,
+        D.C., an international trip after junior year, leadership retreats); no dollar amount is given
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: required
+    milestones:
+    - kind: application_open
+      requirement: recommended
+      date: '2026-08-01'
+      recurring: null
+      precision: day
+      source_date_text: August 1, 2026 (online application available)
+    - kind: application_deadline
+      requirement: required
+      date: '2026-12-01'
+      recurring: null
+      precision: day
+      source_date_text: December 1, 2026
+    - kind: interview
+      requirement: invitation_only
+      date: '2027-02-26'
+      recurring: null
+      precision: day
+      source_date_text: February 26, 2027 (30 finalists invited to a two-day interview process; dates
+        subject to change)
+    - kind: notification
+      requirement: recommended
+      date: '2027-03-31'
+      recurring: null
+      precision: day
+      source_date_text: March 31, 2027 (award winners notified by postal mail)
+    - kind: acceptance_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 5
+        day: 1
+      precision: day
+      source_date_text: Finalists offered scholarships by the end of March have until May 1 to accept
+    admission_plan_requirement: Apply through the UofL admissions portal
+    prerequisites:
+    - kind: recommendation
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Two letters of recommendation, one from a high school teacher
+    interview_mode: in_person
+    finalist_event_required: true
+    notes: The page says its dates are subject to change and that interviews traditionally fall at the
+      end of February or the beginning of March. The page names no entering class.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: Renewable for up to four years if Scholars meet the Center's basic academic and participation
+      requirements; no GPA or credit threshold is published on the pages read.
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-main
+    url: https://centers.louisville.edu/mcconnell-center/mcconnell-scholars-program
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: d91b8cc308f607aeda051a01c2f71a971e7e79e00e25f324291854228d1d1c31
+    archive_url: null
+  - source_id: s-pro
+    url: https://centers.louisville.edu/mcconnell-center/mcconnell-scholars-program/prospective-students
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: e1e34d377d80461648e9fcbb78adc9ab0d0654308b476db56733fd216c590132
+    archive_url: null
+  - source_id: s-faq
+    url: https://centers.louisville.edu/mcconnell-center/mcconnell-scholars-program/prospective-students/frequently-asked-questions
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 64a554a6ded098e3b00a563952578c0f05427954f11550c5d87f43f50d40f2f7
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-faq
+    locator: FAQ, 'How do I become a McConnell Scholar?'
+    short_excerpt: Students selected for the program are chosen based on their strong record of commitment
+      to leadership, scholarship, and service.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-main
+    locator: Program page, Financial Awards
+    short_excerpt: Scholars are guaranteed full in-state tuition to attend UofL.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-main
+    locator: 'Program page, Program Benefits: Travel'
+    short_excerpt: Scholars take part in fully-funded domestic and international travel packages designed
+      by the Center.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/gpa
+    source_ref: s-pro
+    locator: Prospective Students page, Eligibility
+    short_excerpt: Have an outstanding academic record (minimum 3.5 GPA and 26 ACT/1230 SAT)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/test_rules
+    source_ref: s-pro
+    locator: Prospective Students page, Eligibility
+    short_excerpt: Have an outstanding academic record (minimum 3.5 GPA and 26 ACT/1230 SAT)
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-pro
+    locator: Prospective Students page, Requirements
+    short_excerpt: 'The following application materials must be submitted by December 1:'
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-pro
+    locator: Prospective Students page, Important Dates
+    short_excerpt: August 1, 2026 Online application available
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-pro
+    locator: Prospective Students page, Important Dates
+    short_excerpt: December 1, 2026 All application materials must be submitted online to UofL
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-pro
+    locator: Prospective Students page, Important Dates
+    short_excerpt: February 26, 2027 30 finalists invited to a two-day interview process
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-pro
+    locator: Prospective Students page, Important Dates
+    short_excerpt: March 31, 2027 Award winners are notified by postal mail
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/4
+    source_ref: s-faq
+    locator: FAQ, selection process
+    short_excerpt: By the end of March, these finalists are offered scholarships, which they have until
+      May 1 to accept.
+    value_status: reported
+    reported_value: null
+  - field_path: application/interview_mode
+    source_ref: s-faq
+    locator: FAQ, 'What is the selection process'
+    short_excerpt: The top 30 applicants are invited to interview for two days (Friday and Saturday) at
+      UofL in late February/early March.
+    value_status: reported
+    reported_value: null
+  - field_path: application/finalist_event_required
+    source_ref: s-pro
+    locator: Prospective Students page, Important Dates
+    short_excerpt: 30 finalists invited to a two-day interview process
+    value_status: reported
+    reported_value: true
+  - field_path: renewal_rules/0
+    source_ref: s-faq
+    locator: FAQ, 'What can I expect if I am offered a McConnell Scholarship?'
+    short_excerpt: If Scholars meet the Center's basic academic and participation requirements, the scholarship
+      is renewable for up to four years.
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-pro
+    locator: 'Prospective Students page, Important Dates: 2026 and 2027 dates; no entering class named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
