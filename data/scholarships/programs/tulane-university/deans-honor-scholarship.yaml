@@ -15,13 +15,13 @@ status: active
 versions:
 - version_id: deans-honor-tulane-guide-2025-26
   supersedes: null
-  entry_year: null
-  entry_year_label: Sources are an undated-cycle aid page (marked last updated 10/07/2020) and a 2025-26
-    aid guide; no entering class is named
+  entry_year: 2025
+  entry_year_label: Terms are from the 2025-2026 aid guide (file dated April 2025, about 19 months old)
+    and an aid page marked last updated 10/07/2020 (about 6 years old)
   entry_terms:
   - unspecified
   source_cohort_text: The current admissions page could not be read (bot challenge)
-  verification_status: conflicting
+  verification_status: unverified
   last_reviewed_at: '2026-11-15'
   reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b1
   owner_spot_checked: false
@@ -95,14 +95,16 @@ versions:
   - applies_to: []
     gpa_min: 3.0
     gpa_scale: null
-    credit_load_min_per_term: null
+    credit_load_min_per_term: 12
     credit_load_min_per_year: null
     evaluation_timing: null
     summer_courses_can_fix_shortfall: null
     max_semesters: null
     notes: Renewable for four years (five for architecture) with a 3.00 cumulative GPA and continuous
       primary undergraduate enrollment in a Newcomb-Tulane College school; the guide adds a full-time
-      load.
+      load, and the continuation page says 12 or more credits each fall and spring. Students found responsible
+      for Code of Student Conduct or Code of Academic Conduct violations forfeit all remaining portions
+      (aid page).
   stacking_rules:
   - other_aid_type: institutional_merit
     relation: not_allowed
@@ -143,11 +145,17 @@ versions:
     archive_url: null
   field_evidence:
   - field_path: entry_year
-    source_ref: s-dhs
-    locator: 'Aid page and guide: no entering class named'
-    short_excerpt: null
-    value_status: not_published
-    reported_value: null
+    source_ref: s-guide
+    locator: Guide cover page, edition line
+    short_excerpt: 2025-2026
+    value_status: reported
+    reported_value: 2025
+  - field_path: renewal_rules/0/credit_load_min_per_term
+    source_ref: s-gpa
+    locator: Merit scholarship continuation page, Merit Scholarships list
+    short_excerpt: Must stay enrolled full-time, with 12 or more credits each fall and spring
+    value_status: reported
+    reported_value: 12
   - field_path: offers/0/selection_mode
     source_ref: s-dhs
     locator: Aid page, opening paragraphs

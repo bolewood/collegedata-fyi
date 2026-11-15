@@ -48,10 +48,12 @@ versions:
       major_change_restrictions: null
       honors_requirement: null
       first_generation_rule: unknown
-      eligibility_notes: The Benjamin N. Duke Scholarship recognizes students from North or South Carolina
+      eligibility_notes: 'The Benjamin N. Duke Scholarship recognizes students from North or South Carolina
         who excel academically, engage their communities, and aspire to become leaders. The pages do not
-        define 'from' (residence or school location). Rising sophomores complete the Carolina Summer of
-        Service project.
+        define ''from'' (residence or school location). Rising sophomores complete the Carolina Summer
+        of Service project. Not covered by Duke merit scholarships, per the aid page: residential program
+        fees, Quad/1st year housing fees, parking permits, course fees, books and supplies, summer school,
+        health insurance (except for international students), and all other non-mandatory expenses.'
     benefits:
     - benefit_id: b-tuition
       category: tuition
@@ -118,6 +120,21 @@ versions:
       scope_text: A standard meal plan
       advertised_coverage_label: null
       conditions_text: null
+    - benefit_id: b-health
+      category: health_insurance
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Duke health insurance costs for international students receiving merit scholarships
+      advertised_coverage_label: null
+      conditions_text: International students only
     advertised_totals: []
   application:
     separate_application: no_form_other_steps_required
@@ -249,6 +266,32 @@ versions:
     locator: 'For Merit Scholars, What''s Covered: no dollar amount'
     short_excerpt: null
     value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-aid
+    locator: 'For Merit Scholars, Health Insurance section: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/conditions_text
+    source_ref: s-aid
+    locator: For Merit Scholars, Health Insurance section
+    short_excerpt: International students receiving merit scholarships can have their Duke health insurance
+      costs covered by Duke merit scholarship programs
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/4/coverage
+    source_ref: s-aid
+    locator: For Merit Scholars, Health Insurance section
+    short_excerpt: International students receiving merit scholarships can have their Duke health insurance
+      costs covered by Duke merit scholarship programs
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/eligibility/eligibility_notes
+    source_ref: s-aid
+    locator: For Merit Scholars, list of costs not covered
+    short_excerpt: Parking Permits
+    value_status: reported
     reported_value: null
   - field_path: stacking_rules/0
     source_ref: s-aid

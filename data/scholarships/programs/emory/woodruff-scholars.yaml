@@ -261,7 +261,10 @@ versions:
     max_semesters: null
     notes: 'Conflict on the minimum GPA: the Oxford merit scholarships page table lists a 3.4 GPA requirement
       for the Woodruff column; the Oxford catalog says students must maintain a 3.2 grade-point average
-      to continue as Woodruff Scholars. Both pages are current; the field is left empty.'
+      to continue as Woodruff Scholars. Both pages are current; the field is left empty. Also: must remain
+      at Oxford College four consecutive semesters and meet mandatory meetings and community service requirements
+      (details in the offer letter); academic scholars placed on Honor or Conduct Council probation may
+      lose their scholarships permanently (catalog).'
   stacking_rules: null
   award_counts: []
   sources:
@@ -469,6 +472,25 @@ versions:
     short_excerpt: 3.4 GPA Requirement | Yes | Yes | Yes
     value_status: conflicting
     reported_value: '3.4'
+  - field_path: renewal_rules/1
+    source_ref: s-oxm
+    locator: Oxford merit scholarships page, comparison table, Woodruff column
+    short_excerpt: Remain at Oxford College Four Consecutive Semesters
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/1
+    source_ref: s-oxm
+    locator: Oxford merit scholarships page, comparison table, Woodruff column
+    short_excerpt: Mandatory meetings and community service
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/1
+    source_ref: s-oxc
+    locator: Oxford catalog, Academic Scholarships
+    short_excerpt: Academic scholars placed on Honor or Conduct Council probation may lose their scholarships
+      permanently.
+    value_status: reported
+    reported_value: null
   - field_path: renewal_rules/1/gpa_min
     source_ref: s-oxc
     locator: Oxford catalog, Robert W. Woodruff Scholars

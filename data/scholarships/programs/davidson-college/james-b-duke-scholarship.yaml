@@ -51,7 +51,7 @@ versions:
         application with a 500-word essay on one of two prompts, within the context of the qualities of
         a James B. Duke Scholar. The page states no GPA, test or citizenship rule.
     benefits:
-    - benefit_id: b-tuition-fees
+    - benefit_id: b-tuition
       category: tuition
       instrument: scholarship
       coverage: full
@@ -63,8 +63,23 @@ versions:
         period: null
       duration_terms: null
       exclusions: null
-      scope_text: Tuition and fees; housing and food are not mentioned
+      scope_text: Housing and food are not mentioned
       advertised_coverage_label: full tuition and fees
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: The page says 'full tuition and fees'
+      advertised_coverage_label: null
       conditions_text: null
     - benefit_id: b-stipend
       category: stipend
@@ -161,7 +176,20 @@ versions:
     short_excerpt: null
     value_status: not_published
     reported_value: null
+  - field_path: offers/0/benefits/1/coverage
+    source_ref: s-duke
+    locator: James B. Duke page, opening paragraph
+    short_excerpt: Each year five students are awarded the James B. Duke Scholarship of full tuition and
+      fees.
+    value_status: reported
+    reported_value: full
   - field_path: offers/0/benefits/1/amount
+    source_ref: s-duke
+    locator: 'James B. Duke page: no dollar amount for fees'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
     source_ref: s-duke
     locator: James B. Duke page, benefits paragraph
     short_excerpt: full tuition and fees plus a $5,000 stipend to be used for applied, relevant learning

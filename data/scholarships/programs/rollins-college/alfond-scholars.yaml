@@ -18,7 +18,7 @@ versions:
   entry_terms:
   - unspecified
   source_cohort_text: Rollins page describes the current cycle without an entering class
-  verification_status: conflicting
+  verification_status: verified
   last_reviewed_at: '2026-11-15'
   reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b1
   owner_spot_checked: false
@@ -39,7 +39,7 @@ versions:
       first_choice_required: null
       gpa: null
       test_rules: null
-      tests_policy_for_scholarship: unknown
+      tests_policy_for_scholarship: optional
       citizenship_eligible: null
       citizenship_text: null
       majors_allowed: null
@@ -48,11 +48,12 @@ versions:
       first_generation_rule: unknown
       eligibility_notes: For entering first-year students in the College of Liberal Arts. Qualifying applicants
         typically have SATs higher than 1410 or ACTs higher than 32 and GPAs higher than 3.8 (typical
-        profile, not a stated minimum). The page says both 'test-optional and international students are
-        considered' and also lists test scores among materials 'must be on file'; the test rule is left
-        unknown. Scholars must complete the Rollins Honors Degree Program, take the Intersession Service
-        Immersion course in the first year, do one off-campus experience in the first three years, and
-        live on campus for four years.
+        profile, not a stated minimum). The selection paragraph says 'Both test-optional and international
+        students are considered'; the Key Dates line lists SAT and/or ACT scores among the contents of
+        a complete admission application, read as the generic file list rather than a scholarship rule.
+        Scholars must complete the Rollins Honors Degree Program, take the Intersession Service Immersion
+        course in the first year, do one off-campus experience in the first three years, and live on campus
+        for four years.
     benefits:
     - benefit_id: b-tuition
       category: tuition
@@ -143,7 +144,13 @@ versions:
     notes: 'The page lists ''Maintaining 3.33 GPA'' among scholar requirements; it does not label it a
       renewal rule or give a scale. The scholarship is renewable for three additional years. Other requirements:
       Honors Degree Program, service course, an off-campus experience, living on campus for four years.'
-  stacking_rules: null
+  stacking_rules:
+  - other_aid_type: federal_or_state_need
+    relation: counts_within_package
+    note: Scholarship totals include federal and state awards for which a student might already be eligible.
+  - other_aid_type: state_merit
+    relation: counts_within_package
+    note: Scholarship totals include federal and state awards for which a student might already be eligible.
   award_counts:
   - metric: offers
     qualifier: up_to
@@ -235,15 +242,22 @@ versions:
     source_ref: s-prog
     locator: Alfond page, Selection Process
     short_excerpt: Both test-optional and international students are considered, as well.
-    value_status: conflicting
-    reported_value: test-optional considered
-  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    value_status: reported
+    reported_value: optional
+  - field_path: stacking_rules/0
     source_ref: s-prog
-    locator: Alfond page, Key Dates, November 15
-    short_excerpt: including application, SAT and/or ACT test scores, school transcript, personal statement
-      or essay, and counselor recommendation, must be on file
-    value_status: conflicting
-    reported_value: test scores on file
+    locator: Alfond page, intro paragraph 2
+    short_excerpt: Scholarship totals include federal and state awards for which a student might already
+      be eligible.
+    value_status: reported
+    reported_value: counts_within_package
+  - field_path: stacking_rules/1
+    source_ref: s-prog
+    locator: Alfond page, intro paragraph 2
+    short_excerpt: Scholarship totals include federal and state awards for which a student might already
+      be eligible.
+    value_status: reported
+    reported_value: counts_within_package
   - field_path: application/milestones/0
     source_ref: s-prog
     locator: Alfond page, Key Dates

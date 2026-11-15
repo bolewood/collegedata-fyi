@@ -144,9 +144,10 @@ versions:
     prerequisites: []
     interview_mode: virtual
     finalist_event_required: null
-    notes: Finalists are invited to interview with a faculty selection committee via Zoom in mid-February.
-      Applicants who do not advance are not notified individually. The pages name no entering class; the
-      selection page mentions 2024 only for test-optional wording.
+    notes: The final test dates accepted for consideration are the October ACT and November SAT administrations
+      (tests are optional). Finalists are invited to interview with a faculty selection committee via
+      Zoom in mid-February. Applicants who do not advance are not notified individually. The pages name
+      no entering class; the selection page mentions 2024 only for test-optional wording.
   renewal_rules:
   - applies_to: []
     gpa_min: null
@@ -296,6 +297,13 @@ versions:
       in mid-February.
     value_status: reported
     reported_value: virtual
+  - field_path: application/notes
+    source_ref: s-sel
+    locator: Selection page, how to apply list
+    short_excerpt: The final test dates accepted for Richmond Scholars consideration are the October ACT
+      and November SAT administrations.
+    value_status: reported
+    reported_value: null
   - field_path: renewal_rules/0/max_semesters
     source_ref: s-pro
     locator: Prospective Scholars page, benefits list

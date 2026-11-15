@@ -157,6 +157,14 @@ versions:
         day: 1
       precision: day
       source_date_text: By April 1 - Belk Scholarship outcomes announced
+    - kind: nomination_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: November 1 - Nomination deadline.
     admission_plan_requirement: Application for admission by November 15; the page says this does not
       imply an Early Decision commitment
     prerequisites: []
@@ -166,7 +174,18 @@ versions:
       Semifinalists are notified in mid-February with interviews; finalists are notified in early March
       and take part in interviews and events in March. The page does not say whether interviews are virtual
       or in person. The pages name no entering class.
-  renewal_rules: null
+  renewal_rules:
+  - applies_to: []
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: The overview page says all Davidson scholarships are renewable for the remaining three years,
+      provided established grade point average and progress toward degree requirements are met and the
+      student participates fully in the life of the college. No GPA number is given.
   stacking_rules: null
   award_counts:
   - metric: new_recipients
@@ -308,6 +327,18 @@ versions:
       of the Davidson community.
     value_status: reported
     reported_value: true
+  - field_path: application/milestones/3
+    source_ref: s-nom
+    locator: Nomination and Selection Process, dates list
+    short_excerpt: November 1 - Nomination deadline.
+    value_status: reported
+    reported_value: 11-01
+  - field_path: renewal_rules/0
+    source_ref: s-over
+    locator: Scholarships overview page, renewal paragraph
+    short_excerpt: All Davidson scholarships are renewable for your remaining three years at Davidson
+    value_status: reported
+    reported_value: null
   - field_path: award_counts/0
     source_ref: s-belk
     locator: Belk page, endowment paragraph

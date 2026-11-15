@@ -14,9 +14,9 @@ status: active
 versions:
 - version_id: stamps-tulane-guide-2025-26
   supersedes: null
-  entry_year: null
-  entry_year_label: Source is a financial aid guide file named GUIDE2526 (published April 2025); it names
-    no entering class in the Stamps passage
+  entry_year: 2025
+  entry_year_label: Terms are from the 2025-2026 undergraduate financial aid guide (file dated April 2025,
+    about 19 months old); the cover page says 2025-2026 and does not use the words entering class
   entry_terms:
   - unspecified
   source_cohort_text: The current admissions page could not be read (bot challenge); terms come from the
@@ -32,7 +32,7 @@ versions:
     variant_name: null
     residency: any
     selection_mode: competitive
-    consideration_route: admission_application
+    consideration_route: separate_application
     aid_basis: unclear
     need_role: unknown
     funds_limited: null
@@ -85,7 +85,7 @@ versions:
       conditions_text: null
     advertised_totals: []
   application:
-    separate_application: not_required
+    separate_application: required
     milestones:
     - kind: admission_deadline
       requirement: required
@@ -99,35 +99,40 @@ versions:
     - kind: application_deadline
       requirement: required
       date: null
-      recurring:
-        month: 12
-        day: 5
+      recurring: null
       precision: day
-      source_date_text: Applicants must apply for the Deans' Honors Scholarship (see below) by December
-        5
+      source_date_text: null
     admission_plan_requirement: Early Action or Single Choice Early Action admission application by November
       15
     prerequisites: []
     interview_mode: unknown
     finalist_event_required: null
-    notes: The guide says applicants must apply for the Deans' Honors Scholarship by December 5 and also
-      says no separate application is required; the December 5 date is the Deans' Honors application date.
-      The guide is a 2025-26 document and names no interview details. The Tulane admissions merit scholarships
-      page (admission.tulane.edu/tuition-aid/merit-scholarships) answered with a bot-challenge page and
-      was not read, so the current-cycle terms there are unconfirmed.
+    notes: There is no Stamps-specific form ('No separate application is required'), but the guide says
+      applicants must apply for the Deans' Honors Scholarship, so that application is a condition of consideration.
+      The Deans' Honors due date is December 5 in this paragraph and 'on or before November 15' in the
+      Deans' Honor paragraph of the same guide; the date is left empty as a conflict. The guide is the
+      2025-2026 edition (file dated April 2025) and gives no interview details. The Tulane admissions
+      merit scholarships page (admission.tulane.edu/tuition-aid/merit-scholarships) answered with a bot-challenge
+      page and was not read, so the current-cycle terms there are unconfirmed.
   renewal_rules:
   - applies_to: []
     gpa_min: 3.0
     gpa_scale: null
-    credit_load_min_per_term: null
+    credit_load_min_per_term: 12
     credit_load_min_per_year: null
     evaluation_timing: null
     summer_courses_can_fix_shortfall: null
     max_semesters: null
     notes: Renewable provided the student maintains a 3.00 cumulative GPA with a full-time load, maintains
       continuous enrollment at Tulane, and upholds the codes of academic and student conduct. The aid
-      page also lists 3.000 as the minimum GPA for Stamps. Up to four years (five for architecture).
-  stacking_rules: null
+      page also lists 3.000 as the minimum GPA for Stamps. Up to four years (five for architecture). Full-time
+      with 12 or more credits each fall and spring; a leave of absence longer than 2 years ends the scholarship
+      (continuation page).
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: not_allowed
+    note: With very few exceptions, students offered more than one Tulane scholarship may not combine
+      the scholarships.
   award_counts:
   - metric: new_recipients
     qualifier: approximate
@@ -158,10 +163,10 @@ versions:
   field_evidence:
   - field_path: entry_year
     source_ref: s-guide
-    locator: 'Undergraduate aid guide, Merit scholarships: no entering year named in the passage'
-    short_excerpt: null
-    value_status: not_published
-    reported_value: null
+    locator: Guide cover page, edition line
+    short_excerpt: 2025-2026
+    value_status: reported
+    reported_value: 2025
   - field_path: /awarding_authority
     source_ref: s-guide
     locator: Aid guide, Stamps Tulane Scholarships paragraph
@@ -179,15 +184,15 @@ versions:
   - field_path: offers/0/consideration_route
     source_ref: s-guide
     locator: Aid guide, Stamps Tulane Scholarships paragraph
-    short_excerpt: No separate application is required.
+    short_excerpt: Applicants must apply for the Deans’ Honors Scholarship (see below) by December 5
     value_status: reported
-    reported_value: admission_application
+    reported_value: separate_application
   - field_path: application/separate_application
     source_ref: s-guide
     locator: Aid guide, Stamps Tulane Scholarships paragraph
-    short_excerpt: No separate application is required.
+    short_excerpt: Applicants must apply for the Deans’ Honors Scholarship (see below) by December 5
     value_status: reported
-    reported_value: not_required
+    reported_value: required
   - field_path: offers/0/benefits/0/coverage
     source_ref: s-guide
     locator: Aid guide, Stamps Tulane Scholarships paragraph
@@ -214,12 +219,32 @@ versions:
       15
     value_status: reported
     reported_value: 11-15
-  - field_path: application/milestones/1
+  - field_path: application/milestones/1/date
     source_ref: s-guide
     locator: Aid guide, Stamps Tulane Scholarships paragraph
     short_excerpt: Applicants must apply for the Deans’ Honors Scholarship (see below) by December 5
+    value_status: conflicting
+    reported_value: December 5
+  - field_path: application/milestones/1/date
+    source_ref: s-guide
+    locator: Aid guide, Deans' Honor Scholarships paragraph
+    short_excerpt: Applications, which are due on or before November 15, are available from the Office
+      of Undergraduate Admission.
+    value_status: conflicting
+    reported_value: November 15
+  - field_path: stacking_rules/0
+    source_ref: s-guide
+    locator: Aid guide, merit scholarship policies
+    short_excerpt: With very few exceptions, students offered more than one Tulane scholarship may not
+      combine the scholarships.
     value_status: reported
-    reported_value: 12-05
+    reported_value: not_allowed
+  - field_path: renewal_rules/0/credit_load_min_per_term
+    source_ref: s-gpa
+    locator: Merit scholarship continuation page, Merit Scholarships list
+    short_excerpt: Must stay enrolled full-time, with 12 or more credits each fall and spring
+    value_status: reported
+    reported_value: 12
   - field_path: renewal_rules/0/gpa_min
     source_ref: s-gpa
     locator: Merit scholarship continuation page, Minimum GPA by Scholarship
