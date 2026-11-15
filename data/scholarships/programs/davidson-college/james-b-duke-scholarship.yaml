@@ -1,0 +1,184 @@
+schema_version: 1
+program_id: james-b-duke-scholarship
+school_id: davidson-college
+ipeds_id: '198385'
+applicable_campuses: []
+official_name: James B. Duke Scholarship
+aliases:
+- Duke Scholarship
+- James B. Duke Scholars
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: james-b-duke-scholarship-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Page names no entering class
+  entry_terms:
+  - unspecified
+  source_cohort_text: Davidson page describes the current scholarship without an entering class
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b1
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Applicants must first apply for admission to Davidson and then submit a scholarship
+        application with a 500-word essay on one of two prompts, within the context of the qualities of
+        a James B. Duke Scholar. The page states no GPA, test or citizenship rule.
+    benefits:
+    - benefit_id: b-tuition-fees
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Tuition and fees; housing and food are not mentioned
+      advertised_coverage_label: full tuition and fees
+      conditions_text: null
+    - benefit_id: b-stipend
+      category: stipend
+      instrument: cash_stipend
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 5000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: A stipend for applied, relevant learning experiences during their Davidson tenure; the
+        page does not say whether it is annual or a total
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: required
+    milestones: []
+    admission_plan_requirement: Applicants must first be applicants for admission; scholarship materials
+      are due no later than the selected application plan deadline
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: Finalists are notified in March. The page gives no date for the scholarship deadline other
+      than the applicant's chosen admission plan deadline, and names no entering class.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: Renewable for the recipient's remaining three years provided GPA, progress toward degree and
+      campus engagement requirements are met; the page gives no GPA number or credit load.
+  stacking_rules: null
+  award_counts:
+  - metric: new_recipients
+    qualifier: exact
+    value: 5
+    cohort_year: null
+    source_ref: s-duke
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-duke
+    url: https://www.davidson.edu/admission-and-financial-aid/financial-aid/types-financial-aid/scholarships/application-scholarships/james-b-duke-scholarship
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: a6201fa8b5e2adc7ddf7273fb6772a150f348b759317cfd2a1cf65d2697b7fdc
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-duke
+    locator: 'James B. Duke Scholarship page: no entering class named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-duke
+    locator: James B. Duke page, eligibility paragraph
+    short_excerpt: these high achieving students will demonstrate through their admission application
+      and a required supplement
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/consideration_route
+    source_ref: s-duke
+    locator: James B. Duke page, application paragraph
+    short_excerpt: You must first be an applicant for admission at Davidson College in order to submit
+      your James B. Duke Scholarship Application.
+    value_status: reported
+    reported_value: separate_application
+  - field_path: application/separate_application
+    source_ref: s-duke
+    locator: James B. Duke page, application paragraph
+    short_excerpt: You must first be an applicant for admission at Davidson College in order to submit
+      your James B. Duke Scholarship Application.
+    value_status: reported
+    reported_value: required
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-duke
+    locator: James B. Duke page, opening paragraph
+    short_excerpt: Each year five students are awarded the James B. Duke Scholarship of full tuition and
+      fees.
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-duke
+    locator: 'James B. Duke page: no dollar amount for tuition and fees'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-duke
+    locator: James B. Duke page, benefits paragraph
+    short_excerpt: full tuition and fees plus a $5,000 stipend to be used for applied, relevant learning
+      experiences
+    value_status: reported
+    reported_value: 5000
+  - field_path: renewal_rules/0
+    source_ref: s-duke
+    locator: James B. Duke page, opening paragraph
+    short_excerpt: The award is renewable for the recipient’s remaining three years at Davidson, provided
+      GPA, progress toward degree and campus engagement requirements are met.
+    value_status: reported
+    reported_value: null
+  - field_path: award_counts/0
+    source_ref: s-duke
+    locator: James B. Duke page, opening paragraph
+    short_excerpt: Each year five students are awarded the James B. Duke Scholarship of full tuition and
+      fees.
+    value_status: reported
+    reported_value: 5

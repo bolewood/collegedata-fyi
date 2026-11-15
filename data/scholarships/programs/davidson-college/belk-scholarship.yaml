@@ -1,0 +1,316 @@
+schema_version: 1
+program_id: belk-scholarship
+school_id: davidson-college
+ipeds_id: '198385'
+applicable_campuses: []
+official_name: John M. Belk Scholarship
+aliases:
+- Belk Scholarship
+- Belk Scholars
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: belk-scholarship-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Pages name no entering class; dates have no year
+  entry_terms:
+  - unspecified
+  source_cohort_text: Davidson pages give recurring dates (November 15, By April 1) with no year
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b1
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: nomination
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Candidates must be nominated by a school counselor, principal or head of school,
+        or college access program staff (up to two per school), or by Davidson's admission staff. The
+        nomination page describes domestic and international high schools and organizations as nominators;
+        it states no citizenship rule.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: comprehensive funding
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Described as 'food'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-stipend
+      category: stipend
+      instrument: cash_stipend
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 6000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: '''$6,000 in special opportunity stipends''; the page does not say whether this is per
+        year or in total'
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: no_form_other_steps_required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 15
+      precision: day
+      source_date_text: November 15 - Application deadline for all Belk nominees (application for admission)
+    - kind: supporting_materials_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 30
+      precision: day
+      source_date_text: We will accept all supporting documents, including recommendations, through November
+        30
+    - kind: notification
+      requirement: required
+      date: null
+      recurring:
+        month: 4
+        day: 1
+      precision: day
+      source_date_text: By April 1 - Belk Scholarship outcomes announced
+    admission_plan_requirement: Application for admission by November 15; the page says this does not
+      imply an Early Decision commitment
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: true
+    notes: A nomination is required; the candidate files no separate scholarship form on the pages read.
+      Semifinalists are notified in mid-February with interviews; finalists are notified in early March
+      and take part in interviews and events in March. The page does not say whether interviews are virtual
+      or in person. The pages name no entering class.
+  renewal_rules: null
+  stacking_rules: null
+  award_counts:
+  - metric: new_recipients
+    qualifier: exact
+    value: 8
+    cohort_year: null
+    source_ref: s-belk
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-belk
+    url: https://www.davidson.edu/admission-and-financial-aid/financial-aid/types-financial-aid/scholarships/nomination-scholarships/john-m-belk-scholarship
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 707a09ca13c58479201914f9bdbea8da69fde76779b70ec9b2b0ce86f12c5c5e
+    archive_url: null
+  - source_id: s-nom
+    url: https://www.davidson.edu/admission-and-financial-aid/financial-aid/types-financial-aid/scholarships/nomination-scholarships/john-m-belk-scholarship/nomination-and-selection-process
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: cd76a32ce79e5b53b2a07401fc8e3121077b18884d66bdfdc849773e739260ba
+    archive_url: null
+  - source_id: s-over
+    url: https://www.davidson.edu/admission-and-financial-aid/financial-aid/types-financial-aid/scholarships
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 510b43f5585cfdf17ea80b09db2288fde56471da121057ace44f1642f130c0c2
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-nom
+    locator: 'Nomination and Selection Process: no entering class named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-over
+    locator: Scholarships overview page, Nomination scholarships paragraph
+    short_excerpt: these scholarships are some of our most competitive. Candidates must be nominated for
+      consideration.
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/consideration_route
+    source_ref: s-belk
+    locator: Belk page, Nomination & Selection Process
+    short_excerpt: School counselors, principals/heads of school, or college access program staff may
+      nominate up to two candidates per year.
+    value_status: reported
+    reported_value: nomination
+  - field_path: application/separate_application
+    source_ref: s-nom
+    locator: Nomination and Selection Process, nomination and dates
+    short_excerpt: Candidates may also be nominated by Davidson's admission committee on the basis of
+      a strong application for admission.
+    value_status: reported
+    reported_value: no_form_other_steps_required
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-belk
+    locator: Belk page, opening paragraphs
+    short_excerpt: The Belk Scholarship will provide you comprehensive funding (tuition, fees, housing,
+      and food) plus special opportunity stipends
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-belk
+    locator: 'Belk page: no dollar amount for tuition'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/coverage
+    source_ref: s-belk
+    locator: Belk page, opening paragraphs
+    short_excerpt: The Belk Scholarship will provide you comprehensive funding (tuition, fees, housing,
+      and food) plus special opportunity stipends
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-belk
+    locator: 'Belk page: no dollar amount for fees'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/coverage
+    source_ref: s-belk
+    locator: Belk page, opening paragraphs
+    short_excerpt: The Belk Scholarship will provide you comprehensive funding (tuition, fees, housing,
+      and food) plus special opportunity stipends
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-belk
+    locator: 'Belk page: no dollar amount for housing'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/coverage
+    source_ref: s-belk
+    locator: Belk page, opening paragraphs
+    short_excerpt: The Belk Scholarship will provide you comprehensive funding (tuition, fees, housing,
+      and food) plus special opportunity stipends
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-belk
+    locator: 'Belk page: no dollar amount for food'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-over
+    locator: Scholarships overview page, Belk summary
+    short_excerpt: The John M. Belk Scholarship provides comprehensive funding (tuition, fees, food, and
+      housing) plus $6,000 in special opportunity stipends.
+    value_status: reported
+    reported_value: 6000
+  - field_path: application/milestones/0
+    source_ref: s-nom
+    locator: Nomination and Selection Process, dates list
+    short_excerpt: November 15 - Application deadline for all Belk nominees (application for admission).
+    value_status: reported
+    reported_value: 11-15
+  - field_path: application/milestones/1
+    source_ref: s-nom
+    locator: Nomination and Selection Process, dates list
+    short_excerpt: We will accept all supporting documents, including recommendations, through November
+      30.
+    value_status: reported
+    reported_value: 11-30
+  - field_path: application/milestones/2
+    source_ref: s-nom
+    locator: Nomination and Selection Process, dates list
+    short_excerpt: By April 1 - Belk Scholarship outcomes announced.
+    value_status: reported
+    reported_value: 04-01
+  - field_path: application/finalist_event_required
+    source_ref: s-nom
+    locator: Nomination and Selection Process, dates list
+    short_excerpt: Finalists will participate in interviews and events designed to provide a fuller sense
+      of the Davidson community.
+    value_status: reported
+    reported_value: true
+  - field_path: award_counts/0
+    source_ref: s-belk
+    locator: Belk page, endowment paragraph
+    short_excerpt: eight Belk Scholars named in each entering class
+    value_status: reported
+    reported_value: 8

@@ -1,0 +1,294 @@
+schema_version: 1
+program_id: ab-duke-scholars
+school_id: duke
+ipeds_id: '198419'
+applicable_campuses: []
+official_name: A.B. Duke Scholarship
+aliases:
+- A.B. Duke Scholars
+- Angier B. Duke Scholarship
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: ab-duke-scholars-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Pages name no entering class
+  entry_terms:
+  - unspecified
+  source_cohort_text: Duke's OUSF and financial aid pages describe the current merit scholarship program
+    without an entering class
+  verification_status: unverified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b1
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: The Angier B. Duke Scholarship recognizes students who demonstrate intellectual
+        accomplishment and exceptional potential for academic leadership. No residency, GPA or test rule
+        is stated.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Listed under what all Duke merit scholarships cover; stated for the merit scholarship
+        group
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Mandatory fees (student activity, student service, student health, recreation, dining
+        hall, post office box, registration)
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions:
+      - Quad/1st year housing fees
+      - Residential program fees
+      scope_text: Exact on-campus housing charges for fall and spring; first-year Quad housing fees are
+        listed as not covered
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: A standard meal plan
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-oxford
+      category: study_abroad
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: One summer
+      exclusions: null
+      scope_text: A.B. Duke Summer at Oxford
+      advertised_coverage_label: null
+      conditions_text: Offered the summer before sophomore year; the page says 'offered the opportunity
+        to study at Oxford University at no cost'
+    advertised_totals: []
+  application:
+    separate_application: no_form_other_steps_required
+    milestones: []
+    admission_plan_requirement: Apply to Duke; the Duke application is the basis for merit scholarship
+      eligibility
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: No separate scholarship application. Finalists are notified by email in the spring and interview
+      with selection committees; awards follow shortly after the interviews. The pages give no dates,
+      interview format or entering class.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: Merit scholarships are described as covering four years of full-time undergraduate study. The
+      pages give no renewal GPA or credit-load rule for this scholarship.
+  stacking_rules:
+  - other_aid_type: outside_scholarship
+    relation: allowed
+    note: Outside scholarships may be added up to the total cost to attend Duke; funds beyond that reduce
+      the Duke merit scholarship.
+  award_counts: []
+  sources:
+  - source_id: s-prog
+    url: https://ousf.duke.edu/merit-scholarships/ab-duke-scholars-program/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 0ce334ea175587ee6868d72843b17ab5e36541db4d260c20d0bf1906c8f81666
+    archive_url: null
+  - source_id: s-inc
+    url: https://ousf.duke.edu/merit-scholarships/merit-scholarships-incoming-first-year-students/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 2e8c96c091ef0317e6133b56146e6f5ae6814881dccddcf2601b5dd7a7d07cb7
+    archive_url: null
+  - source_id: s-ousf
+    url: https://ousf.duke.edu/merit-scholarships/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: edceb8f5cd58fd87c133d5bf3971ae8d35806aeff8353781b4920e389ac39559
+    archive_url: null
+  - source_id: s-aid
+    url: https://financialaid.duke.edu/types-aid/merit-scholarships/merit-scholars/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: c98429e148af14959c27be50b873c0cc8034e0eef0bf385f61a7d8619b667da5
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-inc
+    locator: 'Merit Scholarships for Incoming First Year Students: no entering class named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-inc
+    locator: Incoming first-year page, opening paragraph
+    short_excerpt: Finalists will then interview with scholarship selection committees and merit scholarships
+      will be awarded shortly after the interviews.
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/consideration_route
+    source_ref: s-inc
+    locator: Incoming first-year page, opening paragraph
+    short_excerpt: Your application to Duke University is the basis on which eligibility for merit scholarships
+      is determined.
+    value_status: reported
+    reported_value: admission_application
+  - field_path: application/separate_application
+    source_ref: s-inc
+    locator: Incoming first-year page, opening paragraph
+    short_excerpt: There is not a separate application process for merit scholarships for incoming first
+      year students, except for the Robertson Scholars Program.
+    value_status: reported
+    reported_value: no_form_other_steps_required
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-ousf
+    locator: Merit Scholarships landing page, opening paragraph
+    short_excerpt: These scholarships cover the cost of tuition, mandatory fees, room, and board for four
+      years of full-time undergraduate studies.
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-ousf
+    locator: 'Merit Scholarships landing page: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/coverage
+    source_ref: s-aid
+    locator: For Merit Scholars, What's Covered list
+    short_excerpt: Mandatory fees (includes student activity, student service, student health, recreation,
+      dining hall, post office box charges, and registration fees)
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-aid
+    locator: 'For Merit Scholars, What''s Covered: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/coverage
+    source_ref: s-aid
+    locator: For Merit Scholars, What's Covered list and exclusions list
+    short_excerpt: Quad/1st year housing fees
+    value_status: reported
+    reported_value: partial
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-aid
+    locator: 'For Merit Scholars, What''s Covered: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/coverage
+    source_ref: s-aid
+    locator: For Merit Scholars, Housing and Meal Expenses
+    short_excerpt: Your scholarship can cover the cost of a standard dining plan.
+    value_status: reported
+    reported_value: partial
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-aid
+    locator: 'For Merit Scholars, What''s Covered: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-aid
+    locator: For Merit Scholars, outside scholarships section
+    short_excerpt: The total amount you may receive cannot exceed your total cost to attend Duke each
+      year
+    value_status: reported
+    reported_value: allowed
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-prog
+    locator: 'A.B. Duke Scholars Program page: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/conditions_text
+    source_ref: s-prog
+    locator: A.B. Duke Scholars Program page, opening paragraph
+    short_excerpt: The summer before their sophomore year, A.B. Duke Scholars are offered the opportunity
+      to study at Oxford University at no cost.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/eligibility_notes
+    source_ref: s-inc
+    locator: Incoming first-year page, scholarship list
+    short_excerpt: The Angier B. Duke Scholarship recognizes students who demonstrate intellectual accomplishment
+      and exceptional potential for academic leadership.
+    value_status: reported
+    reported_value: null

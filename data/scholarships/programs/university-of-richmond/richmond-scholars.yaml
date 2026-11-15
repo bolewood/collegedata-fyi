@@ -1,0 +1,310 @@
+schema_version: 1
+program_id: richmond-scholars
+school_id: university-of-richmond
+ipeds_id: '233374'
+applicable_campuses: []
+official_name: Richmond Scholars Program
+aliases:
+- Richmond Scholars
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: richmond-scholars-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Pages name no entering class; a 2024 test-optional note is a past-cycle leftover
+  entry_terms:
+  - unspecified
+  source_cohort_text: Selection page says 'entering in 2024' for test scores only
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-b1
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Selection looks at four main criteria, one of which is interest in a diverse
+        and inclusive community. The selection page says test scores are optional 'for first-year students
+        entering in 2024' and 'not required' for the program; the 2024 wording looks like a leftover from
+        a past cycle, and the current-cycle value is recorded as optional.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Renewable for up to eight consecutive semesters of full-time enrollment
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: Full-tuition, housing, and food scholarship
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-food
+      category: meals
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Described as 'food'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-grant
+      category: enrichment
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 5500
+        min: null
+        max: null
+        period: one_time
+      duration_terms: null
+      exclusions: null
+      scope_text: Student-selected activity that enhances the academic experience
+      advertised_coverage_label: null
+      conditions_text: Described as 'eligibility for' a one-time grant to support a student-selected activity
+    advertised_totals: []
+  application:
+    separate_application: not_required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 12
+        day: 1
+      precision: day
+      source_date_text: Submit a complete admission application by December 1.
+    - kind: notification
+      requirement: required
+      date: null
+      recurring:
+        month: 2
+        day: 1
+      precision: day
+      source_date_text: Students who are selected to advance to the finalist round will be notified of
+        their status in the Spider Portal by February 1
+    - kind: notification
+      requirement: required
+      date: null
+      recurring:
+        month: 3
+        day: 1
+      precision: day
+      source_date_text: Final selection of Richmond Scholars will be completed by March 1.
+    admission_plan_requirement: Complete first-year admission application by December 1
+    prerequisites: []
+    interview_mode: virtual
+    finalist_event_required: null
+    notes: Finalists are invited to interview with a faculty selection committee via Zoom in mid-February.
+      Applicants who do not advance are not notified individually. The pages name no entering class; the
+      selection page mentions 2024 only for test-optional wording.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Renewable for up to eight consecutive semesters of full-time enrollment. The pages read give
+      no renewal GPA or credit rule.
+  stacking_rules: null
+  award_counts:
+  - metric: new_recipients
+    qualifier: exact
+    value: 25
+    cohort_year: null
+    source_ref: s-pro
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-pro
+    url: https://scholars.richmond.edu/prospective-scholars/index.html
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: f62bedfbcd74b103d3751daaeacc1e621e8aa7c50fee9057deb11b848b62f020
+    archive_url: null
+  - source_id: s-sel
+    url: https://scholars.richmond.edu/prospective-scholars/selection/index.html
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 712ada55a2b89ea0ff8ad858c50eb4848c61077249eb5582aca3229bfbfe5df9
+    archive_url: null
+  - source_id: s-fa
+    url: https://financialaid.richmond.edu/types-of-aid/merit-based/scholarships.html
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 9f29cf000b46e9835d54fa1378659e3d206acfb0074cd585711960a57381b67e
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-sel
+    locator: 'Selection page: no entering class named except a 2024 test-optional note'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-sel
+    locator: Selection page, final paragraphs
+    short_excerpt: Final selection of Richmond Scholars will be completed by March 1.
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/consideration_route
+    source_ref: s-pro
+    locator: Prospective Scholars page, opening paragraph
+    short_excerpt: All applicants for admission who apply by December 1 are automatically considered for
+      the Richmond Scholars Program.
+    value_status: reported
+    reported_value: admission_application
+  - field_path: application/separate_application
+    source_ref: s-fa
+    locator: Merit-based scholarships table, Richmond Scholars Program row
+    short_excerpt: Submit admission application by December 1st
+    value_status: reported
+    reported_value: not_required
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-pro
+    locator: Prospective Scholars page, benefits list
+    short_excerpt: Full-tuition, housing, and food scholarship, renewable for up to eight consecutive
+      semesters of full-time enrollment
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-pro
+    locator: 'Prospective Scholars page: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/coverage
+    source_ref: s-pro
+    locator: Prospective Scholars page, benefits list
+    short_excerpt: Full-tuition, housing, and food scholarship, renewable for up to eight consecutive
+      semesters of full-time enrollment
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-pro
+    locator: 'Prospective Scholars page: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/coverage
+    source_ref: s-pro
+    locator: Prospective Scholars page, benefits list
+    short_excerpt: Full-tuition, housing, and food scholarship, renewable for up to eight consecutive
+      semesters of full-time enrollment
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-pro
+    locator: 'Prospective Scholars page: no dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-pro
+    locator: Prospective Scholars page, benefits list
+    short_excerpt: Eligibility for a one-time $5,500 grant to support a student-selected activity that
+      enhances the academic experience
+    value_status: reported
+    reported_value: 5500
+  - field_path: offers/0/benefits/3/conditions_text
+    source_ref: s-pro
+    locator: Prospective Scholars page, benefits list
+    short_excerpt: Eligibility for a one-time $5,500 grant to support a student-selected activity that
+      enhances the academic experience
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-sel
+    locator: Selection page, test dates paragraph
+    short_excerpt: are not required for consideration for the Richmond Scholars program
+    value_status: reported
+    reported_value: optional
+  - field_path: application/milestones/0
+    source_ref: s-sel
+    locator: Selection page, how to apply list
+    short_excerpt: Submit a complete admission application by December 1.
+    value_status: reported
+    reported_value: 12-01
+  - field_path: application/milestones/1
+    source_ref: s-sel
+    locator: Selection page, finalist paragraph
+    short_excerpt: by February 1
+    value_status: reported
+    reported_value: 02-01
+  - field_path: application/milestones/2
+    source_ref: s-sel
+    locator: Selection page, finalist paragraph
+    short_excerpt: Final selection of Richmond Scholars will be completed by March 1.
+    value_status: reported
+    reported_value: 03-01
+  - field_path: application/interview_mode
+    source_ref: s-sel
+    locator: Selection page, finalist paragraph
+    short_excerpt: Finalists will be invited to interview with a faculty selection committee via Zoom
+      in mid-February.
+    value_status: reported
+    reported_value: virtual
+  - field_path: renewal_rules/0/max_semesters
+    source_ref: s-pro
+    locator: Prospective Scholars page, benefits list
+    short_excerpt: renewable for up to eight consecutive semesters of full-time enrollment
+    value_status: reported
+    reported_value: 8
+  - field_path: award_counts/0
+    source_ref: s-pro
+    locator: Prospective Scholars page, opening paragraph
+    short_excerpt: these scholarships are given to 25 incoming students
+    value_status: reported
+    reported_value: 25
