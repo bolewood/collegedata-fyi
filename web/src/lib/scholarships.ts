@@ -503,6 +503,9 @@ export function benefitLine(b: Benefit, opts: { amountConflicts?: boolean } = {}
   if (opts.amountConflicts) {
     // Conflicting evidence is never "not published".
     text = "the school's pages give different amounts.";
+  } else if (waiver && b.category === "tuition" && b.coverage === "full" && !capped) {
+    // A waiver of tuition itself: the student is charged none. Still named as a waiver.
+    text = `waived in full by the school.${amount ? ` ${capFirst(amount)}.` : ""}`;
   } else if (waiver) {
     text = `waiver, not a scholarship${amount ? `. ${capFirst(amount)}` : ""}.`;
   } else if (capped && amount) {

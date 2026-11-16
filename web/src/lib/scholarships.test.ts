@@ -84,6 +84,17 @@ describe("coverage summary", () => {
     expect(line.text).not.toMatch(/tuition covered|covers all/i);
   });
 
+  it("names a full waiver of tuition itself as waived in full (derived: Hawaii at Manoa Regents)", () => {
+    const real = ROWS.flatMap((r) => r.offers).flatMap((o) => o.benefits ?? []).find((b) => b.category === "tuition" && b.coverage === "full" && !b.conditions_text);
+    expect(real).toBeTruthy();
+    // Derived: a real full-tuition benefit with the instrument set to a waiver and no amount.
+    const waived: Benefit = { ...(real as Benefit), instrument: "tuition_waiver", amount: null };
+    const line = benefitLine(waived);
+    expect(line.flags.waiver).toBe(true);
+    expect(line.text).toMatch(/^waived in full by the school\./);
+    expect(line.text).not.toMatch(/not a scholarship/);
+  });
+
   it("shows a capped housing benefit as capped (derived from a real housing benefit)", () => {
     const real = ROWS.flatMap((r) => r.offers).flatMap((o) => o.benefits ?? []).find((b) => b.category === "housing");
     expect(real).toBeTruthy();

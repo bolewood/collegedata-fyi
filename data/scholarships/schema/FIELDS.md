@@ -32,7 +32,9 @@ One YAML file per program: `data/scholarships/programs/<school_id>/<program_id>.
   needs-review flag and check dates live in the database, not in these files.
 - **Coverage is derived.** There is no `normalized_coverage` in YAML; the loader
   derives it from the typed benefit components. A waiver of the out-of-state
-  differential is `category: nonresident_differential`, `instrument: tuition_waiver`.
+  differential is `category: nonresident_differential`, `instrument: tuition_waiver`,
+  and never counts. A full waiver of tuition itself (`category: tuition`,
+  `instrument: tuition_waiver`) counts as full tuition.
 - **Residency** uses one vocabulary everywhere: `in_state`, `out_of_state`,
   `international`, `any`, `unknown`.
 - **Types.** `string|null` means the key may be null; an enum shown without

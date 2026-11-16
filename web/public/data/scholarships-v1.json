@@ -1,6 +1,6 @@
 {
   "meta": {
-    "dataset_id": "collegedata-scholarships-v1-641ec256da39",
+    "dataset_id": "collegedata-scholarships-v1-2455e2905cca",
     "version": 1,
     "license": "CC-BY-SA-4.0",
     "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
@@ -22176,7 +22176,7 @@
       "owner_spot_checked": false,
       "program_status_for_entry": null,
       "coverages": [
-        "partial_or_fixed"
+        "full_tuition"
       ],
       "selection_modes": [
         "competitive"
@@ -22282,7 +22282,7 @@
             }
           ],
           "advertised_totals": [],
-          "normalized_coverage": "partial_or_fixed"
+          "normalized_coverage": "full_tuition"
         }
       ],
       "application": {

@@ -91,8 +91,9 @@ export default function ScholarshipMethodologyPage() {
           only when the school&rsquo;s page promises the award to everyone who meets the stated requirements.
         </Term>
         <Term lead="A waiver is not a scholarship.">
-          A tuition waiver, such as a nonresident differential, is named as a waiver and is never counted as
-          tuition covered.
+          A waiver is always named as a waiver. A waiver of the out-of-state differential is never counted as
+          tuition covered. A waiver of all tuition is counted as full tuition, because the student is charged
+          none.
         </Term>
         <Term lead="We do not add up totals.">
           We never sum components, multiply a yearly amount, or turn &ldquo;up to&rdquo; into a promise. If the

@@ -84,7 +84,8 @@ Nonresident tuition differential, Other.
 | {Category}: {amount}. | fixed_amount or any benefit with an amount |
 | {Category}: amount varies. | `coverage` = variable, no amount |
 | {Category}: capped. Up to {amount}. | A "full" benefit whose amount qualifier is up_to or approximate, or any up_to amount |
-| {Category}: waiver, not a scholarship. {text} | `instrument` = tuition_waiver. A waiver is named as a waiver and never described as tuition covered |
+| Tuition: waived in full by the school. {amount} | `instrument` = tuition_waiver on `category` = tuition with `coverage` = full and no cap. Counted as full tuition |
+| {Category}: waiver, not a scholarship. {text} | Any other `instrument` = tuition_waiver. Named as a waiver and never described as tuition covered |
 | {line} Condition: {conditions text}. | Any benefit with `conditions_text`. The condition is always shown, in the school's words |
 | The school calls it "{label}". | `advertised_coverage_label` present (quoted, never our label) |
 | {scope text} | `scope_text`, shown after the line in muted type |
@@ -221,7 +222,7 @@ application requirement. Anything else prints "a figure".
 | Sourcing rules | H2. Body: Every fact comes from the school's own pages, or from the page of a foundation the school is tied to (named as such). Third-party scholarship lists are used only to find programs, never as a source of terms. We read the page, record what it says with a locator, and note the date we read it. We do not copy the school's text; we paraphrase it and quote at most 25 words. |
 | Field definitions | H2. Definitions for: program, entering class, offer, benefit, coverage words, how you are considered, separate application, deadlines, renewal, stacking, counts |
 | Considered is not guaranteed. | Definition lead. Body: "Considered" means the program looks at your application. "Automatic" appears only when the school's page promises the award to everyone who meets the stated requirements. |
-| A waiver is not a scholarship. | Definition lead. Body: A tuition waiver (for example, a nonresident differential) is named as a waiver and is never counted as tuition covered. |
+| A waiver is not a scholarship. | Definition lead. Body: A waiver is always named as a waiver. A waiver of the out-of-state differential is never counted as tuition covered. A waiver of all tuition is counted as full tuition, because the student is charged none. |
 | We do not add up totals. | Definition lead. Body: We never sum components, multiply a yearly amount, or turn "up to" into a promise. If the school quotes a total, we show it as a quote with the scope the school gave. |
 | What the freshness lines mean | H2, with the five states below |
 | Terms for a stated entering class | State 1. The page names the class; we print it and the date we read the page. |

@@ -41,8 +41,10 @@ DEADLINE_KINDS = frozenset(
 
 # Coverage derivation. A benefit counts toward a full_* label only when it is a
 # real scholarship (or restricted fund) with full coverage, no conditions_text,
-# and an amount that is not capped. A tuition_waiver instrument or a
-# nonresident_differential category never counts, in any bracket and never as
+# and an amount that is not capped. A waiver of tuition itself (category
+# `tuition`, instrument `tuition_waiver`) counts the same way: the student is
+# charged no tuition. Any other waiver, and the nonresident_differential
+# category under any instrument, never counts, in any bracket and never as
 # partial coverage. advertised_totals are never used.
 NORMALIZED_COVERAGE = (
     "full_tuition",
@@ -59,8 +61,15 @@ _PARTIAL_COVERAGES = frozenset({"partial", "fixed_amount", "variable"})
 _STATED_COVERAGES = frozenset({"full", "partial", "fixed_amount", "variable"})
 
 
+def _tuition_waiver(b: Dict[str, Any]) -> bool:
+    """A waiver of the tuition charge itself, not of the out-of-state differential."""
+    return b.get("instrument") == "tuition_waiver" and b.get("category") == "tuition"
+
+
 def _counted(b: Dict[str, Any]) -> bool:
-    return b.get("instrument") != "tuition_waiver" and b.get("category") != "nonresident_differential"
+    if b.get("category") == "nonresident_differential":
+        return False
+    return b.get("instrument") != "tuition_waiver" or _tuition_waiver(b)
 
 
 def _uncapped(b: Dict[str, Any]) -> bool:
@@ -73,7 +82,7 @@ def _full(b: Dict[str, Any], instruments: frozenset = _FULL_INSTRUMENTS) -> bool
     return (
         _counted(b)
         and b.get("coverage") == "full"
-        and b.get("instrument") in instruments
+        and (b.get("instrument") in instruments or _tuition_waiver(b))
         and not b.get("conditions_text")
         and _uncapped(b)
     )
@@ -91,13 +100,16 @@ def derive_normalized_coverage(benefits: Optional[List[Dict[str, Any]]]) -> Opti
         tuition_housing_meals  tuition + housing + meals full (fees optional)
         full_tuition_fees      tuition + mandatory_fees full
         full_tuition           tuition full
-        partial_or_fixed       no bracket, but some non-waiver benefit is partial,
+        partial_or_fixed       no bracket, but some counted benefit is partial,
                                fixed_amount, variable, or `full` yet capped,
                                conditional, or short of a bracket
         other                  anything else, including coverage `unknown`
     - `full` counts only for instrument scholarship or restricted_fund (cost of
       attendance: scholarship only), with no conditions_text and an amount that
       is null, exact or not_published.
+    - A tuition_waiver on category `tuition` counts like a scholarship there. A
+      waiver on any other category, and every nonresident_differential benefit,
+      is ignored.
     """
     if benefits is None:
         return None
@@ -122,7 +134,7 @@ def derive_normalized_coverage(benefits: Optional[List[Dict[str, Any]]]) -> Opti
         return "full_tuition"
     if any(
         _counted(b)
-        and b.get("instrument") in _PARTIAL_INSTRUMENTS
+        and (b.get("instrument") in _PARTIAL_INSTRUMENTS or _tuition_waiver(b))
         and (b.get("coverage") in _PARTIAL_COVERAGES or b.get("coverage") == "full")
         for b in benefits
     ):
@@ -136,7 +148,7 @@ def derive_offers(offers: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     A tier nests under its parent (`parent_offer_id`) and may list only what it
     adds, so an offer's coverage is derived from its own benefits plus those of
     all its ancestors. An offer whose own `benefits` is null stays null (not
-    documented). Waivers are excluded by the derivation.
+    documented). Differential waivers are excluded by the derivation.
     """
     by_id = {o["offer_id"]: o for o in offers}
     out = []

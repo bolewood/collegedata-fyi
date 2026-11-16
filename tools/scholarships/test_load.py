@@ -96,14 +96,26 @@ def b(
         ([b("housing")], "partial_or_fixed"),  # full housing alone is not tuition coverage, but it is not nothing
         ([b("tuition", instrument="unknown")], "other"),  # cannot prove it is a scholarship
         ([b("tuition", instrument="earned_compensation")], "other"),
-        # Waivers never count as tuition coverage, in any bracket.
-        ([b("tuition", instrument="tuition_waiver")], "other"),
+        # A waiver of tuition itself counts as tuition coverage (Hawaii at Manoa Regents).
+        ([b("tuition", instrument="tuition_waiver")], "full_tuition"),
+        ([b("tuition", instrument="tuition_waiver"), b("stipend", "cash_stipend", "fixed_amount")], "full_tuition"),
+        ([b("tuition", instrument="tuition_waiver"), b("mandatory_fees")], "full_tuition_fees"),
+        ([b("tuition", instrument="tuition_waiver", coverage="partial")], "partial_or_fixed"),
+        ([b("tuition", instrument="tuition_waiver", qualifier="up_to")], "partial_or_fixed"),
+        ([b("tuition", instrument="tuition_waiver", conditions="needs $4,000 in other scholarships")], "partial_or_fixed"),
+        ([b("tuition", instrument="tuition_waiver", coverage="unknown")], "other"),
+        # A waiver of anything else, or of the out-of-state differential, never counts.
+        ([b("mandatory_fees", instrument="tuition_waiver")], "other"),
         ([b("nonresident_differential", instrument="tuition_waiver")], "other"),
         ([b("nonresident_differential", instrument="scholarship")], "other"),
         ([b("nonresident_differential", instrument="tuition_waiver", coverage="partial")], "other"),
         (
             [b("tuition", instrument="tuition_waiver"), b("mandatory_fees"), b("housing"), b("meals")],
-            "partial_or_fixed",  # waiver "tuition" does not unlock the housing and meals bracket
+            "tuition_housing_meals",  # a full tuition waiver fills the tuition slot of a bracket
+        ),
+        (
+            [b("nonresident_differential", instrument="tuition_waiver"), b("mandatory_fees"), b("housing"), b("meals")],
+            "partial_or_fixed",  # the differential waiver does not
         ),
         # Review 4: `full` with a capped or inexact amount is not full.
         ([b("tuition", qualifier="up_to")], "partial_or_fixed"),
