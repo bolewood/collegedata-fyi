@@ -74,6 +74,14 @@ up to"), the value is stated for a group of scholarships, or a component is
 capped or unpublished. Keep the school's exact wording, and leave coverage
 `partial` or `unknown` where the page does not promise the charge in full.
 
+Coverage follows the school's promise. Record `coverage: full` when the school
+says the charge is covered in full, including full tuition stated for the
+standard full-time credit load ("12-18 credits", "up to 18 credits per
+semester" with no dollar cap) or as "valued at full tuition"; keep the credit band in
+`scope_text`. Use `partial` only for a real shortfall: a stated share ("half
+tuition"), "up to" before a dollar amount or a share, a named subset of fees, or a cap below the
+charge.
+
 Test the top tier only, then record every tier of a qualifying program. Never
 add components or multiply an amount to reach the floor. Do not submit a
 program whose value the school does not publish. Reviewers check the floor;

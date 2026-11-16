@@ -325,3 +325,365 @@ versions:
     short_excerpt: may not have their individual Cost of Attendance (COA) exceeded
     value_status: reported
     reported_value: null
+- version_id: uconn-stamps-fall-2027-r2
+  supersedes: uconn-stamps-fall-2027
+  entry_year: 2027
+  entry_year_label: null
+  entry_terms:
+  - fall
+  source_cohort_text: enroll at the University of Connecticut beginning fall semester 2027
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-fable-5-2, after the Gemini 4 Carbon audit of 2026-11-15
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: 3.8
+        scale: 4.0
+        basis: unknown
+      test_rules:
+      - exam: SAT (combined)
+        min: 1420
+        scoring: unknown
+        official_required: null
+      - exam: ACT (composite)
+        min: 32
+        scoring: unknown
+        official_required: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible:
+      - any
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: The score minimums apply only to applicants who choose to submit scores. The
+        page also says applicants should rank in the top 10% of their class (if rank is available), be
+        involved in leadership, and have shown a commitment to community service. The page says interested
+        and eligible students 'must choose to apply to either the Nutmeg, Day of Pride, or Stamps Scholarship
+        and may not apply for all three'. Recipients are guaranteed admission to the Honors College. The
+        Honors page lists 'Full support (tuition, room and board, fees, books, transportation, miscellaneous)';
+        the admissions page says 'full cost-of-attendance'.
+    benefits:
+    - benefit_id: b-coa
+      category: cost_of_attendance
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years (eight academic semesters)
+      exclusions:
+      - Program-related fees
+      - Off-campus housing and food not included in a UConn meal plan
+      - Education Abroad programs that do not charge UConn tuition
+      - Winter intersession and summer courses
+      scope_text: 'School wording: ''full cost-of-attendance scholarship''; the policies page limits housing
+        to the prior-year average housing cost, for on-campus residents only, and food to the cost of
+        a Value Meal Plan'
+      advertised_coverage_label: full cost-of-attendance scholarship
+      conditions_text: On-campus housing is covered only while the student lives on campus; students who
+        live off campus do not receive the housing value. Food is covered up to the cost of a Value Meal
+        Plan for students living on or off campus, although the same section also says the scholarship
+        covers these expenses 'only if the student resides on-campus'. Tuition already covered by a tuition
+        waiver is not covered again
+    - benefit_id: b-enrichment
+      category: enrichment
+      instrument: restricted_fund
+      coverage: variable
+      amount:
+        qualifier: up_to
+        value: 12000
+        min: null
+        max: null
+        period: one_time
+      duration_terms: null
+      exclusions: null
+      scope_text: 'Enrichment funding for research and experiential learning. Admissions page: ''a one-time
+        enrichment award of $12,000''; Honors page: ''access to up to $12,000''. Recorded as up to $12,000,
+        which fits both wordings'
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: '2026-11-01'
+      recurring: null
+      precision: day
+      source_date_text: November 1, 2026
+    - kind: application_deadline
+      requirement: required
+      date: '2026-11-08'
+      recurring: null
+      precision: day
+      source_date_text: November 8, 2026
+    - kind: notification
+      requirement: recommended
+      date: null
+      recurring:
+        month: 2
+        day: 1
+      precision: month
+      source_date_text: early February
+    admission_plan_requirement: null
+    prerequisites:
+    - kind: recommendation
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Two letters of recommendation are required; the same two may serve the admission application.
+    - kind: portal_credentials
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: The supplemental application is in the applicant portal, which needs an activated NetID;
+        the page says most applicants receive a NetID within five days of applying, and August applicants
+        in mid-September.
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: 'Selected applicants have a required interview with the Admissions Committee and the Stamps
+      Scholars Program; no date or format is given. Early Decision applicants who apply for the Stamps
+      Scholarship are not notified of the award at the time of admission. The page says students ''must
+      choose to apply to either the Nutmeg, Day of Pride, or Stamps Scholarship and may not apply for
+      all three''. Supplemental application: three short answers, a resume and two letters of recommendation.'
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.0
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: Reviewed annually for compliance with the SAP/GPA requirements
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Renewable annually for up to eight semesters of full-time undergraduate study on a 3.0 cumulative
+      GPA (2.5 for most other UConn merit scholarships); housing is covered only while the student lives
+      on campus; the Honors College is required for the first two semesters; winter and summer courses
+      are not covered.
+  stacking_rules:
+  - other_aid_type: tuition_waiver
+    relation: counts_within_package
+    note: A student receiving a tuition waiver does not also receive the equivalent tuition value from
+      the scholarship; the award is then applied to University and student fees, housing and/or meals.
+  - other_aid_type: federal_or_state_need
+    relation: counts_within_package
+    note: Merit scholarship plus a Pell Grant may not exceed the cost of attendance; with other need-based
+      aid, may not exceed federally defined need or the cost of attendance.
+  - other_aid_type: institutional_merit
+    relation: not_allowed
+    note: 'School words: ''Students are eligible to receive a single merit-based admissions scholarship
+      award.'''
+  award_counts: []
+  sources:
+  - source_id: s-app
+    url: https://admissions.uconn.edu/stamps-applicants/
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: 71bbf9bb9960ededc795ebb05c74e6c3e3e38ead91fea52bd52acf95bbf19f1f
+    archive_url: null
+  - source_id: s-merit
+    url: https://admissions.uconn.edu/cost-aid/scholarship/
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: fd298c83c13ca374bf8fcbe1637644287740bbec0cca620777fdb5ccf88fee4d
+    archive_url: null
+  - source_id: s-pol
+    url: https://admissions.uconn.edu/cost-aid/scholarship/policies/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 3e1043d7a5d10880e1139837c0e390628d21c115c1b8bb3eac029cddf5e6e57b
+    archive_url: null
+  - source_id: s-hon
+    url: https://honors-scholar.uconn.edu/stamps-scholarship/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: bb76102249d1748832b26685ac4c725eea48ceeb66a0e9910e2de8ee8ead757a
+    archive_url: null
+  field_evidence:
+  - field_path: /awarding_authority
+    source_ref: s-hon
+    locator: Stamps Scholarship page, Stamps Scholars Enrichment Funds paragraph
+    short_excerpt: The Stamps Scholars Program and partner schools evenly share the costs of the awards.
+    value_status: reported
+    reported_value: null
+  - field_path: /applicable_campuses/0
+    source_ref: s-merit
+    locator: Merit Scholarships, Stamps Scholarship heading
+    short_excerpt: Restricted to Storrs Campus Applicants
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-app
+    locator: Stamps Scholarship Applicants, To be eligible
+    short_excerpt: enroll at the University of Connecticut beginning fall semester 2027
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-merit
+    locator: Merit Scholarships, Stamps Scholarship, Applicant Information
+    short_excerpt: Selection is highly competitive.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-merit
+    locator: Merit Scholarships, intro, second paragraph
+    short_excerpt: with the exception of the Nutmeg, Day of Pride, and Stamps Scholarships, which require
+      a supplemental application
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/gpa
+    source_ref: s-app
+    locator: Stamps Scholarship Applicants, To be eligible, last bullet
+    short_excerpt: Applicants should have a minimum grade point average of 3.8 on a 4.0 scale
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/test_rules
+    source_ref: s-app
+    locator: Stamps Scholarship Applicants, To be eligible, test score bullet
+    short_excerpt: Applicants choosing to provide a standardized test score should achieve a minimum combined
+      SAT Score of 1420 or an ACT composite score of 32.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-app
+    locator: Stamps Scholarship Applicants, To be eligible, test score bullet
+    short_excerpt: Submission of standardized test scores is optional and is not required for Stamps Scholarship
+      eligibility.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-merit
+    locator: Merit Scholarships, Stamps Scholarship, first paragraph
+    short_excerpt: The Stamps Scholarship is a full cost-of-attendance scholarship renewable for four
+      years (eight academic semesters) of undergraduate education.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-merit
+    locator: 'Merit Scholarships, Stamps Scholarship: no dollar amount is given for the scholarship itself'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/0/conditions_text
+    source_ref: s-pol
+    locator: Policies, Nutmeg, Day of Pride, Stamps Scholarships, Eligibility Requirements
+    short_excerpt: Students who choose to live off-campus are not eligible to receive the value of the
+      on-campus housing
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-merit
+    locator: Merit Scholarships, Stamps Scholarship, first paragraph
+    short_excerpt: Applicants selected for the Stamps Scholarship will also receive a one-time enrichment
+      award of $12,000
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-hon
+    locator: Stamps Scholarship page, Stamps Scholars Enrichment Award
+    short_excerpt: As a benefit, recipients have access to up to $12,000 to fund enrichment activities.
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-merit
+    locator: Merit Scholarships, intro, second paragraph
+    short_excerpt: with the exception of the Nutmeg, Day of Pride, and Stamps Scholarships, which require
+      a supplemental application
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-app
+    locator: Stamps Scholarship Applicants, Deadlines table
+    short_excerpt: November 1, 2026 | Deadline to complete either the Common Application or Coalition
+      Application
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-app
+    locator: Stamps Scholarship Applicants, Deadlines table
+    short_excerpt: November 8, 2026 | Stamps Scholarship Supplemental Application Deadline
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-app
+    locator: Stamps Scholarship Applicants, second paragraph
+    short_excerpt: Stamps Scholarship selection will be made in early February.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-pol
+    locator: Policies, Renewal and Satisfactory Academic Progress
+    short_excerpt: Stamps Scholarship which require maintaining a 3.0 cumulative grade point average
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-pol
+    locator: Policies, Nutmeg, Day of Pride, Stamps Scholarships
+    short_excerpt: Students receiving a tuition waiver are not eligible to receive the equivalent tuition
+      value
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/1
+    source_ref: s-pol
+    locator: Policies, Excess of Funds
+    short_excerpt: may not have their individual Cost of Attendance (COA) exceeded
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/conditions_text
+    source_ref: s-pol
+    locator: Policies, Nutmeg, Day of Pride, Stamps Scholarships, Eligibility Requirements
+    short_excerpt: The scholarship will cover up to the cost of a Value Meal Plan for students living
+      on or off campus.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/exclusions
+    source_ref: s-pol
+    locator: Policies, Winter Intersession/Summer Session Courses
+    short_excerpt: Merit-based admissions scholarship awards cannot be applied towards winter intersession
+      or summer courses.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/exclusions
+    source_ref: s-pol
+    locator: Policies, fees paragraph
+    short_excerpt: Scholarships will not be applied to program-related fees
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/exclusions
+    source_ref: s-pol
+    locator: Policies, Living Off-Campus
+    short_excerpt: Off-campus housing and/or meal expenses not associated with University meal plans are
+      not covered by merit scholarships.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/exclusions
+    source_ref: s-pol
+    locator: Policies, Education Abroad
+    short_excerpt: programs that do not charge UConn tuition are not eligible to apply their merit-based
+      admissions scholarships to those programs
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/2
+    source_ref: s-pol
+    locator: Policies, Award Amount
+    short_excerpt: Students are eligible to receive a single merit-based admissions scholarship award.
+    value_status: reported
+    reported_value: null

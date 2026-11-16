@@ -432,3 +432,437 @@ versions:
     short_excerpt: Freshman New Mexico Resident Scholarships 2027-28
     value_status: reported
     reported_value: null
+- version_id: regents-2027-r2
+  supersedes: regents-2027
+  entry_year: 2027
+  entry_year_label: 'Page heading: ''Freshman New Mexico Resident Scholarships 2027-28'' (and the non-resident
+    equivalent)'
+  entry_terms:
+  - unspecified
+  source_cohort_text: Heading '2027-28' on both the resident and non-resident tables
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-fable-5-2, after the Gemini 4 Carbon audit of 2026-11-15
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-resident
+    parent_offer_id: null
+    variant_name: Regents' Scholarship (New Mexico resident)
+    residency: in_state
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: true
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: 3.9
+        scale: null
+        basis: unweighted
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Also GED scaled score of 175 or higher. The page says scholarships consider unweighted
+        cumulative GPA, and are 'limited and selective'.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Renewable for 4 years
+      exclusions: null
+      scope_text: '''Base tuition'', part of an approximately $15,500 per year award that also covers
+        fees and housing'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Renewable for 4 years
+      exclusions: null
+      scope_text: Part of the approximately $15,500 per year award; the page does not say which fees
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Renewable for 4 years
+      exclusions: null
+      scope_text: Part of the approximately $15,500 per year award; freshmen must live in the Scholars
+        Wing in Hokona Hall to renew
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: approximate
+        value: 15500
+        min: null
+        max: null
+        period: academic_year
+      scope_text: '''Approximately $15,500 per year — covers base tuition, fees, and housing'' (resident
+        table)'
+  - offer_id: o-nonresident
+    parent_offer_id: null
+    variant_name: Regents' Scholarship (non-resident)
+    residency: out_of_state
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: true
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: 3.9
+        scale: null
+        basis: unweighted
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Also GED scaled score of 175 or higher.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Renewable for 4 years
+      exclusions: null
+      scope_text: '''Base tuition'', part of an approximately $24,000 per year award that also covers
+        fees and housing'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Renewable for 4 years
+      exclusions: null
+      scope_text: Part of the approximately $24,000 per year award; the page does not say which fees
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Renewable for 4 years
+      exclusions: null
+      scope_text: Part of the approximately $24,000 per year award; freshmen must live in the Scholars
+        Wing in Hokona Hall to renew
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-waiver
+      category: nonresident_differential
+      instrument: tuition_waiver
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Renewable for 4 years
+      exclusions: null
+      scope_text: Tuition waiver that adjusts non-resident tuition to the New Mexico resident rate; the
+        page does not say whether the $24,000 figure includes it
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: approximate
+        value: 24000
+        min: null
+        max: null
+        period: academic_year
+      scope_text: '''Approximately $24,000 per year — covers base tuition, fees and housing'' (non-resident
+        table)'
+  application:
+    separate_application: required
+    milestones:
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 12
+        day: 1
+      precision: day
+      source_date_text: Complete Admissions Application and Scholarship Application by December 1
+    admission_plan_requirement: Complete the admission application and the Regents' scholarship application
+      by December 1. The page also says applicants must 'be admitted by the Application Deadline', so
+      apply for admission early enough to be admitted by December 1
+    prerequisites:
+    - kind: admission_application
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Applicants must be admitted to UNM by the application deadline, not only have applied; the
+        page gives no lead time
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: The page gives no year for December 1; it is recorded as recurring. The Regents' Scholarship
+      row links to the scholarship application ('Apply Here'). Freshman Regents' Scholars must live in
+      the Scholars Wing in Hokona Hall to renew.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.3
+    gpa_scale: null
+    credit_load_min_per_term: 15
+    credit_load_min_per_year: null
+    evaluation_timing: Each semester (fall and spring)
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: 'Renewable for 4 years. Freshmen: complete 15 new credit hours with a 3.3 GPA each semester
+      and live in the Scholars Wing in Hokona Hall. Sophomores and above: 15 new credit hours with a 3.3
+      GPA each semester.'
+  stacking_rules:
+  - other_aid_type: other
+    relation: allowed
+    note: The table header says the resident institutional scholarships can be combined with the NM Legislative
+      Lottery and Opportunity Scholarship; the non-resident table says nothing about combining.
+  award_counts: []
+  sources:
+  - source_id: s-sch
+    url: https://scholarship.unm.edu/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: d4a3529862465482630643b7f0da863c4780d9b35aedc0dd8b240fab71b3473b
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-sch
+    locator: Freshman New Mexico Resident Scholarships 2027-28, Regents' Scholarship row, Amount column
+    short_excerpt: Scholarships are limited and selective.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-sch
+    locator: Freshman New Mexico Resident Scholarships 2027-28, Regents' Scholarship row, Application
+      Deadlines column
+    short_excerpt: Complete Admissions Application and Scholarship Application by December 1
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/funds_limited
+    source_ref: s-sch
+    locator: Freshman New Mexico Resident Scholarships 2027-28, intro paragraph
+    short_excerpt: Scholarships are merit-based, competitive and a limited number are available.
+    value_status: reported
+    reported_value: true
+  - field_path: offers/0/benefits/0
+    source_ref: s-sch
+    locator: Resident table, Regents' Scholarship row, Amount column
+    short_excerpt: Approximately $15,500 per year — covers base tuition, fees, and housing
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-sch
+    locator: Resident table, Regents' Scholarship row, Amount column
+    short_excerpt: Approximately $15,500 per year — covers base tuition, fees, and housing
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-sch
+    locator: Resident table, Regents' Scholarship row, Amount column
+    short_excerpt: Approximately $15,500 per year — covers base tuition, fees, and housing
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-sch
+    locator: 'Resident table: one bundled amount, no per-component amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-sch
+    locator: 'Resident table: one bundled amount, no per-component amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-sch
+    locator: 'Resident table: one bundled amount, no per-component amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/advertised_totals/0/amount
+    source_ref: s-sch
+    locator: Resident table, Regents' Scholarship row, Amount column
+    short_excerpt: Approximately $15,500 per year — covers base tuition, fees, and housing
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/gpa
+    source_ref: s-sch
+    locator: Resident table, Regents' Scholarship row, Criteria for Consideration column
+    short_excerpt: Minimum 3.90 Cumulative GPA
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/selection_mode
+    source_ref: s-sch
+    locator: Freshman Non-Resident Scholarships 2027-28, Regents' Scholarship row, Amount column
+    short_excerpt: Scholarships are limited and selective.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/consideration_route
+    source_ref: s-sch
+    locator: Freshman Non-Resident Scholarships 2027-28, Regents' Scholarship row, Application Deadlines
+      column
+    short_excerpt: Complete Admissions Application and Scholarship Application by December 1
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/funds_limited
+    source_ref: s-sch
+    locator: Freshman Non-Resident Scholarships 2027-28, intro paragraph
+    short_excerpt: Scholarships are merit-based, competitive and a limited number are available.
+    value_status: reported
+    reported_value: true
+  - field_path: offers/1/benefits/0
+    source_ref: s-sch
+    locator: Non-resident table, Regents' Scholarship row, Amount column
+    short_excerpt: Approximately $24,000 per year — covers base tuition, fees and housing
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/1
+    source_ref: s-sch
+    locator: Non-resident table, Regents' Scholarship row, Amount column
+    short_excerpt: Approximately $24,000 per year — covers base tuition, fees and housing
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/2
+    source_ref: s-sch
+    locator: Non-resident table, Regents' Scholarship row, Amount column
+    short_excerpt: Approximately $24,000 per year — covers base tuition, fees and housing
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/0/amount
+    source_ref: s-sch
+    locator: 'Non-resident table: one bundled amount, no per-component amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/1/amount
+    source_ref: s-sch
+    locator: 'Non-resident table: one bundled amount, no per-component amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/2/amount
+    source_ref: s-sch
+    locator: 'Non-resident table: one bundled amount, no per-component amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/3
+    source_ref: s-sch
+    locator: Non-resident table, Regents' Scholarship row, Amount column
+    short_excerpt: Any non-resident will receive a tuition waiver to adjust non-resident tuition to NM
+      resident tuition rates
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/3/amount
+    source_ref: s-sch
+    locator: 'Non-resident table: no dollar value for the waiver'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/advertised_totals/0/amount
+    source_ref: s-sch
+    locator: Non-resident table, Regents' Scholarship row, Amount column
+    short_excerpt: Approximately $24,000 per year — covers base tuition, fees and housing
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/eligibility/gpa
+    source_ref: s-sch
+    locator: Non-resident table, Regents' Scholarship row, Criteria for Consideration column
+    short_excerpt: Minimum 3.90 Cumulative GPA
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-sch
+    locator: Resident table, Regents' Scholarship row, Application Deadlines column
+    short_excerpt: Complete Admissions Application and Scholarship Application by December 1
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-sch
+    locator: Resident and non-resident tables, Regents' Scholarship row, Application Deadlines column
+    short_excerpt: Complete Admissions Application and Scholarship Application by December 1
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-sch
+    locator: Resident table, Regents' Scholarship row, Maintaining Your Scholarship column
+    short_excerpt: 'Sophomore and Above : Complete 15 new credit hours with a 3.3 GPA each semester (fall
+      and spring semesters).'
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-sch
+    locator: Resident table, Institutional Scholarships header row
+    short_excerpt: Competitive 4-year renewable scholarships. Can be combined with NM Legislative Lottery
+      and Opportunity Scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-sch
+    locator: Resident section heading
+    short_excerpt: Freshman New Mexico Resident Scholarships 2027-28
+    value_status: reported
+    reported_value: null
+  - field_path: application/prerequisites/0
+    source_ref: s-sch
+    locator: Resident and non-resident scholarship sections, intro paragraph
+    short_excerpt: To be considered you must meet the criteria for consideration, be admitted by the Application
+      Deadline and complete any application materials noted.
+    value_status: reported
+    reported_value: null

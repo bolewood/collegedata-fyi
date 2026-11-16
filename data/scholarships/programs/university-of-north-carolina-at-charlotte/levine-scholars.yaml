@@ -508,3 +508,495 @@ versions:
     short_excerpt: null
     value_status: not_published
     reported_value: null
+- version_id: levine-undated-r2
+  supersedes: levine-undated
+  entry_year: null
+  entry_year_label: Entering class not named; dates run August 2026 to April 2027
+  entry_terms:
+  - fall
+  source_cohort_text: Dates labeled 2026 and 2027 on the Important Dates page
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-fable-5-2, after the Gemini 4 Carbon audit of 2026-11-15
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: nomination
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible:
+      - us_citizen
+      - permanent_resident
+      citizenship_text: Students must be U.S. citizens or permanent residents.
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: First-year applicants for the fall term immediately following high school graduation
+        (no gap year); must be admitted to UNC Charlotte. The page also publishes 2026 finalist averages
+        (weighted GPA 4.51, unweighted 3.96, SAT 1431, ACT 31, test takers only) as a profile, not as
+        minimums. Levine semifinalists are automatically admitted to the Honors College's University Honors
+        Program.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: All four years
+      exclusions: null
+      scope_text: Tuition for all four years
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: All four years
+      exclusions: null
+      scope_text: Mandatory fees for all four years
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: All four years
+      exclusions: null
+      scope_text: Listed as 'housing'; page gives no rate or cap
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: All four years
+      exclusions: null
+      scope_text: Listed as 'meals'; page gives no rate or cap
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-books
+      category: books
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Listed on the program home page ('books'); the About page's benefit sentence omits books;
+        no amount given
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-summer
+      category: enrichment
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Funding each summer for four summer experiences; amount not published
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-civic
+      category: enrichment
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 8000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Grant to design and lead a project with a local nonprofit; the page says scholars 'have
+        access to' it
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: at_least
+        value: 129000
+        min: null
+        max: null
+        period: total_program
+      scope_text: 'Estimated current total value of the four-year package for in-state students: ''over
+        $129,000'''
+    - amount:
+        qualifier: at_least
+        value: 192000
+        min: null
+        max: null
+        period: total_program
+      scope_text: 'Estimated current total value of the four-year package for out-of-state students: ''over
+        $192,000'''
+  application:
+    separate_application: required
+    milestones:
+    - kind: application_open
+      requirement: required
+      date: '2026-08-15'
+      recurring: null
+      precision: day
+      source_date_text: Aug. 15, 2026
+    - kind: nomination_deadline
+      requirement: required
+      date: '2026-10-15'
+      recurring: null
+      precision: day
+      source_date_text: Oct. 15, 2026
+    - kind: admission_deadline
+      requirement: required
+      date: '2026-11-01'
+      recurring: null
+      precision: day
+      source_date_text: Nov. 1, 2026
+    - kind: application_deadline
+      requirement: required
+      date: '2026-11-15'
+      recurring: null
+      precision: day
+      source_date_text: Nov. 15, 2026; 11:59 P.M. EST
+    - kind: notification
+      requirement: recommended
+      date: '2026-12-07'
+      recurring: null
+      precision: approximate
+      source_date_text: Dec. 7, 2026 ('during this week')
+    - kind: notification
+      requirement: recommended
+      date: '2027-01-08'
+      recurring: null
+      precision: day
+      source_date_text: Jan. 8, 2027
+    - kind: finalist_event
+      requirement: invitation_only
+      date: '2027-02-21'
+      recurring: null
+      precision: day
+      source_date_text: Feb. 21-22, 2027
+    - kind: notification
+      requirement: recommended
+      date: '2027-03-01'
+      recurring: null
+      precision: day
+      source_date_text: Mar. 1, 2027
+    - kind: acceptance_deadline
+      requirement: required
+      date: '2027-04-01'
+      recurring: null
+      precision: day
+      source_date_text: Apr. 1, 2027
+    admission_plan_requirement: A complete UNC Charlotte first-year admission application by Nov. 1 (separate
+      from the Levine application)
+    prerequisites:
+    - kind: admission_application
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Nominees must also submit a first-year admission application; the Levine committee cannot
+        see supplemental admission materials
+    - kind: recommendation
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Three online recommenders (academic, service, leadership); letters due by 11:59 P.M. EST
+        Nov. 15
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: Counselor nomination or self-nomination is needed before the application is available. Three
+      essays are required. The home page repeats the dates without a year ('Nominations due October 15,
+      Applications due November 15'); the Important Dates page gives 2026/2027 and does not name an entering
+      class. The dates page says finalists are invited to the on-campus Finalist Program; it does not
+      say attendance is required to receive the award.
+  renewal_rules: null
+  stacking_rules: null
+  award_counts:
+  - metric: new_recipients
+    qualifier: exact
+    value: 20
+    cohort_year: null
+    source_ref: s-home
+    claim: target
+    denominator: Scholars per cohort, as the home page states it
+  sources:
+  - source_id: s-home
+    url: https://levinescholars.charlotte.edu/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 2940dafd0468d31710348b6e83ea3715d679c2012cc445c5a200f42c2e5bc93e
+    archive_url: null
+  - source_id: s-about
+    url: https://levinescholars.charlotte.edu/about/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 4d84622a4a473f30e5f3d623666a9427deab5b8b7374816db39fc502e7a862a5
+    archive_url: null
+  - source_id: s-apply
+    url: https://levinescholars.charlotte.edu/apply/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 522e776d6fa0088bec99ebd326fdbf8aed05e2127696ea6550ade02d60340ca4
+    archive_url: null
+  - source_id: s-dates
+    url: https://levinescholars.charlotte.edu/apply/important-dates/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 5c48461c8691b9b6733b3f78665b8aa877bce611f852fed4ed1355cd7b911b83
+    archive_url: null
+  - source_id: s-profile
+    url: https://levinescholars.charlotte.edu/nomination-application-process/applicant-profile/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: d1cce86481eeec43815d98900e3675ca1690b0212221a8ccf795cdcd4d62c2b0
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-apply
+    locator: Apply page, criteria paragraph
+    short_excerpt: 'demonstrate a strong sense of purpose and potential in the program''s three core components:
+      intellectual curiosity, commitment to community service and ethical leadership.'
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-about
+    locator: About page, award paragraph
+    short_excerpt: The award provides Levine Scholars with full tuition, housing, meals and mandatory
+      fees for all four years.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-about
+    locator: About page, award paragraph
+    short_excerpt: The award provides Levine Scholars with full tuition, housing, meals and mandatory
+      fees for all four years.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/4
+    source_ref: s-home
+    locator: Home page, Overview and Benefits, 'Full Tuition' tile
+    short_excerpt: The scholarship includes tuition, housing and meals, books and mandatory fees for all
+      four years.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/5
+    source_ref: s-about
+    locator: About page, award paragraph
+    short_excerpt: Funding is also provided for four distinctive summer experiences
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/6/amount
+    source_ref: s-home
+    locator: Home page, Overview and Benefits, 'Civic Engagement' tile
+    short_excerpt: Each scholar has access to an $8,000 grant to design and lead a project partnering
+      with a local nonprofit to address a community need.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-about
+    locator: 'About page, award paragraph: housing and meals named without a rate'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-about
+    locator: 'About page, award paragraph: housing and meals named without a rate'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-home
+    locator: 'Home page benefits tile: books named without an amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/5/amount
+    source_ref: s-about
+    locator: 'About page: summer funding named without an amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-about
+    locator: 'About page: no dollar rate for tuition or fees'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-about
+    locator: 'About page: no dollar rate for tuition or fees'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/advertised_totals/0/amount
+    source_ref: s-about
+    locator: About page, award paragraph, last sentence
+    short_excerpt: The current total value of this four-year package is estimated at over $129,000 for
+      in-state students and over $192,000 for out-of-state students.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/advertised_totals/1/amount
+    source_ref: s-about
+    locator: About page, award paragraph, last sentence
+    short_excerpt: The current total value of this four-year package is estimated at over $129,000 for
+      in-state students and over $192,000 for out-of-state students.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/citizenship_text
+    source_ref: s-apply
+    locator: Apply page, eligibility paragraph
+    short_excerpt: Students must be U.S. citizens or permanent residents.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/citizenship_eligible
+    source_ref: s-apply
+    locator: Apply page, eligibility paragraph
+    short_excerpt: Students must be U.S. citizens or permanent residents.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-apply
+    locator: 'Apply page, Step 1: Nomination'
+    short_excerpt: Students may be nominated by their school counselor or college advisor at their current
+      high school.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-apply
+    locator: Apply page, academic averages box
+    short_excerpt: submitting the SAT and/or ACT is optional
+    value_status: reported
+    reported_value: optional
+  - field_path: application/separate_application
+    source_ref: s-apply
+    locator: 'Apply page, Step 2: Application'
+    short_excerpt: Nominees must submit a Levine Scholars Program application and a university admissions
+      application.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-dates
+    locator: Important Dates, 'Aug. 15' row
+    short_excerpt: Nomination and Application process opens.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-dates
+    locator: Important Dates, 'Oct. 15' row
+    short_excerpt: Deadline for school counselors to nominate students for the Levine Scholars Program.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-dates
+    locator: Important Dates, 'Nov. 1' row
+    short_excerpt: Deadline for nominees to submit a complete first-year admissions application to UNC
+      Charlotte Undergraduate Admissions
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-dates
+    locator: Important Dates, 'Nov. 15' row
+    short_excerpt: Deadline for nominees to complete the Levine Scholars supplemental application through
+      the online portal.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/4
+    source_ref: s-dates
+    locator: Important Dates, 'Dec. 7' row
+    short_excerpt: Semifinalists and all other applicants are notified of their status through the Levine
+      Scholars portal during this week.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/5
+    source_ref: s-dates
+    locator: Important Dates, 'Jan. 8' row
+    short_excerpt: Finalists and all other applicants are notified of their status through the Levine
+      Scholars portal.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/6
+    source_ref: s-dates
+    locator: Important Dates, 'Feb. 21-22, 2027' row
+    short_excerpt: Levine Scholars Finalist Program is held on campus.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/7
+    source_ref: s-dates
+    locator: Important Dates, 'Mar. 1' row
+    short_excerpt: Recipients and all other candidates are notified of their status through the Levine
+      Scholars portal.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/8
+    source_ref: s-dates
+    locator: Important Dates, 'Apr. 1' row
+    short_excerpt: Deadline for recipients to notify the Levine Scholars office if they accept the scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules
+    source_ref: s-about
+    locator: 'Program pages: no renewal GPA or credit rule found on the five pages read'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: stacking_rules
+    source_ref: s-apply
+    locator: 'Apply page, NinerScholars paragraph: other scholarships exist but no stacking rule is stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: award_counts/0
+    source_ref: s-home
+    locator: Home page, 'LSP by the Numbers'
+    short_excerpt: Scholars Per Cohort
+    value_status: reported
+    reported_value: 20
+  - field_path: entry_year
+    source_ref: s-dates
+    locator: 'Important Dates: dated 2026 and 2027 rows; no entering class named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
