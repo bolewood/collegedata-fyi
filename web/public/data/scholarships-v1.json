@@ -1,6 +1,6 @@
 {
   "meta": {
-    "dataset_id": "collegedata-scholarships-v1-d9e7933e2500",
+    "dataset_id": "collegedata-scholarships-v1-d34eb295b7e3",
     "version": 1,
     "license": "CC-BY-SA-4.0",
     "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
@@ -4164,7 +4164,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "fsu-national-merit-package-undated",
+      "version_id": "fsu-national-merit-package-undated-r2",
       "entry_year": null,
       "entry_year_label": "National Merit sections name no entering class; Vires amounts carry an 'Admitted first-year students starting Fall 2024' footnote",
       "entry_terms": [
@@ -4175,7 +4175,7 @@
       "cycle_basis": "none",
       "cycle_through_date": null,
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b3",
+      "reviewed_by": "agent:claude-fable-5-2, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -4288,7 +4288,10 @@
               "coverage": "full",
               "amount": null,
               "duration_terms": null,
-              "exclusions": null,
+              "exclusions": [
+                "Fees other than tuition",
+                "Study-abroad programs"
+              ],
               "scope_text": "100 percent out-of-state tuition waiver; a waiver, not a scholarship. No separate value is given on the National Merit section",
               "advertised_coverage_label": null,
               "conditions_text": null
@@ -4303,11 +4306,11 @@
                 "value": 16000,
                 "min": null,
                 "max": null,
-                "period": null
+                "period": "total_program"
               },
-              "duration_terms": null,
+              "duration_terms": "Eight semesters, paid in $2,000 increments at the start of each fall and spring term",
               "exclusions": null,
-              "scope_text": "Vires scholarship as the package describes it; the admissions page also calls Vires an award for Florida residents. Amount carries the 'Admitted first-year students starting Fall 2024' footnote",
+              "scope_text": "Vires scholarship as the package describes it: a $16,000 total over eight semesters, not an annual amount. The admissions page also calls Vires an award for Florida residents. Amount carries the 'Admitted first-year students starting Fall 2024' footnote",
               "advertised_coverage_label": null,
               "conditions_text": null
             },
@@ -4451,7 +4454,7 @@
         {
           "field_path": "offers/1/benefits/1/amount",
           "source_ref": "s-adm",
-          "locator": "Admissions Scholarships page, Out-of-State Resident",
+          "locator": "Admissions Scholarships page, Vires Scholarship",
           "value_status": "reported"
         },
         {
@@ -4519,6 +4522,12 @@
           "source_ref": "s-adm",
           "locator": "Admissions Scholarships page, National Merit sections: no entering class named; the Vires amounts carry an 'Admitted first-year students starting Fall 2024' footnote",
           "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/1/benefits/0/exclusions",
+          "source_ref": "s-adm",
+          "locator": "Admissions Scholarships page, Out-of-State Tuition Waiver",
+          "value_status": "reported"
         }
       ]
     },
@@ -6396,7 +6405,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "wells-scholars-undated",
+      "version_id": "wells-scholars-undated-r2",
       "entry_year": null,
       "entry_year_label": "Entering class not named; the domestic deadlines page is labeled the \"2026-2027 WSP application cycle\"",
       "entry_terms": [
@@ -6407,11 +6416,11 @@
       "cycle_basis": "none",
       "cycle_through_date": null,
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b5",
+      "reviewed_by": "agent:claude-fable-5-2, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
-        "partial_or_fixed"
+        "full_tuition_fees"
       ],
       "selection_modes": [
         "competitive"
@@ -6463,7 +6472,7 @@
               "benefit_id": "b-tuition",
               "category": "tuition",
               "instrument": "scholarship",
-              "coverage": "partial",
+              "coverage": "full",
               "amount": {
                 "qualifier": "not_published",
                 "value": null,
@@ -6481,7 +6490,7 @@
               "benefit_id": "b-fees",
               "category": "mandatory_fees",
               "instrument": "scholarship",
-              "coverage": "partial",
+              "coverage": "full",
               "amount": {
                 "qualifier": "not_published",
                 "value": null,
@@ -6550,7 +6559,7 @@
               "conditions_text": null
             }
           ],
-          "normalized_coverage": "partial_or_fixed"
+          "normalized_coverage": "full_tuition_fees"
         }
       ],
       "application": {
@@ -6882,6 +6891,12 @@
           "source_ref": "s-dom",
           "locator": "Domestic Student Deadlines, \"Notification of Status\"",
           "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1/coverage",
+          "source_ref": "s-det",
+          "locator": "Scholarship Details, first paragraph",
+          "value_status": "reported"
         }
       ]
     },
@@ -6901,7 +6916,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "founders-scholarship-undated",
+      "version_id": "founders-scholarship-undated-r2",
       "entry_year": null,
       "entry_year_label": "Catalog page ('2026-27 Catalog') names no entering class for this award",
       "entry_terms": [
@@ -6912,11 +6927,11 @@
       "cycle_basis": "none",
       "cycle_through_date": null,
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b4",
+      "reviewed_by": "agent:claude-fable-5-2, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
-        "partial_or_fixed"
+        "full_tuition"
       ],
       "selection_modes": [
         "competitive"
@@ -6964,7 +6979,7 @@
               "benefit_id": "b-tuition",
               "category": "tuition",
               "instrument": "scholarship",
-              "coverage": "partial",
+              "coverage": "full",
               "amount": {
                 "qualifier": "not_published",
                 "value": null,
@@ -6974,13 +6989,13 @@
               },
               "duration_terms": "Renewable annually for up to eight consecutive semesters (ten for students in a bona-fide five-year program)",
               "exclusions": null,
-              "scope_text": "School wording: 'valued at full tuition'; the page does not promise tuition 'in full'",
+              "scope_text": "School wording: 'valued at full tuition'; no dollar value is published",
               "advertised_coverage_label": "valued at full tuition",
               "conditions_text": null
             }
           ],
           "advertised_totals": [],
-          "normalized_coverage": "partial_or_fixed"
+          "normalized_coverage": "full_tuition"
         }
       ],
       "application": {
@@ -7963,7 +7978,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "alumni-distinguished-undated",
+      "version_id": "alumni-distinguished-undated-r2",
       "entry_year": null,
       "entry_year_label": "Entering class not named on the high-achieving scholarships or regulations pages",
       "entry_terms": [
@@ -7974,10 +7989,11 @@
       "cycle_basis": "none",
       "cycle_through_date": null,
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b5",
+      "reviewed_by": "agent:claude-fable-5-2, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
+        "full_tuition_fees",
         "partial_or_fixed"
       ],
       "selection_modes": [
@@ -8030,7 +8046,7 @@
               "benefit_id": "b-tuition",
               "category": "tuition",
               "instrument": "scholarship",
-              "coverage": "partial",
+              "coverage": "full",
               "amount": {
                 "qualifier": "not_published",
                 "value": null,
@@ -8048,7 +8064,7 @@
               "benefit_id": "b-fees",
               "category": "mandatory_fees",
               "instrument": "scholarship",
-              "coverage": "partial",
+              "coverage": "full",
               "amount": {
                 "qualifier": "not_published",
                 "value": null,
@@ -8117,11 +8133,11 @@
               "conditions_text": null
             }
           ],
-          "normalized_coverage": "partial_or_fixed"
+          "normalized_coverage": "full_tuition_fees"
         },
         {
           "offer_id": "o-dfy",
-          "parent_offer_id": "o-ads",
+          "parent_offer_id": null,
           "variant_name": "Distinguished First-year Scholarship (20 runners-up)",
           "residency": "unknown",
           "selection_mode": "competitive",
@@ -8150,7 +8166,7 @@
               "benefit_id": "b-tuition",
               "category": "tuition",
               "instrument": "scholarship",
-              "coverage": "partial",
+              "coverage": "full",
               "amount": {
                 "qualifier": "not_published",
                 "value": null,
@@ -8168,7 +8184,7 @@
               "benefit_id": "b-fees",
               "category": "mandatory_fees",
               "instrument": "scholarship",
-              "coverage": "partial",
+              "coverage": "full",
               "amount": {
                 "qualifier": "not_published",
                 "value": null,
@@ -8183,11 +8199,11 @@
               "conditions_text": null
             }
           ],
-          "normalized_coverage": "partial_or_fixed"
+          "normalized_coverage": "full_tuition_fees"
         },
         {
           "offer_id": "o-cf",
-          "parent_offer_id": "o-ads",
+          "parent_offer_id": null,
           "variant_name": "Alumni Distinguished Scholarship Commended Finalist (30 finalists)",
           "residency": "unknown",
           "selection_mode": "competitive",
@@ -8235,7 +8251,7 @@
         },
         {
           "offer_id": "o-cs",
-          "parent_offer_id": "o-ads",
+          "parent_offer_id": null,
           "variant_name": "Alumni Distinguished Scholarship Commended Semifinalist (65 semifinalists)",
           "residency": "unknown",
           "selection_mode": "competitive",
@@ -12035,18 +12051,18 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "alfond-scholars-undated",
+      "version_id": "alfond-scholars-undated-r2",
       "entry_year": null,
       "entry_year_label": "Page names no entering class; November 15 has no year",
       "entry_terms": [
         "unspecified"
       ],
       "source_cohort_text": "Rollins page describes the current cycle without an entering class",
-      "verification_status": "verified",
+      "verification_status": "conflicting",
       "cycle_basis": "none",
       "cycle_through_date": null,
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b1",
+      "reviewed_by": "agent:claude-fable-5-2, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -12183,9 +12199,9 @@
         ],
         "admission_plan_requirement": "Apply Early Decision I or Early Action with all materials on file by November 15",
         "prerequisites": [],
-        "interview_mode": "virtual",
+        "interview_mode": "unknown",
         "finalist_event_required": null,
-        "notes": "Key dates on the page: finalists identified in late December; a virtual interview process in late February; recipients notified in mid March; May 1 reply date. The page also mentions Scholars Weekend invitations 'to participate in the on-campus selection process' while describing a virtual interview process; the format is recorded as virtual per the selection process paragraph. The page names no entering class."
+        "notes": "Key dates on the page: finalists identified in late December; a virtual interview process in late February; recipients notified in mid March; May 1 reply date. The page contradicts itself on the format: the selection process paragraph and the late February date describe a virtual interview process, while the late December date says Scholars Weekend invitations go to students 'invited to participate in the on-campus selection process'. The format is left unknown. The page names no entering class."
       },
       "renewal_rules": [
         {
@@ -12324,12 +12340,6 @@
           "value_status": "reported"
         },
         {
-          "field_path": "application/interview_mode",
-          "source_ref": "s-prog",
-          "locator": "Alfond page, Selection Process",
-          "value_status": "reported"
-        },
-        {
           "field_path": "renewal_rules/0/gpa_min",
           "source_ref": "s-prog",
           "locator": "Alfond page, scholar requirements list",
@@ -12340,6 +12350,18 @@
           "source_ref": "s-prog",
           "locator": "Alfond page, intro",
           "value_status": "reported"
+        },
+        {
+          "field_path": "application/interview_mode",
+          "source_ref": "s-prog",
+          "locator": "Alfond page, Selection Process",
+          "value_status": "conflicting"
+        },
+        {
+          "field_path": "application/interview_mode",
+          "source_ref": "s-prog",
+          "locator": "Alfond page, Key Dates, Late December",
+          "value_status": "conflicting"
         }
       ]
     },
@@ -20895,7 +20917,7 @@
         "Storrs"
       ],
       "related_programs": [],
-      "version_id": "uconn-nutmeg-fall-2027",
+      "version_id": "uconn-nutmeg-fall-2027-r2",
       "entry_year": 2027,
       "entry_year_label": null,
       "entry_terms": [
@@ -20906,7 +20928,7 @@
       "cycle_basis": "entry_year",
       "cycle_through_date": "2026-11-08",
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b4",
+      "reviewed_by": "agent:claude-fable-5-2, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -20986,10 +21008,15 @@
                 "period": null
               },
               "duration_terms": "Renewable up to eight semesters of full-time undergraduate study",
-              "exclusions": null,
-              "scope_text": "School wording: 'Full Scholarship (Includes direct and indirect cost of attendance. Some restrictions may apply.)'; the policies page limits housing to the prior-year average housing cost and food to the Value Meal Plan, for on-campus residents only",
+              "exclusions": [
+                "Program-related fees",
+                "Off-campus housing and food not included in a UConn meal plan",
+                "Education Abroad programs that do not charge UConn tuition",
+                "Winter intersession and summer courses"
+              ],
+              "scope_text": "School wording: 'Full Scholarship (Includes direct and indirect cost of attendance. Some restrictions may apply.)'; the policies page limits housing to the prior-year average housing cost, for on-campus residents only, and food to the cost of a Value Meal Plan",
               "advertised_coverage_label": "Full Scholarship (Includes direct and indirect cost of attendance. Some restrictions may apply.)",
-              "conditions_text": "Housing and food are covered only for students who live on campus, based on cost-of-attendance components; the scholarship covers up to the Value Meal Plan; tuition already covered by a tuition waiver is not covered again"
+              "conditions_text": "On-campus housing is covered only while the student lives on campus; students who live off campus do not receive the housing value. Food is covered up to the cost of a Value Meal Plan for students living on or off campus, although the same section also says the scholarship covers these expenses 'only if the student resides on-campus'. Tuition already covered by a tuition waiver is not covered again"
             }
           ],
           "advertised_totals": [],
@@ -21056,7 +21083,7 @@
           "evaluation_timing": "Reviewed annually for compliance with the SAP/GPA requirements",
           "summer_courses_can_fix_shortfall": null,
           "max_semesters": 8,
-          "notes": "Renewable annually for up to eight semesters of full-time undergraduate study on a 3.0 cumulative GPA; housing and food are covered only while the student lives on campus; the Honors College is required for the first two semesters; winter and summer courses are not covered."
+          "notes": "Renewable annually for up to eight semesters of full-time undergraduate study on a 3.0 cumulative GPA; housing is covered only while the student lives on campus; the Honors College is required for the first two semesters; winter and summer courses are not covered."
         }
       ],
       "stacking_rules": [
@@ -21069,6 +21096,11 @@
           "other_aid_type": "federal_or_state_need",
           "relation": "counts_within_package",
           "note": "Merit scholarship plus a Pell Grant may not exceed the cost of attendance; with other need-based aid, may not exceed federally defined need or the cost of attendance."
+        },
+        {
+          "other_aid_type": "institutional_merit",
+          "relation": "not_allowed",
+          "note": "School words: 'Students are eligible to receive a single merit-based admissions scholarship award.'"
         }
       ],
       "award_counts": [
@@ -21225,6 +21257,42 @@
           "source_ref": "s-app",
           "locator": "Nutmeg Scholarship Eligibility & Selection, first bullet",
           "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/conditions_text",
+          "source_ref": "s-pol",
+          "locator": "Policies, Nutmeg, Day of Pride, Stamps Scholarships, Eligibility Requirements",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/exclusions",
+          "source_ref": "s-pol",
+          "locator": "Policies, Winter Intersession/Summer Session Courses",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/exclusions",
+          "source_ref": "s-pol",
+          "locator": "Policies, fees paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/exclusions",
+          "source_ref": "s-pol",
+          "locator": "Policies, Living Off-Campus",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/exclusions",
+          "source_ref": "s-pol",
+          "locator": "Policies, Education Abroad",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/2",
+          "source_ref": "s-pol",
+          "locator": "Policies, Award Amount",
+          "value_status": "reported"
         }
       ]
     },
@@ -21247,7 +21315,7 @@
         "Storrs"
       ],
       "related_programs": [],
-      "version_id": "uconn-stamps-fall-2027",
+      "version_id": "uconn-stamps-fall-2027-r2",
       "entry_year": 2027,
       "entry_year_label": null,
       "entry_terms": [
@@ -21258,7 +21326,7 @@
       "cycle_basis": "entry_year",
       "cycle_through_date": "2026-11-08",
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b4",
+      "reviewed_by": "agent:claude-fable-5-2, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -21340,10 +21408,15 @@
                 "period": null
               },
               "duration_terms": "Four years (eight academic semesters)",
-              "exclusions": null,
-              "scope_text": "School wording: 'full cost-of-attendance scholarship'; the policies page limits housing to the prior-year average housing cost and food to the Value Meal Plan, for on-campus residents only",
+              "exclusions": [
+                "Program-related fees",
+                "Off-campus housing and food not included in a UConn meal plan",
+                "Education Abroad programs that do not charge UConn tuition",
+                "Winter intersession and summer courses"
+              ],
+              "scope_text": "School wording: 'full cost-of-attendance scholarship'; the policies page limits housing to the prior-year average housing cost, for on-campus residents only, and food to the cost of a Value Meal Plan",
               "advertised_coverage_label": "full cost-of-attendance scholarship",
-              "conditions_text": "Housing and food are covered only for students who live on campus, based on cost-of-attendance components; the scholarship covers up to the Value Meal Plan; tuition already covered by a tuition waiver is not covered again"
+              "conditions_text": "On-campus housing is covered only while the student lives on campus; students who live off campus do not receive the housing value. Food is covered up to the cost of a Value Meal Plan for students living on or off campus, although the same section also says the scholarship covers these expenses 'only if the student resides on-campus'. Tuition already covered by a tuition waiver is not covered again"
             },
             {
               "benefit_id": "b-enrichment",
@@ -21428,7 +21501,7 @@
           "evaluation_timing": "Reviewed annually for compliance with the SAP/GPA requirements",
           "summer_courses_can_fix_shortfall": null,
           "max_semesters": 8,
-          "notes": "Renewable annually for up to eight semesters of full-time undergraduate study on a 3.0 cumulative GPA (2.5 for most other UConn merit scholarships); housing and food are covered only while the student lives on campus; the Honors College is required for the first two semesters; winter and summer courses are not covered."
+          "notes": "Renewable annually for up to eight semesters of full-time undergraduate study on a 3.0 cumulative GPA (2.5 for most other UConn merit scholarships); housing is covered only while the student lives on campus; the Honors College is required for the first two semesters; winter and summer courses are not covered."
         }
       ],
       "stacking_rules": [
@@ -21441,6 +21514,11 @@
           "other_aid_type": "federal_or_state_need",
           "relation": "counts_within_package",
           "note": "Merit scholarship plus a Pell Grant may not exceed the cost of attendance; with other need-based aid, may not exceed federally defined need or the cost of attendance."
+        },
+        {
+          "other_aid_type": "institutional_merit",
+          "relation": "not_allowed",
+          "note": "School words: 'Students are eligible to receive a single merit-based admissions scholarship award.'"
         }
       ],
       "award_counts": [],
@@ -21593,6 +21671,42 @@
           "field_path": "stacking_rules/1",
           "source_ref": "s-pol",
           "locator": "Policies, Excess of Funds",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/conditions_text",
+          "source_ref": "s-pol",
+          "locator": "Policies, Nutmeg, Day of Pride, Stamps Scholarships, Eligibility Requirements",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/exclusions",
+          "source_ref": "s-pol",
+          "locator": "Policies, Winter Intersession/Summer Session Courses",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/exclusions",
+          "source_ref": "s-pol",
+          "locator": "Policies, fees paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/exclusions",
+          "source_ref": "s-pol",
+          "locator": "Policies, Living Off-Campus",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/exclusions",
+          "source_ref": "s-pol",
+          "locator": "Policies, Education Abroad",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/2",
+          "source_ref": "s-pol",
+          "locator": "Policies, Award Amount",
           "value_status": "reported"
         }
       ]
@@ -24673,7 +24787,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "regents-2027",
+      "version_id": "regents-2027-r2",
       "entry_year": 2027,
       "entry_year_label": "Page heading: 'Freshman New Mexico Resident Scholarships 2027-28' (and the non-resident equivalent)",
       "entry_terms": [
@@ -24684,7 +24798,7 @@
       "cycle_basis": "entry_year",
       "cycle_through_date": null,
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b6",
+      "reviewed_by": "agent:claude-fable-5-2, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -24941,11 +25055,18 @@
             "source_date_text": "Complete Admissions Application and Scholarship Application by December 1"
           }
         ],
-        "admission_plan_requirement": "Admission application and the Regents' scholarship application, both by December 1",
-        "prerequisites": [],
+        "admission_plan_requirement": "Complete the admission application and the Regents' scholarship application by December 1. The page also says applicants must 'be admitted by the Application Deadline', so apply for admission early enough to be admitted by December 1",
+        "prerequisites": [
+          {
+            "kind": "admission_application",
+            "minimum_lead_days": null,
+            "maximum_lead_days": null,
+            "notes": "Applicants must be admitted to UNM by the application deadline, not only have applied; the page gives no lead time"
+          }
+        ],
         "interview_mode": "unknown",
         "finalist_event_required": null,
-        "notes": "The page gives no year for December 1; it is recorded as recurring. The page's header links offer separate 'Regents' Scholarship Application' and 'Presidential Scholarship Application' forms. Freshman Regents' Scholars must live in the Scholars Wing in Hokona Hall to renew."
+        "notes": "The page gives no year for December 1; it is recorded as recurring. The Regents' Scholarship row links to the scholarship application ('Apply Here'). Freshman Regents' Scholars must live in the Scholars Wing in Hokona Hall to renew."
       },
       "renewal_rules": [
         {
@@ -25151,6 +25272,12 @@
           "source_ref": "s-sch",
           "locator": "Resident section heading",
           "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/0",
+          "source_ref": "s-sch",
+          "locator": "Resident and non-resident scholarship sections, intro paragraph",
+          "value_status": "reported"
         }
       ]
     },
@@ -25170,7 +25297,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "levine-undated",
+      "version_id": "levine-undated-r2",
       "entry_year": null,
       "entry_year_label": "Entering class not named; dates run August 2026 to April 2027",
       "entry_terms": [
@@ -25181,7 +25308,7 @@
       "cycle_basis": "milestone_dates",
       "cycle_through_date": "2027-04-01",
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b2",
+      "reviewed_by": "agent:claude-fable-5-2, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -25440,7 +25567,7 @@
           },
           {
             "kind": "finalist_event",
-            "requirement": "required",
+            "requirement": "invitation_only",
             "date": "2027-02-21",
             "recurring": null,
             "precision": "day",
@@ -25479,8 +25606,8 @@
           }
         ],
         "interview_mode": "unknown",
-        "finalist_event_required": true,
-        "notes": "Counselor nomination or self-nomination is needed before the application is available. Three essays are required. The home page repeats the dates without a year ('Nominations due October 15, Applications due November 15'); the Important Dates page gives 2026/2027 and does not name an entering class."
+        "finalist_event_required": null,
+        "notes": "Counselor nomination or self-nomination is needed before the application is available. Three essays are required. The home page repeats the dates without a year ('Nominations due October 15, Applications due November 15'); the Important Dates page gives 2026/2027 and does not name an entering class. The dates page says finalists are invited to the on-campus Finalist Program; it does not say attendance is required to receive the award."
       },
       "renewal_rules": null,
       "stacking_rules": null,
@@ -25699,12 +25826,6 @@
           "field_path": "application/milestones/8",
           "source_ref": "s-dates",
           "locator": "Important Dates, 'Apr. 1' row",
-          "value_status": "reported"
-        },
-        {
-          "field_path": "application/finalist_event_required",
-          "source_ref": "s-dates",
-          "locator": "Important Dates, 'Jan. 8' row",
           "value_status": "reported"
         },
         {
@@ -27498,7 +27619,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "top-scholars-undated",
+      "version_id": "top-scholars-undated-r2",
       "entry_year": null,
       "entry_year_label": "Pages call their figures last year's recipient averages and date only the Top Scholar Weekend (Feb. 27 - March 1, 2027); no entering class is named",
       "entry_terms": [
@@ -27509,7 +27630,7 @@
       "cycle_basis": "milestone_dates",
       "cycle_through_date": "2027-02-27",
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b3",
+      "reviewed_by": "agent:claude-fable-5-2, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -28031,7 +28152,7 @@
             "source_date_text": "Nov. 15 (Honors College application, which also considers students for the Top Scholar Program)"
           },
           {
-            "kind": "admission_deadline",
+            "kind": "supporting_materials_deadline",
             "requirement": "required",
             "date": null,
             "recurring": {
@@ -28039,7 +28160,7 @@
               "day": 1
             },
             "precision": "day",
-            "source_date_text": "Dec. 1 (application credentials deadline)"
+            "source_date_text": "Dec. 1 (application credentials deadline: all required materials to complete the application for admission)"
           },
           {
             "kind": "interview",
@@ -28072,8 +28193,15 @@
             "source_date_text": "February 27 - March 1, 2027 (in-person Top Scholar Weekend)"
           }
         ],
-        "admission_plan_requirement": "General university application plus the South Carolina Honors College application",
-        "prerequisites": [],
+        "admission_plan_requirement": "Submit the general university application first; the South Carolina Honors College application then appears in the admissions portal about 48 hours later and is due Nov. 15",
+        "prerequisites": [
+          {
+            "kind": "portal_credentials",
+            "minimum_lead_days": 2,
+            "maximum_lead_days": null,
+            "notes": "The Honors College application is added to the USC Admissions Portal about 48 hours after the freshman application is submitted, so the freshman application must go in ahead of the Nov. 15 Honors deadline"
+          }
+        ],
         "interview_mode": "mixed",
         "finalist_event_required": true,
         "notes": "The Honors College application also requires two additional essays and one letter of recommendation. Semifinalists have a mandatory virtual interview; finalists attend an in-person Top Scholar Weekend. The pages name no year for Nov. 15, Dec. 1 or the interview month; only the weekend is dated."
@@ -28392,6 +28520,12 @@
           "source_ref": "s-nr",
           "locator": "Nonresident and resident pages: 'The information below reflects last year's recipient averages'; the apply page gives a February 27 - March 1, 2027 weekend; no entering class is named",
           "value_status": "not_published"
+        },
+        {
+          "field_path": "application/prerequisites/0",
+          "source_ref": "s-apply",
+          "locator": "Apply to Carolina Elite page, application instructions",
+          "value_status": "reported"
         }
       ]
     },
@@ -33458,7 +33592,7 @@
         "Pullman"
       ],
       "related_programs": [],
-      "version_id": "distinguished-regents-fall-2027",
+      "version_id": "distinguished-regents-fall-2027-r2",
       "entry_year": 2027,
       "entry_year_label": "Fall 2027 and after",
       "entry_terms": [
@@ -33469,10 +33603,11 @@
       "cycle_basis": "entry_year",
       "cycle_through_date": null,
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b6",
+      "reviewed_by": "agent:claude-fable-5-2, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
+        "full_tuition_fees",
         "partial_or_fixed"
       ],
       "selection_modes": [
@@ -33509,7 +33644,11 @@
             "national_merit_statuses": null,
             "status_required_for_award": null,
             "first_choice_required": null,
-            "gpa": null,
+            "gpa": {
+              "min": 3.8,
+              "scale": null,
+              "basis": "unknown"
+            },
             "test_rules": null,
             "tests_policy_for_scholarship": "unknown",
             "citizenship_eligible": null,
@@ -33518,14 +33657,14 @@
             "major_change_restrictions": null,
             "honors_requirement": null,
             "first_generation_rule": "unknown",
-            "eligibility_notes": "Washington high schools nominate two students each. The terms page also says: 'Students with a 3.8 minimum high school GPA must enroll full-time at the WSU Pullman campus in fall semester and be a Washington State resident to receive their Regents award.' It does not say whether 3.8 is an entry minimum, so no GPA minimum is recorded. Selection looks at academic achievement, community involvement and an academic reference."
+            "eligibility_notes": "Washington high schools nominate two students each. The terms page says: 'Students with a 3.8 minimum high school GPA must enroll full-time at the WSU Pullman campus in fall semester and be a Washington State resident to receive their Regents award.' That sentence does not say whether the GPA is weighted; the page's Distinguished award criteria list 'high school GPA (unweighted)'. Selection looks at academic achievement, community involvement and an academic reference."
           },
           "benefits": [
             {
               "benefit_id": "b-tuition",
               "category": "tuition",
               "instrument": "scholarship",
-              "coverage": "partial",
+              "coverage": "full",
               "amount": {
                 "qualifier": "not_published",
                 "value": null,
@@ -33543,7 +33682,7 @@
               "benefit_id": "b-fees",
               "category": "mandatory_fees",
               "instrument": "scholarship",
-              "coverage": "partial",
+              "coverage": "full",
               "amount": {
                 "qualifier": "not_published",
                 "value": null,
@@ -33559,7 +33698,7 @@
             }
           ],
           "advertised_totals": [],
-          "normalized_coverage": "partial_or_fixed"
+          "normalized_coverage": "full_tuition_fees"
         },
         {
           "offer_id": "o-regents",
@@ -33575,7 +33714,11 @@
             "national_merit_statuses": null,
             "status_required_for_award": null,
             "first_choice_required": null,
-            "gpa": null,
+            "gpa": {
+              "min": 3.8,
+              "scale": null,
+              "basis": "unknown"
+            },
             "test_rules": null,
             "tests_policy_for_scholarship": "unknown",
             "citizenship_eligible": null,
@@ -33584,7 +33727,7 @@
             "major_change_restrictions": null,
             "honors_requirement": null,
             "first_generation_rule": "unknown",
-            "eligibility_notes": "Nominees must complete the admission and scholarship application process by the deadline. Same Pullman-campus, full-time, Washington-resident conditions as the page's 3.8 GPA sentence. Students must enroll for at least 12 credits each semester. Not eligible: students previously enrolled at WSU (other than through Running Start) and transfer students (2027-28 terms page)."
+            "eligibility_notes": "Nominees must complete the admission and scholarship application process by the deadline. The terms page requires a 3.8 minimum high school GPA, full-time enrollment at the Pullman campus in fall and Washington residency. Students must enroll for at least 12 credits each semester. Not eligible: students previously enrolled at WSU (other than through Running Start) and transfer students (2027-28 terms page)."
           },
           "benefits": [
             {
@@ -33849,6 +33992,18 @@
           "source_ref": "s-main",
           "locator": "Main page, Regents Scholars block lists current deadlines",
           "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/0/eligibility/gpa",
+          "source_ref": "s-terms",
+          "locator": "Terms page, 2027-28, Regents Scholars Program, Award Levels",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/1/eligibility/gpa",
+          "source_ref": "s-terms",
+          "locator": "Terms page, 2027-28, Regents Scholars Program, Award Levels",
+          "value_status": "reported"
         }
       ]
     },

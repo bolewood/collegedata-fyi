@@ -283,3 +283,283 @@ versions:
     short_excerpt: annually awards up to 10 full scholarships
     value_status: reported
     reported_value: 10
+- version_id: alfond-scholars-undated-r2
+  supersedes: alfond-scholars-undated
+  entry_year: null
+  entry_year_label: Page names no entering class; November 15 has no year
+  entry_terms:
+  - unspecified
+  source_cohort_text: Rollins page describes the current cycle without an entering class
+  verification_status: conflicting
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-fable-5-2, after the Gemini 4 Carbon audit of 2026-11-15
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: For entering first-year students in the College of Liberal Arts. Qualifying applicants
+        typically have SATs higher than 1410 or ACTs higher than 32 and GPAs higher than 3.8 (typical
+        profile, not a stated minimum). The selection paragraph says 'Both test-optional and international
+        students are considered'; the Key Dates line lists SAT and/or ACT scores among the contents of
+        a complete admission application, read as the generic file list rather than a scholarship rule.
+        Scholars must complete the Rollins Honors Degree Program, take the Intersession Service Immersion
+        course in the first year, do one off-campus experience in the first three years, and live on campus
+        for four years.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: full scholarships
+      conditions_text: null
+    - benefit_id: b-room
+      category: housing
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: A double room
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: A 15-swipe meal plan
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals:
+    - amount:
+        qualifier: at_least
+        value: 280000
+        min: null
+        max: null
+        period: total_program
+      scope_text: The page says each scholarship, renewable for three additional years, brings 'the value
+        of each scholarship to more than $280,000 over four years'; totals include federal and state awards
+        a student might already be eligible for
+  application:
+    separate_application: no_form_other_steps_required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 15
+      precision: day
+      source_date_text: 'November 15: complete application for admission must be on file; apply Early
+        Decision I or Early Action'
+    admission_plan_requirement: Apply Early Decision I or Early Action with all materials on file by November
+      15
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: 'Key dates on the page: finalists identified in late December; a virtual interview process
+      in late February; recipients notified in mid March; May 1 reply date. The page contradicts itself
+      on the format: the selection process paragraph and the late February date describe a virtual interview
+      process, while the late December date says Scholars Weekend invitations go to students ''invited
+      to participate in the on-campus selection process''. The format is left unknown. The page names
+      no entering class.'
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.33
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: 'The page lists ''Maintaining 3.33 GPA'' among scholar requirements; it does not label it a
+      renewal rule or give a scale. The scholarship is renewable for three additional years. Other requirements:
+      Honors Degree Program, service course, an off-campus experience, living on campus for four years.'
+  stacking_rules:
+  - other_aid_type: federal_or_state_need
+    relation: counts_within_package
+    note: Scholarship totals include federal and state awards for which a student might already be eligible.
+  - other_aid_type: state_merit
+    relation: counts_within_package
+    note: Scholarship totals include federal and state awards for which a student might already be eligible.
+  award_counts:
+  - metric: offers
+    qualifier: up_to
+    value: 10
+    cohort_year: null
+    source_ref: s-prog
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-prog
+    url: https://www.rollins.edu/scholarships-aid/scholarships/alfond-scholars-program/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: d24909648c9d0cbc1327740608b93ccbb3da41f809280b82fa8955d366febe9f
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-prog
+    locator: 'Alfond Scholars Program page: no entering class named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-prog
+    locator: Alfond page, Selection Process
+    short_excerpt: A select number of qualified applicants will be invited to participate in a virtual
+      interview process with Rollins faculty, staff and current students.
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/consideration_route
+    source_ref: s-prog
+    locator: Alfond page, Selection Process
+    short_excerpt: Students who apply Early Decision I or Early Action and submit all application materials
+      by the November 15 deadline are considered
+    value_status: reported
+    reported_value: admission_application
+  - field_path: application/separate_application
+    source_ref: s-prog
+    locator: Alfond page, Key Dates, November 15
+    short_excerpt: To be considered, you must apply either Early Decision I or Early Action.
+    value_status: reported
+    reported_value: no_form_other_steps_required
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-prog
+    locator: Alfond page, intro
+    short_excerpt: annually awards up to 10 full scholarships—including tuition, double room, and a 15-swipe
+      meal plan
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-prog
+    locator: 'Alfond page: no per-year dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/coverage
+    source_ref: s-prog
+    locator: Alfond page, intro
+    short_excerpt: annually awards up to 10 full scholarships—including tuition, double room, and a 15-swipe
+      meal plan
+    value_status: reported
+    reported_value: partial
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-prog
+    locator: 'Alfond page: no per-year dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2/coverage
+    source_ref: s-prog
+    locator: Alfond page, intro
+    short_excerpt: annually awards up to 10 full scholarships—including tuition, double room, and a 15-swipe
+      meal plan
+    value_status: reported
+    reported_value: partial
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-prog
+    locator: 'Alfond page: no per-year dollar amount'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/advertised_totals/0/amount
+    source_ref: s-prog
+    locator: Alfond page, intro paragraph 2
+    short_excerpt: bringing the value of each scholarship to more than $280,000 over four years
+    value_status: reported
+    reported_value: 280000
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-prog
+    locator: Alfond page, Selection Process
+    short_excerpt: Both test-optional and international students are considered, as well.
+    value_status: reported
+    reported_value: optional
+  - field_path: stacking_rules/0
+    source_ref: s-prog
+    locator: Alfond page, intro paragraph 2
+    short_excerpt: Scholarship totals include federal and state awards for which a student might already
+      be eligible.
+    value_status: reported
+    reported_value: counts_within_package
+  - field_path: stacking_rules/1
+    source_ref: s-prog
+    locator: Alfond page, intro paragraph 2
+    short_excerpt: Scholarship totals include federal and state awards for which a student might already
+      be eligible.
+    value_status: reported
+    reported_value: counts_within_package
+  - field_path: application/milestones/0
+    source_ref: s-prog
+    locator: Alfond page, Key Dates
+    short_excerpt: November 15
+    value_status: reported
+    reported_value: 11-15
+  - field_path: renewal_rules/0/gpa_min
+    source_ref: s-prog
+    locator: Alfond page, scholar requirements list
+    short_excerpt: Maintaining 3.33 GPA
+    value_status: reported
+    reported_value: 3.33
+  - field_path: award_counts/0
+    source_ref: s-prog
+    locator: Alfond page, intro
+    short_excerpt: annually awards up to 10 full scholarships
+    value_status: reported
+    reported_value: 10
+  - field_path: application/interview_mode
+    source_ref: s-prog
+    locator: Alfond page, Selection Process
+    short_excerpt: A select number of qualified applicants will be invited to participate in a virtual
+      interview process
+    value_status: conflicting
+    reported_value: virtual
+  - field_path: application/interview_mode
+    source_ref: s-prog
+    locator: Alfond page, Key Dates, Late December
+    short_excerpt: Scholars Weekend invitations mailed to students invited to participate in the on-campus
+      selection process
+    value_status: conflicting
+    reported_value: in_person

@@ -139,3 +139,130 @@ versions:
       is enrolled as a full-time undergraduate student
     value_status: reported
     reported_value: null
+- version_id: founders-scholarship-undated-r2
+  supersedes: founders-scholarship-undated
+  entry_year: null
+  entry_year_label: Catalog page ('2026-27 Catalog') names no entering class for this award
+  entry_terms:
+  - unspecified
+  source_cohort_text: 2026-27 Catalog
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-fable-5-2, after the Gemini 4 Carbon audit of 2026-11-15
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: unknown
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Merit awards are selected by the Admissions Office from all admitted full-time
+        students 'solely on a merit basis' and holistically; recipients are notified at the time of admission.
+        The page states no GPA or test minimum for selection.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Renewable annually for up to eight consecutive semesters (ten for students in a
+        bona-fide five-year program)
+      exclusions: null
+      scope_text: 'School wording: ''valued at full tuition''; no dollar value is published'
+      advertised_coverage_label: valued at full tuition
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: not_required
+    milestones: []
+    admission_plan_requirement: null
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: All full-time admitted students are considered by the Committee on Admissions; recipients are
+      notified at the time of admission. The same catalog lists the Trustees Scholarship (half tuition)
+      and Deans Scholarship ($15,000 - $25,000) separately; they are not part of this record.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.0
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Renewable annually for up to eight consecutive semesters, or ten consecutive semesters in a
+      bona-fide five-year program, if the recipient keeps a 3.0 cumulative GPA and full-time undergraduate
+      enrollment.
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-cat
+    url: https://catalog.lehigh.edu/informationofgeneralinterest/financialaid/sourcesofuniversityaid/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 1586378b9c1dd77fc02b105163a3ca33f90286e2153b9c9570b8d6492ed18dbd
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-cat
+    locator: 'Sources of University Aid (2026-27 Catalog): the catalog names no entering class for this
+      award'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-cat
+    locator: Lehigh University Founders Scholarship, first sentence
+    short_excerpt: given to students in the top tier of our applicant pool
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-cat
+    locator: Lehigh University Founders Scholarship, second sentence
+    short_excerpt: These awards are valued at full tuition
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-cat
+    locator: 'Lehigh University Founders Scholarship: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-cat
+    locator: Lehigh University Founders Scholarship, last paragraph sentences
+    short_excerpt: No additional application beyond the application for admission is necessary for these
+      awards.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-cat
+    locator: Lehigh University Founders Scholarship, second sentence
+    short_excerpt: provided the recipient maintains a minimum cumulative grade point average of 3.0 and
+      is enrolled as a full-time undergraduate student
+    value_status: reported
+    reported_value: null
