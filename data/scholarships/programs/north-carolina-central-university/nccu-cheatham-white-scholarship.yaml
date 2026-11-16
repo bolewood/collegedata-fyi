@@ -528,3 +528,585 @@ versions:
     short_excerpt: Nominations for the 2027–2028 year will open on August 15, 2026.
     value_status: reported
     reported_value: null
+- version_id: cheatham-white-2027-r2
+  supersedes: cheatham-white-2027
+  entry_year: 2027
+  entry_year_label: 'Apply page: nominations for the 2027-2028 year'
+  entry_terms:
+  - fall
+  source_cohort_text: null
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: unknown
+    selection_mode: competitive
+    consideration_route: nomination
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: 4.0
+        scale: 4.0
+        basis: unknown
+      test_rules:
+      - exam: SAT
+        min: 1280
+        scoring: superscore
+        official_required: null
+      - exam: ACT
+        min: 28
+        scoring: superscore
+        official_required: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible:
+      - us_citizen
+      - permanent_resident
+      citizenship_text: Candidates must be US citizens or permanent residents
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: true
+      first_generation_rule: unknown
+      eligibility_notes: 'Admitted as a first-year student in the fall to a baccalaureate program, on
+        course to graduate from high school that spring. Minimum 4.0 weighted or unweighted cumulative
+        GPA (the policy page says ''weighted''). Test scores are optional: the apply page says so for
+        the 2027-2028 academic year; the FAQ page still says 2026-2027 (a leftover from the previous cycle).
+        Selection looks at character, leadership, extracurricular involvement and service; the policy
+        says financial need is not a consideration. Students are enrolled in the University Honors Program
+        automatically. The policy page also lists SAT 1280 / ACT 28 as required; the apply page makes
+        tests optional for 2027-2028 and is followed. Policy nominee caps by school: 2 to 5 depending
+        on senior class size. The policy names North Carolina high schools as eligible to nominate students (policy section 5.1.1);
+        a student who does not attend an endorsing school may self-nominate (section 5.2.1), so students
+        at schools outside North Carolina must self-nominate through the Eagle Promise Portal.'
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: ''full tuition and fees'''
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-books
+      category: books
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: ''textbooks'''
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-laptop
+      category: laptop
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: ''a laptop''; the FAQ highlights list calls it the ''Laptop Checkout
+        Program'''
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-other
+      category: other
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: ''travel and select personal expenses'' (FAQ); the policy says ''supplies,
+        travel, and personal expenses'''
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-summers
+      category: enrichment
+      instrument: restricted_fund
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four summers
+      exclusions: null
+      scope_text: 'School words: ''four summers of fully funded enrichment and networking opportunities
+        that may include international travel and study'' (policy page)'
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: required
+    milestones:
+    - kind: application_open
+      requirement: required
+      date: '2026-08-15'
+      recurring: null
+      precision: day
+      source_date_text: August 15, 2026 | Nomination forms available
+    - kind: nomination_deadline
+      requirement: required
+      date: '2026-11-01'
+      recurring: null
+      precision: day
+      source_date_text: November 1, 2026 | Deadline for nomination forms
+    - kind: application_deadline
+      requirement: required
+      date: '2026-11-15'
+      recurring: null
+      precision: day
+      source_date_text: November 15, 2026 | Cheatham-White application material deadline
+    - kind: notification
+      requirement: required
+      date: '2027-01-15'
+      recurring: null
+      precision: day
+      source_date_text: January 15, 2027 | Applicants will be notified if selected to continue as a finalist
+    - kind: interview
+      requirement: invitation_only
+      date: '2027-02-20'
+      recurring: null
+      precision: day
+      source_date_text: February 20, 2027 | Eagle Scholars Day and finalists' interviews
+    - kind: notification
+      requirement: required
+      date: '2027-03-01'
+      recurring: null
+      precision: month
+      source_date_text: March 2027 | All applicants are notified of the final status
+    admission_plan_requirement: 'Be fully admitted to NCCU by the Cheatham-White application deadline
+      (November 15). A nomination is required first: the policy names North Carolina high schools as eligible to nominate students
+      (principal, vice-principal or guidance counselor); other students self-nominate in the Eagle Promise
+      Portal after submitting an admission application, and self-nominations also need a letter of recommendation'
+    prerequisites:
+    - kind: admission_application
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Students must be fully admitted to NCCU by the Cheatham-White application deadline (November
+        15) to be considered; self-nominees must first submit an undergraduate admission application to
+        reach the Eagle Promise Portal
+    - kind: portal_credentials
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Students self-nominate in the Eagle Promise Portal after applying for admission; the Cheatham-White
+        Application is available only after a nomination is received and reviewed. The page gives no lead
+        time
+    - kind: recommendation
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Self-nominations are required to provide a subsequent letter of recommendation
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: 'Finalist interviews cannot be rescheduled: the interview date is announced a year in advance
+      and finalists are told a month before. Self-nominations go through the Eagle Promise Portal after
+      an admission application and must be followed by a letter of recommendation (FAQ). The FAQ page
+      still says ''for the 2026-2027 academic year'' for test-optional; the apply page says 2027-2028
+      and is used here. The FAQ says recipients are notified in early March, finalists decide by mid-April
+      and the class is announced in early May. The scholarship is non-binding: scholars need not attend
+      NCCU.'
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.5
+    gpa_scale: 4.0
+    credit_load_min_per_term: null
+    credit_load_min_per_year: 30
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: Cumulative 3.5 GPA, full-time enrollment each semester with at least 30 credit hours each academic
+      year, and membership and active participation in the University Honors Program.
+  stacking_rules:
+  - other_aid_type: outside_scholarship
+    relation: allowed
+    note: Outside scholarships will not affect eligibility to fully qualify.
+  - other_aid_type: federal_or_state_need
+    relation: allowed
+    note: Federal Pell Grants are considered an entitlement and the scholarship would not be adjusted.
+  award_counts: []
+  sources:
+  - source_id: s-apply
+    url: https://www.nccu.edu/usp/cheatham-white-scholarship-program/apply
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 811113b7a86a00fb9c3a65242c68d971ed2d4ea57add41bfd4ec2f0350d07804
+    archive_url: null
+  - source_id: s-faq
+    url: https://www.nccu.edu/usp/cheatham-white-scholarship-program/faqs
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: a032588c3c122af8eb4789bcef3f2bd005c2981b71ebd14d2b5f07012f197928
+    archive_url: null
+  - source_id: s-pol
+    url: https://www.nccu.edu/policies/retrieve/6
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: a83646815b9ca2d85067d70a4f8a01b5afd292a4abea474dc42d447ecfadfc4f
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-pol
+    locator: Policy 4.1 Selection Criteria
+    short_excerpt: Candidates for Cheatham-White Scholarships shall be selected based on academic merit,
+      honorable character, outstanding leadership potential, and a demonstrable commitment to service.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-apply
+    locator: How to Apply, Submitting a Nomination
+    short_excerpt: To begin the process, a student must be nominated by a high school administrator (principal,
+      vice-principal, or guidance counselor); alternatively, they may self-nominate.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/aid_basis
+    source_ref: s-pol
+    locator: Policy 4.1 Selection Criteria
+    short_excerpt: Financial need shall not be a consideration.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-faq
+    locator: About the Program, 'Is Cheatham-White a full-ride scholarship?'
+    short_excerpt: The scholarship covers full tuition and fees, housing, meals, textbooks, a laptop,
+      travel and select personal expenses.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-faq
+    locator: 'FAQ and policy: no dollar amount for this component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-faq
+    locator: About the Program, 'Is Cheatham-White a full-ride scholarship?'
+    short_excerpt: The scholarship covers full tuition and fees, housing, meals, textbooks, a laptop,
+      travel and select personal expenses.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-faq
+    locator: 'FAQ and policy: no dollar amount for this component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-faq
+    locator: About the Program, 'Is Cheatham-White a full-ride scholarship?'
+    short_excerpt: The scholarship covers full tuition and fees, housing, meals, textbooks, a laptop,
+      travel and select personal expenses.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-faq
+    locator: 'FAQ and policy: no dollar amount for this component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3
+    source_ref: s-faq
+    locator: About the Program, 'Is Cheatham-White a full-ride scholarship?'
+    short_excerpt: The scholarship covers full tuition and fees, housing, meals, textbooks, a laptop,
+      travel and select personal expenses.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-faq
+    locator: 'FAQ and policy: no dollar amount for this component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4
+    source_ref: s-faq
+    locator: About the Program, 'Is Cheatham-White a full-ride scholarship?'
+    short_excerpt: The scholarship covers full tuition and fees, housing, meals, textbooks, a laptop,
+      travel and select personal expenses.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-faq
+    locator: 'FAQ and policy: no dollar amount for this component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/5
+    source_ref: s-faq
+    locator: About the Program, 'Is Cheatham-White a full-ride scholarship?'
+    short_excerpt: The scholarship covers full tuition and fees, housing, meals, textbooks, a laptop,
+      travel and select personal expenses.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/5/amount
+    source_ref: s-faq
+    locator: 'FAQ and policy: no dollar amount for this component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/6
+    source_ref: s-faq
+    locator: About the Program, 'Is Cheatham-White a full-ride scholarship?'
+    short_excerpt: The scholarship covers full tuition and fees, housing, meals, textbooks, a laptop,
+      travel and select personal expenses.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/6/amount
+    source_ref: s-faq
+    locator: 'FAQ and policy: no dollar amount for this component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/7
+    source_ref: s-faq
+    locator: About the Program, 'Is Cheatham-White a full-ride scholarship?'
+    short_excerpt: The scholarship covers full tuition and fees, housing, meals, textbooks, a laptop,
+      travel and select personal expenses.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/7/amount
+    source_ref: s-faq
+    locator: 'FAQ and policy: no dollar amount for this component'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/7
+    source_ref: s-pol
+    locator: Policy page, 1. Purpose
+    short_excerpt: Each scholarship also provides four summers of fully funded enrichment and networking
+      opportunities that may include international travel and study.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/gpa
+    source_ref: s-apply
+    locator: Eligibility and Selection Criteria
+    short_excerpt: Have a minimum weighted or unweighted cumulative GPA of 4.0 or higher.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/citizenship_text
+    source_ref: s-apply
+    locator: Eligibility and Selection Criteria
+    short_excerpt: Be a United States citizen or permanent resident.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-apply
+    locator: Eligibility and Selection Criteria, test scores bullet
+    short_excerpt: Test scores are optional for those seeking the Cheatham-White Scholarship for the 2027–2028
+      academic year.
+    value_status: reported
+    reported_value: optional
+  - field_path: offers/0/eligibility/test_rules
+    source_ref: s-apply
+    locator: Eligibility and Selection Criteria, test scores bullet
+    short_excerpt: OPTIONAL. Have a minimum SAT score of 1280 or ACT score of 28. (Superscores are accepted.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/honors_requirement
+    source_ref: s-faq
+    locator: About the Program, honors question
+    short_excerpt: Students recognized as Cheatham-White Scholars will automatically be enrolled in the
+      University Honors Program.
+    value_status: reported
+    reported_value: true
+  - field_path: application/separate_application
+    source_ref: s-apply
+    locator: How to Apply, Submitting an Application
+    short_excerpt: After a nomination has been received and reviewed, the student will be provided access
+      to the Cheatham-White Application.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-apply
+    locator: Important Dates table
+    short_excerpt: August 15, 2026 | Nomination forms available
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-apply
+    locator: Important Dates table
+    short_excerpt: November 1, 2026 | Deadline for nomination forms
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-apply
+    locator: Important Dates table
+    short_excerpt: November 15, 2026 | Cheatham-White application material deadline
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-apply
+    locator: Important Dates table
+    short_excerpt: January 15, 2027 | Applicants will be notified if selected to continue as a finalist
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/4
+    source_ref: s-apply
+    locator: Important Dates table
+    short_excerpt: February 20, 2027 | Eagle Scholars Day and finalists' interviews
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/5
+    source_ref: s-apply
+    locator: Important Dates table
+    short_excerpt: March 2027 | All applicants are notified of the final status
+    value_status: reported
+    reported_value: null
+  - field_path: application/interview_mode
+    source_ref: s-apply
+    locator: 'Important Dates table: finalists are interviewed on Eagle Scholars Day; no format stated'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-faq
+    locator: About the Program, academic eligibility question
+    short_excerpt: Maintain a 3.5 cumulative GPA
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-faq
+    locator: About the Program, additional scholarships question
+    short_excerpt: outside scholarships will not impact the student’s eligibility to fully qualify for
+      the Cheatham-White Scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/1
+    source_ref: s-faq
+    locator: About the Program, additional scholarships question
+    short_excerpt: federal Pell Grants are considered an entitlement, and thus, the Cheatham-White Scholarship
+      would not be adjusted.
+    value_status: reported
+    reported_value: null
+  - field_path: award_counts
+    source_ref: s-apply
+    locator: 'Cheatham-White pages fetched: no current award count'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-apply
+    locator: 'Apply page: ''Nominations for the 2027–2028 year will open on August 15, 2026.'''
+    short_excerpt: Nominations for the 2027–2028 year will open on August 15, 2026.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/eligibility_notes
+    source_ref: s-pol
+    locator: Policy 6, section 5.1.1
+    short_excerpt: All North Carolina high schools are eligible to nominate students to be considered
+      as a candidate(s) for the Cheatham-White Scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/eligibility_notes
+    source_ref: s-pol
+    locator: Policy 6, section 5.2.1
+    short_excerpt: Nominee does not attend an endorsing school
+    value_status: reported
+    reported_value: null
+  - field_path: application/prerequisites/0
+    source_ref: s-apply
+    locator: Apply page, note
+    short_excerpt: Students must be fully admitted to North Carolina Central University by the Cheatham-White
+      application deadline in order to be considered for this scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: application/prerequisites/1
+    source_ref: s-apply
+    locator: Apply page, Submitting a Nomination
+    short_excerpt: Students may self-nominate in their Eagle Promise Portal after submitting an application
+      for undergraduate admission.
+    value_status: reported
+    reported_value: null
+  - field_path: application/prerequisites/1
+    source_ref: s-apply
+    locator: Apply page, Submitting an Application
+    short_excerpt: After a nomination has been received and reviewed, the student will be provided access
+      to the Cheatham-White Application.
+    value_status: reported
+    reported_value: null
+  - field_path: application/prerequisites/2
+    source_ref: s-faq
+    locator: FAQ, self-nomination question
+    short_excerpt: Additionally, self-nominations are required to provide a subsequent letter of recommendation.
+    value_status: reported
+    reported_value: null
+  - field_path: entry_terms
+    source_ref: s-apply
+    locator: Apply page, Eligibility and Selection Criteria
+    short_excerpt: Be admitted as a freshman in the fall semester into a baccalaureate program at NCCU.
+    value_status: reported
+    reported_value: fall

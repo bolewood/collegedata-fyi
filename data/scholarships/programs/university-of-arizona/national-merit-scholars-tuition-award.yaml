@@ -248,3 +248,292 @@ versions:
     short_excerpt: The award must be used beginning Fall 2026 semester.
     value_status: reported
     reported_value: null
+- version_id: nm-2026-r2
+  supersedes: nm-2026
+  entry_year: 2026
+  entry_year_label: null
+  entry_terms:
+  - fall
+  source_cohort_text: A completed University of Arizona Admission Application for Fall 2026; award must
+    be used beginning Fall 2026
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15
+  owner_spot_checked: false
+  program_status_for_entry: null
+  offers:
+  - offer_id: o-nm-tuition
+    parent_offer_id: null
+    variant_name: National Merit Scholars Tuition Award
+    residency: unknown
+    selection_mode: unknown
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: true
+    eligibility:
+      national_merit_statuses:
+      - finalist
+      status_required_for_award: null
+      first_choice_required: true
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: Limited to domestic students including U.S. citizens, U.S. nationals, permanent
+        residents, and those lawfully present in the U.S. who can establish domicile under federal immigration
+        law.
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Students eligible for the High School 150% Resident Tuition Rate or participating
+        in the Western Undergraduate Exchange (WUE) program are not eligible for this award. First-time,
+        full-time, degree-seeking students pursuing a first bachelor's degree; not available to spring-admitted
+        students, GED applicants, or Online and Near You Network campuses. Students who become Finalists
+        receive this award, which supersedes and replaces other merit tuition scholarships.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four consecutive years (8 semesters), fall and spring only; 10 semesters for the
+        5-year Bachelor of Architecture. Remaining semesters may go toward full-time graduate tuition
+        immediately after finishing early.
+      exclusions:
+      - College and program fees, surcharges, room and board, books and other expenses
+      - Programs that do not charge tuition through the Bursar's student account
+      - Summer and winter semesters (fall and spring only)
+      - Arizona Faculty Led and third-party provider (CEA, CIEE, DIS, Semester at Sea) study abroad programs
+      scope_text: Applies to undergraduate base tuition charged through the Bursar's Office; the page
+        gives no dollar amount and no statement that it covers all tuition
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: not_required
+    milestones:
+    - kind: admission_deadline
+      requirement: priority
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: November 1 Early Action deadline
+    - kind: acceptance_deadline
+      requirement: required
+      date: '2026-05-01'
+      recurring: null
+      precision: day
+      source_date_text: May 1, 2026
+    admission_plan_requirement: null
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: The terms page is the 2026-2027 edition. The first-year merit scholarships page tells students
+      to apply by November 1 for priority consideration. The 2027-2028 terms URL returned 404 on 2026-11-14,
+      so no terms for a later entering class are published yet. Students must declare Arizona as first
+      choice with NMSC by the NMSC deadline (no date).
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.0
+    gpa_scale: null
+    credit_load_min_per_term: 12
+    credit_load_min_per_year: null
+    evaluation_timing: By the conclusion of the academic year (fall, winter, spring and summer semesters)
+    summer_courses_can_fix_shortfall: true
+    max_semesters: 8
+    notes: Also requires 30 cumulative Arizona units after year 1, 60 after year 2 and 90 after year 3,
+      and continuous enrollment in fall and spring. Cumulative GPA is not rounded or recalculated. Offers
+      are non-negotiable. The award is disbursed only if the student is enrolled full-time (12+ units
+      per term); students in their final semester before graduation who do not need full-time enrollment
+      are the exception. Units can be completed in summer of the award year to renew, and students who
+      fall short at the end of spring but are enrolled in summer are reviewed after summer.
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: replaces
+    note: The National Scholar award supersedes and replaces all other merit tuition scholarships offered
+      to the student.
+  - other_aid_type: other
+    relation: not_allowed
+    note: Cannot be combined with ROTC tuition awards, the GI Bill, and some departmental tuition awards
+      depending on type and amount.
+  - other_aid_type: tuition_waiver
+    relation: counts_within_package
+    note: Multiple awards designated to cover base tuition cannot exceed 100% of base tuition; the award
+      is adjusted if Qualified Tuition Reduction or other tuition reduction programs or waivers are used.
+  award_counts: []
+  sources:
+  - source_id: s-terms
+    url: https://financialaid.arizona.edu/2026-2027-terms-and-conditions
+    authority: official_aid_policy
+    retrieved_at: '2026-11-14'
+    content_sha256: a9098487b59231ed4d79c2bdbc178149b51cd957e8b79f886a921f2bd5fbb4f4
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/eligibility/national_merit_statuses
+    source_ref: s-terms
+    locator: 2026-2027 Scholarship Terms and Conditions, National Merit Scholars Tuition Award 2026-2027,
+      Selection
+    short_excerpt: This Undergraduate tuition award is offered to students who are selected as National
+      Merit Finalists.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/first_choice_required
+    source_ref: s-terms
+    locator: 2026-2027 Scholarship Terms and Conditions, National Merit Scholars Tuition Award 2026-2027,
+      Selection
+    short_excerpt: National Merit Finalist must declare the University of Arizona as your first school
+      of choice
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/citizenship_text
+    source_ref: s-terms
+    locator: 2026-2027 Scholarship Terms and Conditions, National Merit Scholars Tuition Award 2026-2027,
+      Eligibility
+    short_excerpt: Limited to domestic students including U.S. citizens, U.S. nationals, permanent residents,
+      and those lawfully present in the U.S.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/eligibility_notes
+    source_ref: s-terms
+    locator: 2026-2027 Scholarship Terms and Conditions, National Merit Scholars Tuition Award 2026-2027,
+      Multiple Awards and Tuition Programs
+    short_excerpt: Students eligible for the High School 150% Resident Tuition Rate or participating in
+      the Western Undergraduate Exchange (WUE) program are not eligible for this award.
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/1
+    source_ref: s-terms
+    locator: 2026-2027 Scholarship Terms and Conditions, National Merit Scholars Tuition Award 2026-2027,
+      Multiple Awards and Tuition Programs
+    short_excerpt: This award cannot be combined with ROTC tuition awards, the GI Bill, and some departmental
+      tuition awards depending on type and amount.
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/2
+    source_ref: s-terms
+    locator: 2026-2027 Scholarship Terms and Conditions, National Merit Scholars Tuition Award 2026-2027,
+      Multiple Awards and Tuition Programs
+    short_excerpt: cannot receive more than 100% of the cost of tuition from the combination of the awards
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/funds_limited
+    source_ref: s-terms
+    locator: 2026-2027 Scholarship Terms and Conditions, National Merit Scholars Tuition Award 2026-2027,
+      Selection
+    short_excerpt: This scholarship is subject to the availability of funds.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-terms
+    locator: 2026-2027 Scholarship Terms and Conditions, National Merit Scholars Tuition Award 2026-2027,
+      Availability
+    short_excerpt: Four consecutive years (8 semesters total) for fall and spring semesters only; based
+      on academic year renewal requirements.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-terms
+    locator: '2026-2027 Scholarship Terms and Conditions, National Merit Scholars Tuition Award 2026-2027:
+      no dollar amount published'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-terms
+    locator: 2026-2027 Scholarship Terms and Conditions, National Merit Scholars Tuition Award 2026-2027,
+      Application
+    short_excerpt: A completed University of Arizona Admission Application for Fall 2026 serves as the
+      application for this award.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-terms
+    locator: 2026-2027 Scholarship Terms and Conditions, National Merit Scholars Tuition Award 2026-2027,
+      Deadline
+    short_excerpt: Submit a completed University of Arizona application by the November 1 Early Action
+      deadline to receive priority consideration for merit scholarships.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-terms
+    locator: 2026-2027 Scholarship Terms and Conditions, National Merit Scholars Tuition Award 2026-2027,
+      Deadline
+    short_excerpt: students must pay their Enrollment Fee by May 1, 2026
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-terms
+    locator: 2026-2027 Scholarship Terms and Conditions, National Merit Scholars Tuition Award 2026-2027,
+      Renewal Criteria table, Minimum GPA row
+    short_excerpt: 3.00 cumulative University of Arizona grade point average.
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-terms
+    locator: 2026-2027 Scholarship Terms and Conditions, National Merit Scholars Tuition Award 2026-2027,
+      Eligibility
+    short_excerpt: the National Scholar award which supersedes and replaces all other merit tuition scholarships
+      offered to a student
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-terms
+    locator: 2026-2027 Scholarship Terms and Conditions, National Merit Scholars Tuition Award 2026-2027,
+      Eligibility
+    short_excerpt: The award must be used beginning Fall 2026 semester.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-terms
+    locator: How the award is applied
+    short_excerpt: enrolled full-time (12+ units per term) at Arizona
+    value_status: reported
+    reported_value: 12
+  - field_path: renewal_rules/0
+    source_ref: s-terms
+    locator: Renewal Criteria, Minimum Units
+    short_excerpt: Units can be completed in the fall, winter, spring or summer semesters of the first
+      award year to renew for the following academic year.
+    value_status: reported
+    reported_value: true
+  - field_path: renewal_rules/0
+    source_ref: s-terms
+    locator: Reinstatement
+    short_excerpt: but who are enrolled in the summer semester will automatically be reviewed by OSFA
+      after the conclusion of the summer semester
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/exclusions
+    source_ref: s-terms
+    locator: Terms and conditions, How the award is applied
+    short_excerpt: Base Tuition does not include college or program fees, surcharges, room and board,
+      books or other expenses.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/exclusions
+    source_ref: s-terms
+    locator: Terms and conditions, How the award is applied
+    short_excerpt: If your program does not charge tuition through the Bursar
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/exclusions
+    source_ref: s-terms
+    locator: Terms and conditions, Availability
+    short_excerpt: for fall and spring semesters only
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/exclusions
+    source_ref: s-terms
+    locator: Terms and conditions, Study Abroad
+    short_excerpt: Arizona Faculty Led All 3rd Party Providers
+    value_status: reported
+    reported_value: null

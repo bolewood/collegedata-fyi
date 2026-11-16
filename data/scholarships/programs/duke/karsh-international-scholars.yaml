@@ -223,3 +223,234 @@ versions:
     short_excerpt: to apply for the Karsh Scholarship, you must apply to Duke University and request financial aid. There is no separate application.
     value_status: reported
     reported_value: not_required
+- version_id: karsh-international-scholars-undated-r2
+  supersedes: karsh-international-scholars-undated
+  entry_year: null
+  entry_year_label: Entering class not named on the Karsh or the school-wide merit page
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: merit_and_need
+    need_role: required
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible:
+      - international
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Students with dual U.S./other-country citizenship cannot be considered. Students
+        who already hold a B.A. or B.S. cannot be considered. Nominations are not accepted.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: null
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: "room and board" (housing and meals together)'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: "room and board" (housing and meals together)'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-need
+      category: other
+      instrument: scholarship
+      coverage: variable
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: "demonstrated need that exceeds those costs"; amount depends on the student
+        and is not published'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-summers
+      category: enrichment
+      instrument: restricted_fund
+      coverage: variable
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Three summers
+      exclusions: null
+      scope_text: 'School words: "three summers of funding for research, unpaid internships, and other
+        opportunities"; amount not published'
+      advertised_coverage_label: null
+      conditions_text: null
+  application:
+    separate_application: no_form_other_steps_required
+    milestones: []
+    admission_plan_requirement: Apply to Duke University and request financial aid
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: The school-wide merit page says finalists are notified by email in the spring and interview
+      with selection committees; no Karsh-specific dates are published. The Karsh page says there is no
+      separate application but that applicants must apply to Duke and request financial aid (financial
+      aid forms are required); the incoming first-year merit page says finalists for merit scholarships
+      interview with selection committees.
+  renewal_rules: null
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-karsh
+    url: https://ousf.duke.edu/merit-scholarships/karsh-international-scholars-program/
+    authority: official_program
+    retrieved_at: '2026-11-14'
+    content_sha256: dd8981d7a3f471d0036bf9660427ca30708a7aa14b191a2e3bddc80f23507b59
+    archive_url: null
+  - source_id: s-list
+    url: https://ousf.duke.edu/merit-scholarships/merit-scholarships-incoming-first-year-students/
+    authority: official_program
+    retrieved_at: '2026-11-14'
+    content_sha256: d9d5a9974261dab3af4a20cf5015e77c4ebc2c07c7d3274ec41cd65275c5c047
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-karsh
+    locator: Karsh page; no entering class named
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-list
+    locator: Merit Scholarships for Incoming First Year Students, 'Application Process'
+    short_excerpt: If you are selected as a finalist for a merit scholarship, you will be notified via
+      email from this office in the spring.
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/need_role
+    source_ref: s-karsh
+    locator: Karsh page, intro paragraph
+    short_excerpt: International applicants must have demonstrated financial need to be eligible for this
+      scholarship.
+    value_status: reported
+    reported_value: required
+  - field_path: offers/0/aid_basis
+    source_ref: s-karsh
+    locator: Karsh page, FAQ "What makes me a good candidate for this scholarship?"
+    short_excerpt: Strong academic preparation and documented need for financial aid.
+    value_status: reported
+    reported_value: merit_and_need
+  - field_path: offers/0/benefits
+    source_ref: s-karsh
+    locator: Karsh page, Frequently Asked Questions, "What does it cover?"
+    short_excerpt: Your tuition, room and board, mandatory fees, demonstrated need that exceeds those
+      costs, and three summers of funding
+    value_status: reported
+    reported_value: listed
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-karsh
+    locator: Karsh page, Frequently Asked Questions, "What does it cover?"
+    short_excerpt: Your tuition, room and board, mandatory fees
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-karsh
+    locator: Karsh page, Frequently Asked Questions, "What does it cover?"
+    short_excerpt: demonstrated need that exceeds those costs
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/5/amount
+    source_ref: s-karsh
+    locator: Karsh page, Frequently Asked Questions, "What does it cover?"
+    short_excerpt: three summers of funding
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/eligibility/citizenship_eligible
+    source_ref: s-karsh
+    locator: Karsh page, Frequently Asked Questions, dual-citizenship question
+    short_excerpt: Can a student who has dual U.S./other country citizenship be considered for this scholarship?
+      No.
+    value_status: reported
+    reported_value: international
+  - field_path: application/separate_application
+    source_ref: s-karsh
+    locator: Karsh page, paragraph under the intro
+    short_excerpt: to apply for the Karsh Scholarship, you must apply to Duke University and request financial
+      aid. There is no separate application.
+    value_status: reported
+    reported_value: no_form_other_steps_required
+  - field_path: application/separate_application
+    source_ref: s-list
+    locator: Merit scholarships for incoming first-year students
+    short_excerpt: Finalists will then interview with scholarship selection committees and merit scholarships
+      will be awarded shortly after the interviews.
+    value_status: reported
+    reported_value: no_form_other_steps_required

@@ -2,8 +2,7 @@ schema_version: 1
 program_id: national-merit-nonresident-package
 school_id: university-of-oklahoma-norman-campus
 ipeds_id: '207500'
-applicable_campuses:
-- Norman
+applicable_campuses: []
 official_name: National Merit Finalist and Semifinalist (non-resident freshman)
 aliases: []
 program_family: national_merit
