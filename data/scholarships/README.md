@@ -111,8 +111,13 @@ the validator does not.
    `short_excerpt`.
 7. No made-up totals. Never add components or multiply an annual amount. A
    `period: total_program` amount must be quoted by the school.
-8. A waiver is not a scholarship. Use `instrument: tuition_waiver`, and do not
-   count it as tuition coverage.
+8. A waiver is not a scholarship. Use `instrument: tuition_waiver`. A waiver
+   of the out-of-state differential (`category: nonresident_differential`) is
+   never tuition coverage. A waiver of tuition itself (`category: tuition`,
+   `coverage: full`) does count as full tuition, because the student is
+   charged none; the card still names it as a waiver. A partial, capped or
+   conditional waiver of tuition counts as a partial benefit, as a scholarship
+   would.
 9. There is no "full ride" value. Describe coverage with typed components and
    `normalized_coverage`; keep the school's own words in
    `advertised_coverage_label`.
@@ -146,7 +151,9 @@ variants; a tier nests under another with `parent_offer_id`), each offer holds
   fields uses a leading slash: `/awarding_authority`, `/related_programs/0`.
 - **No coverage label in YAML.** The loader derives `full tuition` and similar
   labels from the typed benefits. A waiver of the out-of-state differential is
-  `category: nonresident_differential`, `instrument: tuition_waiver`.
+  `category: nonresident_differential`, `instrument: tuition_waiver`, and is
+  left out of the label. A full waiver of tuition itself is `category: tuition`,
+  `instrument: tuition_waiver`, and derives `full tuition`.
 - **Check dates and the monitor's needs-review flag are not in these files.**
   They live in the database. `last_reviewed_at`, `reviewed_by` and
   `owner_spot_checked` stay.

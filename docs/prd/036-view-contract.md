@@ -114,8 +114,11 @@ amount that is absent, `exact` or `not_published` (a capped or approximate
 | `partial_or_fixed` | No `full_*` value, but a partial, fixed-amount or variable benefit, or a `full` benefit that is capped, conditional or short of a bracket. |
 | `other` | Anything else, including coverage the school did not state. |
 
-A `tuition_waiver` instrument or a `nonresident_differential` category never
-counts toward any value above (a waiver is not a scholarship). There is no
+A waiver of tuition itself (`category: tuition`, `instrument: tuition_waiver`)
+counts like a scholarship: full, unconditional and uncapped it fills the tuition
+slot, and otherwise it counts as a partial benefit. A `tuition_waiver` on any
+other category, and a `nonresident_differential` benefit under any instrument,
+never counts toward any value above. There is no
 "full ride" value; derive any display label from the components.
 
 ### `freshness_status` rule

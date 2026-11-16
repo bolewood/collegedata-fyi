@@ -78,7 +78,7 @@ The directory starts with the largest awards. A program qualifies when the schoo
 
 1. A stated amount of at least $10,000 per academic year. A total the school advertises for the whole program counts when it is at least $40,000 over four years.
 2. Full tuition or more, whatever the dollar value. This keeps full-tuition awards at low-tuition public schools, where the stated value can be under $10,000 for residents.
-3. A waiver of the nonresident tuition differential that the school attaches to the award. It counts toward the floor for the out-of-state tier even when the school publishes no dollar figure. It is still recorded as a waiver and never as tuition coverage.
+3. A waiver of the nonresident tuition differential that the school attaches to the award. It counts toward the floor for the out-of-state tier even when the school publishes no dollar figure. It is still recorded as a waiver and never as tuition coverage. (A waiver of tuition itself, as at Hawaii at Mānoa, is different: it qualifies under rule 2 and counts as full tuition.)
 
 Rules for applying it:
 
@@ -306,7 +306,7 @@ Add a "Scholarship directory" pipeline, numbered 13 so the existing pipelines ke
 
 Each comes from an official page:
 - **Interview or visit required.** Tulsa NMSF is selective even though it's tied to National Merit status.
-- **Waiver vs scholarship.** Texas A&M and Florida State include nonresident waivers. A waiver is never tuition coverage.
+- **Waiver vs scholarship.** Texas A&M and Florida State include nonresident waivers. A waiver of the out-of-state differential is never tuition coverage. A waiver of tuition itself (Hawaii at Mānoa Regents) is named as a waiver and counts as full tuition.
 - **Coverage that doesn't track tuition.** USC National Merit is now a fixed $20,000. Ole Miss's top tier is fixed at first-year tuition.
 - **Contradictions on one page.** UCF lists two renewal GPAs; Oklahoma's heading says Fall 2026 while its deadlines are 2026/2027.
 - **A retired program with current recipients.** Vanderbilt Chancellor's.
