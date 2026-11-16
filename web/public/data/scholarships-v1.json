@@ -1,6 +1,6 @@
 {
   "meta": {
-    "dataset_id": "collegedata-scholarships-v1-d34eb295b7e3",
+    "dataset_id": "collegedata-scholarships-v1-641ec256da39",
     "version": 1,
     "license": "CC-BY-SA-4.0",
     "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
@@ -2489,7 +2489,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "karsh-international-scholars-undated",
+      "version_id": "karsh-international-scholars-undated-r2",
       "entry_year": null,
       "entry_year_label": "Entering class not named on the Karsh or the school-wide merit page",
       "entry_terms": [
@@ -2499,8 +2499,8 @@
       "verification_status": "verified",
       "cycle_basis": "none",
       "cycle_through_date": null,
-      "last_reviewed_at": "2026-11-14",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-canary-B",
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -2517,7 +2517,7 @@
       "need_roles": [
         "required"
       ],
-      "separate_application": "not_required",
+      "separate_application": "no_form_other_steps_required",
       "deadline_months": [],
       "key_deadline": null,
       "source_retrieved_at": "2026-11-14",
@@ -2662,13 +2662,13 @@
         }
       ],
       "application": {
-        "separate_application": "not_required",
+        "separate_application": "no_form_other_steps_required",
         "milestones": [],
         "admission_plan_requirement": "Apply to Duke University and request financial aid",
         "prerequisites": [],
         "interview_mode": "unknown",
         "finalist_event_required": null,
-        "notes": "The school-wide merit page says finalists are notified by email in the spring and interview with selection committees; no Karsh-specific dates are published."
+        "notes": "The school-wide merit page says finalists are notified by email in the spring and interview with selection committees; no Karsh-specific dates are published. The Karsh page says there is no separate application but that applicants must apply to Duke and request financial aid (financial aid forms are required); the incoming first-year merit page says finalists for merit scholarships interview with selection committees."
       },
       "renewal_rules": null,
       "stacking_rules": null,
@@ -2748,6 +2748,12 @@
           "field_path": "application/separate_application",
           "source_ref": "s-karsh",
           "locator": "Karsh page, paragraph under the intro",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-list",
+          "locator": "Merit scholarships for incoming first-year students",
           "value_status": "reported"
         }
       ]
@@ -3794,7 +3800,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "fiu-nmf-non-florida-2027",
+      "version_id": "fiu-nmf-non-florida-2027-r2",
       "entry_year": 2027,
       "entry_year_label": "Early Fall/Fall 2027 (page); National Merit requirements dated May 1, 2027",
       "entry_terms": [
@@ -3805,7 +3811,7 @@
       "cycle_basis": "entry_year",
       "cycle_through_date": "2027-05-01",
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b2",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -3976,11 +3982,11 @@
             "source_date_text": "Select FIU as your #1 choice with the National Merit Scholarship Corporation no later than May 1, 2027"
           }
         ],
-        "admission_plan_requirement": "Apply to FIU and complete the admissions process by May 1, 2027",
+        "admission_plan_requirement": "The page gives two conflicting dates: the page intro says non-Florida residents must submit a completed Early Fall/Fall 2027 application by December 16, 2026 (early action) and that later materials make the student ineligible for merit awards, while the National Merit Finalist tab says to apply and complete the admissions process by May 1, 2027",
         "prerequisites": [],
         "interview_mode": "unknown",
         "finalist_event_required": null,
-        "notes": "CONFLICT: the page intro says FIU automatically considers students who submit a completed Fall 2027 application by the early-action dates (non-Florida residents: December 16, 2026) and that later materials make a student ineligible for merit awards, while the National Merit Finalist tab says to apply and complete admissions by May 1, 2027. The page does not reconcile them, so the admission deadline is left empty. The general paragraph says merit awards need no additional application or FAFSA and that scholarship funding is limited; the Scholarship Office reviews admitted students until funding is allocated. The page names Early Fall/Fall 2027 for the Presidential Merit and Gold and Blue awards; the National Merit tab is dated by its May 1, 2027 requirements. The page is a tabbed panel and was read through the saved page text."
+        "notes": "CONFLICT: the page intro says FIU automatically considers students who submit a completed Fall 2027 application by the early-action dates (non-Florida residents: December 16, 2026) and that later materials make a student ineligible for merit awards, while the National Merit Finalist tab says to apply and complete admissions by May 1, 2027. The page does not reconcile them, so the admission deadline is left empty. The general paragraph says merit awards need no additional application or FAFSA and that scholarship funding is limited; the Scholarship Office reviews admitted students until funding is allocated. The page names Early Fall/Fall 2027 for the Presidential Merit and Gold and Blue awards; the National Merit tab is dated by its May 1, 2027 requirements. The page is a tabbed panel and was read through the saved page text. Test scores: the page says students should submit a complete application including the fee/waiver and official SAT, ACT or CLT scores, and that scores must be sent directly to FIU when registering for tests. Recommended last test dates for scholarship consideration: ACT October 17, 2026; CLT September 17, 2026; SAT October 3, 2026. The page does not say whether a score is required for the National Merit Finalist package, so the test policy is left unknown."
       },
       "renewal_rules": null,
       "stacking_rules": null,
@@ -4144,6 +4150,18 @@
           "source_ref": "s-merit",
           "locator": "Merit scholarships page: no award count stated",
           "value_status": "not_published"
+        },
+        {
+          "field_path": "application/notes",
+          "source_ref": "s-merit",
+          "locator": "Merit scholarships page, intro",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/notes",
+          "source_ref": "s-merit",
+          "locator": "Merit scholarships page, intro",
+          "value_status": "reported"
         }
       ]
     },
@@ -4552,7 +4570,7 @@
           "relation": "component_of"
         }
       ],
-      "version_id": "fsu-stamps-scholars-undated",
+      "version_id": "fsu-stamps-scholars-undated-r2",
       "entry_year": null,
       "entry_year_label": "Pages name a Dec. 1, 2026 application deadline and 2027 interview dates but no entering class",
       "entry_terms": [
@@ -4563,7 +4581,7 @@
       "cycle_basis": "milestone_dates",
       "cycle_through_date": "2027-04-02",
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b3",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -4706,7 +4724,14 @@
           }
         ],
         "admission_plan_requirement": "Apply to FSU by Dec. 1, 2026 and answer 'Yes' to the Honors Program interest question",
-        "prerequisites": [],
+        "prerequisites": [
+          {
+            "kind": "portal_credentials",
+            "minimum_lead_days": 2,
+            "maximum_lead_days": null,
+            "notes": "After the FSU application is submitted, the University Honors Application becomes available on the Application Status Check; for Common App applicants this 'may take up to 48 hours', and the essay is due 11:59 p.m. EST on Dec. 1, 2026"
+          }
+        ],
         "interview_mode": "in_person",
         "finalist_event_required": true,
         "notes": "There is no separate Stamps form, but the supplemental University Honors Program essay (due Dec. 1, 2026) is mandatory and doubles as the Stamps essay; selection is part of the Presidential Scholars process. Presidential Scholars nominated for Stamps interview with a member of the Stamps Scholars Program national leadership team as the final step; no date or format is given."
@@ -4880,6 +4905,12 @@
           "source_ref": "s-app",
           "locator": "Application Process page, steps 1-4: dates in 2026 and 2027; no entering class named",
           "value_status": "not_published"
+        },
+        {
+          "field_path": "application/prerequisites/0",
+          "source_ref": "s-app",
+          "locator": "Application Process, Step 1",
+          "value_status": "reported"
         }
       ]
     },
@@ -4904,7 +4935,7 @@
           "relation": "includes"
         }
       ],
-      "version_id": "presidential-scholars-undated",
+      "version_id": "presidential-scholars-undated-r2",
       "entry_year": null,
       "entry_year_label": "Pages name a Dec. 1, 2026 application deadline and 2027 interview dates but no entering class",
       "entry_terms": [
@@ -4915,7 +4946,7 @@
       "cycle_basis": "milestone_dates",
       "cycle_through_date": "2027-04-02",
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b3",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -5093,7 +5124,14 @@
           }
         ],
         "admission_plan_requirement": "Apply to FSU by Dec. 1, 2026 and answer 'Yes' to the Honors Program interest question",
-        "prerequisites": [],
+        "prerequisites": [
+          {
+            "kind": "portal_credentials",
+            "minimum_lead_days": 2,
+            "maximum_lead_days": null,
+            "notes": "After the FSU application is submitted, the University Honors Application becomes available on the Application Status Check; for Common App applicants this 'may take up to 48 hours', and the essay is due 11:59 p.m. EST on Dec. 1, 2026"
+          }
+        ],
         "interview_mode": "in_person",
         "finalist_event_required": true,
         "notes": "Semi-finalists also submit two video responses. Presidential Scholars nominated for the Stamps Scholarship have a final interview with the Stamps Scholars Program national leadership team."
@@ -5257,6 +5295,12 @@
           "source_ref": "s-app",
           "locator": "Application Process page, steps 1-4: dates in 2026 and 2027; no entering class named",
           "value_status": "not_published"
+        },
+        {
+          "field_path": "application/prerequisites/0",
+          "source_ref": "s-app",
+          "locator": "Application Process, Step 1",
+          "value_status": "reported"
         }
       ]
     },
@@ -7529,22 +7573,22 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "presidential-fellows-fall-2027",
+      "version_id": "presidential-fellows-fall-2027-r2",
       "entry_year": 2027,
       "entry_year_label": "Fall 2027 entry (the page says \"New for fall 2027\" for the test-score rule)",
       "entry_terms": [
         "fall"
       ],
       "source_cohort_text": null,
-      "verification_status": "conflicting",
+      "verification_status": "verified",
       "cycle_basis": "entry_year",
       "cycle_through_date": null,
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b5",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
-        "partial_or_fixed"
+        "full_tuition_fees"
       ],
       "selection_modes": [
         "competitive"
@@ -7621,13 +7665,13 @@
               ],
               "scope_text": "School words: tuition and fees include instructional, non-resident surcharge, basic general, career development, course overload and course fees; Miami reserves the right to determine which charges the scholarship pays",
               "advertised_coverage_label": "elite, full-ride scholarship opportunity",
-              "conditions_text": "Tuition and fees are covered for eight fall/spring semesters provided the student maintains a 3.50 cumulative grade point average each year"
+              "conditions_text": null
             },
             {
               "benefit_id": "b-fees",
               "category": "mandatory_fees",
               "instrument": "scholarship",
-              "coverage": "partial",
+              "coverage": "full",
               "amount": {
                 "qualifier": "not_published",
                 "value": null,
@@ -7685,23 +7729,23 @@
             {
               "benefit_id": "b-enrichment",
               "category": "enrichment",
-              "instrument": "unknown",
-              "coverage": "unknown",
+              "instrument": "restricted_fund",
+              "coverage": "variable",
               "amount": {
-                "qualifier": "not_published",
-                "value": null,
+                "qualifier": "up_to",
+                "value": 5000,
                 "min": null,
                 "max": null,
-                "period": null
+                "period": "total_program"
               },
-              "duration_terms": null,
+              "duration_terms": "Over the four years at Miami",
               "exclusions": null,
-              "scope_text": "School words conflict: a one-time $5,000 academic enrichment stipend (benefits list) versus an enrichment fund of up to $5,000 used over four years, with an application to a review committee (FAQ 4); unused funds are not refundable",
+              "scope_text": "School words: an enrichment fund of up to $5,000 that can be used over the four years at Miami (FAQ 4); the benefits list calls it a one-time $5,000 academic enrichment stipend. Used for independent research, study abroad or away, internships, public service and other approved enrichment activities",
               "advertised_coverage_label": null,
-              "conditions_text": null
+              "conditions_text": "Fellows must submit an application to access their enrichment funds; the Presidential Fellows Enrichment Fund Review Committee reviews each request, and unused funds are not refundable"
             }
           ],
-          "normalized_coverage": "partial_or_fixed"
+          "normalized_coverage": "full_tuition_fees"
         }
       ],
       "application": {
@@ -7834,12 +7878,6 @@
           "value_status": "reported"
         },
         {
-          "field_path": "offers/0/benefits/0/conditions_text",
-          "source_ref": "s-prog",
-          "locator": "Scholarship FAQs, question 1",
-          "value_status": "reported"
-        },
-        {
           "field_path": "offers/0/benefits/0/amount",
           "source_ref": "s-prog",
           "locator": "Scholarship FAQs, question 1: no dollar value for tuition",
@@ -7886,18 +7924,6 @@
           "source_ref": "s-prog",
           "locator": "Scholarship FAQs, question 2: no dollar value for meals",
           "value_status": "not_published"
-        },
-        {
-          "field_path": "offers/0/benefits/4/amount",
-          "source_ref": "s-prog",
-          "locator": "Presidential Fellows page, \"Benefits for Presidential Fellows\"",
-          "value_status": "conflicting"
-        },
-        {
-          "field_path": "offers/0/benefits/4/amount",
-          "source_ref": "s-prog",
-          "locator": "Scholarship FAQs, question 4",
-          "value_status": "conflicting"
         },
         {
           "field_path": "offers/0/eligibility/test_rules",
@@ -7957,6 +7983,18 @@
           "field_path": "award_counts/1",
           "source_ref": "s-news",
           "locator": "News release \"Miami welcomes Class of 2030 Presidential Fellows\", first paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/4/amount",
+          "source_ref": "s-prog",
+          "locator": "Scholarship FAQs, question 4",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/4/conditions_text",
+          "source_ref": "s-prog",
+          "locator": "Scholarship FAQs, question 4",
           "value_status": "reported"
         }
       ]
@@ -8592,7 +8630,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "cheatham-white-undated",
+      "version_id": "cheatham-white-undated-r2",
       "entry_year": null,
       "entry_year_label": "Entering class not named; dates are for 2026-2027 and the timeline is marked \"Revised 7.6.26\"",
       "entry_terms": [
@@ -8602,8 +8640,8 @@
       "verification_status": "verified",
       "cycle_basis": "milestone_dates",
       "cycle_through_date": "2027-04-15",
-      "last_reviewed_at": "2026-11-14",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-canary-B",
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -8871,6 +8909,12 @@
             "kind": "admission_application",
             "minimum_lead_days": null,
             "notes": "The Honors College application is reached through the Aggie Admissions Portal after an admission application is submitted."
+          },
+          {
+            "kind": "recommendation",
+            "minimum_lead_days": null,
+            "maximum_lead_days": null,
+            "notes": "Two letters of recommendation are required: one on academic or leadership ability and one on character or service involvement; letters from family members or peers are not accepted. The FAQ advises requesting a letter 2-3 weeks before the priority deadline"
           }
         ],
         "interview_mode": "in_person",
@@ -9052,6 +9096,24 @@
           "source_ref": "s-cw",
           "locator": "Cheatham-White Scholars page, \"Expectation of Recipients\"",
           "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/1",
+          "source_ref": "s-hon",
+          "locator": "Honors scholarships page, Letters of Recommendation",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/1",
+          "source_ref": "s-hon",
+          "locator": "Honors scholarships page, Letters of Recommendation",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/1",
+          "source_ref": "s-hon",
+          "locator": "Honors scholarships page, FAQ",
+          "value_status": "reported"
         }
       ]
     },
@@ -9072,18 +9134,18 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "cheatham-white-2027",
+      "version_id": "cheatham-white-2027-r2",
       "entry_year": 2027,
       "entry_year_label": "Apply page: nominations for the 2027-2028 year",
       "entry_terms": [
-        "unspecified"
+        "fall"
       ],
       "source_cohort_text": null,
       "verification_status": "verified",
       "cycle_basis": "entry_year",
       "cycle_through_date": "2027-03-01",
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b6",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -9150,7 +9212,7 @@
             "major_change_restrictions": null,
             "honors_requirement": true,
             "first_generation_rule": "unknown",
-            "eligibility_notes": "Admitted as a first-year student in the fall to a baccalaureate program, on course to graduate from high school that spring. Minimum 4.0 weighted or unweighted cumulative GPA (the policy page says 'weighted'). Test scores are optional: the apply page says so for the 2027-2028 academic year; the FAQ page still says 2026-2027 (a leftover from the previous cycle). Selection looks at character, leadership, extracurricular involvement and service; the policy says financial need is not a consideration. Students are enrolled in the University Honors Program automatically. The policy page also lists SAT 1280 / ACT 28 as required; the apply page makes tests optional for 2027-2028 and is followed. Policy nominee caps by school: 2 to 5 depending on senior class size."
+            "eligibility_notes": "Admitted as a first-year student in the fall to a baccalaureate program, on course to graduate from high school that spring. Minimum 4.0 weighted or unweighted cumulative GPA (the policy page says 'weighted'). Test scores are optional: the apply page says so for the 2027-2028 academic year; the FAQ page still says 2026-2027 (a leftover from the previous cycle). Selection looks at character, leadership, extracurricular involvement and service; the policy says financial need is not a consideration. Students are enrolled in the University Honors Program automatically. The policy page also lists SAT 1280 / ACT 28 as required; the apply page makes tests optional for 2027-2028 and is followed. Policy nominee caps by school: 2 to 5 depending on senior class size. The policy names North Carolina high schools as eligible to nominate students (policy section 5.1.1); a student who does not attend an endorsing school may self-nominate (section 5.2.1), so students at schools outside North Carolina must self-nominate through the Eagle Promise Portal."
           },
           "benefits": [
             {
@@ -9354,8 +9416,27 @@
             "source_date_text": "March 2027 | All applicants are notified of the final status"
           }
         ],
-        "admission_plan_requirement": "Admission to NCCU by the Cheatham-White application deadline, plus a nomination by a high school administrator or a self-nomination",
-        "prerequisites": [],
+        "admission_plan_requirement": "Be fully admitted to NCCU by the Cheatham-White application deadline (November 15). A nomination is required first: the policy names North Carolina high schools as eligible to nominate students (principal, vice-principal or guidance counselor); other students self-nominate in the Eagle Promise Portal after submitting an admission application, and self-nominations also need a letter of recommendation",
+        "prerequisites": [
+          {
+            "kind": "admission_application",
+            "minimum_lead_days": null,
+            "maximum_lead_days": null,
+            "notes": "Students must be fully admitted to NCCU by the Cheatham-White application deadline (November 15) to be considered; self-nominees must first submit an undergraduate admission application to reach the Eagle Promise Portal"
+          },
+          {
+            "kind": "portal_credentials",
+            "minimum_lead_days": null,
+            "maximum_lead_days": null,
+            "notes": "Students self-nominate in the Eagle Promise Portal after applying for admission; the Cheatham-White Application is available only after a nomination is received and reviewed. The page gives no lead time"
+          },
+          {
+            "kind": "recommendation",
+            "minimum_lead_days": null,
+            "maximum_lead_days": null,
+            "notes": "Self-nominations are required to provide a subsequent letter of recommendation"
+          }
+        ],
         "interview_mode": "unknown",
         "finalist_event_required": null,
         "notes": "Finalist interviews cannot be rescheduled: the interview date is announced a year in advance and finalists are told a month before. Self-nominations go through the Eagle Promise Portal after an admission application and must be followed by a letter of recommendation (FAQ). The FAQ page still says 'for the 2026-2027 academic year' for test-optional; the apply page says 2027-2028 and is used here. The FAQ says recipients are notified in early March, finalists decide by mid-April and the class is announced in early May. The scholarship is non-binding: scholars need not attend NCCU."
@@ -9637,6 +9718,48 @@
           "source_ref": "s-apply",
           "locator": "Apply page: 'Nominations for the 2027–2028 year will open on August 15, 2026.'",
           "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/eligibility_notes",
+          "source_ref": "s-pol",
+          "locator": "Policy 6, section 5.1.1",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/eligibility_notes",
+          "source_ref": "s-pol",
+          "locator": "Policy 6, section 5.2.1",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/0",
+          "source_ref": "s-apply",
+          "locator": "Apply page, note",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/1",
+          "source_ref": "s-apply",
+          "locator": "Apply page, Submitting a Nomination",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/1",
+          "source_ref": "s-apply",
+          "locator": "Apply page, Submitting an Application",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/2",
+          "source_ref": "s-faq",
+          "locator": "FAQ, self-nomination question",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "entry_terms",
+          "source_ref": "s-apply",
+          "locator": "Apply page, Eligibility and Selection Criteria",
+          "value_status": "reported"
         }
       ]
     },
@@ -9656,7 +9779,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "park-class-of-2031",
+      "version_id": "park-class-of-2031-r2",
       "entry_year": 2027,
       "entry_year_label": "Class of 2031 (entry year derived: fall 2027)",
       "entry_terms": [
@@ -9667,7 +9790,7 @@
       "cycle_basis": "entry_year",
       "cycle_through_date": "2027-03-24",
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b2",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -10132,7 +10255,14 @@
           }
         ],
         "admission_plan_requirement": "Apply for fall, first-year admission to NC State by November 1 (separate from the Park application)",
-        "prerequisites": [],
+        "prerequisites": [
+          {
+            "kind": "recommendation",
+            "minimum_lead_days": null,
+            "maximum_lead_days": null,
+            "notes": "Two recommendations are submitted through the Park Scholarships application; recommendations sent with the NC State admission application are not shared with the Park committee. At least one recommender should know the applicant academically; parents/guardians are not permitted. Recommendations are due by 11:59 p.m. November 1 or the application is not eligible"
+          }
+        ],
         "interview_mode": "mixed",
         "finalist_event_required": true,
         "notes": "The apply page says 'The application for 2026-2027 is now closed' (the November 1, 2026 deadline has passed); the program itself is active. Two recommendations and two essays are required. The page names no per-stage dates beyond those listed. The selection page's own tabs repeat the same dates."
@@ -10532,6 +10662,30 @@
           "source_ref": "s-about",
           "locator": "About the Program, 'Exceptional Benefits' list: 'for the Class of 2031'; apply page 'Park Scholarships Class of 2031 announced' (2027)",
           "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/0",
+          "source_ref": "s-apply",
+          "locator": "Apply page, application requirements",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/0",
+          "source_ref": "s-apply",
+          "locator": "Apply page, application requirements",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/0",
+          "source_ref": "s-faq",
+          "locator": "FAQ, Who should write my letters of recommendation?",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/0",
+          "source_ref": "s-faq",
+          "locator": "FAQ, Who should write my letters of recommendation?",
+          "value_status": "reported"
         }
       ]
     },
@@ -10557,7 +10711,7 @@
           "relation": "mutually_exclusive_with"
         }
       ],
-      "version_id": "presidents-ohio-scholarship-undated",
+      "version_id": "presidents-ohio-scholarship-undated-r2",
       "entry_year": null,
       "entry_year_label": "Entering class not named on the Honors and Scholars or undergraduate admissions pages",
       "entry_terms": [
@@ -10568,7 +10722,7 @@
       "cycle_basis": "none",
       "cycle_through_date": null,
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b5",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -10629,7 +10783,7 @@
             "honors_requirement": null,
             "first_generation_rule": "unknown",
             "eligibility_notes": "New first-year Ohio residents (classified as Ohio residents for tuition purposes) enrolling at the Columbus campus, currently enrolled in their senior year of high school. A perfect score must come from a single test date; superscoring is not accepted. Recipients are guaranteed admission to the University Honors Program or one of 16 Ohio State Scholars programs. Transfer students are not eligible for merit awards. Ohio State does not participate in the National Merit Scholarship Program.",
-            "citizenship_text": null
+            "citizenship_text": "International students are not eligible."
           },
           "benefits": [
             {
@@ -10708,9 +10862,9 @@
       ],
       "stacking_rules": [
         {
-          "other_aid_type": "other",
+          "other_aid_type": "institutional_merit",
           "relation": "not_allowed",
-          "note": "A student cannot receive more than one of the President's Ohio, Stamps Eminence and Morrill scholarships; if offered more than one, the student must choose"
+          "note": "School words (Undergraduate Admissions page, university-funded merit scholarships): 'These scholarships cannot be combined, except for the National Buckeye Scholarship.' The Honors page adds that a student cannot receive more than one of the President's Ohio, Stamps Eminence and Morrill scholarships; if offered more than one, the student must choose"
         }
       ],
       "award_counts": [],
@@ -10813,6 +10967,18 @@
           "field_path": "stacking_rules/0",
           "source_ref": "s-hon",
           "locator": "President's Ohio page, last FAQ",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/citizenship_text",
+          "source_ref": "s-mer",
+          "locator": "Merit-based scholarships page, opening paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/0",
+          "source_ref": "s-mer",
+          "locator": "Merit-based scholarships page, opening paragraph",
           "value_status": "reported"
         }
       ]
@@ -11509,9 +11675,7 @@
       "program_family": "other",
       "awarding_authority": "institution",
       "program_status": "active",
-      "applicable_campuses": [
-        "West Lafayette"
-      ],
+      "applicable_campuses": [],
       "related_programs": [],
       "version_id": "first-year-undated",
       "entry_year": null,
@@ -11778,9 +11942,7 @@
       "program_family": "other",
       "awarding_authority": "institution",
       "program_status": "active",
-      "applicable_campuses": [
-        "West Lafayette"
-      ],
+      "applicable_campuses": [],
       "related_programs": [],
       "version_id": "first-year-undated",
       "entry_year": null,
@@ -14001,7 +14163,7 @@
         "College Station"
       ],
       "related_programs": [],
-      "version_id": "national-merit-undated",
+      "version_id": "national-merit-undated-r2",
       "entry_year": null,
       "entry_year_label": "Page names no entering class (describes 'College Station fall freshman admits')",
       "entry_terms": [
@@ -14011,8 +14173,8 @@
       "verification_status": "verified",
       "cycle_basis": "none",
       "cycle_through_date": null,
-      "last_reviewed_at": "2026-11-14",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-canary-A",
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": null,
       "coverages": [
@@ -14376,7 +14538,11 @@
                 "period": null
               },
               "duration_terms": null,
-              "exclusions": null,
+              "exclusions": [
+                "Students in self-supporting programs (including Aggie ACHIEVE and programs at the TAMU Washington D.C. and Qatar sites)",
+                "Non-resident distance education students who reside outside Texas",
+                "Students with excess credit hours"
+              ],
               "scope_text": "A waiver of the non-resident rate; not a scholarship and not tuition coverage",
               "advertised_coverage_label": null,
               "conditions_text": "Needs competitive scholarships of at least $4,000 per academic year, awarded and maintained; at the discretion of the University and within the state's limit on waivers."
@@ -14562,6 +14728,24 @@
           "source_ref": "s-waiver",
           "locator": "Competitive Scholarship Non-Resident Tuition Waiver page, paragraph 'Undergraduate students must be awarded...'",
           "value_status": "reported"
+        },
+        {
+          "field_path": "offers/4/benefits/0/exclusions",
+          "source_ref": "s-waiver",
+          "locator": "Competitive Scholarship Non-Resident Tuition Waiver page",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/4/benefits/0/exclusions",
+          "source_ref": "s-waiver",
+          "locator": "Competitive Scholarship Non-Resident Tuition Waiver page",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/4/benefits/0/exclusions",
+          "source_ref": "s-waiver",
+          "locator": "Competitive Scholarship Non-Resident Tuition Waiver page",
+          "value_status": "reported"
         }
       ]
     },
@@ -14582,7 +14766,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "tcu-chancellors-fall-2027",
+      "version_id": "tcu-chancellors-fall-2027-r2",
       "entry_year": 2027,
       "entry_year_label": null,
       "entry_terms": [
@@ -14593,7 +14777,7 @@
       "cycle_basis": "entry_year",
       "cycle_through_date": "2027-02-16",
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b4",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -14623,7 +14807,7 @@
           "variant_name": "First-year",
           "residency": "unknown",
           "selection_mode": "competitive",
-          "consideration_route": "separate_application",
+          "consideration_route": "honors_application",
           "aid_basis": "merit_only",
           "need_role": "unknown",
           "funds_limited": null,
@@ -14726,8 +14910,8 @@
           }
         ],
         "interview_mode": "in_person",
-        "finalist_event_required": true,
-        "notes": "The John V. Roach Honors College application is completed in the TCU portal. November 1 and November 15 appear without a year; the January 15, February 14-16 and February 16 dates carry 2027 on the page. Finalists get about one week to register. In-person participation in Interview Day is expected for finalists residing in the United States; finalists residing internationally may request a video interview. The earlier TCU lead's 'three or four years' wording did not appear on either page read; the first-year table says 'Full tuition for four years' and 'Up to 8 semesters', consistent with the eight-semester wording."
+        "finalist_event_required": null,
+        "notes": "The John V. Roach Honors College application is completed in the TCU portal. November 1 and November 15 appear without a year; the January 15, February 14-16 and February 16 dates carry 2027 on the page. Finalists get about one week to register. In-person participation in Interview Day is expected for finalists residing in the United States; finalists residing internationally may request a video interview. The earlier TCU lead's 'three or four years' wording did not appear on either page read; the first-year table says 'Full tuition for four years' and 'Up to 8 semesters', consistent with the eight-semester wording. The page says in-person participation in Interview Day is 'expected' for U.S. finalists and does not say that attending the February 14-16 events is required; international finalists may request a video-conference interview, so finalist_event_required is left null."
       },
       "renewal_rules": [
         {
@@ -15110,7 +15294,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "national-merit-2027",
+      "version_id": "national-merit-2027-r2",
       "entry_year": 2027,
       "entry_year_label": null,
       "entry_terms": [
@@ -15120,8 +15304,8 @@
       "verification_status": "verified",
       "cycle_basis": "entry_year",
       "cycle_through_date": "2027-05-01",
-      "last_reviewed_at": "2026-11-14",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-canary-A",
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": null,
       "coverages": [
@@ -15133,6 +15317,7 @@
       ],
       "residencies": [
         "in_state",
+        "international",
         "out_of_state",
         "unknown"
       ],
@@ -15366,6 +15551,60 @@
           ],
           "advertised_totals": [],
           "normalized_coverage": "partial_or_fixed"
+        },
+        {
+          "offer_id": "o-semifinalist-presidential-international",
+          "parent_offer_id": null,
+          "variant_name": "National Merit Semifinalist: Presidential Scholarship (international)",
+          "residency": "international",
+          "selection_mode": "unknown",
+          "consideration_route": "admission_application",
+          "aid_basis": "unclear",
+          "need_role": "unknown",
+          "funds_limited": null,
+          "eligibility": {
+            "national_merit_statuses": [
+              "semifinalist"
+            ],
+            "status_required_for_award": null,
+            "first_choice_required": null,
+            "gpa": {
+              "min": 3.5,
+              "scale": null,
+              "basis": "unknown"
+            },
+            "test_rules": null,
+            "tests_policy_for_scholarship": "unknown",
+            "citizenship_eligible": null,
+            "citizenship_text": null,
+            "majors_allowed": null,
+            "major_change_restrictions": null,
+            "honors_requirement": null,
+            "first_generation_rule": "unknown",
+            "eligibility_notes": "Admitted Semifinalists with at least a 3.5 GPA after completion of junior year are 'automatically eligible'. The out-of-state and international grid lists Presidential at ACT 32-36 / SAT 1420-1600 / GPA 3.50+; the page says scholarship values and names are identical for out-of-state and international students, so this offer carries the same value as the out-of-state offer."
+          },
+          "benefits": [
+            {
+              "benefit_id": "b-presidential",
+              "category": "other",
+              "instrument": "scholarship",
+              "coverage": "fixed_amount",
+              "amount": {
+                "qualifier": "exact",
+                "value": 28000,
+                "min": null,
+                "max": null,
+                "period": "academic_year"
+              },
+              "duration_terms": null,
+              "exclusions": null,
+              "scope_text": "Yearly value in the out-of-state and international automatic grid; the page says values are identical for out-of-state and international students and does not say which charges it applies to",
+              "advertised_coverage_label": null,
+              "conditions_text": null
+            }
+          ],
+          "advertised_totals": [],
+          "normalized_coverage": "partial_or_fixed"
         }
       ],
       "application": {
@@ -15572,6 +15811,48 @@
           "field_path": "entry_year",
           "source_ref": "s-nm",
           "locator": "National Merit Scholars page, Finalist Package, Eligibility, last bullet; 2027 grids on in-state and out-of-state pages",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/3/selection_mode",
+          "source_ref": "s-nm",
+          "locator": "National Merit Scholars page, National Merit Semifinalist Scholarship: 'automatically eligible' is eligibility, not a promise of the award",
+          "value_status": "not_published"
+        },
+        {
+          "field_path": "offers/3/eligibility/national_merit_statuses",
+          "source_ref": "s-nm",
+          "locator": "National Merit Scholars page, National Merit Semifinalist Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/3/eligibility/gpa",
+          "source_ref": "s-nm",
+          "locator": "National Merit Scholars page, National Merit Semifinalist Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/3/benefits/0",
+          "source_ref": "s-oos",
+          "locator": "Out-of-state freshman page, 2027 automatic merit table, Presidential row",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/3/benefits/0/amount",
+          "source_ref": "s-oos",
+          "locator": "Out-of-state freshman page, 2027 automatic merit table, Presidential row, Yearly Value column",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/3/residency",
+          "source_ref": "s-oos",
+          "locator": "Out-of-State and International Freshman page, 2027 grid heading",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/3/benefits/0/amount",
+          "source_ref": "s-nm",
+          "locator": "National Merit page",
           "value_status": "reported"
         }
       ]
@@ -16575,7 +16856,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "distinguished-presidential-2027",
+      "version_id": "distinguished-presidential-2027-r2",
       "entry_year": 2027,
       "entry_year_label": "Incoming Freshmen 2027-2028",
       "entry_terms": [
@@ -16585,8 +16866,8 @@
       "verification_status": "conflicting",
       "cycle_basis": "entry_year",
       "cycle_through_date": null,
-      "last_reviewed_at": "2026-11-14",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-canary-B",
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -16638,7 +16919,7 @@
                 "official_required": null
               },
               {
-                "exam": "ACT",
+                "exam": "ACT Composite (with Science)",
                 "min": 30,
                 "scoring": "single_sitting",
                 "official_required": null
@@ -16650,7 +16931,7 @@
             "major_change_restrictions": null,
             "honors_requirement": null,
             "first_generation_rule": "unknown",
-            "eligibility_notes": "Only for applicants who apply under Standard Admission. An interview is required. The award is not transferable to other terms or years of entry, and the university may revoke it if the final cumulative high school GPA or test score falls below the scholarship requirement. The page says test-optional applicants outside Alabama may not apply for merit scholarships; the asterisk allowing test-optional applies only to the Alabama Incentive Grant."
+            "eligibility_notes": "Only for applicants who apply under Standard Admission. An interview is required. The award is not transferable to other terms or years of entry, and the university may revoke it if the final cumulative high school GPA or test score falls below the scholarship requirement. The page says test-optional applicants outside Alabama may not apply for merit scholarships; the asterisk allowing test-optional applies only to the Alabama Incentive Grant. The page's column heading for the ACT is 'ACT Composite (with Science)'."
           },
           "benefits": [
             {
@@ -16809,7 +17090,7 @@
         "prerequisites": [],
         "interview_mode": "unknown",
         "finalist_event_required": null,
-        "notes": "Applicants who are extended an offer are encouraged to attend Scholars Day in mid-February (invitation only) and must finalize their admissions decision by April 1. All new students must pay a non-refundable $500 enrollment fee by the priority date on the scholarship letter or the award is subject to cancellation; the award does not cover that fee. The page also says the scholarship application opens December 1 and closes January 1, and that a link is sent to students who qualify."
+        "notes": "Applicants who are extended an offer are encouraged to attend Scholars Day in mid-February (invitation only) and must finalize their admissions decision by April 1. All new students must pay a non-refundable $500 enrollment fee by the priority date on the scholarship letter or the award is subject to cancellation; the award does not cover that fee. The page also says the scholarship application opens December 1 and closes January 1, and that a link is sent to students who qualify. The Scholarship Review Process says applications are evaluated using high school academic performance and course rigor, a personal essay, a letter of recommendation and standardized test scores."
       },
       "renewal_rules": [
         {
@@ -17036,6 +17317,18 @@
           "field_path": "offers/0/benefits/1/exclusions",
           "source_ref": "s-tu",
           "locator": "Scholarships page, \"Merit Based Scholarship and Grant Policies\"",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/test_rules",
+          "source_ref": "s-tu",
+          "locator": "Academic Scholarships/Grants for Incoming Freshmen 2027-2028, column heading",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/notes",
+          "source_ref": "s-tu",
+          "locator": "Scholarship Review Process",
           "value_status": "reported"
         }
       ]
@@ -18388,7 +18681,7 @@
           "relation": "component_of"
         }
       ],
-      "version_id": "stamps-scholars-undated",
+      "version_id": "stamps-scholars-undated-r2",
       "entry_year": null,
       "entry_year_label": "Entering class not named; the Foundation Fellowship deadline is a recurring November 1",
       "entry_terms": [
@@ -18396,10 +18689,10 @@
       ],
       "source_cohort_text": null,
       "verification_status": "verified",
-      "cycle_basis": "none",
-      "cycle_through_date": null,
-      "last_reviewed_at": "2026-11-14",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-canary-B",
+      "cycle_basis": "milestone_dates",
+      "cycle_through_date": "2027-02-26",
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [],
@@ -18414,7 +18707,7 @@
       "need_roles": [
         "unknown"
       ],
-      "separate_application": "no_form_other_steps_required",
+      "separate_application": "required",
       "deadline_months": [
         11
       ],
@@ -18427,7 +18720,7 @@
           "variant_name": null,
           "residency": "any",
           "selection_mode": "competitive",
-          "consideration_route": "nomination",
+          "consideration_route": "honors_application",
           "aid_basis": "unclear",
           "need_role": "unknown",
           "funds_limited": null,
@@ -18450,7 +18743,7 @@
         }
       ],
       "application": {
-        "separate_application": "no_form_other_steps_required",
+        "separate_application": "required",
         "milestones": [
           {
             "kind": "application_deadline",
@@ -18462,13 +18755,28 @@
             },
             "precision": "day",
             "source_date_text": "November 1 (Foundation Fellowship application)"
+          },
+          {
+            "kind": "finalist_event",
+            "requirement": "required",
+            "date": "2027-02-26",
+            "recurring": null,
+            "precision": "day",
+            "source_date_text": "Friday, February 26 and Saturday, February 27, 2027 (mandatory Interview Weekend)"
           }
         ],
         "admission_plan_requirement": "Selected from that year's Foundation Fellows, via the Foundation Fellowship application (due November 1); six Fellows are nominated to interview",
-        "prerequisites": [],
+        "prerequisites": [
+          {
+            "kind": "admission_application",
+            "minimum_lead_days": null,
+            "maximum_lead_days": null,
+            "notes": "Applicants must submit a First-Year Admission application to UGA before they can access the Foundation Fellowship application"
+          }
+        ],
         "interview_mode": "unknown",
-        "finalist_event_required": null,
-        "notes": "The Stamps designation sits inside the Foundation Fellowship; see that record for benefits and the application. Each February, finalists are interviewed by UGA administrators, faculty, alumni, and trustees."
+        "finalist_event_required": true,
+        "notes": "The Stamps designation sits inside the Foundation Fellowship; see that record for benefits and the application. Finalists attend a mandatory Interview Weekend (no alternate dates); the page's dates are for 2027. Each February, finalists are interviewed by UGA administrators, faculty, alumni, and trustees."
       },
       "renewal_rules": null,
       "stacking_rules": null,
@@ -18530,6 +18838,36 @@
           "field_path": "/related_programs/0",
           "source_ref": "s-stamps",
           "locator": "Stamps Scholars page, \"Selection\"",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-apply",
+          "locator": "Applying for the Foundation Fellowship, Deadline",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-apply",
+          "locator": "Applying for the Foundation Fellowship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/1",
+          "source_ref": "s-apply",
+          "locator": "Applying for the Foundation Fellowship, Finalist interviews",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/finalist_event_required",
+          "source_ref": "s-apply",
+          "locator": "Applying for the Foundation Fellowship, Finalist interviews",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/0",
+          "source_ref": "s-apply",
+          "locator": "Applying for the Foundation Fellowship",
           "value_status": "reported"
         }
       ]
@@ -19696,7 +20034,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "nm-2026",
+      "version_id": "nm-2026-r2",
       "entry_year": 2026,
       "entry_year_label": null,
       "entry_terms": [
@@ -19706,8 +20044,8 @@
       "verification_status": "verified",
       "cycle_basis": "entry_year",
       "cycle_through_date": "2026-05-01",
-      "last_reviewed_at": "2026-11-14",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-canary-A",
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": null,
       "coverages": [
@@ -19774,8 +20112,13 @@
                 "period": null
               },
               "duration_terms": "Four consecutive years (8 semesters), fall and spring only; 10 semesters for the 5-year Bachelor of Architecture. Remaining semesters may go toward full-time graduate tuition immediately after finishing early.",
-              "exclusions": null,
-              "scope_text": "Described as an undergraduate tuition award; the page gives no dollar amount and no statement that it covers all tuition",
+              "exclusions": [
+                "College and program fees, surcharges, room and board, books and other expenses",
+                "Programs that do not charge tuition through the Bursar's student account",
+                "Summer and winter semesters (fall and spring only)",
+                "Arizona Faculty Led and third-party provider (CEA, CIEE, DIS, Semester at Sea) study abroad programs"
+              ],
+              "scope_text": "Applies to undergraduate base tuition charged through the Bursar's Office; the page gives no dollar amount and no statement that it covers all tuition",
               "advertised_coverage_label": null,
               "conditions_text": null
             }
@@ -19818,12 +20161,12 @@
           "applies_to": [],
           "gpa_min": 3.0,
           "gpa_scale": null,
-          "credit_load_min_per_term": null,
+          "credit_load_min_per_term": 12,
           "credit_load_min_per_year": null,
           "evaluation_timing": "By the conclusion of the academic year (fall, winter, spring and summer semesters)",
-          "summer_courses_can_fix_shortfall": null,
+          "summer_courses_can_fix_shortfall": true,
           "max_semesters": 8,
-          "notes": "Also requires 30 cumulative Arizona units after year 1, 60 after year 2 and 90 after year 3, and continuous enrollment in fall and spring. Cumulative GPA is not rounded or recalculated. Offers are non-negotiable."
+          "notes": "Also requires 30 cumulative Arizona units after year 1, 60 after year 2 and 90 after year 3, and continuous enrollment in fall and spring. Cumulative GPA is not rounded or recalculated. Offers are non-negotiable. The award is disbursed only if the student is enrolled full-time (12+ units per term); students in their final semester before graduation who do not need full-time enrollment are the exception. Units can be completed in summer of the award year to renew, and students who fall short at the end of spring but are enrolled in summer are reviewed after summer."
         }
       ],
       "stacking_rules": [
@@ -19943,6 +20286,48 @@
           "source_ref": "s-terms",
           "locator": "2026-2027 Scholarship Terms and Conditions, National Merit Scholars Tuition Award 2026-2027, Eligibility",
           "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-terms",
+          "locator": "How the award is applied",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-terms",
+          "locator": "Renewal Criteria, Minimum Units",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-terms",
+          "locator": "Reinstatement",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/exclusions",
+          "source_ref": "s-terms",
+          "locator": "Terms and conditions, How the award is applied",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/exclusions",
+          "source_ref": "s-terms",
+          "locator": "Terms and conditions, How the award is applied",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/exclusions",
+          "source_ref": "s-terms",
+          "locator": "Terms and conditions, Availability",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0/exclusions",
+          "source_ref": "s-terms",
+          "locator": "Terms and conditions, Study Abroad",
+          "value_status": "reported"
         }
       ]
     },
@@ -19962,7 +20347,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "bodenhamer-fellowship-undated",
+      "version_id": "bodenhamer-fellowship-undated-r2",
       "entry_year": null,
       "entry_year_label": "Catalog is the 2026-27 edition and a scholarships page cites the Fall 2026/Spring 2027 cycle; neither names the fellowships' entering class",
       "entry_terms": [
@@ -19973,7 +20358,7 @@
       "cycle_basis": "none",
       "cycle_through_date": null,
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b3",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -19992,7 +20377,6 @@
       ],
       "separate_application": "required",
       "deadline_months": [
-        1,
         2,
         11
       ],
@@ -20092,7 +20476,7 @@
           },
           {
             "kind": "admission_deadline",
-            "requirement": "required",
+            "requirement": "recommended",
             "date": null,
             "recurring": {
               "month": 1,
@@ -20120,6 +20504,12 @@
             "minimum_lead_days": null,
             "maximum_lead_days": null,
             "notes": "Letters of recommendation must be submitted by the February 1 final deadline to be considered for fellowships"
+          },
+          {
+            "kind": "portal_credentials",
+            "minimum_lead_days": 2,
+            "maximum_lead_days": null,
+            "notes": "Approximately 48 hours after the admission application is submitted, the personalized scholarship/fellowship application becomes available in the New Student Center (the home page says 'within 48 hours')"
           }
         ],
         "interview_mode": "unknown",
@@ -20242,6 +20632,24 @@
           "source_ref": "s-home",
           "locator": "Academic Scholarship Office page, deadlines: 'Fall 2026/Spring 2027 application cycle'; the catalog is the '2026-27 Edition'; neither names the fellowships' entering class",
           "value_status": "not_published"
+        },
+        {
+          "field_path": "application/milestones/2",
+          "source_ref": "s-guide",
+          "locator": "Guide to Academic Freshman Scholarships, intro",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/1",
+          "source_ref": "s-guide",
+          "locator": "Guide to Academic Freshman Scholarships, Check your New Student Center",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/1",
+          "source_ref": "s-home",
+          "locator": "Academic Scholarship Office home page, New Freshman Scholarships",
+          "value_status": "reported"
         }
       ]
     },
@@ -20262,7 +20670,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "honors-college-fellowship-undated",
+      "version_id": "honors-college-fellowship-undated-r2",
       "entry_year": null,
       "entry_year_label": "Catalog is the 2026-27 edition and a scholarships page cites the Fall 2026/Spring 2027 cycle; neither names the fellowships' entering class",
       "entry_terms": [
@@ -20273,7 +20681,7 @@
       "cycle_basis": "none",
       "cycle_through_date": null,
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b3",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -20292,7 +20700,6 @@
       ],
       "separate_application": "required",
       "deadline_months": [
-        1,
         2,
         11
       ],
@@ -20392,7 +20799,7 @@
           },
           {
             "kind": "admission_deadline",
-            "requirement": "required",
+            "requirement": "recommended",
             "date": null,
             "recurring": {
               "month": 1,
@@ -20420,6 +20827,12 @@
             "minimum_lead_days": null,
             "maximum_lead_days": null,
             "notes": "Letters of recommendation must be submitted by the February 1 final deadline to be considered for fellowships"
+          },
+          {
+            "kind": "portal_credentials",
+            "minimum_lead_days": 2,
+            "maximum_lead_days": null,
+            "notes": "Approximately 48 hours after the admission application is submitted, the personalized scholarship/fellowship application becomes available in the New Student Center (the home page says 'within 48 hours')"
           }
         ],
         "interview_mode": "unknown",
@@ -20542,6 +20955,24 @@
           "source_ref": "s-home",
           "locator": "Academic Scholarship Office page, deadlines: 'Fall 2026/Spring 2027 application cycle'; the catalog is the '2026-27 Edition'; neither names the fellowships' entering class",
           "value_status": "not_published"
+        },
+        {
+          "field_path": "application/milestones/2",
+          "source_ref": "s-guide",
+          "locator": "Guide to Academic Freshman Scholarships, intro",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/1",
+          "source_ref": "s-guide",
+          "locator": "Guide to Academic Freshman Scholarships, Check your New Student Center",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/1",
+          "source_ref": "s-home",
+          "locator": "Academic Scholarship Office home page, New Freshman Scholarships",
+          "value_status": "reported"
         }
       ]
     },
@@ -21730,25 +22161,25 @@
         "Manoa"
       ],
       "related_programs": [],
-      "version_id": "regents-undated",
+      "version_id": "regents-undated-r2",
       "entry_year": null,
       "entry_year_label": "The Manoa pages name no entering class",
       "entry_terms": [
-        "unspecified"
+        "fall"
       ],
       "source_cohort_text": null,
-      "verification_status": "verified",
+      "verification_status": "conflicting",
       "cycle_basis": "none",
       "cycle_through_date": null,
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b6",
-      "owner_spot_checked": true,
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
+      "owner_spot_checked": false,
       "program_status_for_entry": null,
       "coverages": [
-        "other"
+        "partial_or_fixed"
       ],
       "selection_modes": [
-        "unknown"
+        "competitive"
       ],
       "residencies": [
         "in_state"
@@ -21758,8 +22189,10 @@
       "need_roles": [
         "unknown"
       ],
-      "separate_application": "unknown",
-      "deadline_months": [],
+      "separate_application": "required",
+      "deadline_months": [
+        1
+      ],
       "key_deadline": null,
       "source_retrieved_at": "2026-11-15",
       "offers": [
@@ -21768,8 +22201,8 @@
           "parent_offer_id": null,
           "variant_name": "Regents Scholarship (incoming first-year students)",
           "residency": "in_state",
-          "selection_mode": "unknown",
-          "consideration_route": "honors_application",
+          "selection_mode": "competitive",
+          "consideration_route": "multiple",
           "aid_basis": "unclear",
           "need_role": "unknown",
           "funds_limited": null,
@@ -21777,7 +22210,11 @@
             "national_merit_statuses": null,
             "status_required_for_award": null,
             "first_choice_required": null,
-            "gpa": null,
+            "gpa": {
+              "min": 3.7,
+              "scale": null,
+              "basis": "unknown"
+            },
             "test_rules": null,
             "tests_policy_for_scholarship": "unknown",
             "citizenship_eligible": null,
@@ -21786,7 +22223,7 @@
             "major_change_restrictions": null,
             "honors_requirement": true,
             "first_generation_rule": "unknown",
-            "eligibility_notes": "Hawaii residents; incoming first-year students. The student must apply and be accepted to the Honors Program to receive the scholarship. Scholars also complete 10 hours of service each fall or spring semester. The Manoa pages state no GPA minimum, citizenship rule or test rule."
+            "eligibility_notes": "Hawaii residents; first-year, degree-seeking students who enroll at UH Manoa in the semester after high school. The Financial Aid Services page says students with a 3.7 cumulative high school GPA or higher will be considered. The student must also apply and be accepted to the Honors Program to receive the scholarship; the Honors application page asks for a cumulative high school GPA of 3.5 or higher. Scholars complete 10 hours of service each fall and spring semester (20 hours each academic year). The pages state no citizenship rule or test rule. As of Fall 2024 students are no longer required to live on campus."
           },
           "benefits": [
             {
@@ -21803,7 +22240,7 @@
               },
               "duration_terms": "Four years of undergraduate study",
               "exclusions": null,
-              "scope_text": "School words: 'full tuition waivers'; the Manoa pages give no cap or exclusions",
+              "scope_text": "The two Manoa pages word this differently. The Honors page (RAPS) says 'full tuition waivers for four years of undergraduate study'; the Financial Aid Services page calls the Regents Scholarship a merit scholarship whose amount is 'equivalent to full-tuition each year for 4 years' and says the award is applied toward and reduces the student's educational expenses. Recorded as a waiver, following the Honors page; neither page gives a cap or exclusions",
               "advertised_coverage_label": "full tuition waivers",
               "conditions_text": null
             },
@@ -21811,45 +22248,45 @@
               "benefit_id": "b-stipend",
               "category": "stipend",
               "instrument": "cash_stipend",
-              "coverage": "unknown",
+              "coverage": "fixed_amount",
               "amount": {
-                "qualifier": "not_published",
-                "value": null,
+                "qualifier": "exact",
+                "value": 5600,
                 "min": null,
                 "max": null,
-                "period": null
+                "period": "academic_year"
               },
               "duration_terms": "Each fall and spring semester",
               "exclusions": null,
-              "scope_text": "The Manoa pages say a stipend is paid each fall and spring semester and give no amount",
+              "scope_text": "School words: '$5,600 per year stipend'; the Honors page says the stipend is paid each fall and spring semester",
               "advertised_coverage_label": null,
               "conditions_text": null
             },
             {
               "benefit_id": "b-travel",
               "category": "enrichment",
-              "instrument": "unknown",
-              "coverage": "unknown",
+              "instrument": "restricted_fund",
+              "coverage": "fixed_amount",
               "amount": {
-                "qualifier": "not_published",
-                "value": null,
+                "qualifier": "exact",
+                "value": 2500,
                 "min": null,
                 "max": null,
-                "period": null
+                "period": "one_time"
               },
               "duration_terms": "One time",
               "exclusions": null,
-              "scope_text": "The Manoa pages list a one-time travel grant and give no amount",
+              "scope_text": "School words: '$2,500 one-time travel grant'; the Honors page lists a one-time travel grant for Regents Scholars",
               "advertised_coverage_label": null,
               "conditions_text": null
             }
           ],
           "advertised_totals": [],
-          "normalized_coverage": "other"
+          "normalized_coverage": "partial_or_fixed"
         }
       ],
       "application": {
-        "separate_application": "unknown",
+        "separate_application": "required",
         "milestones": [
           {
             "kind": "other",
@@ -21872,22 +22309,95 @@
             },
             "precision": "day",
             "source_date_text": "June 15: Students accepted by this date can join the Honors program in the fall"
+          },
+          {
+            "kind": "admission_deadline",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 1,
+              "day": 5
+            },
+            "precision": "day",
+            "source_date_text": "students must apply for admission by January 5"
+          },
+          {
+            "kind": "application_deadline",
+            "requirement": "required",
+            "date": null,
+            "recurring": null,
+            "precision": "day",
+            "source_date_text": null
           }
         ],
-        "admission_plan_requirement": null,
-        "prerequisites": [],
+        "admission_plan_requirement": "Apply for admission to UH Manoa by January 5; admitted students then receive instructions to submit two supplemental documents (an activities/achievements list and a short-answer essay). The student must also apply separately to the Honors Program and be accepted",
+        "prerequisites": [
+          {
+            "kind": "admission_application",
+            "minimum_lead_days": null,
+            "maximum_lead_days": null,
+            "notes": "Students must apply for admission by January 5; instructions for the supplemental documents are sent only after admission"
+          },
+          {
+            "kind": "portal_credentials",
+            "minimum_lead_days": null,
+            "maximum_lead_days": null,
+            "notes": "The Honors application is submitted through the Makalei portal using the student's @hawaii.edu email; no lead time is stated"
+          },
+          {
+            "kind": "recommendation",
+            "minimum_lead_days": null,
+            "maximum_lead_days": null,
+            "notes": "The Honors application asks for one academic letter of recommendation; the New Warrior Scholarship application no longer requires letters of recommendation (as of Fall 2024)"
+          }
+        ],
         "interview_mode": "unknown",
         "finalist_event_required": null,
-        "notes": "These two dates are the Honors Program's acceptance dates, not a published scholarship deadline: the Honors page says it accepts applications year-round and that an Honors interview is part of every date. The scholarship's own application and its deadline are described on pages of the UH System Office (www.hawaii.edu), which is not an allowed source domain for this school, so they are not recorded."
+        "notes": "The Honors dates (May 1 and June 15) are the Honors Program's acceptance dates, not scholarship deadlines: the Honors page says it accepts applications year-round and an Honors interview is part of every date. The scholarship itself is selected by the Office of Admissions (New Warrior Scholarships page). That page contradicts itself on the supplemental-materials deadline (February 2nd in the intro, January 15 in the Regents Timeline tab) and on notification (April in the intro, around early March in the Timeline tab); the deadline is left empty and the record is marked conflicting. Fall entry only."
       },
-      "renewal_rules": null,
-      "stacking_rules": null,
-      "award_counts": [],
+      "renewal_rules": [
+        {
+          "applies_to": [],
+          "gpa_min": 3.5,
+          "gpa_scale": null,
+          "credit_load_min_per_term": 12,
+          "credit_load_min_per_year": null,
+          "evaluation_timing": "Reviewed every semester",
+          "summer_courses_can_fix_shortfall": null,
+          "max_semesters": null,
+          "notes": "Engaged in the Honors Program. Regents Scholars also complete and document 10 hours of service each fall and spring semester (20 hours each academic year). The page says the award supports enrollment for 4 years and gives no semester count."
+        }
+      ],
+      "stacking_rules": [
+        {
+          "other_aid_type": "institutional_merit",
+          "relation": "not_allowed",
+          "note": "School words: if a student is offered more than one merit award by the Office of Admissions, they may only accept one of the awards"
+        }
+      ],
+      "award_counts": [
+        {
+          "metric": "offers",
+          "qualifier": "exact",
+          "value": 16,
+          "cohort_year": null,
+          "source_ref": "s-nws",
+          "claim": "actual",
+          "denominator": null
+        }
+      ],
       "sources": [
         {
           "source_id": "s-apply",
           "url": "https://manoa.hawaii.edu/undergrad/honors/apply-as-a-first-year-2/",
           "authority": "official_program",
+          "retrieved_at": "2026-11-15",
+          "archive_url": null
+        },
+        {
+          "source_id": "s-nws",
+          "url": "https://manoa.hawaii.edu/fas/types-of-aid/scholarships/new-warrior-scholarships/",
+          "authority": "official_aid_policy",
           "retrieved_at": "2026-11-15",
           "archive_url": null
         },
@@ -21925,22 +22435,10 @@
           "value_status": "reported"
         },
         {
-          "field_path": "offers/0/benefits/1/amount",
-          "source_ref": "s-raps",
-          "locator": "Regents page lists no stipend amount",
-          "value_status": "not_published"
-        },
-        {
           "field_path": "offers/0/benefits/2",
           "source_ref": "s-raps",
           "locator": "Regents and Presidential Scholars page, Regents Scholarship list, fourth bullet",
           "value_status": "reported"
-        },
-        {
-          "field_path": "offers/0/benefits/2/amount",
-          "source_ref": "s-raps",
-          "locator": "Regents page lists no travel grant amount",
-          "value_status": "not_published"
         },
         {
           "field_path": "offers/0/eligibility/honors_requirement",
@@ -21979,22 +22477,130 @@
           "value_status": "not_published"
         },
         {
-          "field_path": "renewal_rules",
-          "source_ref": "s-raps",
-          "locator": "Regents and Presidential Scholars page: no renewal GPA or credit rule on the Manoa pages",
-          "value_status": "not_published"
+          "field_path": "offers/0/eligibility/gpa",
+          "source_ref": "s-nws",
+          "locator": "New Warrior Scholarships page, Regents Scholarship, Criteria for Scholarship Consideration",
+          "value_status": "reported"
         },
         {
-          "field_path": "stacking_rules",
-          "source_ref": "s-raps",
-          "locator": "Regents and Presidential Scholars page: no rule on other aid",
-          "value_status": "not_published"
+          "field_path": "offers/0/eligibility/eligibility_notes",
+          "source_ref": "s-apply",
+          "locator": "Apply to Honors, Who is Eligible to Apply",
+          "value_status": "reported"
         },
         {
-          "field_path": "award_counts",
+          "field_path": "offers/0/selection_mode",
+          "source_ref": "s-nws",
+          "locator": "New Warrior Scholarships page, intro",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/consideration_route",
+          "source_ref": "s-nws",
+          "locator": "New Warrior Scholarships page, Selection Process for Scholarship Award",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/0",
+          "source_ref": "s-nws",
+          "locator": "New Warrior Scholarships page, Regents Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/1/amount",
+          "source_ref": "s-nws",
+          "locator": "New Warrior Scholarships page, Regents Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/2/amount",
+          "source_ref": "s-nws",
+          "locator": "New Warrior Scholarships page, Regents Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-nws",
+          "locator": "New Warrior Scholarships page, Selection Process for Scholarship Award",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/2",
+          "source_ref": "s-nws",
+          "locator": "New Warrior Scholarships page, Timeline for Scholarship Consideration and Award",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/3/date",
+          "source_ref": "s-nws",
+          "locator": "New Warrior Scholarships page, intro",
+          "value_status": "conflicting"
+        },
+        {
+          "field_path": "application/milestones/3/date",
+          "source_ref": "s-nws",
+          "locator": "New Warrior Scholarships page, Regents tab, Timeline for Scholarship Consideration and Award",
+          "value_status": "conflicting"
+        },
+        {
+          "field_path": "application/prerequisites/0",
+          "source_ref": "s-nws",
+          "locator": "New Warrior Scholarships page, intro",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/1",
+          "source_ref": "s-apply",
+          "locator": "Apply to Honors, Application Process",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/2",
+          "source_ref": "s-apply",
+          "locator": "Apply to Honors, Application Process",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "entry_terms",
+          "source_ref": "s-nws",
+          "locator": "New Warrior Scholarships page, Regents Timeline tab",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-nws",
+          "locator": "New Warrior Scholarships page, Regents Scholarship, Renewal Criteria",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-nws",
+          "locator": "New Warrior Scholarships page, Regents Scholarship, Renewal Criteria",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
+          "source_ref": "s-nws",
+          "locator": "New Warrior Scholarships page, Regents Scholarship, Renewal Criteria",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "renewal_rules/0",
           "source_ref": "s-raps",
-          "locator": "Regents and Presidential Scholars page: no award count",
-          "value_status": "not_published"
+          "locator": "Regents and Presidential Scholars page, RAPS Service Requirements",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/0",
+          "source_ref": "s-nws",
+          "locator": "New Warrior Scholarships page, Criteria for Scholarship Consideration",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "award_counts/0",
+          "source_ref": "s-nws",
+          "locator": "New Warrior Scholarships page, Criteria for Scholarship Consideration",
+          "value_status": "reported"
         }
       ]
     },
@@ -23720,7 +24326,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "nr-national-merit-undated",
+      "version_id": "nr-national-merit-undated-r2",
       "entry_year": null,
       "entry_year_label": "Page names no entering class for these awards (the Academic Merit chart on the same page is headed 2026-2027)",
       "entry_terms": [
@@ -23730,8 +24336,8 @@
       "verification_status": "verified",
       "cycle_basis": "none",
       "cycle_through_date": null,
-      "last_reviewed_at": "2026-11-14",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-canary-A",
+      "last_reviewed_at": "2026-11-15",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": null,
       "coverages": [
@@ -23752,7 +24358,7 @@
       "need_roles": [
         "unknown"
       ],
-      "separate_application": "unknown",
+      "separate_application": "no_form_other_steps_required",
       "deadline_months": [],
       "key_deadline": null,
       "source_retrieved_at": "2026-11-14",
@@ -23976,7 +24582,7 @@
         }
       ],
       "application": {
-        "separate_application": "unknown",
+        "separate_application": "no_form_other_steps_required",
         "milestones": [],
         "admission_plan_requirement": null,
         "prerequisites": [],
@@ -24002,7 +24608,13 @@
           "notes": "Renewable for up to four years as long as all terms and conditions are met. The page does not state a GPA or credit rule."
         }
       ],
-      "stacking_rules": null,
+      "stacking_rules": [
+        {
+          "other_aid_type": "institutional_merit",
+          "relation": "not_allowed",
+          "note": "School words: 'These cannot be stacked with the Academic Merit awards.' (stated for the Academic Excellence National Merit Finalist/Semifinalist Scholarship)"
+        }
+      ],
       "award_counts": [],
       "sources": [
         {
@@ -24127,6 +24739,18 @@
           "source_ref": "s-nr",
           "locator": "Non-Resident Freshman page: only the Academic Merit chart is headed 2026-2027; the National Merit sections name no year",
           "value_status": "not_published"
+        },
+        {
+          "field_path": "stacking_rules/0",
+          "source_ref": "s-nr",
+          "locator": "Academic Excellence National Merit Finalist/Semifinalist Scholarship",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-nr",
+          "locator": "How to Apply, Academic Excellence section",
+          "value_status": "reported"
         }
       ]
     },
@@ -24148,7 +24772,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "stamps-scholars-award-fall-2027-r2",
+      "version_id": "stamps-scholars-award-fall-2027-r3",
       "entry_year": 2027,
       "entry_year_label": "Fall 2027 entry",
       "entry_terms": [
@@ -24159,8 +24783,8 @@
       "cycle_basis": "entry_year",
       "cycle_through_date": "2027-02-04",
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-fable-5-2, owner ruling 2026-11-15",
-      "owner_spot_checked": true,
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
+      "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
         "full_school_coa"
@@ -24288,14 +24912,6 @@
             "recurring": null,
             "precision": "day",
             "source_date_text": "December 1, 2026; must be admitted to Mizzou and the Honors College by Dec. 1 (Nov. 1 strongly encouraged)"
-          },
-          {
-            "kind": "supporting_materials_deadline",
-            "requirement": "priority",
-            "date": "2026-12-15",
-            "recurring": null,
-            "precision": "day",
-            "source_date_text": "December 15, 2026 (official high school transcript for priority merit scholarship consideration)"
           },
           {
             "kind": "application_deadline",
@@ -24465,18 +25081,12 @@
         },
         {
           "field_path": "application/milestones/2",
-          "source_ref": "s-adm",
-          "locator": "Freshman scholarships page, Key Dates table",
-          "value_status": "reported"
-        },
-        {
-          "field_path": "application/milestones/3",
           "source_ref": "s-hon",
           "locator": "Stamps Scholars page, \"Deadlines and Notifications\"",
           "value_status": "reported"
         },
         {
-          "field_path": "application/milestones/4",
+          "field_path": "application/milestones/3",
           "source_ref": "s-hon",
           "locator": "Stamps Scholars page, \"Deadlines and Notifications\"",
           "value_status": "reported"
@@ -25866,9 +26476,7 @@
       "program_family": "national_merit",
       "awarding_authority": "institution",
       "program_status": "active",
-      "applicable_campuses": [
-        "Norman"
-      ],
+      "applicable_campuses": [],
       "related_programs": [],
       "version_id": "nonresident-2027",
       "entry_year": 2027,
@@ -27176,7 +27784,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "handler-undated",
+      "version_id": "handler-undated-r2",
       "entry_year": null,
       "entry_year_label": "Pages name no entering class or year (nominations September 15 - November 30 and December 1 have no year)",
       "entry_terms": [
@@ -27187,7 +27795,7 @@
       "cycle_basis": "none",
       "cycle_through_date": null,
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b4",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -27373,7 +27981,7 @@
                 "value": 5000,
                 "min": null,
                 "max": null,
-                "period": null
+                "period": "total_program"
               },
               "duration_terms": null,
               "exclusions": null,
@@ -27413,7 +28021,14 @@
           }
         ],
         "admission_plan_requirement": null,
-        "prerequisites": [],
+        "prerequisites": [
+          {
+            "kind": "other",
+            "minimum_lead_days": null,
+            "maximum_lead_days": null,
+            "notes": "Applicants must complete the necessary financial aid documents (the page names the CSS Profile and FAFSA as the way need is shown); no additional scholarship materials are required"
+          }
+        ],
         "interview_mode": "virtual",
         "finalist_event_required": true,
         "notes": "CONFLICT on route: the scholarships page says the award 'requires a nomination from a recommender who is not related to the prospective student'; the Handler admissions page says every first-year applicant is reviewed 'simply by submitting an application ... no additional materials are required' while also inviting counselors, teachers and community officials to nominate (not students or parents). Nominations open September 15 and close November 30 (recurring, no year); they are not recorded as milestones because whether that step is required is exactly what the two pages disagree on. The admissions page says the application need not be Early Decision. Finalists are invited to a two-part virtual interview event in mid-February; recipients may be invited to River Campus in late spring."
@@ -27436,6 +28051,11 @@
           "other_aid_type": "federal_or_state_need",
           "relation": "counts_within_package",
           "note": "The scholarship is combined with federal and state grants and scholarships to cover tuition and mandatory fees."
+        },
+        {
+          "other_aid_type": "institutional_merit",
+          "relation": "not_allowed",
+          "note": "School words: 'Students are eligible to receive only one merit scholarship from the University of Rochester.' The Handler admissions page adds that finalists not awarded the Handler Scholarship remain eligible for other competitive merit scholarships"
         }
       ],
       "award_counts": [],
@@ -27598,6 +28218,24 @@
           "field_path": "stacking_rules/0",
           "source_ref": "s-adm",
           "locator": "Handler page, Scholarship coverage, Tuition and fees",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/benefits/7/amount",
+          "source_ref": "s-adm",
+          "locator": "Handler enrichment fund",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "stacking_rules/1",
+          "source_ref": "s-fa",
+          "locator": "Scholarships page, Merit scholarships (merit-based aid)",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/0",
+          "source_ref": "s-adm",
+          "locator": "Handler page, How to apply",
           "value_status": "reported"
         }
       ]
@@ -29685,7 +30323,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "rees-chancellors-fall-2027",
+      "version_id": "rees-chancellors-fall-2027-r2",
       "entry_year": 2027,
       "entry_year_label": null,
       "entry_terms": [
@@ -29696,7 +30334,7 @@
       "cycle_basis": "entry_year",
       "cycle_through_date": null,
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b4",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -29741,7 +30379,7 @@
             "citizenship_text": "U.S. residents or DACA recipients",
             "majors_allowed": null,
             "major_change_restrictions": null,
-            "honors_requirement": null,
+            "honors_requirement": true,
             "first_generation_rule": "unknown",
             "eligibility_notes": "Factors for review include weighted GPA, rigor of curriculum, SAT/ACT scores (if applicable), class rank (if applicable), extracurricular activities and the quality of the Common Application essay or Pitt personal statement; high school research experience and leadership are highly recommended. The page states no minimum GPA or score, and the test-policy wording ('if applicable') is not specific enough to record. The program was renamed and expanded from the Chancellor's Scholarship."
           },
@@ -29984,6 +30622,12 @@
           "field_path": "application/milestones/3",
           "source_ref": "s-prog",
           "locator": "Application timeline paragraph",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "offers/0/eligibility/honors_requirement",
+          "source_ref": "s-prog",
+          "locator": "Rees-Chancellor's Scholars page, Admission",
           "value_status": "reported"
         }
       ]
@@ -32919,7 +33563,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "vt-stamps-undated",
+      "version_id": "vt-stamps-undated-r2",
       "entry_year": null,
       "entry_year_label": "Recruitment page dates are September 1, 2026 and January 8, 2027; no entering class is named",
       "entry_terms": [
@@ -32930,7 +33574,7 @@
       "cycle_basis": "milestone_dates",
       "cycle_through_date": "2027-01-08",
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b3",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -33099,7 +33743,7 @@
           "note": "An individual student may not receive more than one of the listed Honors recruitment scholarships"
         },
         {
-          "other_aid_type": "outside_scholarship",
+          "other_aid_type": "other",
           "relation": "counts_within_package",
           "note": "Stamps covers estimated cost of attendance filling in after any other scholarships won"
         }
@@ -34024,7 +34668,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "danforth-scholars-class-2031",
+      "version_id": "danforth-scholars-class-2031-r2",
       "entry_year": 2027,
       "entry_year_label": "Class of 2031 (application cycle ending January 4, 2027)",
       "entry_terms": [
@@ -34035,7 +34679,7 @@
       "cycle_basis": "entry_year",
       "cycle_through_date": "2027-01-04",
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b5",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -34222,13 +34866,13 @@
             "source_date_text": "an interview in March"
           }
         ],
-        "admission_plan_requirement": "Complete the Common Application or Coalition Application, then the separate scholar program application through the WashU Pathway (a short answer of 250 words per program; Danforth/Ervin/Rodriguez are the three Signature Scholar Programs)",
+        "admission_plan_requirement": "Complete the Common Application or Coalition Application (QuestBridge applicants are also eligible for consideration), then the separate scholar program application through the WashU Pathway (a short answer of 250 words per program; Danforth/Ervin/Rodriguez are the three Signature Scholar Programs)",
         "prerequisites": [
           {
             "kind": "admission_application",
             "minimum_lead_days": null,
             "maximum_lead_days": null,
-            "notes": "Common or Coalition Application; the scholar application opens in the WashU Pathway after the admission application is submitted"
+            "notes": "Common or Coalition Application (QuestBridge applicants are also eligible for consideration); the scholar application opens in the WashU Pathway after the admission application is submitted"
           }
         ],
         "interview_mode": "virtual",
@@ -34399,6 +35043,18 @@
           "source_ref": "s-faq",
           "locator": "FAQ, need-based aid question",
           "value_status": "reported"
+        },
+        {
+          "field_path": "application/admission_plan_requirement",
+          "source_ref": "s-faq",
+          "locator": "Scholar Program FAQ, How do I apply?",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/0",
+          "source_ref": "s-faq",
+          "locator": "Scholar Program FAQ, How do I apply?",
+          "value_status": "reported"
         }
       ]
     },
@@ -34420,7 +35076,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "ervin-scholars-class-2031",
+      "version_id": "ervin-scholars-class-2031-r2",
       "entry_year": 2027,
       "entry_year_label": "Class of 2031 (application cycle ending January 4, 2027)",
       "entry_terms": [
@@ -34431,7 +35087,7 @@
       "cycle_basis": "entry_year",
       "cycle_through_date": "2027-01-04",
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b5",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -34624,13 +35280,13 @@
             "source_date_text": "an interview in March"
           }
         ],
-        "admission_plan_requirement": "Complete the Common Application or Coalition Application, then the separate scholar program application through the WashU Pathway (a short answer of 250 words per program; Danforth/Ervin/Rodriguez are the three Signature Scholar Programs)",
+        "admission_plan_requirement": "Complete the Common Application or Coalition Application (QuestBridge applicants are also eligible for consideration), then the separate scholar program application through the WashU Pathway (a short answer of 250 words per program; Danforth/Ervin/Rodriguez are the three Signature Scholar Programs)",
         "prerequisites": [
           {
             "kind": "admission_application",
             "minimum_lead_days": null,
             "maximum_lead_days": null,
-            "notes": "Common or Coalition Application; the scholar application opens in the WashU Pathway after the admission application is submitted"
+            "notes": "Common or Coalition Application (QuestBridge applicants are also eligible for consideration); the scholar application opens in the WashU Pathway after the admission application is submitted"
           }
         ],
         "interview_mode": "unknown",
@@ -34795,6 +35451,18 @@
           "source_ref": "s-faq",
           "locator": "FAQ, need-based aid question",
           "value_status": "reported"
+        },
+        {
+          "field_path": "application/admission_plan_requirement",
+          "source_ref": "s-faq",
+          "locator": "Scholar Program FAQ, How do I apply?",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/0",
+          "source_ref": "s-faq",
+          "locator": "Scholar Program FAQ, How do I apply?",
+          "value_status": "reported"
         }
       ]
     },
@@ -34816,7 +35484,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "rodriguez-scholars-class-2031",
+      "version_id": "rodriguez-scholars-class-2031-r2",
       "entry_year": 2027,
       "entry_year_label": "Class of 2031 (application cycle ending January 4, 2027)",
       "entry_terms": [
@@ -34827,7 +35495,7 @@
       "cycle_basis": "entry_year",
       "cycle_through_date": "2027-01-04",
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b5",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -35014,13 +35682,13 @@
             "source_date_text": "an interview in March"
           }
         ],
-        "admission_plan_requirement": "Complete the Common Application or Coalition Application, then the separate scholar program application through the WashU Pathway (a short answer of 250 words per program; Danforth/Ervin/Rodriguez are the three Signature Scholar Programs)",
+        "admission_plan_requirement": "Complete the Common Application or Coalition Application (QuestBridge applicants are also eligible for consideration), then the separate scholar program application through the WashU Pathway (a short answer of 250 words per program; Danforth/Ervin/Rodriguez are the three Signature Scholar Programs)",
         "prerequisites": [
           {
             "kind": "admission_application",
             "minimum_lead_days": null,
             "maximum_lead_days": null,
-            "notes": "Common or Coalition Application; the scholar application opens in the WashU Pathway after the admission application is submitted"
+            "notes": "Common or Coalition Application (QuestBridge applicants are also eligible for consideration); the scholar application opens in the WashU Pathway after the admission application is submitted"
           }
         ],
         "interview_mode": "virtual",
@@ -35191,6 +35859,18 @@
           "source_ref": "s-faq",
           "locator": "FAQ, need-based aid question",
           "value_status": "reported"
+        },
+        {
+          "field_path": "application/admission_plan_requirement",
+          "source_ref": "s-faq",
+          "locator": "Scholar Program FAQ, How do I apply?",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/prerequisites/0",
+          "source_ref": "s-faq",
+          "locator": "Scholar Program FAQ, How do I apply?",
+          "value_status": "reported"
         }
       ]
     },
@@ -35210,7 +35890,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "1693-scholars-2026",
+      "version_id": "1693-scholars-2026-r2",
       "entry_year": 2026,
       "entry_year_label": "2026 cycle (past): the only published timeline, headed 2026; no later cycle published",
       "entry_terms": [
@@ -35221,7 +35901,7 @@
       "cycle_basis": "entry_year",
       "cycle_through_date": "2026-04-13",
       "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b2",
+      "reviewed_by": "agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15",
       "owner_spot_checked": false,
       "program_status_for_entry": "unknown",
       "coverages": [
@@ -35240,7 +35920,7 @@
       "need_roles": [
         "unknown"
       ],
-      "separate_application": "not_required",
+      "separate_application": "no_form_other_steps_required",
       "deadline_months": [
         1
       ],
@@ -35477,7 +36157,7 @@
         }
       ],
       "application": {
-        "separate_application": "not_required",
+        "separate_application": "no_form_other_steps_required",
         "milestones": [
           {
             "kind": "admission_deadline",
@@ -35518,6 +36198,14 @@
             "recurring": null,
             "precision": "day",
             "source_date_text": "April 13 - April 20 (scholars selected and notified)"
+          },
+          {
+            "kind": "other",
+            "requirement": "required",
+            "date": "2026-03-18",
+            "recurring": null,
+            "precision": "day",
+            "source_date_text": "March 18 - March 21 - Virtual Finalist Presentations"
           }
         ],
         "admission_plan_requirement": "Apply to W&M first-year admission (Regular Decision, ED, ED II, joint degree or international); every first-year applicant is reviewed",
@@ -35789,6 +36477,18 @@
           "field_path": "award_counts/0",
           "source_ref": "s-sel",
           "locator": "Selection Information, Timeline, April 13 - April 20",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/separate_application",
+          "source_ref": "s-sel",
+          "locator": "Selection page, intro",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/5",
+          "source_ref": "s-sel",
+          "locator": "2026 Application, Nomination and Notification Timeline",
           "value_status": "reported"
         }
       ]

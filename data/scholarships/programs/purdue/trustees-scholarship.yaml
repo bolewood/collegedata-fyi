@@ -2,8 +2,7 @@ schema_version: 1
 program_id: trustees-scholarship
 school_id: purdue
 ipeds_id: '243780'
-applicable_campuses:
-- West Lafayette
+applicable_campuses: []
 official_name: Trustees Scholarship
 aliases: []
 program_family: other

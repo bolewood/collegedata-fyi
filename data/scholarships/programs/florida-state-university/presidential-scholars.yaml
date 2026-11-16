@@ -329,3 +329,331 @@ versions:
     short_excerpt: null
     value_status: not_published
     reported_value: null
+- version_id: presidential-scholars-undated-r2
+  supersedes: presidential-scholars-undated
+  entry_year: null
+  entry_year_label: Pages name a Dec. 1, 2026 application deadline and 2027 interview dates but no entering
+    class
+  entry_terms:
+  - unspecified
+  source_cohort_text: 'Application Process page dates: Dec. 1, 2026; Feb. 18, 2027; April 2-3, 2027'
+  verification_status: conflicting
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: honors_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: true
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: true
+      first_generation_rule: unknown
+      eligibility_notes: Open to high school seniors admitted into the FSU Honors Program. 'Scholarship
+        funds are limited, so students are encouraged to apply early.' Program obligations on the benefits
+        page include a four-year curriculum, monthly Sunday meetings and first-year residence in Landis
+        Hall; a participation agreement is signed on acceptance. First-year applicants; all finalists
+        are admitted to the Honors Program. The $42,000 package carries a 'Presidential Scholars selected
+        starting Fall 2024' footnote on the admissions page, which dates the amount, not the entering
+        class. The current-students renewal page is written for enrolled students and gives the waiver
+        as $73,080.
+    benefits:
+    - benefit_id: b-presidential
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 14000
+        min: null
+        max: null
+        period: total_program
+      duration_terms: Distributed over four years
+      exclusions: null
+      scope_text: Presidential Scholarship
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-vires
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 16000
+        min: null
+        max: null
+        period: total_program
+      duration_terms: Distributed over four years
+      exclusions: null
+      scope_text: Admissions (Vires) Scholarship, as the Scholarship Benefits page describes it; the admissions
+        page calls Vires an award for Florida residents
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-enrichment
+      category: enrichment
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 12000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'Educational enrichment: international programs, research and creative projects, service
+        learning, internships, entrepreneurial activities'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-waiver
+      category: nonresident_differential
+      instrument: tuition_waiver
+      coverage: full
+      amount: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Waiver of the out-of-state portion of tuition for out-of-state applicants; this is a
+        waiver, not a scholarship. The value is in conflict between FSU pages ($73,808 vs $73,080 over
+        four years)
+      advertised_coverage_label: null
+      conditions_text: Out-of-state applicants
+    advertised_totals:
+    - amount:
+        qualifier: exact
+        value: 42000
+        min: null
+        max: null
+        period: total_program
+      scope_text: 'School-quoted total award package: $14,000 Presidential Scholarship, $16,000 Vires
+        scholarship and $12,000 enrichment; the out-of-state waiver is quoted separately'
+  application:
+    separate_application: required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: '2026-12-01'
+      recurring: null
+      precision: day
+      source_date_text: Dec. 1, 2026 (FSU application)
+    - kind: application_deadline
+      requirement: required
+      date: '2026-12-01'
+      recurring: null
+      precision: day
+      source_date_text: 11:59 p.m. EST on Dec. 1, 2026 (Honors/Presidential Scholars application essay)
+    - kind: notification
+      requirement: recommended
+      date: '2027-02-18'
+      recurring: null
+      precision: day
+      source_date_text: Feb. 18, 2027 (admission and Honors status; semi-finalists named)
+    - kind: supporting_materials_deadline
+      requirement: required
+      date: '2027-02-28'
+      recurring: null
+      precision: day
+      source_date_text: Feb. 28, 2027, 11:59 p.m. EST (semi-finalist video responses)
+    - kind: finalist_event
+      requirement: required
+      date: '2027-04-02'
+      recurring: null
+      precision: day
+      source_date_text: April 2-3, 2027 (Recruitment Weekend, required on-campus interview)
+    admission_plan_requirement: Apply to FSU by Dec. 1, 2026 and answer 'Yes' to the Honors Program interest
+      question
+    prerequisites:
+    - kind: portal_credentials
+      minimum_lead_days: 2
+      maximum_lead_days: null
+      notes: After the FSU application is submitted, the University Honors Application becomes available
+        on the Application Status Check; for Common App applicants this 'may take up to 48 hours', and
+        the essay is due 11:59 p.m. EST on Dec. 1, 2026
+    interview_mode: in_person
+    finalist_event_required: true
+    notes: Semi-finalists also submit two video responses. Presidential Scholars nominated for the Stamps
+      Scholarship have a final interview with the Stamps Scholars Program national leadership team.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.0
+    gpa_scale: null
+    credit_load_min_per_term: 15
+    credit_load_min_per_year: null
+    evaluation_timing: Reviewed each semester; the award renews automatically if the requirements are
+      met
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: Enrollment in 15 credit hours each semester, a 3.0 cumulative FSU GPA and consistent degree
+      progress, per the current-students renewal table.
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-adm
+    url: https://admissions.fsu.edu/first-year/scholarships
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: 15e087c1d723431b0b6c46c06a93154bc80cf66ab7544048a920bbabb6f1d3e2
+    archive_url: null
+  - source_id: s-ben
+    url: https://presidentialscholars.fsu.edu/scholarship-benefits
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: ed450a97af3a4f3d925d2bbbc7a41e6d772691dbb851c7f8445d9d39fc701d32
+    archive_url: null
+  - source_id: s-app
+    url: https://presidentialscholars.fsu.edu/application-process
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 83a49982f7087045011ee9367606930f55adf537498c2ae669602e1a44ea76fc
+    archive_url: null
+  - source_id: s-ren
+    url: https://admissions.fsu.edu/first-year/scholarships/current-students
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 21cb0aa601c58987cafa09304fa0388c648135275186c3088acd3f08d21d9661
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-adm
+    locator: Admissions Scholarships page, Presidential Scholars Program and Scholarship, first paragraph
+    short_excerpt: Students who apply to the University Honors Program will automatically be considered
+      for this invitation-only scholarship program, which incorporates an interview process.
+    value_status: reported
+    reported_value: null
+  - field_path: /awarding_authority
+    source_ref: s-ben
+    locator: Scholarship Benefits page, first paragraph
+    short_excerpt: The Presidential Scholars Program offers the premier university-funded undergraduate
+      merit scholarship at Florida State University.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/advertised_totals/0/amount
+    source_ref: s-ben
+    locator: Scholarship Benefits page, 'The total award package'
+    short_excerpt: The total award package for Presidential Scholars is $42,000, plus an out-of-state
+      tuition waiver (valued at $73,808 over four years).
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-ben
+    locator: Scholarship Benefits page, list under 'This includes'
+    short_excerpt: $14,000 Presidential Scholarship distributed over four years
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-ben
+    locator: Scholarship Benefits page, list under 'This includes'
+    short_excerpt: $16,000 Admissions (Vires) Scholarship distributed over four years
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-ben
+    locator: Scholarship Benefits page, list under 'This includes'
+    short_excerpt: $12,000 for educational enrichment opportunities including international experiences
+      such as
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3/conditions_text
+    source_ref: s-ren
+    locator: Current-students page, renewal table, Presidential Scholars row
+    short_excerpt: Out-of-state applicants will also receive a full out-of-state tuition waiver valued
+      at $73,080 over four years.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-adm
+    locator: Admissions Scholarships page, Presidential Scholars Program and Scholarship
+    short_excerpt: plus an out-of-state tuition waiver valued at $73,808 distributed across four years
+    value_status: conflicting
+    reported_value: 73808
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-ren
+    locator: Current-students page, renewal table, Presidential Scholars row
+    short_excerpt: Out-of-state applicants will also receive a full out-of-state tuition waiver valued
+      at $73,080 over four years.
+    value_status: conflicting
+    reported_value: 73080
+  - field_path: application/separate_application
+    source_ref: s-app
+    locator: Application Process page, step 2
+    short_excerpt: Students must indicate their interest in and complete their supplemental University
+      Honors Program application essay
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-ren
+    locator: Current-students page, renewal table, Presidential Scholars row
+    short_excerpt: Maintenance of a cumulative FSU grade point average of 3.0 or better
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-app
+    locator: Application Process page, step 1
+    short_excerpt: first-year applicants must first submit an application to Florida State University
+      by Dec. 1, 2026
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-app
+    locator: Application Process page, step 2
+    short_excerpt: 11:59 p.m. EST on Dec. 1, 2026
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-app
+    locator: Application Process page, step 2
+    short_excerpt: Incoming prospective first-year students will be notified of their admission status
+      to FSU and to University Honors on Feb. 18, 2027.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-app
+    locator: Application Process page, step 3
+    short_excerpt: These are due Feb. 28, 2027, by 11:59 p.m. EST
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/4
+    source_ref: s-app
+    locator: Application Process page, step 4
+    short_excerpt: required on-campus interview during Recruitment Weekend, April 2-3, 2027
+    value_status: reported
+    reported_value: null
+  - field_path: application/interview_mode
+    source_ref: s-app
+    locator: Application Process page, step 4
+    short_excerpt: required on-campus interview during Recruitment Weekend
+    value_status: reported
+    reported_value: null
+  - field_path: application/finalist_event_required
+    source_ref: s-app
+    locator: Application Process page, step 4
+    short_excerpt: required on-campus interview during Recruitment Weekend
+    value_status: reported
+    reported_value: true
+  - field_path: entry_year
+    source_ref: s-app
+    locator: 'Application Process page, steps 1-4: dates in 2026 and 2027; no entering class named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: application/prerequisites/0
+    source_ref: s-app
+    locator: Application Process, Step 1
+    short_excerpt: For students applying through the Common App, this may take up to 48 hours.
+    value_status: reported
+    reported_value: null

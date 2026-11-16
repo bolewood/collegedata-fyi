@@ -246,3 +246,412 @@ versions:
     short_excerpt: null
     value_status: not_published
     reported_value: null
+- version_id: regents-undated-r2
+  supersedes: regents-undated
+  entry_year: null
+  entry_year_label: The Manoa pages name no entering class
+  entry_terms:
+  - fall
+  source_cohort_text: null
+  verification_status: conflicting
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15
+  owner_spot_checked: false
+  program_status_for_entry: null
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: Regents Scholarship (incoming first-year students)
+    residency: in_state
+    selection_mode: competitive
+    consideration_route: multiple
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa:
+        min: 3.7
+        scale: null
+        basis: unknown
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: true
+      first_generation_rule: unknown
+      eligibility_notes: Hawaii residents; first-year, degree-seeking students who enroll at UH Manoa
+        in the semester after high school. The Financial Aid Services page says students with a 3.7 cumulative
+        high school GPA or higher will be considered. The student must also apply and be accepted to the
+        Honors Program to receive the scholarship; the Honors application page asks for a cumulative high
+        school GPA of 3.5 or higher. Scholars complete 10 hours of service each fall and spring semester
+        (20 hours each academic year). The pages state no citizenship rule or test rule. As of Fall 2024
+        students are no longer required to live on campus.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: tuition_waiver
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Four years of undergraduate study
+      exclusions: null
+      scope_text: The two Manoa pages word this differently. The Honors page (RAPS) says 'full tuition
+        waivers for four years of undergraduate study'; the Financial Aid Services page calls the Regents
+        Scholarship a merit scholarship whose amount is 'equivalent to full-tuition each year for 4 years'
+        and says the award is applied toward and reduces the student's educational expenses. Recorded
+        as a waiver, following the Honors page; neither page gives a cap or exclusions
+      advertised_coverage_label: full tuition waivers
+      conditions_text: null
+    - benefit_id: b-stipend
+      category: stipend
+      instrument: cash_stipend
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 5600
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: Each fall and spring semester
+      exclusions: null
+      scope_text: 'School words: ''$5,600 per year stipend''; the Honors page says the stipend is paid
+        each fall and spring semester'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-travel
+      category: enrichment
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 2500
+        min: null
+        max: null
+        period: one_time
+      duration_terms: One time
+      exclusions: null
+      scope_text: 'School words: ''$2,500 one-time travel grant''; the Honors page lists a one-time travel
+        grant for Regents Scholars'
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  application:
+    separate_application: required
+    milestones:
+    - kind: other
+      requirement: priority
+      date: null
+      recurring:
+        month: 5
+        day: 1
+      precision: day
+      source_date_text: 'May 1: Students accepted by this date (including Honors interview) have priority
+        registration'
+    - kind: other
+      requirement: recommended
+      date: null
+      recurring:
+        month: 6
+        day: 15
+      precision: day
+      source_date_text: 'June 15: Students accepted by this date can join the Honors program in the fall'
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 1
+        day: 5
+      precision: day
+      source_date_text: students must apply for admission by January 5
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring: null
+      precision: day
+      source_date_text: null
+    admission_plan_requirement: Apply for admission to UH Manoa by January 5; admitted students then receive
+      instructions to submit two supplemental documents (an activities/achievements list and a short-answer
+      essay). The student must also apply separately to the Honors Program and be accepted
+    prerequisites:
+    - kind: admission_application
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Students must apply for admission by January 5; instructions for the supplemental documents
+        are sent only after admission
+    - kind: portal_credentials
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: The Honors application is submitted through the Makalei portal using the student's @hawaii.edu
+        email; no lead time is stated
+    - kind: recommendation
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: The Honors application asks for one academic letter of recommendation; the New Warrior Scholarship
+        application no longer requires letters of recommendation (as of Fall 2024)
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: 'The Honors dates (May 1 and June 15) are the Honors Program''s acceptance dates, not scholarship
+      deadlines: the Honors page says it accepts applications year-round and an Honors interview is part
+      of every date. The scholarship itself is selected by the Office of Admissions (New Warrior Scholarships
+      page). That page contradicts itself on the supplemental-materials deadline (February 2nd in the
+      intro, January 15 in the Regents Timeline tab) and on notification (April in the intro, around early
+      March in the Timeline tab); the deadline is left empty and the record is marked conflicting. Fall
+      entry only.'
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.5
+    gpa_scale: null
+    credit_load_min_per_term: 12
+    credit_load_min_per_year: null
+    evaluation_timing: Reviewed every semester
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: Engaged in the Honors Program. Regents Scholars also complete and document 10 hours of service
+      each fall and spring semester (20 hours each academic year). The page says the award supports enrollment
+      for 4 years and gives no semester count.
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: not_allowed
+    note: 'School words: if a student is offered more than one merit award by the Office of Admissions,
+      they may only accept one of the awards'
+  award_counts:
+  - metric: offers
+    qualifier: exact
+    value: 16
+    cohort_year: null
+    source_ref: s-nws
+    claim: actual
+    denominator: null
+  sources:
+  - source_id: s-raps
+    url: https://manoa.hawaii.edu/undergrad/honors/regents-and-presidential-scholars-2/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: e513aaec73f15520dfd7eb8da1b1ab02b9b8e380a4559b1e021a6e638fb994ff
+    archive_url: null
+  - source_id: s-apply
+    url: https://manoa.hawaii.edu/undergrad/honors/apply-as-a-first-year-2/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 9a575974992335b07e4a80fa864921701de82e221e4809537c0cf2757a0aa566
+    archive_url: null
+  - source_id: s-nws
+    url: https://manoa.hawaii.edu/fas/types-of-aid/scholarships/new-warrior-scholarships/
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: null
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/consideration_route
+    source_ref: s-raps
+    locator: Regents and Presidential Scholars page, Regents Scholarship list, third bullet
+    short_excerpt: Apply separately for Honors. Student must apply and be accepted to Honors to receive
+      scholarship.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-raps
+    locator: Regents and Presidential Scholars page, Regents Scholarship list, third bullet
+    short_excerpt: Students receive full tuition waivers for four years of undergraduate study, plus a
+      stipend each Fall and Spring semester
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-raps
+    locator: Regents page lists no tuition dollar amount
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-raps
+    locator: Regents and Presidential Scholars page, Regents Scholarship list, third bullet
+    short_excerpt: Students receive full tuition waivers for four years of undergraduate study, plus a
+      stipend each Fall and Spring semester
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-raps
+    locator: Regents and Presidential Scholars page, Regents Scholarship list, fourth bullet
+    short_excerpt: One-time travel grant.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/honors_requirement
+    source_ref: s-raps
+    locator: Regents and Presidential Scholars page, Regents Scholarship list, third bullet
+    short_excerpt: Student must apply and be accepted to Honors to receive scholarship.
+    value_status: reported
+    reported_value: true
+  - field_path: offers/0/residency
+    source_ref: s-raps
+    locator: Regents and Presidential Scholars page, Regents Scholarship list
+    short_excerpt: Must be a Hawaiʻi resident
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-apply
+    locator: Apply to Honors, first-year deadlines paragraph
+    short_excerpt: 'May 1: Students accepted by this date (including Honors interview) have priority registration
+      for all their Fall classes.'
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-apply
+    locator: Apply to Honors, first-year deadlines paragraph
+    short_excerpt: 'June 15: Students accepted by this date can join the Honors program in the fall and
+      register for Fall Honors classes.'
+    value_status: reported
+    reported_value: null
+  - field_path: application/interview_mode
+    source_ref: s-apply
+    locator: 'Apply to Honors, scheduling paragraph: an interview is required, no format is named'
+    short_excerpt: Your application cannot be processed before you meet with an Honors faculty member.
+    value_status: reported
+    reported_value: unknown
+  - field_path: entry_year
+    source_ref: s-raps
+    locator: 'Regents and Presidential Scholars page: no entering class named'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/eligibility/gpa
+    source_ref: s-nws
+    locator: New Warrior Scholarships page, Regents Scholarship, Criteria for Scholarship Consideration
+    short_excerpt: Students with a 3.7 cumulative high school GPA or higher will be considered for this
+      scholarship
+    value_status: reported
+    reported_value: 3.7
+  - field_path: offers/0/eligibility/eligibility_notes
+    source_ref: s-apply
+    locator: Apply to Honors, Who is Eligible to Apply
+    short_excerpt: Cumulative high school GPA of 3.5 or higher
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-nws
+    locator: New Warrior Scholarships page, intro
+    short_excerpt: higher-tier, selective scholarship awards
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/consideration_route
+    source_ref: s-nws
+    locator: New Warrior Scholarships page, Selection Process for Scholarship Award
+    short_excerpt: In addition to submitting the admission application, students must also submit 2 supplemental
+      documents
+    value_status: reported
+    reported_value: multiple
+  - field_path: offers/0/benefits/0
+    source_ref: s-nws
+    locator: New Warrior Scholarships page, Regents Scholarship
+    short_excerpt: The award amount is equivalent to full-tuition each year for 4 years
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-nws
+    locator: New Warrior Scholarships page, Regents Scholarship
+    short_excerpt: $5,600 per year stipend + $2,500 one-time travel grant
+    value_status: reported
+    reported_value: 5600
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-nws
+    locator: New Warrior Scholarships page, Regents Scholarship
+    short_excerpt: $5,600 per year stipend + $2,500 one-time travel grant
+    value_status: reported
+    reported_value: 2500
+  - field_path: application/separate_application
+    source_ref: s-nws
+    locator: New Warrior Scholarships page, Selection Process for Scholarship Award
+    short_excerpt: In addition to submitting the admission application, students must also submit 2 supplemental
+      documents
+    value_status: reported
+    reported_value: required
+  - field_path: application/milestones/2
+    source_ref: s-nws
+    locator: New Warrior Scholarships page, Timeline for Scholarship Consideration and Award
+    short_excerpt: Since these are higher-tier, selective scholarships, students must apply for admission
+      by January 5.
+    value_status: reported
+    reported_value: January 5
+  - field_path: application/milestones/3/date
+    source_ref: s-nws
+    locator: New Warrior Scholarships page, intro
+    short_excerpt: The supplemental application for NWS consideration is due February 2nd.
+    value_status: conflicting
+    reported_value: February 2
+  - field_path: application/milestones/3/date
+    source_ref: s-nws
+    locator: New Warrior Scholarships page, Regents tab, Timeline for Scholarship Consideration and Award
+    short_excerpt: The deadline to submit supplemental materials for New Warrior Scholarship consideration
+      is January 15.
+    value_status: conflicting
+    reported_value: January 15
+  - field_path: application/prerequisites/0
+    source_ref: s-nws
+    locator: New Warrior Scholarships page, intro
+    short_excerpt: When a student who is eligible for these higher-tier scholarships has been admitted
+    value_status: reported
+    reported_value: null
+  - field_path: application/prerequisites/1
+    source_ref: s-apply
+    locator: Apply to Honors, Application Process
+    short_excerpt: Apply with your @hawaii.edu email.
+    value_status: reported
+    reported_value: null
+  - field_path: application/prerequisites/2
+    source_ref: s-apply
+    locator: Apply to Honors, Application Process
+    short_excerpt: one academic letter of recommendation
+    value_status: reported
+    reported_value: null
+  - field_path: entry_terms
+    source_ref: s-nws
+    locator: New Warrior Scholarships page, Regents Timeline tab
+    short_excerpt: This scholarship is only awarded for students who begin their enrollment in the Fall
+      semester.
+    value_status: reported
+    reported_value: fall
+  - field_path: renewal_rules/0
+    source_ref: s-nws
+    locator: New Warrior Scholarships page, Regents Scholarship, Renewal Criteria
+    short_excerpt: Maintain a 3.5 undergraduate GPA or higher; to be reviewed for eligibility every semester
+    value_status: reported
+    reported_value: 3.5
+  - field_path: renewal_rules/0
+    source_ref: s-nws
+    locator: New Warrior Scholarships page, Regents Scholarship, Renewal Criteria
+    short_excerpt: Enrolled full-time (at least 12 credits per semester)
+    value_status: reported
+    reported_value: 12
+  - field_path: renewal_rules/0
+    source_ref: s-nws
+    locator: New Warrior Scholarships page, Regents Scholarship, Renewal Criteria
+    short_excerpt: Engaged in the Honors Program
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-raps
+    locator: Regents and Presidential Scholars page, RAPS Service Requirements
+    short_excerpt: 10 hours each Fall and Spring semester (20 hours total each academic year)
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-nws
+    locator: New Warrior Scholarships page, Criteria for Scholarship Consideration
+    short_excerpt: If a student is offered more than one merit award by the Office of Admissions, they
+      may only accept one of the awards.
+    value_status: reported
+    reported_value: not_allowed
+  - field_path: award_counts/0
+    source_ref: s-nws
+    locator: New Warrior Scholarships page, Criteria for Scholarship Consideration
+    short_excerpt: Historically, Manoa has awarded 16 Regents Scholarships each year.
+    value_status: reported
+    reported_value: 16

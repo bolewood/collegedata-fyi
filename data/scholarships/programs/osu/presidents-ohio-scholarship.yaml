@@ -225,3 +225,246 @@ versions:
     short_excerpt: A student cannot receive more than one of these scholarships or participate in multiple programs.
     value_status: reported
     reported_value: not_allowed
+- version_id: presidents-ohio-scholarship-undated-r2
+  supersedes: presidents-ohio-scholarship-undated
+  entry_year: null
+  entry_year_label: Entering class not named on the Honors and Scholars or undergraduate admissions pages
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: conflicting
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: in_state
+    selection_mode: unknown
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    advertised_totals: []
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules:
+      - exam: ACT (36)
+        min: 36
+        scoring: single_sitting
+        official_required: true
+      - exam: SAT (1600)
+        min: 1600
+        scoring: single_sitting
+        official_required: true
+      tests_policy_for_scholarship: required
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: New first-year Ohio residents (classified as Ohio residents for tuition purposes)
+        enrolling at the Columbus campus, currently enrolled in their senior year of high school. A perfect
+        score must come from a single test date; superscoring is not accepted. Recipients are guaranteed
+        admission to the University Honors Program or one of 16 Ohio State Scholars programs. Transfer
+        students are not eligible for merit awards. Ohio State does not participate in the National Merit
+        Scholarship Program.
+      citizenship_text: International students are not eligible.
+    benefits:
+    - benefit_id: b-coa
+      category: cost_of_attendance
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Renewable for up to 8 full-time enrolled semesters
+      exclusions: null
+      scope_text: 'School words: full cost of attendance to The Ohio State University, renewable for up
+        to 8 full-time enrolled semesters; no dollar value is published'
+      advertised_coverage_label: full cost of attendance
+      conditions_text: null
+    - benefit_id: b-enrichment
+      category: enrichment
+      instrument: unknown
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words conflict: "Up to $5,000 enrichment grant funding" (Honors and Scholars
+        page) versus "a $5,000 supplemental award" (undergraduate admissions page); accessible after the
+        first year of successful study'
+      advertised_coverage_label: null
+      conditions_text: null
+  application:
+    separate_application: not_required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: the November 1 priority deadline / early action deadline
+    admission_plan_requirement: Submit the application for admission and all supporting materials, including
+      official test scores, by the November 1 early action deadline of the senior year; indicate interest
+      in the University Honors Program or Ohio State Scholars Program on the Common Application
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: No separate application. Award notifications are sent by the end of December, with further
+      action required to select University Honors or one of the 16 Ohio State Scholars Programs. November
+      1 carries no year on the pages and is recorded as recurring.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: 'Full-time enrollment required. GPA: the Honors and Scholars page says a cumulative 3.0 keeps
+      the scholarship and that University Honors participants must hold 3.4 or 3.5 depending on major;
+      the admissions page says the scholarship requires the GPA of the chosen Honors or Scholars program.
+      The Scholars Program GPA is not stated on these pages.'
+  stacking_rules:
+  - other_aid_type: institutional_merit
+    relation: not_allowed
+    note: 'School words (Undergraduate Admissions page, university-funded merit scholarships): ''These
+      scholarships cannot be combined, except for the National Buckeye Scholarship.'' The Honors page
+      adds that a student cannot receive more than one of the President''s Ohio, Stamps Eminence and Morrill
+      scholarships; if offered more than one, the student must choose'
+  award_counts: []
+  sources:
+  - source_id: s-hon
+    url: https://honors-scholars.osu.edu/future-students/presidents-ohio-scholarship-program
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 7face7415eea21e18deec4fe3271aeedd91f1b9d30242f357f4cf2d80a2e4c2a
+    archive_url: null
+  - source_id: s-mer
+    url: https://undergrad.osu.edu/cost-and-aid/merit-based-scholarships
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: 61dcfcd532d53e7a6a0126218bc226f664b0e415cbc0391efe6f3f807a7821b9
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-hon
+    locator: 'Honors and Scholars page and Merit scholarships page: no entering class or year named for
+      this award'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-hon
+    locator: 'President''s Ohio page, "Eligibility and Criteria" and FAQ: criteria stated; no promise
+      that every qualifier is awarded'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits
+    source_ref: s-hon
+    locator: President's Ohio page, "Scholarship"
+    short_excerpt: Full cost of attendance to The Ohio State University, renewable for up to 8 full-time
+      enrolled semesters
+    value_status: reported
+    reported_value: listed
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-hon
+    locator: President's Ohio page, "Scholarship"
+    short_excerpt: Full cost of attendance to The Ohio State University, renewable for up to 8 full-time
+      enrolled semesters
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-hon
+    locator: 'President''s Ohio page, "Scholarship": no dollar value'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-hon
+    locator: President's Ohio page, "Scholarship"
+    short_excerpt: Up to $5,000 enrichment grant funding
+    value_status: conflicting
+    reported_value: up to 5000
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-mer
+    locator: Merit scholarships page, President's Ohio Scholarship Program
+    short_excerpt: a full cost of attendance scholarship and a $5,000 supplemental award
+    value_status: conflicting
+    reported_value: '5000'
+  - field_path: offers/0/eligibility/test_rules
+    source_ref: s-hon
+    locator: President's Ohio page, "Eligibility and Criteria"
+    short_excerpt: Score a perfect ACT (36) or SAT (1600) test score on a single test date
+    value_status: reported
+    reported_value: ACT 36 or SAT 1600, single test date
+  - field_path: offers/0/eligibility/citizenship_eligible
+    source_ref: s-hon
+    locator: 'President''s Ohio page: no citizenship rule stated; residency rule is Ohio resident'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-hon
+    locator: President's Ohio page, FAQ "Is there a separate application?"
+    short_excerpt: No. The application for admission will automatically allow all eligible applicants
+      to be considered.
+    value_status: reported
+    reported_value: not_required
+  - field_path: application/milestones/0
+    source_ref: s-hon
+    locator: President's Ohio page, FAQ "Do I have to apply by the early action deadline?"
+    short_excerpt: Meeting the November 1 early action application deadline is required.
+    value_status: reported
+    reported_value: November 1
+  - field_path: renewal_rules/0/gpa_min
+    source_ref: s-hon
+    locator: President's Ohio page, "Ongoing Scholarship Requirements"
+    short_excerpt: Students must maintain a cumulative GPA of 3.0 to remain eligible for the President's
+      Ohio Scholarship.
+    value_status: conflicting
+    reported_value: '3.0'
+  - field_path: renewal_rules/0/gpa_min
+    source_ref: s-mer
+    locator: Merit scholarships page, President's Ohio Scholarship Program
+    short_excerpt: maintain the GPA requirement for the University Honors Program or Ohio State Scholars
+      Program
+    value_status: conflicting
+    reported_value: program-dependent (University Honors 3.4 or 3.5 by major)
+  - field_path: stacking_rules/0
+    source_ref: s-hon
+    locator: President's Ohio page, last FAQ
+    short_excerpt: A student cannot receive more than one of these scholarships or participate in multiple
+      programs.
+    value_status: reported
+    reported_value: not_allowed
+  - field_path: offers/0/eligibility/citizenship_text
+    source_ref: s-mer
+    locator: Merit-based scholarships page, opening paragraph
+    short_excerpt: International students are not eligible.
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-mer
+    locator: Merit-based scholarships page, opening paragraph
+    short_excerpt: These scholarships cannot be combined, except for the National Buckeye Scholarship.
+    value_status: reported
+    reported_value: not_allowed

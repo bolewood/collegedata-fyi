@@ -322,3 +322,347 @@ versions:
     short_excerpt: If the scholarship award covers your financial needs, you will no longer require need-based financial assistance.
     value_status: reported
     reported_value: counts_within_package
+- version_id: danforth-scholars-class-2031-r2
+  supersedes: danforth-scholars-class-2031
+  entry_year: 2027
+  entry_year_label: Class of 2031 (application cycle ending January 4, 2027)
+  entry_terms:
+  - unspecified
+  source_cohort_text: Class of 2031
+  verification_status: verified
+  last_reviewed_at: '2026-11-15'
+  reviewed_by: agent:claude-sonnet-5-5, after the Gemini 4 Carbon audit of 2026-11-15
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-full-tuition
+    parent_offer_id: null
+    variant_name: Full tuition with $2,500 stipend
+    residency: any
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    advertised_totals: []
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: 'Applicants to any undergraduate division may apply; incoming transfer students
+        are not eligible. The page says only that awards vary between the full-tuition-with-stipend and
+        half-tuition awards and does not say how a scholar is placed in one. '
+      citizenship_text: International students are welcome to apply to the Danforth Scholars Program and
+        the Annika Rodriguez Scholars Program.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions:
+      - housing
+      scope_text: 'School words: tuition-based awards do not cover housing expenses; no dollar value is
+        given for tuition'
+      advertised_coverage_label: Full-tuition scholarship with $2,500 stipend
+      conditions_text: null
+    - benefit_id: b-stipend
+      category: stipend
+      instrument: cash_stipend
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 2500
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'School words: $2,500 stipend; the page does not say whether it is paid per year or
+        once'
+      advertised_coverage_label: null
+      conditions_text: null
+  - offer_id: o-half-tuition
+    parent_offer_id: null
+    variant_name: Half tuition
+    residency: any
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    advertised_totals: []
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: 'Applicants to any undergraduate division may apply; incoming transfer students
+        are not eligible. The page says only that awards vary between the full-tuition-with-stipend and
+        half-tuition awards and does not say how a scholar is placed in one. '
+      citizenship_text: International students are welcome to apply to the Danforth Scholars Program and
+        the Annika Rodriguez Scholars Program.
+    benefits:
+    - benefit_id: b-tuition-half
+      category: tuition
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions:
+      - housing
+      scope_text: 'Half of tuition; no dollar value is given. School words: tuition-based awards do not
+        cover housing expenses'
+      advertised_coverage_label: Half-tuition scholarship
+      conditions_text: null
+  application:
+    separate_application: required
+    milestones:
+    - kind: application_deadline
+      requirement: required
+      date: '2027-01-04'
+      recurring: null
+      precision: day
+      source_date_text: January 4, 2027
+    - kind: admission_deadline
+      requirement: priority
+      date: '2026-12-16'
+      recurring: null
+      precision: day
+      source_date_text: submit a Common Application or Coalition Application by December 16, 2026 for
+        priority consideration for the scholar programs
+    - kind: notification
+      requirement: recommended
+      date: null
+      recurring:
+        month: 2
+        day: 1
+      precision: month
+      source_date_text: by the end of February
+    - kind: interview
+      requirement: required
+      date: null
+      recurring:
+        month: 3
+        day: 1
+      precision: month
+      source_date_text: an interview in March
+    admission_plan_requirement: Complete the Common Application or Coalition Application (QuestBridge
+      applicants are also eligible for consideration), then the separate scholar program application through
+      the WashU Pathway (a short answer of 250 words per program; Danforth/Ervin/Rodriguez are the three
+      Signature Scholar Programs)
+    prerequisites:
+    - kind: admission_application
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Common or Coalition Application (QuestBridge applicants are also eligible for consideration);
+        the scholar application opens in the WashU Pathway after the admission application is submitted
+    interview_mode: virtual
+    finalist_event_required: true
+    notes: 'Finalists attend a series of virtual events in early spring and an interview in March. Applicants
+      to more than one of the Danforth, Ervin and Rodriguez programs are allowed; the page does not say
+      whether one student can hold more than one. Early Decision applicants may apply, but academic scholarships
+      are not awarded until after the Early Decision commitment date. A third recommendation letter is
+      recommended, not required. Study-abroad: awards count toward WashU-sponsored study abroad during
+      the academic year.'
+  renewal_rules:
+  - applies_to: []
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: Annually renewable for the duration of the degree program, provided students progress academically
+      and uphold the program's character standards; the page gives no GPA or credit threshold.
+  stacking_rules:
+  - other_aid_type: institutional_need
+    relation: counts_within_package
+    note: 'School words: if the scholarship covers your financial needs, you will no longer require need-based
+      assistance; the page says the effect depends on each family''s circumstances'
+  award_counts: []
+  sources:
+  - source_id: s-page
+    url: https://scholars.washu.edu/danforth-scholars/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: dbfc780d86f1c851cd30067967fff76f4845623c4e099eea4cd6981550f45f4f
+    archive_url: null
+  - source_id: s-faq
+    url: https://scholars.washu.edu/about/scholar-program-faq/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 94eb43690c2e0ff87d3f20cee55928075e7a0568389b9d751ef1a0957f653b2f
+    archive_url: null
+  - source_id: s-app
+    url: https://scholars.washu.edu/about/application-process/
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 033b51b517e808a730ef3a3bc700df1ff242cd08947b8d325ce3079d676239f2
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-app
+    locator: Application Process, "How to Apply"
+    short_excerpt: Scholar Program Applications for the Class of 2031 will be accepted until
+    value_status: reported
+    reported_value: Class of 2031
+  - field_path: offers/0/selection_mode
+    source_ref: s-app
+    locator: Application Process, second paragraph
+    short_excerpt: Scholars will be selected based on academic achievement, demonstrated leadership, dedication
+      to service
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/1/selection_mode
+    source_ref: s-app
+    locator: Application Process, second paragraph
+    short_excerpt: Scholars will be selected based on academic achievement, demonstrated leadership, dedication
+      to service
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/selection_mode
+    source_ref: s-page
+    locator: Danforth program page, "Apply"
+    short_excerpt: The Danforth Scholars Committee will review applications and invite selected finalists
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/benefits
+    source_ref: s-page
+    locator: Danforth program page, "offers annually renewable" list
+    short_excerpt: Full-tuition scholarship with $2,500 stipend
+    value_status: reported
+    reported_value: listed
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-page
+    locator: Danforth program page, "offers annually renewable" list
+    short_excerpt: Full-tuition scholarship with $2,500 stipend
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-page
+    locator: Danforth program page, "offers annually renewable" list
+    short_excerpt: Full-tuition scholarship with $2,500 stipend
+    value_status: reported
+    reported_value: 2500
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-faq
+    locator: FAQ, "What do the programs pay for?"
+    short_excerpt: Our scholarships cover full tuition expenses with a stipend, or half tuition. Tuition-based
+      awards do not cover housing expenses.
+    value_status: reported
+    reported_value: full
+  - field_path: offers/1/benefits/0/amount
+    source_ref: s-page
+    locator: Danforth program page, "offers annually renewable" list
+    short_excerpt: Half-tuition scholarship
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/0/coverage
+    source_ref: s-page
+    locator: Danforth program page, "offers annually renewable" list
+    short_excerpt: Half-tuition scholarship
+    value_status: reported
+    reported_value: partial
+  - field_path: offers/0/eligibility/citizenship_text
+    source_ref: s-faq
+    locator: FAQ, "What about international students?"
+    short_excerpt: International students are welcome to apply to the Danforth Scholars Program
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-faq
+    locator: FAQ, "How do I apply?"
+    short_excerpt: a separate scholarship application via the WashU Pathway
+    value_status: reported
+    reported_value: required
+  - field_path: application/milestones/0
+    source_ref: s-faq
+    locator: FAQ, "When is the deadline to apply?"
+    short_excerpt: The deadline to apply is January 4, 2027.
+    value_status: reported
+    reported_value: '2027-01-04'
+  - field_path: application/milestones/1
+    source_ref: s-app
+    locator: Application Process, "How to Apply"
+    short_excerpt: submit either a Common Application or Coalition Application by December 16, 2026
+    value_status: reported
+    reported_value: '2026-12-16'
+  - field_path: application/milestones/2
+    source_ref: s-app
+    locator: Application Process, "How to Apply", finalists paragraph
+    short_excerpt: leading up to the interview round of selection by the end of February.
+    value_status: reported
+    reported_value: by the end of February
+  - field_path: application/milestones/3
+    source_ref: s-faq
+    locator: FAQ, "Do I have to attend finalist activities?"
+    short_excerpt: you must make yourself available for a series of virtual events an interview in March.
+    value_status: reported
+    reported_value: March
+  - field_path: application/interview_mode
+    source_ref: s-page
+    locator: Danforth program page, "Scholarship eligibility"
+    short_excerpt: Finalists will be notified by the end of February and invited to a virtual interview.
+    value_status: reported
+    reported_value: virtual
+  - field_path: application/finalist_event_required
+    source_ref: s-app
+    locator: Application Process, finalists paragraph
+    short_excerpt: Finalists must attend these virtual events and complete an interview to remain eligible
+      for selection.
+    value_status: reported
+    reported_value: true
+  - field_path: renewal_rules/0
+    source_ref: s-app
+    locator: Application Process, "Scholar program benefits"
+    short_excerpt: Renewed each year for the duration of the degree program, provided students progress
+      academically
+    value_status: reported
+    reported_value: annual
+  - field_path: stacking_rules/0
+    source_ref: s-faq
+    locator: FAQ, need-based aid question
+    short_excerpt: If the scholarship award covers your financial needs, you will no longer require need-based
+      financial assistance.
+    value_status: reported
+    reported_value: counts_within_package
+  - field_path: application/admission_plan_requirement
+    source_ref: s-faq
+    locator: Scholar Program FAQ, How do I apply?
+    short_excerpt: Questbridge applicants are also eligible for consideration.
+    value_status: reported
+    reported_value: null
+  - field_path: application/prerequisites/0
+    source_ref: s-faq
+    locator: Scholar Program FAQ, How do I apply?
+    short_excerpt: Questbridge applicants are also eligible for consideration.
+    value_status: reported
+    reported_value: null
