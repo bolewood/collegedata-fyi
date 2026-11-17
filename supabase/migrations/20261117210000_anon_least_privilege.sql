@@ -35,8 +35,10 @@ alter default privileges for role postgres in schema public
 --    helpers the public views use.
 --    rls_auto_enable() is left alone: it is an event-trigger function and
 --    cannot be called through the API.
---    New maintenance functions still need their own revoke, as before: Postgres
---    grants EXECUTE on every new function to PUBLIC.
+--    New maintenance functions still need their own revoke: Postgres grants
+--    EXECUTE on every new function to PUBLIC, and Supabase also grants it to
+--    anon and authenticated directly, so revoke from all three. (Older
+--    migrations revoked from public only, which is why these stayed callable.)
 do $$
 declare
   fn text;
