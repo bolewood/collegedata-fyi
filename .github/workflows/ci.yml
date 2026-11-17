@@ -227,10 +227,59 @@ jobs:
       - name: Run web unit tests
         working-directory: web
         run: npm test
+      # The build and the Playwright smoke tests read the production API with
+      # the public key: about 2,600 database reads per run, competing with
+      # real visitors on a small database. They run only when the web app or
+      # this workflow changed. Typecheck and unit tests above always run.
+      # Pushes to main compare against the previous main commit, so a web
+      # change is still built and smoke tested after it merges.
+      - name: Decide whether the build and smoke tests are needed
+        id: webbuild
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          run=true
+          reason="always on ${EVENT_NAME}"
+          base=""
+          if [ "${EVENT_NAME}" = "pull_request" ]; then
+            base="${PR_BASE}"
+          elif [ "${EVENT_NAME}" = "push" ] && [ "${REF_NAME}" = "main" ]; then
+            base="${PUSH_BEFORE}"
+          elif [ "${EVENT_NAME}" = "push" ]; then
+            base="main"
+          fi
+          # Fail open: no usable base (first push of a branch reports all
+          # zeros), an unreadable comparison, or one large enough to be
+          # truncated (300 files) runs the build.
+          if [ -n "${base}" ] && ! printf '%s' "${base}" | grep -Eq '^0+$'; then
+            if files="$(gh api "repos/${GITHUB_REPOSITORY}/compare/${base}...${HEAD_SHA}" --jq '.files[].filename')" \
+              && [ "$(printf '%s\n' "${files}" | grep -c .)" -lt 300 ]; then
+              if printf '%s\n' "${files}" | grep -Eq '^(web/|\.github/workflows/ci\.yml$)'; then
+                reason="the web app or this workflow changed"
+              else
+                run=false
+                reason="nothing under web/ changed"
+              fi
+            else
+              reason="could not read the change list"
+            fi
+          elif [ "${EVENT_NAME}" != "workflow_dispatch" ]; then
+            reason="no base commit to compare against"
+          fi
+          echo "run=${run}" >> "${GITHUB_OUTPUT}"
+          echo "Web build and smoke tests: run=${run} (${reason})"
       - name: Build web app
+        if: steps.webbuild.outputs.run == 'true'
         working-directory: web
         run: npm run build
       - name: Check public data API for smoke tests
+        if: steps.webbuild.outputs.run == 'true'
         id: data-api
         run: |
           if curl --fail --silent --show-error --max-time 8 \
