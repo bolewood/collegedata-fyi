@@ -6,9 +6,10 @@
  * error, or a thrown fetch error, so pages render and the build does not fail.
  *
  * Caching: the loader throws on error and the empty fallback is applied
- * OUTSIDE unstable_cache, so a failed read is never cached for a day. Nothing
- * revalidates after `load.py --apply`, so new rows appear when the daily
- * window expires or when /api/revalidate expires the school's tag.
+ * OUTSIDE unstable_cache, so a failed read is never cached. The loader
+ * workflow calls /api/revalidate after a load; a hand-run `load.py --apply`
+ * does not, so run `tools/ops/revalidate_pages.py --school-id <id>
+ * --scholarships` after one, or new rows wait for the 7-day window.
  */
 import { unstable_cache } from "next/cache";
 import { supabase } from "./supabase";
@@ -135,7 +136,7 @@ const NONE: AllScholarships = { rows: [], info: {} };
 /**
  * The whole directory in one cached read (the view is small). School pages and
  * the index both derive from it, so a crawler sweep of thousands of school
- * pages costs one query a day, not one per school. Throws on error.
+ * pages costs one query per cache window, not one per school. Throws on error.
  */
 async function fetchAllScholarships(): Promise<AllScholarships> {
   return cached(["fetchAllScholarships"], [SCHOLARSHIP_INDEX_TAG], async () => {

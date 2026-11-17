@@ -22,19 +22,26 @@ What the sweep looks at (all read with the service role):
 
   cds_documents.updated_at          a trigger keeps it, so it also catches
                                     hiding a document, removal flags and SQL
-                                    edits made by hand
+                                    edits made by hand. Documents the archiver
+                                    re-verified inside the window are left out
+                                    (see find_changed_schools); after a hand
+                                    edit to one of those, use --school-id
   cds_artifacts.created_at          artifacts written without touching the
                                     document row (LLM fallback, overlay)
   school_browser_rows.updated_at    projection refreshes
-  cds_field_change_events.updated_at
-  scholarship_programs.loaded_at    a scholarship load
+  cds_field_change_events.updated_at  new events only: nothing maintains the
+                                    column on re-projection or delete
+  scholarship_programs.loaded_at    a newly added program only; the loader
+                                    workflow refreshes edited programs itself
   scholarship_version_checks        only checks that change what the page
                                     says (needs_review, or result changed or
                                     conflicting)
 
 Not covered, by design: institution_cds_coverage (the hourly refresh rewrites
-every row, so its timestamp cannot tell what changed) and federal loads (run
---all by hand after one). Those wait for the 7-day window at worst.
+every row, so its timestamp cannot tell what changed), federal loads and
+school identity or alias changes (run --all by hand after either: the Scorecard
+and slug-crosswalk reads are shared by every school, so only --all expires
+them). Those wait for the 7-day window at worst.
 
 Environment: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (sweep only),
 COLLEGEDATA_REVALIDATE_URL, REVALIDATE_SECRET.
@@ -135,33 +142,50 @@ def find_changed_schools(fetch: Fetch, since: datetime) -> dict:
         return ids
 
     schools: set = set()
-    schools |= add("documents", _school_ids(fetch("cds_documents", {"select": "school_id", "updated_at": after})))
+    # The weekly archive re-check of an unchanged file stamps last_verified_at,
+    # which also moves updated_at. Pages do not show that date, so a document
+    # verified inside the window is not counted: otherwise a seventh of all
+    # schools would look changed every day.
     schools |= add(
-        "browser_rows", _school_ids(fetch("school_browser_rows", {"select": "school_id", "updated_at": after}))
+        "documents",
+        _school_ids(
+            fetch(
+                "cds_documents",
+                {
+                    "select": "school_id",
+                    "updated_at": after,
+                    "or": f"(last_verified_at.is.null,last_verified_at.lt.{stamp})",
+                    "order": "id",
+                },
+            )
+        ),
     )
     schools |= add(
-        "change_events", _school_ids(fetch("cds_field_change_events", {"select": "school_id", "updated_at": after}))
+        "browser_rows", _school_ids(fetch("school_browser_rows", {"select": "school_id", "updated_at": after, "order": "document_id"}))
+    )
+    schools |= add(
+        "change_events", _school_ids(fetch("cds_field_change_events", {"select": "school_id", "updated_at": after, "order": "id"}))
     )
 
     # Artifacts carry a document id, not a school id.
     document_ids = sorted(
         {
             r["document_id"]
-            for r in fetch("cds_artifacts", {"select": "document_id", "created_at": after})
+            for r in fetch("cds_artifacts", {"select": "document_id", "created_at": after, "order": "id"})
             if r.get("document_id")
         }
     )
     artifact_schools: set = set()
     for chunk in _chunks(document_ids, ID_CHUNK):
         artifact_schools |= _school_ids(
-            fetch("cds_documents", {"select": "school_id", "id": f"in.({','.join(chunk)})"})
+            fetch("cds_documents", {"select": "school_id", "id": f"in.({','.join(chunk)})", "order": "id"})
         )
     schools |= add("artifacts", artifact_schools)
 
     # Scholarships: a load, or a monitor check that changes what the page says.
     program_ids = {
         r["program_id"]
-        for r in fetch("scholarship_programs", {"select": "program_id", "loaded_at": after})
+        for r in fetch("scholarship_programs", {"select": "program_id", "loaded_at": after, "order": "program_id"})
         if r.get("program_id")
     }
     results = ",".join(SCHOLARSHIP_RESULTS_THAT_CHANGE_PAGES)
@@ -173,6 +197,7 @@ def find_changed_schools(fetch: Fetch, since: datetime) -> dict:
                 "select": "program_id",
                 "checked_at": after,
                 "or": f"(needs_review.is.true,result.in.({results}))",
+                "order": "id",
             },
         )
         if r.get("program_id")
@@ -181,13 +206,19 @@ def find_changed_schools(fetch: Fetch, since: datetime) -> dict:
     for chunk in _chunks(sorted(program_ids), ID_CHUNK):
         for row in fetch(
             "scholarship_programs",
-            {"select": "school_id,participating_schools", "program_id": f"in.({','.join(chunk)})"},
+            {
+                "select": "school_id,participating_schools",
+                "program_id": f"in.({','.join(chunk)})",
+                "order": "program_id",
+            },
         ):
             if isinstance(row.get("school_id"), str) and row["school_id"]:
                 scholarship_schools.add(row["school_id"])
+            # participating_schools holds [{school_id, ipeds_id}] objects.
             for other in row.get("participating_schools") or []:
-                if isinstance(other, str) and other:
-                    scholarship_schools.add(other)
+                other_id = other.get("school_id") if isinstance(other, dict) else other
+                if isinstance(other_id, str) and other_id:
+                    scholarship_schools.add(other_id)
     schools |= add("scholarships", scholarship_schools)
 
     return {"schools": schools, "scholarships": bool(program_ids), "sources": sources}

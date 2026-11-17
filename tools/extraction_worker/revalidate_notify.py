@@ -15,6 +15,7 @@ import json
 import os
 import sys
 import time
+import urllib.error
 import urllib.request
 from typing import Iterable, Mapping, Optional
 
@@ -77,7 +78,9 @@ def notify_school_revalidation(
             result["batches"] += 1
         except Exception as e:  # noqa: BLE001 - must never fail the run
             result["errors"] += 1
-            transport_failure = not isinstance(e, RuntimeError)
+            # An HTTP error answer (a rejected batch, a 5xx) means the endpoint
+            # is reachable: keep sending the other batches.
+            transport_failure = not isinstance(e, (RuntimeError, urllib.error.HTTPError))
             print(
                 f"revalidate_notify_error: {type(e).__name__}: "
                 f"{str(e).splitlines()[0][:200] if str(e) else ''}",

@@ -84,23 +84,37 @@ class SweepTests(unittest.TestCase):
                 "cds_documents:by_id": [{"school_id": "duke"}],
                 "scholarship_programs": [{"program_id": "p-load"}],
                 "scholarship_version_checks": [{"program_id": "p-check"}],
-                "scholarship_programs:by_id": [{"school_id": "unc", "participating_schools": ["duke", "unc"]}],
+                "scholarship_programs:by_id": [
+                    {
+                        "school_id": "unc",
+                        "participating_schools": [
+                            {"school_id": "duke", "ipeds_id": "198419"},
+                            {"school_id": "ncsu", "ipeds_id": "199193"},
+                        ],
+                    }
+                ],
             }
         )
         opener = Recorder()
         code, lines = run(["--changed-since-hours", "26"], db=db, opener=opener)
         self.assertEqual(code, 0)
         self.assertEqual(len(opener.bodies), 1)
-        self.assertEqual(opener.bodies[0]["school_ids"], ["brown", "duke", "mit", "unc", "yale"])
+        self.assertEqual(opener.bodies[0]["school_ids"], ["brown", "duke", "mit", "ncsu", "unc", "yale"])
         self.assertIs(opener.bodies[0]["scholarships"], True)
-        self.assertIn("5 school(s) changed in 26 h", lines[0])
+        self.assertIn("6 school(s) changed in 26 h", lines[0])
 
     def test_window_and_scholarship_check_filter_reach_the_database(self):
         db = FakeDb({})
         run(["--changed-since-hours", "26", "--dry-run"], db=db)
         by_table = {t: p for t, p in db.calls}
         self.assertEqual(by_table["cds_documents"]["updated_at"], "gt.2026-11-16T11:35:00Z")
+        self.assertEqual(
+            by_table["cds_documents"]["or"],
+            "(last_verified_at.is.null,last_verified_at.lt.2026-11-16T11:35:00Z)",
+        )
         self.assertEqual(by_table["cds_artifacts"]["created_at"], "gt.2026-11-16T11:35:00Z")
+        for table, params in db.calls:
+            self.assertIn("order", params, table)
         self.assertEqual(
             by_table["scholarship_version_checks"]["or"],
             "(needs_review.is.true,result.in.(changed,conflicting))",
@@ -149,6 +163,28 @@ class SweepTests(unittest.TestCase):
                 opener=Recorder(status=500),
             )
         self.assertEqual(code, 1)
+
+    def test_one_rejected_batch_does_not_stop_the_rest(self):
+        import urllib.error
+
+        class FirstBatchRejected(Recorder):
+            def __call__(self, request, timeout=None):
+                response = super().__call__(request, timeout)
+                if len(self.bodies) == 1:
+                    raise urllib.error.HTTPError(request.full_url, 400, "Bad Request", {}, None)
+                return response
+
+        opener = FirstBatchRejected()
+        rows = [{"school_id": f"school-{i:04d}"} for i in range(250)]
+        original, rp.BATCH_PAUSE_SECONDS = rp.BATCH_PAUSE_SECONDS, 0
+        try:
+            with redirect_stderr(io.StringIO()):
+                code, lines = run(["--changed-since-hours", "26"], db=FakeDb({"cds_documents": rows}), opener=opener)
+        finally:
+            rp.BATCH_PAUSE_SECONDS = original
+        self.assertEqual(len(opener.bodies), 3)
+        self.assertEqual(code, 1)
+        self.assertIn("refreshed 150/250", lines[-1])
 
     def test_missing_revalidate_settings_exit_nonzero(self):
         with redirect_stderr(io.StringIO()) as err:
