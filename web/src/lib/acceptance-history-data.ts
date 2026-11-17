@@ -1,3 +1,4 @@
+import { mapWithConcurrency } from "./map-with-concurrency";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import type { MetadataRoute } from "next";
@@ -194,12 +195,20 @@ export const fetchAcceptancePageServed = cache(async function fetchAcceptancePag
   }
 });
 
+/**
+ * How many schools the sitemap checks at once. Each check reads one extract
+ * per report year, so checking every pilot school together sent about 700
+ * database reads in 20 seconds on every build (production, preview and CI),
+ * enough to time out the small database and drop pages from the sitemap.
+ */
+const SITEMAP_SCHOOL_CONCURRENCY = 3;
+
 export async function acceptanceRateSitemap(
   indexable: boolean = ACCEPTANCE_PILOT_INDEXABLE,
 ): Promise<MetadataRoute.Sitemap> {
   if (!indexable) return [];
-  const served = await Promise.all(
-    ACCEPTANCE_PILOT_SCHOOLS.map(async (id) => ((await fetchAcceptancePageServed(id)) ? id : null)),
+  const served = await mapWithConcurrency(ACCEPTANCE_PILOT_SCHOOLS, SITEMAP_SCHOOL_CONCURRENCY, async (id) =>
+    (await fetchAcceptancePageServed(id)) ? id : null,
   );
   return acceptanceSitemapEntries(
     served.filter((id): id is string => id != null),
@@ -225,8 +234,8 @@ export async function earlyDecisionSitemap(
   indexable: boolean = EARLY_DECISION_INDEXABLE,
 ): Promise<MetadataRoute.Sitemap> {
   if (!indexable) return [];
-  const served = await Promise.all(
-    EARLY_DECISION_SCHOOLS.map(async (id) => ((await fetchEarlyDecisionPageServed(id)) ? id : null)),
+  const served = await mapWithConcurrency(EARLY_DECISION_SCHOOLS, SITEMAP_SCHOOL_CONCURRENCY, async (id) =>
+    (await fetchEarlyDecisionPageServed(id)) ? id : null,
   );
   return earlyDecisionSitemapEntries(
     served.filter((id): id is string => id != null),
@@ -252,8 +261,8 @@ export async function gpaSitemap(
   indexable: boolean = GPA_INDEXABLE,
 ): Promise<MetadataRoute.Sitemap> {
   if (!indexable) return [];
-  const served = await Promise.all(
-    GPA_SCHOOLS.map(async (id) => ((await fetchGpaPageServed(id)) ? id : null)),
+  const served = await mapWithConcurrency(GPA_SCHOOLS, SITEMAP_SCHOOL_CONCURRENCY, async (id) =>
+    (await fetchGpaPageServed(id)) ? id : null,
   );
   return gpaSitemapEntries(
     served.filter((id): id is string => id != null),
