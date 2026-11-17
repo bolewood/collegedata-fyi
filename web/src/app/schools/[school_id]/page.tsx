@@ -61,7 +61,7 @@ import { combinedFilingNote, notIncludedLead } from "@/lib/campus-filings";
 import type { ArtifactNotes, ManifestRow, InstitutionCoverage } from "@/lib/types";
 
 export const dynamic = "force-static";
-export const revalidate = 86400;
+export const revalidate = 604800;
 
 export async function generateMetadata({
   params,

@@ -1,8 +1,8 @@
 """Tell the web app which school pages changed after an extraction run.
 
-School pages are ISR-cached for 24 h. After the worker finishes, POST the
+School pages are ISR-cached for 7 days. After the worker finishes, POST the
 affected ``school_id`` values to ``/api/revalidate`` so only those pages are
-regenerated, instead of every page re-rendering hourly.
+regenerated. ``tools/ops/revalidate_pages.py`` reuses this for the daily sweep.
 
 Best effort by design: no-op unless both ``COLLEGEDATA_REVALIDATE_URL`` and
 ``REVALIDATE_SECRET`` are set, short timeout, never raises, never changes the
@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import time
 import urllib.request
 from typing import Iterable, Mapping, Optional
 
@@ -29,8 +30,17 @@ def notify_school_revalidation(
     env: Optional[Mapping[str, str]] = None,
     *,
     opener=urllib.request.urlopen,
+    max_batches: Optional[int] = MAX_BATCHES,
+    scholarships: bool = False,
+    pause_seconds: float = 0.0,
+    sleep=time.sleep,
 ) -> dict:
-    """POST school ids in batches. Returns counts; swallows every error."""
+    """POST school ids in batches. Returns counts; swallows every error.
+
+    ``max_batches=None`` sends every batch (the daily sweep). ``scholarships``
+    also expires the shared scholarship directory read. ``pause_seconds`` waits
+    between batches.
+    """
     env = os.environ if env is None else env
     url = (env.get(URL_ENV) or "").strip()
     secret = env.get(SECRET_ENV) or ""
@@ -41,10 +51,16 @@ def notify_school_revalidation(
     if not ids:
         return result
     batches = [ids[i : i + BATCH_SIZE] for i in range(0, len(ids), BATCH_SIZE)]
-    for batch in batches[:MAX_BATCHES]:
+    capped = batches if max_batches is None else batches[:max_batches]
+    for index, batch in enumerate(capped):
+        if index and pause_seconds > 0:
+            sleep(pause_seconds)
+        body = {"school_ids": batch}
+        if scholarships:
+            body["scholarships"] = True
         request = urllib.request.Request(
             url,
-            data=json.dumps({"school_ids": batch}).encode("utf-8"),
+            data=json.dumps(body).encode("utf-8"),
             method="POST",
             headers={
                 "Authorization": f"Bearer {secret}",
@@ -70,12 +86,46 @@ def notify_school_revalidation(
             )
             if transport_failure:
                 break  # endpoint unreachable/timing out: don't stall the run
-    skipped = max(0, len(batches) - MAX_BATCHES)
+    skipped = len(batches) - len(capped)
     if skipped:
         print(
             f"revalidate_notify: skipped {skipped} batch(es) over the cap; "
-            "daily ISR safety net will pick them up.",
+            "the daily page sweep will pick them up.",
             file=sys.stderr,
             flush=True,
         )
+    return result
+
+
+def notify_all_revalidation(
+    env: Optional[Mapping[str, str]] = None,
+    *,
+    opener=urllib.request.urlopen,
+) -> dict:
+    """POST ``{"all": true}``: expire every school page. Swallows every error."""
+    env = os.environ if env is None else env
+    url = (env.get(URL_ENV) or "").strip()
+    secret = env.get(SECRET_ENV) or ""
+    result = {"enabled": bool(url and secret), "sent": 0, "batches": 0, "errors": 0}
+    if not result["enabled"]:
+        return result
+    request = urllib.request.Request(
+        url,
+        data=json.dumps({"all": True}).encode("utf-8"),
+        method="POST",
+        headers={
+            "Authorization": f"Bearer {secret}",
+            "Content-Type": "application/json",
+            "User-Agent": "collegedata-extraction-worker",
+        },
+    )
+    try:
+        with opener(request, timeout=TIMEOUT_SECONDS) as response:
+            status = getattr(response, "status", 200)
+        if status >= 300:
+            raise RuntimeError(f"HTTP {status}")
+        result["batches"] = 1
+    except Exception as e:  # noqa: BLE001 - must never raise
+        result["errors"] = 1
+        print(f"revalidate_notify_error: {type(e).__name__}", file=sys.stderr, flush=True)
     return result

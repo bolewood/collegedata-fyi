@@ -11,6 +11,7 @@ Operator and CI automation scripts for the pipelines: health checks, heartbeats,
 | `notify_discord.py` | Posts ops events to the Discord webhooks (`ops-discord-notify.yml`, hourly). Posts only on first miss and on recovery; never fails the job; never prints webhook URLs. See [`docs/ops-discord.md`](../../docs/ops-discord.md). |
 | `enqueue_changed_seeds.py` | After `tools/finder/schools.yaml` changes on `main`, enqueues archive work for the schools whose seed changed so they do not wait out the 7-day cooldown (`ops-archive-seed-catchup.yml`). `--before`, `--after`, `--apply`. |
 | `top100_coverage.py` | Scores the priority-100 cohort (`data/watchlists/priority_coverage.yaml`) against the two-year byte bar and routes residential-allowlisted schools (`data/watchlists/residential_allowlist.yaml`) to the headless archive workflow. Coverage means finder and archive, not extraction. |
+| `revalidate_pages.py` | Refreshes cached school pages after data changed, through the web app's `/api/revalidate`. `--changed-since-hours N` is the daily sweep (`ops-page-refresh.yml`); `--school-id` refreshes named schools after a hand-run edit; `--all` expires every page (run it after an IPEDS, FSA or Scorecard load). `--dry-run` sends nothing. Prints counts only. |
 | `lint_gha_heredocs.py` | CI check: fails on indented bash heredoc terminators inside `run: |` blocks, which GitHub Actions leaves indented so bash never closes the heredoc. Run `python tools/ops/lint_gha_heredocs.py` before pushing workflow edits. |
 
 ## Operator tools

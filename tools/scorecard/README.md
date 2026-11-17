@@ -105,6 +105,13 @@ The schema-drift guard fires loudly on any renamed/removed column, so the first 
 2. Update `COLUMN_MAP` in `refresh_summary.py`.
 3. If a column has no replacement (as happened with `GRAD_DEBT_MDN_NOPELL` in 2026), write a migration that drops the dead column from `scorecard_summary` AND recreates `cds_scorecard` without it. Use `20260420180000_scorecard_pell_remap.sql` as the template.
 
+Then expire the cached school pages, which otherwise keep the old numbers for
+up to 7 days (needs `COLLEGEDATA_REVALIDATE_URL` and `REVALIDATE_SECRET`):
+
+```bash
+python tools/ops/revalidate_pages.py --all
+```
+
 The same `--only-cds` flag scopes the upsert to just the IPEDS IDs referenced by `cds_documents`, which is faster but means new schools archived between refreshes won't get Scorecard data until the next full refresh.
 
 ## Querying the data

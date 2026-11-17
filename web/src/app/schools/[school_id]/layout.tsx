@@ -5,7 +5,7 @@ import { isRoutableSchoolSlug } from "@/lib/school-cache-tags";
 import { cachedSchoolInks, schoolInkWrapperProps } from "@/lib/school-inks";
 
 export const dynamic = "force-static";
-export const revalidate = 86400;
+export const revalidate = 604800;
 
 export default async function SchoolRecordLayout({
   children,

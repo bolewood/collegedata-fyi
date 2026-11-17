@@ -26,13 +26,16 @@ export function schoolCacheTag(schoolId: string): string {
 }
 
 /**
- * Daily safety net for school pages and school-scoped queries. Data changes at
- * most once a day; the extraction worker calls /api/revalidate for the schools
- * it touched, so shorter windows only add load (crawler sweeps of stale pages).
- * Route files must repeat this as a literal (`export const revalidate = 86400`)
+ * Last-resort window for school pages and school-scoped queries. Pages are
+ * refreshed when their data changes, not on a timer: the extraction worker and
+ * the scholarship loader call /api/revalidate for the schools they touch, and a
+ * daily sweep (tools/ops/revalidate_pages.py) does the same for every other
+ * change. A shorter window only added load: with a 24 h window, a crawler that
+ * returns at the same hour each day made every page it reads regenerate at once.
+ * Route files must repeat this as a literal (`export const revalidate = 604800`)
  * because Next requires statically analyzable segment config; a test pins both.
  */
-export const SCHOOL_DATA_REVALIDATE_SECONDS = 86400;
+export const SCHOOL_DATA_REVALIDATE_SECONDS = 604800;
 
 /** Tag on the cached scholarship directory read (PRD 036). Expired together with school tags by /api/revalidate. */
 export const SCHOLARSHIP_INDEX_TAG = "scholarship-directory";

@@ -38,6 +38,13 @@ python tools/fsa/load.py \
 CSV (no slug rewrite) and upserts the workbook on `source_sha256`. Reloading
 the same file is idempotent.
 
+Then expire the cached school pages, which otherwise keep the old numbers for
+up to 7 days (needs `COLLEGEDATA_REVALIDATE_URL` and `REVALIDATE_SECRET`):
+
+```bash
+python tools/ops/revalidate_pages.py --all
+```
+
 ## Tests
 
 ```bash
