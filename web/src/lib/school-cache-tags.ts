@@ -6,9 +6,23 @@
 
 export const SCHOOL_DATA_TAG = "school-data";
 
-/** Per-school tag attached to every cached query that is scoped to a school. */
+/**
+ * True when a requested school slug is printable ASCII with no spaces. Real
+ * slugs are lowercase letters, digits and hyphens, and one legacy alias has an
+ * ampersand ("w&m"). Anything else (for example a look-alike Cyrillic letter)
+ * cannot name a school and is answered 404 before any data is read.
+ */
+export function isRoutableSchoolSlug(schoolId: string): boolean {
+  return /^[\x21-\x7E]{1,120}$/.test(schoolId);
+}
+
+/**
+ * Per-school tag attached to every cached query that is scoped to a school.
+ * Tags travel in the `x-next-cache-tags` response header, which must be ASCII:
+ * a raw non-ASCII slug there crashes the response, so it is percent-encoded.
+ */
 export function schoolCacheTag(schoolId: string): string {
-  return `school:${schoolId}`;
+  return `school:${isRoutableSchoolSlug(schoolId) ? schoolId : encodeURIComponent(schoolId).slice(0, 200)}`;
 }
 
 /**
