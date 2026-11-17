@@ -378,7 +378,10 @@ When the probe opens a release-available issue:
 4. If migrations are needed for schema drift, ship/apply those first from
    `main`.
 5. Re-run the same loader command with `--apply`.
-6. Confirm the probe now sees the release as loaded:
+6. Expire the cached school pages, which otherwise keep the old numbers for up
+   to 7 days: `python tools/ops/revalidate_pages.py --all` (needs
+   `COLLEGEDATA_REVALIDATE_URL` and `REVALIDATE_SECRET`).
+7. Confirm the probe now sees the release as loaded:
 
 ```bash
 python tools/ipeds/probe_releases.py --as-of "$(date +%F)"

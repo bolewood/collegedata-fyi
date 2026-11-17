@@ -16,6 +16,7 @@ on:
       - Ops archive seed catchup
       - Ops headless archive
       - Ops corpus audit
+      - Page refresh sweep
     types:
       - completed
   deployment_status:

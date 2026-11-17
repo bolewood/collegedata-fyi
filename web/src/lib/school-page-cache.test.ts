@@ -37,7 +37,7 @@ describe("school page ISR contract", () => {
     ]) {
       const source = read(rel);
       expect(source).toContain('export const dynamic = "force-static"');
-      expect(source).toContain("export const revalidate = 86400");
+      expect(source).toContain("export const revalidate = 604800");
     }
   });
 
@@ -51,6 +51,6 @@ describe("school page ISR contract", () => {
 describe("school data cache contract", () => {
   it("keeps the literal route revalidate in sync with the query cache window", async () => {
     const { SCHOOL_DATA_REVALIDATE_SECONDS } = await import("./school-cache-tags");
-    expect(SCHOOL_DATA_REVALIDATE_SECONDS).toBe(86400);
+    expect(SCHOOL_DATA_REVALIDATE_SECONDS).toBe(604800);
   });
 });

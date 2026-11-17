@@ -68,9 +68,9 @@ import { excludeHiddenQualityDocuments } from "./public-documents";
 // can query cds_documents directly via PostgREST.
 const PUBLIC_EXCLUDED_STATUSES = ["withdrawn", "verified_absent"];
 const STATIC_BUILD_QUERY_TIMEOUT_MS = 8_000;
-// Daily safety net. School data changes at most once a day (extraction worker),
-// and the worker calls /api/revalidate for the schools it touched, so hourly
-// regeneration only added Supabase load (crawler sweeps of stale pages).
+// Seven-day last-resort window (see school-cache-tags.ts). Writers call
+// /api/revalidate for the schools they touch and a daily sweep covers the rest,
+// so timed regeneration only added Supabase load (crawler sweeps of stale pages).
 
 /**
  * Cache a school-scoped query under the global "school-data" tag plus a

@@ -41,8 +41,10 @@ In short:
 - Home, `/browse`, `/schools`, and `/usage` use hourly ISR (`revalidate = 3600`).
   `/coverage` revalidates every 15 minutes.
 - School detail, school-year, acceptance-rate, early-decision, and GPA pages are
-  static and revalidate daily (`revalidate = 86400`). They carry `school:<id>`
-  cache tags, so data changes show up sooner through `POST /api/revalidate`.
+  static with a 7-day last-resort window (`revalidate = 604800`). They carry
+  `school:<id>` cache tags and are refreshed when data changes, through
+  `POST /api/revalidate`: by the extraction worker, the scholarship loader and
+  the daily sweep `tools/ops/revalidate_pages.py` (workflow `ops-page-refresh.yml`).
 - `/pipeline-observation` is `force-dynamic`.
 
 `POST /api/revalidate` takes `Authorization: Bearer $REVALIDATE_SECRET` and a JSON

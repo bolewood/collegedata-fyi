@@ -166,8 +166,8 @@ Optional (web cache refresh):
 
 When both are set, the worker POSTs the `school_id`s whose data changed
 (re-extracted + projected, or reconciled) in batches of 100 after the run, so
-only those school pages regenerate. School pages otherwise refresh on a 24 h
-ISR window. Best effort: short timeout, errors are logged
+only those school pages regenerate. School pages otherwise wait for the daily
+sweep (`tools/ops/revalidate_pages.py`) or the 7-day ISR window. Best effort: short timeout, errors are logged
 (`revalidate_notify_error`) and never change the exit code; no-op if either
 value is unset. See `revalidate_notify.py`.
 

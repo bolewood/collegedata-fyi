@@ -1,0 +1,57 @@
+name: Page refresh sweep
+
+# School pages are cached for 7 days and refreshed when their data changes.
+# The extraction worker and the scholarship loader refresh the schools they
+# touch. This daily sweep refreshes every other school whose data changed in
+# the last 26 hours (document edits, hand-run SQL, fallback and overlay
+# artifacts, projection refreshes, scholarship monitor findings), so nothing
+# waits for the 7-day window. See tools/ops/revalidate_pages.py.
+#
+# This repository is public: the script prints counts only, never school ids.
+
+on:
+  schedule:
+    # 13:35 UTC: after the hourly serving-cache refresh at :23, so a refreshed
+    # page reads current merit and stats rows. The 26 h window overlaps the
+    # previous run to absorb GitHub's late starts.
+    - cron: "35 13 * * *"
+  workflow_dispatch:
+    inputs:
+      hours:
+        description: "Look back this many hours (1-336). Use a longer window after a missed run."
+        required: false
+        default: "26"
+      dry_run:
+        description: "Report how many schools would be refreshed; send nothing."
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: page-refresh-sweep
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Refresh pages for schools whose data changed
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          COLLEGEDATA_REVALIDATE_URL: ${{ vars.COLLEGEDATA_REVALIDATE_URL || secrets.COLLEGEDATA_REVALIDATE_URL }}
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+          SWEEP_HOURS: ${{ inputs.hours || '26' }}
+          SWEEP_DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC2086
+          python tools/ops/revalidate_pages.py --changed-since-hours "${SWEEP_HOURS}" ${SWEEP_DRY_RUN}

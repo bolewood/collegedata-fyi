@@ -47,7 +47,7 @@ import { ShareButton } from "@/components/ShareButton";
 import { externalLinkRel } from "@/lib/client-info";
 
 export const dynamic = "force-static";
-export const revalidate = 86400;
+export const revalidate = 604800;
 
 type Params = { school_id: string; year: string };
 

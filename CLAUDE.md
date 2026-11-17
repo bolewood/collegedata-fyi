@@ -39,7 +39,9 @@ whole corpus, not a one-off.
   URLs return HTML; some captures truncate at 1 MB without `%%EOF`).
 - For school identity changes, run `python tools/finder/identity_guard.py` before
   writing generated data, then run `python tools/finder/school_redirect_guard.py`
-  to verify the checked-in web redirect manifest. Treat `retired_aliases` as
+  to verify the checked-in web redirect manifest. After the change is live, run
+  `python tools/ops/revalidate_pages.py --all`: the slug crosswalk is one cached
+  read shared by every school page and is otherwise held for up to 7 days. Treat `retired_aliases` as
   durable redirects: preserve them across refreshes and never promote a retired
   slug to another institution.
 - Close the loop across current state, prior-year baseline, future discovery, and
