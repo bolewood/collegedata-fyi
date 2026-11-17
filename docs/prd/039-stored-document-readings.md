@@ -1,19 +1,22 @@
 # PRD 039: Stored document readings for school pages
 
-**Status:** Draft for owner review. Work starts no earlier than 2026-11-24 (see [Start gate](#start-gate)).
+**Status:** Draft. Owner decisions recorded 2026-11-17 (see [Decisions](#decisions)). Work starts no earlier than 2026-11-24 (see [Start gate](#start-gate)).
 **Created:** 2026-11-17
-**Author:** Claude. A first draft (whole-page payloads) was reviewed by Gemini 4 Hydrogen and replaced by this design; see [What the review changed](#what-the-review-changed). This revision has not had a second review.
+**Author:** Claude. Two review rounds: Gemini 4 Hydrogen on the first draft (whole-page payloads), then Codex on the readings design. See [What the reviews changed](#what-the-reviews-changed). The text below is the design after both; it has not been reviewed a third time.
 **Related:** [PRD 002: frontend](002-frontend.md), [PRD 038: template overlay extraction](038-template-overlay-extraction.md), PRs #236, #262, #333–#338
 
 ---
 
 ## Summary
 
-A cold school hub page asks the live database about 21 questions. One of them, fetching a whole extraction artifact, is about 85% of the database time, and the hub page uses almost none of what it fetches: from a median 355 KB row it derives three yes/no flags, three counts and one note.
+A cold school hub page asks the live database about 21 questions. One of them, fetching a whole extraction artifact, is about 85% of school-page database time, and the hub page uses very little of what it fetches.
 
-This PRD stores those small derived values, called **document readings**, one row per document, the first time they are computed. Later renders read the stored row and never fetch the artifact. A second, optional phase folds the page's remaining small reads into one database call.
+This PRD cuts that cost in two steps, cheapest first:
 
-Phase 0 proves the readings are identical to what the page computes today, on a frozen set of 50 schools, before anything is served from them.
+1. **Narrow the read.** More than half of each artifact is a field the web app never reads. Asking only for the parts it uses is a small change and is measured before anything else is built.
+2. **Store parser results.** For what remains, store the small results of the page's parsers once per document, as **document readings**, so later renders do not fetch the artifact at all.
+
+Step 2 is built only if step 1 leaves a problem worth solving.
 
 All numbers below were measured on 2026-11-17 against production (read-only). See [How measured](#how-measured).
 
@@ -42,19 +45,39 @@ That read returns the whole artifact. Across the 5,371 newest canonical artifact
 | `markdown` (document text) | 129 KB | |
 | `values` | 13 KB | 111 KB |
 
+By total bytes in a random sample of 200 of those artifacts: `native_tables` 38 MB, `markdown` 25 MB, `values` 5 MB, everything else under 1 MB. The web app reads `values`, `markdown`, `schema_version`, `stats` and `schema_fallback_used` from `notes`, and a few fields for fallback and overlay matching. It never reads `native_tables` (no reference under `web/src`).
+
+Timed inside the database on the same 200 artifacts, warm, per artifact:
+
+| Read | Time | Size |
+|---|---:|---:|
+| Whole row (today) | 6.2 ms | 349 KB |
+| `values`, `markdown`, `stats`, schema version | 2.8 ms | 153 KB |
+| `id` and `producer` only | 0.02 ms | |
+
+These are database-side times on warm data. The 46 ms production mean also includes cold storage reads, JSON serialization by PostgREST and transfer, all of which scale with size.
+
 ### What the hub page takes from it
 
-Read from `web/src/app/schools/[school_id]/page.tsx` and `web/src/lib/acceptance-history-data.ts`:
+Read from `web/src/app/schools/[school_id]/page.tsx`, `web/src/lib/acceptance-history-data.ts` and `web/src/lib/acceptance-history.ts`:
 
-| Use | Loader | Documents read | Result |
-|---|---|---|---|
-| Schema-fallback note | `fetchExtract` → `schemaFallbackNoteFromArtifact` | newest extracted | one string or null |
-| Printed C1 counts for the headline | `gatedYearFacts` → `printedCountsForDocument` | one | three integers |
-| Whether the acceptance-rate, early-decision and GPA pages exist | `fetch*PageServed` → `fetchAcceptanceHistory` | every candidate year, pilot schools only | three booleans |
+| Use | Loader | Documents read |
+|---|---|---|
+| Schema-fallback note | `fetchExtract` → `schemaFallbackNoteFromArtifact` | newest extracted |
+| Printed C1 counts | `gatedYearFacts` → `printedCountsForDocument` | one |
+| Whether the acceptance-rate, early-decision and GPA pages exist | `fetch*PageServed` → `fetchAcceptanceHistory` | every candidate year, pilot schools only |
 
-The parsers behind these (`c1-headline-totals.ts`, `c11-gpa.ts`, `c21-ed-counts.ts`, `c21-ed-note.ts`) read both `values` and the document text. Their outputs are small objects.
+The printed counts feed the headline, the page metadata, the positioning card's acceptance rate, the summary and the fact ribbon.
 
-The **year page** is different: it shows the document itself (`MarkdownView` renders the full text and offers it as a download). It needs the artifact and stays as it is.
+**These results are not functions of the artifact alone.** The parsers (`c1-headline-totals.ts`, `c11-gpa.ts`, `c21-ed-counts.ts`, `c21-ed-note.ts`) read the artifact's `values` and document text and need the document's year. What the page finally shows also depends on:
+
+- the projected counts in `school_browser_rows`, which fill in enrollment, replace unreadable C1 counts and supply Early Decision counts (`acceptance-history.ts`);
+- IPEDS figures, pilot membership and the administrative-unit list, which gate the hub counts (`c1-hub-gate.ts`);
+- choices made across a school's documents: the first usable document per year, gaps, exclusion reasons, minimum and recent-year rules, the newest school-written Early Decision note (`acceptance-history.ts`, `c11-gpa.ts`).
+
+So the three page-exists flags are school-level decisions, and the counts are gated results. Neither can be stored per document. What can be stored per document is what the parsers return.
+
+The **year page** shows the document itself (`MarkdownView` renders the full text and offers it as a download). It needs `values` and `markdown` and benefits from step 1 only.
 
 ### What happens under load
 
@@ -75,134 +98,194 @@ PRs #334, #336, #337 and #338 reduce how often cold renders happen. None reduces
 
 ## Goals
 
-1. A hub render does not fetch an artifact when readings exist for its documents.
-2. What the page shows is unchanged. A parity check proves it before any switch.
-3. Nothing gets staler than it is today. A reading depends only on the artifacts it was computed from, so it is correct for as long as those artifacts are the newest.
-4. Rollback is one environment variable.
+1. A hub render fetches no more of an artifact than it uses, and after step 2 fetches no artifact when readings exist.
+2. What every page shows is unchanged. Parity is proved against a frozen baseline before any switch.
+3. Nothing gets staler than it is today.
+4. Each step can be turned off with one environment variable, and any failure falls back to today's path.
 
 ## Non-goals
 
-- Whole-page payloads. The first draft proposed them; see [What the review changed](#what-the-review-changed).
-- The year page, the CSV and XLSX downloads and the facts API. They serve the document's contents and keep reading the artifact.
+- Whole-page payloads, or storing final counts and page-exists flags. See [What the reviews changed](#what-the-reviews-changed).
+- Changing gating, projection fallback or cross-document aggregation. They stay in the render.
+- The CSV and XLSX downloads and the facts API, beyond what step 1 gives them for free.
 - Changing hosts, object storage or a CDN for data.
 - The public PostgREST API and its rate limits.
 
 ## Design
 
-### 1. What a reading is
+### Step 1: narrow artifact reads
 
-One row per document, holding everything the hub and the three pilot pages derive from that document's artifacts:
+`fetchExtract` and `fetchCanonicalArtifact` select `*`. Replace that with the columns and `notes` keys the web app uses: `values`, `markdown`, `schema_version`, `stats`, `schema_fallback_used`, and the keys the fallback and overlay matching read (source hash, markdown hash, hold flag). The returned object keeps its current shape so callers do not change.
+
+A test lists the `notes` keys the web app reads and fails when code reads one that the select omits. Controlled by `ARTIFACT_READ_MODE=narrow|full`.
+
+Expected effect, from the table above: bytes roughly halved. The effect on the 46 ms mean is not known until measured in production.
+
+### Step 2: document readings
+
+#### What a reading is
+
+The parsers' own outputs for one document, before any gating or aggregation: the C1 resolution and totals, the C21 candidate counts and note, the C11 and C12 GPA bands, average and share submitting, and the facts the schema-fallback note is built from. Projected counts, IPEDS, allowlists and cross-document rules are applied afterwards, in the render, as they are today.
+
+#### What makes a reading valid
+
+A reading is computed from a set of inputs, and is served only when all of them still match:
+
+| Input | Why |
+|---|---|
+| Canonical, fallback and overlay artifact ids | Which artifacts were read |
+| A revision for each of those artifacts | Artifacts can be edited in place: `tools/data_quality/audit_b1_gender_2024.py` rewrites `notes.values` on an existing row. A new `revision` column on `cds_artifacts`, raised by a trigger on update, makes that visible |
+| The document's `canonical_year` | C1 rejects some older layouts by year; C21 switches field ids at 2025; the fallback note takes the year |
+| Overlay serving classes (PRD 038) | They change which values are merged |
+| `reader_version` | Bumped when a parser changes; a test fails when a parser file changes without a bump |
+
+These are hashed into one `input_fingerprint`.
+
+#### Storage
 
 ```sql
 create table public.cds_document_readings (
-  document_id           uuid        primary key references public.cds_documents(id) on delete cascade,
-  canonical_artifact_id uuid        not null,  -- the artifacts this was computed from
-  fallback_artifact_id  uuid,
-  overlay_artifact_id   uuid,
-  overlay_serve_key     text        not null default '',  -- PRD 038 serving classes in force
-  reader_version        text        not null,  -- bumped when a parser or the shape changes
-  reading               jsonb       not null,  -- c1, c11, c21, schema-fallback inputs; a few hundred bytes
-  computed_at           timestamptz not null default now()
+  document_id       uuid        not null references public.cds_documents(id) on delete cascade,
+  input_fingerprint text        not null,
+  reader_version    text        not null,
+  reading           jsonb       not null,
+  computed_at       timestamptz not null default now(),
+  primary key (document_id, input_fingerprint)
 );
 ```
 
-Privileges follow the recent convention: `revoke all … from public, anon, authenticated`, then `grant select` to `anon, authenticated` and `grant all` to `service_role`; RLS on with one SELECT policy. The readings are derived from already-public data.
+Rows are never updated. A different fingerprint is a different row, so two deployments with different reader versions, or two renders racing, cannot overwrite each other. A cleanup step in the backfill script deletes rows whose fingerprint is no longer current.
 
-A reading is valid when its three artifact ids, `overlay_serve_key` and `reader_version` match the current ones. Nothing else can make it stale: federal loads, coverage refreshes, scholarship changes and the date do not touch it.
+Publicly readable (owner decision): `revoke all … from public, anon, authenticated`, then `grant select` to `anon, authenticated` and `grant all` to `service_role`; RLS on with one SELECT policy.
 
-### 2. One implementation, in TypeScript
+#### Selecting the current inputs
 
-`readDocument(extract)` is a pure function that runs the existing parsers on one document's merged extract and returns the reading object. The pages already call these parsers; this gathers the calls behind one function with a serializable result. There is no copy in Python or SQL.
+One database function, `cds_reading_inputs(p_document_ids uuid[])`, returns for each document the artifact ids and revisions the web app would select, and the matching stored reading if there is one.
 
-### 3. Read path
+It must reproduce the web app's selection rules exactly, which differ from the existing SQL view `cds_selected_extraction_result`:
+
+- the newest canonical artifact regardless of producer;
+- the newest fallback artifact, dropped if it does not match the canonical one;
+- the overlay candidate chosen by schema version, recorded source hash and `held = false`, which can be an older row behind newer rejected ones.
+
+Whether the fingerprint tracks the eligible overlay or only one that contributes values is settled in Phase 2a, with fixtures. So is an index to support the function; the existing one is `(document_id, kind, created_at desc)`. The function's plan and timing are measured for a 28-document school before anything depends on it.
+
+#### Read path
 
 ```
-1. cheap read: the newest canonical, fallback and overlay artifact ids for the page's documents
-               (ids and producer only, never notes)
-2. cheap read: the readings for those documents
-3. for each document:
-     reading present and valid  -> use it
-     otherwise                  -> fetch the artifact as today, compute the reading,
-                                   use it, and store it (best effort, service role)
+1. call cds_reading_inputs for the page's documents
+2. for each document:
+     stored reading for the current fingerprint  -> use it
+     otherwise -> fetch exactly the artifact ids from step 1 (not through the
+                  7-day cache), compute the reading, use it, and store it
+3. apply gating, projection fallback and aggregation as today
 ```
 
-So readings fill themselves in the first time each document is rendered and repair themselves when an artifact or the reader changes. No build route, no hooks in the worker or loaders, no sweep changes.
+Fetching by exact id matters: `fetchExtract` sits behind a 7-day cache keyed by document, and pairing a fresh fingerprint with a cached older artifact would store a wrong reading under a valid key. The outer `fetchAcceptanceHistory` cache key gains the reader version and serving classes for the same reason.
 
-Step 1 replaces up to 28 full-artifact reads for a pilot school with one read of ids. The write in step 3 is an idempotent upsert; two renders computing the same reading write the same row.
+#### Writing from a page render (owner decision: fill on read)
 
-Controlled by `DOCUMENT_READINGS_MODE`:
+- A separate server-only client holds the service-role key. The anon client cannot write (#337).
+- The key is present in Vercel production. CI and local builds do not have it; with no key, nothing is written and the page renders as today.
+- The write runs after the response through Next's `after`, with caching disabled and a 2-second budget. Its failure is logged and ignored: the render already has its answer.
+- School pages are static with on-demand regeneration, so fills happen during regeneration, not on every visit.
 
-- `off`: today's behaviour.
-- `shadow`: compute as today, also read the stored reading, record whether they match, serve today's result. Fill missing rows.
-- `on`: serve from readings as above.
+#### Failure behaviour
 
-### 4. Backfill
+If the function call fails or times out, a stored row is malformed, or anything in the readings path throws, the page uses today's path for that render. `DOCUMENT_READINGS_MODE=off|shadow|on` controls the whole of step 2.
 
-A script computes readings for all 5,325 extracted documents at two per second (about 45 minutes, one artifact read each, spread evenly). Without it, `on` still works; each document just costs one last artifact read.
+### Optional later step: one call for the rest
 
-### 5. Recording parity in shadow
-
-Mismatches go to Sentry as one event per document with the JSON paths that differ (no values). A count per day is the exit measure. Workflow logs are public and are not used for this.
-
-### 6. Optional second step: one call for the rest
-
-With artifacts out of the hub path, about 12 small reads remain (documents, coverage, scorecard, federal facts, merit profile, change events, nonpayment, brand colours, browser row, scholarships). A Postgres function `school_hub_data(p_school_id)` could return them in one round trip. Whether that is worth building is decided from measurements after Phase 1, not now: those reads are indexed lookups under 1 ms each in `pg_stat_statements`, and the gain is fewer connections, not less work.
+With artifacts out of the hub path, about 12 small reads remain. A Postgres function could return them in one round trip. Decided from measurements after step 2; those reads are indexed lookups under 1 ms each in `pg_stat_statements`.
 
 ## Milestones
 
-### Phase 0: prove the reading (about 1 day)
+### Phase 0: baseline and benchmark (about half a day)
 
-- Freeze a benchmark slice of 50 distinct schools, filled in this order so groups do not overlap: 10 acceptance-rate pilot schools, 10 with a scholarship record, 10 with the most documents, 10 with exactly one document, 10 more chosen at random with a fixed seed. Check the list in.
-- Write `readDocument` and refactor the hub's three uses to go through it. No table, no behaviour change.
-- Parity script: for every document of the 50 schools, compare the reading computed fresh with the same reading after a JSON round trip, and compare the hub's derived values (note, counts, three flags) before and after the refactor.
-- **Exit:** zero differences. Any difference is fixed or listed by JSON path in an allowlist in the PR. Report the size distribution of `reading`; if the median is over 4 KB, stop and revisit what is in it.
+- Freeze a benchmark slice of 60 distinct schools: all schools on the early-decision and GPA pilot lists, 10 acceptance-rate pilot schools, 10 with a scholarship record, the 10 with the most documents, 10 with exactly one document, and the rest chosen at random with a fixed seed. Check the list in.
+- Freeze the inputs: export, for those schools, the artifacts, documents, projected rows and IPEDS rows the pages read, to a local fixture (not committed; artifacts are large).
+- Record a baseline from the current code against that fixture: for every school, the full acceptance, early-decision and GPA histories, the hub's derived values, and the rendered text of the hub and three pilot pages.
+- **Exit:** the baseline is reproducible (two runs are byte-identical).
 
-### Phase 1: store and serve (about 2 days)
+### Phase 1: narrow the read (about 1 day)
 
-- Migration, read path, backfill script, `DOCUMENT_READINGS_MODE`.
-- Run the backfill, then `shadow` in production for 3 days.
-- **Exit to `on`:** zero mismatch events over the shadow period.
-- **After `on`:** over 24 hours, `cds_artifacts` requests from the web tier that select `notes` drop by at least 80% against the week before (gateway logs, by request URL). Year pages and downloads account for the remainder.
+- Implement step 1 behind `ARTIFACT_READ_MODE`.
+- **Exit to `narrow`:** output for all 60 schools is byte-identical to the baseline.
+- **After `narrow`:** for 20 controlled cold renders of fixed hub and year pages, before and after, report artifact requests, response bytes and origin time per render from the gateway logs (requests are attributed by a marker header the web tier adds).
+- **Decision:** if the canonical read's share of database time falls below half, stop here and close the issue.
 
-### Phase 2: decide on the single call
+### Phase 2a: prove the reading and the selector (about 1 day)
 
-Compare a week of gateway logs with Nov 5–17 and with the week before Phase 1. Build `school_hub_data` only if hub renders still cause 503s or p95 over 1 s during bursts.
+- Typed `Reading`, `readDocument(extract, yearStart)`, and the pages refactored to compute through it. No table.
+- `cds_reading_inputs` with fixtures for each selection rule above, its query plan, and its timing for a 28-document school.
+- **Exit:** output for all 60 schools is byte-identical to the baseline; the function agrees with the web app's selection for every document in the slice; reading size is reported (stop if the median is over 4 KB).
+
+### Phase 2b: store and serve (about 2 days)
+
+- Migrations (`revision` on `cds_artifacts`, the readings table, the function), the server-only writer, the read path, a resumable backfill script with retry.
+- Backfill cost is about three artifact requests per document (canonical, fallback, overlay page), 5,325 documents, paced.
+- `shadow` in production for 3 days. Each comparison records a counter: compared, matched, mismatched, reading missing, reading stale, error. Mismatches also go to Sentry with the JSON paths that differ.
+- **Exit to `on`:** at least 1,000 comparisons, covering every school in the slice, with zero mismatches and zero errors.
+- **After `on`:** the same 20 controlled cold renders show zero artifact requests for hub pages whose readings exist.
+
+### Phase 3: decide on the single call
+
+Defined before measuring: build it only if, in the week after Phase 2b, any hour shows more than 100 PostgREST 503s attributable to hub renders, or gateway p95 for web-tier requests over 1 s in any hour with more than 5,000 requests.
 
 ## Start gate
 
 Do not start before 2026-11-24. PR #336 shipped on 2026-11-17 and changes how often cold renders happen. The first task is a comparison of the week after it with Nov 5–17: requests per hour, 503s, p95, and the share of database time taken by the artifact read. If bursts are gone, this work is routine, not urgent; it is still worth doing because the artifact read is most of the database time either way.
 
-## Decisions for the owner
+## Decisions
 
-1. **Fill on read or build on write.** Recommended: fill on read, as designed. It needs no hooks and cannot miss a write path. The cost is that a page render performs a database write the first time a document is seen. The alternative is to have the extraction worker ask the web app to compute readings after each run.
-2. **Who can read the table.** Recommended: public, like the data it is derived from. The alternative is service-role only, with the web app reading it through the service key.
-3. **Review size.** Phase 0 and Phase 1 are separate PRs. Phase 1 is estimated at 400–700 changed lines and needs owner review.
+Recorded 2026-11-17:
+
+1. **Fill on read** (owner). Readings are computed and stored the first time a document is rendered, not built on write.
+2. **Publicly readable** (owner). The readings table is readable with the public key, like the data it is derived from.
+
+Open:
+
+3. **Review size.** Phases 1, 2a and 2b are separate PRs. 2b is estimated at 500–800 changed lines including two migrations and needs owner review.
+4. **Editing artifacts in place.** This design tolerates it through the `revision` column. The alternative is to forbid it and convert the one repair script that does it.
 
 ## Risks
 
 | Risk | Mitigation |
 |---|---|
-| A parser changes and old readings are served | `reader_version` is part of validity; a test fails when a parser file changes without a bump |
-| The reading misses something a page needs | Phase 0 routes all three uses through `readDocument`, so a missing value fails parity |
-| Writing from a page render fails or is slow | Best effort with a short timeout; the page already has its answer and renders regardless |
-| The cheap id read is not cheap | It selects ids only; measured in Phase 0 against the largest school (28 documents) |
-| Overlay serving classes change (PRD 038) | `overlay_serve_key` is part of validity |
-| The backfill loads the database | Two documents per second, about one artifact read each; less than one crawl minute per minute |
+| A parser changes and old readings are served | `reader_version` is in the fingerprint; a test fails when a parser file changes without a bump |
+| An artifact is edited in place | `revision` is in the fingerprint |
+| The selector disagrees with the web app's selection | Fixtures per rule and a full-slice agreement check in Phase 2a |
+| The selector is slow | Plan and timing measured in Phase 2a before anything depends on it |
+| A narrow select omits a key some code reads | Test that ties the select list to the keys read; byte-identical baseline |
+| The write is lost, slow or rejected | Best effort after the response; the next regeneration tries again |
+| No service key in an environment | No writes; pages render as today |
+| The backfill loads the database | Paced and resumable; about 16,000 requests in total, spread out |
 
-## What the review changed
+## What the reviews changed
 
-The first draft stored one JSON payload per school holding everything the hub shows, rebuilt by a new route whenever data changed. Gemini 4 Hydrogen's review found that design had problems this one avoids:
+**First draft: whole-page payloads (reviewed by Gemini 4 Hydrogen).** One JSON payload per school, rebuilt by a new route whenever data changed. The review found:
 
-- **Staleness without a bound.** A stored page payload does not expire. Changes that no hook reports (coverage wording, federal loads, the scholarship cycle rolling over on July 1) would have stayed wrong until a full rebuild. Readings depend only on artifacts.
-- **Stale inputs.** The builder would have called loaders that sit behind a 7-day cache and could have stored week-old data.
-- **Timeouts.** The worker waits 5 seconds and the loader workflow 20 for the refresh call; building 100 schools inside that call would not fit.
-- **Rebuild cost.** A full rebuild is about 3,000 schools, not 772, close to an hour at one per second.
-- **Removed schools.** A payload row had no way to say a school now redirects or returns 404.
-- **Uncheckable milestones.** The first draft compared the builder with the loaders it wrapped, which tests nothing, and its "explained differences" exit could not fail.
+- a stored page payload does not expire, so changes no hook reports (coverage wording, federal loads, the scholarship cycle rolling over on July 1) stay wrong until a full rebuild;
+- the builder would read through a 7-day cache and could store week-old data;
+- the worker waits 5 seconds for the refresh call, and building 100 schools inside it does not fit;
+- a full rebuild is about 3,000 schools, close to an hour;
+- a payload row cannot say a school now redirects or returns 404;
+- the exit criteria could not fail.
 
-It also corrected two facts: `c1-headline-totals.ts` parses document text too, and the year page renders the whole document, so what it needs from the text was never an open question.
+It suggested storing only the small values derived from the artifact.
 
-The review suggested this design's core idea: store only the small values derived from the artifact, and optionally fetch the rest in one call.
+**Second draft: per-document readings holding final values (reviewed by Codex).** The review found:
+
+- the validity rule was wrong: final counts and page-exists flags also depend on projected rows, IPEDS, allowlists and cross-document rules, so identical artifacts can produce different correct values. Readings now hold parser output only;
+- parsers need the document year, which was not an input;
+- artifact ids are not content revisions, because one repair script edits artifacts in place;
+- "one cheap read of newest ids" was not expressible as described, and the overlay selection rule needs values an id-only read does not have. It is now an explicit function with fixtures;
+- the existing SQL view selects artifacts by different rules from the web app;
+- filling through the cached loader could store an older artifact's reading under a current key;
+- a single row per document can be overwritten by an older deployment. Rows are now keyed by fingerprint;
+- the exit criteria again could pass without proving anything: a JSON round trip tests serialization, zero mismatch events can mean zero comparisons, and weekly request counts do not isolate the change.
+
+It also suggested measuring a narrow artifact read first. That measurement is in this document and became step 1.
 
 ## How measured
 
@@ -212,4 +295,7 @@ The review suggested this design's core idea: store only the small values derive
 - **Counts:** `cds_manifest`, `institution_cds_coverage`, `web/src/lib/acceptance-pilot.ts`.
 - **What the hub takes from the artifact:** reading the two files named above, and the review.
 
-Not measured: the size of a reading; reads per render for the three pilot pages; how long the id read takes for a 28-document school; how much of the crawl hits expired pages versus pages never rendered. Gateway logs record database paths, not which page caused them, so "reads per hub render" is inferred from a minute dominated by hub renders.
+- **Narrow read timing and key sizes:** a `do` block timing 200 randomly chosen newest canonical artifacts three ways inside the database, and `jsonb_each` over the same sample.
+- **Which `notes` keys the web app reads:** grep of `notes.<key>` under `web/src`, tests excluded.
+
+Not measured: the production effect of the narrow read; the size of a reading; reads per render for the three pilot pages; the selector's plan and timing; whether the service-role key is present in every Vercel environment (it is listed for production); how much of the crawl hits expired pages versus pages never rendered. Gateway logs record database paths, not which page caused them, so "reads per hub render" is inferred from a minute dominated by hub renders.
