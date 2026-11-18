@@ -241,9 +241,12 @@ class BrowserProjectionTests(unittest.TestCase):
             defs(),
         )
 
-        self.assertEqual(browser["applied"], 100)
-        self.assertEqual(browser["admitted"], 120)
-        self.assertEqual(browser["enrolled_first_year"], 240)
+        # Admitted > applied and enrolled > admitted cannot both be true of
+        # one funnel; the rows cannot say which side is wrong, so the browser
+        # row publishes neither (issue #281).
+        self.assertIsNone(browser["applied"])
+        self.assertIsNone(browser["admitted"])
+        self.assertIsNone(browser["enrolled_first_year"])
         self.assertIsNone(browser["acceptance_rate"])
         self.assertIsNone(browser["yield_rate"])
 
@@ -593,6 +596,475 @@ class BrowserProjectionTests(unittest.TestCase):
         self.assertIsNone(browser["ed_applicants"])
         self.assertIsNone(browser["ed_admitted"])
         self.assertEqual(browser["applied"], 76247)
+
+    def test_c1_total_row_funnel_that_cannot_be_true_is_not_published(self):
+        # Salisbury 2024-25: applied total 299 beside 7,737 admitted.
+        fields, browser = self._project(
+            "2024-25",
+            {"C.101": "3663", "C.102": "5182", "C.117": "299", "C.118": "7737", "C.119": "16"},
+        )
+        for field_id in ("C.117", "C.118"):
+            self.assertEqual(fields[field_id]["value_status"], "parse_error")
+            self.assertIsNone(fields[field_id]["value_num"])
+        # With admitted already blamed, a small enrolled count is not also
+        # flagged for the 1% yield rule (it is the browser row that clears it).
+        self.assertEqual(fields["C.119"]["value_status"], "reported")
+        # The gender rows are consistent with each other and stay published.
+        self.assertEqual(fields["C.101"]["value_status"], "reported")
+
+    def test_c1_total_row_with_consistent_funnel_is_kept(self):
+        # Lenoir-Rhyne 2024-25 after the extraction fix: 3661 / 3100 / 341.
+        fields, browser = self._project(
+            "2024-25",
+            {"C.101": "1656", "C.102": "2005", "C.105": "1402", "C.106": "1698",
+             "C.117": "3661", "C.118": "3100", "C.119": "341"},
+        )
+        for field_id in ("C.117", "C.118", "C.119"):
+            self.assertEqual(fields[field_id]["value_status"], "reported")
+        self.assertEqual(browser["applied"], 3661)
+        self.assertEqual(browser["admitted"], 3100)
+
+    def test_c1_zero_admitted_beside_enrolled_flags_only_the_zero(self):
+        # Akron 2025-26: admitted total 0 beside 2,169 enrolled; the enrolled
+        # count is the one the school filled in.
+        fields, _browser = self._project(
+            "2025-26", {"C.116": "0", "C.117": "0", "C.118": "2169"}
+        )
+        self.assertEqual(fields["C.117"]["value_status"], "parse_error")
+        self.assertEqual(fields["C.118"]["value_status"], "reported")
+        self.assertEqual(fields["C.118"]["value_num"], "2169")
+
+    def test_c1_men_admitted_over_men_applied_is_not_published(self):
+        # San Jose State 2024-25: the residency row landed in the gender rows.
+        fields, _browser = self._project(
+            "2024-25",
+            {"C.101": "18545", "C.102": "18464", "C.105": "31419", "C.106": "29918", "C.103": "123"},
+        )
+        for field_id in ("C.101", "C.105", "C.102", "C.106"):
+            self.assertEqual(fields[field_id]["value_status"], "parse_error")
+        self.assertEqual(fields["C.103"]["value_status"], "reported")
+
+    def test_c1_men_and_women_rows_in_order_are_kept(self):
+        # UNC 2025-26: 31,665 men applied, 5,305 admitted.
+        fields, _browser = self._project(
+            "2025-26",
+            {"C.101": "31665", "C.102": "44582", "C.104": "5305", "C.105": "7446"},
+        )
+        for field_id in ("C.101", "C.102", "C.104", "C.105"):
+            self.assertEqual(fields[field_id]["value_status"], "reported")
+
+    def test_browser_funnel_admitted_over_applied_is_cleared(self):
+        # San Jose State 2024-25 browser row: 37,132 applied, 62,266 admitted.
+        _fields, browser = self._project(
+            "2024-25",
+            {"C.101": "18545", "C.102": "18464", "C.103": "123", "C.105": "31419",
+             "C.106": "29918", "C.107": "929", "C.109": "2261", "C.111": "2140"},
+        )
+        self.assertIsNone(browser["applied"])
+        self.assertIsNone(browser["admitted"])
+        self.assertIsNone(browser["acceptance_rate"])
+        self.assertEqual(browser["enrolled_first_year"], 4401)
+
+    def test_browser_funnel_enrolled_over_admitted_is_cleared(self):
+        # MIT 2024-25 (tier6_html): 29,278 enrolled beside 1,658 admitted.
+        _fields, browser = self._project(
+            "2025-26", {"C.116": "26791", "C.117": "1658", "C.118": "29278"}
+        )
+        self.assertEqual(browser["applied"], 26791)
+        self.assertIsNone(browser["admitted"])
+        self.assertIsNone(browser["enrolled_first_year"])
+
+    def test_browser_funnel_zero_class_beside_thousands_of_admits(self):
+        # UNC 2025-26: enrolled 0 beside 12,751 admitted.
+        _fields, browser = self._project(
+            "2025-26", {"C.116": "76247", "C.117": "12751", "C.118": "0"}
+        )
+        self.assertEqual(browser["admitted"], 12751)
+        self.assertIsNone(browser["enrolled_first_year"])
+        self.assertIsNone(browser["yield_rate"])
+
+    def test_browser_funnel_real_low_yield_is_kept(self):
+        # Manhattan College 2025-26: 464 enrolled of 11,970 admitted (3.9%),
+        # the lowest real yield among the 762 published rows.
+        _fields, browser = self._project(
+            "2025-26", {"C.116": "14570", "C.117": "11970", "C.118": "464"}
+        )
+        self.assertEqual(browser["enrolled_first_year"], 464)
+        self.assertIsNotNone(browser["yield_rate"])
+
+    def _project_labeled(self, year, specs, values):
+        """specs: {field_id: (label, value_type)}"""
+        definitions = defs()
+        for field_id, (label, hint) in specs.items():
+            definitions[year][field_id] = FieldDefinition(
+                year, field_id, label, "Section", "Subsection", hint
+            )
+        fields, _browser = build_projection_rows(
+            doc(canonical_year=year),
+            [artifact(schema_version=year, values={k: {"value": v} for k, v in values.items()})],
+            definitions,
+        )
+        return {row["field_id"]: row for row in fields}
+
+    def test_excel_serial_in_a_date_field_is_converted(self):
+        # Austin Peay 2024-25 printed its spreadsheet dates as serials.
+        fields = self._project_labeled(
+            "2024-25",
+            {
+                "D.904": ("Summer", "MM-DD"),
+                "G.003": ("Approximate date when final costs of attendance will be available", "MM-DD"),
+                "H.901": ("Priority date for filing required financial aid forms:", "MM-DD"),
+                "C.8E": ("Latest date by which SAT or ACT scores must be received for fall-term admission", "YN"),
+                "D.905": ("Fall", "MM-DD"),
+                "D.906": ("Spring", "MM-DD"),
+            },
+            {"D.904": "45437", "G.003": "45869", "H.901": "45931", "C.8E": "45509",
+             "D.905": "3/15", "D.906": "99999"},
+        )
+        self.assertEqual(fields["D.904"]["value_text"], "2024-05-25")
+        self.assertEqual(fields["G.003"]["value_text"], "2025-07-31")
+        self.assertEqual(fields["H.901"]["value_text"], "2025-10-01")
+        self.assertEqual(fields["C.8E"]["value_text"], "2024-08-05")
+        for field_id in ("D.904", "G.003", "H.901", "C.8E"):
+            self.assertEqual(fields[field_id]["value_status"], "reported")
+        # A written date is left as the school wrote it.
+        self.assertEqual(fields["D.905"]["value_text"], "3/15")
+        # A 5-digit number outside the CDS window is left as the school wrote it.
+        self.assertEqual(fields["D.906"]["value_text"], "99999")
+        self.assertEqual(fields["D.906"]["value_status"], "reported")
+
+    def test_serial_one_year_before_the_cds_year_converts(self):
+        # A 2024-25 form lists early-decision deadlines in November 2023.
+        fields = self._project_labeled(
+            "2024-25", {"D.904": ("Summer", "MM-DD")}, {"D.904": "45231"}
+        )
+        self.assertEqual(fields["D.904"]["value_text"], "2023-11-01")
+
+    def test_numeric_cell_with_date_in_its_label_is_not_a_date(self):
+        # Texas A&M 2025-26 B.2202: students still enrolled "as of the official
+        # enrollment date". Also the split Month cells of 2025-26.
+        fields = self._project_labeled(
+            "2025-26",
+            {
+                "B.2202": ("From this group, identify how many were still enrolled as of the official enrollment date", "Number"),
+                "C.2102": ("First or only early decision plan closing date: Month", "MM"),
+            },
+            {"B.2202": "10364", "C.2102": "45509"},
+        )
+        self.assertEqual(fields["B.2202"]["value_status"], "reported")
+        self.assertEqual(fields["B.2202"]["value_num"], "10364")
+        self.assertEqual(fields["C.2102"]["value_text"], "45509")
+
+    def test_five_digit_number_outside_a_date_field_is_untouched(self):
+        fields = self._project_labeled(
+            "2024-25",
+            {"B.101": ("Total students", "Number"), "A.103": ("City/State/Zip/Country:", "Text")},
+            {"B.101": "45509", "A.103": "45509"},
+        )
+        self.assertEqual(fields["B.101"]["value_num"], "45509")
+        self.assertEqual(fields["A.103"]["value_text"], "45509")
+
+    def test_zip_code_in_a_web_address_field_is_not_published(self):
+        # Kenyon 2024-25: 43022 landed in A.010 (CDS web page URL) and A.107
+        # (WWW home page) under the 2025-26 numbering of section A.
+        fields = self._project_labeled(
+            "2024-25",
+            {
+                "A.010": ("If yes, please provide the URL of the corresponding Web page:", "URL"),
+                "A.107": ("WWW Home Page Address:", "Text"),
+                "A.008": ("E-mail Address:", "Email Address"),
+                "A.112": ("Admissions E-mail Address:", "Email Address"),
+            },
+            {"A.010": "43022", "A.107": "43022", "A.008": "43022", "A.112": "admissions@kenyon.edu"},
+        )
+        for field_id in ("A.010", "A.107", "A.008"):
+            self.assertEqual(fields[field_id]["value_status"], "parse_error")
+        self.assertEqual(fields["A.112"]["value_status"], "reported")
+        # In the 2025-26 form A.010 really is the ZIP code.
+        current = self._project_labeled(
+            "2025-26", {"A.010": ("Zipcode", "Numbers")}, {"A.010": "43022"}
+        )
+        self.assertEqual(current["A.010"]["value_status"], "reported")
+
+    def test_c7_ratings_use_the_four_label_vocabulary(self):
+        specs = {f"C.70{n}": ("Rigor of secondary school record", "Text") for n in range(1, 10)}
+        values = {
+            "C.701": "VI",  # Barnard 2025-26 legend
+            "C.702": "NC",  # Aquinas 2024-25, beside spelled-out ratings
+            "C.703": "NotConsidered",  # Reed 2024-25
+            "C.704": "Not Considered Not Considered",  # North Alabama 2024-25, doubled cell
+            "C.705": "Very Important",
+            "C.706": "nc",  # lower-case legend
+            "C.707": "Not considered for admission, even if submitted",  # Virginia Tech
+            "C.708": "C",
+            "C.709": "I",
+        }
+        fields = self._project_labeled("2025-26", specs, values)
+        self.assertEqual(fields["C.701"]["value_text"], "Very Important")
+        self.assertEqual(fields["C.702"]["value_text"], "Not Considered")
+        self.assertEqual(fields["C.703"]["value_text"], "Not Considered")
+        self.assertEqual(fields["C.704"]["value_text"], "Not Considered")
+        self.assertEqual(fields["C.705"]["value_text"], "Very Important")
+        self.assertEqual(fields["C.707"]["value_text"], "Not Considered")
+        self.assertEqual(fields["C.708"]["value_text"], "Considered")
+        self.assertEqual(fields["C.709"]["value_text"], "Important")
+        self.assertEqual(fields["C.706"]["value_text"], "Not Considered")
+        for field_id in values:
+            self.assertEqual(fields[field_id]["value_status"], "reported")
+
+    def test_c7_cells_that_are_not_ratings_are_not_published(self):
+        specs = {f"C.70{n}": ("Class rank", "Text") for n in range(1, 10)}
+        values = {
+            "C.709": "X",  # a bare mark does not say which rating was ticked
+            "C.701": "Text",  # Hiram 2024-25: template header
+            "C.702": "25th Percentile",  # Fullerton 2024-25: C9 heading in a C7 cell
+            "C.703": "SAT Evidence-Based Reading and Writing",
+            "C.704": "First-Time,",  # Evergreen 2024-25
+            "C.705": "18",  # Westminster 2024-25: an ACT score
+            "C.706": "0.3076923076923077",  # North Dakota State 2024-25
+            "C.707": "/2",  # Spring Arbor 2025-26: radio button state
+            "C.708": "Yes",  # Bethel 2024-25
+        }
+        fields = self._project_labeled("2024-25", specs, values)
+        for field_id in ("C.701", "C.702", "C.703", "C.704", "C.705", "C.706", "C.707", "C.708", "C.709"):
+            self.assertEqual(fields[field_id]["value_status"], "parse_error", field_id)
+            self.assertIsNone(fields[field_id]["value_num"])
+        na = self._project_labeled(
+            "2024-25", {"C.701": ("Class rank", "Text")}, {"C.701": "n/a"}
+        )
+        self.assertEqual(na["C.701"]["value_status"], "not_applicable")
+
+    def test_c801_yes_no_vocabulary(self):
+        question = "Does your institution make use of SAT or ACT scores in admission decisions"
+        fields = self._project_labeled(
+            "2024-25",
+            {
+                "C.801": (question, "YN"),
+                "C.8D": ("In addition, does your institution use applicants' test scores for academic advising?", "YN"),
+                "C.8F": ("If necessary, use this space to clarify your test policies", "YN"),
+                "C.1402": ("Application closing date (fall)", "YN"),
+                "C.201": ("Do you have a policy of placing students on a waiting list?", "YN"),
+                "C.205": ("Is your waiting list ranked?", "YN"),
+                "C.206": ("If yes, do you release that information to students?", "YN"),
+            },
+            {"C.801": "Y", "C.8D": "N", "C.8F": "Tests are optional for most applicants.",
+             "C.1402": "Mar 1", "C.201": "YN", "C.205": "0.0283", "C.206": "Y Response 'Y' or 'N'"},
+        )
+        self.assertEqual(fields["C.801"]["value_kind"], "yesno")
+        self.assertIs(fields["C.801"]["value_bool"], True)
+        self.assertIs(fields["C.8D"]["value_bool"], False)
+        # Date and free-text cells that the form also marks YN are not yes/no.
+        self.assertEqual(fields["C.8F"]["value_kind"], "text")
+        self.assertEqual(fields["C.8F"]["value_status"], "reported")
+        self.assertEqual(fields["C.1402"]["value_text"], "Mar 1")
+        # Template echoes and fractions are not answers.
+        for field_id in ("C.201", "C.205", "C.206"):
+            self.assertEqual(fields[field_id]["value_status"], "parse_error", field_id)
+
+    def test_c802_to_c804_radio_export_names_are_decoded(self):
+        specs = {f"C.80{n}": ("SAT or ACT", "Text") for n in (2, 3, 4)}
+        fields = self._project_labeled(
+            "2024-25",
+            specs,
+            {"C.802": "/ADMS_CONSIDER", "C.803": "/ADMS_RFS", "C.804": "/ADMS_NOT_USED"},
+        )
+        self.assertEqual(fields["C.802"]["value_text"], "Considered")
+        self.assertEqual(fields["C.804"]["value_text"], "Not Used")
+        # RFS has no label in the schema, so it is left as exported.
+        self.assertEqual(fields["C.803"]["value_text"], "/ADMS_RFS")
+
+    def test_c7_radio_on_state_names_are_ratings(self):
+        fields = self._project_labeled(
+            "2025-26",
+            {"C.701": ("Rigor of secondary school record", "Text")},
+            {"C.701": "/VI"},
+        )
+        self.assertEqual(fields["C.701"]["value_text"], "Very Important")
+
+    def test_c802_to_c804_template_text_and_fractions_are_not_published(self):
+        specs = {f"C.80{n}": ("SAT or ACT", "Text") for n in (2, 3, 4)}
+        fields = self._project_labeled(
+            "2024-25",
+            specs,
+            {"C.802": "ACT Composite", "C.803": "0.3678", "C.804": "Required"},
+        )
+        self.assertEqual(fields["C.802"]["value_status"], "parse_error")
+        self.assertEqual(fields["C.803"]["value_status"], "parse_error")
+        self.assertEqual(fields["C.804"]["value_status"], "reported")
+
+    def test_loan_category_borrowers_over_any_loan_borrowers_are_not_published(self):
+        # Illinois Urbana-Champaign 2024-25: a dollar amount in H.503.
+        hints = {f"H.50{n}": "Number" for n in (1, 2, 3, 4, 5)}
+        fields = self._project_with_hints(
+            hints,
+            {"H.501": "2923", "H.502": "2800", "H.503": "40705", "H.504": "0", "H.505": "3500"},
+            year="2024-25",
+        )
+        for field_id in ("H.501", "H.503"):
+            self.assertEqual(fields[field_id]["value_status"], "parse_error", field_id)
+        # Federal and state counts at or under the any-loan count stay, and
+        # private loans (H.505) are not compared.
+        self.assertEqual(fields["H.502"]["value_status"], "reported")
+        self.assertEqual(fields["H.504"]["value_status"], "reported")
+        self.assertEqual(fields["H.505"]["value_status"], "reported")
+
+    def test_loan_category_slightly_over_any_loan_is_the_schools_own_figure(self):
+        # USC 2025-26: H.502 = 1,386 against H.501 = 1,334 (1.04x).
+        hints = {f"H.50{n}": "Number" for n in (1, 2)}
+        fields = self._project_with_hints(hints, {"H.501": "1334", "H.502": "1386"})
+        self.assertEqual(fields["H.501"]["value_status"], "reported")
+        self.assertEqual(fields["H.502"]["value_status"], "reported")
+
+    def test_flagged_zero_any_loan_count_is_not_evidence_for_not_applicable(self):
+        hints = {"H.501": "Number", "H.502": "Number", "H.511": "Nearest $1"}
+        fields = self._project_with_hints(
+            hints, {"H.501": "0", "H.502": "400", "H.511": "0"}
+        )
+        self.assertEqual(fields["H.501"]["value_status"], "parse_error")
+        self.assertEqual(fields["H.511"]["value_status"], "reported")
+
+    def test_funnel_rules_do_not_double_blame_enrolled(self):
+        # applied 200, admitted 10000, enrolled 80: admitted is the wrong
+        # figure; 80 is not also flagged as a tiny class.
+        fields, browser = self._project(
+            "2025-26", {"C.116": "200", "C.117": "10000", "C.118": "80"}
+        )
+        self.assertEqual(fields["C.118"]["value_status"], "reported")
+        self.assertEqual(browser["enrolled_first_year"], 80)
+        self.assertIsNone(browser["admitted"])
+        # Admitted 0 beside 2,169 enrolled (Akron): only the zero is cleared.
+        _fields, browser = self._project(
+            "2025-26", {"C.116": "9000", "C.117": "0", "C.118": "2169"}
+        )
+        self.assertEqual(browser["enrolled_first_year"], 2169)
+
+    def test_whole_number_rule_covers_only_headcount_cells(self):
+        # H.1103 (weeks of notification) is a Number cell with real fractions.
+        fields = self._project_labeled(
+            "2025-26",
+            {
+                "H.1103": ("or within____weeks of notification.", "Number"),
+                "H.604": ("If institutional financial aid is available for nonresident", "Number"),
+                "B.101": ("Degree-seeking, first-time first-year men", "Number"),
+            },
+            {"H.1103": "2.5", "H.604": "12.5", "B.101": "12.5"},
+        )
+        self.assertEqual(fields["H.1103"]["value_status"], "reported")
+        self.assertEqual(fields["H.604"]["value_status"], "reported")
+        self.assertEqual(fields["B.101"]["value_status"], "parse_error")
+
+    def test_yn_cells_not_phrased_as_questions_are_yes_no(self):
+        fields = self._project_labeled(
+            "2024-25",
+            {"D.1801": ("American Council on Education (ACE)", "YN"),
+             "H.1002": ("b) Students notified on a rolling basis:", "YN")},
+            {"D.1801": "Y", "H.1002": "N"},
+        )
+        self.assertIs(fields["D.1801"]["value_bool"], True)
+        self.assertIs(fields["H.1002"]["value_bool"], False)
+
+    def test_zero_loan_average_beside_zero_borrowers_is_not_applicable(self):
+        # Brigham Young 2025-26: no state-loan borrowers (H.504 = 0), so the
+        # state-loan average (H.514) of 0 is the blank, not a $0 loan.
+        hints = {f"H.{n}": "Nearest $1" if n >= 511 else "Number" for n in (501, 504, 513, 514, 515, 505)}
+        fields = self._project_with_hints(
+            hints,
+            {"H.501": "2000", "H.504": "0", "H.514": "0", "H.505": "10", "H.515": "0", "H.513": "8437"},
+        )
+        self.assertEqual(fields["H.514"]["value_status"], "not_applicable")
+        self.assertEqual(fields["H.514"]["value_kind"], "not_applicable")
+        self.assertIsNone(fields["H.514"]["value_num"])
+        # Samford 2024-25: one state-loan borrower, average 0 -- left as reported.
+        self.assertEqual(fields["H.515"]["value_status"], "reported")
+        self.assertEqual(fields["H.515"]["value_num"], "0")
+        # Yale 2025-26: a real institutional-loan average is untouched.
+        self.assertEqual(fields["H.513"]["value_num"], "8437")
+
+    def test_zero_loan_average_without_a_borrower_count_is_left_alone(self):
+        fields = self._project_with_hints({"H.514": "Nearest $1"}, {"H.514": "0"})
+        self.assertEqual(fields["H.514"]["value_status"], "reported")
+
+    def test_zero_loan_average_with_zero_percent_and_no_count_is_not_applicable(self):
+        # No borrower count, 0% borrowing, average 0: nobody borrowed.
+        hints = {"H.509": "Nearest 1%", "H.514": "Nearest $1"}
+        fields = self._project_with_hints(hints, {"H.509": "0", "H.514": "0"})
+        self.assertEqual(fields["H.514"]["value_status"], "not_applicable")
+
+    def test_zero_percent_with_a_borrower_count_does_not_make_the_average_not_applicable(self):
+        # Belmont 2024-25 institutional loans: 1 borrower rounds to 0%. A zero
+        # average beside that borrower is still a reported answer.
+        hints = {"H.503": "Number", "H.508": "Nearest 1%", "H.513": "Nearest $1"}
+        fields = self._project_with_hints(hints, {"H.503": "1", "H.508": "0", "H.513": "0"})
+        self.assertEqual(fields["H.513"]["value_status"], "reported")
+
+    def test_c1_first_year_class_under_one_percent_of_admits_is_not_published(self):
+        # Salisbury 2024-25: 16 enrolled beside 7,737 admitted.
+        fields, _browser = self._project(
+            "2024-25", {"C.117": "10734", "C.118": "7737", "C.119": "16"}
+        )  # applied is consistent with admitted, so only enrolled is suspect
+        self.assertEqual(fields["C.119"]["value_status"], "parse_error")
+        self.assertEqual(fields["C.118"]["value_status"], "reported")
+        # Manhattan College 2025-26: 464 of 11,970 (3.9%) is a real low yield.
+        fields, _browser = self._project(
+            "2025-26", {"C.116": "14570", "C.117": "11970", "C.118": "464"}
+        )
+        self.assertEqual(fields["C.118"]["value_status"], "reported")
+
+    def test_yes_no_question_about_a_date_is_not_read_as_a_date_serial(self):
+        fields = self._project_labeled(
+            "2024-25",
+            {"C.1401": ("Does your institution have an application closing date?", "YN")},
+            {"C.1401": "45509"},
+        )
+        self.assertEqual(fields["C.1401"]["value_status"], "parse_error")
+        self.assertEqual(fields["C.1401"]["value_text"], "45509")
+
+    def test_fractional_headcount_is_not_published(self):
+        # Worcester State 2025-26: dollars and cents in an H2 count cell.
+        # Colorado 2024-25: B.121 = 16.312 for the full-time men count.
+        fields = self._project_labeled(
+            "2025-26",
+            {
+                "H.204": ("D. Number of students in line c who were awarded any financial aid", "Number"),
+                "H.205": ("E. Number of students in line d who were awarded any need-based aid", "Number"),
+                "B.121": ("Total graduate Part-Time Students: males", "Number"),
+                "I.202": ("based on ____ students", "Number"),
+                "C.1201": ("Average high school GPA", "Round to Nearest Hundredths"),
+                "B.429": ("Recipients of a Federal Pell Grant", "Whole Number or Round to Nearest Tenth"),
+            },
+            {"H.204": "3126429.42", "H.205": "1500", "B.121": "16.312",
+             "I.202": "17070.67", "C.1201": "3.35", "B.429": "49.19"},
+        )
+        for field_id in ("H.204", "B.121"):
+            self.assertEqual(fields[field_id]["value_status"], "parse_error", field_id)
+            self.assertIsNone(fields[field_id]["value_num"])
+        # B18/B19 two-year graduation cells ("2022 Cohort") may be counts or
+        # rates, so they are not held to whole numbers (Purdue 2025-26).
+        two_year = self._project_labeled(
+            "2025-26", {"B.1801": ("2022 Cohort", "Number")}, {"B.1801": "0.8296261239943209"}
+        )
+        self.assertEqual(two_year["B.1801"]["value_status"], "reported")
+        # Counter-examples: a whole count, FTE students (section I), a GPA and
+        # a percent typed "Whole Number or Round to Nearest Tenth" stay.
+        self.assertEqual(fields["H.205"]["value_status"], "reported")
+        self.assertEqual(fields["I.202"]["value_num"], "17070.67")
+        self.assertEqual(fields["C.1201"]["value_num"], "3.35")
+        self.assertEqual(fields["B.429"]["value_num"], "49.19")
+
+    def test_student_count_above_250k_is_a_dollar_column(self):
+        # Worcester State 2025-26: H.218 = 448,174. A real large count stays.
+        fields = self._project_labeled(
+            "2025-26",
+            {
+                "H.218": ("E. Number of students in line d who were awarded any need-based aid", "Number"),
+                "H.214": ("A. Number of degree-seeking undergraduate students", "Number"),
+                "H.606": ("Total dollar amount", "Nearest $1"),
+            },
+            {"H.218": "448174", "H.214": "92000", "H.606": "448174"},
+        )
+        self.assertEqual(fields["H.218"]["value_status"], "parse_error")
+        self.assertEqual(fields["H.214"]["value_status"], "reported")
+        self.assertEqual(fields["H.606"]["value_status"], "reported")
 
     def test_ed_counts_from_the_2024_form_use_its_own_field_numbers(self):
         # Hofstra 2024-25: 20 applicants, 24 admitted.

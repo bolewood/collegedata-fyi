@@ -1660,7 +1660,7 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
       <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
         Every row has a <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">value_status</code>:{" "}
         <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">reported</code> (the school gave a value we could read),{" "}
-        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">not_applicable</code> (the school marked it N/A),{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">not_applicable</code> (the school marked it N/A, or the value cannot apply: a loan average of 0 where no student borrowed),{" "}
         <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">missing</code> (blank), or{" "}
         <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">parse_error</code> (the cell held something that is not a
         valid answer, or a number that cannot be true next to its neighbours,
