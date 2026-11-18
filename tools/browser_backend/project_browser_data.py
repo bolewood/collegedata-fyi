@@ -24,6 +24,7 @@ Env:
 from __future__ import annotations
 
 import argparse
+import datetime as _dt
 import hashlib
 import json
 import re
@@ -659,6 +660,19 @@ def infer_value_kind(record: Any, definition: Optional[FieldDefinition], text: O
     # as text with no number.
     format_hint = (definition.value_kind_hint if definition else "") or ""
     format_hint = format_hint.strip().lower()
+    # 2024-25 marks yes/no questions "YN". Without this a bare "Y" or "N" was
+    # stored as text and template echoes ("YN", "Y Response 'Y' or 'N'", a
+    # fraction) passed as answers. Only questions: the form also marks date
+    # cells (C.8E, C.1402) and a clarification box (C.8F) YN.
+    if (
+        format_hint == "yn"
+        and definition is not None
+        and (
+            _YES_NO_QUESTION.match(definition.field_label or "")
+            or definition.field_id in _YES_NO_FIELD_IDS
+        )
+    ):
+        return "yesno"
     if (
         re.search(r"\b(percent|percentage|rate)\b", hint)
         and "percentile" not in hint
@@ -673,7 +687,7 @@ def infer_value_kind(record: Any, definition: Optional[FieldDefinition], text: O
         return "currency"
     if "yesno" in hint or "yes/no" in hint or lower in {"yes", "no", "true", "false"}:
         return "yesno"
-    if lower in {"☒", "☑", "✓", "x", "/yes", "/x", "checked", "unchecked", "☐"}:
+    if lower in {"☒", "☑", "✓", "✔", "x", "/yes", "/x", "checked", "unchecked", "☐"}:
         return "checkbox"
     if "number" in hint or "nearest tenth" in hint or "nearest hundredths" in hint:
         return "number"
@@ -682,12 +696,181 @@ def infer_value_kind(record: Any, definition: Optional[FieldDefinition], text: O
     return "text"
 
 
+_EXCEL_EPOCH = _dt.date(1899, 12, 30)
+_FIVE_DIGITS = re.compile(r"\d{5}")
+_ZIP_LIKE = re.compile(r"\d{5}(?:-\d{4})?")
+
+
+def _is_date_field(definition: Optional[FieldDefinition]) -> bool:
+    """The schema marks deadline and availability dates MM-DD; a few date
+    questions carry another hint (C.8E, "Latest date by which SAT or ACT
+    scores must be received", is typed YN; 2025-26 G.003 is Text), so the
+    label is checked for those hints only. A numeric cell whose label mentions
+    a date (2025-26 B.2202 "... as of the official enrollment date"), the
+    split Month/Day cells of 2025-26 (MM, DD) and checkboxes are not dates.
+    Swept over the 2023-24, 2024-25 and 2025-26 schemas: 38 MM-DD cells plus
+    C.8E, C.1402, C.1403 (YN) and G.003 (Text) qualify.
+    """
+    if definition is None:
+        return False
+    if _YES_NO_QUESTION.match(definition.field_label or ""):
+        return False
+    hint = definition.value_kind_hint or ""
+    if hint == "MM-DD":
+        return True
+    return hint in {"YN", "Text"} and bool(
+        re.search(r"\bdate\b", definition.field_label or "", re.IGNORECASE)
+    )
+
+
+def _is_web_or_email_field(definition: Optional[FieldDefinition]) -> bool:
+    if definition is None:
+        return False
+    label = definition.field_label or ""
+    return (definition.value_kind_hint or "") in {"URL", "Email Address"} or bool(
+        re.search(r"\b(?:www|url|web page|e-mail|email)\b", label, re.IGNORECASE)
+    )
+
+
+def _date_serial_value(
+    text: str, definition: Optional[FieldDefinition], year_start: Optional[int]
+) -> Optional[ParsedValue]:
+    """A bare 5-digit number in a date field is an Excel serial (days since
+    1899-12-30), as when a school prints its spreadsheet without date
+    formatting (Austin Peay 2024-25: 45509 in C.8E, 45437 in D.904, 45869 in
+    G.003, 45931 in H.901). It is converted when it lands between January of
+    the year before the CDS year and December of the year after it (a 2024-25
+    form carries early-decision deadlines in November 2023); any other 5-digit
+    number is left as the school wrote it.
+    """
+    if not _is_date_field(definition) or not _FIVE_DIGITS.fullmatch(text):
+        return None
+    if year_start is None:
+        return None
+    day = _EXCEL_EPOCH + _dt.timedelta(days=int(text))
+    if _dt.date(year_start - 1, 1, 1) <= day <= _dt.date(year_start + 1, 12, 31):
+        return ParsedValue(day.isoformat(), None, None, "text", "reported")
+    return None
+
+
+# C7 "basis for selection" cells (C.701-C.718) hold one of four ratings, or a
+# checkbox mark when the school ticked a column of the grid.
+_C7_RATING_FIELD = re.compile(r"C\.7(?:0[1-9]|1[0-8])")
+_C7_RATINGS = {
+    "veryimportant": "Very Important",
+    "important": "Important",
+    "considered": "Considered",
+    "notconsidered": "Not Considered",
+}
+# A school's own legend (Barnard, Eastern Oregon, Utah 2025-26; Aquinas
+# 2024-25 beside spelled-out ratings in the same table).
+_C7_ABBREVIATIONS = {"VI": "Very Important", "I": "Important", "C": "Considered", "NC": "Not Considered"}
+_C7_CHECK_MARKS = {"x", "\u2713", "\u2714", "\u2612", "\u2611", "/yes", "/x", "checked"}
+_C8_TEST_USE_FIELD = re.compile(r"C\.80[2-4]")
+# C.802-C.804 radio buttons export their on-state names (schemas/field_maps:
+# /ADMS_REQ, /ADMS_RFS, /ADMS_REC, /ADMS_CONSIDER, /ADMS_NOT_USED). RFS is left
+# raw: the form's wording for it is not in the schema.
+_C8_EXPORT_STATES = {
+    "ADMS_REQ": "Required",
+    "ADMS_REC": "Recommended",
+    "ADMS_CONSIDER": "Considered",
+    "ADMS_NOT_USED": "Not Used",
+}
+# Words the C7 grid and the C9 test-score table print as headings; when a value
+# equals one of them the cell is the template, not an answer.
+_TEMPLATE_ECHO = frozenset(
+    {
+        "text", "act composite", "sat composite", "25th percentile",
+        "sat evidence-based reading and writing", "first-time,",
+        "rigor of secondary school record", "class rank", "academic gpa",
+        "standardized test scores", "application essay", "recommendation(s)",
+        "interview", "extracurricular activities", "talent/ability",
+        "character/personal qualities", "first generation", "alumni/ae relation",
+        "geographical residence", "state residency", "religious affiliation/commitment",
+        "volunteer work", "work experience", "level of applicant\u2019s interest",
+    }
+)
+# B18/B19 two-year graduation cells ("2021 Cohort"): typed Number, but the
+# template does not say whether a cell is a count or a rate, so they are not
+# held to whole numbers.
+_TWO_YEAR_GRADUATION_CELL = re.compile(r"B\.(?:18|19)\d\d")
+# Number cells that are headcounts: every B cell typed Number (enrollment B1,
+# race B2, degrees B3, graduation cohorts B4/B5; B18/B19 excluded above), the
+# H2 "Number of students in line ..." cells, H.401 (class size) and H.501-H.505
+# (borrowers). Other Number cells are not: H.1102/H.1103 are weeks of
+# notification (2.5 is real) and H.604 is a dollar-or-count cell the schema does
+# not describe.
+_B_HEADCOUNT_CELL = re.compile(r"B\.\d+")
+_H_HEADCOUNT_CELLS = frozenset(_sanity._H2_COUNT_FIELDS) | {
+    "H.401", "H.501", "H.502", "H.503", "H.504", "H.505",
+}
+
+
+def _is_headcount_cell(field_id: str) -> bool:
+    if field_id in _H_HEADCOUNT_CELLS:
+        return True
+    return bool(_B_HEADCOUNT_CELL.fullmatch(field_id)) and not _TWO_YEAR_GRADUATION_CELL.fullmatch(field_id)
+
+# 2024-25 YN cells whose label is not phrased as a question.
+_YES_NO_FIELD_IDS = frozenset({"D.1801", "D.1802", "D.1803", "H.1002"})
+_YES_NO_QUESTION = re.compile(
+    r"(?:(?:in addition|if yes|if no),?\s*)?(?:do|does|is|are|can|must|may)\b", re.IGNORECASE
+)
+
+
+def _c7_rating_value(text: str) -> ParsedValue:
+    """Normalise a C7 rating cell to its label, keep a check mark, and
+    refuse anything else (page text, a count, a fraction)."""
+    stripped = text.strip()
+    if stripped.lower() in _C7_CHECK_MARKS:
+        # A bare mark says a column was ticked, not which rating it is.
+        return ParsedValue(text, None, None, "checkbox", "parse_error")
+    # The template's radio buttons export "/VI", "/I", "/C" and "/NC".
+    label = _C7_ABBREVIATIONS.get(stripped.lstrip("/").upper())
+    if label is None:
+        squashed = re.sub(r"[^a-z]", "", stripped.lower())
+        # A doubled cell is the same rating twice; "Not considered for
+        # admission, even if submitted" is Not Considered with its note.
+        for key, rating in _C7_RATINGS.items():
+            if squashed in (key, key * 2):
+                label = rating
+        if label is None and squashed.startswith("notconsidered"):
+            label = "Not Considered"
+    if label is not None:
+        return ParsedValue(label, None, None, "text", "reported")
+    return ParsedValue(text, None, None, "text", "parse_error")
+
+
 def parse_field_value(
     record: Any,
     definition: Optional[FieldDefinition] = None,
     metric: Optional[MetricDefinition] = None,
+    year_start: Optional[int] = None,
 ) -> ParsedValue:
     text = display_value(record)
+    if text is not None:
+        serial = _date_serial_value(text, definition, year_start)
+        if serial is not None:
+            return serial
+        # A web address or email cell holding a ZIP code: the 2025-26 numbering
+        # of section A applied to a 2024-25 document (Kenyon 2024-25 A.010 =
+        # 43022). The extractor no longer produces it; this covers rows
+        # extracted before that fix.
+        if _is_web_or_email_field(definition) and _ZIP_LIKE.fullmatch(text):
+            return ParsedValue(text, None, None, "text", "parse_error")
+    if text is not None and definition is not None:
+        if _C7_RATING_FIELD.fullmatch(definition.field_id):
+            if text.strip().lower() in NOT_APPLICABLE_VALUES:
+                return ParsedValue(text, None, None, "not_applicable", "not_applicable")
+            return _c7_rating_value(text)
+        if _C8_TEST_USE_FIELD.fullmatch(definition.field_id):
+            decoded = _C8_EXPORT_STATES.get(text.strip().lstrip("/").upper())
+            if decoded is not None:
+                return ParsedValue(decoded, None, None, "text", "reported")
+        if _C8_TEST_USE_FIELD.fullmatch(definition.field_id) and (
+            text.strip().lower() in _TEMPLATE_ECHO or parse_numeric(text) is not None
+        ):
+            return ParsedValue(text, None, None, "text", "parse_error")
     kind = infer_value_kind(record, definition, text)
     if metric and metric.value_kind == "percent":
         kind = "percent"
@@ -715,6 +898,18 @@ def parse_field_value(
         parsed = parse_numeric(text)
         if parsed is None:
             return ParsedValue(text, None, None, kind, "parse_error")
+        if (
+            kind == "number"
+            and definition is not None
+            and definition.value_kind_hint == "Number"
+            and _is_headcount_cell(definition.field_id)
+            and parsed != parsed.to_integral_value()
+        ):
+            # A headcount cannot have a fractional part. Seen as a ratio in an
+            # enrollment cell (B.168 = 0.51 in 25 workbooks), a percent
+            # (B.201 = 25.37) or dollars and cents (Worcester State 2025-26
+            # H.204 = 3126429.42). Averages and percents carry other hints.
+            return ParsedValue(text, None, None, kind, "parse_error")
         if kind == "percent":
             parsed = normalize_fractional_percent(parsed, text)
             if parsed < 0 or parsed > 1:
@@ -738,7 +933,7 @@ def metric_value_is_valid(value: Decimal, metric: MetricDefinition) -> bool:
 
 def parse_bool(text: str) -> Optional[bool]:
     lower = text.strip().lower()
-    if lower in {"yes", "true", "y", "☒", "☑", "✓", "x", "/yes", "/x", "checked"}:
+    if lower in {"yes", "true", "y", "☒", "☑", "✓", "✔", "x", "/yes", "/x", "checked"}:
         return True
     if lower in {"no", "false", "n", "☐", "/off", "unchecked"}:
         return False
@@ -1235,6 +1430,13 @@ def build_projection_rows(
         if probe.value_status == "reported" and probe.value_num is not None:
             reported_numbers[field_id] = probe.value_num
     implausible = _sanity.implausible_fields(selected.schema_version, reported_numbers)
+    no_borrowers = set(
+        _sanity.averages_without_borrowers(
+            selected.schema_version,
+            # A borrower count that failed a rule is not evidence of "no borrowers".
+            {k: v for k, v in reported_numbers.items() if k not in implausible},
+        )
+    )
 
     field_rows: list[dict[str, Any]] = []
     metric_values: dict[str, Decimal] = {}
@@ -1246,9 +1448,11 @@ def build_projection_rows(
             direct_metrics.get(canonical_field_id or "")
             or derived_formula_single_fields.get(field_id)
         )
-        parsed = parse_field_value(record, definition, metric)
+        parsed = parse_field_value(record, definition, metric, year_start)
         if field_id in implausible:
             parsed = ParsedValue(parsed.value_text, None, None, parsed.value_kind, "parse_error")
+        elif field_id in no_borrowers:
+            parsed = ParsedValue(parsed.value_text, None, None, "not_applicable", "not_applicable")
         source_producer, source_version = selected.value_sources.get(
             field_id,
             (selected.base_producer, selected.base_producer_version),
@@ -1305,6 +1509,17 @@ def build_browser_row(
     applied = int_from_decimal(metric_values.get("applied"))
     admitted = int_from_decimal(metric_values.get("admitted"))
     enrolled = int_from_decimal(metric_values.get("first_year_enrolled"))
+
+    # An impossible funnel (admitted > applied, enrolled > admitted, a zero
+    # class beside thousands of admits) is published as NULL: one side is
+    # wrong and the rows cannot say which. See sanity_rules.implausible_funnel.
+    funnel_flags = _sanity.implausible_funnel(applied, admitted, enrolled)
+    if "applied" in funnel_flags:
+        applied = None
+    if "admitted" in funnel_flags:
+        admitted = None
+    if "enrolled_first_year" in funnel_flags:
+        enrolled = None
 
     acceptance_rate = None
     if (
