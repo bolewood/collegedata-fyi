@@ -943,7 +943,7 @@ schools:
   domain: adams.edu
   ipeds_id: '126182'
   scrape_policy: active
-  discovery_seed_url: https://adams.edu/institutional-research/common-data-set/
+  discovery_seed_url: https://www.adams.edu/administration/institutional-effectiveness/common-data-set/
   probe_state:
     last_probed_at: '2026-04-14T02:28:07Z'
     last_result: found
@@ -2468,7 +2468,7 @@ schools:
   domain: bard.edu
   ipeds_id: '189088'
   scrape_policy: active
-  discovery_seed_url: https://bard.edu/institutionalresearch/common-data-set/
+  discovery_seed_url: https://www.bard.edu/about/disclosures/
   probe_state:
     last_probed_at: '2026-04-14T03:02:17Z'
     last_result: found
@@ -4014,7 +4014,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://academics.fresnostate.edu/oie/documents/data-documents/CDS2014-15.pdf
+  discovery_seed_url: https://academics.fresnostate.edu/oie/data/common.html
 - id: california-state-university-fullerton
   name: California State University-Fullerton
   domain: fullerton.edu
@@ -5623,6 +5623,12 @@ schools:
     patterns_tried: 0
     search_fallback_tried: true
   discovery_seed_url: https://coloradomtn.edu/contact-departments/institutional-research/common-data-set/
+- id: colorado-state-university-fort-collins
+  name: Colorado State University-Fort Collins
+  domain: colostate.edu
+  ipeds_id: '126818'
+  discovery_seed_url: https://www.ir.colostate.edu/common-data-set/
+  scrape_policy: active
 - id: colorado-state-university-global
   name: Colorado State University Global
   domain: csuglobal.edu
@@ -7244,6 +7250,11 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
+- id: elizabeth-city-state-university
+  name: Elizabeth City State University
+  domain: ecsu.edu
+  ipeds_id: '198507'
+  scrape_policy: unknown
 - id: elizabethtown-college
   name: Elizabethtown College
   domain: etown.edu
@@ -8057,6 +8068,11 @@ schools:
     patterns_tried: 0
     search_fallback_tried: true
   discovery_seed_url: https://www.fvsu.edu/about-fvsu/resource-center
+- id: framingham-state-university
+  name: Framingham State University
+  domain: framingham.edu
+  ipeds_id: '165866'
+  scrape_policy: unknown
 - id: francis-marion-university
   name: Francis Marion University
   domain: fmarion.edu
@@ -10248,6 +10264,12 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
+- id: iowa-state-university
+  name: Iowa State University
+  domain: iastate.edu
+  ipeds_id: '153603'
+  discovery_seed_url: https://www.ir.iastate.edu/common-data-set
+  scrape_policy: active
 - id: iowa-wesleyan-university
   name: Iowa Wesleyan University
   domain: null
@@ -14300,7 +14322,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.njit.edu/oie/factbook/commondata/index.php
+  discovery_seed_url: https://www.njit.edu/oie/external-surveys
 - id: new-mexico-highlands-university
   name: New Mexico Highlands University
   domain: nmhu.edu
@@ -20157,6 +20179,11 @@ schools:
     patterns_tried: 0
     search_fallback_tried: true
   discovery_seed_url: https://www.stonybrook.edu/irpe/factbook/common-data-set.html
+- id: suffolk-university
+  name: Suffolk University
+  domain: suffolk.edu
+  ipeds_id: '168005'
+  scrape_policy: unknown
 - id: sul-ross-state-university
   name: Sul Ross State University
   domain: sulross.edu
@@ -25373,7 +25400,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/23-24/CDS_2023-2024.pdf
+  discovery_seed_url: https://aie.vt.edu/analytics-and-ai/common-data-set.html
 - id: virginia-state-university
   name: Virginia State University
   domain: vsu.edu
