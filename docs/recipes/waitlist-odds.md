@@ -63,10 +63,11 @@ The Berkeley history panel, inspired by a chart idea from [@neetu_arnold](https:
 The checked-in dataset (`web/src/lib/waitlist-recipe-data.ts`) is generated from the public API by `tools/scorecard/build_waitlist_recipe.py`; its header and `generatedAt` say when. The page does not update on its own, so rebuild it after corpus corrections:
 
 ```bash
+cd ~/Projects/Owen/colleges/collegedata-fyi
 python tools/scorecard/build_waitlist_recipe.py
 ```
 
-The builder needs only the public anon key (`SUPABASE_ANON_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY`). It keeps school-year rows that publish at least one of the three C2 counts, skips sub-institutional rows and malformed year labels, and excludes rows whose counts cannot all be true (more admitted from the wait list than accepted a spot, more accepted than offered, more admitted than offered). The excluded rows are listed in the generated file's header. To pull the underlying fields by hand, start from:
+The builder needs only the public anon key, read from `SUPABASE_ANON_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY` in the environment, the repo-root `.env`, or `web/.env.local`. It keeps school-year rows that publish at least one of the three C2 counts, skips sub-institutional rows and malformed year labels, and excludes rows whose counts cannot all be true (more admitted from the wait list than accepted a spot, more accepted than offered, more admitted than offered). The excluded rows are listed in the generated file's header. To pull the underlying fields by hand, start from:
 
 ```bash
 curl 'https://api.collegedata.fyi/rest/v1/school_browser_rows?select=document_id,ipeds_id,school_id,school_name,canonical_year,acceptance_rate,wait_list_policy,wait_list_offered,wait_list_accepted,wait_list_admitted&wait_list_offered=not.is.null'

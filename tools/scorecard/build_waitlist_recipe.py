@@ -31,8 +31,11 @@ reproduce"):
   this builder keeps those rows so the page logic stays the single place that
   decides.
 
-Regenerate:
+Regenerate (the anon key is read from SUPABASE_ANON_KEY or
+NEXT_PUBLIC_SUPABASE_ANON_KEY in the environment, the repo-root .env, or
+web/.env.local):
 
+    cd <repo root>
     python tools/scorecard/build_waitlist_recipe.py
 """
 
@@ -712,7 +715,9 @@ def main() -> int:
     except ValueError:
         parser.error("--generated-at must be an ISO date (YYYY-MM-DD)")
 
-    load_env(REPO_ROOT / ".env")
+    # Only the public anon key is read from these files; nothing else is used.
+    for env_path in (REPO_ROOT / ".env", REPO_ROOT / "web/.env.local"):
+        load_env(env_path)
     supabase_url = os.environ.get("SUPABASE_URL", "").strip() or SOURCE_API_URL
     api_key = (
         os.environ.get("SUPABASE_ANON_KEY", "").strip()
