@@ -286,11 +286,12 @@ versions:
     relation: counts_within_package
     note: The award is subject to revision pending receipt of any grant, scholarship, or prepaid tuition
       and/or housing aid not anticipated at the time the award is made.
-  - other_aid_type: institutional_merit
-    relation: not_allowed
-    note: 'School words: ''Recipients may receive only one merit scholarship from the Office of
-      Undergraduate Admission.'''
   award_counts: []
+  other_info:
+  - text: The First-Year Merit Scholarships page, in its Merit Scholarships section (President's Scholarship
+      and Canes Achievement Award), says recipients may receive only one merit scholarship from the
+      Office of Undergraduate Admission.
+    source_ref: s-first
   sources:
   - source_id: s-prog
     url: https://admissions.miami.edu/undergraduate/financial-aid/scholarships/isaac-bashevis-singer/index.html
@@ -382,10 +383,11 @@ versions:
     short_excerpt: null
     value_status: not_published
     reported_value: null
-  - field_path: stacking_rules/1
+  - field_path: other_info/0
     source_ref: s-first
-    locator: First-Year Merit Scholarships page, Merit Scholarships section footnote
+    locator: First-Year Merit Scholarships page, note inside the Merit Scholarships section, below the
+      President's Scholarship and Canes Achievement Award
     short_excerpt: Recipients may receive only one merit scholarship from the Office of Undergraduate
       Admission.
     value_status: reported
-    reported_value: not_allowed
+    reported_value: null

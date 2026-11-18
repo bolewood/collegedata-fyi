@@ -1,6 +1,6 @@
 {
   "meta": {
-    "dataset_id": "collegedata-scholarships-v1-652f19e9a5d1",
+    "dataset_id": "collegedata-scholarships-v1-1979e59897fa",
     "version": 1,
     "license": "CC-BY-SA-4.0",
     "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
@@ -4562,13 +4562,19 @@
         {
           "field_path": "other_info/0",
           "source_ref": "s-adm",
-          "locator": "Admissions Scholarships page, National Merit Finalist, Out-of-State National Merit Award package",
+          "locator": "Admissions Scholarships page, National Merit Finalist, Out-of-State Resident",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "other_info/0",
+          "source_ref": "s-adm",
+          "locator": "Admissions Scholarships page, National Merit Finalist / Benacquisto Scholarship, Florida Resident",
           "value_status": "reported"
         }
       ],
       "other_info": [
         {
-          "text": "Florida State University describes its Out-of-State National Merit Award scholarship package as a 100 percent out-of-state tuition waiver, a Vires scholarship and an NMSC stipend if college sponsored.",
+          "text": "The out-of-state offer is Florida State University's Out-of-State National Merit Award scholarship package; for the Florida-resident Benacquisto Scholarship, the page refers students to Florida Student Financial Aid for renewal information.",
           "source_ref": "s-adm",
           "source_url": "https://admissions.fsu.edu/first-year/scholarships"
         }
@@ -13544,6 +13550,12 @@
           "field_path": "entry_year",
           "source_ref": "s-prog",
           "locator": "Program page banner at the top",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-app",
+          "locator": "Application Information, Timeline and Selection Process",
           "value_status": "reported"
         },
         {
@@ -24712,11 +24724,6 @@
           "other_aid_type": "other",
           "relation": "counts_within_package",
           "note": "The award is subject to revision pending receipt of any grant, scholarship, or prepaid tuition and/or housing aid not anticipated at the time the award is made."
-        },
-        {
-          "other_aid_type": "institutional_merit",
-          "relation": "not_allowed",
-          "note": "School words: 'Recipients may receive only one merit scholarship from the Office of Undergraduate Admission.'"
         }
       ],
       "award_counts": [],
@@ -24822,13 +24829,19 @@
           "value_status": "reported"
         },
         {
-          "field_path": "stacking_rules/1",
+          "field_path": "other_info/0",
           "source_ref": "s-first",
-          "locator": "First-Year Merit Scholarships page, Merit Scholarships section footnote",
+          "locator": "First-Year Merit Scholarships page, note inside the Merit Scholarships section, below the President's Scholarship and Canes Achievement Award",
           "value_status": "reported"
         }
       ],
-      "other_info": []
+      "other_info": [
+        {
+          "text": "The First-Year Merit Scholarships page, in its Merit Scholarships section (President's Scholarship and Canes Achievement Award), says recipients may receive only one merit scholarship from the Office of Undergraduate Admission.",
+          "source_ref": "s-first",
+          "source_url": "https://admissions.miami.edu/undergraduate/financial-aid/scholarships/freshman/index.html"
+        }
+      ]
     },
     {
       "program_id": "singer-scholarship",
@@ -24970,11 +24983,6 @@
           "other_aid_type": "other",
           "relation": "counts_within_package",
           "note": "The award is subject to revision pending receipt of any grant, scholarship, or prepaid tuition and/or housing aid not anticipated at the time the award is made."
-        },
-        {
-          "other_aid_type": "institutional_merit",
-          "relation": "not_allowed",
-          "note": "School words: 'Recipients may receive only one merit scholarship from the Office of Undergraduate Admission.'"
         }
       ],
       "award_counts": [],
@@ -25068,13 +25076,19 @@
           "value_status": "not_published"
         },
         {
-          "field_path": "stacking_rules/1",
+          "field_path": "other_info/0",
           "source_ref": "s-first",
-          "locator": "First-Year Merit Scholarships page, Merit Scholarships section footnote",
+          "locator": "First-Year Merit Scholarships page, note inside the Merit Scholarships section, below the President's Scholarship and Canes Achievement Award",
           "value_status": "reported"
         }
       ],
-      "other_info": []
+      "other_info": [
+        {
+          "text": "The First-Year Merit Scholarships page, in its Merit Scholarships section (President's Scholarship and Canes Achievement Award), says recipients may receive only one merit scholarship from the Office of Undergraduate Admission.",
+          "source_ref": "s-first",
+          "source_url": "https://admissions.miami.edu/undergraduate/financial-aid/scholarships/freshman/index.html"
+        }
+      ]
     },
     {
       "program_id": "umn-presidential-scholarship",
@@ -29880,6 +29894,17 @@
             "recurring": null,
             "precision": "day",
             "source_date_text": "February 27 - March 1, 2027 (in-person Top Scholar Weekend)"
+          },
+          {
+            "kind": "acceptance_deadline",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 5,
+              "day": 1
+            },
+            "precision": "day",
+            "source_date_text": "May 1 (submit the nonrefundable $200 enrollment deposit to accept the award)"
           }
         ],
         "admission_plan_requirement": "Submit the general university application first; the South Carolina Honors College application then appears in the admissions portal about 48 hours later and is due Nov. 15",
@@ -30217,13 +30242,13 @@
           "value_status": "reported"
         },
         {
-          "field_path": "other_info/0",
+          "field_path": "application/milestones/5",
           "source_ref": "s-faq",
           "locator": "Scholarship FAQs, I've been awarded a scholarship. How do I accept it?",
           "value_status": "reported"
         },
         {
-          "field_path": "other_info/1",
+          "field_path": "other_info/0",
           "source_ref": "s-faq",
           "locator": "Scholarship FAQs, spring-semester question",
           "value_status": "reported"
@@ -30231,12 +30256,7 @@
       ],
       "other_info": [
         {
-          "text": "The university says general merit scholarships are accepted by paying a nonrefundable $200 enrollment deposit by May 1.",
-          "source_ref": "s-faq",
-          "source_url": "https://sc.edu/about/offices_and_divisions/undergraduate_admissions/tuition_scholarships/scholarship_faqs/index.php"
-        },
-        {
-          "text": "The university says general merit scholarships are awarded for the fall semester only.",
+          "text": "Asked whether a student enrolling in the spring semester can be considered, the university says general merit scholarships are awarded to first-time, first-year freshmen for the fall semester only.",
           "source_ref": "s-faq",
           "source_url": "https://sc.edu/about/offices_and_divisions/undergraduate_admissions/tuition_scholarships/scholarship_faqs/index.php"
         }

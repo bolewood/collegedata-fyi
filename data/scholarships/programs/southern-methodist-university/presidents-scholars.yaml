@@ -585,6 +585,12 @@ versions:
     short_excerpt: Applications have closed for the President's Scholars Class of 2031.
     value_status: reported
     reported_value: null
+  - field_path: entry_year
+    source_ref: s-app
+    locator: Application Information, Timeline and Selection Process
+    short_excerpt: Applications for the Class of 2032 will open Fall 2027.
+    value_status: reported
+    reported_value: null
   - field_path: offers/0/selection_mode
     source_ref: s-app
     locator: Application Information, Timeline and Selection Process, February and March

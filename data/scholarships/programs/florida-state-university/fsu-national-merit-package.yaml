@@ -827,7 +827,9 @@ versions:
     note: National Merit award (corporate or college sponsored) is subtracted from the Benacquisto award
   award_counts: []
   other_info:
-  - text: Florida State University describes its Out-of-State National Merit Award scholarship package as a 100 percent out-of-state tuition waiver, a Vires scholarship and an NMSC stipend if college sponsored.
+  - text: The out-of-state offer is Florida State University's Out-of-State National Merit Award scholarship
+      package; for the Florida-resident Benacquisto Scholarship, the page refers students to Florida
+      Student Financial Aid for renewal information.
     source_ref: s-adm
   sources:
   - source_id: s-adm
@@ -961,7 +963,13 @@ versions:
     reported_value: null
   - field_path: other_info/0
     source_ref: s-adm
-    locator: Admissions Scholarships page, National Merit Finalist, Out-of-State National Merit Award package
-    short_excerpt: It includes a 100 percent out-of-state tuition waiver, a $16,000*, Vires scholarship, and a $2000 NMSC stipend (if college sponsored).
+    locator: Admissions Scholarships page, National Merit Finalist, Out-of-State Resident
+    short_excerpt: Florida State University's Out-of-State National Merit Award scholarship package
+    value_status: reported
+    reported_value: null
+  - field_path: other_info/0
+    source_ref: s-adm
+    locator: Admissions Scholarships page, National Merit Finalist / Benacquisto Scholarship, Florida Resident
+    short_excerpt: Please visit Florida Student Financial Aid for detailed Benacquisto renewal information.
     value_status: reported
     reported_value: null

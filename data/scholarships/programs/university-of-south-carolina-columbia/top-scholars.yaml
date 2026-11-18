@@ -2083,6 +2083,14 @@ versions:
       recurring: null
       precision: day
       source_date_text: February 27 - March 1, 2027 (in-person Top Scholar Weekend)
+    - kind: acceptance_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 5
+        day: 1
+      precision: day
+      source_date_text: May 1 (submit the nonrefundable $200 enrollment deposit to accept the award)
     admission_plan_requirement: Submit the general university application first; the South Carolina Honors
       College application then appears in the admissions portal about 48 hours later and is due Nov. 15
     prerequisites:
@@ -2128,9 +2136,8 @@ versions:
     claim: target
     denominator: null
   other_info:
-  - text: The university says general merit scholarships are accepted by paying a nonrefundable $200 enrollment deposit by May 1.
-    source_ref: s-faq
-  - text: The university says general merit scholarships are awarded for the fall semester only.
+  - text: Asked whether a student enrolling in the spring semester can be considered, the university says
+      general merit scholarships are awarded to first-time, first-year freshmen for the fall semester only.
     source_ref: s-faq
   sources:
   - source_id: s-nr
@@ -2430,13 +2437,13 @@ versions:
       hours after submitting the freshman application.
     value_status: reported
     reported_value: null
-  - field_path: other_info/0
+  - field_path: application/milestones/5
     source_ref: s-faq
     locator: Scholarship FAQs, I've been awarded a scholarship. How do I accept it?
     short_excerpt: To accept your award, submit your nonrefundable $200 enrollment deposit by May 1.
     value_status: reported
     reported_value: null
-  - field_path: other_info/1
+  - field_path: other_info/0
     source_ref: s-faq
     locator: Scholarship FAQs, spring-semester question
     short_excerpt: General university merit scholarships are awarded to first-time, first-year freshmen for the fall semester only.
