@@ -1,6 +1,6 @@
 # PRD 020: Accessible reconstructed CDS table view
 
-**Status:** Draft
+**Status:** Partly shipped (2026-05-07 to 2026-05-08, PRs #64 to #67; the table set was extended later, most recently in #233 on 2026-10-14). The school-year page renders native HTML tables (caption, `scope` headers, scrollable focusable wrapper, explicit "Not reported" cells) from `web/src/lib/reconstructed-tables.ts` for B1, B2, B3, B4/B5, B22, C1, C7, C9, D2, G1, G5, H2, H2A, H5, I1, I3 and J, with unit tests and Playwright coverage (an axe check on the B1 tables of one school, smoke checks for C1 and D2). Not built: the "View as list" fallback, copy-table and per-table CSV controls, table-specific print CSS, the Phase 0 fixture route, keyboard-traversal, forced-colors, zoom and screen-reader test passes, and the accessibility evidence bundle (`docs/accessibility/`) the launch criteria require, so no accessibility claim beyond the single axe check is documented. The body below is the original plan.
 **Created:** 2026-05-07
 **Author:** Anthony + Codex
 **Related:** [PRD 002](002-frontend.md), [PRD 005](005-full-schema-extraction.md), [PRD 010](010-queryable-data-browser.md), [PRD 012](012-browser-field-expansion-after-v03.md), [PRD 016](016-academic-positioning-card.md), [Architecture](../ARCHITECTURE.md)

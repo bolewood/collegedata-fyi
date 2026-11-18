@@ -1,6 +1,6 @@
 # PRD 024: Share button
 
-**Status:** Draft
+**Status:** M1 shipped (2026-11-14, PR #308, v0.6.22.0). `ShareButton` is on school pages, year pages, `/coverage` and `/match`; `/match` Copy link replaced Copy code and adds a Copy summary with no profile values; `/match` previews use generic Open Graph text; unit tests cover `share.ts` and `match-share.ts`. Not built: M2 section-level share controls, stable section anchors and Copy citation; M3 code-specific Match previews (still gated on the reversible-code decision, so no `match/og/route.tsx`); M4 recipe and API page share and OG review. The body below is the original plan.
 **Created:** 2026-05-21
 **Author:** Anthony + Codex
 **Related:** [PRD 002](002-frontend.md), [PRD 013](013-analytics-and-abuse-signal.md), [PRD 015](015-institution-directory-and-cds-coverage.md), [PRD 017](017-match-list-builder.md), [PRD 020](020-accessible-cds-table-view.md), [PRD 023](023-admission-visualization-upgrades.md)

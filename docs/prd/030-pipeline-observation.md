@@ -1,6 +1,6 @@
 # PRD 030: Public pipeline observation
 
-**Status:** M0 live and M2 extraction activity shipped (ledger in v0.6.2.0, PR #177; tooltips and live, non-ISR serving in #183 and #226). The locked-door wall (M1) is not built: `/pipeline-observation.json` carries an empty `locked_doors` array.
+**Status:** M0 live and M2 extraction activity shipped. M0 (stations, heartbeats, lamps, the page and `/pipeline-observation.json`) landed in PR #137 on 2026-08-21; the extraction activity ledger followed in v0.6.2.0 (PR #177); tooltips and live, non-ISR serving came in #183 and #226; the corpus-audit station was added in #301. Not built: the locked-door wall (M1: `pipeline_locked_doors`, the override YAML and its tests); `/pipeline-observation.json` carries an empty `locked_doors` array. M3 incident RSS is also not built. The body below is the original plan.
 **Created:** 2026-08-21
 **Updated:** 2026-09-12 (durable extraction activity slice)
 **Author:** Anthony Showalter (with Cursor Grok, via CEO-design)

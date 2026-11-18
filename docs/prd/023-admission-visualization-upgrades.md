@@ -1,6 +1,6 @@
 # PRD 023: Admission visualization upgrades
 
-**Status:** Draft
+**Status:** Partly shipped (Phases 1 and 2, 2026-05-11, PR #78). `AdmissionStrategyCard` renders the adjusted two-lane admission flow (applicants, admits and class seats, with the stage-scaling note, the class-seat assumption note and a methodology link) and the three-stage wait-list view (explicit zero state, anomaly gating for non-monotonic counts), each with an accessible data table; unit tests in `web/src/lib/admission-strategy.test.ts` use synthetic inputs. Not built: Phase 3 trend strip and the `school_admission_strategy_years` table, Phase 4 peer buckets and `admission_strategy_peer_buckets`, Phase 5 API and MCP alignment (the friendly API has no admission-strategy payload), the pinned Duke, Vanderbilt and Goshen fixtures, and the Playwright visual QA the acceptance criteria name. The body below is the original plan.
 **Created:** 2026-05-11
 **Author:** Anthony + Codex
 **Related:** [PRD 016B](016B-admission-strategy-card.md), [PRD 020](020-accessible-cds-table-view.md), [PRD 021](021-ipeds-coverage-layer.md), [PRD 022](022-mcp-cli-readiness.md), [Admission strategy methodology](../../web/src/app/methodology/admission-strategy/page.tsx)
