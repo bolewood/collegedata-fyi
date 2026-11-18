@@ -872,3 +872,119 @@ overrides:
         Shared listing for Seattle, Bothell and Tacoma. Only files with
         'bothell' in the name belong to this school. No Bothell file is published
         before 2020-21.
+
+  # Issue #302 follow-up, 2026-11-18. The files below were found and checked
+  # by hand (school name and year read from each file; PDFs end with %%EOF).
+  # direct_archive_urls is not read by any scheduled job: archive them with
+  # archive-process force_urls (see docs/data-extraction-pipeline.md).
+  - school_id: bard-college
+    browse_url: https://www.bard.edu/about/disclosures/
+    direct_archive_urls:
+      - { url: "https://docs.google.com/spreadsheets/d/1rWhCTutQYJNzo0CP2lElP2vScNihAtJt/export?format=xlsx", year: "2022-23" }
+      - { url: "https://docs.google.com/spreadsheets/d/1WWOs7BVWgWSS63M-xz1xehwSZ3AY7Be5/export?format=xlsx", year: "2021-22" }
+    hosting_override:
+      file_storage: google_drive
+      notes: >-
+        Bard publishes Google Sheets (2017-18 to 2022-23) on the disclosures
+        page; the old /institutionalresearch/common-data-set/ page stops at
+        2015-16. No 2023-24 or 2024-25 CDS is published (checked 2026-11-18).
+        Only 2021-22 and 2022-23 were verified; the sheets for 2017-18 to
+        2020-21 are on the same page and can be added when checked.
+
+  - school_id: university-of-south-carolina-aiken
+    browse_url: https://ie.usca.edu/facts/cds/index.html
+    direct_archive_urls:
+      - { url: https://ie.usca.edu/facts/cds/reports/USCA_CDS_2024-25.pdf, year: "2024-25" }
+      - { url: https://ie.usca.edu/facts/cds/reports/USCA_CDS_2023-24.pdf, year: "2023-24" }
+      - { url: https://ie.usca.edu/facts/cds/reports/USCA_CDS_2022-23.pdf, year: "2022-23" }
+      - { url: https://ie.usca.edu/facts/cds/reports/USCA_CDS_2021-22.pdf, year: "2021-22" }
+      - { url: https://ie.usca.edu/facts/cds/reports/USCA_CDS_2020-21.pdf, year: "2020-21" }
+      - { url: https://ie.usca.edu/facts/cds/reports/USCA_CDS_2019-20.pdf, year: "2019-20" }
+      - { url: https://ie.usca.edu/facts/cds/reports/USCA_CDS_2018-19.pdf, year: "2018-19" }
+    hosting_override:
+      file_storage: same_origin
+      cms: custom
+      rendering: js_required
+      waf: cloudflare
+      notes: >-
+        The listing page returns 403 to non-browser clients (Cloudflare) and
+        offers the years in a select box, not links. The PDFs themselves
+        download with a plain client. Name pattern
+        reports/USCA_CDS_<YYYY-YY>.pdf holds back to 2005-06; add each new
+        year by hand. Listed in waf_blocked_urls.yaml for the headless worker.
+
+  - school_id: drake-university
+    direct_archive_urls:
+      - { url: https://web.archive.org/web/20250621010721id_/https://www.drake.edu/media/departmentsoffices/institutionalresearch/cds/CDS-2024-2025-Drake.pdf, year: "2024-25" }
+      - { url: https://web.archive.org/web/20240710151331id_/https://www.drake.edu/media/departmentsoffices/institutionalresearch/cds/CDS_Drake_University_2023_2024.pdf, year: "2023-24" }
+      - { url: "https://web.archive.org/web/20240710135035id_/https://www.drake.edu/media/departmentsoffices/institutionalresearch/cds/CDS_2020-2021%20Drake%20University_updated.pdf", year: "2020-21" }
+    hosting_override:
+      file_storage: same_origin
+      notes: >-
+        Drake took its CDS PDFs down; the /cds/ folder returns 404 and there is
+        no live listing, so the discovery seed (a 2018-19 PDF) is also dead.
+        Wayback id_ snapshots pinned. The 2023-24 file's page footers still
+        read "Common Data Set 2021-2022" but its data is Fall 2023 and the
+        workbook title is CDS_Drake_University_2023_2024. Re-check drake.edu
+        institutional research if a listing returns.
+
+  - school_id: new-jersey-institute-of-technology
+    browse_url: https://www.njit.edu/oie/external-surveys
+    direct_archive_urls:
+      - { url: https://www.njit.edu/oie/sites/njit.edu.oie/files/CDS_2024-2025_v12.xlsx, year: "2024-25" }
+      - { url: "https://www.njit.edu/oie/sites/njit.edu.oie/files/CDS_2023_2024_Final%20Web%20Publish%2007232024.xlsb.xlsx", year: "2023-24" }
+      - { url: https://www.njit.edu/sites/njit.edu.oie/files/CDS_2020-2021_20210731.xlsx, year: "2020-21" }
+      - { url: https://www.njit.edu/sites/njit.edu.oie/files/CDS_2019-2020_20200731.xlsx, year: "2019-20" }
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      notes: >-
+        The listing at /oie/external-surveys links 2023-24 and 2024-25. The
+        2019-20 and 2020-21 workbooks are live but not linked from it. The
+        listing's 2018-19 link is a 404 (also a 404 when archived); no 2018-19
+        CDS exists.
+
+  - school_id: california-state-university-fresno
+    browse_url: https://academics.fresnostate.edu/oie/data/common.html
+    direct_archive_urls:
+      - { url: https://web.archive.org/web/20250716013937id_/https://academics.fresnostate.edu/oie/documents/cds-2022-23.pdf, year: "2022-23" }
+      - { url: "https://web.archive.org/web/20220814213619id_/https://academics.fresnostate.edu/oie/documents/CDS%202019-20.pdf", year: "2019-20" }
+      - { url: "https://web.archive.org/web/20220814201919id_/https://academics.fresnostate.edu/oie/documents/CDS%202018-19.pdf", year: "2018-19" }
+    hosting_override:
+      file_storage: same_origin
+      notes: >-
+        Fresno's listing page has no file links; files are sent on request.
+        The live /oie/documents/ PDFs now return 404, so these are Wayback id_
+        snapshots. Do not use documents/cds-2023-24.pdf (Wayback 20250716):
+        cell A1 reads California State University Long Beach, not Fresno. No
+        real 2023-24 file was found. The discovery seed is the listing page,
+        not a PDF, so the resolver has nothing to attach for 2023-24. Other
+        archived Fresno files not pinned (unchecked): CDS 2012-13 to 2016-17
+        under /oie/documents/data-documents/.
+
+  - school_id: virginia-tech
+    browse_url: https://aie.vt.edu/analytics-and-ai/common-data-set.html
+    direct_archive_urls:
+      - { url: https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/25-26/2025-2026-CDS.xlsx, year: "2025-26" }
+      - { url: https://web.archive.org/web/20250206130115id_/https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/24-25/2024-2025-CDS.xlsx, year: "2024-25" }
+      - { url: https://web.archive.org/web/20240203020836id_/https://aie.vt.edu/content/dam/aie_vt_edu/common-data-set/23-24/CDS_2023-2024.pdf, year: "2023-24" }
+    hosting_override:
+      file_storage: same_origin
+      cms: custom
+      notes: >-
+        The listing links only the newest file; older years survive on
+        Archive.org. 2018-19 exists only as ten per-section workbooks
+        (18-19/CDS_2018-2019_A.xlsx to _J.xlsx) and is not pinned: force_urls
+        archives each URL as its own single document, and a section package
+        is only built when the resolver sees two or more same-year section
+        links on a crawled page.
+
+  - school_id: adams-state-university
+    browse_url: https://www.adams.edu/administration/institutional-effectiveness/common-data-set/
+    direct_archive_urls:
+      - { url: https://drive.google.com/file/d/1ogaSJnbgPAgNbaBz0oA91F0iIADVPTHP/view, year: "2022-23" }
+    hosting_override:
+      file_storage: google_drive
+      notes: >-
+        Newest CDS on the listing is 2022-23 (Google Drive, verified Fall 2022
+        data). No 2023-24 or later file is published (checked 2026-11-18).

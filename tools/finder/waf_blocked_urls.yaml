@@ -220,3 +220,24 @@ schools:
       year: 2018-19
     - url: https://corescholar.libraries.wright.edu/cgi/viewcontent.cgi?article=1010&context=common-data-set
       year: 2017-18
+  # ie.usca.edu sits behind Cloudflare and returns 403 to non-browser clients
+  # on the listing page; the years are a select box, so a landing crawl finds
+  # no links. The PDFs themselves download with a plain client.
+  university-of-south-carolina-aiken:
+    school_name: University of South Carolina Aiken
+    landing_url: https://ie.usca.edu/facts/cds/index.html
+    urls:
+    - url: https://ie.usca.edu/facts/cds/reports/USCA_CDS_2024-25.pdf
+      year: 2024-25
+    - url: https://ie.usca.edu/facts/cds/reports/USCA_CDS_2023-24.pdf
+      year: 2023-24
+    - url: https://ie.usca.edu/facts/cds/reports/USCA_CDS_2022-23.pdf
+      year: 2022-23
+    - url: https://ie.usca.edu/facts/cds/reports/USCA_CDS_2021-22.pdf
+      year: 2021-22
+    - url: https://ie.usca.edu/facts/cds/reports/USCA_CDS_2020-21.pdf
+      year: 2020-21
+    - url: https://ie.usca.edu/facts/cds/reports/USCA_CDS_2019-20.pdf
+      year: 2019-20
+    - url: https://ie.usca.edu/facts/cds/reports/USCA_CDS_2018-19.pdf
+      year: 2018-19
