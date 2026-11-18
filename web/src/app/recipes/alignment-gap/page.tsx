@@ -72,16 +72,12 @@ const TRAPPED_EXAMPLES = TRAPPED_EXAMPLE_IDS.map(requireMerit);
 const quincy = requireMerit("quincy-university");
 const hollins = requireEndowment("hollins-university");
 const bennington = requireEndowment("bennington-college");
-const bard = requireEndowment("bard-college");
-const grinnell = requireEndowment("grinnell-college");
 const ex = ALIGNMENT_GAP_MERIT_META.exclusions;
 const medianEndowmentUsd = roundUsd(
   ALIGNMENT_GAP_META.medianEndowmentPerStudent,
   1000,
 );
 const hollinsEndowmentUsd = roundUsd(hollins.endowmentPerStudent, 1000);
-const bardEndowmentUsd = roundUsd(bard.endowmentPerStudent, 100);
-const grinnellEndowmentMillions = (grinnell.endowmentPerStudent / 1_000_000).toFixed(2);
 const benningtonInstructionPct = Math.round(bennington.instructionShare * 100);
 
 const REGIONS = [
@@ -392,53 +388,6 @@ export default function AlignmentGapPage() {
             </div>
           </div>
         ))}
-      </section>
-
-      <section style={{ marginTop: 48, maxWidth: 760 }}>
-        <h2 className="serif" style={{ fontSize: 28, margin: "0 0 12px", letterSpacing: "-0.015em" }}>
-          An example: Bard and Grinnell
-        </h2>
-        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: 0 }}>
-          Bard and Grinnell illustrate why putting these datasets together can
-          be useful.
-        </p>
-        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          Their published median SAT scores are similar: {bard.satCompositeP50}{" "}
-          for Bard and {grinnell.satCompositeP50} for Grinnell. But the financial
-          picture in the joined data is very different.
-        </p>
-        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          Grinnell&apos;s average net price is {formatUsd(grinnell.avgNetPrice)},
-          compared with {formatUsd(bard.avgNetPrice)}{" "}at Bard. Grinnell&apos;s
-          graduate debt burden is {formatRecipeShare(grinnell.burden, 1)},
-          compared with {formatRecipeShare(bard.burden, 1)} at Bard. And Grinnell
-          reports about ${grinnellEndowmentMillions} million in endowment per
-          undergraduate, compared with about {bardEndowmentUsd} at Bard.
-        </p>
-        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          Those numbers do <strong>not</strong> make Bard and Grinnell equivalent
-          colleges, nor do they prove that the difference in endowment caused
-          the difference in price or debt. Admissions alone make that clear:
-          Grinnell admitted 1,416 of 9,758 applicants in 2024–25, or 14.5%.
-        </p>
-        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          The comparison simply shows what becomes visible when data that
-          normally sits in separate systems is placed side by side. Two
-          colleges can enroll students with similar published test profiles
-          while having very different prices, graduate debt burdens, and
-          institutional resources.
-        </p>
-        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          Neither Bard nor Grinnell appears in the first chart because neither
-          has a usable H2A merit-aid row in this dataset. That is why the
-          second chart uses the broader endowment comparison.
-        </p>
-        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          For a student or family, that is the practical point of the exercise:
-          sticker price, financial aid, debt, earnings, and a college&apos;s
-          financial resources are usually presented separately. Looking at them
-          together gives a more complete picture.
-        </p>
       </section>
 
       <section style={{ marginTop: 48, maxWidth: 760 }}>

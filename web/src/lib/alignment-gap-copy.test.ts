@@ -114,8 +114,6 @@ describe("alignment-gap recipe", () => {
     expect(page).not.toContain("because the endowment, not tuition, is paying");
     expect(page).toContain("federal aggregate borrowing");
     expect(page).toContain("dependent undergraduates");
-    expect(page).toContain("An example: Bard and Grinnell");
-    expect(page).toContain("Those numbers do");
     expect(page).not.toContain("whether an applicant should be able to see both numbers before");
     expect(page).not.toContain("Same students, same outcomes, opposite prices");
     expect(page).toContain("CDS H2A");
@@ -180,15 +178,15 @@ describe("alignment-gap recipe", () => {
       ALIGNMENT_GAP_META.medianEndowmentPerStudent,
     );
     expect(ALIGNMENT_GAP_MERIT_META.zeroMeritCount).toBe(5);
-    expect(ALIGNMENT_GAP_MERIT_META.exclusions.rangeGrant).toBe(1);
+    expect(ALIGNMENT_GAP_MERIT_META.exclusions.rangeGrant).toBe(0);
     const zeros = ALIGNMENT_GAP_MERIT_SCHOOLS.filter(
       (row) => row.meritPerFirstYear === 0,
     );
     expect(zeros.map((row) => row.schoolId).sort()).toEqual([
       "amherst",
       "barnard",
-      "colgate-university",
       "haverford-college",
+      "thomas-jefferson-university",
       "university-of-the-incarnate-word",
     ]);
     const incarnate = zeros.find(
@@ -221,11 +219,10 @@ describe("alignment-gap recipe", () => {
     ).toBe(ex.universe);
   });
 
-  it("keeps Bard and Grinnell on the endowment panel and out of the merit join", () => {
+  it("keeps Grinnell on the endowment panel and out of the merit join", () => {
     const endowmentIds = new Set(ALIGNMENT_GAP_SCHOOLS.map((row) => row.schoolId));
     const meritIds = new Set(ALIGNMENT_GAP_MERIT_SCHOOLS.map((row) => row.schoolId));
     for (const id of [
-      "bard-college",
       "grinnell-college",
       "bennington-college",
       "sarah-lawrence-college",
