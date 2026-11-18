@@ -151,7 +151,7 @@ export async function GET() {
             summary: "Flat quick-citation facts for one school (deprecated)",
             deprecated: true,
             description:
-              "Deprecated: use /api/schools/{school_id}/facts. Flat summary of the most recent extracted Common Data Set filing (applied, admitted, acceptance rate, source URLs). Some fields are read from fixed question numbers and can be null or wrong for some schools and years.",
+              "Deprecated: use /api/schools/{school_id}/facts. Flat summary of the most recent extracted Common Data Set filing (applied, admitted, enrolled, acceptance and yield rates, source URLs). Counts come from the year-aware projection, which covers 2024-25 and later filings; older filings return null counts. The raw block keeps legacy keys but fills them only where the CDS question number means what the key says for that year (see raw_note).",
             parameters: [CLIENT_HEADER, { name: "school_id", in: "path", required: true, schema: { type: "string" } }],
             responses: {
               "200": {
@@ -167,7 +167,12 @@ export async function GET() {
                         cds_year: { oneOf: [{ type: "string" }, { type: "null" }] },
                         applied: { oneOf: [{ type: "integer" }, { type: "null" }] },
                         admitted: { oneOf: [{ type: "integer" }, { type: "null" }] },
+                        enrolled: { oneOf: [{ type: "integer" }, { type: "null" }] },
                         acceptance_rate_pct: { oneOf: [{ type: "number" }, { type: "null" }] },
+                        yield_rate_pct: { oneOf: [{ type: "number" }, { type: "null" }] },
+                        deprecated: { type: "boolean" },
+                        replacement: { type: "string" },
+                        raw_note: { type: "string" },
                         source_url: { oneOf: [{ type: "string" }, { type: "null" }] },
                         archive_url: { type: "string" },
                         raw: { type: "object", additionalProperties: true },

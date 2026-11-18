@@ -3,9 +3,9 @@
  *
  * Flat-JSON facts endpoint for LLM tool-use / quick citation.
  *
- * Returns the most-queried CDS fields for the school's most recent extracted
- * year. Shape is deliberately denormalized and stable: no nesting, no schema
- * wrapper, keys match the canonical CDS question numbers that produced them.
+ * DEPRECATED: use /api/schools/{school_id}/facts. Returns admissions counts for
+ * the school's most recent extracted year, read from the year-aware
+ * school_browser_rows projection. Shape is flat and stable.
  *
  * Use cases:
  *   - ChatGPT / Claude tool-call: "curl https://www.collegedata.fyi/api/facts/mit"
@@ -22,7 +22,9 @@ import {
   fetchCanonicalSchoolId,
   fetchSchoolDocuments,
   fetchExtract,
+  fetchSchoolYearFacts,
 } from "@/lib/queries";
+import { legacyAdmissions, legacyRaw, legacyRawNote } from "@/lib/legacy-facts";
 import { schoolRedirectUrl } from "@/lib/school-alias";
 
 export const revalidate = 3600; // hourly — matches the rest of the app
@@ -39,18 +41,6 @@ function readValue(
   return typeof raw === "string" ? raw : null;
 }
 
-function asInt(s: string | null): number | null {
-  if (s === null) return null;
-  const cleaned = s.replace(/[, ]/g, "");
-  const n = parseInt(cleaned, 10);
-  return Number.isFinite(n) ? n : null;
-}
-
-function asPct(a: number | null, b: number | null): number | null {
-  if (a === null || b === null || b === 0) return null;
-  return Math.round((a / b) * 1000) / 10; // one decimal place
-}
-
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ school_id: string }> },
@@ -64,7 +54,18 @@ export async function GET(
     );
   }
   const docs = await fetchSchoolDocuments(school_id);
-  const extracted = docs.find((d) => d.extraction_status === "extracted" && d.document_id);
+  // The list sorts canonical_year as text, so an "unknown"-year document comes
+  // first, and wrong_file documents are not filtered out. Neither has a
+  // projection row. Prefer the newest dated whole-institution filing; fall back
+  // to the first extracted document only when none qualifies.
+  const candidates = docs.filter((d) => d.extraction_status === "extracted" && d.document_id);
+  const extracted =
+    candidates.find(
+      (d) =>
+        /^\d{4}-\d{2}$/.test(d.canonical_year ?? "") &&
+        d.data_quality_flag !== "wrong_file" &&
+        d.sub_institutional == null,
+    ) ?? candidates[0];
 
   if (!extracted || !extracted.document_id) {
     return NextResponse.json(
@@ -78,43 +79,34 @@ export async function GET(
     );
   }
 
-  const { mergedValues } = await fetchExtract(extracted.document_id, school_id);
+  const [{ canonical, mergedValues }, yearFacts] = await Promise.all([
+    fetchExtract(extracted.document_id, school_id),
+    fetchSchoolYearFacts(school_id),
+  ]);
 
-  // CDS canonical question numbers for the "most-queried" fields.
-  //   C.116 = total first-time, first-year applicants
-  //   C.117 = total admitted
-  //   C.120 = total enrolled
-  //   B.101 = total full-time men enrolled
-  //   B.126 = total full-time women enrolled
-  //   B.201-B.220 = retention/persistence (subset per year)
-  //   A.101 = name of institution
-  // Values are strings in the source; we coerce to int / pct where sensible
-  // but always include the raw string alongside for fidelity.
-  const applied = asInt(readValue(mergedValues, "C.116"));
-  const admitted = asInt(readValue(mergedValues, "C.117"));
-  const enrolled = asInt(readValue(mergedValues, "C.120"));
+  // Counts come from the year-aware school_browser_rows projection for this
+  // same document, never from hardcoded question numbers (issue #267).
+  const admissions = legacyAdmissions(yearFacts, extracted.document_id);
+  const templateYear =
+    (canonical?.notes as { schema_version?: string } | null)?.schema_version ??
+    extracted.canonical_year;
 
   const body = {
     school_id,
     school_name: extracted.school_name,
     cds_year: extracted.canonical_year,
     source_format: extracted.source_format,
-    applied,
-    admitted,
-    enrolled,
-    acceptance_rate_pct: asPct(admitted, applied),
-    yield_rate_pct: asPct(enrolled, admitted),
+    applied: admissions.applied,
+    admitted: admissions.admitted,
+    enrolled: admissions.enrolled,
+    acceptance_rate_pct: admissions.acceptance_rate_pct,
+    yield_rate_pct: admissions.yield_rate_pct,
     source_url: extracted.source_url,
     archive_url: `https://www.collegedata.fyi/schools/${school_id}/${extracted.canonical_year}`,
-    raw: {
-      // Include the full canonical field dict so LLMs can cite any other
-      // question by question_number. Keys are stable across years.
-      C_116_applied_total: readValue(mergedValues, "C.116"),
-      C_117_admitted_total: readValue(mergedValues, "C.117"),
-      C_120_enrolled_total: readValue(mergedValues, "C.120"),
-      B_101_ft_men_enrolled: readValue(mergedValues, "B.101"),
-      B_126_ft_women_enrolled: readValue(mergedValues, "B.126"),
-    },
+    raw: legacyRaw(templateYear, (q) => readValue(mergedValues, q)),
+    raw_note: legacyRawNote(school_id),
+    deprecated: true,
+    replacement: `/api/schools/${school_id}/facts`,
     note:
       "Values extracted from the school's own Common Data Set document. Pipeline source: https://github.com/bolewood/collegedata-fyi. For the full extract, query /rest/v1/cds_artifacts directly using the public anon-key instructions at /api.",
   };
