@@ -73,6 +73,12 @@ One YAML file per program: `data/scholarships/programs/<school_id>/<program_id>.
   no_form_other_steps_required` means other steps (visit, interview,
   recommendations) but no scholarship form; it is treated like `not_required` in
   the `consideration_route` cross-check.
+- **Other info.** `versions[].other_info` is null (nothing recorded) or at most 6
+  entries `{text, source_ref}` for a sourced fact with no typed field. `text` is one
+  plain sentence of at most 40 words in the school's terms; `source_ref` names a
+  source of the same version. Each entry needs `reported` evidence on the exact path
+  `other_info/N` with a `short_excerpt`. Display only: it never feeds a label,
+  filter, count or freshness status.
 - **Amounts.** `exact`, `up_to`, `at_least`, `approximate` need `value`; `range`
   needs `min < max`; `not_published` has no numbers.
 - **Supersedes.** Only within the same `entry_year`, acyclic, with at most one
@@ -226,6 +232,9 @@ Paths use `[]` for list items.
 | `versions[].sources[].retrieved_at` | string |  |
 | `versions[].sources[].content_sha256` | string|null |  |
 | `versions[].sources[].archive_url` | string|null |  |
+| `versions[].other_info[]` | array of object|null |  |
+| `versions[].other_info[].text` | string |  |
+| `versions[].other_info[].source_ref` | string |  |
 | `versions[].field_evidence[]` | array of object |  |
 | `versions[].field_evidence[].field_path` | string |  |
 | `versions[].field_evidence[].source_ref` | string |  |

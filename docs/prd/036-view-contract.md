@@ -32,7 +32,8 @@ that have been merged under `data/scholarships/programs/`.
   Everything else comes from a cache refreshed after each load and after the
   change monitor writes (it is not refreshed by the clock).
 - Exposed with the row: sources (`url`, `authority`, `retrieved_at`) and evidence
-  locators (`evidence`: which source and where on it supports which field).
+  locators (`evidence`: which source and where on it supports which field), and
+  `other_info` entries (text, source reference and source URL).
   Never exposed: evidence excerpts (`short_excerpt`), `content_sha256`, the
   monitor's `detail`, and the verbatim `record`.
 
@@ -87,6 +88,7 @@ Types are Postgres types; PostgREST returns arrays as JSON arrays, `date` as
 | `award_counts` | jsonb | no | Array; `metric` is the unit, `claim` is `target` or `actual`. Never present these as odds. |
 | `sources` | jsonb | no | `[{source_id, url, authority, retrieved_at, archive_url}]`. Link the official source one click away. |
 | `evidence` | jsonb | no | `[{field_path, source_ref, locator, value_status}]`: where on which source (`source_ref` is a `sources[].source_id`) each field comes from. `field_path` is relative to the version (`offers/0/benefits/1/amount`); a leading `/` addresses the program. No excerpts. |
+| `other_info` | jsonb | no | `[{text, source_ref, source_url}]`: sourced facts the typed fields cannot hold, each one plain sentence in the school's terms (40 words or fewer), with the source's URL so no join is needed. `[]` when none are recorded. Display only: it never feeds `coverages`, `freshness_status`, a filter or a count, and it is never a substitute for a typed field. The quoted excerpt behind each entry is not exposed. |
 | `last_check_at` | timestamptz | yes | Latest monitor check of this version; null until the monitor (M4) has run. |
 | `last_check_result` | text | yes | Result of that check: `unchanged`, `changed`, `stale_signal`, `unreachable`, `conflicting`. |
 | `needs_review` | boolean | yes | Latest check flagged a change for review. Null when never checked. |
@@ -599,6 +601,7 @@ program data. It shows a full cost-of-attendance offer with an advertised total,
       "value_status": "reported"
     }
   ],
+  "other_info": [],
   "last_check_at": null,
   "last_check_result": null,
   "needs_review": null,

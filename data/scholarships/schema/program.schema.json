@@ -1156,6 +1156,26 @@
         "value_status"
       ]
     },
+    "other_info_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "description": "One plain sentence, 40 words or fewer, stating the fact in the school's terms. No interpretation."
+        },
+        "source_ref": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "description": "A sources[].source_id of this version."
+        }
+      },
+      "required": [
+        "text",
+        "source_ref"
+      ]
+    },
     "version": {
       "type": "object",
       "additionalProperties": false,
@@ -1293,6 +1313,18 @@
             "$ref": "#/$defs/source"
           },
           "minItems": 1
+        },
+        "other_info": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "maxItems": 6,
+          "items": {
+            "$ref": "#/$defs/other_info_entry"
+          },
+          "description": "Sourced facts with no typed field, as short plain statements. null means nothing recorded. Display only: never feeds a label, filter, count or freshness. Each entry needs reported field_evidence with a short_excerpt on other_info/N."
         },
         "field_evidence": {
           "type": "array",

@@ -946,3 +946,83 @@ def test_amendments_are_additive_for_published_versions(doc):
     version27(head)["offers"][0]["benefits"].pop(3)
     version27(base)["offers"][0]["benefits"].pop(3)
     assert v.compare_published({"f.yaml": base}, {"f.yaml": head}) == []
+
+
+# 13. other_info ---------------------------------------------------------------
+
+
+def add_other_info(d: dict, n: int = 1, evidence: bool = True) -> list:
+    entries = [{"text": f"Entry is in the fall term only ({i}).", "source_ref": "s-foundation"} for i in range(n)]
+    version27(d)["other_info"] = entries
+    if evidence:
+        for i in range(n):
+            other_evidence(d, f"other_info/{i}", short_excerpt="fall entry only")
+    return entries
+
+
+def test_other_info_valid_entry_and_null_are_accepted(doc, ctx):
+    version27(doc)["other_info"] = None
+    assert v.validate_doc(doc, ctx) == []
+    add_other_info(doc, 6)
+    assert v.validate_doc(doc, ctx) == []
+
+
+def test_other_info_rejects_more_than_six_entries(doc, ctx):
+    add_other_info(doc, 7)
+    assert codes(v.validate_doc(doc, ctx)) == {"E_SCHEMA"}
+
+
+def test_other_info_text_word_limit(doc, ctx):
+    add_other_info(doc, 1)
+    version27(doc)["other_info"][0]["text"] = " ".join(["word"] * 40)
+    assert v.validate_doc(doc, ctx) == []
+    version27(doc)["other_info"][0]["text"] = " ".join(["word"] * 41)
+    assert codes(v.validate_doc(doc, ctx)) == {"E_TEXT_LENGTH"}
+
+
+def test_other_info_rejects_unknown_source(doc, ctx):
+    add_other_info(doc, 1)
+    version27(doc)["other_info"][0]["source_ref"] = "s-nowhere"
+    # The quote no longer comes from the entry's source either, so both are reported.
+    assert codes(v.validate_doc(doc, ctx)) == {"E_EVIDENCE_SOURCE", "E_NO_EVIDENCE"}
+
+
+def test_other_info_needs_reported_evidence_with_excerpt_on_its_exact_path(doc, ctx):
+    add_other_info(doc, 1, evidence=False)
+    assert codes(v.validate_doc(doc, ctx)) == {"E_NO_EVIDENCE"}
+    # Evidence on the parent path does not count; the path must be exact.
+    other_evidence(doc, "other_info", short_excerpt="fall entry only")
+    assert codes(v.validate_doc(doc, ctx)) == {"E_NO_EVIDENCE"}
+    # Right path but no quote.
+    other_evidence(doc, "other_info/0", short_excerpt=None)
+    assert codes(v.validate_doc(doc, ctx)) == {"E_NO_EVIDENCE"}
+    # not_published evidence does not support a stated fact.
+    other_evidence(doc, "other_info/0", short_excerpt="fall entry only", value_status="not_published")
+    assert codes(v.validate_doc(doc, ctx)) == {"E_NO_EVIDENCE"}
+    # A quote from a different source than the one the entry links does not count.
+    other_evidence(doc, "other_info/0", short_excerpt="fall entry only", source_ref="s-school")
+    assert codes(v.validate_doc(doc, ctx)) == {"E_NO_EVIDENCE"}
+    other_evidence(doc, "other_info/0", short_excerpt="fall entry only")
+    assert v.validate_doc(doc, ctx) == []
+
+
+def test_other_info_excerpt_keeps_the_25_word_limit(doc, ctx):
+    add_other_info(doc, 1, evidence=False)
+    other_evidence(doc, "other_info/0", short_excerpt=" ".join(["word"] * 26))
+    assert codes(v.validate_doc(doc, ctx)) == {"E_EXCERPT_LENGTH"}
+
+
+def test_other_info_evidence_path_must_exist(doc, ctx):
+    add_other_info(doc, 1)
+    other_evidence(doc, "other_info/3", short_excerpt="fall entry only")
+    assert codes(v.validate_doc(doc, ctx)) == {"E_EVIDENCE_PATH"}
+
+
+def test_other_info_is_additive_for_published_versions(doc):
+    base = copy.deepcopy(doc)
+    head = copy.deepcopy(doc)
+    version27(head)["other_info"] = None  # absent at base, null at head: not a change
+    assert v.compare_published({"f.yaml": base}, {"f.yaml": head}) == []
+    add_other_info(head, 1)  # real entries on a published version are an edit
+    issues = v.compare_published({"f.yaml": base}, {"f.yaml": head})
+    assert codes(issues) == {"E_PUBLISHED_EDITED"}

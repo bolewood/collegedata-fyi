@@ -78,6 +78,7 @@ CSV_COLUMNS = [
     "offers_json",
     "license",
     "attribution",
+    "other_info_json",
 ]
 
 
@@ -121,6 +122,7 @@ def render_csv(rows: List[Dict[str, Any]]) -> str:
         flat = dict(r)
         flat["source_urls"] = [s["url"] for s in r["sources"]]
         flat["offers_json"] = json.dumps(r["offers"], sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+        flat["other_info_json"] = json.dumps(r["other_info"], sort_keys=True, ensure_ascii=False, separators=(",", ":"))
         flat["license"] = model.LICENSE_ID
         flat["attribution"] = model.ATTRIBUTION
         writer.writerow([_cell(flat.get(c)) for c in CSV_COLUMNS])

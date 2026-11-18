@@ -369,6 +369,9 @@ Recorded 2026-11-08 by Anthony:
 2. **Verification: agent verification with owner spot-checks** (see M5).
 3. **Foundation-administered, school-tied programs are included** (Jefferson/Walentas, Morehead-Cain, Robertson), with `awarding_authority: affiliated_foundation` and the foundation's official page as the source. The validator's domain allowlist covers these foundations.
 
+Recorded 2026-11-18 by Anthony:
+4. **Edge-case facts go in `other_info`, not one ruling at a time.** A sourced fact that fits no typed field (for example "A student may hold only one merit scholarship" or "Entry is in the fall term only") is recorded in the version's `other_info`: up to 6 entries of one plain sentence (40 words or fewer) with a source and a quoted excerpt in `field_evidence` on `other_info/N`. The card shows them under "Other info". They are display only and never feed a label, filter, count or freshness status; they never replace a typed field that fits. The public view serves the text and source URL, not the excerpt.
+
 ## Open decisions (recommendations included)
 
 1. **Automatic award tiers.** Recommend **named National Merit packages and named flagship tiers only** in v1; defer full grids.
