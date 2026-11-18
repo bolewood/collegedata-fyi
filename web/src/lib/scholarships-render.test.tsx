@@ -72,6 +72,25 @@ describe("card", () => {
     );
     expect(html).toMatch(/aria-label="National Merit Scholars[^"]*: (Program page|Aid policy page|Admissions page|News page|Archived page|Foundation's page) \(opens in a new tab\)"/);
   });
+  it("shows an Other info section with each sentence and its source link, and nothing when the list is empty", () => {
+    const base = ROWS.find((r) => r.school_id === "texas-am") as ScholarshipDirectoryRow;
+    const plain = renderToStaticMarkup(<ScholarshipProgramsCard programs={[base]} names={{}} schoolId="texas-am" today={TODAY} />);
+    expect(plain).not.toContain("Other info");
+    const withInfo = {
+      ...base,
+      other_info: [
+        { text: "A student may hold only one merit scholarship.", source_ref: base.sources[0].source_id, source_url: base.sources[0].url },
+        { text: "Entry is in the fall term only.", source_ref: base.sources[0].source_id, source_url: null },
+      ],
+    };
+    const html = renderToStaticMarkup(<ScholarshipProgramsCard programs={[withInfo]} names={{}} schoolId="texas-am" today={TODAY} />);
+    expect(html).toContain("§ Other info");
+    expect(html).toContain("A student may hold only one merit scholarship.");
+    expect(html).toContain("Entry is in the fall term only.");
+    const section = html.slice(html.indexOf("§ Other info"));
+    expect(section).toContain(`href="${base.sources[0].url}"`);
+    expect(html.match(/§ Other info/g)).toHaveLength(1);
+  });
   it("renders nothing for a school with no programs", () => {
     expect(renderToStaticMarkup(<ScholarshipProgramsCard programs={[]} names={{}} schoolId="x" />)).toBe("");
   });

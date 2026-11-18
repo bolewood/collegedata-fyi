@@ -21,6 +21,8 @@ import {
   closedLabel,
   NOT_STATED,
   otherDateLines,
+  otherInfoItems,
+  SCHOLARSHIP_SELECT,
   sourceLabel,
   recurringDeadline,
   relatedItems,
@@ -349,7 +351,7 @@ describe("the index row carries only what the table reads", () => {
   it("drops offers, evidence, application and renewal from what goes to the browser", () => {
     const slim = toIndexRow(row("national-merit-scholars", "texas-am"), "Texas A&M");
     const keys = Object.keys(slim);
-    for (const heavy of ["offers", "evidence", "application", "renewal_rules", "stacking_rules", "award_counts", "attribution"]) {
+    for (const heavy of ["offers", "evidence", "application", "renewal_rules", "stacking_rules", "award_counts", "attribution", "other_info"]) {
       expect(keys).not.toContain(heavy);
     }
     expect(JSON.stringify(ROWS.map((r) => toIndexRow(r, r.school_id))).length).toBeLessThan(JSON.stringify(ROWS).length / 8);
@@ -382,7 +384,7 @@ describe("exclusions, duration and conflicting amounts sit with the benefit", ()
     expect(l).toMatch(/Not included: .*enrollment fee/i);
   });
   it("prints duration terms (real: Robertson, eight semesters)", () => {
-    expect(lines(row("robertson-scholars", "duke")).some((l) => /For Eight semesters\./i.test(l))).toBe(true);
+    expect(lines(row("robertson-scholars", "duke")).some((l) => /Duration: Eight semesters\./i.test(l))).toBe(true);
   });
   it("says the pages give different amounts, not 'not published', where the amount conflicts (real: UMD out-of-state tuition)", () => {
     const r = row("banneker-key-scholarship");
@@ -396,7 +398,7 @@ describe("exclusions, duration and conflicting amounts sit with the benefit", ()
   });
   it("benefitLine adds exclusions and duration (unit)", () => {
     const b: Benefit = { category: "mandatory_fees", instrument: "scholarship", coverage: "full", amount: null, exclusions: ["Parking"], duration_terms: "four years" };
-    expect(benefitLine(b).text).toBe("the school says it covers all of it. Not included: Parking. For four years.");
+    expect(benefitLine(b).text).toBe("the school says it covers all of it. Not included: Parking. Duration: four years.");
   });
 });
 
@@ -483,5 +485,48 @@ describe("benefit names and source labels (owner review)", () => {
     // Real rows: the labels follow the authority, so a program page and an aid policy page differ.
     const auths = new Set(ROWS.flatMap((r) => r.sources.map((x) => x.authority)));
     expect(new Set([...auths].map(sourceLabel)).size).toBe(auths.size);
+  });
+});
+
+describe("other_info", () => {
+  const src = [{ source_id: "s1", url: "https://example.edu/a", authority: "official_program", retrieved_at: null, archive_url: null }];
+
+  it("is requested from the view and defaults to an empty list when the row has none", () => {
+    expect(SCHOLARSHIP_SELECT.split(",")).toContain("other_info");
+    expect(ROWS.every((r) => Array.isArray(r.other_info) && r.other_info.length === 0)).toBe(true);
+    const raw = { ...(fixture as Record<string, unknown>[])[0], other_info: null };
+    expect(normalizeScholarshipRow(raw)?.other_info).toEqual([]);
+  });
+
+  it("keeps well-formed entries and drops malformed ones", () => {
+    const raw = {
+      ...(fixture as Record<string, unknown>[])[0],
+      other_info: [
+        { text: "Entry is in the fall term only.", source_ref: "s1", source_url: "https://example.edu/a" },
+        { text: "   ", source_ref: "s1", source_url: null },
+        "not an object",
+        { source_ref: "s1" },
+      ],
+    };
+    expect(normalizeScholarshipRow(raw)?.other_info.map((e) => e.text)).toEqual(["Entry is in the fall term only."]);
+  });
+
+  it("treats a row cached before the column existed as having no entries", () => {
+    expect(otherInfoItems(undefined, src)).toEqual([]);
+    expect(otherInfoItems(null, src)).toEqual([]);
+  });
+
+  it("pairs each sentence with its source link and never links a non-http URL", () => {
+    const items = otherInfoItems(
+      [
+        { text: "A student may hold only one merit scholarship.", source_ref: "s1", source_url: "https://example.edu/a" },
+        { text: "Entry is in the fall term only.", source_ref: "s1", source_url: "javascript:alert(1)" },
+        { text: "No link here.", source_ref: "s1", source_url: null },
+      ],
+      src,
+    );
+    expect(items[0]).toMatchObject({ text: "A student may hold only one merit scholarship.", url: "https://example.edu/a", label: sourceLabel("official_program") });
+    expect(items[1].url).toBeNull();
+    expect(items[2].url).toBeNull();
   });
 });

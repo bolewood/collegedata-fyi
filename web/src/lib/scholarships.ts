@@ -114,6 +114,9 @@ export type ScholarshipSource = {
 
 export type ScholarshipEvidence = { field_path: string; value_status: string };
 
+/** A sourced fact with no typed field, as one plain sentence. Display only. */
+export type OtherInfoEntry = { text: string; source_ref: string; source_url: string | null };
+
 export type ScholarshipDirectoryRow = {
   program_id: string;
   school_id: string;
@@ -147,6 +150,7 @@ export type ScholarshipDirectoryRow = {
   award_counts: AwardCount[];
   sources: ScholarshipSource[];
   evidence: ScholarshipEvidence[];
+  other_info: OtherInfoEntry[];
   license: string;
   attribution: string;
 };
@@ -159,7 +163,7 @@ export const SCHOLARSHIP_SELECT = [
   "last_reviewed_at", "program_status_for_entry", "coverages", "selection_modes", "residencies",
   "national_merit_statuses", "separate_application", "deadline_months", "key_deadline",
   "source_retrieved_at", "offers", "application", "renewal_rules", "stacking_rules",
-  "award_counts", "sources", "evidence", "license", "attribution",
+  "award_counts", "sources", "evidence", "other_info", "license", "attribution",
 ].join(",");
 
 function isObject(v: unknown): boolean {
@@ -200,6 +204,9 @@ export function normalizeScholarshipRow(raw: unknown): ScholarshipDirectoryRow |
       (x) => isObject(x) && typeof (x as { url?: unknown }).url === "string" && /^https?:/.test((x as { url: string }).url),
     ),
     evidence: list(r.evidence).filter(isObject),
+    other_info: list(r.other_info).filter(
+      (x) => isObject(x) && typeof (x as { text?: unknown }).text === "string" && (x as { text: string }).text.trim() !== "",
+    ),
     renewal_rules: Array.isArray(r.renewal_rules) ? r.renewal_rules.filter(isObject) : null,
     stacking_rules: Array.isArray(r.stacking_rules) ? r.stacking_rules.filter(isObject) : null,
     application:
@@ -525,7 +532,7 @@ export function benefitLine(b: Benefit, opts: { amountConflicts?: boolean } = {}
   // Limits sit on the same line as the benefit they limit, never elsewhere.
   const exclusions = (b.exclusions ?? []).filter((e): e is string => typeof e === "string" && e.trim() !== "");
   if (exclusions.length) text += ` Not included: ${exclusions.map(trimStop).join("; ")}.`;
-  if (b.duration_terms?.trim()) text += ` For ${trimStop(b.duration_terms)}.`;
+  if (b.duration_terms?.trim()) text += ` Duration: ${trimStop(b.duration_terms)}.`;
   return {
     label,
     text,
@@ -824,6 +831,22 @@ export function awardCountLines(counts: AwardCount[]): string[] {
       const unit = c.metric === "share_of_class" ? `${q}${c.value}% ${metric}` : `${q}${c.value} ${metric}`;
       return `${capFirst(unit)}${claim ? ` (${claim})` : ""}${year}. This is not the odds of receiving it.`;
     });
+}
+
+/**
+ * Entries for the card's "Other info" section: the school's sentence and a link to its source.
+ * A source URL that is not http(s) is dropped, so the sentence still shows without a link.
+ */
+export function otherInfoItems(
+  entries: OtherInfoEntry[] | null | undefined,
+  sources: ScholarshipSource[],
+): { text: string; url: string | null; label: string | null; authority: string | null }[] {
+  // Rows cached before the column existed have no other_info at all.
+  return (entries ?? []).map((e) => {
+    const src = sources.find((s) => s.source_id === e.source_ref);
+    const url = typeof e.source_url === "string" && /^https?:/.test(e.source_url) ? e.source_url : null;
+    return { text: e.text.trim(), url, label: url ? sourceLabel(src?.authority ?? "") : null, authority: src?.authority ?? null };
+  });
 }
 
 // ------------------------------------------------ program-level wording

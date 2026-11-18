@@ -1023,6 +1023,7 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
             "award_counts",
             "sources",
             "evidence",
+            "other_info",
             "license",
             "attribution",
           ]}

@@ -11,6 +11,7 @@ import {
   deadlineLine,
   freshnessLine,
   otherDateLines,
+  otherInfoItems,
   relatedItems,
   renewalSummary,
   residencyLine,
@@ -108,6 +109,7 @@ function Program({
   const authority = authorityLine(row.awarding_authority);
   const related = relatedItems(row, namesById);
   const others = row.participating_school_ids.filter((id) => id !== schoolId);
+  const otherInfo = otherInfoItems(row.other_info, row.sources);
   const hasTerms = row.offers.some((o) => (o.benefits ?? []).length > 0);
 
   return (
@@ -174,6 +176,30 @@ function Program({
           ))}
         </div>
       </div>
+
+      {otherInfo.length > 0 ? (
+        <div className="sch-panel">
+          <div className="meta">§ Other info</div>
+          {otherInfo.map((item, i) => (
+            <p key={i} className="sch-line">
+              {item.text}
+              {item.url ? (
+                <>
+                  {" "}
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel={externalLinkRel(item.url)}
+                    aria-label={`${row.official_name}, note ${i + 1}: ${(item.label ?? "").replace(" ↗", "")} (opens in a new tab)`}
+                  >
+                    {item.label}
+                  </a>
+                </>
+              ) : null}
+            </p>
+          ))}
+        </div>
+      ) : null}
 
       {counts.length > 0 ? (
         <div className="sch-panel">
