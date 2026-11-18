@@ -838,10 +838,11 @@ export function awardCountLines(counts: AwardCount[]): string[] {
  * A source URL that is not http(s) is dropped, so the sentence still shows without a link.
  */
 export function otherInfoItems(
-  entries: OtherInfoEntry[],
+  entries: OtherInfoEntry[] | null | undefined,
   sources: ScholarshipSource[],
 ): { text: string; url: string | null; label: string | null; authority: string | null }[] {
-  return entries.map((e) => {
+  // Rows cached before the column existed have no other_info at all.
+  return (entries ?? []).map((e) => {
     const src = sources.find((s) => s.source_id === e.source_ref);
     const url = typeof e.source_url === "string" && /^https?:/.test(e.source_url) ? e.source_url : null;
     return { text: e.text.trim(), url, label: url ? sourceLabel(src?.authority ?? "") : null, authority: src?.authority ?? null };

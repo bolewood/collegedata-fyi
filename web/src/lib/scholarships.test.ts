@@ -511,6 +511,11 @@ describe("other_info", () => {
     expect(normalizeScholarshipRow(raw)?.other_info.map((e) => e.text)).toEqual(["Entry is in the fall term only."]);
   });
 
+  it("treats a row cached before the column existed as having no entries", () => {
+    expect(otherInfoItems(undefined, src)).toEqual([]);
+    expect(otherInfoItems(null, src)).toEqual([]);
+  });
+
   it("pairs each sentence with its source link and never links a non-http URL", () => {
     const items = otherInfoItems(
       [
