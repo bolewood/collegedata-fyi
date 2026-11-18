@@ -1545,7 +1545,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-- id: anderson-university
+- id: anderson-university-in
   name: Anderson University
   domain: anderson.edu
   ipeds_id: '150066'
@@ -2908,7 +2908,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-- id: bethany-college
+- id: bethany-college-ks
   name: Bethany College
   domain: bethanylb.edu
   ipeds_id: '154721'
@@ -2974,7 +2974,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-- id: bethel-university
+- id: bethel-university-in
   name: Bethel University
   domain: betheluniversity.edu
   ipeds_id: '150145'
@@ -2996,7 +2996,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-- id: bethel-university
+- id: bethel-university-tn
   name: Bethel University
   domain: bethelu.edu
   ipeds_id: '219718'
@@ -5686,7 +5686,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-- id: columbia-college
+- id: columbia-college-sc
   name: Columbia College
   domain: columbiasc.edu
   ipeds_id: '217934'
@@ -12250,7 +12250,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-- id: marian-university
+- id: marian-university-wi
   name: Marian University
   domain: marianuniversity.edu
   ipeds_id: '239080'
@@ -19582,7 +19582,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-- id: southwestern-college
+- id: southwestern-college-nm
   name: Southwestern College
   domain: swc.edu
   ipeds_id: '188207'
@@ -19889,7 +19889,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-- id: st-johns-college
+- id: st-john-s-college
   name: St. John's College
   domain: sjc.edu
   ipeds_id: '245652'
@@ -20075,7 +20075,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-- id: sterling-college
+- id: sterling-college-vt
   name: Sterling College
   domain: sterlingcollege.edu
   ipeds_id: '231095'
@@ -22146,18 +22146,11 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-- id: union-college
+- id: union-commonwealth-university
   name: Union College
   domain: unionky.edu
   ipeds_id: '157863'
-  scrape_policy: active
-  probe_state:
-    last_probed_at: '2026-04-14T13:22:55Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
-  discovery_seed_url: https://www.union.edu/sites/default/files/institutional-research/202505/common-data-set-2024-2025-final-website-march-2025.pdf
+  scrape_policy: unknown
 - id: union-college
   name: Union College
   domain: union.edu
@@ -24546,15 +24539,8 @@ schools:
   name: University of St Thomas
   domain: stthomas.edu
   ipeds_id: '174914'
-  scrape_policy: active
-  probe_state:
-    last_probed_at: '2026-11-02T22:54:59Z'
-    last_result: found
-    last_method: brave
-    patterns_tried: 0
-    search_fallback_tried: true
-  discovery_seed_url: https://it.stthom.edu/wp-content/uploads/2023/05/CDS_2022-2023.pdf
-- id: university-of-st-thomas
+  scrape_policy: unknown
+- id: university-of-st-thomas-tx
   name: University of St Thomas
   domain: stthom.edu
   ipeds_id: '227863'
@@ -26255,7 +26241,7 @@ schools:
     patterns_tried: 0
     search_fallback_tried: true
   discovery_seed_url: https://www.westfield.ma.edu/documents/cds2023-24pdf
-- id: westminster-college
+- id: westminster-college-mo
   name: Westminster College
   domain: wcmo.edu
   ipeds_id: '179946'
