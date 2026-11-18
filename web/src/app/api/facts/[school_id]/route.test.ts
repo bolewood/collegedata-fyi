@@ -129,6 +129,36 @@ describe("GET /api/facts/{school_id} (legacy)", () => {
     expect(body.yield_rate_pct).toBeNull();
   });
 
+  it("prefers the newest dated filing over an unknown-year or wrong_file document", async () => {
+    setup(AMHERST_2024);
+    mocks.fetchSchoolDocuments.mockResolvedValue([
+      { ...AMHERST_2024.doc, document_id: "d-unknown", canonical_year: "unknown" },
+      { ...AMHERST_2024.doc, document_id: "d-wrong", canonical_year: "2025-26", data_quality_flag: "wrong_file" },
+      { ...AMHERST_2024.doc, document_id: "d-sub", canonical_year: "2025-26", sub_institutional: "law" },
+      AMHERST_2024.doc,
+    ]);
+    const { body } = await get("amherst");
+    expect(body.cds_year).toBe("2024-25");
+    expect(body.applied).toBe(AMHERST_2024.row.applied);
+    expect(body.archive_url).toBe("https://www.collegedata.fyi/schools/amherst/2024-25");
+  });
+
+  it("falls back to the first extracted document when none is a dated whole-institution filing", async () => {
+    setup(AMHERST_2024, null);
+    mocks.fetchSchoolDocuments.mockResolvedValue([{ ...AMHERST_2024.doc, document_id: "d-unknown", canonical_year: "unknown" }]);
+    const { res, body } = await get("amherst");
+    expect(res.status).toBe(200);
+    expect(body.cds_year).toBe("unknown");
+    expect(body.applied).toBeNull();
+  });
+
+  it("a zero count gives no rate", async () => {
+    setup(PRINCETON_2025, { ...PRINCETON_2025.row, enrolledFirstYear: 0 });
+    const { body } = await get("princeton");
+    expect(body.enrolled).toBe(0);
+    expect(body.yield_rate_pct).toBeNull();
+  });
+
   it("ignores projection rows for other documents", async () => {
     setup(PRINCETON_2025, { ...PRINCETON_2025.row, document_id: "other-doc" });
     const { body } = await get("princeton");

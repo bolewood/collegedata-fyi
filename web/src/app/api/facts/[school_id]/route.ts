@@ -54,7 +54,18 @@ export async function GET(
     );
   }
   const docs = await fetchSchoolDocuments(school_id);
-  const extracted = docs.find((d) => d.extraction_status === "extracted" && d.document_id);
+  // The list sorts canonical_year as text, so an "unknown"-year document comes
+  // first, and wrong_file documents are not filtered out. Neither has a
+  // projection row. Prefer the newest dated whole-institution filing; fall back
+  // to the first extracted document only when none qualifies.
+  const candidates = docs.filter((d) => d.extraction_status === "extracted" && d.document_id);
+  const extracted =
+    candidates.find(
+      (d) =>
+        /^\d{4}-\d{2}$/.test(d.canonical_year ?? "") &&
+        d.data_quality_flag !== "wrong_file" &&
+        d.sub_institutional == null,
+    ) ?? candidates[0];
 
   if (!extracted || !extracted.document_id) {
     return NextResponse.json(

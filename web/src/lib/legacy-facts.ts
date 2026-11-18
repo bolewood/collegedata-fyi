@@ -24,7 +24,8 @@ export type LegacyAdmissions = {
 };
 
 function pct(a: number | null, b: number | null): number | null {
-  if (a === null || b === null || b === 0) return null;
+  // A zero count gives no rate, as in the projection (which nulls rates <= 0).
+  if (a === null || b === null || a <= 0 || b <= 0) return null;
   return Math.round((a / b) * 1000) / 10; // one decimal place
 }
 
