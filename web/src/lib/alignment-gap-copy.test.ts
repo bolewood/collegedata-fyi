@@ -163,7 +163,7 @@ describe("alignment-gap recipe", () => {
       ALIGNMENT_GAP_MERIT_META.coversShare,
       3,
     );
-    expect(Math.round(ALIGNMENT_GAP_MERIT_META.coversShare * 100)).toBe(61);
+    expect(Math.round(ALIGNMENT_GAP_MERIT_META.coversShare * 100)).toBe(65);
     const recipesIndex = src("app/recipes/page.tsx");
     expect(recipesIndex).toContain(
       "Compare the alignment gap with merit aid, then with endowment per student. Hover any school.",

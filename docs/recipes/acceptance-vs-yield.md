@@ -22,7 +22,7 @@ federal-loan burden; analysts joining IPEDS ADM counts to College Scorecard.
 **Sources:** IPEDS ADM2024 (fall 2024) raw applicant / admitted / enrolled
 counts; College Scorecard 2022–23 debt, payments, earnings, net price, and
 instructional spending; CDS 2024–25 C1 acceptance and yield as a tooltip
-cross-check only (356 of 1,417 Panel A schools). Plotted positions always use
+cross-check only (383 of 1,417 Panel A schools). Plotted positions always use
 IPEDS.
 
 The XLSX starter
@@ -110,8 +110,8 @@ A school can sit on different sides of “higher yield” in the two charts.
 
 CDS 2024–25 C1 is attached last, from `school_browser_rows` with
 `canonical_year=eq.2024-25`, `sub_institutional=is.null`, and non-null
-`acceptance_rate` and `yield_rate`. This build found **371** complete C1 rows
-and attached **356** of them to a Panel A school. Syracuse has no CDS C1 row
+`acceptance_rate` and `yield_rate`. This build found **393** complete C1 rows
+and attached **383** of them to a Panel A school. Syracuse has no CDS C1 row
 in the serving data. Those rates appear only as a labeled tooltip cross-check.
 
 Rebuild:
@@ -285,7 +285,7 @@ students moving through college.
 
 Where a school also has a complete Common Data Set C1 row for 2024–25, the
 tooltip shows that acceptance and yield as a cross-check. In this build that
-is 356 of 1,417 schools. Plotted positions always use IPEDS ADM2024.
+is 383 of 1,417 schools. Plotted positions always use IPEDS ADM2024.
 
 ## Limitations
 

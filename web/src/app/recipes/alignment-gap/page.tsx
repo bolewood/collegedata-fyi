@@ -89,7 +89,7 @@ const REGIONS = [
     num: "A",
     head: "Merit aid is larger than the gap",
     count: ALIGNMENT_GAP_MERIT_META.regions.covers,
-    body: `Among the ${ALIGNMENT_GAP_MERIT_META.positiveGap} schools in this view with above-median debt burden, ${ALIGNMENT_GAP_MERIT_META.regions.covers} (61%) report average non-need merit aid per first-year student that is larger than their annual alignment gap. Quincy University is an especially visible example. It reports non-need merit aid for every full-time first-year student, averaging ${formatUsd(quincy.avgMeritGrant)}, compared with an average net price of ${formatUsd(quincy.avgNetPrice)} and an alignment gap of ${formatUsd(quincy.gap)} per year. That does not mean Quincy could simply move ${formatUsd(quincy.gap)} from one budget line to another. It does show that the scale of its existing merit discount is large relative to the debt adjustment represented by the gap.`,
+    body: `Among the ${ALIGNMENT_GAP_MERIT_META.positiveGap} schools in this view with above-median debt burden, ${ALIGNMENT_GAP_MERIT_META.regions.covers} (${Math.round(ALIGNMENT_GAP_MERIT_META.coversShare * 100)}%) report average non-need merit aid per first-year student that is larger than their annual alignment gap. Quincy University is an especially visible example. It reports non-need merit aid for every full-time first-year student, averaging ${formatUsd(quincy.avgMeritGrant)}, compared with an average net price of ${formatUsd(quincy.avgNetPrice)} and an alignment gap of ${formatUsd(quincy.gap)} per year. That does not mean Quincy could simply move ${formatUsd(quincy.gap)} from one budget line to another. It does show that the scale of its existing merit discount is large relative to the debt adjustment represented by the gap.`,
   },
   {
     num: "B",
@@ -227,7 +227,7 @@ export default function AlignmentGapPage() {
           median debt burden in this group of schools.
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          The core finding: <strong>at {ALIGNMENT_GAP_MERIT_META.regions.covers} of {ALIGNMENT_GAP_MERIT_META.positiveGap} colleges (61%) with above-median debt burden, the freshman merit aid budget alone is larger than the entire annual alignment gap.</strong>
+          The core finding: <strong>at {ALIGNMENT_GAP_MERIT_META.regions.covers} of {ALIGNMENT_GAP_MERIT_META.positiveGap} colleges ({Math.round(ALIGNMENT_GAP_MERIT_META.coversShare * 100)}%) with above-median debt burden, the freshman merit aid budget alone is larger than the entire annual alignment gap.</strong>
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
           The gap is not a recommended tuition price or a claim that lowering
@@ -621,7 +621,7 @@ export default function AlignmentGapPage() {
             overflowX: "auto",
           }}
         >
-{`# Panel A — CDS H2A merit × Scorecard (488 rows; under the 1,000-row cap)
+{`# Panel A — CDS H2A merit × Scorecard (${ALIGNMENT_GAP_MERIT_META.exclusions.universe} rows; under the 1,000-row cap)
 curl 'https://api.collegedata.fyi/rest/v1/school_merit_profile?select=school_id,school_name,canonical_year,merit_profile_quality,non_need_aid_share_first_year_ft,avg_non_need_grant_first_year_ft,avg_need_grant_first_year_ft,earnings_10yr_median,median_debt_completers,median_debt_monthly_payment,avg_net_price&limit=1000' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'

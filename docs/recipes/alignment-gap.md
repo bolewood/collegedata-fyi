@@ -13,7 +13,7 @@ The diagonal boundary partitions schools where merit spend exceeds the annual ga
 (forest green) from those where the debt gap exceeds merit aid (ochre). Panel B
 keeps a broader endowment comparison so schools without a usable H2A row —
 including Bard and Grinnell — stay on the page. Both panels measure the gap
-against the same 375-school median burden. Hover any dot for the school name.
+against the same 392-school median burden. Hover any dot for the school name.
 
 ## What the recipe computes
 
@@ -25,7 +25,7 @@ burden = median_debt_monthly_payment × 12 / earnings_10yr_median
 ```
 
 The **alignment gap** estimates how much lower median completer debt would
-need to be for the school to reach the 375-school median burden at its
+need to be for the school to reach the 392-school median burden at its
 existing earnings, expressed per year of enrollment:
 
 ```text
@@ -89,7 +89,7 @@ python3 tools/scorecard/build_alignment_gap_recipe.py
   this definition.
 - Panel B quadrants split the same gap against endowment per undergraduate:
   higher/lower debt burden × higher/lower endowment. “High endowment” on both
-  panels means at or above the 375-school median.
+  panels means at or above the 392-school median.
 
 CDS H2A covers first-year full-time students and specifically reports
 non-need aid. Some awards that combine need and merit may not appear. Scorecard
