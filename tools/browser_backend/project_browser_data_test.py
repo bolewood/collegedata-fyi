@@ -10,6 +10,7 @@ from tools.browser_backend.project_browser_data import (
     metric_field_ids_for_year,
     metric_alias_rows,
     parse_field_value,
+    project_document,
     project_document_id,
     replace_projection_rows,
     select_extraction_result,
@@ -200,6 +201,44 @@ class FakeTableClient:
 
     def table(self, name):
         return FakeQuery(self.table_data.get(name, []))
+
+
+class RecordingClient:
+    """Records RPCs and table writes; `facts` is the set of UNITIDs that have ipeds_current_facts rows."""
+
+    def __init__(self, facts=(), docs=()):
+        self.facts = set(facts)
+        self.rpcs = []
+        self.updates = []
+        self.fact_lookups = []
+
+    def rpc(self, name, params):
+        self.rpcs.append((name, params))
+        return FakeQuery()
+
+    def table(self, name):
+        client = self
+        query = FakeQuery([])
+        if name == "ipeds_current_facts":
+            state = {}
+            real_eq = query.eq
+
+            def eq(col, val):
+                state["id"] = val
+                client.fact_lookups.append(val)
+                query.data = [{"ipeds_id": val}] if val in client.facts else []
+                return real_eq(col, val)
+
+            query.eq = eq
+        elif name == "school_browser_rows":
+            def update(values):
+                entry = {"values": values}
+                client.updates.append(entry)
+                query.eq = lambda col, val: (entry.update(where=(col, val)) or query)
+                return query
+
+            query.update = update
+        return query
 
 
 class BrowserProjectionTests(unittest.TestCase):
@@ -1609,6 +1648,67 @@ class BrowserProjectionTests(unittest.TestCase):
         self.assertEqual(params["p_document_id"], "00000000-0000-0000-0000-000000000001")
         self.assertEqual(params["p_field_rows"], field_rows)
         self.assertEqual(params["p_browser_row"], browser_row)
+
+    def test_federal_flags_are_rewritten_after_every_reprojection(self):
+        # The RPC deletes and re-inserts the row, which resets the columns to
+        # their table defaults; the projection must write them back (#351).
+        for facts, expected_flag, expected_mode in (
+            ({"123456"}, True, "cds_plus_ipeds_baseline"),
+            (set(), False, "cds_only"),
+        ):
+            client = RecordingClient(facts=facts)
+            fields, has_row = self._project_with_artifact(client, "123456")
+            self.assertTrue(has_row)
+            (name, params), = client.rpcs
+            self.assertNotIn("federal_baseline_available", params["p_browser_row"])
+            self.assertNotIn("federal_source_mode", params["p_browser_row"])
+            (update,) = client.updates
+            self.assertEqual(
+                update["values"],
+                {"federal_baseline_available": expected_flag, "federal_source_mode": expected_mode},
+            )
+            self.assertEqual(update["where"], ("document_id", "00000000-0000-0000-0000-000000000001"))
+
+    def test_null_ipeds_id_stays_cds_only_without_a_lookup(self):
+        client = RecordingClient(facts={"123456"})
+        self._project_with_artifact(client, None)
+        self.assertEqual(client.fact_lookups, [])
+        (update,) = client.updates
+        self.assertEqual(
+            update["values"],
+            {"federal_baseline_available": False, "federal_source_mode": "cds_only"},
+        )
+
+    def test_lookup_is_once_per_unitid_in_a_bulk_run(self):
+        client = RecordingClient(facts={"123456"})
+        cache = {}
+        self._project_with_artifact(client, "123456", cache)
+        self._project_with_artifact(client, "123456", cache)
+        self.assertEqual(client.fact_lookups, ["123456"])
+        self.assertEqual(len(client.updates), 2)
+        self.assertEqual(cache, {"123456": True})
+
+    def test_a_row_without_federal_keys_sends_no_update(self):
+        client = RecordingClient()
+        replace_projection_rows(client, "d", [], {"document_id": "d"})
+        self.assertEqual(client.updates, [])
+        replace_projection_rows(client, "d", [], None)
+        self.assertEqual(client.updates, [])
+
+    def _project_with_artifact(self, client, ipeds_id, cache=None):
+        import tools.browser_backend.project_browser_data as module
+
+        def fake_build(document, artifacts, definitions, scorecard=None):
+            return [], {"document_id": document["document_id"], "ipeds_id": document.get("ipeds_id")}
+
+        original = (module.build_projection_rows, module.fetch_artifacts, module.fetch_scorecard)
+        module.build_projection_rows = fake_build
+        module.fetch_artifacts = lambda *_a, **_k: []
+        module.fetch_scorecard = lambda *_a, **_k: None
+        try:
+            return project_document(client, doc(ipeds_id=ipeds_id), defs(), True, cache)
+        finally:
+            module.build_projection_rows, module.fetch_artifacts, module.fetch_scorecard = original
 
     def test_project_document_id_no_manifest_row_is_noop(self):
         client = FakeTableClient({"cds_manifest": []})
