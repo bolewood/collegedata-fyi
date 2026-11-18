@@ -202,3 +202,25 @@ export function bandCircleStyle(mark: BandMark, active: boolean) {
 export function formatUsd(value: number): string {
   return `$${Math.round(value).toLocaleString("en-US")}`;
 }
+
+/**
+ * The "That includes ..." sentence for the range-guard exclusions. Clauses
+ * with a zero count are omitted; returns "" when both counts are zero.
+ */
+export function rangeExclusionSentence(
+  rangeShare: number,
+  rangeGrant: number,
+): string {
+  const parts: string[] = [];
+  if (rangeShare > 0) {
+    parts.push(
+      `${rangeShare} reported merit-aid ${rangeShare === 1 ? "share" : "shares"} outside 0–100%`,
+    );
+  }
+  if (rangeGrant > 0) {
+    parts.push(
+      `${rangeGrant} average ${rangeGrant === 1 ? "grant" : "grants"} above $80,000`,
+    );
+  }
+  return parts.length ? `That includes ${parts.join(" and ")}.` : "";
+}

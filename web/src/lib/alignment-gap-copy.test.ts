@@ -15,6 +15,7 @@ import {
   meritGrantInRange,
   meritRegion,
   meritShareInRange,
+  rangeExclusionSentence,
 } from "./alignment-gap-recipe-analysis";
 
 const src = (rel: string) => readFileSync(join(process.cwd(), "src", rel), "utf8");
@@ -114,8 +115,6 @@ describe("alignment-gap recipe", () => {
     expect(page).not.toContain("because the endowment, not tuition, is paying");
     expect(page).toContain("federal aggregate borrowing");
     expect(page).toContain("dependent undergraduates");
-    expect(page).toContain("An example: Bard and Grinnell");
-    expect(page).toContain("Those numbers do");
     expect(page).not.toContain("whether an applicant should be able to see both numbers before");
     expect(page).not.toContain("Same students, same outcomes, opposite prices");
     expect(page).toContain("CDS H2A");
@@ -163,7 +162,7 @@ describe("alignment-gap recipe", () => {
       ALIGNMENT_GAP_MERIT_META.coversShare,
       3,
     );
-    expect(Math.round(ALIGNMENT_GAP_MERIT_META.coversShare * 100)).toBe(61);
+    expect(Math.round(ALIGNMENT_GAP_MERIT_META.coversShare * 100)).toBe(65);
     const recipesIndex = src("app/recipes/page.tsx");
     expect(recipesIndex).toContain(
       "Compare the alignment gap with merit aid, then with endowment per student. Hover any school.",
@@ -180,15 +179,15 @@ describe("alignment-gap recipe", () => {
       ALIGNMENT_GAP_META.medianEndowmentPerStudent,
     );
     expect(ALIGNMENT_GAP_MERIT_META.zeroMeritCount).toBe(5);
-    expect(ALIGNMENT_GAP_MERIT_META.exclusions.rangeGrant).toBe(1);
+    expect(ALIGNMENT_GAP_MERIT_META.exclusions.rangeGrant).toBe(0);
     const zeros = ALIGNMENT_GAP_MERIT_SCHOOLS.filter(
       (row) => row.meritPerFirstYear === 0,
     );
     expect(zeros.map((row) => row.schoolId).sort()).toEqual([
       "amherst",
       "barnard",
-      "colgate-university",
       "haverford-college",
+      "thomas-jefferson-university",
       "university-of-the-incarnate-word",
     ]);
     const incarnate = zeros.find(
@@ -221,11 +220,10 @@ describe("alignment-gap recipe", () => {
     ).toBe(ex.universe);
   });
 
-  it("keeps Bard and Grinnell on the endowment panel and out of the merit join", () => {
+  it("keeps Grinnell on the endowment panel and out of the merit join", () => {
     const endowmentIds = new Set(ALIGNMENT_GAP_SCHOOLS.map((row) => row.schoolId));
     const meritIds = new Set(ALIGNMENT_GAP_MERIT_SCHOOLS.map((row) => row.schoolId));
     for (const id of [
-      "bard-college",
       "grinnell-college",
       "bennington-college",
       "sarah-lawrence-college",
@@ -255,5 +253,29 @@ describe("alignment-gap merit arithmetic", () => {
     expect(meritGrantInRange(85_600)).toBe(false);
     expect(meritGrantInRange(0)).toBe(true);
     expect(meritGrantInRange(27_587)).toBe(true);
+  });
+});
+
+describe("rangeExclusionSentence", () => {
+  it("names both counts when both are non-zero", () => {
+    expect(rangeExclusionSentence(2, 3)).toBe(
+      "That includes 2 reported merit-aid shares outside 0–100% and 3 average grants above $80,000.",
+    );
+    expect(rangeExclusionSentence(1, 1)).toBe(
+      "That includes 1 reported merit-aid share outside 0–100% and 1 average grant above $80,000.",
+    );
+  });
+
+  it("omits a clause whose count is zero", () => {
+    expect(rangeExclusionSentence(2, 0)).toBe(
+      "That includes 2 reported merit-aid shares outside 0–100%.",
+    );
+    expect(rangeExclusionSentence(0, 1)).toBe(
+      "That includes 1 average grant above $80,000.",
+    );
+  });
+
+  it("returns an empty string when both counts are zero", () => {
+    expect(rangeExclusionSentence(0, 0)).toBe("");
   });
 });

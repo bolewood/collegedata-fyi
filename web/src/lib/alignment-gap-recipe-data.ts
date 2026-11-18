@@ -3,7 +3,7 @@
 import type { AlignmentGapMeritRow, AlignmentGapRow } from "./alignment-gap-recipe-analysis";
 
 export const ALIGNMENT_GAP_META = {
-  "generatedAt": "2026-08-29",
+  "generatedAt": "2026-11-18",
   "sourceApiUrl": "https://api.collegedata.fyi",
   "scorecardYears": [
     "2022-23"
@@ -12,21 +12,21 @@ export const ALIGNMENT_GAP_META = {
     "2024-25",
     "2025-26"
   ],
-  "schoolCount": 375,
+  "schoolCount": 392,
   "sample": "endowment-join",
-  "medianBurden": 0.043992,
-  "medianEndowmentPerStudent": 64403.29,
-  "aboveMedianBurden": 187,
+  "medianBurden": 0.04446,
+  "medianEndowmentPerStudent": 63217.76,
+  "aboveMedianBurden": 196,
   "quadrants": {
-    "capacity": 63,
-    "constrained": 124,
-    "absorbs": 125,
-    "earnings": 63
+    "capacity": 69,
+    "constrained": 127,
+    "absorbs": 127,
+    "earnings": 69
   },
   "debtMin": 10000,
   "debtMax": 30964,
   "debtMode": 27000,
-  "debtModeCount": 33,
+  "debtModeCount": 34,
   "join": "scorecard_summary debt, earnings, net price, endowment, and instructional spend, joined to institution_directory undergraduate enrollment and the latest 2024-25 or 2025-26 school_browser_rows SAT composite midpoint"
 } as const;
 
@@ -44,7 +44,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 20057,
     "undergraduateEnrollment": 836,
     "burden": 0.060471,
-    "gap": 1822.39,
+    "gap": 1770.6,
     "endowmentPerStudent": 283367.12,
     "instructionShare": 0.8103
   },
@@ -61,7 +61,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 8051,
     "undergraduateEnrollment": 991,
     "burden": 0.065497,
-    "gap": 2541.65,
+    "gap": 2486.31,
     "endowmentPerStudent": 31457.48,
     "instructionShare": 0.2366
   },
@@ -78,7 +78,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 17999,
     "undergraduateEnrollment": 1156,
     "burden": 0.05534,
-    "gap": 1384.14,
+    "gap": 1327.03,
     "endowmentPerStudent": 234289.52,
     "instructionShare": 0.7846
   },
@@ -95,7 +95,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 19197,
     "undergraduateEnrollment": 7266,
     "burden": 0.037408,
-    "gap": -1000.95,
+    "gap": -1072.14,
     "endowmentPerStudent": 142034.41,
     "instructionShare": 0.4577
   },
@@ -112,7 +112,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 36411,
     "undergraduateEnrollment": 1911,
     "burden": 0.022514,
-    "gap": -3277.05,
+    "gap": -3348.5,
     "endowmentPerStudent": 1857444.48,
     "instructionShare": 1.5582
   },
@@ -129,7 +129,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 8690,
     "undergraduateEnrollment": 19444,
     "burden": 0.049652,
-    "gap": 576.57,
+    "gap": 528.87,
     "endowmentPerStudent": 11170.63,
     "instructionShare": 0.5162
   },
@@ -146,9 +146,26 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 8672,
     "undergraduateEnrollment": 1083,
     "burden": 0.059013,
-    "gap": 1463.57,
+    "gap": 1417.95,
     "endowmentPerStudent": 43106.17,
     "instructionShare": 0.5216
+  },
+  {
+    "schoolId": "arkansas-state-university",
+    "schoolName": "Arkansas State University",
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1080,
+    "earnings10yrMedian": 42617,
+    "medianDebtCompleters": 20500,
+    "medianDebtMonthlyPayment": 217.33,
+    "avgNetPrice": 12366,
+    "endowmentEnd": 115395232,
+    "instructionalExpenditureFte": 5703,
+    "undergraduateEnrollment": 9110,
+    "burden": 0.061195,
+    "gap": 1401.54,
+    "endowmentPerStudent": 12666.88,
+    "instructionShare": 0.4612
   },
   {
     "schoolId": "auburn-university-at-montgomery",
@@ -163,7 +180,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 7192,
     "undergraduateEnrollment": 2542,
     "burden": 0.071647,
-    "gap": 2412.45,
+    "gap": 2371.6,
     "endowmentPerStudent": 26945.13,
     "instructionShare": 0.5439
   },
@@ -180,7 +197,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11113,
     "undergraduateEnrollment": 2490,
     "burden": 0.054547,
-    "gap": 1306.17,
+    "gap": 1248.22,
     "endowmentPerStudent": 89533.64,
     "instructionShare": 0.4888
   },
@@ -197,7 +214,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 18775,
     "undergraduateEnrollment": 1965,
     "burden": 0.053709,
-    "gap": 1130.76,
+    "gap": 1076.27,
     "endowmentPerStudent": 64403.29,
     "instructionShare": 0.7858
   },
@@ -214,7 +231,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 5125,
     "undergraduateEnrollment": 3974,
     "burden": 0.044027,
-    "gap": 4.09,
+    "gap": -49.93,
     "endowmentPerStudent": 13591.94,
     "instructionShare": 0.2721
   },
@@ -231,7 +248,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 17782,
     "undergraduateEnrollment": 1165,
     "burden": 0.05085,
-    "gap": 826.05,
+    "gap": 769.64,
     "endowmentPerStudent": 164586.64,
     "instructionShare": 0.8425
   },
@@ -248,7 +265,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9781,
     "undergraduateEnrollment": 7560,
     "burden": 0.059005,
-    "gap": 1306.96,
+    "gap": 1266.19,
     "endowmentPerStudent": 7688.71,
     "instructionShare": 1.0047
   },
@@ -265,7 +282,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 15660,
     "undergraduateEnrollment": 2728,
     "burden": 0.020529,
-    "gap": -5714.4,
+    "gap": -5828.45,
     "endowmentPerStudent": 271375.06,
     "instructionShare": 0.3865
   },
@@ -282,7 +299,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10207,
     "undergraduateEnrollment": 3026,
     "burden": 0.088758,
-    "gap": 3152.28,
+    "gap": 3119.3,
     "endowmentPerStudent": 115011.43,
     "instructionShare": 0.7758
   },
@@ -299,26 +316,9 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 15441,
     "undergraduateEnrollment": 2842,
     "burden": 0.063466,
-    "gap": 2071.16,
+    "gap": 2021.36,
     "endowmentPerStudent": 63289.1,
     "instructionShare": 0.5594
-  },
-  {
-    "schoolId": "bard-college",
-    "schoolName": "Bard College",
-    "cdsYear": "2024-25",
-    "satCompositeP50": 1510,
-    "earnings10yrMedian": 46543,
-    "medianDebtCompleters": 24254,
-    "medianDebtMonthlyPayment": 257.13,
-    "avgNetPrice": 34649,
-    "endowmentEnd": 167819284,
-    "instructionalExpenditureFte": 42373,
-    "undergraduateEnrollment": 2414,
-    "burden": 0.066295,
-    "gap": 2039.89,
-    "endowmentPerStudent": 69519.17,
-    "instructionShare": 1.2229
   },
   {
     "schoolId": "barnard",
@@ -333,7 +333,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 32573,
     "undergraduateEnrollment": 3264,
     "burden": 0.028441,
-    "gap": -2460.47,
+    "gap": -2534.56,
     "endowmentPerStudent": 154241.42,
     "instructionShare": 1.131
   },
@@ -350,7 +350,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 27338,
     "undergraduateEnrollment": 1760,
     "burden": 0.026131,
-    "gap": -2439.19,
+    "gap": -2503.14,
     "endowmentPerStudent": 253866.37,
     "instructionShare": 0.9314
   },
@@ -367,7 +367,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 15852,
     "undergraduateEnrollment": 14785,
     "burden": 0.044474,
-    "gap": 62.34,
+    "gap": 1.8,
     "endowmentPerStudent": 142242.61,
     "instructionShare": 0.3857
   },
@@ -384,7 +384,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 13651,
     "undergraduateEnrollment": 7137,
     "burden": 0.046629,
-    "gap": 289.85,
+    "gap": 238.38,
     "endowmentPerStudent": 56678.37,
     "instructionShare": 0.4118
   },
@@ -401,7 +401,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11768,
     "undergraduateEnrollment": 926,
     "burden": 0.06148,
-    "gap": 1830.33,
+    "gap": 1781.33,
     "endowmentPerStudent": 90727.29,
     "instructionShare": 0.5467
   },
@@ -418,7 +418,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 7813,
     "undergraduateEnrollment": 1942,
     "burden": 0.045117,
-    "gap": 140.26,
+    "gap": 81.87,
     "endowmentPerStudent": 17848.53,
     "instructionShare": 0.3502
   },
@@ -435,7 +435,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 23573,
     "undergraduateEnrollment": 780,
     "burden": 0.086387,
-    "gap": 3189.94,
+    "gap": 3154.71,
     "endowmentPerStudent": 62730.62,
     "instructionShare": 0.7617
   },
@@ -452,7 +452,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 16265,
     "undergraduateEnrollment": 4474,
     "burden": 0.026319,
-    "gap": -4200.78,
+    "gap": -4312.08,
     "endowmentPerStudent": 81055.88,
     "instructionShare": 0.4288
   },
@@ -469,7 +469,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9737,
     "undergraduateEnrollment": 1871,
     "burden": 0.042897,
-    "gap": -137.19,
+    "gap": -195.86,
     "endowmentPerStudent": 58407.86,
     "instructionShare": 0.341
   },
@@ -486,7 +486,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14520,
     "undergraduateEnrollment": 14655,
     "burden": 0.029202,
-    "gap": -2342.42,
+    "gap": -2416.58,
     "endowmentPerStudent": 15082.11,
     "instructionShare": 0.6716
   },
@@ -503,7 +503,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 27008,
     "undergraduateEnrollment": 10085,
     "burden": 0.023256,
-    "gap": -4235.26,
+    "gap": -4330.9,
     "endowmentPerStudent": 387550.85,
     "instructionShare": 0.6476
   },
@@ -520,7 +520,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 35988,
     "undergraduateEnrollment": 18248,
     "burden": 0.035535,
-    "gap": -1383.25,
+    "gap": -1459.84,
     "endowmentPerStudent": 193370.45,
     "instructionShare": 1.4748
   },
@@ -537,7 +537,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 42365,
     "undergraduateEnrollment": 1873,
     "burden": 0.028447,
-    "gap": -2527.33,
+    "gap": -2603.47,
     "endowmentPerStudent": 1379287.77,
     "instructionShare": 2.9424
   },
@@ -554,7 +554,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 21670,
     "undergraduateEnrollment": 3618,
     "burden": 0.042249,
-    "gap": -264.53,
+    "gap": -335.6,
     "endowmentPerStudent": 349615.33,
     "instructionShare": 0.6064
   },
@@ -571,7 +571,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 18168,
     "undergraduateEnrollment": 32952,
     "burden": 0.01858,
-    "gap": -3784.66,
+    "gap": -3854.4,
     "endowmentPerStudent": 93462.8,
     "instructionShare": 1.1673
   },
@@ -588,7 +588,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 42520,
     "undergraduateEnrollment": 7226,
     "burden": 0.015552,
-    "gap": -5224.52,
+    "gap": -5310.54,
     "endowmentPerStudent": 929806.95,
     "instructionShare": 1.6884
   },
@@ -605,7 +605,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 26652,
     "undergraduateEnrollment": 1359,
     "burden": 0.042284,
-    "gap": -252.43,
+    "gap": -321.64,
     "endowmentPerStudent": 889584.99,
     "instructionShare": 0.8392
   },
@@ -613,7 +613,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "schoolId": "bucknell",
     "schoolName": "Bucknell University",
     "cdsYear": "2024-25",
-    "satCompositeP50": 1270,
+    "satCompositeP50": 1280,
     "earnings10yrMedian": 93807,
     "medianDebtCompleters": 27000,
     "medianDebtMonthlyPayment": 286.24,
@@ -622,7 +622,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 24614,
     "undergraduateEnrollment": 3876,
     "burden": 0.036616,
-    "gap": -1359.6,
+    "gap": -1445.92,
     "endowmentPerStudent": 301154.54,
     "instructionShare": 0.6038
   },
@@ -639,7 +639,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14447,
     "undergraduateEnrollment": 4317,
     "burden": 0.042826,
-    "gap": -176.92,
+    "gap": -247.99,
     "endowmentPerStudent": 68850.82,
     "instructionShare": 0.4008
   },
@@ -656,7 +656,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9630,
     "undergraduateEnrollment": 8179,
     "burden": 0.053911,
-    "gap": 1198.81,
+    "gap": 1142.21,
     "endowmentPerStudent": 19269.72,
     "instructionShare": 0.3664
   },
@@ -673,7 +673,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 12168,
     "undergraduateEnrollment": 2296,
     "burden": 0.040121,
-    "gap": -522.72,
+    "gap": -585.95,
     "endowmentPerStudent": 63146.43,
     "instructionShare": 0.4041
   },
@@ -690,9 +690,26 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11438,
     "undergraduateEnrollment": 21996,
     "burden": 0.025929,
-    "gap": -3221.78,
+    "gap": -3305.3,
     "endowmentPerStudent": 13477.31,
     "instructionShare": 0.6863
+  },
+  {
+    "schoolId": "california-state-polytechnic-university-humboldt",
+    "schoolName": "California State Polytechnic University-Humboldt",
+    "cdsYear": "2024-25",
+    "satCompositeP50": 990,
+    "earnings10yrMedian": 47626,
+    "medianDebtCompleters": 18000,
+    "medianDebtMonthlyPayment": 190.83,
+    "avgNetPrice": 13171,
+    "endowmentEnd": 39670628,
+    "instructionalExpenditureFte": 18064,
+    "undergraduateEnrollment": 5612,
+    "burden": 0.048082,
+    "gap": 338.99,
+    "endowmentPerStudent": 7068.89,
+    "instructionShare": 1.3715
   },
   {
     "schoolId": "california-state-university-bakersfield",
@@ -707,7 +724,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 8900,
     "undergraduateEnrollment": 8577,
     "burden": 0.035789,
-    "gap": -951.16,
+    "gap": -1005.46,
     "endowmentPerStudent": 4982.54,
     "instructionShare": 1.5747
   },
@@ -724,7 +741,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 8907,
     "undergraduateEnrollment": 13631,
     "burden": 0.032814,
-    "gap": -1409.52,
+    "gap": -1468.57,
     "endowmentPerStudent": 7351.26,
     "instructionShare": 0.6151
   },
@@ -741,15 +758,15 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 7992,
     "undergraduateEnrollment": 38546,
     "burden": 0.027787,
-    "gap": -2004.62,
+    "gap": -2062.55,
     "endowmentPerStudent": 3689.76,
     "instructionShare": 1.2192
   },
   {
     "schoolId": "california-state-university-san-bernardino",
     "schoolName": "California State University-San Bernardino",
-    "cdsYear": "2024-25",
-    "satCompositeP50": 1010,
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1000,
     "earnings10yrMedian": 59977,
     "medianDebtCompleters": 14715,
     "medianDebtMonthlyPayment": 156.0,
@@ -758,7 +775,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9661,
     "undergraduateEnrollment": 15023,
     "burden": 0.031212,
-    "gap": -1506.28,
+    "gap": -1561.47,
     "endowmentPerStudent": 3880.46,
     "instructionShare": 2.1168
   },
@@ -775,7 +792,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 8419,
     "undergraduateEnrollment": 14877,
     "burden": 0.035087,
-    "gap": -1100.76,
+    "gap": -1158.65,
     "endowmentPerStudent": 2457.51,
     "instructionShare": 0.8231
   },
@@ -792,7 +809,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 41024,
     "undergraduateEnrollment": 7304,
     "burden": 0.02409,
-    "gap": -4491.97,
+    "gap": -4597.66,
     "endowmentPerStudent": 442496.66,
     "instructionShare": 1.2842
   },
@@ -809,7 +826,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 35710,
     "undergraduateEnrollment": 6437,
     "burden": 0.034701,
-    "gap": -1606.5,
+    "gap": -1687.47,
     "endowmentPerStudent": 372325.31,
     "instructionShare": 0.867
   },
@@ -826,7 +843,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 12087,
     "undergraduateEnrollment": 1235,
     "burden": 0.065183,
-    "gap": 2031.9,
+    "gap": 1987.0,
     "endowmentPerStudent": 312818.51,
     "instructionShare": 0.676
   },
@@ -843,9 +860,26 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 13976,
     "undergraduateEnrollment": 7822,
     "burden": 0.048445,
-    "gap": 512.47,
+    "gap": 458.59,
     "endowmentPerStudent": 12731.88,
     "instructionShare": 0.8291
+  },
+  {
+    "schoolId": "central-michigan-university",
+    "schoolName": "Central Michigan University",
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1100,
+    "earnings10yrMedian": 55874,
+    "medianDebtCompleters": 27000,
+    "medianDebtMonthlyPayment": 286.24,
+    "avgNetPrice": 17597,
+    "endowmentEnd": 265356840,
+    "instructionalExpenditureFte": 8718,
+    "undergraduateEnrollment": 10035,
+    "burden": 0.061475,
+    "gap": 1868.29,
+    "endowmentPerStudent": 26443.13,
+    "instructionShare": 0.4954
   },
   {
     "schoolId": "centre-college",
@@ -860,7 +894,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 24174,
     "undergraduateEnrollment": 1400,
     "burden": 0.051855,
-    "gap": 1023.56,
+    "gap": 962.61,
     "endowmentPerStudent": 287646.26,
     "instructionShare": 1.1633
   },
@@ -877,7 +911,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 21557,
     "undergraduateEnrollment": 7478,
     "burden": 0.037219,
-    "gap": -932.55,
+    "gap": -997.03,
     "endowmentPerStudent": 107600.56,
     "instructionShare": 0.463
   },
@@ -894,7 +928,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 13358,
     "undergraduateEnrollment": 1232,
     "burden": 0.056437,
-    "gap": 1281.77,
+    "gap": 1233.54,
     "endowmentPerStudent": 65212.26,
     "instructionShare": 0.446
   },
@@ -911,7 +945,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10016,
     "undergraduateEnrollment": 2705,
     "burden": 0.037231,
-    "gap": -957.71,
+    "gap": -1024.04,
     "endowmentPerStudent": 155191.03,
     "instructionShare": 0.4833
   },
@@ -928,7 +962,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 47965,
     "undergraduateEnrollment": 1388,
     "burden": 0.016398,
-    "gap": -5679.41,
+    "gap": -5775.79,
     "endowmentPerStudent": 951002.88,
     "instructionShare": 1.6626
   },
@@ -945,7 +979,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 19052,
     "undergraduateEnrollment": 2214,
     "burden": 0.054572,
-    "gap": 1297.02,
+    "gap": 1239.61,
     "endowmentPerStudent": 219894.31,
     "instructionShare": 0.6635
   },
@@ -962,7 +996,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14641,
     "undergraduateEnrollment": 23300,
     "burden": 0.038249,
-    "gap": -807.07,
+    "gap": -872.87,
     "endowmentPerStudent": 48247.05,
     "instructionShare": 0.6579
   },
@@ -979,7 +1013,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 8741,
     "undergraduateEnrollment": 10377,
     "burden": 0.063936,
-    "gap": 1852.13,
+    "gap": 1808.64,
     "endowmentPerStudent": 5546.54,
     "instructionShare": 0.6259
   },
@@ -996,7 +1030,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 29447,
     "undergraduateEnrollment": 3180,
     "burden": 0.022413,
-    "gap": -3610.36,
+    "gap": -3688.7,
     "endowmentPerStudent": 394552.49,
     "instructionShare": 1.023
   },
@@ -1013,7 +1047,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10229,
     "undergraduateEnrollment": 10558,
     "burden": 0.05243,
-    "gap": 935.46,
+    "gap": 883.54,
     "endowmentPerStudent": 13970.76,
     "instructionShare": 0.5395
   },
@@ -1030,7 +1064,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 34153,
     "undergraduateEnrollment": 2014,
     "burden": 0.035611,
-    "gap": -1074.22,
+    "gap": -1134.24,
     "endowmentPerStudent": 491471.38,
     "instructionShare": 1.0233
   },
@@ -1047,9 +1081,26 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10538,
     "undergraduateEnrollment": 8143,
     "burden": 0.06108,
-    "gap": 1538.73,
+    "gap": 1496.57,
     "endowmentPerStudent": 7340.11,
     "instructionShare": 0.6977
+  },
+  {
+    "schoolId": "colorado-school-of-mines",
+    "schoolName": "Colorado School of Mines",
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1270,
+    "earnings10yrMedian": 97335,
+    "medianDebtCompleters": 23000,
+    "medianDebtMonthlyPayment": 243.84,
+    "avgNetPrice": 28690,
+    "endowmentEnd": 386363861,
+    "instructionalExpenditureFte": 20431,
+    "undergraduateEnrollment": 6155,
+    "burden": 0.030062,
+    "gap": -2753.96,
+    "endowmentPerStudent": 62772.36,
+    "instructionShare": 0.7121
   },
   {
     "schoolId": "colorado-state-university-pueblo",
@@ -1064,7 +1115,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 6672,
     "undergraduateEnrollment": 3042,
     "burden": 0.049228,
-    "gap": 571.76,
+    "gap": 520.63,
     "endowmentPerStudent": 8923.62,
     "instructionShare": 0.6638
   },
@@ -1081,7 +1132,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 110371,
     "undergraduateEnrollment": 8973,
     "burden": 0.026688,
-    "gap": -3485.01,
+    "gap": -3579.32,
     "endowmentPerStudent": 1647441.44,
     "instructionShare": 5.1121
   },
@@ -1098,7 +1149,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 6332,
     "undergraduateEnrollment": 1504,
     "burden": 0.056306,
-    "gap": 1033.37,
+    "gap": 994.07,
     "endowmentPerStudent": 30156.96,
     "instructionShare": 0.6354
   },
@@ -1115,7 +1166,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 12417,
     "undergraduateEnrollment": 1937,
     "burden": 0.039862,
-    "gap": -608.69,
+    "gap": -677.71,
     "endowmentPerStudent": 249023.23,
     "instructionShare": 0.3432
   },
@@ -1132,9 +1183,26 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 33431,
     "undergraduateEnrollment": 15995,
     "burden": 0.017118,
-    "gap": -5494.55,
+    "gap": -5590.29,
     "endowmentPerStudent": 636303.93,
     "instructionShare": 1.1652
+  },
+  {
+    "schoolId": "covenant-college",
+    "schoolName": "Covenant College",
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1270,
+    "earnings10yrMedian": 50412,
+    "medianDebtCompleters": 22500,
+    "medianDebtMonthlyPayment": 238.54,
+    "avgNetPrice": 26265,
+    "endowmentEnd": 64939767,
+    "instructionalExpenditureFte": 10737,
+    "undergraduateEnrollment": 939,
+    "burden": 0.056782,
+    "gap": 1220.62,
+    "endowmentPerStudent": 69158.43,
+    "instructionShare": 0.4088
   },
   {
     "schoolId": "creighton-university",
@@ -1149,7 +1217,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 18314,
     "undergraduateEnrollment": 4348,
     "burden": 0.043031,
-    "gap": -139.52,
+    "gap": -207.54,
     "endowmentPerStudent": 179988.04,
     "instructionShare": 0.5801
   },
@@ -1166,7 +1234,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 8768,
     "undergraduateEnrollment": 2071,
     "burden": 0.058656,
-    "gap": 1468.74,
+    "gap": 1421.84,
     "endowmentPerStudent": 10066.8,
     "instructionShare": 0.4164
   },
@@ -1183,7 +1251,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 32539,
     "undergraduateEnrollment": 4541,
     "burden": 0.02285,
-    "gap": -4047.97,
+    "gap": -4137.63,
     "endowmentPerStudent": 1821914.94,
     "instructionShare": 1.1023
   },
@@ -1200,7 +1268,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 22692,
     "undergraduateEnrollment": 1867,
     "burden": 0.029207,
-    "gap": -2365.03,
+    "gap": -2439.94,
     "endowmentPerStudent": 736209.88,
     "instructionShare": 1.3057
   },
@@ -1217,7 +1285,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 25080,
     "undergraduateEnrollment": 2380,
     "burden": 0.04882,
-    "gap": 642.79,
+    "gap": 580.45,
     "endowmentPerStudent": 436562.61,
     "instructionShare": 0.6269
   },
@@ -1234,7 +1302,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 13870,
     "undergraduateEnrollment": 14090,
     "burden": 0.042871,
-    "gap": -151.4,
+    "gap": -214.66,
     "endowmentPerStudent": 72761.6,
     "instructionShare": 0.4488
   },
@@ -1251,15 +1319,15 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 24399,
     "undergraduateEnrollment": 1905,
     "burden": 0.048703,
-    "gap": 652.95,
+    "gap": 588.05,
     "endowmentPerStudent": 489534.3,
     "instructionShare": 1.0959
   },
   {
     "schoolId": "desales-university",
     "schoolName": "DeSales University",
-    "cdsYear": "2024-25",
-    "satCompositeP50": 1180,
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1210,
     "earnings10yrMedian": 61295,
     "medianDebtCompleters": 25788,
     "medianDebtMonthlyPayment": 273.4,
@@ -1268,7 +1336,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11727,
     "undergraduateEnrollment": 2128,
     "burden": 0.053525,
-    "gap": 1148.23,
+    "gap": 1091.83,
     "endowmentPerStudent": 49677.68,
     "instructionShare": 0.3706
   },
@@ -1285,7 +1353,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 19764,
     "undergraduateEnrollment": 2273,
     "burden": 0.034431,
-    "gap": -1319.07,
+    "gap": -1383.67,
     "endowmentPerStudent": 276088.1,
     "instructionShare": 0.5255
   },
@@ -1302,7 +1370,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11343,
     "undergraduateEnrollment": 2561,
     "burden": 0.051479,
-    "gap": 887.64,
+    "gap": 832.12,
     "endowmentPerStudent": 21627.85,
     "instructionShare": 0.9658
   },
@@ -1319,7 +1387,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14134,
     "undergraduateEnrollment": 1114,
     "burden": 0.040547,
-    "gap": -573.43,
+    "gap": -651.38,
     "endowmentPerStudent": 28654.65,
     "instructionShare": 0.4
   },
@@ -1336,9 +1404,26 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 22377,
     "undergraduateEnrollment": 13233,
     "burden": 0.038062,
-    "gap": -986.35,
+    "gap": -1064.24,
     "endowmentPerStudent": 80805.11,
     "instructionShare": 0.5811
+  },
+  {
+    "schoolId": "duke",
+    "schoolName": "Duke University",
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1550,
+    "earnings10yrMedian": 97800,
+    "medianDebtCompleters": 13000,
+    "medianDebtMonthlyPayment": 137.82,
+    "avgNetPrice": 29612,
+    "endowmentEnd": 11889994000,
+    "instructionalExpenditureFte": 87044,
+    "undergraduateEnrollment": 6442,
+    "burden": 0.01691,
+    "gap": -5294.75,
+    "endowmentPerStudent": 1845699.16,
+    "instructionShare": 2.9395
   },
   {
     "schoolId": "duquesne-university",
@@ -1353,7 +1438,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 16449,
     "undergraduateEnrollment": 5350,
     "burden": 0.04467,
-    "gap": 99.68,
+    "gap": 30.9,
     "endowmentPerStudent": 123553.64,
     "instructionShare": 0.436
   },
@@ -1370,7 +1455,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 38316,
     "undergraduateEnrollment": 670,
     "burden": 0.058825,
-    "gap": 1480.65,
+    "gap": 1433.91,
     "endowmentPerStudent": 621191.08,
     "instructionShare": 1.5504
   },
@@ -1387,7 +1472,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14141,
     "undergraduateEnrollment": 19896,
     "burden": 0.052484,
-    "gap": 920.26,
+    "gap": 869.52,
     "endowmentPerStudent": 16089.01,
     "instructionShare": 0.8985
   },
@@ -1404,7 +1489,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 8444,
     "undergraduateEnrollment": 9912,
     "burden": 0.051852,
-    "gap": 776.91,
+    "gap": 730.63,
     "endowmentPerStudent": 3908.64,
     "instructionShare": 0.7131
   },
@@ -1421,9 +1506,26 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14453,
     "undergraduateEnrollment": 3418,
     "burden": 0.054633,
-    "gap": 1180.84,
+    "gap": 1128.88,
     "endowmentPerStudent": 6023.63,
     "instructionShare": 0.686
+  },
+  {
+    "schoolId": "eastern-michigan-university",
+    "schoolName": "Eastern Michigan University",
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1040,
+    "earnings10yrMedian": 51793,
+    "medianDebtCompleters": 25000,
+    "medianDebtMonthlyPayment": 265.04,
+    "avgNetPrice": 15407,
+    "endowmentEnd": 109425810,
+    "instructionalExpenditureFte": 8921,
+    "undergraduateEnrollment": 10055,
+    "burden": 0.061408,
+    "gap": 1724.89,
+    "endowmentPerStudent": 10882.73,
+    "instructionShare": 0.579
   },
   {
     "schoolId": "eastern-washington-university",
@@ -1438,7 +1540,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11582,
     "undergraduateEnrollment": 6222,
     "burden": 0.042848,
-    "gap": -130.16,
+    "gap": -183.44,
     "endowmentPerStudent": 7769.35,
     "instructionShare": 0.8341
   },
@@ -1455,7 +1557,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 17363,
     "undergraduateEnrollment": 1888,
     "burden": 0.066286,
-    "gap": 2270.26,
+    "gap": 2222.57,
     "endowmentPerStudent": 50315.2,
     "instructionShare": 0.4561
   },
@@ -1472,7 +1574,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 19988,
     "undergraduateEnrollment": 6452,
     "burden": 0.034985,
-    "gap": -1319.41,
+    "gap": -1388.01,
     "endowmentPerStudent": 56647.01,
     "instructionShare": 0.481
   },
@@ -1489,7 +1591,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 55602,
     "undergraduateEnrollment": 7298,
     "burden": 0.028972,
-    "gap": -2365.23,
+    "gap": -2438.97,
     "endowmentPerStudent": 1698572.9,
     "instructionShare": 2.4619
   },
@@ -1506,7 +1608,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 15558,
     "undergraduateEnrollment": 5373,
     "burden": 0.037251,
-    "gap": -1176.19,
+    "gap": -1257.89,
     "endowmentPerStudent": 76504.37,
     "instructionShare": 0.3235
   },
@@ -1523,7 +1625,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9659,
     "undergraduateEnrollment": 8106,
     "burden": 0.048809,
-    "gap": 518.14,
+    "gap": 467.78,
     "endowmentPerStudent": 15728.91,
     "instructionShare": 1.12
   },
@@ -1540,7 +1642,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11112,
     "undergraduateEnrollment": 2752,
     "burden": 0.057238,
-    "gap": 1402.36,
+    "gap": 1352.79,
     "endowmentPerStudent": 9721.53,
     "instructionShare": 0.7791
   },
@@ -1557,7 +1659,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10680,
     "undergraduateEnrollment": 7582,
     "burden": 0.067551,
-    "gap": 2053.13,
+    "gap": 2012.32,
     "endowmentPerStudent": 13413.48,
     "instructionShare": 0.7773
   },
@@ -1574,7 +1676,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9412,
     "undergraduateEnrollment": 23757,
     "burden": 0.038642,
-    "gap": -596.61,
+    "gap": -648.82,
     "endowmentPerStudent": 16757.97,
     "instructionShare": 1.0754
   },
@@ -1591,7 +1693,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 7517,
     "undergraduateEnrollment": 13874,
     "burden": 0.041089,
-    "gap": -311.19,
+    "gap": -361.39,
     "endowmentPerStudent": 7484.27,
     "instructionShare": 0.5981
   },
@@ -1608,7 +1710,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11908,
     "undergraduateEnrollment": 3404,
     "burden": 0.079627,
-    "gap": 3020.81,
+    "gap": 2981.12,
     "endowmentPerStudent": 31128.64,
     "instructionShare": 0.3341
   },
@@ -1625,7 +1727,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 8518,
     "undergraduateEnrollment": 39508,
     "burden": 0.034841,
-    "gap": -1083.35,
+    "gap": -1138.79,
     "endowmentPerStudent": 8548.53,
     "instructionShare": 0.9171
   },
@@ -1642,7 +1744,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 20636,
     "undergraduateEnrollment": 1799,
     "burden": 0.031753,
-    "gap": -1830.85,
+    "gap": -1900.9,
     "endowmentPerStudent": 259945.71,
     "instructionShare": 0.5665
   },
@@ -1659,7 +1761,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 25690,
     "undergraduateEnrollment": 2379,
     "burden": 0.043096,
-    "gap": -120.85,
+    "gap": -184.01,
     "endowmentPerStudent": 347935.53,
     "instructionShare": 0.8476
   },
@@ -1676,7 +1778,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 15232,
     "undergraduateEnrollment": 27752,
     "burden": 0.032495,
-    "gap": -1724.81,
+    "gap": -1795.06,
     "endowmentPerStudent": 7451.41,
     "instructionShare": 0.8502
   },
@@ -1693,7 +1795,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 24525,
     "undergraduateEnrollment": 11182,
     "burden": 0.028628,
-    "gap": -2743.7,
+    "gap": -2827.32,
     "endowmentPerStudent": 236067.61,
     "instructionShare": 0.6703
   },
@@ -1710,7 +1812,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 37019,
     "undergraduateEnrollment": 7569,
     "burden": 0.019054,
-    "gap": -5071.66,
+    "gap": -5166.89,
     "endowmentPerStudent": 480703.26,
     "instructionShare": 0.907
   },
@@ -1727,7 +1829,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11809,
     "undergraduateEnrollment": 18785,
     "burden": 0.026828,
-    "gap": -3466.44,
+    "gap": -3561.01,
     "endowmentPerStudent": 168591.61,
     "instructionShare": 0.9747
   },
@@ -1744,7 +1846,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 15097,
     "undergraduateEnrollment": 2099,
     "burden": 0.048027,
-    "gap": 567.13,
+    "gap": 501.32,
     "endowmentPerStudent": 202661.01,
     "instructionShare": 0.4794
   },
@@ -1761,7 +1863,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 15138,
     "undergraduateEnrollment": 5198,
     "burden": 0.039434,
-    "gap": -706.67,
+    "gap": -779.26,
     "endowmentPerStudent": 91602.15,
     "instructionShare": 0.431
   },
@@ -1778,7 +1880,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 17884,
     "undergraduateEnrollment": 964,
     "burden": 0.062382,
-    "gap": 1916.19,
+    "gap": 1867.4,
     "endowmentPerStudent": 303578.84,
     "instructionShare": 0.7959
   },
@@ -1795,7 +1897,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10704,
     "undergraduateEnrollment": 18854,
     "burden": 0.055542,
-    "gap": 1273.68,
+    "gap": 1222.04,
     "endowmentPerStudent": 11106.86,
     "instructionShare": 0.656
   },
@@ -1812,7 +1914,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 32882,
     "undergraduateEnrollment": 1729,
     "burden": 0.035435,
-    "gap": -1056.52,
+    "gap": -1114.34,
     "endowmentPerStudent": 1544736.26,
     "instructionShare": 1.8632
   },
@@ -1829,7 +1931,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9202,
     "undergraduateEnrollment": 1067,
     "burden": 0.047367,
-    "gap": 445.39,
+    "gap": 383.6,
     "endowmentPerStudent": 63777.88,
     "instructionShare": 0.3348
   },
@@ -1846,7 +1948,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 31938,
     "undergraduateEnrollment": 2030,
     "burden": 0.027582,
-    "gap": -2528.44,
+    "gap": -2600.59,
     "endowmentPerStudent": 670758.13,
     "instructionShare": 1.1019
   },
@@ -1863,7 +1965,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14712,
     "undergraduateEnrollment": 1087,
     "burden": 0.056211,
-    "gap": 1467.31,
+    "gap": 1411.08,
     "endowmentPerStudent": 40282.85,
     "instructionShare": 0.4697
   },
@@ -1880,7 +1982,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 36100,
     "undergraduateEnrollment": 921,
     "burden": 0.022933,
-    "gap": -5739.34,
+    "gap": -5866.96,
     "endowmentPerStudent": 493539.09,
     "instructionShare": 1.0049
   },
@@ -1897,7 +1999,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 29284,
     "undergraduateEnrollment": 1430,
     "burden": 0.021671,
-    "gap": -3507.45,
+    "gap": -3581.03,
     "endowmentPerStudent": 491080.5,
     "instructionShare": 1.1568
   },
@@ -1914,7 +2016,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 12391,
     "undergraduateEnrollment": 777,
     "burden": 0.063245,
-    "gap": 2054.82,
+    "gap": 2004.85,
     "endowmentPerStudent": 71330.78,
     "instructionShare": 0.5884
   },
@@ -1931,7 +2033,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 18893,
     "undergraduateEnrollment": 1786,
     "burden": 0.049903,
-    "gap": 799.57,
+    "gap": 736.23,
     "endowmentPerStudent": 103141.58,
     "instructionShare": 0.5986
   },
@@ -1948,7 +2050,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 19163,
     "undergraduateEnrollment": 6488,
     "burden": 0.043527,
-    "gap": -63.1,
+    "gap": -126.63,
     "endowmentPerStudent": 142619.99,
     "instructionShare": 0.5607
   },
@@ -1965,15 +2067,32 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 19506,
     "undergraduateEnrollment": 665,
     "burden": 0.085711,
-    "gap": 3285.52,
+    "gap": 3248.65,
     "endowmentPerStudent": 456901.24,
     "instructionShare": 0.9335
+  },
+  {
+    "schoolId": "hope-college",
+    "schoolName": "Hope College",
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1190,
+    "earnings10yrMedian": 58427,
+    "medianDebtCompleters": 26800,
+    "medianDebtMonthlyPayment": 284.12,
+    "avgNetPrice": 27182,
+    "endowmentEnd": 309915000,
+    "instructionalExpenditureFte": 13039,
+    "undergraduateEnrollment": 3288,
+    "burden": 0.058354,
+    "gap": 1595.24,
+    "endowmentPerStudent": 94256.39,
+    "instructionShare": 0.4797
   },
   {
     "schoolId": "houston-christian-university",
     "schoolName": "Houston Christian University",
     "cdsYear": "2025-26",
-    "satCompositeP50": 980,
+    "satCompositeP50": 1090,
     "earnings10yrMedian": 55933,
     "medianDebtCompleters": 22642,
     "medianDebtMonthlyPayment": 240.04,
@@ -1982,7 +2101,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 5467,
     "undergraduateEnrollment": 2886,
     "burden": 0.051499,
-    "gap": 825.13,
+    "gap": 773.66,
     "endowmentPerStudent": 47811.4,
     "instructionShare": 0.265
   },
@@ -1999,7 +2118,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14944,
     "undergraduateEnrollment": 10108,
     "burden": 0.049423,
-    "gap": 673.03,
+    "gap": 615.0,
     "endowmentPerStudent": 102146.52,
     "instructionShare": 0.2957
   },
@@ -2016,7 +2135,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9152,
     "undergraduateEnrollment": 19057,
     "burden": 0.041948,
-    "gap": -249.49,
+    "gap": -306.65,
     "endowmentPerStudent": 11770.48,
     "instructionShare": 0.4718
   },
@@ -2033,7 +2152,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 19373,
     "undergraduateEnrollment": 1582,
     "burden": 0.048467,
-    "gap": 623.21,
+    "gap": 558.0,
     "endowmentPerStudent": 161731.19,
     "instructionShare": 0.687
   },
@@ -2050,7 +2169,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 6267,
     "undergraduateEnrollment": 1320,
     "burden": 0.045374,
-    "gap": 205.66,
+    "gap": 136.0,
     "endowmentPerStudent": 20012.44,
     "instructionShare": 0.2583
   },
@@ -2067,7 +2186,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10440,
     "undergraduateEnrollment": 6764,
     "burden": 0.066822,
-    "gap": 2288.94,
+    "gap": 2241.99,
     "endowmentPerStudent": 14573.84,
     "instructionShare": 0.6213
   },
@@ -2084,7 +2203,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 15334,
     "undergraduateEnrollment": 37806,
     "burden": 0.038938,
-    "gap": -633.08,
+    "gap": -691.74,
     "endowmentPerStudent": 55229.17,
     "instructionShare": 0.9428
   },
@@ -2101,7 +2220,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 15871,
     "undergraduateEnrollment": 2274,
     "burden": 0.05262,
-    "gap": 1065.79,
+    "gap": 1007.95,
     "endowmentPerStudent": 125980.24,
     "instructionShare": 0.5521
   },
@@ -2118,7 +2237,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 101214,
     "undergraduateEnrollment": 5693,
     "burden": 0.014894,
-    "gap": -5006.28,
+    "gap": -5086.85,
     "endowmentPerStudent": 2294585.1,
     "instructionShare": 5.3811
   },
@@ -2135,7 +2254,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14358,
     "undergraduateEnrollment": 1191,
     "burden": 0.060348,
-    "gap": 1829.45,
+    "gap": 1777.07,
     "endowmentPerStudent": 111409.29,
     "instructionShare": 0.5985
   },
@@ -2152,7 +2271,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 12603,
     "undergraduateEnrollment": 15142,
     "burden": 0.047212,
-    "gap": 362.4,
+    "gap": 309.71,
     "endowmentPerStudent": 67300.6,
     "instructionShare": 0.6494
   },
@@ -2160,7 +2279,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "schoolId": "keene-state-college",
     "schoolName": "Keene State College",
     "cdsYear": "2024-25",
-    "satCompositeP50": 1000,
+    "satCompositeP50": 1050,
     "earnings10yrMedian": 54368,
     "medianDebtCompleters": 25749,
     "medianDebtMonthlyPayment": 272.98,
@@ -2169,7 +2288,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10942,
     "undergraduateEnrollment": 2699,
     "burden": 0.060252,
-    "gap": 1737.19,
+    "gap": 1687.16,
     "endowmentPerStudent": 22768.71,
     "instructionShare": 0.6117
   },
@@ -2186,7 +2305,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 5687,
     "undergraduateEnrollment": 41254,
     "burden": 0.052683,
-    "gap": 982.98,
+    "gap": 930.03,
     "endowmentPerStudent": 3006.8,
     "instructionShare": 0.3779
   },
@@ -2203,7 +2322,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10496,
     "undergraduateEnrollment": 19320,
     "burden": 0.068672,
-    "gap": 2201.27,
+    "gap": 2159.5,
     "endowmentPerStudent": 10464.94,
     "instructionShare": 0.5049
   },
@@ -2220,7 +2339,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 26237,
     "undergraduateEnrollment": 1732,
     "burden": 0.032814,
-    "gap": -1577.74,
+    "gap": -1643.84,
     "endowmentPerStudent": 361780.28,
     "instructionShare": 0.6813
   },
@@ -2237,7 +2356,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10174,
     "undergraduateEnrollment": 6180,
     "burden": 0.06151,
-    "gap": 1851.18,
+    "gap": 1801.7,
     "endowmentPerStudent": 7287.33,
     "instructionShare": 0.477
   },
@@ -2254,7 +2373,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 25883,
     "undergraduateEnrollment": 2757,
     "burden": 0.022268,
-    "gap": -3902.09,
+    "gap": -3986.2,
     "endowmentPerStudent": 413583.61,
     "instructionShare": 0.7517
   },
@@ -2271,7 +2390,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11874,
     "undergraduateEnrollment": 1813,
     "burden": 0.053827,
-    "gap": 1194.86,
+    "gap": 1137.97,
     "endowmentPerStudent": 68121.36,
     "instructionShare": 0.4141
   },
@@ -2288,7 +2407,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11551,
     "undergraduateEnrollment": 1325,
     "burden": 0.06031,
-    "gap": 1572.66,
+    "gap": 1527.53,
     "endowmentPerStudent": 29628.02,
     "instructionShare": 0.9009
   },
@@ -2305,7 +2424,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 12614,
     "undergraduateEnrollment": 1668,
     "burden": 0.049672,
-    "gap": 771.91,
+    "gap": 708.27,
     "endowmentPerStudent": 32574.84,
     "instructionShare": 0.3832
   },
@@ -2322,7 +2441,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 22280,
     "undergraduateEnrollment": 1396,
     "burden": 0.059289,
-    "gap": 1677.08,
+    "gap": 1625.74,
     "endowmentPerStudent": 330397.15,
     "instructionShare": 0.9521
   },
@@ -2339,7 +2458,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 8868,
     "undergraduateEnrollment": 2617,
     "burden": 0.075792,
-    "gap": 2700.99,
+    "gap": 2661.22,
     "endowmentPerStudent": 12585.61,
     "instructionShare": 0.4698
   },
@@ -2356,7 +2475,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 24840,
     "undergraduateEnrollment": 5898,
     "burden": 0.02646,
-    "gap": -3637.66,
+    "gap": -3734.82,
     "endowmentPerStudent": 317517.12,
     "instructionShare": 0.6726
   },
@@ -2373,7 +2492,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9626,
     "undergraduateEnrollment": 2385,
     "burden": 0.051163,
-    "gap": 648.27,
+    "gap": 605.94,
     "endowmentPerStudent": 6582.86,
     "instructionShare": 0.6157
   },
@@ -2390,7 +2509,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 6898,
     "undergraduateEnrollment": 893,
     "burden": 0.044734,
-    "gap": 69.17,
+    "gap": 25.56,
     "endowmentPerStudent": 5279.85,
     "instructionShare": 0.2315
   },
@@ -2407,7 +2526,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 12062,
     "undergraduateEnrollment": 2997,
     "burden": 0.044665,
-    "gap": 73.51,
+    "gap": 22.41,
     "endowmentPerStudent": 39127.45,
     "instructionShare": 0.4876
   },
@@ -2424,7 +2543,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 7357,
     "undergraduateEnrollment": 8312,
     "burden": 0.053866,
-    "gap": 1014.36,
+    "gap": 966.25,
     "endowmentPerStudent": 11931.7,
     "instructionShare": 0.6201
   },
@@ -2441,7 +2560,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 19325,
     "undergraduateEnrollment": 7094,
     "burden": 0.031663,
-    "gap": -1898.22,
+    "gap": -1970.32,
     "endowmentPerStudent": 101497.32,
     "instructionShare": 0.3994
   },
@@ -2458,7 +2577,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14058,
     "undergraduateEnrollment": 11737,
     "burden": 0.042964,
-    "gap": -144.51,
+    "gap": -210.33,
     "endowmentPerStudent": 89861.83,
     "instructionShare": 0.3896
   },
@@ -2475,15 +2594,15 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 13478,
     "undergraduateEnrollment": 3869,
     "burden": 0.041558,
-    "gap": -395.25,
+    "gap": -471.31,
     "endowmentPerStudent": 82859.71,
     "instructionShare": 0.4408
   },
   {
     "schoolId": "lycoming-college",
     "schoolName": "Lycoming College",
-    "cdsYear": "2024-25",
-    "satCompositeP50": 1185,
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1140,
     "earnings10yrMedian": 56210,
     "medianDebtCompleters": 27000,
     "medianDebtMonthlyPayment": 286.24,
@@ -2492,7 +2611,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 15750,
     "undergraduateEnrollment": 996,
     "burden": 0.061108,
-    "gap": 1890.65,
+    "gap": 1838.93,
     "endowmentPerStudent": 191912.65,
     "instructionShare": 0.8229
   },
@@ -2509,7 +2628,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 25033,
     "undergraduateEnrollment": 2131,
     "burden": 0.045807,
-    "gap": 227.89,
+    "gap": 169.11,
     "endowmentPerStudent": 413733.93,
     "instructionShare": 0.7787
   },
@@ -2526,7 +2645,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 16204,
     "undergraduateEnrollment": 2744,
     "burden": 0.038321,
-    "gap": -961.96,
+    "gap": -1041.39,
     "endowmentPerStudent": 58369.14,
     "instructionShare": 0.5945
   },
@@ -2543,7 +2662,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 16371,
     "undergraduateEnrollment": 952,
     "burden": 0.060071,
-    "gap": 1806.8,
+    "gap": 1754.18,
     "endowmentPerStudent": 96347.0,
     "instructionShare": 0.7765
   },
@@ -2560,7 +2679,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14663,
     "undergraduateEnrollment": 5182,
     "burden": 0.04087,
-    "gap": -477.37,
+    "gap": -548.97,
     "endowmentPerStudent": 90367.59,
     "instructionShare": 0.353
   },
@@ -2577,9 +2696,43 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14847,
     "undergraduateEnrollment": 7660,
     "burden": 0.038918,
-    "gap": -780.29,
+    "gap": -852.3,
     "endowmentPerStudent": 130156.53,
     "instructionShare": 0.4715
+  },
+  {
+    "schoolId": "marshall-university",
+    "schoolName": "Marshall University",
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1040,
+    "earnings10yrMedian": 46354,
+    "medianDebtCompleters": 23250,
+    "medianDebtMonthlyPayment": 246.49,
+    "avgNetPrice": 7502,
+    "endowmentEnd": 226038119,
+    "instructionalExpenditureFte": 10515,
+    "undergraduateEnrollment": 7266,
+    "burden": 0.063811,
+    "gap": 1762.64,
+    "endowmentPerStudent": 31109.02,
+    "instructionShare": 1.4016
+  },
+  {
+    "schoolId": "maryville-university-of-saint-louis",
+    "schoolName": "Maryville University of Saint Louis",
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1070,
+    "earnings10yrMedian": 62105,
+    "medianDebtCompleters": 22000,
+    "medianDebtMonthlyPayment": 233.24,
+    "avgNetPrice": 22066,
+    "endowmentEnd": 80287156,
+    "instructionalExpenditureFte": 6073,
+    "undergraduateEnrollment": 5658,
+    "burden": 0.045067,
+    "gap": 74.06,
+    "endowmentPerStudent": 14190.02,
+    "instructionShare": 0.2752
   },
   {
     "schoolId": "mit",
@@ -2594,7 +2747,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 99057,
     "undergraduateEnrollment": 4535,
     "burden": 0.013105,
-    "gap": -8701.91,
+    "gap": -8833.83,
     "endowmentPerStudent": 5418459.98,
     "instructionShare": 4.9255
   },
@@ -2611,7 +2764,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10231,
     "undergraduateEnrollment": 872,
     "burden": 0.061657,
-    "gap": 1807.97,
+    "gap": 1760.04,
     "endowmentPerStudent": 819536.75,
     "instructionShare": 0.3869
   },
@@ -2628,7 +2781,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10324,
     "undergraduateEnrollment": 2259,
     "burden": 0.060291,
-    "gap": 1731.59,
+    "gap": 1681.84,
     "endowmentPerStudent": 58476.5,
     "instructionShare": 0.3896
   },
@@ -2645,7 +2798,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11183,
     "undergraduateEnrollment": 16656,
     "burden": 0.053128,
-    "gap": 988.8,
+    "gap": 938.12,
     "endowmentPerStudent": 48781.22,
     "instructionShare": 0.394
   },
@@ -2662,7 +2815,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 19397,
     "undergraduateEnrollment": 40922,
     "burden": 0.043981,
-    "gap": -1.38,
+    "gap": -63.27,
     "endowmentPerStudent": 121847.25,
     "instructionShare": 0.9856
   },
@@ -2679,14 +2832,14 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 12828,
     "undergraduateEnrollment": 5955,
     "burden": 0.040657,
-    "gap": -512.48,
+    "gap": -584.43,
     "endowmentPerStudent": 28394.42,
     "instructionShare": 0.9045
   },
   {
     "schoolId": "middle-tennessee-state-university",
     "schoolName": "Middle Tennessee State University",
-    "cdsYear": "2024-25",
+    "cdsYear": "2025-26",
     "satCompositeP50": 1120,
     "earnings10yrMedian": 48541,
     "medianDebtCompleters": 20000,
@@ -2696,7 +2849,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 12353,
     "undergraduateEnrollment": 16301,
     "burden": 0.052417,
-    "gap": 803.65,
+    "gap": 758.98,
     "endowmentPerStudent": 9424.94,
     "instructionShare": 0.9247
   },
@@ -2713,7 +2866,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 32208,
     "undergraduateEnrollment": 2738,
     "burden": 0.023102,
-    "gap": -3132.5,
+    "gap": -3202.72,
     "endowmentPerStudent": 523517.77,
     "instructionShare": 1.023
   },
@@ -2730,15 +2883,15 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10132,
     "undergraduateEnrollment": 5728,
     "burden": 0.054131,
-    "gap": 1100.76,
+    "gap": 1049.92,
     "endowmentPerStudent": 8180.74,
     "instructionShare": 0.4874
   },
   {
     "schoolId": "milwaukee-school-of-engineering",
     "schoolName": "Milwaukee School of Engineering",
-    "cdsYear": "2025-26",
-    "satCompositeP50": 1310,
+    "cdsYear": "2024-25",
+    "satCompositeP50": 1270,
     "earnings10yrMedian": 89070,
     "medianDebtCompleters": 27000,
     "medianDebtMonthlyPayment": 286.24,
@@ -2747,7 +2900,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 13879,
     "undergraduateEnrollment": 2654,
     "burden": 0.038564,
-    "gap": -950.09,
+    "gap": -1032.05,
     "endowmentPerStudent": 34037.56,
     "instructionShare": 0.6181
   },
@@ -2764,7 +2917,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 8632,
     "undergraduateEnrollment": 18397,
     "burden": 0.054683,
-    "gap": 1082.25,
+    "gap": 1034.84,
     "endowmentPerStudent": 48631.98,
     "instructionShare": 0.4906
   },
@@ -2781,7 +2934,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9817,
     "undergraduateEnrollment": 3019,
     "burden": 0.057235,
-    "gap": 1109.14,
+    "gap": 1069.92,
     "endowmentPerStudent": 17846.22,
     "instructionShare": 0.8176
   },
@@ -2798,7 +2951,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 15588,
     "undergraduateEnrollment": 5521,
     "burden": 0.035656,
-    "gap": -1358.96,
+    "gap": -1435.29,
     "endowmentPerStudent": 51185.05,
     "instructionShare": 0.9564
   },
@@ -2815,7 +2968,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9613,
     "undergraduateEnrollment": 14451,
     "burden": 0.053742,
-    "gap": 1020.55,
+    "gap": 971.54,
     "endowmentPerStudent": 21658.84,
     "instructionShare": 0.4273
   },
@@ -2832,7 +2985,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9193,
     "undergraduateEnrollment": 18376,
     "burden": 0.045573,
-    "gap": 190.85,
+    "gap": 134.34,
     "endowmentPerStudent": 3350.46,
     "instructionShare": 0.5906
   },
@@ -2840,7 +2993,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "schoolId": "morehead-state-university",
     "schoolName": "Morehead State University",
     "cdsYear": "2024-25",
-    "satCompositeP50": 1110,
+    "satCompositeP50": 1030,
     "earnings10yrMedian": 43197,
     "medianDebtCompleters": 22250,
     "medianDebtMonthlyPayment": 235.89,
@@ -2849,7 +3002,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10768,
     "undergraduateEnrollment": 4578,
     "burden": 0.06553,
-    "gap": 1828.24,
+    "gap": 1788.49,
     "endowmentPerStudent": 15475.92,
     "instructionShare": 1.0996
   },
@@ -2866,7 +3019,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 29177,
     "undergraduateEnrollment": 2169,
     "burden": 0.049875,
-    "gap": 675.37,
+    "gap": 621.62,
     "endowmentPerStudent": 507859.95,
     "instructionShare": 1.1035
   },
@@ -2883,7 +3036,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 7816,
     "undergraduateEnrollment": 1533,
     "burden": 0.05941,
-    "gap": 1751.73,
+    "gap": 1698.53,
     "endowmentPerStudent": 16014.03,
     "instructionShare": 0.2811
   },
@@ -2900,14 +3053,14 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 16796,
     "undergraduateEnrollment": 9019,
     "burden": 0.0317,
-    "gap": -2035.68,
+    "gap": -2113.24,
     "endowmentPerStudent": 19904.98,
     "instructionShare": 1.0177
   },
   {
     "schoolId": "nyu",
     "schoolName": "New York University",
-    "cdsYear": "2024-25",
+    "cdsYear": "2025-26",
     "satCompositeP50": 1520,
     "earnings10yrMedian": 82509,
     "medianDebtCompleters": 20500,
@@ -2917,7 +3070,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 37294,
     "undergraduateEnrollment": 28663,
     "burden": 0.031608,
-    "gap": -2007.9,
+    "gap": -2083.83,
     "endowmentPerStudent": 232075.57,
     "instructionShare": 1.0066
   },
@@ -2934,7 +3087,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 8093,
     "undergraduateEnrollment": 12182,
     "burden": 0.077293,
-    "gap": 2908.17,
+    "gap": 2867.27,
     "endowmentPerStudent": 16577.05,
     "instructionShare": 0.7462
   },
@@ -2951,7 +3104,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11500,
     "undergraduateEnrollment": 2428,
     "burden": 0.051842,
-    "gap": 927.45,
+    "gap": 872.13,
     "endowmentPerStudent": 57553.52,
     "instructionShare": 0.5465
   },
@@ -2968,7 +3121,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11618,
     "undergraduateEnrollment": 9471,
     "burden": 0.047448,
-    "gap": 422.45,
+    "gap": 365.21,
     "endowmentPerStudent": 51391.13,
     "instructionShare": 0.7475
   },
@@ -2985,7 +3138,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 21813,
     "undergraduateEnrollment": 17326,
     "burden": 0.033339,
-    "gap": -1937.27,
+    "gap": -2022.42,
     "endowmentPerStudent": 98768.62,
     "instructionShare": 0.7056
   },
@@ -3002,7 +3155,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 7753,
     "undergraduateEnrollment": 22903,
     "burden": 0.044446,
-    "gap": 48.55,
+    "gap": -1.49,
     "endowmentPerStudent": 12373.34,
     "instructionShare": 0.5476
   },
@@ -3019,9 +3172,26 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9637,
     "undergraduateEnrollment": 8246,
     "burden": 0.058265,
-    "gap": 1408.59,
+    "gap": 1362.38,
     "endowmentPerStudent": 16805.97,
     "instructionShare": 1.1765
+  },
+  {
+    "schoolId": "northwestern-state-university-of-louisiana",
+    "schoolName": "Northwestern State University of Louisiana",
+    "cdsYear": "2025-26",
+    "satCompositeP50": 980,
+    "earnings10yrMedian": 47021,
+    "medianDebtCompleters": 25000,
+    "medianDebtMonthlyPayment": 265.04,
+    "avgNetPrice": 13606,
+    "endowmentEnd": 18934642,
+    "instructionalExpenditureFte": 6994,
+    "undergraduateEnrollment": 5519,
+    "burden": 0.06764,
+    "gap": 2141.82,
+    "endowmentPerStudent": 3430.81,
+    "instructionShare": 0.514
   },
   {
     "schoolId": "northwestern",
@@ -3036,9 +3206,26 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 48932,
     "undergraduateEnrollment": 9201,
     "burden": 0.021354,
-    "gap": -3975.53,
+    "gap": -4057.76,
     "endowmentPerStudent": 1193486.03,
     "instructionShare": 1.6776
+  },
+  {
+    "schoolId": "oakland-university",
+    "schoolName": "Oakland University",
+    "cdsYear": "2024-25",
+    "satCompositeP50": 1040,
+    "earnings10yrMedian": 58612,
+    "medianDebtCompleters": 22750,
+    "medianDebtMonthlyPayment": 241.19,
+    "avgNetPrice": 9120,
+    "endowmentEnd": 151474929,
+    "instructionalExpenditureFte": 10989,
+    "undergraduateEnrollment": 12351,
+    "burden": 0.04938,
+    "gap": 566.7,
+    "endowmentPerStudent": 12264.18,
+    "instructionShare": 1.2049
   },
   {
     "schoolId": "oberlin",
@@ -3053,7 +3240,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 26123,
     "undergraduateEnrollment": 2887,
     "burden": 0.056694,
-    "gap": 1456.28,
+    "gap": 1402.6,
     "endowmentPerStudent": 440064.08,
     "instructionShare": 0.676
   },
@@ -3070,7 +3257,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 24676,
     "undergraduateEnrollment": 1877,
     "burden": 0.038526,
-    "gap": -815.79,
+    "gap": -885.68,
     "endowmentPerStudent": 348586.83,
     "instructionShare": 0.6449
   },
@@ -3087,9 +3274,26 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 23612,
     "undergraduateEnrollment": 45638,
     "burden": 0.042069,
-    "gap": -228.23,
+    "gap": -283.82,
     "endowmentPerStudent": 173167.86,
     "instructionShare": 1.3618
+  },
+  {
+    "schoolId": "oklahoma-state-university-main-campus",
+    "schoolName": "Oklahoma State University-Main Campus",
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1160,
+    "earnings10yrMedian": 57413,
+    "medianDebtCompleters": 20500,
+    "medianDebtMonthlyPayment": 217.33,
+    "avgNetPrice": 17447,
+    "endowmentEnd": 603919302,
+    "instructionalExpenditureFte": 10663,
+    "undergraduateEnrollment": 21773,
+    "burden": 0.045425,
+    "gap": 108.81,
+    "endowmentPerStudent": 27737.07,
+    "instructionShare": 0.6112
   },
   {
     "schoolId": "old-dominion-university",
@@ -3104,7 +3308,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 12901,
     "undergraduateEnrollment": 17514,
     "burden": 0.055601,
-    "gap": 1252.78,
+    "gap": 1202.24,
     "endowmentPerStudent": 18260.42,
     "instructionShare": 0.8813
   },
@@ -3121,7 +3325,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10507,
     "undergraduateEnrollment": 2892,
     "burden": 0.039606,
-    "gap": -622.82,
+    "gap": -689.32,
     "endowmentPerStudent": 12058.4,
     "instructionShare": 0.669
   },
@@ -3138,7 +3342,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 12607,
     "undergraduateEnrollment": 30743,
     "burden": 0.042177,
-    "gap": -228.26,
+    "gap": -287.16,
     "endowmentPerStudent": 33448.4,
     "instructionShare": 0.6431
   },
@@ -3155,7 +3359,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 12774,
     "undergraduateEnrollment": 1516,
     "burden": 0.048766,
-    "gap": 568.4,
+    "gap": 512.65,
     "endowmentPerStudent": 42751.56,
     "instructionShare": 0.3621
   },
@@ -3172,7 +3376,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 15699,
     "undergraduateEnrollment": 42284,
     "burden": 0.050138,
-    "gap": 766.12,
+    "gap": 707.74,
     "endowmentPerStudent": 99103.17,
     "instructionShare": 0.4775
   },
@@ -3189,7 +3393,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10390,
     "undergraduateEnrollment": 3553,
     "burden": 0.036063,
-    "gap": -1292.3,
+    "gap": -1368.62,
     "endowmentPerStudent": 371244.3,
     "instructionShare": 0.1788
   },
@@ -3206,7 +3410,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 45049,
     "undergraduateEnrollment": 1666,
     "burden": 0.019272,
-    "gap": -3778.3,
+    "gap": -3849.87,
     "endowmentPerStudent": 1806101.44,
     "instructionShare": 2.336
   },
@@ -3223,7 +3427,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 19936,
     "undergraduateEnrollment": 3910,
     "burden": 0.060921,
-    "gap": 1806.23,
+    "gap": 1756.27,
     "endowmentPerStudent": 74263.75,
     "instructionShare": 0.3786
   },
@@ -3240,7 +3444,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 73220,
     "undergraduateEnrollment": 5709,
     "burden": 0.011928,
-    "gap": -6934.95,
+    "gap": -7036.23,
     "endowmentPerStudent": 5850738.31,
     "instructionShare": 11.9484
   },
@@ -3257,7 +3461,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 17553,
     "undergraduateEnrollment": 4229,
     "burden": 0.039457,
-    "gap": -775.8,
+    "gap": -855.91,
     "endowmentPerStudent": 83428.84,
     "instructionShare": 0.3617
   },
@@ -3274,7 +3478,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 20511,
     "undergraduateEnrollment": 44503,
     "burden": 0.034253,
-    "gap": -1386.01,
+    "gap": -1452.65,
     "endowmentPerStudent": 89251.31,
     "instructionShare": 1.4049
   },
@@ -3291,7 +3495,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 6923,
     "undergraduateEnrollment": 1010,
     "burden": 0.060618,
-    "gap": 1645.68,
+    "gap": 1599.33,
     "endowmentPerStudent": 17935.88,
     "instructionShare": 0.34
   },
@@ -3308,7 +3512,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14638,
     "undergraduateEnrollment": 6038,
     "burden": 0.056817,
-    "gap": 1354.35,
+    "gap": 1304.9,
     "endowmentPerStudent": 12302.51,
     "instructionShare": 1.0041
   },
@@ -3325,9 +3529,26 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 30286,
     "undergraduateEnrollment": 1320,
     "burden": 0.043468,
-    "gap": -64.84,
+    "gap": -122.74,
     "endowmentPerStudent": 599212.97,
     "instructionShare": 0.9174
+  },
+  {
+    "schoolId": "regent-university",
+    "schoolName": "Regent University",
+    "cdsYear": "2024-25",
+    "satCompositeP50": 1180,
+    "earnings10yrMedian": 44498,
+    "medianDebtCompleters": 24534,
+    "medianDebtMonthlyPayment": 260.1,
+    "avgNetPrice": 19923,
+    "endowmentEnd": 124604000,
+    "instructionalExpenditureFte": 4054,
+    "undergraduateEnrollment": 4729,
+    "burden": 0.070142,
+    "gap": 2245.76,
+    "endowmentPerStudent": 26348.91,
+    "instructionShare": 0.2035
   },
   {
     "schoolId": "rpi",
@@ -3342,7 +3563,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 20696,
     "undergraduateEnrollment": 5714,
     "burden": 0.029608,
-    "gap": -2884.62,
+    "gap": -2978.53,
     "endowmentPerStudent": 175060.38,
     "instructionShare": 0.5713
   },
@@ -3359,7 +3580,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 16723,
     "undergraduateEnrollment": 1836,
     "burden": 0.041536,
-    "gap": -321.69,
+    "gap": -383.02,
     "endowmentPerStudent": 235067.24,
     "instructionShare": 0.585
   },
@@ -3376,7 +3597,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 47816,
     "undergraduateEnrollment": 4776,
     "burden": 0.015598,
-    "gap": -5005.86,
+    "gap": -5088.42,
     "endowmentPerStudent": 1660764.45,
     "instructionShare": 3.5764
   },
@@ -3393,7 +3614,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 21369,
     "undergraduateEnrollment": 13215,
     "burden": 0.04449,
-    "gap": 75.03,
+    "gap": 4.57,
     "endowmentPerStudent": 104768.67,
     "instructionShare": 0.6122
   },
@@ -3410,7 +3631,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11659,
     "undergraduateEnrollment": 840,
     "burden": 0.067454,
-    "gap": 2260.87,
+    "gap": 2215.75,
     "endowmentPerStudent": 52767.2,
     "instructionShare": 0.5903
   },
@@ -3427,7 +3648,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 5581,
     "undergraduateEnrollment": 2657,
     "burden": 0.060417,
-    "gap": 1393.3,
+    "gap": 1353.58,
     "endowmentPerStudent": 7418.23,
     "instructionShare": 0.3644
   },
@@ -3444,7 +3665,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 13624,
     "undergraduateEnrollment": 2631,
     "burden": 0.055649,
-    "gap": 1335.45,
+    "gap": 1281.8,
     "endowmentPerStudent": 184232.61,
     "instructionShare": 0.3923
   },
@@ -3461,7 +3682,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 19963,
     "undergraduateEnrollment": 2309,
     "burden": 0.031411,
-    "gap": -2503.21,
+    "gap": -2596.38,
     "endowmentPerStudent": 127596.79,
     "instructionShare": 0.4696
   },
@@ -3478,7 +3699,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 16731,
     "undergraduateEnrollment": 15841,
     "burden": 0.043475,
-    "gap": -60.96,
+    "gap": -116.16,
     "endowmentPerStudent": 27437.4,
     "instructionShare": 0.7467
   },
@@ -3495,7 +3716,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11705,
     "undergraduateEnrollment": 1916,
     "burden": 0.053426,
-    "gap": 1103.61,
+    "gap": 1048.83,
     "endowmentPerStudent": 129142.12,
     "instructionShare": 0.4741
   },
@@ -3512,7 +3733,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 16031,
     "undergraduateEnrollment": 1458,
     "burden": 0.057871,
-    "gap": 1618.86,
+    "gap": 1564.24,
     "endowmentPerStudent": 220754.01,
     "instructionShare": 0.6338
   },
@@ -3529,15 +3750,15 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10571,
     "undergraduateEnrollment": 4291,
     "burden": 0.056131,
-    "gap": 1351.63,
+    "gap": 1299.49,
     "endowmentPerStudent": 16224.56,
     "instructionShare": 0.6609
   },
   {
     "schoolId": "salisbury-university",
     "schoolName": "Salisbury University",
-    "cdsYear": "2024-25",
-    "satCompositeP50": 1250,
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1230,
     "earnings10yrMedian": 61515,
     "medianDebtCompleters": 21000,
     "medianDebtMonthlyPayment": 222.63,
@@ -3546,9 +3767,26 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11356,
     "undergraduateEnrollment": 6057,
     "burden": 0.043429,
-    "gap": -67.99,
+    "gap": -124.6,
     "endowmentPerStudent": 13935.48,
     "instructionShare": 0.64
+  },
+  {
+    "schoolId": "sam-houston-state-university",
+    "schoolName": "Sam Houston State University",
+    "cdsYear": "2024-25",
+    "satCompositeP50": 1030,
+    "earnings10yrMedian": 54211,
+    "medianDebtCompleters": 21983,
+    "medianDebtMonthlyPayment": 233.06,
+    "avgNetPrice": 16404,
+    "endowmentEnd": 190847399,
+    "instructionalExpenditureFte": 7981,
+    "undergraduateEnrollment": 17743,
+    "burden": 0.05159,
+    "gap": 759.49,
+    "endowmentPerStudent": 10756.21,
+    "instructionShare": 0.4865
   },
   {
     "schoolId": "samford-university",
@@ -3563,7 +3801,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 16043,
     "undergraduateEnrollment": 4206,
     "burden": 0.042429,
-    "gap": -179.61,
+    "gap": -233.41,
     "endowmentPerStudent": 111744.76,
     "instructionShare": 0.4918
   },
@@ -3580,7 +3818,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9020,
     "undergraduateEnrollment": 27601,
     "burden": 0.024159,
-    "gap": -3078.6,
+    "gap": -3151.28,
     "endowmentPerStudent": 7525.66,
     "instructionShare": 0.6555
   },
@@ -3597,7 +3835,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 22421,
     "undergraduateEnrollment": 6552,
     "burden": 0.022328,
-    "gap": -4648.15,
+    "gap": -4748.62,
     "endowmentPerStudent": 237370.27,
     "instructionShare": 0.4479
   },
@@ -3614,7 +3852,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 21462,
     "undergraduateEnrollment": 1530,
     "burden": 0.06408,
-    "gap": 2116.03,
+    "gap": 2066.7,
     "endowmentPerStudent": 96803.36,
     "instructionShare": 0.5179
   },
@@ -3631,7 +3869,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 31253,
     "undergraduateEnrollment": 1113,
     "burden": 0.022149,
-    "gap": -3328.23,
+    "gap": -3399.59,
     "endowmentPerStudent": 451966.21,
     "instructionShare": 0.8611
   },
@@ -3648,7 +3886,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 12250,
     "undergraduateEnrollment": 2116,
     "burden": 0.05443,
-    "gap": 1198.53,
+    "gap": 1144.76,
     "endowmentPerStudent": 40251.18,
     "instructionShare": 0.4043
   },
@@ -3665,7 +3903,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10282,
     "undergraduateEnrollment": 3409,
     "burden": 0.044415,
-    "gap": 63.33,
+    "gap": -6.68,
     "endowmentPerStudent": 55706.67,
     "instructionShare": 0.3048
   },
@@ -3682,7 +3920,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 25466,
     "undergraduateEnrollment": 2694,
     "burden": 0.035765,
-    "gap": -1121.39,
+    "gap": -1185.22,
     "endowmentPerStudent": 181217.89,
     "instructionShare": 0.7885
   },
@@ -3699,7 +3937,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 6248,
     "undergraduateEnrollment": 6373,
     "burden": 0.062123,
-    "gap": 1568.75,
+    "gap": 1528.23,
     "endowmentPerStudent": 18888.37,
     "instructionShare": 0.3934
   },
@@ -3716,7 +3954,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11507,
     "undergraduateEnrollment": 6295,
     "burden": 0.051427,
-    "gap": 804.18,
+    "gap": 753.53,
     "endowmentPerStudent": 6426.86,
     "instructionShare": 0.5517
   },
@@ -3733,7 +3971,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 18509,
     "undergraduateEnrollment": 7277,
     "burden": 0.031661,
-    "gap": -1898.65,
+    "gap": -1970.76,
     "endowmentPerStudent": 297364.3,
     "instructionShare": 0.4526
   },
@@ -3750,7 +3988,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 17431,
     "undergraduateEnrollment": 1440,
     "burden": 0.055918,
-    "gap": 1332.96,
+    "gap": 1280.62,
     "endowmentPerStudent": 280366.33,
     "instructionShare": 0.5965
   },
@@ -3767,7 +4005,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 15850,
     "undergraduateEnrollment": 3414,
     "burden": 0.053014,
-    "gap": 1063.67,
+    "gap": 1008.47,
     "endowmentPerStudent": 160889.48,
     "instructionShare": 0.4068
   },
@@ -3784,7 +4022,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14653,
     "undergraduateEnrollment": 1751,
     "burden": 0.06952,
-    "gap": 2409.81,
+    "gap": 2365.61,
     "endowmentPerStudent": 58979.31,
     "instructionShare": 0.4791
   },
@@ -3801,7 +4039,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 19642,
     "undergraduateEnrollment": 1918,
     "burden": 0.05107,
-    "gap": 935.56,
+    "gap": 873.66,
     "endowmentPerStudent": 217327.34,
     "instructionShare": 0.6856
   },
@@ -3818,7 +4056,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 19698,
     "undergraduateEnrollment": 3093,
     "burden": 0.050466,
-    "gap": 833.85,
+    "gap": 773.54,
     "endowmentPerStudent": 259867.7,
     "instructionShare": 0.8251
   },
@@ -3835,7 +4073,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 12170,
     "undergraduateEnrollment": 2565,
     "burden": 0.044184,
-    "gap": 25.33,
+    "gap": -36.27,
     "endowmentPerStudent": 58881.76,
     "instructionShare": 0.4205
   },
@@ -3852,7 +4090,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 13110,
     "undergraduateEnrollment": 1603,
     "burden": 0.044445,
-    "gap": 53.47,
+    "gap": -1.84,
     "endowmentPerStudent": 28090.48,
     "instructionShare": 0.7109
   },
@@ -3869,15 +4107,15 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 154517,
     "undergraduateEnrollment": 7554,
     "burden": 0.012304,
-    "gap": -7726.51,
+    "gap": -7840.69,
     "endowmentPerStudent": 4981606.96,
     "instructionShare": 11.1912
   },
   {
     "schoolId": "stephen-f-austin-state-university",
     "schoolName": "Stephen F Austin State University",
-    "cdsYear": "2024-25",
-    "satCompositeP50": 1050,
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1040,
     "earnings10yrMedian": 49634,
     "medianDebtCompleters": 23409,
     "medianDebtMonthlyPayment": 248.17,
@@ -3886,7 +4124,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9033,
     "undergraduateEnrollment": 8728,
     "burden": 0.06,
-    "gap": 1561.4,
+    "gap": 1515.72,
     "endowmentPerStudent": 15511.13,
     "instructionShare": 0.6335
   },
@@ -3903,7 +4141,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14922,
     "undergraduateEnrollment": 2297,
     "burden": 0.057277,
-    "gap": 1348.16,
+    "gap": 1300.64,
     "endowmentPerStudent": 170010.04,
     "instructionShare": 0.7703
   },
@@ -3920,7 +4158,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14681,
     "undergraduateEnrollment": 4222,
     "burden": 0.031579,
-    "gap": -2653.32,
+    "gap": -2753.42,
     "endowmentPerStudent": 88725.25,
     "instructionShare": 0.3551
   },
@@ -3937,7 +4175,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 22608,
     "undergraduateEnrollment": 18101,
     "burden": 0.031127,
-    "gap": -1883.48,
+    "gap": -1952.04,
     "endowmentPerStudent": 43431.82,
     "instructionShare": 1.2036
   },
@@ -3954,7 +4192,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14838,
     "undergraduateEnrollment": 3869,
     "burden": 0.036852,
-    "gap": -944.43,
+    "gap": -1006.37,
     "endowmentPerStudent": 10768.59,
     "instructionShare": 0.8148
   },
@@ -3971,7 +4209,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 25510,
     "undergraduateEnrollment": 1839,
     "burden": 0.025096,
-    "gap": -2070.55,
+    "gap": -2121.86,
     "endowmentPerStudent": 26003.4,
     "instructionShare": 1.346
   },
@@ -3988,7 +4226,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11535,
     "undergraduateEnrollment": 2741,
     "burden": 0.053163,
-    "gap": 862.52,
+    "gap": 818.48,
     "endowmentPerStudent": 6614.08,
     "instructionShare": 0.7555
   },
@@ -4005,9 +4243,26 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 13074,
     "undergraduateEnrollment": 4643,
     "burden": 0.041739,
-    "gap": -267.27,
+    "gap": -322.84,
     "endowmentPerStudent": 16928.95,
     "instructionShare": 0.6824
+  },
+  {
+    "schoolId": "susquehanna-university",
+    "schoolName": "Susquehanna University",
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1190,
+    "earnings10yrMedian": 61723,
+    "medianDebtCompleters": 27000,
+    "medianDebtMonthlyPayment": 286.24,
+    "avgNetPrice": 28819,
+    "endowmentEnd": 225341330,
+    "instructionalExpenditureFte": 12425,
+    "undergraduateEnrollment": 2163,
+    "burden": 0.05565,
+    "gap": 1357.26,
+    "endowmentPerStudent": 104180.0,
+    "instructionShare": 0.4311
   },
   {
     "schoolId": "swarthmore",
@@ -4022,9 +4277,26 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 46961,
     "undergraduateEnrollment": 1613,
     "burden": 0.02774,
-    "gap": -2563.05,
+    "gap": -2636.9,
     "endowmentPerStudent": 1691551.77,
     "instructionShare": 2.0286
+  },
+  {
+    "schoolId": "taylor-university",
+    "schoolName": "Taylor University",
+    "cdsYear": "2024-25",
+    "satCompositeP50": 1210,
+    "earnings10yrMedian": 52198,
+    "medianDebtCompleters": 20500,
+    "medianDebtMonthlyPayment": 217.33,
+    "avgNetPrice": 24865,
+    "endowmentEnd": 140140110,
+    "instructionalExpenditureFte": 11366,
+    "undergraduateEnrollment": 2025,
+    "burden": 0.049963,
+    "gap": 564.45,
+    "endowmentPerStudent": 69204.99,
+    "instructionShare": 0.4571
   },
   {
     "schoolId": "temple",
@@ -4039,7 +4311,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 18465,
     "undergraduateEnrollment": 20970,
     "burden": 0.048701,
-    "gap": 589.71,
+    "gap": 531.07,
     "endowmentPerStudent": 45823.99,
     "instructionShare": 0.6548
   },
@@ -4056,7 +4328,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10861,
     "undergraduateEnrollment": 8698,
     "burden": 0.041052,
-    "gap": -280.23,
+    "gap": -324.86,
     "endowmentPerStudent": 12162.02,
     "instructionShare": 0.7624
   },
@@ -4073,7 +4345,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9222,
     "undergraduateEnrollment": 8034,
     "burden": 0.056417,
-    "gap": 1266.39,
+    "gap": 1218.66,
     "endowmentPerStudent": 17309.31,
     "instructionShare": 0.6057
   },
@@ -4090,7 +4362,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 19596,
     "undergraduateEnrollment": 59615,
     "burden": 0.031416,
-    "gap": -1781.73,
+    "gap": -1848.08,
     "endowmentPerStudent": 320637.94,
     "instructionShare": 0.9194
   },
@@ -4107,7 +4379,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10279,
     "undergraduateEnrollment": 4748,
     "burden": 0.056709,
-    "gap": 1285.76,
+    "gap": 1238.41,
     "endowmentPerStudent": 34719.34,
     "instructionShare": 0.8502
   },
@@ -4124,15 +4396,15 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 20405,
     "undergraduateEnrollment": 11026,
     "burden": 0.039975,
-    "gap": -540.03,
+    "gap": -602.99,
     "endowmentPerStudent": 237216.31,
     "instructionShare": 0.5566
   },
   {
     "schoolId": "texas-state-university",
     "schoolName": "Texas State University",
-    "cdsYear": "2024-25",
-    "satCompositeP50": 1100,
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1070,
     "earnings10yrMedian": 56906,
     "medianDebtCompleters": 21000,
     "medianDebtMonthlyPayment": 222.63,
@@ -4141,7 +4413,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 6786,
     "undergraduateEnrollment": 36177,
     "burden": 0.046947,
-    "gap": 330.46,
+    "gap": 278.09,
     "endowmentPerStudent": 11381.76,
     "instructionShare": 0.4038
   },
@@ -4158,7 +4430,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 8554,
     "undergraduateEnrollment": 32394,
     "burden": 0.043797,
-    "gap": -23.95,
+    "gap": -81.41,
     "endowmentPerStudent": 65441.82,
     "instructionShare": 0.4486
   },
@@ -4175,7 +4447,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 7653,
     "undergraduateEnrollment": 8767,
     "burden": 0.043239,
-    "gap": -83.7,
+    "gap": -135.73,
     "endowmentPerStudent": 15190.14,
     "instructionShare": 0.6397
   },
@@ -4192,7 +4464,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10258,
     "undergraduateEnrollment": 7105,
     "burden": 0.04034,
-    "gap": -526.12,
+    "gap": -593.59,
     "endowmentPerStudent": 9713.44,
     "instructionShare": 0.371
   },
@@ -4209,7 +4481,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 17263,
     "undergraduateEnrollment": 1730,
     "burden": 0.056538,
-    "gap": 1470.1,
+    "gap": 1415.22,
     "endowmentPerStudent": 253076.7,
     "instructionShare": 0.7359
   },
@@ -4226,7 +4498,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9728,
     "undergraduateEnrollment": 33227,
     "burden": 0.048873,
-    "gap": 567.99,
+    "gap": 513.49,
     "endowmentPerStudent": 47127.09,
     "instructionShare": 0.4339
   },
@@ -4243,7 +4515,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10232,
     "undergraduateEnrollment": 10074,
     "burden": 0.048499,
-    "gap": 453.03,
+    "gap": 405.96,
     "endowmentPerStudent": 21398.48,
     "instructionShare": 0.7173
   },
@@ -4260,7 +4532,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 13098,
     "undergraduateEnrollment": 30418,
     "burden": 0.043286,
-    "gap": -83.53,
+    "gap": -138.97,
     "endowmentPerStudent": 39054.17,
     "instructionShare": 0.6902
   },
@@ -4277,15 +4549,15 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 12056,
     "undergraduateEnrollment": 21751,
     "burden": 0.033564,
-    "gap": -1398.11,
+    "gap": -1460.89,
     "endowmentPerStudent": 39485.97,
     "instructionShare": 0.66
   },
   {
     "schoolId": "the-university-of-texas-at-el-paso",
     "schoolName": "The University of Texas at El Paso",
-    "cdsYear": "2024-25",
-    "satCompositeP50": 970,
+    "cdsYear": "2025-26",
+    "satCompositeP50": 950,
     "earnings10yrMedian": 50923,
     "medianDebtCompleters": 18000,
     "medianDebtMonthlyPayment": 190.83,
@@ -4294,7 +4566,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 7651,
     "undergraduateEnrollment": 21005,
     "burden": 0.044969,
-    "gap": 97.79,
+    "gap": 50.93,
     "endowmentPerStudent": 18413.86,
     "instructionShare": 0.8137
   },
@@ -4311,7 +4583,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 6112,
     "undergraduateEnrollment": 30580,
     "burden": 0.045649,
-    "gap": 186.03,
+    "gap": 133.45,
     "endowmentPerStudent": 10301.96,
     "instructionShare": 0.564
   },
@@ -4328,9 +4600,26 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 27629,
     "undergraduateEnrollment": 7440,
     "burden": 0.038213,
-    "gap": -647.91,
+    "gap": -700.41,
     "endowmentPerStudent": 28559.33,
     "instructionShare": 2.0738
+  },
+  {
+    "schoolId": "the-university-of-the-south",
+    "schoolName": "The University of the South",
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1310,
+    "earnings10yrMedian": 64911,
+    "medianDebtCompleters": 22855,
+    "medianDebtMonthlyPayment": 242.3,
+    "avgNetPrice": 27872,
+    "endowmentEnd": 499943537,
+    "instructionalExpenditureFte": 22548,
+    "undergraduateEnrollment": 1607,
+    "burden": 0.044794,
+    "gap": 42.55,
+    "endowmentPerStudent": 311103.63,
+    "instructionShare": 0.809
   },
   {
     "schoolId": "thomas-jefferson-university",
@@ -4345,7 +4634,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 32364,
     "undergraduateEnrollment": 3755,
     "burden": 0.024219,
-    "gap": -3009.38,
+    "gap": -3080.65,
     "endowmentPerStudent": 775647.94,
     "instructionShare": 1.1188
   },
@@ -4362,7 +4651,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10084,
     "undergraduateEnrollment": 16136,
     "burden": 0.036982,
-    "gap": -886.96,
+    "gap": -946.22,
     "endowmentPerStudent": 7102.4,
     "instructionShare": 0.5791
   },
@@ -4379,7 +4668,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 28943,
     "undergraduateEnrollment": 2146,
     "burden": 0.032233,
-    "gap": -2097.64,
+    "gap": -2181.17,
     "endowmentPerStudent": 396423.68,
     "instructionShare": 0.8309
   },
@@ -4387,7 +4676,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "schoolId": "troy-university",
     "schoolName": "Troy University",
     "cdsYear": "2024-25",
-    "satCompositeP50": 1030,
+    "satCompositeP50": 1080,
     "earnings10yrMedian": 42062,
     "medianDebtCompleters": 25000,
     "medianDebtMonthlyPayment": 265.04,
@@ -4396,7 +4685,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 8209,
     "undergraduateEnrollment": 9805,
     "burden": 0.075614,
-    "gap": 2613.79,
+    "gap": 2575.08,
     "endowmentPerStudent": 15332.42,
     "instructionShare": 0.4967
   },
@@ -4413,7 +4702,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 28034,
     "undergraduateEnrollment": 7061,
     "burden": 0.024844,
-    "gap": -3131.09,
+    "gap": -3207.66,
     "endowmentPerStudent": 358837.98,
     "instructionShare": 0.7009
   },
@@ -4430,7 +4719,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 37362,
     "undergraduateEnrollment": 7767,
     "burden": 0.041221,
-    "gap": -344.52,
+    "gap": -402.74,
     "endowmentPerStudent": 290201.36,
     "instructionShare": 0.9352
   },
@@ -4447,7 +4736,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9734,
     "undergraduateEnrollment": 9052,
     "burden": 0.063474,
-    "gap": 1784.03,
+    "gap": 1741.15,
     "endowmentPerStudent": 36903.81,
     "instructionShare": 0.698
   },
@@ -4464,7 +4753,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 17855,
     "undergraduateEnrollment": 11635,
     "burden": 0.052055,
-    "gap": 863.54,
+    "gap": 813.38,
     "endowmentPerStudent": 73828.04,
     "instructionShare": 0.9523
   },
@@ -4472,7 +4761,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "schoolId": "university-of-alaska-fairbanks",
     "schoolName": "University of Alaska Fairbanks",
     "cdsYear": "2024-25",
-    "satCompositeP50": 1160,
+    "satCompositeP50": 1070,
     "earnings10yrMedian": 48866,
     "medianDebtCompleters": 20291,
     "medianDebtMonthlyPayment": 215.12,
@@ -4481,7 +4770,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 19769,
     "undergraduateEnrollment": 4207,
     "burden": 0.052827,
-    "gap": 848.4,
+    "gap": 803.43,
     "endowmentPerStudent": 37937.89,
     "instructionShare": 1.815
   },
@@ -4498,7 +4787,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 15271,
     "undergraduateEnrollment": 42537,
     "burden": 0.041615,
-    "gap": -280.2,
+    "gap": -335.4,
     "endowmentPerStudent": 32615.01,
     "instructionShare": 0.9159
   },
@@ -4515,7 +4804,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10926,
     "undergraduateEnrollment": 28677,
     "burden": 0.047005,
-    "gap": 344.58,
+    "gap": 291.03,
     "endowmentPerStudent": 58082.9,
     "instructionShare": 0.6
   },
@@ -4532,14 +4821,14 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 7831,
     "undergraduateEnrollment": 59146,
     "burden": 0.039687,
-    "gap": -493.24,
+    "gap": -546.9,
     "endowmentPerStudent": 3413.87,
     "instructionShare": 0.7522
   },
   {
     "schoolId": "uchicago",
     "schoolName": "University of Chicago",
-    "cdsYear": "2024-25",
+    "cdsYear": "2025-26",
     "satCompositeP50": 1540,
     "earnings10yrMedian": 91885,
     "medianDebtCompleters": 15000,
@@ -4549,7 +4838,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 96069,
     "undergraduateEnrollment": 7569,
     "burden": 0.020768,
-    "gap": -4193.56,
+    "gap": -4278.11,
     "endowmentPerStudent": 1205488.26,
     "instructionShare": 6.4649
   },
@@ -4566,7 +4855,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 12292,
     "undergraduateEnrollment": 29882,
     "burden": 0.049325,
-    "gap": 574.36,
+    "gap": 523.93,
     "endowmentPerStudent": 67289.57,
     "instructionShare": 0.4793
   },
@@ -4583,9 +4872,26 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 23435,
     "undergraduateEnrollment": 19835,
     "burden": 0.036965,
-    "gap": -1021.8,
+    "gap": -1089.89,
     "endowmentPerStudent": 30292.37,
     "instructionShare": 0.9338
+  },
+  {
+    "schoolId": "university-of-dallas",
+    "schoolName": "University of Dallas",
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1270,
+    "earnings10yrMedian": 58285,
+    "medianDebtCompleters": 23117,
+    "medianDebtMonthlyPayment": 245.08,
+    "avgNetPrice": 22610,
+    "endowmentEnd": 100594000,
+    "instructionalExpenditureFte": 12940,
+    "undergraduateEnrollment": 1403,
+    "burden": 0.050458,
+    "gap": 687.0,
+    "endowmentPerStudent": 71699.22,
+    "instructionShare": 0.5723
   },
   {
     "schoolId": "udel",
@@ -4600,7 +4906,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 21941,
     "undergraduateEnrollment": 19071,
     "burden": 0.042851,
-    "gap": -163.51,
+    "gap": -230.64,
     "endowmentPerStudent": 101189.94,
     "instructionShare": 1.2327
   },
@@ -4617,7 +4923,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 19940,
     "undergraduateEnrollment": 6025,
     "burden": 0.039055,
-    "gap": -690.31,
+    "gap": -755.78,
     "endowmentPerStudent": 180742.2,
     "instructionShare": 0.5519
   },
@@ -4634,7 +4940,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14925,
     "undergraduateEnrollment": 2438,
     "burden": 0.041643,
-    "gap": -327.89,
+    "gap": -393.26,
     "endowmentPerStudent": 44532.45,
     "instructionShare": 0.9798
   },
@@ -4651,7 +4957,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 23406,
     "undergraduateEnrollment": 35629,
     "burden": 0.026656,
-    "gap": -2438.86,
+    "gap": -2504.73,
     "endowmentPerStudent": 68716.3,
     "instructionShare": 3.5784
   },
@@ -4668,7 +4974,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11512,
     "undergraduateEnrollment": 32137,
     "burden": 0.034246,
-    "gap": -1316.27,
+    "gap": -1379.51,
     "endowmentPerStudent": 63969.78,
     "instructionShare": 0.8261
   },
@@ -4685,7 +4991,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9920,
     "undergraduateEnrollment": 38380,
     "burden": 0.037108,
-    "gap": -843.8,
+    "gap": -901.19,
     "endowmentPerStudent": 34216.38,
     "instructionShare": 0.6949
   },
@@ -4702,7 +5008,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 6787,
     "undergraduateEnrollment": 12555,
     "burden": 0.044544,
-    "gap": 58.08,
+    "gap": 8.8,
     "endowmentPerStudent": 5132.11,
     "instructionShare": 0.6438
   },
@@ -4719,7 +5025,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 28590,
     "undergraduateEnrollment": 22170,
     "burden": 0.030915,
-    "gap": -1766.47,
+    "gap": -1829.72,
     "endowmentPerStudent": 30715.9,
     "instructionShare": 2.6052
   },
@@ -4736,7 +5042,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14929,
     "undergraduateEnrollment": 36258,
     "burden": 0.030606,
-    "gap": -2132.07,
+    "gap": -2206.65,
     "endowmentPerStudent": 71876.05,
     "instructionShare": 1.04
   },
@@ -4753,7 +5059,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 15714,
     "undergraduateEnrollment": 22264,
     "burden": 0.0442,
-    "gap": 26.49,
+    "gap": -33.1,
     "endowmentPerStudent": 157446.33,
     "instructionShare": 0.6974
   },
@@ -4770,7 +5076,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 22979,
     "undergraduateEnrollment": 21217,
     "burden": 0.043128,
-    "gap": -105.16,
+    "gap": -162.17,
     "endowmentPerStudent": 120049.2,
     "instructionShare": 1.2724
   },
@@ -4787,7 +5093,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 13191,
     "undergraduateEnrollment": 24763,
     "burden": 0.048496,
-    "gap": 522.44,
+    "gap": 468.13,
     "endowmentPerStudent": 82331.36,
     "instructionShare": 0.6998
   },
@@ -4804,7 +5110,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 17552,
     "undergraduateEnrollment": 14727,
     "burden": 0.048386,
-    "gap": 465.43,
+    "gap": 415.83,
     "endowmentPerStudent": 68602.57,
     "instructionShare": 0.9758
   },
@@ -4821,7 +5127,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 12786,
     "undergraduateEnrollment": 8496,
     "burden": 0.065371,
-    "gap": 2044.0,
+    "gap": 1999.23,
     "endowmentPerStudent": 56415.84,
     "instructionShare": 0.7302
   },
@@ -4838,7 +5144,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11398,
     "undergraduateEnrollment": 3566,
     "burden": 0.043026,
-    "gap": -114.99,
+    "gap": -170.77,
     "endowmentPerStudent": 24967.24,
     "instructionShare": 0.5515
   },
@@ -4855,7 +5161,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 20217,
     "undergraduateEnrollment": 30760,
     "burden": 0.029172,
-    "gap": -2413.17,
+    "gap": -2489.42,
     "endowmentPerStudent": 38080.95,
     "instructionShare": 1.2895
   },
@@ -4872,7 +5178,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 20843,
     "undergraduateEnrollment": 23671,
     "burden": 0.040429,
-    "gap": -501.52,
+    "gap": -567.43,
     "endowmentPerStudent": 24490.05,
     "instructionShare": 0.9312
   },
@@ -4889,7 +5195,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 15274,
     "undergraduateEnrollment": 11434,
     "burden": 0.046484,
-    "gap": 317.71,
+    "gap": 258.01,
     "endowmentPerStudent": 18405.46,
     "instructionShare": 0.8899
   },
@@ -4906,7 +5212,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 36040,
     "undergraduateEnrollment": 12913,
     "burden": 0.029556,
-    "gap": -2136.95,
+    "gap": -2206.27,
     "endowmentPerStudent": 123120.69,
     "instructionShare": 0.9677
   },
@@ -4923,7 +5229,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 29014,
     "undergraduateEnrollment": 34177,
     "burden": 0.029657,
-    "gap": -2356.32,
+    "gap": -2433.29,
     "endowmentPerStudent": 552850.22,
     "instructionShare": 2.2084
   },
@@ -4940,9 +5246,26 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 12893,
     "undergraduateEnrollment": 5952,
     "burden": 0.047989,
-    "gap": 468.5,
+    "gap": 413.61,
     "endowmentPerStudent": 15656.08,
     "instructionShare": 1.3583
+  },
+  {
+    "schoolId": "university-of-michigan-flint",
+    "schoolName": "University of Michigan-Flint",
+    "cdsYear": "2024-25",
+    "satCompositeP50": 1110,
+    "earnings10yrMedian": 53230,
+    "medianDebtCompleters": 25000,
+    "medianDebtMonthlyPayment": 265.04,
+    "avgNetPrice": 7007,
+    "endowmentEnd": 178319000,
+    "instructionalExpenditureFte": 11896,
+    "undergraduateEnrollment": 4411,
+    "burden": 0.05975,
+    "gap": 1599.34,
+    "endowmentPerStudent": 40425.98,
+    "instructionShare": 1.6977
   },
   {
     "schoolId": "university-of-minnesota-twin-cities",
@@ -4957,7 +5280,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 18312,
     "undergraduateEnrollment": 31855,
     "burden": 0.035943,
-    "gap": -1091.74,
+    "gap": -1155.25,
     "endowmentPerStudent": 173047.44,
     "instructionShare": 1.0914
   },
@@ -4974,15 +5297,15 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 15881,
     "undergraduateEnrollment": 21473,
     "burden": 0.049895,
-    "gap": 591.58,
+    "gap": 544.66,
     "endowmentPerStudent": 43055.35,
     "instructionShare": 1.1928
   },
   {
     "schoolId": "university-of-missouri-kansas-city",
     "schoolName": "University of Missouri-Kansas City",
-    "cdsYear": "2024-25",
-    "satCompositeP50": 1465,
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1350,
     "earnings10yrMedian": 59637,
     "medianDebtCompleters": 18750,
     "medianDebtMonthlyPayment": 198.78,
@@ -4991,7 +5314,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14451,
     "undergraduateEnrollment": 6817,
     "burden": 0.039998,
-    "gap": -468.05,
+    "gap": -522.93,
     "endowmentPerStudent": 31285.97,
     "instructionShare": 1.0857
   },
@@ -5008,7 +5331,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 16939,
     "undergraduateEnrollment": 24622,
     "burden": 0.044959,
-    "gap": 104.59,
+    "gap": 53.94,
     "endowmentPerStudent": 16986.27,
     "instructionShare": 1.6352
   },
@@ -5025,15 +5348,15 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14669,
     "undergraduateEnrollment": 15599,
     "burden": 0.039714,
-    "gap": -509.6,
+    "gap": -565.38,
     "endowmentPerStudent": 35903.54,
     "instructionShare": 0.921
   },
   {
     "schoolId": "university-of-new-hampshire-main-campus",
     "schoolName": "University of New Hampshire-Main Campus",
-    "cdsYear": "2024-25",
-    "satCompositeP50": 1220,
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1230,
     "earnings10yrMedian": 66479,
     "medianDebtCompleters": 26814,
     "medianDebtMonthlyPayment": 284.27,
@@ -5042,7 +5365,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 12735,
     "undergraduateEnrollment": 11261,
     "burden": 0.051313,
-    "gap": 956.44,
+    "gap": 895.26,
     "endowmentPerStudent": 46660.66,
     "instructionShare": 0.535
   },
@@ -5059,7 +5382,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 15468,
     "undergraduateEnrollment": 17244,
     "burden": 0.052402,
-    "gap": 740.29,
+    "gap": 699.07,
     "endowmentPerStudent": 47637.89,
     "instructionShare": 0.9986
   },
@@ -5076,7 +5399,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 7717,
     "undergraduateEnrollment": 5811,
     "burden": 0.061843,
-    "gap": 1593.15,
+    "gap": 1551.36,
     "endowmentPerStudent": 10999.81,
     "instructionShare": 0.6341
   },
@@ -5093,7 +5416,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 13642,
     "undergraduateEnrollment": 2910,
     "burden": 0.059231,
-    "gap": 1318.61,
+    "gap": 1278.09,
     "endowmentPerStudent": 25994.02,
     "instructionShare": 1.1136
   },
@@ -5110,7 +5433,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 33767,
     "undergraduateEnrollment": 20752,
     "burden": 0.024668,
-    "gap": -2741.71,
+    "gap": -2808.15,
     "endowmentPerStudent": 276036.73,
     "instructionShare": 2.8972
   },
@@ -5127,9 +5450,26 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11037,
     "undergraduateEnrollment": 24453,
     "burden": 0.047745,
-    "gap": 422.55,
+    "gap": 369.84,
     "endowmentPerStudent": 14095.13,
     "instructionShare": 0.7151
+  },
+  {
+    "schoolId": "university-of-north-carolina-at-pembroke",
+    "schoolName": "University of North Carolina at Pembroke",
+    "cdsYear": "2025-26",
+    "satCompositeP50": 915,
+    "earnings10yrMedian": 43407,
+    "medianDebtCompleters": 25000,
+    "medianDebtMonthlyPayment": 265.04,
+    "avgNetPrice": 10260,
+    "endowmentEnd": 35896353,
+    "instructionalExpenditureFte": 7136,
+    "undergraduateEnrollment": 5330,
+    "burden": 0.073271,
+    "gap": 2457.57,
+    "endowmentPerStudent": 6734.78,
+    "instructionShare": 0.6955
   },
   {
     "schoolId": "university-of-north-carolina-wilmington",
@@ -5144,7 +5484,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10765,
     "undergraduateEnrollment": 14922,
     "burden": 0.045132,
-    "gap": 123.14,
+    "gap": 72.56,
     "endowmentPerStudent": 10866.46,
     "instructionShare": 0.5353
   },
@@ -5161,7 +5501,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 6126,
     "undergraduateEnrollment": 16146,
     "burden": 0.045042,
-    "gap": 103.42,
+    "gap": 57.29,
     "endowmentPerStudent": 5269.35,
     "instructionShare": 0.6236
   },
@@ -5178,7 +5518,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 7601,
     "undergraduateEnrollment": 34341,
     "burden": 0.042957,
-    "gap": -115.97,
+    "gap": -168.43,
     "endowmentPerStudent": 9544.86,
     "instructionShare": 0.4857
   },
@@ -5195,7 +5535,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10378,
     "undergraduateEnrollment": 5598,
     "burden": 0.04986,
-    "gap": 602.3,
+    "gap": 554.24,
     "endowmentPerStudent": 21403.28,
     "instructionShare": 0.5843
   },
@@ -5212,7 +5552,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11070,
     "undergraduateEnrollment": 7529,
     "burden": 0.045402,
-    "gap": 152.85,
+    "gap": 102.08,
     "endowmentPerStudent": 29806.12,
     "instructionShare": 0.6962
   },
@@ -5229,7 +5569,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 38658,
     "undergraduateEnrollment": 8818,
     "burden": 0.024176,
-    "gap": -3893.18,
+    "gap": -3985.18,
     "endowmentPerStudent": 2069100.36,
     "instructionShare": 1.4435
   },
@@ -5246,7 +5586,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14268,
     "undergraduateEnrollment": 22734,
     "burden": 0.041625,
-    "gap": -293.56,
+    "gap": -351.65,
     "endowmentPerStudent": 68370.37,
     "instructionShare": 0.9325
   },
@@ -5263,7 +5603,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 15863,
     "undergraduateEnrollment": 20497,
     "burden": 0.04178,
-    "gap": -266.53,
+    "gap": -322.96,
     "endowmentPerStudent": 78723.49,
     "instructionShare": 0.7151
   },
@@ -5280,7 +5620,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11189,
     "undergraduateEnrollment": 1135,
     "burden": 0.054545,
-    "gap": 1000.22,
+    "gap": 955.84,
     "endowmentPerStudent": 29990.77,
     "instructionShare": 0.5509
   },
@@ -5297,7 +5637,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 19056,
     "undergraduateEnrollment": 2957,
     "burden": 0.032833,
-    "gap": -1815.69,
+    "gap": -1891.89,
     "endowmentPerStudent": 109445.05,
     "instructionShare": 0.6755
   },
@@ -5314,7 +5654,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 23433,
     "undergraduateEnrollment": 1594,
     "burden": 0.0457,
-    "gap": 233.68,
+    "gap": 169.64,
     "endowmentPerStudent": 295776.66,
     "instructionShare": 0.6103
   },
@@ -5331,7 +5671,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 10555,
     "undergraduateEnrollment": 13381,
     "burden": 0.040587,
-    "gap": -466.59,
+    "gap": -530.77,
     "endowmentPerStudent": 23746.44,
     "instructionShare": 0.4923
   },
@@ -5348,7 +5688,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 27137,
     "undergraduateEnrollment": 2980,
     "burden": 0.03507,
-    "gap": -1335.61,
+    "gap": -1405.71,
     "endowmentPerStudent": 1088956.04,
     "instructionShare": 0.8667
   },
@@ -5365,7 +5705,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 40019,
     "undergraduateEnrollment": 6331,
     "burden": 0.033799,
-    "gap": -1583.2,
+    "gap": -1655.94,
     "endowmentPerStudent": 472123.52,
     "instructionShare": 1.3669
   },
@@ -5382,7 +5722,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14562,
     "undergraduateEnrollment": 838,
     "burden": 0.057336,
-    "gap": 1570.96,
+    "gap": 1515.83,
     "endowmentPerStudent": 64991.65,
     "instructionShare": 0.5203
   },
@@ -5399,7 +5739,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 20560,
     "undergraduateEnrollment": 5287,
     "burden": 0.03258,
-    "gap": -2014.04,
+    "gap": -2096.69,
     "endowmentPerStudent": 107589.37,
     "instructionShare": 0.4962
   },
@@ -5416,7 +5756,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14866,
     "undergraduateEnrollment": 3554,
     "burden": 0.046012,
-    "gap": 296.35,
+    "gap": 227.65,
     "endowmentPerStudent": 89959.77,
     "instructionShare": 0.4565
   },
@@ -5433,26 +5773,9 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11135,
     "undergraduateEnrollment": 8879,
     "burden": 0.064227,
-    "gap": 1963.53,
+    "gap": 1918.1,
     "endowmentPerStudent": 79997.07,
     "instructionShare": 0.6309
-  },
-  {
-    "schoolId": "university-of-south-carolina-aiken",
-    "schoolName": "University of South Carolina Aiken",
-    "cdsYear": "2024-25",
-    "satCompositeP50": 1270,
-    "earnings10yrMedian": 45603,
-    "medianDebtCompleters": 24275,
-    "medianDebtMonthlyPayment": 257.36,
-    "avgNetPrice": 11641,
-    "endowmentEnd": 36148232,
-    "instructionalExpenditureFte": 10925,
-    "undergraduateEnrollment": 2962,
-    "burden": 0.067722,
-    "gap": 2126.52,
-    "endowmentPerStudent": 12203.99,
-    "instructionShare": 0.9385
   },
   {
     "schoolId": "university-of-south-carolina-columbia",
@@ -5467,7 +5790,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14139,
     "undergraduateEnrollment": 29820,
     "burden": 0.043992,
-    "gap": 0.0,
+    "gap": -57.21,
     "endowmentPerStudent": 26040.02,
     "instructionShare": 0.6198
   },
@@ -5484,7 +5807,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11862,
     "undergraduateEnrollment": 5439,
     "burden": 0.0578,
-    "gap": 1409.0,
+    "gap": 1361.22,
     "endowmentPerStudent": 58400.08,
     "instructionShare": 0.5973
   },
@@ -5501,7 +5824,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 49674,
     "undergraduateEnrollment": 20443,
     "burden": 0.024757,
-    "gap": -3496.3,
+    "gap": -3581.41,
     "endowmentPerStudent": 395873.7,
     "instructionShare": 1.5172
   },
@@ -5509,7 +5832,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "schoolId": "university-of-southern-indiana",
     "schoolName": "University of Southern Indiana",
     "cdsYear": "2024-25",
-    "satCompositeP50": 1130,
+    "satCompositeP50": 1110,
     "earnings10yrMedian": 47605,
     "medianDebtCompleters": 20105,
     "medianDebtMonthlyPayment": 213.15,
@@ -5518,7 +5841,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9774,
     "undergraduateEnrollment": 5292,
     "burden": 0.05373,
-    "gap": 910.94,
+    "gap": 867.14,
     "endowmentPerStudent": 30274.34,
     "instructionShare": 0.7563
   },
@@ -5535,7 +5858,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 15061,
     "undergraduateEnrollment": 767,
     "burden": 0.059835,
-    "gap": 1381.83,
+    "gap": 1340.99,
     "endowmentPerStudent": 184520.66,
     "instructionShare": 0.8676
   },
@@ -5552,7 +5875,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 22165,
     "undergraduateEnrollment": 3204,
     "burden": 0.031624,
-    "gap": -1906.52,
+    "gap": -1978.71,
     "endowmentPerStudent": 200741.96,
     "instructionShare": 0.871
   },
@@ -5569,7 +5892,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 15494,
     "undergraduateEnrollment": 9770,
     "burden": 0.055907,
-    "gap": 1185.5,
+    "gap": 1138.91,
     "endowmentPerStudent": 39717.94,
     "instructionShare": 0.8983
   },
@@ -5586,7 +5909,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 17724,
     "undergraduateEnrollment": 27264,
     "burden": 0.035986,
-    "gap": -1056.78,
+    "gap": -1118.59,
     "endowmentPerStudent": 60542.66,
     "instructionShare": 1.0941
   },
@@ -5603,7 +5926,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14705,
     "undergraduateEnrollment": 11743,
     "burden": 0.042666,
-    "gap": -162.74,
+    "gap": -220.23,
     "endowmentPerStudent": 76326.24,
     "instructionShare": 0.7602
   },
@@ -5620,7 +5943,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 26598,
     "undergraduateEnrollment": 17597,
     "burden": 0.025631,
-    "gap": -3134.13,
+    "gap": -3214.06,
     "endowmentPerStudent": 571427.15,
     "instructionShare": 1.2334
   },
@@ -5628,7 +5951,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "schoolId": "university-of-washington-bothell-campus",
     "schoolName": "University of Washington-Bothell Campus",
     "cdsYear": "2025-26",
-    "satCompositeP50": 1440,
+    "satCompositeP50": 1215,
     "earnings10yrMedian": 78466,
     "medianDebtCompleters": 14615,
     "medianDebtMonthlyPayment": 154.94,
@@ -5637,7 +5960,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 4757,
     "undergraduateEnrollment": 5457,
     "burden": 0.023695,
-    "gap": -3129.65,
+    "gap": -3201.86,
     "endowmentPerStudent": 20399.13,
     "instructionShare": 0.3862
   },
@@ -5654,7 +5977,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 24064,
     "undergraduateEnrollment": 31942,
     "burden": 0.023695,
-    "gap": -3129.65,
+    "gap": -3201.86,
     "endowmentPerStudent": 167280.3,
     "instructionShare": 1.7078
   },
@@ -5662,7 +5985,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "schoolId": "university-of-washington-tacoma-campus",
     "schoolName": "University of Washington-Tacoma Campus",
     "cdsYear": "2025-26",
-    "satCompositeP50": 1440,
+    "satCompositeP50": 1080,
     "earnings10yrMedian": 78466,
     "medianDebtCompleters": 14615,
     "medianDebtMonthlyPayment": 154.94,
@@ -5671,7 +5994,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 5672,
     "undergraduateEnrollment": 4185,
     "burden": 0.023695,
-    "gap": -3129.65,
+    "gap": -3201.86,
     "endowmentPerStudent": 26599.3,
     "instructionShare": 0.5581
   },
@@ -5679,7 +6002,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "schoolId": "university-of-west-florida",
     "schoolName": "University of West Florida",
     "cdsYear": "2024-25",
-    "satCompositeP50": 1060,
+    "satCompositeP50": 1080,
     "earnings10yrMedian": 49137,
     "medianDebtCompleters": 16624,
     "medianDebtMonthlyPayment": 176.24,
@@ -5688,7 +6011,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 6911,
     "undergraduateEnrollment": 9330,
     "burden": 0.04304,
-    "gap": -91.86,
+    "gap": -137.08,
     "endowmentPerStudent": 11589.28,
     "instructionShare": 0.738
   },
@@ -5705,7 +6028,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9152,
     "undergraduateEnrollment": 7520,
     "burden": 0.061497,
-    "gap": 1705.75,
+    "gap": 1660.12,
     "endowmentPerStudent": 6518.21,
     "instructionShare": 0.7158
   },
@@ -5722,7 +6045,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9211,
     "undergraduateEnrollment": 8895,
     "burden": 0.045423,
-    "gap": 164.74,
+    "gap": 110.86,
     "endowmentPerStudent": 8627.64,
     "instructionShare": 0.5566
   },
@@ -5739,7 +6062,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 21417,
     "undergraduateEnrollment": 36902,
     "burden": 0.035314,
-    "gap": -1258.33,
+    "gap": -1326.23,
     "endowmentPerStudent": 165353.83,
     "instructionShare": 1.2341
   },
@@ -5756,7 +6079,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 8443,
     "undergraduateEnrollment": 2844,
     "burden": 0.050989,
-    "gap": 703.0,
+    "gap": 655.95,
     "endowmentPerStudent": 5989.13,
     "instructionShare": 0.7172
   },
@@ -5773,7 +6096,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 13665,
     "undergraduateEnrollment": 20272,
     "burden": 0.033771,
-    "gap": -1085.05,
+    "gap": -1134.76,
     "endowmentPerStudent": 31338.42,
     "instructionShare": 0.9149
   },
@@ -5790,7 +6113,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 7133,
     "undergraduateEnrollment": 6622,
     "burden": 0.063864,
-    "gap": 1927.59,
+    "gap": 1882.17,
     "endowmentPerStudent": 11137.83,
     "instructionShare": 0.6517
   },
@@ -5807,7 +6130,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 34184,
     "undergraduateEnrollment": 7208,
     "burden": 0.019451,
-    "gap": -4415.82,
+    "gap": -4500.08,
     "endowmentPerStudent": 1421715.8,
     "instructionShare": 2.1573
   },
@@ -5824,7 +6147,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 34689,
     "undergraduateEnrollment": 2444,
     "burden": 0.033202,
-    "gap": -1513.1,
+    "gap": -1578.77,
     "endowmentPerStudent": 532319.61,
     "instructionShare": 0.8817
   },
@@ -5841,7 +6164,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 21398,
     "undergraduateEnrollment": 6938,
     "burden": 0.032779,
-    "gap": -2212.82,
+    "gap": -2305.23,
     "endowmentPerStudent": 189252.38,
     "instructionShare": 0.489
   },
@@ -5858,7 +6181,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 16705,
     "undergraduateEnrollment": 20753,
     "burden": 0.047056,
-    "gap": 350.02,
+    "gap": 296.54,
     "endowmentPerStudent": 139050.11,
     "instructionShare": 0.7129
   },
@@ -5875,7 +6198,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 21289,
     "undergraduateEnrollment": 1527,
     "burden": 0.037814,
-    "gap": -939.31,
+    "gap": -1010.5,
     "endowmentPerStudent": 515737.42,
     "instructionShare": 1.244
   },
@@ -5892,7 +6215,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 19824,
     "undergraduateEnrollment": 866,
     "burden": 0.049103,
-    "gap": 702.66,
+    "gap": 638.29,
     "endowmentPerStudent": 495361.19,
     "instructionShare": 0.8146
   },
@@ -5909,7 +6232,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 35708,
     "undergraduateEnrollment": 5485,
     "burden": 0.034997,
-    "gap": -1381.51,
+    "gap": -1453.42,
     "endowmentPerStudent": 364138.56,
     "instructionShare": 1.2434
   },
@@ -5926,7 +6249,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 40378,
     "undergraduateEnrollment": 1881,
     "burden": 0.026166,
-    "gap": -3321.27,
+    "gap": -3408.51,
     "endowmentPerStudent": 1086244.02,
     "instructionShare": 1.6979
   },
@@ -5943,7 +6266,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 26477,
     "undergraduateEnrollment": 891,
     "burden": 0.052342,
-    "gap": 1075.11,
+    "gap": 1014.82,
     "endowmentPerStudent": 406623.92,
     "instructionShare": 0.9491
   },
@@ -5960,7 +6283,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11856,
     "undergraduateEnrollment": 21099,
     "burden": 0.036003,
-    "gap": -1081.79,
+    "gap": -1145.2,
     "endowmentPerStudent": 65551.83,
     "instructionShare": 0.7919
   },
@@ -5977,7 +6300,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 181929,
     "undergraduateEnrollment": 7857,
     "burden": 0.025833,
-    "gap": -3075.26,
+    "gap": -3154.56,
     "endowmentPerStudent": 1528067.46,
     "instructionShare": 8.3507
   },
@@ -5994,7 +6317,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14651,
     "undergraduateEnrollment": 15587,
     "burden": 0.050539,
-    "gap": 688.21,
+    "gap": 638.99,
     "endowmentPerStudent": 38647.46,
     "instructionShare": 1.1477
   },
@@ -6011,7 +6334,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 39815,
     "undergraduateEnrollment": 2300,
     "burden": 0.015002,
-    "gap": -4830.85,
+    "gap": -4908.88,
     "endowmentPerStudent": 1300532.17,
     "instructionShare": 1.5616
   },
@@ -6028,7 +6351,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 14597,
     "undergraduateEnrollment": 3747,
     "burden": 0.038492,
-    "gap": -894.05,
+    "gap": -970.17,
     "endowmentPerStudent": 42744.16,
     "instructionShare": 0.4272
   },
@@ -6045,7 +6368,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 34729,
     "undergraduateEnrollment": 3067,
     "burden": 0.029267,
-    "gap": -2138.21,
+    "gap": -2206.21,
     "endowmentPerStudent": 516239.32,
     "instructionShare": 1.1508
   },
@@ -6062,7 +6385,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 8968,
     "undergraduateEnrollment": 14164,
     "burden": 0.048805,
-    "gap": 579.37,
+    "gap": 523.0,
     "endowmentPerStudent": 4899.96,
     "instructionShare": 0.3844
   },
@@ -6079,7 +6402,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 6290,
     "undergraduateEnrollment": 6917,
     "burden": 0.048891,
-    "gap": 488.47,
+    "gap": 441.78,
     "endowmentPerStudent": 19836.12,
     "instructionShare": 0.3228
   },
@@ -6096,7 +6419,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 13615,
     "undergraduateEnrollment": 17385,
     "burden": 0.051171,
-    "gap": 789.22,
+    "gap": 737.74,
     "endowmentPerStudent": 48073.32,
     "instructionShare": 0.8709
   },
@@ -6113,15 +6436,15 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9410,
     "undergraduateEnrollment": 10024,
     "burden": 0.056251,
-    "gap": 1191.49,
+    "gap": 1145.98,
     "endowmentPerStudent": 13778.02,
     "instructionShare": 0.7067
   },
   {
     "schoolId": "western-michigan-university",
     "schoolName": "Western Michigan University",
-    "cdsYear": "2024-25",
-    "satCompositeP50": 1100,
+    "cdsYear": "2025-26",
+    "satCompositeP50": 1080,
     "earnings10yrMedian": 53562,
     "medianDebtCompleters": 26188,
     "medianDebtMonthlyPayment": 277.64,
@@ -6130,7 +6453,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 13167,
     "undergraduateEnrollment": 12568,
     "burden": 0.062202,
-    "gap": 1916.71,
+    "gap": 1867.43,
     "endowmentPerStudent": 60068.43,
     "instructionShare": 0.8621
   },
@@ -6147,7 +6470,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 12651,
     "undergraduateEnrollment": 2603,
     "burden": 0.044344,
-    "gap": 50.64,
+    "gap": -16.68,
     "endowmentPerStudent": 23142.95,
     "instructionShare": 0.4636
   },
@@ -6164,7 +6487,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 13138,
     "undergraduateEnrollment": 13544,
     "burden": 0.037615,
-    "gap": -784.01,
+    "gap": -841.58,
     "endowmentPerStudent": 9301.92,
     "instructionShare": 0.6199
   },
@@ -6181,7 +6504,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 16627,
     "undergraduateEnrollment": 823,
     "burden": 0.04275,
-    "gap": -161.61,
+    "gap": -222.54,
     "endowmentPerStudent": 87681.05,
     "instructionShare": 0.6137
   },
@@ -6198,7 +6521,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 22852,
     "undergraduateEnrollment": 1302,
     "burden": 0.045662,
-    "gap": 212.58,
+    "gap": 152.97,
     "endowmentPerStudent": 70785.1,
     "instructionShare": 0.7866
   },
@@ -6215,7 +6538,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 23597,
     "undergraduateEnrollment": 1531,
     "burden": 0.034703,
-    "gap": -1233.79,
+    "gap": -1295.99,
     "endowmentPerStudent": 513375.36,
     "instructionShare": 0.7083
   },
@@ -6232,7 +6555,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9179,
     "undergraduateEnrollment": 10780,
     "burden": 0.050609,
-    "gap": 670.06,
+    "gap": 622.64,
     "endowmentPerStudent": 31159.74,
     "instructionShare": 0.6957
   },
@@ -6249,7 +6572,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11892,
     "undergraduateEnrollment": 1985,
     "burden": 0.052127,
-    "gap": 1014.44,
+    "gap": 956.05,
     "endowmentPerStudent": 33859.59,
     "instructionShare": 0.4286
   },
@@ -6266,7 +6589,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 18167,
     "undergraduateEnrollment": 7055,
     "burden": 0.032026,
-    "gap": -1728.12,
+    "gap": -1795.74,
     "endowmentPerStudent": 206153.88,
     "instructionShare": 0.9514
   },
@@ -6283,26 +6606,9 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 51880,
     "undergraduateEnrollment": 2076,
     "burden": 0.01831,
-    "gap": -4474.57,
+    "gap": -4556.16,
     "endowmentPerStudent": 1700597.28,
     "instructionShare": 2.9284
-  },
-  {
-    "schoolId": "winona-state-university",
-    "schoolName": "Winona State University",
-    "cdsYear": "2024-25",
-    "satCompositeP50": 1250,
-    "earnings10yrMedian": 58532,
-    "medianDebtCompleters": 21500,
-    "medianDebtMonthlyPayment": 227.94,
-    "avgNetPrice": 17503,
-    "endowmentEnd": 62386000,
-    "instructionalExpenditureFte": 11017,
-    "undergraduateEnrollment": 5144,
-    "burden": 0.046731,
-    "gap": 315.1,
-    "endowmentPerStudent": 12127.92,
-    "instructionShare": 0.6294
   },
   {
     "schoolId": "winthrop-university",
@@ -6317,7 +6623,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9121,
     "undergraduateEnrollment": 3523,
     "burden": 0.07273,
-    "gap": 2664.69,
+    "gap": 2621.27,
     "endowmentPerStudent": 22203.3,
     "instructionShare": 0.5945
   },
@@ -6334,26 +6640,9 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 13725,
     "undergraduateEnrollment": 1215,
     "burden": 0.062513,
-    "gap": 1999.84,
+    "gap": 1949.28,
     "endowmentPerStudent": 79524.24,
     "instructionShare": 0.736
-  },
-  {
-    "schoolId": "worcester-polytechnic-institute",
-    "schoolName": "Worcester Polytechnic Institute",
-    "cdsYear": "2024-25",
-    "satCompositeP50": 1410,
-    "earnings10yrMedian": 103470,
-    "medianDebtCompleters": 27000,
-    "medianDebtMonthlyPayment": 286.24,
-    "avgNetPrice": 43071,
-    "endowmentEnd": 682734000,
-    "instructionalExpenditureFte": 21636,
-    "undergraduateEnrollment": 5447,
-    "burden": 0.033197,
-    "gap": -2194.97,
-    "endowmentPerStudent": 125341.29,
-    "instructionShare": 0.5023
   },
   {
     "schoolId": "worcester-state-university",
@@ -6368,7 +6657,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 9709,
     "undergraduateEnrollment": 3930,
     "burden": 0.04092,
-    "gap": -365.91,
+    "gap": -421.69,
     "endowmentPerStudent": 6524.77,
     "instructionShare": 0.7256
   },
@@ -6376,7 +6665,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "schoolId": "wright-state-university-main-campus",
     "schoolName": "Wright State University-Main Campus",
     "cdsYear": "2024-25",
-    "satCompositeP50": 970,
+    "satCompositeP50": 1125,
     "earnings10yrMedian": 49500,
     "medianDebtCompleters": 22750,
     "medianDebtMonthlyPayment": 241.19,
@@ -6385,7 +6674,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 11536,
     "undergraduateEnrollment": 6762,
     "burden": 0.05847,
-    "gap": 1408.34,
+    "gap": 1362.8,
     "endowmentPerStudent": 22746.17,
     "instructionShare": 0.7484
   },
@@ -6402,14 +6691,14 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
     "instructionalExpenditureFte": 80541,
     "undergraduateEnrollment": 6758,
     "burden": 0.01642,
-    "gap": -5446.95,
+    "gap": -5539.45,
     "endowmentPerStudent": 6132235.13,
     "instructionShare": 3.3873
   }
 ];
 
 export const ALIGNMENT_GAP_MERIT_META = {
-  "generatedAt": "2026-08-29",
+  "generatedAt": "2026-11-18",
   "sourceApiUrl": "https://api.collegedata.fyi",
   "scorecardYears": [
     "2022-23"
@@ -6418,35 +6707,34 @@ export const ALIGNMENT_GAP_MERIT_META = {
     "2024-25",
     "2025-26"
   ],
-  "schoolCount": 223,
+  "schoolCount": 269,
   "sample": "merit-join",
-  "medianBurden": 0.043992,
-  "sampleMedianBurden": 0.044959,
-  "endowmentHighCut": 64403.29,
-  "endowmentLowCut": 18405.46,
-  "positiveGap": 120,
+  "medianBurden": 0.04446,
+  "sampleMedianBurden": 0.046012,
+  "endowmentHighCut": 63217.76,
+  "endowmentLowCut": 18384.22,
+  "positiveGap": 149,
   "zeroMeritCount": 5,
   "regions": {
-    "covers": 73,
-    "constrained": 47,
-    "none": 103
+    "covers": 97,
+    "constrained": 52,
+    "none": 120
   },
-  "coversShare": 0.6083,
+  "coversShare": 0.651,
   "exclusions": {
-    "universe": 488,
-    "qualityLimited": 116,
-    "qualityMissing": 49,
-    "missingH2a": 83,
-    "rangeShare": 3,
-    "rangeGrant": 1,
-    "missingScorecard": 13
+    "universe": 504,
+    "qualityLimited": 89,
+    "qualityMissing": 42,
+    "missingH2a": 100,
+    "rangeShare": 2,
+    "rangeGrant": 0,
+    "missingScorecard": 2
   },
   "rangeShareSchools": [
     "California State University-Chico",
-    "Dickinson College",
     "University of Illinois Chicago"
   ],
-  "join": "school_merit_profile CDS H2A non-need share and average grant, joined to scorecard_summary endowment and school_browser_rows undergraduate enrollment. Dropped quality limited/missing, missing H2A, share outside [0, 1], average grant outside [0, 80000], and rows without Scorecard earnings, debt, net price, and endowment. A published $0 grant is kept. Gaps use the 375-school endowment-join median burden so both panels share one y-axis."
+  "join": "school_merit_profile CDS H2A non-need share and average grant, joined to scorecard_summary endowment and school_browser_rows undergraduate enrollment. Dropped quality limited/missing, missing H2A, share outside [0, 1], average grant outside [0, 80000], and rows without Scorecard earnings, debt, net price, and endowment. A published $0 grant is kept. Gaps use the endowment-join median burden so both panels share one y-axis."
 } as const;
 
 export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
@@ -6464,7 +6752,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 236894913,
     "undergraduateEnrollment": 836,
     "burden": 0.060471,
-    "gap": 1822.37,
+    "gap": 1770.62,
     "endowmentPerStudent": 283367.12
   },
   {
@@ -6481,7 +6769,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 270838687,
     "undergraduateEnrollment": 1156,
     "burden": 0.05534,
-    "gap": 1384.12,
+    "gap": 1327.04,
     "endowmentPerStudent": 234289.52
   },
   {
@@ -6498,7 +6786,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 3549576398,
     "undergraduateEnrollment": 1911,
     "burden": 0.022514,
-    "gap": -3277.08,
+    "gap": -3348.48,
     "endowmentPerStudent": 1857444.48
   },
   {
@@ -6515,8 +6803,42 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1321499440,
     "undergraduateEnrollment": 64674,
     "burden": 0.039586,
-    "gap": -542.63,
+    "gap": -600.27,
     "endowmentPerStudent": 20433.24
+  },
+  {
+    "schoolId": "arkansas-state-university",
+    "schoolName": "Arkansas State University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.010766,
+    "avgMeritGrant": 11798.0,
+    "meritPerFirstYear": 127.01,
+    "earnings10yrMedian": 42617,
+    "medianDebtCompleters": 20500,
+    "medianDebtMonthlyPayment": 217.33,
+    "avgNetPrice": 12366,
+    "endowmentEnd": 115395232,
+    "undergraduateEnrollment": 9110,
+    "burden": 0.061195,
+    "gap": 1401.55,
+    "endowmentPerStudent": 12666.88
+  },
+  {
+    "schoolId": "augustana-college",
+    "schoolName": "Augustana College",
+    "cdsYear": "2025-26",
+    "meritShare": 0.387048,
+    "avgMeritGrant": 36198.0,
+    "meritPerFirstYear": 14010.37,
+    "earnings10yrMedian": 62971,
+    "medianDebtCompleters": 27000,
+    "medianDebtMonthlyPayment": 286.24,
+    "avgNetPrice": 22736,
+    "endowmentEnd": 222938769,
+    "undergraduateEnrollment": 2490,
+    "burden": 0.054547,
+    "gap": 1248.23,
+    "endowmentPerStudent": 89533.64
   },
   {
     "schoolId": "augustana-university",
@@ -6532,8 +6854,42 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 126552473,
     "undergraduateEnrollment": 1965,
     "burden": 0.053709,
-    "gap": 1130.74,
+    "gap": 1076.28,
     "endowmentPerStudent": 64403.29
+  },
+  {
+    "schoolId": "aurora-university",
+    "schoolName": "Aurora University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.141983,
+    "avgMeritGrant": 15256.0,
+    "meritPerFirstYear": 2166.09,
+    "earnings10yrMedian": 58709,
+    "medianDebtCompleters": 20318,
+    "medianDebtMonthlyPayment": 215.4,
+    "avgNetPrice": 18838,
+    "endowmentEnd": 54014375,
+    "undergraduateEnrollment": 3974,
+    "burden": 0.044027,
+    "gap": -49.92,
+    "endowmentPerStudent": 13591.94
+  },
+  {
+    "schoolId": "austin-peay-state-university",
+    "schoolName": "Austin Peay State University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.859303,
+    "avgMeritGrant": 3249.0,
+    "meritPerFirstYear": 2791.88,
+    "earnings10yrMedian": 44301,
+    "medianDebtCompleters": 20547,
+    "medianDebtMonthlyPayment": 217.83,
+    "avgNetPrice": 9735,
+    "endowmentEnd": 58126611,
+    "undergraduateEnrollment": 7560,
+    "burden": 0.059005,
+    "gap": 1266.2,
+    "endowmentPerStudent": 7688.71
   },
   {
     "schoolId": "baker-college",
@@ -6549,7 +6905,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 348024578,
     "undergraduateEnrollment": 3026,
     "burden": 0.088758,
-    "gap": 3152.27,
+    "gap": 3119.31,
     "endowmentPerStudent": 115011.43
   },
   {
@@ -6566,7 +6922,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 179867612,
     "undergraduateEnrollment": 2842,
     "burden": 0.063466,
-    "gap": 2071.14,
+    "gap": 2021.37,
     "endowmentPerStudent": 63289.1
   },
   {
@@ -6583,7 +6939,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 503444000,
     "undergraduateEnrollment": 3264,
     "burden": 0.028441,
-    "gap": -2460.5,
+    "gap": -2534.55,
     "endowmentPerStudent": 154241.42
   },
   {
@@ -6600,7 +6956,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 25410090,
     "undergraduateEnrollment": 982,
     "burden": 0.06871,
-    "gap": 2327.24,
+    "gap": 2283.18,
     "endowmentPerStudent": 25875.86
   },
   {
@@ -6617,7 +6973,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 84013471,
     "undergraduateEnrollment": 926,
     "burden": 0.06148,
-    "gap": 1830.32,
+    "gap": 1781.34,
     "endowmentPerStudent": 90727.29
   },
   {
@@ -6634,8 +6990,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 362644000,
     "undergraduateEnrollment": 4474,
     "burden": 0.026319,
-    "gap": -4200.82,
+    "gap": -4312.06,
     "endowmentPerStudent": 81055.88
+  },
+  {
+    "schoolId": "boise-state-university",
+    "schoolName": "Boise State University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.098487,
+    "avgMeritGrant": 2473.0,
+    "meritPerFirstYear": 243.56,
+    "earnings10yrMedian": 51658,
+    "medianDebtCompleters": 20500,
+    "medianDebtMonthlyPayment": 217.33,
+    "avgNetPrice": 21610,
+    "endowmentEnd": 165407637,
+    "undergraduateEnrollment": 17674,
+    "burden": 0.050485,
+    "gap": 611.64,
+    "endowmentPerStudent": 9358.81
   },
   {
     "schoolId": "bowdoin",
@@ -6651,50 +7024,101 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 2583406000,
     "undergraduateEnrollment": 1873,
     "burden": 0.028447,
-    "gap": -2527.36,
+    "gap": -2603.45,
     "endowmentPerStudent": 1379287.77
   },
   {
-    "schoolId": "bucknell",
-    "schoolName": "Bucknell University",
-    "cdsYear": "2024-25",
-    "meritShare": 0.116683,
-    "avgMeritGrant": 20060.0,
-    "meritPerFirstYear": 2340.66,
-    "earnings10yrMedian": 93807,
-    "medianDebtCompleters": 27000,
-    "medianDebtMonthlyPayment": 286.24,
-    "avgNetPrice": 40766,
-    "endowmentEnd": 1167275000,
-    "undergraduateEnrollment": 3876,
-    "burden": 0.036616,
-    "gap": -1359.63,
-    "endowmentPerStudent": 301154.54
+    "schoolId": "brandeis",
+    "schoolName": "Brandeis University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.202721,
+    "avgMeritGrant": 18791.0,
+    "meritPerFirstYear": 3809.33,
+    "earnings10yrMedian": 77231,
+    "medianDebtCompleters": 25648,
+    "medianDebtMonthlyPayment": 271.91,
+    "avgNetPrice": 35736,
+    "endowmentEnd": 1264908273,
+    "undergraduateEnrollment": 3618,
+    "burden": 0.042249,
+    "gap": -335.58,
+    "endowmentPerStudent": 349615.33
   },
   {
-    "schoolId": "california-state-polytechnic-university-pomona",
-    "schoolName": "California State Polytechnic University-Pomona",
+    "schoolId": "brown",
+    "schoolName": "Brown University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.001714,
+    "avgMeritGrant": 22364.0,
+    "meritPerFirstYear": 38.34,
+    "earnings10yrMedian": 93487,
+    "medianDebtCompleters": 11428,
+    "medianDebtMonthlyPayment": 121.16,
+    "avgNetPrice": 25184,
+    "endowmentEnd": 6718785000,
+    "undergraduateEnrollment": 7226,
+    "burden": 0.015552,
+    "gap": -5310.52,
+    "endowmentPerStudent": 929806.95
+  },
+  {
+    "schoolId": "california-polytechnic-state-university-san-luis-obispo",
+    "schoolName": "California Polytechnic State University-San Luis Obispo",
+    "cdsYear": "2025-26",
+    "meritShare": 0.117161,
+    "avgMeritGrant": 4121.0,
+    "meritPerFirstYear": 482.82,
+    "earnings10yrMedian": 90768,
+    "medianDebtCompleters": 18500,
+    "medianDebtMonthlyPayment": 196.13,
+    "avgNetPrice": 16665,
+    "endowmentEnd": 296446884,
+    "undergraduateEnrollment": 21996,
+    "burden": 0.025929,
+    "gap": -3305.28,
+    "endowmentPerStudent": 13477.31
+  },
+  {
+    "schoolId": "california-state-university-northridge",
+    "schoolName": "California State University-Northridge",
     "cdsYear": "2024-25",
-    "meritShare": 0.013519,
-    "avgMeritGrant": 1304.0,
-    "meritPerFirstYear": 17.63,
-    "earnings10yrMedian": 71902,
-    "medianDebtCompleters": 16000,
-    "medianDebtMonthlyPayment": 169.63,
-    "avgNetPrice": 11531,
-    "endowmentEnd": 187532916,
-    "undergraduateEnrollment": 25042,
-    "burden": 0.02831,
-    "gap": -2215.71,
-    "endowmentPerStudent": 7488.74
+    "meritShare": 0.595799,
+    "avgMeritGrant": 2085.0,
+    "meritPerFirstYear": 1242.24,
+    "earnings10yrMedian": 59115,
+    "medianDebtCompleters": 13872,
+    "medianDebtMonthlyPayment": 147.07,
+    "avgNetPrice": 7021,
+    "endowmentEnd": 239940034,
+    "undergraduateEnrollment": 32691,
+    "burden": 0.029854,
+    "gap": -1696.65,
+    "endowmentPerStudent": 7339.64
+  },
+  {
+    "schoolId": "california-state-university-sacramento",
+    "schoolName": "California State University-Sacramento",
+    "cdsYear": "2025-26",
+    "meritShare": 0.002188,
+    "avgMeritGrant": 1012.5,
+    "meritPerFirstYear": 2.22,
+    "earnings10yrMedian": 64876,
+    "medianDebtCompleters": 15000,
+    "medianDebtMonthlyPayment": 159.02,
+    "avgNetPrice": 9338,
+    "endowmentEnd": 86290912,
+    "undergraduateEnrollment": 28350,
+    "burden": 0.029414,
+    "gap": -1918.29,
+    "endowmentPerStudent": 3043.77
   },
   {
     "schoolId": "california-state-university-san-bernardino",
     "schoolName": "California State University-San Bernardino",
-    "cdsYear": "2024-25",
-    "meritShare": 0.00308,
-    "avgMeritGrant": 7215.0,
-    "meritPerFirstYear": 22.22,
+    "cdsYear": "2025-26",
+    "meritShare": 0.002662,
+    "avgMeritGrant": 11738.0,
+    "meritPerFirstYear": 31.25,
     "earnings10yrMedian": 59977,
     "medianDebtCompleters": 14715,
     "medianDebtMonthlyPayment": 156.0,
@@ -6702,7 +7126,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 58296181,
     "undergraduateEnrollment": 15023,
     "burden": 0.031212,
-    "gap": -1506.3,
+    "gap": -1561.46,
     "endowmentPerStudent": 3880.46
   },
   {
@@ -6719,7 +7143,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 23739490,
     "undergraduateEnrollment": 2492,
     "burden": 0.068181,
-    "gap": 1906.92,
+    "gap": 1870.02,
     "endowmentPerStudent": 9526.28
   },
   {
@@ -6736,7 +7160,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 2396658000,
     "undergraduateEnrollment": 6437,
     "burden": 0.034701,
-    "gap": -1606.53,
+    "gap": -1687.45,
     "endowmentPerStudent": 372325.31
   },
   {
@@ -6753,16 +7177,16 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 386330862,
     "undergraduateEnrollment": 1235,
     "burden": 0.065183,
-    "gap": 2031.88,
+    "gap": 1987.01,
     "endowmentPerStudent": 312818.51
   },
   {
     "schoolId": "central-college",
     "schoolName": "Central College",
     "cdsYear": "2024-25",
-    "meritShare": 0.368932,
-    "avgMeritGrant": 10330.0,
-    "meritPerFirstYear": 3811.07,
+    "meritShare": 0.380645,
+    "avgMeritGrant": 10506.0,
+    "meritPerFirstYear": 3999.06,
     "earnings10yrMedian": 54317,
     "medianDebtCompleters": 26984,
     "medianDebtMonthlyPayment": 286.08,
@@ -6770,7 +7194,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 98924047,
     "undergraduateEnrollment": 1070,
     "burden": 0.063202,
-    "gap": 2050.44,
+    "gap": 2000.49,
     "endowmentPerStudent": 92452.38
   },
   {
@@ -6787,8 +7211,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 99588764,
     "undergraduateEnrollment": 7822,
     "burden": 0.048445,
-    "gap": 512.45,
+    "gap": 458.6,
     "endowmentPerStudent": 12731.88
+  },
+  {
+    "schoolId": "central-michigan-university",
+    "schoolName": "Central Michigan University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.262913,
+    "avgMeritGrant": 6303.0,
+    "meritPerFirstYear": 1657.14,
+    "earnings10yrMedian": 55874,
+    "medianDebtCompleters": 27000,
+    "medianDebtMonthlyPayment": 286.24,
+    "avgNetPrice": 17597,
+    "endowmentEnd": 265356840,
+    "undergraduateEnrollment": 10035,
+    "burden": 0.061475,
+    "gap": 1868.3,
+    "endowmentPerStudent": 26443.13
   },
   {
     "schoolId": "centre-college",
@@ -6804,7 +7245,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 402704759,
     "undergraduateEnrollment": 1400,
     "burden": 0.051855,
-    "gap": 1023.54,
+    "gap": 962.62,
     "endowmentPerStudent": 287646.26
   },
   {
@@ -6821,7 +7262,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 419791742,
     "undergraduateEnrollment": 2705,
     "burden": 0.037231,
-    "gap": -957.73,
+    "gap": -1024.02,
     "endowmentPerStudent": 155191.03
   },
   {
@@ -6838,7 +7279,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 486846000,
     "undergraduateEnrollment": 2214,
     "burden": 0.054572,
-    "gap": 1297.0,
+    "gap": 1239.63,
     "endowmentPerStudent": 219894.31
   },
   {
@@ -6855,25 +7296,8 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 57556431,
     "undergraduateEnrollment": 10377,
     "burden": 0.063936,
-    "gap": 1852.12,
+    "gap": 1808.65,
     "endowmentPerStudent": 5546.54
-  },
-  {
-    "schoolId": "colgate-university",
-    "schoolName": "Colgate University",
-    "cdsYear": "2024-25",
-    "meritShare": 0.0,
-    "avgMeritGrant": 0.0,
-    "meritPerFirstYear": 0.0,
-    "earnings10yrMedian": 85139,
-    "medianDebtCompleters": 15000,
-    "medianDebtMonthlyPayment": 159.02,
-    "avgNetPrice": 28786,
-    "endowmentEnd": 1254676903,
-    "undergraduateEnrollment": 3180,
-    "burden": 0.022413,
-    "gap": -3610.38,
-    "endowmentPerStudent": 394552.49
   },
   {
     "schoolId": "colorado-college",
@@ -6889,7 +7313,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 989823357,
     "undergraduateEnrollment": 2014,
     "burden": 0.035611,
-    "gap": -1074.24,
+    "gap": -1134.22,
     "endowmentPerStudent": 491471.38
   },
   {
@@ -6906,8 +7330,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 59770524,
     "undergraduateEnrollment": 8143,
     "burden": 0.06108,
-    "gap": 1538.72,
+    "gap": 1496.58,
     "endowmentPerStudent": 7340.11
+  },
+  {
+    "schoolId": "colorado-school-of-mines",
+    "schoolName": "Colorado School of Mines",
+    "cdsYear": "2025-26",
+    "meritShare": 0.513767,
+    "avgMeritGrant": 8432.0,
+    "meritPerFirstYear": 4332.09,
+    "earnings10yrMedian": 97335,
+    "medianDebtCompleters": 23000,
+    "medianDebtMonthlyPayment": 243.84,
+    "avgNetPrice": 28690,
+    "endowmentEnd": 386363861,
+    "undergraduateEnrollment": 6155,
+    "burden": 0.030062,
+    "gap": -2753.94,
+    "endowmentPerStudent": 62772.36
   },
   {
     "schoolId": "colorado-state-university-pueblo",
@@ -6923,7 +7364,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 27145639,
     "undergraduateEnrollment": 3042,
     "burden": 0.049228,
-    "gap": 571.74,
+    "gap": 520.64,
     "endowmentPerStudent": 8923.62
   },
   {
@@ -6940,7 +7381,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 45356064,
     "undergraduateEnrollment": 1504,
     "burden": 0.056306,
-    "gap": 1033.35,
+    "gap": 994.08,
     "endowmentPerStudent": 30156.96
   },
   {
@@ -6957,8 +7398,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 482358000,
     "undergraduateEnrollment": 1937,
     "burden": 0.039862,
-    "gap": -608.72,
+    "gap": -677.69,
     "endowmentPerStudent": 249023.23
+  },
+  {
+    "schoolId": "covenant-college",
+    "schoolName": "Covenant College",
+    "cdsYear": "2025-26",
+    "meritShare": 0.325,
+    "avgMeritGrant": 26572.0,
+    "meritPerFirstYear": 8635.9,
+    "earnings10yrMedian": 50412,
+    "medianDebtCompleters": 22500,
+    "medianDebtMonthlyPayment": 238.54,
+    "avgNetPrice": 26265,
+    "endowmentEnd": 64939767,
+    "undergraduateEnrollment": 939,
+    "burden": 0.056782,
+    "gap": 1220.63,
+    "endowmentPerStudent": 69158.43
   },
   {
     "schoolId": "dakota-state-university",
@@ -6974,7 +7432,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 20848338,
     "undergraduateEnrollment": 2071,
     "burden": 0.058656,
-    "gap": 1468.73,
+    "gap": 1421.85,
     "endowmentPerStudent": 10066.8
   },
   {
@@ -6991,7 +7449,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1374503853,
     "undergraduateEnrollment": 1867,
     "burden": 0.029207,
-    "gap": -2365.06,
+    "gap": -2439.92,
     "endowmentPerStudent": 736209.88
   },
   {
@@ -7008,7 +7466,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 37018763,
     "undergraduateEnrollment": 4398,
     "burden": 0.067083,
-    "gap": 2237.42,
+    "gap": 2192.08,
     "endowmentPerStudent": 8417.18
   },
   {
@@ -7025,16 +7483,16 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 932562848,
     "undergraduateEnrollment": 1905,
     "burden": 0.048703,
-    "gap": 652.93,
+    "gap": 588.07,
     "endowmentPerStudent": 489534.3
   },
   {
     "schoolId": "desales-university",
     "schoolName": "DeSales University",
-    "cdsYear": "2024-25",
-    "meritShare": 0.204365,
-    "avgMeritGrant": 29211.0,
-    "meritPerFirstYear": 5969.71,
+    "cdsYear": "2025-26",
+    "meritShare": 0.237817,
+    "avgMeritGrant": 29139.0,
+    "meritPerFirstYear": 6929.74,
     "earnings10yrMedian": 61295,
     "medianDebtCompleters": 25788,
     "medianDebtMonthlyPayment": 273.4,
@@ -7042,7 +7500,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 105714112,
     "undergraduateEnrollment": 2128,
     "burden": 0.053525,
-    "gap": 1148.21,
+    "gap": 1091.84,
     "endowmentPerStudent": 49677.68
   },
   {
@@ -7059,7 +7517,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 55388935,
     "undergraduateEnrollment": 2561,
     "burden": 0.051479,
-    "gap": 887.62,
+    "gap": 832.14,
     "endowmentPerStudent": 21627.85
   },
   {
@@ -7076,7 +7534,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 31921283,
     "undergraduateEnrollment": 1114,
     "burden": 0.040547,
-    "gap": -573.45,
+    "gap": -651.36,
     "endowmentPerStudent": 28654.65
   },
   {
@@ -7093,7 +7551,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 661012000,
     "undergraduateEnrollment": 5350,
     "burden": 0.04467,
-    "gap": 99.65,
+    "gap": 30.91,
     "endowmentPerStudent": 123553.64
   },
   {
@@ -7110,7 +7568,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 320106984,
     "undergraduateEnrollment": 19896,
     "burden": 0.052484,
-    "gap": 920.24,
+    "gap": 869.53,
     "endowmentPerStudent": 16089.01
   },
   {
@@ -7127,8 +7585,42 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 20588771,
     "undergraduateEnrollment": 3418,
     "burden": 0.054633,
-    "gap": 1180.82,
+    "gap": 1128.89,
     "endowmentPerStudent": 6023.63
+  },
+  {
+    "schoolId": "eastern-mennonite-university",
+    "schoolName": "Eastern Mennonite University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.149254,
+    "avgMeritGrant": 25877.0,
+    "meritPerFirstYear": 3862.24,
+    "earnings10yrMedian": 54869,
+    "medianDebtCompleters": 24813,
+    "medianDebtMonthlyPayment": 263.06,
+    "avgNetPrice": 24588,
+    "endowmentEnd": 46225730,
+    "undergraduateEnrollment": 754,
+    "burden": 0.057532,
+    "gap": 1409.45,
+    "endowmentPerStudent": 61307.33
+  },
+  {
+    "schoolId": "eastern-michigan-university",
+    "schoolName": "Eastern Michigan University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.217767,
+    "avgMeritGrant": 7342.0,
+    "meritPerFirstYear": 1598.84,
+    "earnings10yrMedian": 51793,
+    "medianDebtCompleters": 25000,
+    "medianDebtMonthlyPayment": 265.04,
+    "avgNetPrice": 15407,
+    "endowmentEnd": 109425810,
+    "undergraduateEnrollment": 10055,
+    "burden": 0.061408,
+    "gap": 1724.9,
+    "endowmentPerStudent": 10882.73
   },
   {
     "schoolId": "eastern-oregon-university",
@@ -7144,7 +7636,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 18485220,
     "undergraduateEnrollment": 2172,
     "burden": 0.052043,
-    "gap": 792.8,
+    "gap": 746.71,
     "endowmentPerStudent": 8510.69
   },
   {
@@ -7161,7 +7653,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 48340888,
     "undergraduateEnrollment": 6222,
     "burden": 0.042848,
-    "gap": -130.18,
+    "gap": -183.43,
     "endowmentPerStudent": 7769.35
   },
   {
@@ -7178,7 +7670,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 12396185000,
     "undergraduateEnrollment": 7298,
     "burden": 0.028972,
-    "gap": -2365.25,
+    "gap": -2438.95,
     "endowmentPerStudent": 1698572.9
   },
   {
@@ -7195,7 +7687,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 411058000,
     "undergraduateEnrollment": 5373,
     "burden": 0.037251,
-    "gap": -1176.22,
+    "gap": -1257.88,
     "endowmentPerStudent": 76504.37
   },
   {
@@ -7212,7 +7704,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 50118000,
     "undergraduateEnrollment": 1990,
     "burden": 0.055532,
-    "gap": 1298.79,
+    "gap": 1246.12,
     "endowmentPerStudent": 25184.92
   },
   {
@@ -7229,7 +7721,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 50118000,
     "undergraduateEnrollment": 2627,
     "burden": 0.055532,
-    "gap": 1298.79,
+    "gap": 1246.12,
     "endowmentPerStudent": 19078.04
   },
   {
@@ -7246,8 +7738,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 7579659,
     "undergraduateEnrollment": 9552,
     "burden": 0.026834,
-    "gap": -2352.79,
+    "gap": -2416.97,
     "endowmentPerStudent": 793.52
+  },
+  {
+    "schoolId": "ferris-state-university",
+    "schoolName": "Ferris State University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.284924,
+    "avgMeritGrant": 4950.0,
+    "meritPerFirstYear": 1410.37,
+    "earnings10yrMedian": 54735,
+    "medianDebtCompleters": 21000,
+    "medianDebtMonthlyPayment": 222.63,
+    "avgNetPrice": 8624,
+    "endowmentEnd": 127498531,
+    "undergraduateEnrollment": 8106,
+    "burden": 0.048809,
+    "gap": 467.79,
+    "endowmentPerStudent": 15728.91
   },
   {
     "schoolId": "florida-gulf-coast-university",
@@ -7263,8 +7772,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 103836772,
     "undergraduateEnrollment": 13874,
     "burden": 0.041089,
-    "gap": -311.2,
+    "gap": -361.38,
     "endowmentPerStudent": 7484.27
+  },
+  {
+    "schoolId": "gwu",
+    "schoolName": "George Washington University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.301966,
+    "avgMeritGrant": 22036.67,
+    "meritPerFirstYear": 6654.32,
+    "earnings10yrMedian": 90873,
+    "medianDebtCompleters": 20449,
+    "medianDebtMonthlyPayment": 216.79,
+    "avgNetPrice": 36586,
+    "endowmentEnd": 2639708000,
+    "undergraduateEnrollment": 11182,
+    "burden": 0.028628,
+    "gap": -2827.3,
+    "endowmentPerStudent": 236067.61
   },
   {
     "schoolId": "georgia-tech",
@@ -7280,7 +7806,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 3166993332,
     "undergraduateEnrollment": 18785,
     "burden": 0.026828,
-    "gap": -3466.48,
+    "gap": -3560.99,
     "endowmentPerStudent": 168591.61
   },
   {
@@ -7297,7 +7823,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 425385470,
     "undergraduateEnrollment": 2099,
     "burden": 0.048027,
-    "gap": 567.11,
+    "gap": 501.33,
     "endowmentPerStudent": 202661.01
   },
   {
@@ -7314,7 +7840,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 209408812,
     "undergraduateEnrollment": 18854,
     "burden": 0.055542,
-    "gap": 1273.66,
+    "gap": 1222.05,
     "endowmentPerStudent": 11106.86
   },
   {
@@ -7331,7 +7857,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 53235205000,
     "undergraduateEnrollment": 7601,
     "burden": 0.017493,
-    "gap": -5302.14,
+    "gap": -5395.78,
     "endowmentPerStudent": 7003710.7
   },
   {
@@ -7348,7 +7874,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 454549500,
     "undergraduateEnrollment": 921,
     "burden": 0.022933,
-    "gap": -5739.38,
+    "gap": -5866.93,
     "endowmentPerStudent": 493539.09
   },
   {
@@ -7365,8 +7891,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 702245110,
     "undergraduateEnrollment": 1430,
     "burden": 0.021671,
-    "gap": -3507.48,
+    "gap": -3581.02,
     "endowmentPerStudent": 491080.5
+  },
+  {
+    "schoolId": "hiram-college",
+    "schoolName": "Hiram College",
+    "cdsYear": "2025-26",
+    "meritShare": 0.118483,
+    "avgMeritGrant": 11092.0,
+    "meritPerFirstYear": 1314.22,
+    "earnings10yrMedian": 54311,
+    "medianDebtCompleters": 27000,
+    "medianDebtMonthlyPayment": 286.24,
+    "avgNetPrice": 21058,
+    "endowmentEnd": 55424015,
+    "undergraduateEnrollment": 777,
+    "burden": 0.063245,
+    "gap": 2004.86,
+    "endowmentPerStudent": 71330.78
   },
   {
     "schoolId": "hollins-university",
@@ -7382,8 +7925,42 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 303839322,
     "undergraduateEnrollment": 665,
     "burden": 0.085711,
-    "gap": 3285.51,
+    "gap": 3248.65,
     "endowmentPerStudent": 456901.24
+  },
+  {
+    "schoolId": "hope-college",
+    "schoolName": "Hope College",
+    "cdsYear": "2025-26",
+    "meritShare": 0.426471,
+    "avgMeritGrant": 21711.0,
+    "meritPerFirstYear": 9259.1,
+    "earnings10yrMedian": 58427,
+    "medianDebtCompleters": 26800,
+    "medianDebtMonthlyPayment": 284.12,
+    "avgNetPrice": 27182,
+    "endowmentEnd": 309915000,
+    "undergraduateEnrollment": 3288,
+    "burden": 0.058354,
+    "gap": 1595.25,
+    "endowmentPerStudent": 94256.39
+  },
+  {
+    "schoolId": "houston-christian-university",
+    "schoolName": "Houston Christian University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.111583,
+    "avgMeritGrant": 24325.0,
+    "meritPerFirstYear": 2714.27,
+    "earnings10yrMedian": 55933,
+    "medianDebtCompleters": 22642,
+    "medianDebtMonthlyPayment": 240.04,
+    "avgNetPrice": 20629,
+    "endowmentEnd": 137983692,
+    "undergraduateEnrollment": 2886,
+    "burden": 0.051499,
+    "gap": 773.67,
+    "endowmentPerStudent": 47811.4
   },
   {
     "schoolId": "howard-university",
@@ -7399,7 +7976,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1032497000,
     "undergraduateEnrollment": 10108,
     "burden": 0.049423,
-    "gap": 673.01,
+    "gap": 615.01,
     "endowmentPerStudent": 102146.52
   },
   {
@@ -7416,25 +7993,8 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 255858735,
     "undergraduateEnrollment": 1582,
     "burden": 0.048467,
-    "gap": 623.19,
+    "gap": 558.01,
     "endowmentPerStudent": 161731.19
-  },
-  {
-    "schoolId": "indiana-university-of-pennsylvania-main-campus",
-    "schoolName": "Indiana University of Pennsylvania-Main Campus",
-    "cdsYear": "2024-25",
-    "meritShare": 0.017223,
-    "avgMeritGrant": 2094.0,
-    "meritPerFirstYear": 36.07,
-    "earnings10yrMedian": 51019,
-    "medianDebtCompleters": 26798,
-    "medianDebtMonthlyPayment": 284.1,
-    "avgNetPrice": 16804,
-    "endowmentEnd": 98577436,
-    "undergraduateEnrollment": 6764,
-    "burden": 0.066822,
-    "gap": 2288.92,
-    "endowmentPerStudent": 14573.84
   },
   {
     "schoolId": "johns-hopkins",
@@ -7450,7 +8010,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 13063073000,
     "undergraduateEnrollment": 5693,
     "burden": 0.014894,
-    "gap": -5006.31,
+    "gap": -5086.83,
     "endowmentPerStudent": 2294585.1
   },
   {
@@ -7467,7 +8027,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 132688469,
     "undergraduateEnrollment": 1191,
     "burden": 0.060348,
-    "gap": 1829.43,
+    "gap": 1777.08,
     "endowmentPerStudent": 111409.29
   },
   {
@@ -7484,8 +8044,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1019065645,
     "undergraduateEnrollment": 15142,
     "burden": 0.047212,
-    "gap": 362.38,
+    "gap": 309.72,
     "endowmentPerStudent": 67300.6
+  },
+  {
+    "schoolId": "keene-state-college",
+    "schoolName": "Keene State College",
+    "cdsYear": "2024-25",
+    "meritShare": 0.354467,
+    "avgMeritGrant": 7532.0,
+    "meritPerFirstYear": 2669.84,
+    "earnings10yrMedian": 54368,
+    "medianDebtCompleters": 25749,
+    "medianDebtMonthlyPayment": 272.98,
+    "avgNetPrice": 17887,
+    "endowmentEnd": 61452755,
+    "undergraduateEnrollment": 2699,
+    "burden": 0.060252,
+    "gap": 1687.17,
+    "endowmentPerStudent": 22768.71
   },
   {
     "schoolId": "kennesaw-state-university",
@@ -7501,7 +8078,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 124042454,
     "undergraduateEnrollment": 41254,
     "burden": 0.052683,
-    "gap": 982.97,
+    "gap": 930.04,
     "endowmentPerStudent": 3006.8
   },
   {
@@ -7518,7 +8095,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 202182612,
     "undergraduateEnrollment": 19320,
     "burden": 0.068672,
-    "gap": 2201.26,
+    "gap": 2159.51,
     "endowmentPerStudent": 10464.94
   },
   {
@@ -7535,25 +8112,8 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 22486515,
     "undergraduateEnrollment": 1309,
     "burden": 0.090701,
-    "gap": 3339.37,
+    "gap": 3305.91,
     "endowmentPerStudent": 17178.39
-  },
-  {
-    "schoolId": "kenyon",
-    "schoolName": "Kenyon College",
-    "cdsYear": "2024-25",
-    "meritShare": 0.32574,
-    "avgMeritGrant": 24471.0,
-    "meritPerFirstYear": 7971.19,
-    "earnings10yrMedian": 71830,
-    "medianDebtCompleters": 18527,
-    "medianDebtMonthlyPayment": 196.42,
-    "avgNetPrice": 38512,
-    "endowmentEnd": 626603453,
-    "undergraduateEnrollment": 1732,
-    "burden": 0.032814,
-    "gap": -1577.77,
-    "endowmentPerStudent": 361780.28
   },
   {
     "schoolId": "kutztown-university-of-pennsylvania",
@@ -7569,7 +8129,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 45035669,
     "undergraduateEnrollment": 6180,
     "burden": 0.06151,
-    "gap": 1851.17,
+    "gap": 1801.71,
     "endowmentPerStudent": 7287.33
   },
   {
@@ -7586,8 +8146,42 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1140250000,
     "undergraduateEnrollment": 2757,
     "burden": 0.022268,
-    "gap": -3902.12,
+    "gap": -3986.18,
     "endowmentPerStudent": 413583.61
+  },
+  {
+    "schoolId": "lake-superior-state-university",
+    "schoolName": "Lake Superior State University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.20082,
+    "avgMeritGrant": 8122.0,
+    "meritPerFirstYear": 1631.06,
+    "earnings10yrMedian": 49045,
+    "medianDebtCompleters": 23250,
+    "medianDebtMonthlyPayment": 246.49,
+    "avgNetPrice": 12822,
+    "endowmentEnd": 39257131,
+    "undergraduateEnrollment": 1325,
+    "burden": 0.06031,
+    "gap": 1527.54,
+    "endowmentPerStudent": 29628.02
+  },
+  {
+    "schoolId": "lawrence-technological-university",
+    "schoolName": "Lawrence Technological University",
+    "cdsYear": "2026-27",
+    "meritShare": 0.244514,
+    "avgMeritGrant": 23175.92,
+    "meritPerFirstYear": 5666.84,
+    "earnings10yrMedian": 69151,
+    "medianDebtCompleters": 27000,
+    "medianDebtMonthlyPayment": 286.24,
+    "avgNetPrice": 32918,
+    "endowmentEnd": 54334838,
+    "undergraduateEnrollment": 1668,
+    "burden": 0.049672,
+    "gap": 708.29,
+    "endowmentPerStudent": 32574.84
   },
   {
     "schoolId": "lee-university",
@@ -7603,7 +8197,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 32936546,
     "undergraduateEnrollment": 2617,
     "burden": 0.075792,
-    "gap": 2700.98,
+    "gap": 2661.23,
     "endowmentPerStudent": 12585.61
   },
   {
@@ -7620,8 +8214,59 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1872716000,
     "undergraduateEnrollment": 5898,
     "burden": 0.02646,
-    "gap": -3637.7,
+    "gap": -3734.8,
     "endowmentPerStudent": 317517.12
+  },
+  {
+    "schoolId": "lenoir-rhyne-university",
+    "schoolName": "Lenoir-Rhyne University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.207715,
+    "avgMeritGrant": 13800.0,
+    "meritPerFirstYear": 2866.47,
+    "earnings10yrMedian": 45543,
+    "medianDebtCompleters": 26000,
+    "medianDebtMonthlyPayment": 275.64,
+    "avgNetPrice": 20689,
+    "endowmentEnd": 136106163,
+    "undergraduateEnrollment": 1359,
+    "burden": 0.072628,
+    "gap": 2520.94,
+    "endowmentPerStudent": 100151.7
+  },
+  {
+    "schoolId": "lewis-clark-state-college",
+    "schoolName": "Lewis-Clark State College",
+    "cdsYear": "2025-26",
+    "meritShare": 0.751445,
+    "avgMeritGrant": 5071.0,
+    "meritPerFirstYear": 3810.58,
+    "earnings10yrMedian": 46001,
+    "medianDebtCompleters": 18500,
+    "medianDebtMonthlyPayment": 196.13,
+    "avgNetPrice": 15635,
+    "endowmentEnd": 15700127,
+    "undergraduateEnrollment": 2385,
+    "burden": 0.051163,
+    "gap": 605.95,
+    "endowmentPerStudent": 6582.86
+  },
+  {
+    "schoolId": "lindenwood-university",
+    "schoolName": "Lindenwood University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.193861,
+    "avgMeritGrant": 8554.0,
+    "meritPerFirstYear": 1658.29,
+    "earnings10yrMedian": 53278,
+    "medianDebtCompleters": 26000,
+    "medianDebtMonthlyPayment": 275.64,
+    "avgNetPrice": 19638,
+    "endowmentEnd": 159164606,
+    "undergraduateEnrollment": 4624,
+    "burden": 0.062083,
+    "gap": 1845.13,
+    "endowmentPerStudent": 34421.41
   },
   {
     "schoolId": "louisiana-tech-university",
@@ -7637,7 +8282,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 99176307,
     "undergraduateEnrollment": 8312,
     "burden": 0.053866,
-    "gap": 1014.34,
+    "gap": 966.26,
     "endowmentPerStudent": 11931.7
   },
   {
@@ -7654,16 +8299,16 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1054708355,
     "undergraduateEnrollment": 11737,
     "burden": 0.042964,
-    "gap": -144.53,
+    "gap": -210.32,
     "endowmentPerStudent": 89861.83
   },
   {
     "schoolId": "lycoming-college",
     "schoolName": "Lycoming College",
-    "cdsYear": "2024-25",
-    "meritShare": 0.144444,
-    "avgMeritGrant": 31171.0,
-    "meritPerFirstYear": 4502.48,
+    "cdsYear": "2025-26",
+    "meritShare": 0.117057,
+    "avgMeritGrant": 36574.0,
+    "meritPerFirstYear": 4281.24,
     "earnings10yrMedian": 56210,
     "medianDebtCompleters": 27000,
     "medianDebtMonthlyPayment": 286.24,
@@ -7671,7 +8316,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 191145000,
     "undergraduateEnrollment": 996,
     "burden": 0.061108,
-    "gap": 1890.64,
+    "gap": 1838.94,
     "endowmentPerStudent": 191912.65
   },
   {
@@ -7688,7 +8333,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 160164930,
     "undergraduateEnrollment": 2744,
     "burden": 0.038321,
-    "gap": -961.99,
+    "gap": -1041.38,
     "endowmentPerStudent": 58369.14
   },
   {
@@ -7705,7 +8350,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 91722343,
     "undergraduateEnrollment": 952,
     "burden": 0.060071,
-    "gap": 1806.78,
+    "gap": 1754.19,
     "endowmentPerStudent": 96347.0
   },
   {
@@ -7722,8 +8367,59 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 468284843,
     "undergraduateEnrollment": 5182,
     "burden": 0.04087,
-    "gap": -477.39,
+    "gap": -548.96,
     "endowmentPerStudent": 90367.59
+  },
+  {
+    "schoolId": "marquette-university",
+    "schoolName": "Marquette University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.408782,
+    "avgMeritGrant": 29284.0,
+    "meritPerFirstYear": 11970.77,
+    "earnings10yrMedian": 78257,
+    "medianDebtCompleters": 23940,
+    "medianDebtMonthlyPayment": 253.8,
+    "avgNetPrice": 31487,
+    "endowmentEnd": 996999000,
+    "undergraduateEnrollment": 7660,
+    "burden": 0.038918,
+    "gap": -852.29,
+    "endowmentPerStudent": 130156.53
+  },
+  {
+    "schoolId": "maryville-university-of-saint-louis",
+    "schoolName": "Maryville University of Saint Louis",
+    "cdsYear": "2025-26",
+    "meritShare": 0.340206,
+    "avgMeritGrant": 14953.0,
+    "meritPerFirstYear": 5087.1,
+    "earnings10yrMedian": 62105,
+    "medianDebtCompleters": 22000,
+    "medianDebtMonthlyPayment": 233.24,
+    "avgNetPrice": 22066,
+    "endowmentEnd": 80287156,
+    "undergraduateEnrollment": 5658,
+    "burden": 0.045067,
+    "gap": 74.07,
+    "endowmentPerStudent": 14190.02
+  },
+  {
+    "schoolId": "massachusetts-maritime-academy",
+    "schoolName": "Massachusetts Maritime Academy",
+    "cdsYear": "2025-26",
+    "meritShare": 0.309469,
+    "avgMeritGrant": 9302.0,
+    "meritPerFirstYear": 2878.68,
+    "earnings10yrMedian": 82392,
+    "medianDebtCompleters": 25000,
+    "medianDebtMonthlyPayment": 265.04,
+    "avgNetPrice": 21582,
+    "endowmentEnd": 56133736,
+    "undergraduateEnrollment": 1395,
+    "burden": 0.038602,
+    "gap": -948.5,
+    "endowmentPerStudent": 40239.24
   },
   {
     "schoolId": "messiah-university",
@@ -7739,7 +8435,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 132098420,
     "undergraduateEnrollment": 2259,
     "burden": 0.060291,
-    "gap": 1731.57,
+    "gap": 1681.85,
     "endowmentPerStudent": 58476.5
   },
   {
@@ -7756,7 +8452,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 28890481,
     "undergraduateEnrollment": 15002,
     "burden": 0.052508,
-    "gap": 871.71,
+    "gap": 823.8,
     "endowmentPerStudent": 1925.78
   },
   {
@@ -7773,7 +8469,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 4986233000,
     "undergraduateEnrollment": 40922,
     "burden": 0.043981,
-    "gap": -1.4,
+    "gap": -63.25,
     "endowmentPerStudent": 121847.25
   },
   {
@@ -7790,25 +8486,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 169088791,
     "undergraduateEnrollment": 5955,
     "burden": 0.040657,
-    "gap": -512.5,
+    "gap": -584.42,
     "endowmentPerStudent": 28394.42
   },
   {
-    "schoolId": "middlebury-college",
-    "schoolName": "Middlebury College",
-    "cdsYear": "2024-25",
-    "meritShare": 0.004732,
-    "avgMeritGrant": 2700.0,
-    "meritPerFirstYear": 12.78,
-    "earnings10yrMedian": 76310,
-    "medianDebtCompleters": 13857,
-    "medianDebtMonthlyPayment": 146.91,
-    "avgNetPrice": 31483,
-    "endowmentEnd": 1433391648,
-    "undergraduateEnrollment": 2738,
-    "burden": 0.023102,
-    "gap": -3132.53,
-    "endowmentPerStudent": 523517.77
+    "schoolId": "middle-tennessee-state-university",
+    "schoolName": "Middle Tennessee State University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.250161,
+    "avgMeritGrant": 9798.66,
+    "meritPerFirstYear": 2451.24,
+    "earnings10yrMedian": 48541,
+    "medianDebtCompleters": 20000,
+    "medianDebtMonthlyPayment": 212.03,
+    "avgNetPrice": 13359,
+    "endowmentEnd": 153635992,
+    "undergraduateEnrollment": 16301,
+    "burden": 0.052417,
+    "gap": 758.99,
+    "endowmentPerStudent": 9424.94
   },
   {
     "schoolId": "millersville-university-of-pennsylvania",
@@ -7824,13 +8520,13 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 46859301,
     "undergraduateEnrollment": 5728,
     "burden": 0.054131,
-    "gap": 1100.74,
+    "gap": 1049.93,
     "endowmentPerStudent": 8180.74
   },
   {
     "schoolId": "milwaukee-school-of-engineering",
     "schoolName": "Milwaukee School of Engineering",
-    "cdsYear": "2025-26",
+    "cdsYear": "2024-25",
     "meritShare": 0.26489,
     "avgMeritGrant": 27565.0,
     "meritPerFirstYear": 7301.7,
@@ -7841,7 +8537,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 90335690,
     "undergraduateEnrollment": 2654,
     "burden": 0.038564,
-    "gap": -950.12,
+    "gap": -1032.03,
     "endowmentPerStudent": 34037.56
   },
   {
@@ -7858,7 +8554,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 53877747,
     "undergraduateEnrollment": 3019,
     "burden": 0.057235,
-    "gap": 1109.12,
+    "gap": 1069.93,
     "endowmentPerStudent": 17846.22
   },
   {
@@ -7875,7 +8571,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 282592656,
     "undergraduateEnrollment": 5521,
     "burden": 0.035656,
-    "gap": -1358.99,
+    "gap": -1435.28,
     "endowmentPerStudent": 51185.05
   },
   {
@@ -7892,7 +8588,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 40378556,
     "undergraduateEnrollment": 2219,
     "burden": 0.059565,
-    "gap": 1305.15,
+    "gap": 1265.93,
     "endowmentPerStudent": 18196.74
   },
   {
@@ -7909,7 +8605,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 312991891,
     "undergraduateEnrollment": 14451,
     "burden": 0.053742,
-    "gap": 1020.53,
+    "gap": 971.55,
     "endowmentPerStudent": 21658.84
   },
   {
@@ -7926,7 +8622,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 36754025,
     "undergraduateEnrollment": 2626,
     "burden": 0.052298,
-    "gap": 723.0,
+    "gap": 682.27,
     "endowmentPerStudent": 13996.2
   },
   {
@@ -7943,7 +8639,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 70848750,
     "undergraduateEnrollment": 4578,
     "burden": 0.06553,
-    "gap": 1828.22,
+    "gap": 1788.5,
     "endowmentPerStudent": 15475.92
   },
   {
@@ -7960,7 +8656,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1101548227,
     "undergraduateEnrollment": 2169,
     "burden": 0.049875,
-    "gap": 675.35,
+    "gap": 621.63,
     "endowmentPerStudent": 507859.95
   },
   {
@@ -7977,7 +8673,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 24549502,
     "undergraduateEnrollment": 1533,
     "burden": 0.05941,
-    "gap": 1751.71,
+    "gap": 1698.54,
     "endowmentPerStudent": 16014.03
   },
   {
@@ -7994,8 +8690,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 13151236,
     "undergraduateEnrollment": 1451,
     "burden": 0.031569,
-    "gap": -1121.39,
+    "gap": -1163.64,
     "endowmentPerStudent": 9063.57
+  },
+  {
+    "schoolId": "nyu",
+    "schoolName": "New York University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.022321,
+    "avgMeritGrant": 38420.0,
+    "meritPerFirstYear": 857.56,
+    "earnings10yrMedian": 82509,
+    "medianDebtCompleters": 20500,
+    "medianDebtMonthlyPayment": 217.33,
+    "avgNetPrice": 37050,
+    "endowmentEnd": 6651982030,
+    "undergraduateEnrollment": 28663,
+    "burden": 0.031608,
+    "gap": -2083.81,
+    "endowmentPerStudent": 232075.57
   },
   {
     "schoolId": "north-carolina-a-and-t-state-university",
@@ -8011,8 +8724,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 201941618,
     "undergraduateEnrollment": 12182,
     "burden": 0.077293,
-    "gap": 2908.15,
+    "gap": 2867.28,
     "endowmentPerStudent": 16577.05
+  },
+  {
+    "schoolId": "north-carolina-central-university",
+    "schoolName": "North Carolina Central University",
+    "cdsYear": "2024-25",
+    "meritShare": 0.028866,
+    "avgMeritGrant": 9194.0,
+    "meritPerFirstYear": 265.39,
+    "earnings10yrMedian": 42968,
+    "medianDebtCompleters": 28250,
+    "medianDebtMonthlyPayment": 299.5,
+    "avgNetPrice": 15359,
+    "endowmentEnd": 59634623,
+    "undergraduateEnrollment": 6081,
+    "burden": 0.083644,
+    "gap": 3308.49,
+    "endowmentPerStudent": 9806.71
   },
   {
     "schoolId": "north-central-college",
@@ -8028,7 +8758,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 139739937,
     "undergraduateEnrollment": 2428,
     "burden": 0.051842,
-    "gap": 927.43,
+    "gap": 872.14,
     "endowmentPerStudent": 57553.52
   },
   {
@@ -8045,7 +8775,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1711265094,
     "undergraduateEnrollment": 17326,
     "burden": 0.033339,
-    "gap": -1937.3,
+    "gap": -2022.4,
     "endowmentPerStudent": 98768.62
   },
   {
@@ -8062,8 +8792,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 283386638,
     "undergraduateEnrollment": 22903,
     "burden": 0.044446,
-    "gap": 48.54,
+    "gap": -1.48,
     "endowmentPerStudent": 12373.34
+  },
+  {
+    "schoolId": "northern-kentucky-university",
+    "schoolName": "Northern Kentucky University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.265432,
+    "avgMeritGrant": 3019.0,
+    "meritPerFirstYear": 801.34,
+    "earnings10yrMedian": 50220,
+    "medianDebtCompleters": 23000,
+    "medianDebtMonthlyPayment": 243.84,
+    "avgNetPrice": 8191,
+    "endowmentEnd": 138582000,
+    "undergraduateEnrollment": 8246,
+    "burden": 0.058265,
+    "gap": 1362.39,
+    "endowmentPerStudent": 16805.97
   },
   {
     "schoolId": "northern-michigan-university",
@@ -8079,8 +8826,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 19835537,
     "undergraduateEnrollment": 6556,
     "burden": 0.057994,
-    "gap": 1296.16,
+    "gap": 1252.84,
     "endowmentPerStudent": 3025.55
+  },
+  {
+    "schoolId": "northwestern-state-university-of-louisiana",
+    "schoolName": "Northwestern State University of Louisiana",
+    "cdsYear": "2025-26",
+    "meritShare": 0.135524,
+    "avgMeritGrant": 4963.0,
+    "meritPerFirstYear": 672.6,
+    "earnings10yrMedian": 47021,
+    "medianDebtCompleters": 25000,
+    "medianDebtMonthlyPayment": 265.04,
+    "avgNetPrice": 13606,
+    "endowmentEnd": 18934642,
+    "undergraduateEnrollment": 5519,
+    "burden": 0.06764,
+    "gap": 2141.83,
+    "endowmentPerStudent": 3430.81
   },
   {
     "schoolId": "northwestern",
@@ -8096,8 +8860,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 10981265000,
     "undergraduateEnrollment": 9201,
     "burden": 0.021354,
-    "gap": -3975.56,
+    "gap": -4057.74,
     "endowmentPerStudent": 1193486.03
+  },
+  {
+    "schoolId": "oakland-university",
+    "schoolName": "Oakland University",
+    "cdsYear": "2024-25",
+    "meritShare": 0.278209,
+    "avgMeritGrant": 3746.0,
+    "meritPerFirstYear": 1042.17,
+    "earnings10yrMedian": 58612,
+    "medianDebtCompleters": 22750,
+    "medianDebtMonthlyPayment": 241.19,
+    "avgNetPrice": 9120,
+    "endowmentEnd": 151474929,
+    "undergraduateEnrollment": 12351,
+    "burden": 0.04938,
+    "gap": 566.71,
+    "endowmentPerStudent": 12264.18
   },
   {
     "schoolId": "occidental-college",
@@ -8113,8 +8894,42 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 654297483,
     "undergraduateEnrollment": 1877,
     "burden": 0.038526,
-    "gap": -815.82,
+    "gap": -885.67,
     "endowmentPerStudent": 348586.83
+  },
+  {
+    "schoolId": "osu",
+    "schoolName": "Ohio State University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.304961,
+    "avgMeritGrant": 7336.0,
+    "meritPerFirstYear": 2237.19,
+    "earnings10yrMedian": 60409,
+    "medianDebtCompleters": 19976,
+    "medianDebtMonthlyPayment": 211.78,
+    "avgNetPrice": 17339,
+    "endowmentEnd": 7903034629,
+    "undergraduateEnrollment": 45638,
+    "burden": 0.042069,
+    "gap": -283.81,
+    "endowmentPerStudent": 173167.86
+  },
+  {
+    "schoolId": "oklahoma-state-university-main-campus",
+    "schoolName": "Oklahoma State University-Main Campus",
+    "cdsYear": "2025-26",
+    "meritShare": 0.4,
+    "avgMeritGrant": 7134.0,
+    "meritPerFirstYear": 2853.6,
+    "earnings10yrMedian": 57413,
+    "medianDebtCompleters": 20500,
+    "medianDebtMonthlyPayment": 217.33,
+    "avgNetPrice": 17447,
+    "endowmentEnd": 603919302,
+    "undergraduateEnrollment": 21773,
+    "burden": 0.045425,
+    "gap": 108.83,
+    "endowmentPerStudent": 27737.07
   },
   {
     "schoolId": "old-dominion-university",
@@ -8130,8 +8945,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 319812987,
     "undergraduateEnrollment": 17514,
     "burden": 0.055601,
-    "gap": 1252.76,
+    "gap": 1202.26,
     "endowmentPerStudent": 18260.42
+  },
+  {
+    "schoolId": "oregon-institute-of-technology",
+    "schoolName": "Oregon Institute of Technology",
+    "cdsYear": "2025-26",
+    "meritShare": 0.267465,
+    "avgMeritGrant": 5274.0,
+    "meritPerFirstYear": 1410.61,
+    "earnings10yrMedian": 72273,
+    "medianDebtCompleters": 22500,
+    "medianDebtMonthlyPayment": 238.54,
+    "avgNetPrice": 15706,
+    "endowmentEnd": 34872899,
+    "undergraduateEnrollment": 2892,
+    "burden": 0.039606,
+    "gap": -689.31,
+    "endowmentPerStudent": 12058.4
   },
   {
     "schoolId": "oregon-state-university",
@@ -8147,7 +8979,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1028304309,
     "undergraduateEnrollment": 30743,
     "burden": 0.042177,
-    "gap": -228.28,
+    "gap": -287.15,
     "endowmentPerStudent": 33448.4
   },
   {
@@ -8164,7 +8996,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 32677120,
     "undergraduateEnrollment": 1223,
     "burden": 0.059067,
-    "gap": 1722.75,
+    "gap": 1669.27,
     "endowmentPerStudent": 26718.82
   },
   {
@@ -8181,7 +9013,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 64811367,
     "undergraduateEnrollment": 1516,
     "burden": 0.048766,
-    "gap": 568.38,
+    "gap": 512.66,
     "endowmentPerStudent": 42751.56
   },
   {
@@ -8198,33 +9030,16 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 4190478239,
     "undergraduateEnrollment": 42284,
     "burden": 0.050138,
-    "gap": 766.09,
+    "gap": 707.75,
     "endowmentPerStudent": 99103.17
-  },
-  {
-    "schoolId": "pepperdine-university",
-    "schoolName": "Pepperdine University",
-    "cdsYear": "2024-25",
-    "meritShare": 0.318306,
-    "avgMeritGrant": 7158.0,
-    "meritPerFirstYear": 2278.43,
-    "earnings10yrMedian": 82939,
-    "medianDebtCompleters": 23510,
-    "medianDebtMonthlyPayment": 249.25,
-    "avgNetPrice": 58098,
-    "endowmentEnd": 1319031000,
-    "undergraduateEnrollment": 3553,
-    "burden": 0.036063,
-    "gap": -1292.33,
-    "endowmentPerStudent": 371244.3
   },
   {
     "schoolId": "pitzer-college",
     "schoolName": "Pitzer College",
-    "cdsYear": "2024-25",
-    "meritShare": 0.016129,
-    "avgMeritGrant": 7000.0,
-    "meritPerFirstYear": 112.9,
+    "cdsYear": "2025-26",
+    "meritShare": 0.007042,
+    "avgMeritGrant": 5000.0,
+    "meritPerFirstYear": 35.21,
     "earnings10yrMedian": 69512,
     "medianDebtCompleters": 16750,
     "medianDebtMonthlyPayment": 177.58,
@@ -8232,16 +9047,16 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 191881805,
     "undergraduateEnrollment": 1227,
     "burden": 0.030656,
-    "gap": -1821.65,
+    "gap": -1885.58,
     "endowmentPerStudent": 156382.89
   },
   {
     "schoolId": "point-park-university",
     "schoolName": "Point Park University",
     "cdsYear": "2024-25",
-    "meritShare": 0.113924,
-    "avgMeritGrant": 21719.0,
-    "meritPerFirstYear": 2474.32,
+    "meritShare": 0.20777,
+    "avgMeritGrant": 22315.0,
+    "meritPerFirstYear": 4636.39,
     "earnings10yrMedian": 45856,
     "medianDebtCompleters": 27000,
     "medianDebtMonthlyPayment": 286.24,
@@ -8249,7 +9064,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 64289492,
     "undergraduateEnrollment": 2331,
     "burden": 0.074906,
-    "gap": 2785.74,
+    "gap": 2743.57,
     "endowmentPerStudent": 27580.22
   },
   {
@@ -8266,7 +9081,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 290371269,
     "undergraduateEnrollment": 3910,
     "burden": 0.060921,
-    "gap": 1806.21,
+    "gap": 1756.28,
     "endowmentPerStudent": 74263.75
   },
   {
@@ -8283,7 +9098,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 18115236,
     "undergraduateEnrollment": 1010,
     "burden": 0.060618,
-    "gap": 1645.67,
+    "gap": 1599.34,
     "endowmentPerStudent": 17935.88
   },
   {
@@ -8300,8 +9115,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 74282583,
     "undergraduateEnrollment": 6038,
     "burden": 0.056817,
-    "gap": 1354.33,
+    "gap": 1304.91,
     "endowmentPerStudent": 12302.51
+  },
+  {
+    "schoolId": "rhode-island-college",
+    "schoolName": "Rhode Island College",
+    "cdsYear": "2025-26",
+    "meritShare": 0.044855,
+    "avgMeritGrant": 2495.0,
+    "meritPerFirstYear": 111.91,
+    "earnings10yrMedian": 56318,
+    "medianDebtCompleters": 20500,
+    "medianDebtMonthlyPayment": 217.33,
+    "avgNetPrice": 9478,
+    "endowmentEnd": 47463260,
+    "undergraduateEnrollment": 5049,
+    "burden": 0.046308,
+    "gap": 204.5,
+    "endowmentPerStudent": 9400.53
   },
   {
     "schoolId": "rhodes-college",
@@ -8317,7 +9149,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 431583452,
     "undergraduateEnrollment": 1836,
     "burden": 0.041536,
-    "gap": -321.71,
+    "gap": -383.01,
     "endowmentPerStudent": 235067.24
   },
   {
@@ -8334,8 +9166,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 7931811000,
     "undergraduateEnrollment": 4776,
     "burden": 0.015598,
-    "gap": -5005.89,
+    "gap": -5088.4,
     "endowmentPerStudent": 1660764.45
+  },
+  {
+    "schoolId": "rochester-institute-of-technology",
+    "schoolName": "Rochester Institute of Technology",
+    "cdsYear": "2025-26",
+    "meritShare": 0.255924,
+    "avgMeritGrant": 24975.0,
+    "meritPerFirstYear": 6391.71,
+    "earnings10yrMedian": 76571,
+    "medianDebtCompleters": 26778,
+    "medianDebtMonthlyPayment": 283.89,
+    "avgNetPrice": 34906,
+    "endowmentEnd": 1384518000,
+    "undergraduateEnrollment": 13215,
+    "burden": 0.04449,
+    "gap": 4.59,
+    "endowmentPerStudent": 104768.67
   },
   {
     "schoolId": "rocky-mountain-college",
@@ -8351,7 +9200,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 44324445,
     "undergraduateEnrollment": 840,
     "burden": 0.067454,
-    "gap": 2260.85,
+    "gap": 2215.75,
     "endowmentPerStudent": 52767.2
   },
   {
@@ -8368,7 +9217,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 19710242,
     "undergraduateEnrollment": 2657,
     "burden": 0.060417,
-    "gap": 1393.29,
+    "gap": 1353.59,
     "endowmentPerStudent": 7418.23
   },
   {
@@ -8385,7 +9234,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 109975868,
     "undergraduateEnrollment": 5989,
     "burden": 0.061216,
-    "gap": 1758.53,
+    "gap": 1710.75,
     "endowmentPerStudent": 18362.98
   },
   {
@@ -8402,7 +9251,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 247436298,
     "undergraduateEnrollment": 1916,
     "burden": 0.053426,
-    "gap": 1103.59,
+    "gap": 1048.84,
     "endowmentPerStudent": 129142.12
   },
   {
@@ -8419,16 +9268,16 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 95450950,
     "undergraduateEnrollment": 1092,
     "burden": 0.055858,
-    "gap": 1429.76,
+    "gap": 1373.37,
     "endowmentPerStudent": 87409.29
   },
   {
     "schoolId": "salisbury-university",
     "schoolName": "Salisbury University",
-    "cdsYear": "2024-25",
-    "meritShare": 0.318049,
-    "avgMeritGrant": 4211.0,
-    "meritPerFirstYear": 1339.31,
+    "cdsYear": "2025-26",
+    "meritShare": 0.449683,
+    "avgMeritGrant": 3944.0,
+    "meritPerFirstYear": 1773.55,
     "earnings10yrMedian": 61515,
     "medianDebtCompleters": 21000,
     "medianDebtMonthlyPayment": 222.63,
@@ -8436,8 +9285,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 84407176,
     "undergraduateEnrollment": 6057,
     "burden": 0.043429,
-    "gap": -68.01,
+    "gap": -124.58,
     "endowmentPerStudent": 13935.48
+  },
+  {
+    "schoolId": "sam-houston-state-university",
+    "schoolName": "Sam Houston State University",
+    "cdsYear": "2024-25",
+    "meritShare": 0.063946,
+    "avgMeritGrant": 3781.0,
+    "meritPerFirstYear": 241.78,
+    "earnings10yrMedian": 54211,
+    "medianDebtCompleters": 21983,
+    "medianDebtMonthlyPayment": 233.06,
+    "avgNetPrice": 16404,
+    "endowmentEnd": 190847399,
+    "undergraduateEnrollment": 17743,
+    "burden": 0.05159,
+    "gap": 759.5,
+    "endowmentPerStudent": 10756.21
   },
   {
     "schoolId": "samford-university",
@@ -8453,7 +9319,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 469998443,
     "undergraduateEnrollment": 4206,
     "burden": 0.042429,
-    "gap": -179.63,
+    "gap": -233.4,
     "endowmentPerStudent": 111744.76
   },
   {
@@ -8470,7 +9336,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 207715718,
     "undergraduateEnrollment": 27601,
     "burden": 0.024159,
-    "gap": -3078.62,
+    "gap": -3151.27,
     "endowmentPerStudent": 7525.66
   },
   {
@@ -8487,8 +9353,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 503038388,
     "undergraduateEnrollment": 1113,
     "burden": 0.022149,
-    "gap": -3328.26,
+    "gap": -3399.57,
     "endowmentPerStudent": 451966.21
+  },
+  {
+    "schoolId": "siena-college",
+    "schoolName": "Siena College",
+    "cdsYear": "2025-26",
+    "meritShare": 0.278533,
+    "avgMeritGrant": 23618.0,
+    "meritPerFirstYear": 6578.38,
+    "earnings10yrMedian": 76079,
+    "medianDebtCompleters": 26561,
+    "medianDebtMonthlyPayment": 281.59,
+    "avgNetPrice": 33733,
+    "endowmentEnd": 189904049,
+    "undergraduateEnrollment": 3409,
+    "burden": 0.044415,
+    "gap": -6.67,
+    "endowmentPerStudent": 55706.67
   },
   {
     "schoolId": "skidmore-college",
@@ -8504,7 +9387,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 488201000,
     "undergraduateEnrollment": 2694,
     "burden": 0.035765,
-    "gap": -1121.41,
+    "gap": -1185.2,
     "endowmentPerStudent": 181217.89
   },
   {
@@ -8521,7 +9404,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 120375603,
     "undergraduateEnrollment": 6373,
     "burden": 0.062123,
-    "gap": 1568.73,
+    "gap": 1528.24,
     "endowmentPerStudent": 18888.37
   },
   {
@@ -8538,7 +9421,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 40457103,
     "undergraduateEnrollment": 6295,
     "burden": 0.051427,
-    "gap": 804.16,
+    "gap": 753.54,
     "endowmentPerStudent": 6426.86
   },
   {
@@ -8555,8 +9438,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 31160986,
     "undergraduateEnrollment": 1010,
     "burden": 0.064862,
-    "gap": 2121.6,
+    "gap": 2074.03,
     "endowmentPerStudent": 30852.46
+  },
+  {
+    "schoolId": "springfield-college",
+    "schoolName": "Springfield College",
+    "cdsYear": "2025-26",
+    "meritShare": 0.237996,
+    "avgMeritGrant": 27267.0,
+    "meritPerFirstYear": 6489.43,
+    "earnings10yrMedian": 48036,
+    "medianDebtCompleters": 26250,
+    "medianDebtMonthlyPayment": 278.29,
+    "avgNetPrice": 30587,
+    "endowmentEnd": 103272771,
+    "undergraduateEnrollment": 1751,
+    "burden": 0.06952,
+    "gap": 2365.62,
+    "endowmentPerStudent": 58979.31
   },
   {
     "schoolId": "st-john-fisher-university",
@@ -8572,7 +9472,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 151031721,
     "undergraduateEnrollment": 2565,
     "burden": 0.044184,
-    "gap": 25.31,
+    "gap": -36.26,
     "endowmentPerStudent": 58881.76
   },
   {
@@ -8589,16 +9489,16 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 45029041,
     "undergraduateEnrollment": 1603,
     "burden": 0.044445,
-    "gap": 53.45,
+    "gap": -1.83,
     "endowmentPerStudent": 28090.48
   },
   {
     "schoolId": "stephen-f-austin-state-university",
     "schoolName": "Stephen F Austin State University",
-    "cdsYear": "2024-25",
-    "meritShare": 0.15727,
-    "avgMeritGrant": 3205.0,
-    "meritPerFirstYear": 504.05,
+    "cdsYear": "2025-26",
+    "meritShare": 0.141998,
+    "avgMeritGrant": 3718.0,
+    "meritPerFirstYear": 527.95,
     "earnings10yrMedian": 49634,
     "medianDebtCompleters": 23409,
     "medianDebtMonthlyPayment": 248.17,
@@ -8606,7 +9506,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 135381137,
     "undergraduateEnrollment": 8728,
     "burden": 0.06,
-    "gap": 1561.38,
+    "gap": 1515.73,
     "endowmentPerStudent": 15511.13
   },
   {
@@ -8614,8 +9514,8 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "schoolName": "Stony Brook University",
     "cdsYear": "2025-26",
     "meritShare": 0.376238,
-    "avgMeritGrant": 4040.0,
-    "meritPerFirstYear": 1520.0,
+    "avgMeritGrant": 3671.95,
+    "meritPerFirstYear": 1381.52,
     "earnings10yrMedian": 74502,
     "medianDebtCompleters": 18228,
     "medianDebtMonthlyPayment": 193.25,
@@ -8623,25 +9523,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 786159357,
     "undergraduateEnrollment": 18101,
     "burden": 0.031127,
-    "gap": -1883.5,
+    "gap": -1952.02,
     "endowmentPerStudent": 43431.82
   },
   {
-    "schoolId": "suny-college-at-geneseo",
-    "schoolName": "SUNY College at Geneseo",
-    "cdsYear": "2024-25",
-    "meritShare": 0.055271,
-    "avgMeritGrant": 3976.0,
-    "meritPerFirstYear": 219.76,
-    "earnings10yrMedian": 67316,
-    "medianDebtCompleters": 19500,
-    "medianDebtMonthlyPayment": 206.73,
-    "avgNetPrice": 18211,
-    "endowmentEnd": 41663666,
-    "undergraduateEnrollment": 3869,
-    "burden": 0.036852,
-    "gap": -944.45,
-    "endowmentPerStudent": 10768.59
+    "schoolId": "suny-college-at-potsdam",
+    "schoolName": "SUNY College at Potsdam",
+    "cdsYear": "2025-26",
+    "meritShare": 0.268908,
+    "avgMeritGrant": 4216.0,
+    "meritPerFirstYear": 1133.71,
+    "earnings10yrMedian": 47866,
+    "medianDebtCompleters": 24250,
+    "medianDebtMonthlyPayment": 257.09,
+    "avgNetPrice": 13624,
+    "endowmentEnd": 53841887,
+    "undergraduateEnrollment": 1823,
+    "burden": 0.064452,
+    "gap": 1880.52,
+    "endowmentPerStudent": 29534.77
   },
   {
     "schoolId": "suny-college-of-environmental-science-and-forestry",
@@ -8657,8 +9557,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 47820260,
     "undergraduateEnrollment": 1839,
     "burden": 0.025096,
-    "gap": -2070.57,
+    "gap": -2121.85,
     "endowmentPerStudent": 26003.4
+  },
+  {
+    "schoolId": "susquehanna-university",
+    "schoolName": "Susquehanna University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.190654,
+    "avgMeritGrant": 42707.0,
+    "meritPerFirstYear": 8142.27,
+    "earnings10yrMedian": 61723,
+    "medianDebtCompleters": 27000,
+    "medianDebtMonthlyPayment": 286.24,
+    "avgNetPrice": 28819,
+    "endowmentEnd": 225341330,
+    "undergraduateEnrollment": 2163,
+    "burden": 0.05565,
+    "gap": 1357.27,
+    "endowmentPerStudent": 104180.0
   },
   {
     "schoolId": "texas-a-and-m-university-commerce",
@@ -8674,7 +9591,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 38742427,
     "undergraduateEnrollment": 9912,
     "burden": 0.051852,
-    "gap": 776.89,
+    "gap": 730.64,
     "endowmentPerStudent": 3908.64
   },
   {
@@ -8691,7 +9608,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 139062959,
     "undergraduateEnrollment": 8034,
     "burden": 0.056417,
-    "gap": 1266.37,
+    "gap": 1218.67,
     "endowmentPerStudent": 17309.31
   },
   {
@@ -8708,7 +9625,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 19114830674,
     "undergraduateEnrollment": 59615,
     "burden": 0.031416,
-    "gap": -1781.76,
+    "gap": -1848.06,
     "endowmentPerStudent": 320637.94
   },
   {
@@ -8725,16 +9642,16 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 2615547000,
     "undergraduateEnrollment": 11026,
     "burden": 0.039975,
-    "gap": -540.06,
+    "gap": -602.98,
     "endowmentPerStudent": 237216.31
   },
   {
     "schoolId": "texas-state-university",
     "schoolName": "Texas State University",
-    "cdsYear": "2024-25",
-    "meritShare": 0.178961,
-    "avgMeritGrant": 6845.0,
-    "meritPerFirstYear": 1224.99,
+    "cdsYear": "2025-26",
+    "meritShare": 0.177508,
+    "avgMeritGrant": 6550.0,
+    "meritPerFirstYear": 1162.67,
     "earnings10yrMedian": 56906,
     "medianDebtCompleters": 21000,
     "medianDebtMonthlyPayment": 222.63,
@@ -8742,7 +9659,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 411758097,
     "undergraduateEnrollment": 36177,
     "burden": 0.046947,
-    "gap": 330.44,
+    "gap": 278.11,
     "endowmentPerStudent": 11381.76
   },
   {
@@ -8759,16 +9676,16 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 133171935,
     "undergraduateEnrollment": 8767,
     "burden": 0.043239,
-    "gap": -83.72,
+    "gap": -135.72,
     "endowmentPerStudent": 15190.14
   },
   {
     "schoolId": "the-college-of-new-jersey",
     "schoolName": "The College of New Jersey",
     "cdsYear": "2024-25",
-    "meritShare": 0.043668,
+    "meritShare": 0.20287,
     "avgMeritGrant": 4884.0,
-    "meritPerFirstYear": 213.27,
+    "meritPerFirstYear": 990.82,
     "earnings10yrMedian": 73323,
     "medianDebtCompleters": 23250,
     "medianDebtMonthlyPayment": 246.49,
@@ -8776,7 +9693,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 69014000,
     "undergraduateEnrollment": 7105,
     "burden": 0.04034,
-    "gap": -526.14,
+    "gap": -593.58,
     "endowmentPerStudent": 9713.44
   },
   {
@@ -8793,7 +9710,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 437822692,
     "undergraduateEnrollment": 1730,
     "burden": 0.056538,
-    "gap": 1470.08,
+    "gap": 1415.24,
     "endowmentPerStudent": 253076.7
   },
   {
@@ -8810,7 +9727,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1565891763,
     "undergraduateEnrollment": 33227,
     "burden": 0.048873,
-    "gap": 567.97,
+    "gap": 513.5,
     "endowmentPerStudent": 47127.09
   },
   {
@@ -8827,7 +9744,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 215568292,
     "undergraduateEnrollment": 10074,
     "burden": 0.048499,
-    "gap": 453.01,
+    "gap": 405.97,
     "endowmentPerStudent": 21398.48
   },
   {
@@ -8844,7 +9761,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1187949666,
     "undergraduateEnrollment": 30418,
     "burden": 0.043286,
-    "gap": -83.55,
+    "gap": -138.96,
     "endowmentPerStudent": 39054.17
   },
   {
@@ -8861,25 +9778,8 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 858859362,
     "undergraduateEnrollment": 21751,
     "burden": 0.033564,
-    "gap": -1398.13,
+    "gap": -1460.88,
     "endowmentPerStudent": 39485.97
-  },
-  {
-    "schoolId": "the-university-of-texas-at-el-paso",
-    "schoolName": "The University of Texas at El Paso",
-    "cdsYear": "2024-25",
-    "meritShare": 0.027926,
-    "avgMeritGrant": 3242.0,
-    "meritPerFirstYear": 90.54,
-    "earnings10yrMedian": 50923,
-    "medianDebtCompleters": 18000,
-    "medianDebtMonthlyPayment": 190.83,
-    "avgNetPrice": 9403,
-    "endowmentEnd": 386783155,
-    "undergraduateEnrollment": 21005,
-    "burden": 0.044969,
-    "gap": 97.77,
-    "endowmentPerStudent": 18413.86
   },
   {
     "schoolId": "the-university-of-texas-at-tyler",
@@ -8895,8 +9795,42 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 212481451,
     "undergraduateEnrollment": 7440,
     "burden": 0.038213,
-    "gap": -647.93,
+    "gap": -700.4,
     "endowmentPerStudent": 28559.33
+  },
+  {
+    "schoolId": "the-university-of-the-south",
+    "schoolName": "The University of the South",
+    "cdsYear": "2025-26",
+    "meritShare": 0.476987,
+    "avgMeritGrant": 28155.99,
+    "meritPerFirstYear": 13430.05,
+    "earnings10yrMedian": 64911,
+    "medianDebtCompleters": 22855,
+    "medianDebtMonthlyPayment": 242.3,
+    "avgNetPrice": 27872,
+    "endowmentEnd": 499943537,
+    "undergraduateEnrollment": 1607,
+    "burden": 0.044794,
+    "gap": 42.56,
+    "endowmentPerStudent": 311103.63
+  },
+  {
+    "schoolId": "thomas-jefferson-university",
+    "schoolName": "Thomas Jefferson University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.0,
+    "avgMeritGrant": 0.0,
+    "meritPerFirstYear": 0.0,
+    "earnings10yrMedian": 77449,
+    "medianDebtCompleters": 14744,
+    "medianDebtMonthlyPayment": 156.31,
+    "avgNetPrice": 28928,
+    "endowmentEnd": 2912558000,
+    "undergraduateEnrollment": 3755,
+    "burden": 0.024219,
+    "gap": -3080.63,
+    "endowmentPerStudent": 775647.94
   },
   {
     "schoolId": "troy-university",
@@ -8912,12 +9846,29 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 150334381,
     "undergraduateEnrollment": 9805,
     "burden": 0.075614,
-    "gap": 2613.77,
+    "gap": 2575.09,
     "endowmentPerStudent": 15332.42
   },
   {
+    "schoolId": "tufts",
+    "schoolName": "Tufts University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.029512,
+    "avgMeritGrant": 23157.0,
+    "meritPerFirstYear": 683.41,
+    "earnings10yrMedian": 83214,
+    "medianDebtCompleters": 16250,
+    "medianDebtMonthlyPayment": 172.28,
+    "avgNetPrice": 39998,
+    "endowmentEnd": 2533755000,
+    "undergraduateEnrollment": 7061,
+    "burden": 0.024844,
+    "gap": -3207.65,
+    "endowmentPerStudent": 358837.98
+  },
+  {
     "schoolId": "tulane-university",
-    "schoolName": "Tulane University of Louisiana",
+    "schoolName": "Tulane University",
     "cdsYear": "2025-26",
     "meritShare": 0.278794,
     "avgMeritGrant": 19636.0,
@@ -8929,7 +9880,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 2253994000,
     "undergraduateEnrollment": 7767,
     "burden": 0.041221,
-    "gap": -344.54,
+    "gap": -402.73,
     "endowmentPerStudent": 290201.36
   },
   {
@@ -8946,7 +9897,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 567467656,
     "undergraduateEnrollment": 2046,
     "burden": 0.036379,
-    "gap": -1325.57,
+    "gap": -1407.06,
     "endowmentPerStudent": 277354.67
   },
   {
@@ -8963,7 +9914,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 334053266,
     "undergraduateEnrollment": 9052,
     "burden": 0.063474,
-    "gap": 1784.01,
+    "gap": 1741.16,
     "endowmentPerStudent": 36903.81
   },
   {
@@ -8980,16 +9931,50 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 858989211,
     "undergraduateEnrollment": 11635,
     "burden": 0.052055,
-    "gap": 863.52,
+    "gap": 813.4,
     "endowmentPerStudent": 73828.04
+  },
+  {
+    "schoolId": "university-of-arizona",
+    "schoolName": "University of Arizona",
+    "cdsYear": "2025-26",
+    "meritShare": 0.432689,
+    "avgMeritGrant": 10990.0,
+    "meritPerFirstYear": 4755.25,
+    "earnings10yrMedian": 59979,
+    "medianDebtCompleters": 19620,
+    "medianDebtMonthlyPayment": 208.0,
+    "avgNetPrice": 16674,
+    "endowmentEnd": 1387344636,
+    "undergraduateEnrollment": 42537,
+    "burden": 0.041615,
+    "gap": -335.38,
+    "endowmentPerStudent": 32615.01
+  },
+  {
+    "schoolId": "university-of-arkansas",
+    "schoolName": "University of Arkansas",
+    "cdsYear": "2025-26",
+    "meritShare": 0.209255,
+    "avgMeritGrant": 4374.0,
+    "meritPerFirstYear": 915.28,
+    "earnings10yrMedian": 58191,
+    "medianDebtCompleters": 21500,
+    "medianDebtMonthlyPayment": 227.94,
+    "avgNetPrice": 18209,
+    "endowmentEnd": 1665643378,
+    "undergraduateEnrollment": 28677,
+    "burden": 0.047005,
+    "gap": 291.04,
+    "endowmentPerStudent": 58082.9
   },
   {
     "schoolId": "uc-davis",
     "schoolName": "University of California, Davis",
     "cdsYear": "2024-25",
-    "meritShare": 0.007056,
+    "meritShare": 0.03356,
     "avgMeritGrant": 8659.0,
-    "meritPerFirstYear": 61.1,
+    "meritPerFirstYear": 290.6,
     "earnings10yrMedian": 80838,
     "medianDebtCompleters": 13000,
     "medianDebtMonthlyPayment": 137.82,
@@ -8997,7 +9982,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 773217000,
     "undergraduateEnrollment": 32253,
     "burden": 0.020459,
-    "gap": -3738.42,
+    "gap": -3812.77,
     "endowmentPerStudent": 23973.49
   },
   {
@@ -9014,7 +9999,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 899356000,
     "undergraduateEnrollment": 30197,
     "burden": 0.023636,
-    "gap": -3229.65,
+    "gap": -3303.9,
     "endowmentPerStudent": 29782.96
   },
   {
@@ -9031,7 +10016,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1557815000,
     "undergraduateEnrollment": 34948,
     "burden": 0.023215,
-    "gap": -3468.02,
+    "gap": -3546.14,
     "endowmentPerStudent": 44575.23
   },
   {
@@ -9048,7 +10033,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 444044000,
     "undergraduateEnrollment": 23113,
     "burden": 0.023763,
-    "gap": -2978.01,
+    "gap": -3046.91,
     "endowmentPerStudent": 19211.87
   },
   {
@@ -9065,7 +10050,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 277082000,
     "undergraduateEnrollment": 22593,
     "burden": 0.032886,
-    "gap": -1477.46,
+    "gap": -1539.72,
     "endowmentPerStudent": 12264.06
   },
   {
@@ -9082,16 +10067,16 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 201916665,
     "undergraduateEnrollment": 59146,
     "burden": 0.039687,
-    "gap": -493.26,
+    "gap": -546.89,
     "endowmentPerStudent": 3413.87
   },
   {
     "schoolId": "uchicago",
     "schoolName": "University of Chicago",
-    "cdsYear": "2024-25",
-    "meritShare": 0.037659,
-    "avgMeritGrant": 16338.0,
-    "meritPerFirstYear": 615.28,
+    "cdsYear": "2025-26",
+    "meritShare": 0.031915,
+    "avgMeritGrant": 16333.0,
+    "meritPerFirstYear": 521.27,
     "earnings10yrMedian": 91885,
     "medianDebtCompleters": 15000,
     "medianDebtMonthlyPayment": 159.02,
@@ -9099,7 +10084,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 9124340657,
     "undergraduateEnrollment": 7569,
     "burden": 0.020768,
-    "gap": -4193.59,
+    "gap": -4278.09,
     "endowmentPerStudent": 1205488.26
   },
   {
@@ -9116,25 +10101,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 600849076,
     "undergraduateEnrollment": 19835,
     "burden": 0.036965,
-    "gap": -1021.83,
+    "gap": -1089.88,
     "endowmentPerStudent": 30292.37
   },
   {
-    "schoolId": "uf",
-    "schoolName": "University of Florida",
+    "schoolId": "university-of-detroit-mercy",
+    "schoolName": "University of Detroit Mercy",
     "cdsYear": "2025-26",
-    "meritShare": 0.019265,
-    "avgMeritGrant": 4033.0,
-    "meritPerFirstYear": 77.7,
-    "earnings10yrMedian": 71588,
-    "medianDebtCompleters": 15000,
-    "medianDebtMonthlyPayment": 159.02,
-    "avgNetPrice": 6541,
-    "endowmentEnd": 2448293000,
-    "undergraduateEnrollment": 35629,
-    "burden": 0.026656,
-    "gap": -2438.88,
-    "endowmentPerStudent": 68716.3
+    "meritShare": 0.288136,
+    "avgMeritGrant": 15540.0,
+    "meritPerFirstYear": 4477.63,
+    "earnings10yrMedian": 71030,
+    "medianDebtCompleters": 23250,
+    "medianDebtMonthlyPayment": 246.49,
+    "avgNetPrice": 15232,
+    "endowmentEnd": 108570110,
+    "undergraduateEnrollment": 2438,
+    "burden": 0.041643,
+    "gap": -393.24,
+    "endowmentPerStudent": 44532.45
   },
   {
     "schoolId": "university-of-houston",
@@ -9150,7 +10135,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1313224792,
     "undergraduateEnrollment": 38380,
     "burden": 0.037108,
-    "gap": -843.82,
+    "gap": -901.18,
     "endowmentPerStudent": 34216.38
   },
   {
@@ -9167,25 +10152,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 64433695,
     "undergraduateEnrollment": 12555,
     "burden": 0.044544,
-    "gap": 58.06,
+    "gap": 8.81,
     "endowmentPerStudent": 5132.11
   },
   {
-    "schoolId": "university-of-illinois-urbana-champaign",
-    "schoolName": "University of Illinois Urbana-Champaign",
-    "cdsYear": "2024-25",
-    "meritShare": 0.001971,
-    "avgMeritGrant": 3644.0,
-    "meritPerFirstYear": 7.18,
-    "earnings10yrMedian": 81054,
-    "medianDebtCompleters": 19500,
-    "medianDebtMonthlyPayment": 206.73,
-    "avgNetPrice": 14355,
-    "endowmentEnd": 2606081833,
-    "undergraduateEnrollment": 36258,
-    "burden": 0.030606,
-    "gap": -2132.1,
-    "endowmentPerStudent": 71876.05
+    "schoolId": "university-of-kentucky",
+    "schoolName": "University of Kentucky",
+    "cdsYear": "2025-26",
+    "meritShare": 0.378378,
+    "avgMeritGrant": 8450.0,
+    "meritPerFirstYear": 3197.3,
+    "earnings10yrMedian": 59025,
+    "medianDebtCompleters": 22500,
+    "medianDebtMonthlyPayment": 238.54,
+    "avgNetPrice": 18851,
+    "endowmentEnd": 2038771493,
+    "undergraduateEnrollment": 24763,
+    "burden": 0.048496,
+    "gap": 468.14,
+    "endowmentPerStudent": 82331.36
   },
   {
     "schoolId": "university-of-maine",
@@ -9201,7 +10186,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 479309000,
     "undergraduateEnrollment": 8496,
     "burden": 0.065371,
-    "gap": 2043.99,
+    "gap": 1999.24,
     "endowmentPerStudent": 56415.84
   },
   {
@@ -9218,7 +10203,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1171369937,
     "undergraduateEnrollment": 30760,
     "burden": 0.029172,
-    "gap": -2413.2,
+    "gap": -2489.4,
     "endowmentPerStudent": 38080.95
   },
   {
@@ -9235,7 +10220,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 579704081,
     "undergraduateEnrollment": 23671,
     "burden": 0.040429,
-    "gap": -501.55,
+    "gap": -567.42,
     "endowmentPerStudent": 24490.05
   },
   {
@@ -9252,7 +10237,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 210448000,
     "undergraduateEnrollment": 11434,
     "burden": 0.046484,
-    "gap": 317.69,
+    "gap": 258.02,
     "endowmentPerStudent": 18405.46
   },
   {
@@ -9269,7 +10254,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1589857455,
     "undergraduateEnrollment": 12913,
     "burden": 0.029556,
-    "gap": -2136.98,
+    "gap": -2206.25,
     "endowmentPerStudent": 123120.69
   },
   {
@@ -9286,7 +10271,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 18894762000,
     "undergraduateEnrollment": 34177,
     "burden": 0.029657,
-    "gap": -2356.35,
+    "gap": -2433.28,
     "endowmentPerStudent": 552850.22
   },
   {
@@ -9303,16 +10288,16 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 24639517,
     "undergraduateEnrollment": 1729,
     "burden": 0.044921,
-    "gap": 106.04,
+    "gap": 52.65,
     "endowmentPerStudent": 14250.73
   },
   {
     "schoolId": "university-of-mississippi",
     "schoolName": "University of Mississippi",
     "cdsYear": "2024-25",
-    "meritShare": 0.101661,
+    "meritShare": 0.343425,
     "avgMeritGrant": 10714.0,
-    "meritPerFirstYear": 1089.2,
+    "meritPerFirstYear": 3679.45,
     "earnings10yrMedian": 50994,
     "medianDebtCompleters": 20000,
     "medianDebtMonthlyPayment": 212.03,
@@ -9320,16 +10305,16 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 924527426,
     "undergraduateEnrollment": 21473,
     "burden": 0.049895,
-    "gap": 591.57,
+    "gap": 544.67,
     "endowmentPerStudent": 43055.35
   },
   {
     "schoolId": "university-of-missouri-kansas-city",
     "schoolName": "University of Missouri-Kansas City",
-    "cdsYear": "2024-25",
-    "meritShare": 0.226575,
-    "avgMeritGrant": 6055.0,
-    "meritPerFirstYear": 1371.91,
+    "cdsYear": "2025-26",
+    "meritShare": 0.226217,
+    "avgMeritGrant": 6260.0,
+    "meritPerFirstYear": 1416.12,
     "earnings10yrMedian": 59637,
     "medianDebtCompleters": 18750,
     "medianDebtMonthlyPayment": 198.78,
@@ -9337,7 +10322,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 213276450,
     "undergraduateEnrollment": 6817,
     "burden": 0.039998,
-    "gap": -468.07,
+    "gap": -522.92,
     "endowmentPerStudent": 31285.97
   },
   {
@@ -9354,7 +10339,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 127708077,
     "undergraduateEnrollment": 5024,
     "burden": 0.047973,
-    "gap": 414.95,
+    "gap": 366.17,
     "endowmentPerStudent": 25419.6
   },
   {
@@ -9371,8 +10356,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 418236000,
     "undergraduateEnrollment": 24622,
     "burden": 0.044959,
-    "gap": 104.57,
+    "gap": 53.95,
     "endowmentPerStudent": 16986.27
+  },
+  {
+    "schoolId": "university-of-new-hampshire-main-campus",
+    "schoolName": "University of New Hampshire-Main Campus",
+    "cdsYear": "2025-26",
+    "meritShare": 0.402153,
+    "avgMeritGrant": 7529.0,
+    "meritPerFirstYear": 3027.81,
+    "earnings10yrMedian": 66479,
+    "medianDebtCompleters": 26814,
+    "medianDebtMonthlyPayment": 284.27,
+    "avgNetPrice": 23805,
+    "endowmentEnd": 525445726,
+    "undergraduateEnrollment": 11261,
+    "burden": 0.051313,
+    "gap": 895.28,
+    "endowmentPerStudent": 46660.66
   },
   {
     "schoolId": "unc",
@@ -9388,7 +10390,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 5728314165,
     "undergraduateEnrollment": 20752,
     "burden": 0.024668,
-    "gap": -2741.73,
+    "gap": -2808.14,
     "endowmentPerStudent": 276036.73
   },
   {
@@ -9405,16 +10407,16 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 344668261,
     "undergraduateEnrollment": 24453,
     "burden": 0.047745,
-    "gap": 422.53,
+    "gap": 369.85,
     "endowmentPerStudent": 14095.13
   },
   {
     "schoolId": "university-of-north-carolina-at-pembroke",
     "schoolName": "University of North Carolina at Pembroke",
-    "cdsYear": "2024-25",
-    "meritShare": 0.080158,
-    "avgMeritGrant": 4681.0,
-    "meritPerFirstYear": 375.22,
+    "cdsYear": "2025-26",
+    "meritShare": 0.075,
+    "avgMeritGrant": 1101.0,
+    "meritPerFirstYear": 82.58,
     "earnings10yrMedian": 43407,
     "medianDebtCompleters": 25000,
     "medianDebtMonthlyPayment": 265.04,
@@ -9422,7 +10424,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 35896353,
     "undergraduateEnrollment": 5330,
     "burden": 0.073271,
-    "gap": 2497.5,
+    "gap": 2457.58,
     "endowmentPerStudent": 6734.78
   },
   {
@@ -9439,8 +10441,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 85078881,
     "undergraduateEnrollment": 16146,
     "burden": 0.045042,
-    "gap": 103.41,
+    "gap": 57.3,
     "endowmentPerStudent": 5269.35
+  },
+  {
+    "schoolId": "university-of-north-texas",
+    "schoolName": "University of North Texas",
+    "cdsYear": "2025-26",
+    "meritShare": 0.168502,
+    "avgMeritGrant": 5807.0,
+    "meritPerFirstYear": 978.49,
+    "earnings10yrMedian": 57010,
+    "medianDebtCompleters": 19250,
+    "medianDebtMonthlyPayment": 204.08,
+    "avgNetPrice": 15649,
+    "endowmentEnd": 327779886,
+    "undergraduateEnrollment": 34341,
+    "burden": 0.042957,
+    "gap": -168.42,
+    "endowmentPerStudent": 9544.86
   },
   {
     "schoolId": "university-of-northern-iowa",
@@ -9456,7 +10475,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 224410285,
     "undergraduateEnrollment": 7529,
     "burden": 0.045402,
-    "gap": 152.83,
+    "gap": 102.09,
     "endowmentPerStudent": 29806.12
   },
   {
@@ -9473,25 +10492,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 18245327000,
     "undergraduateEnrollment": 8818,
     "burden": 0.024176,
-    "gap": -3893.21,
+    "gap": -3985.16,
     "endowmentPerStudent": 2069100.36
   },
   {
-    "schoolId": "university-of-oklahoma-norman-campus",
-    "schoolName": "University of Oklahoma-Norman Campus",
+    "schoolId": "university-of-oregon",
+    "schoolName": "University of Oregon",
     "cdsYear": "2025-26",
-    "meritShare": 0.115645,
-    "avgMeritGrant": 3642.0,
-    "meritPerFirstYear": 421.18,
-    "earnings10yrMedian": 63126,
-    "medianDebtCompleters": 20654,
-    "medianDebtMonthlyPayment": 218.97,
-    "avgNetPrice": 15300,
-    "endowmentEnd": 1554332000,
-    "undergraduateEnrollment": 22734,
-    "burden": 0.041625,
-    "gap": -293.58,
-    "endowmentPerStudent": 68370.37
+    "meritShare": 0.291782,
+    "avgMeritGrant": 8854.0,
+    "meritPerFirstYear": 2583.44,
+    "earnings10yrMedian": 61324,
+    "medianDebtCompleters": 20139,
+    "medianDebtMonthlyPayment": 213.51,
+    "avgNetPrice": 22182,
+    "endowmentEnd": 1613595472,
+    "undergraduateEnrollment": 20497,
+    "burden": 0.04178,
+    "gap": -322.95,
+    "endowmentPerStudent": 78723.49
   },
   {
     "schoolId": "upitt",
@@ -9507,16 +10526,16 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 5757792571,
     "undergraduateEnrollment": 20370,
     "burden": 0.046655,
-    "gap": 346.07,
+    "gap": 285.26,
     "endowmentPerStudent": 282660.41
   },
   {
     "schoolId": "university-of-puget-sound",
     "schoolName": "University of Puget Sound",
     "cdsYear": "2024-25",
-    "meritShare": 0.097143,
+    "meritShare": 0.355814,
     "avgMeritGrant": 30447.0,
-    "meritPerFirstYear": 2957.71,
+    "meritPerFirstYear": 10833.47,
     "earnings10yrMedian": 69594,
     "medianDebtCompleters": 25000,
     "medianDebtMonthlyPayment": 265.04,
@@ -9524,7 +10543,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 471468000,
     "undergraduateEnrollment": 1594,
     "burden": 0.0457,
-    "gap": 233.65,
+    "gap": 169.65,
     "endowmentPerStudent": 295776.66
   },
   {
@@ -9541,7 +10560,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 317751177,
     "undergraduateEnrollment": 13381,
     "burden": 0.040587,
-    "gap": -466.62,
+    "gap": -530.75,
     "endowmentPerStudent": 23746.44
   },
   {
@@ -9558,7 +10577,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 3245089000,
     "undergraduateEnrollment": 2980,
     "burden": 0.03507,
-    "gap": -1335.63,
+    "gap": -1405.69,
     "endowmentPerStudent": 1088956.04
   },
   {
@@ -9575,7 +10594,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 2989014000,
     "undergraduateEnrollment": 6331,
     "burden": 0.033799,
-    "gap": -1583.23,
+    "gap": -1655.92,
     "endowmentPerStudent": 472123.52
   },
   {
@@ -9592,7 +10611,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 714021000,
     "undergraduateEnrollment": 5671,
     "burden": 0.03373,
-    "gap": -1744.78,
+    "gap": -1824.35,
     "endowmentPerStudent": 125907.42
   },
   {
@@ -9609,8 +10628,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 319717006,
     "undergraduateEnrollment": 3554,
     "burden": 0.046012,
-    "gap": 296.32,
+    "gap": 227.66,
     "endowmentPerStudent": 89959.77
+  },
+  {
+    "schoolId": "university-of-south-alabama",
+    "schoolName": "University of South Alabama",
+    "cdsYear": "2025-26",
+    "meritShare": 0.293951,
+    "avgMeritGrant": 5755.0,
+    "meritPerFirstYear": 1691.69,
+    "earnings10yrMedian": 49379,
+    "medianDebtCompleters": 24929,
+    "medianDebtMonthlyPayment": 264.29,
+    "avgNetPrice": 17648,
+    "endowmentEnd": 710294000,
+    "undergraduateEnrollment": 8879,
+    "burden": 0.064227,
+    "gap": 1918.11,
+    "endowmentPerStudent": 79997.07
   },
   {
     "schoolId": "university-of-south-dakota",
@@ -9626,7 +10662,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 317638024,
     "undergraduateEnrollment": 5439,
     "burden": 0.0578,
-    "gap": 1408.99,
+    "gap": 1361.23,
     "endowmentPerStudent": 58400.08
   },
   {
@@ -9643,7 +10679,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 8092846000,
     "undergraduateEnrollment": 20443,
     "burden": 0.024757,
-    "gap": -3496.33,
+    "gap": -3581.4,
     "endowmentPerStudent": 395873.7
   },
   {
@@ -9660,7 +10696,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 160211786,
     "undergraduateEnrollment": 5292,
     "burden": 0.05373,
-    "gap": 910.93,
+    "gap": 867.15,
     "endowmentPerStudent": 30274.34
   },
   {
@@ -9677,7 +10713,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 6177255191,
     "undergraduateEnrollment": 42855,
     "burden": 0.034717,
-    "gap": -1369.24,
+    "gap": -1438.32,
     "endowmentPerStudent": 144143.16
   },
   {
@@ -9694,7 +10730,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 187996471,
     "undergraduateEnrollment": 4440,
     "burden": 0.060545,
-    "gap": 1845.42,
+    "gap": 1793.25,
     "endowmentPerStudent": 42341.55
   },
   {
@@ -9711,7 +10747,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 141527346,
     "undergraduateEnrollment": 767,
     "burden": 0.059835,
-    "gap": 1381.82,
+    "gap": 1341.0,
     "endowmentPerStudent": 184520.66
   },
   {
@@ -9728,7 +10764,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 388044243,
     "undergraduateEnrollment": 9770,
     "burden": 0.055907,
-    "gap": 1185.48,
+    "gap": 1138.92,
     "endowmentPerStudent": 39717.94
   },
   {
@@ -9745,7 +10781,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1650635000,
     "undergraduateEnrollment": 27264,
     "burden": 0.035986,
-    "gap": -1056.81,
+    "gap": -1118.58,
     "endowmentPerStudent": 60542.66
   },
   {
@@ -9762,7 +10798,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 896299000,
     "undergraduateEnrollment": 11743,
     "burden": 0.042666,
-    "gap": -162.76,
+    "gap": -220.21,
     "endowmentPerStudent": 76326.24
   },
   {
@@ -9779,16 +10815,16 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 5343267349,
     "undergraduateEnrollment": 31942,
     "burden": 0.023695,
-    "gap": -3129.68,
+    "gap": -3201.84,
     "endowmentPerStudent": 167280.3
   },
   {
     "schoolId": "university-of-washington-bothell-campus",
     "schoolName": "University of Washington-Bothell Campus",
     "cdsYear": "2025-26",
-    "meritShare": 0.08819,
-    "avgMeritGrant": 4399.0,
-    "meritPerFirstYear": 387.95,
+    "meritShare": 0.019571,
+    "avgMeritGrant": 4872.0,
+    "meritPerFirstYear": 95.35,
     "earnings10yrMedian": 78466,
     "medianDebtCompleters": 14615,
     "medianDebtMonthlyPayment": 154.94,
@@ -9796,16 +10832,16 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 111318069,
     "undergraduateEnrollment": 5457,
     "burden": 0.023695,
-    "gap": -3129.68,
+    "gap": -3201.84,
     "endowmentPerStudent": 20399.13
   },
   {
     "schoolId": "university-of-washington-tacoma-campus",
     "schoolName": "University of Washington-Tacoma Campus",
     "cdsYear": "2025-26",
-    "meritShare": 0.08819,
-    "avgMeritGrant": 4399.0,
-    "meritPerFirstYear": 387.95,
+    "meritShare": 0.088106,
+    "avgMeritGrant": 5333.0,
+    "meritPerFirstYear": 469.87,
     "earnings10yrMedian": 78466,
     "medianDebtCompleters": 14615,
     "medianDebtMonthlyPayment": 154.94,
@@ -9813,7 +10849,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 111318069,
     "undergraduateEnrollment": 4185,
     "burden": 0.023695,
-    "gap": -3129.68,
+    "gap": -3201.84,
     "endowmentPerStudent": 26599.3
   },
   {
@@ -9830,7 +10866,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 76742889,
     "undergraduateEnrollment": 8895,
     "burden": 0.045423,
-    "gap": 164.72,
+    "gap": 110.87,
     "endowmentPerStudent": 8627.64
   },
   {
@@ -9847,16 +10883,16 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 63937536,
     "undergraduateEnrollment": 6341,
     "burden": 0.044806,
-    "gap": 84.0,
+    "gap": 35.7,
     "endowmentPerStudent": 10083.19
   },
   {
     "schoolId": "uw-madison",
     "schoolName": "University of Wisconsin-Madison",
     "cdsYear": "2025-26",
-    "meritShare": 0.05572,
-    "avgMeritGrant": 9836.0,
-    "meritPerFirstYear": 548.06,
+    "meritShare": 0.076732,
+    "avgMeritGrant": 7397.0,
+    "meritPerFirstYear": 567.59,
     "earnings10yrMedian": 73792,
     "medianDebtCompleters": 20484,
     "medianDebtMonthlyPayment": 217.16,
@@ -9864,7 +10900,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 6101887051,
     "undergraduateEnrollment": 36902,
     "burden": 0.035314,
-    "gap": -1258.35,
+    "gap": -1326.22,
     "endowmentPerStudent": 165353.83
   },
   {
@@ -9881,8 +10917,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 635292413,
     "undergraduateEnrollment": 20272,
     "burden": 0.033771,
-    "gap": -1085.07,
+    "gap": -1134.75,
     "endowmentPerStudent": 31338.42
+  },
+  {
+    "schoolId": "utah-valley-university",
+    "schoolName": "Utah Valley University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.046175,
+    "avgMeritGrant": 6983.0,
+    "meritPerFirstYear": 322.44,
+    "earnings10yrMedian": 55486,
+    "medianDebtCompleters": 14750,
+    "medianDebtMonthlyPayment": 156.37,
+    "avgNetPrice": 6376,
+    "endowmentEnd": 109935241,
+    "undergraduateEnrollment": 28453,
+    "burden": 0.033818,
+    "gap": -1160.36,
+    "endowmentPerStudent": 3863.75
   },
   {
     "schoolId": "valparaiso-university",
@@ -9898,7 +10951,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 311933000,
     "undergraduateEnrollment": 2083,
     "burden": 0.054241,
-    "gap": 1272.72,
+    "gap": 1214.61,
     "endowmentPerStudent": 149751.8
   },
   {
@@ -9915,7 +10968,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 10247727490,
     "undergraduateEnrollment": 7208,
     "burden": 0.019451,
-    "gap": -4415.85,
+    "gap": -4500.06,
     "endowmentPerStudent": 1421715.8
   },
   {
@@ -9932,16 +10985,16 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 2885706877,
     "undergraduateEnrollment": 20753,
     "burden": 0.047056,
-    "gap": 350.0,
+    "gap": 296.55,
     "endowmentPerStudent": 139050.11
   },
   {
     "schoolId": "virginia-tech",
-    "schoolName": "Virginia Polytechnic Institute and State University",
-    "cdsYear": "2024-25",
-    "meritShare": 0.111699,
-    "avgMeritGrant": 3288.33,
-    "meritPerFirstYear": 367.3,
+    "schoolName": "Virginia Tech",
+    "cdsYear": "2025-26",
+    "meritShare": 0.154237,
+    "avgMeritGrant": 3169.33,
+    "meritPerFirstYear": 488.83,
     "earnings10yrMedian": 81698,
     "medianDebtCompleters": 21500,
     "medianDebtMonthlyPayment": 227.94,
@@ -9949,7 +11002,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1939700000,
     "undergraduateEnrollment": 30923,
     "burden": 0.03348,
-    "gap": -1687.55,
+    "gap": -1762.69,
     "endowmentPerStudent": 62726.77
   },
   {
@@ -9966,7 +11019,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 428982792,
     "undergraduateEnrollment": 866,
     "burden": 0.049103,
-    "gap": 702.64,
+    "gap": 638.3,
     "endowmentPerStudent": 495361.19
   },
   {
@@ -9983,8 +11036,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 2043225000,
     "undergraduateEnrollment": 1881,
     "burden": 0.026166,
-    "gap": -3321.3,
+    "gap": -3408.49,
     "endowmentPerStudent": 1086244.02
+  },
+  {
+    "schoolId": "washington-state-university",
+    "schoolName": "Washington State University",
+    "cdsYear": "2025-26",
+    "meritShare": 0.307909,
+    "avgMeritGrant": 5300.0,
+    "meritPerFirstYear": 1631.92,
+    "earnings10yrMedian": 68905,
+    "medianDebtCompleters": 19500,
+    "medianDebtMonthlyPayment": 206.73,
+    "avgNetPrice": 14971,
+    "endowmentEnd": 1383078164,
+    "undergraduateEnrollment": 21099,
+    "burden": 0.036003,
+    "gap": -1145.19,
+    "endowmentPerStudent": 65551.83
   },
   {
     "schoolId": "washington-university-in-st-louis",
@@ -10000,7 +11070,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 12006026000,
     "undergraduateEnrollment": 7857,
     "burden": 0.025833,
-    "gap": -3075.29,
+    "gap": -3154.54,
     "endowmentPerStudent": 1528067.46
   },
   {
@@ -10017,7 +11087,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 602398000,
     "undergraduateEnrollment": 15587,
     "burden": 0.050539,
-    "gap": 688.2,
+    "gap": 639.0,
     "endowmentPerStudent": 38647.46
   },
   {
@@ -10034,8 +11104,25 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 2991224000,
     "undergraduateEnrollment": 2300,
     "burden": 0.015002,
-    "gap": -4830.88,
+    "gap": -4908.86,
     "endowmentPerStudent": 1300532.17
+  },
+  {
+    "schoolId": "wentworth-institute-of-technology",
+    "schoolName": "Wentworth Institute of Technology",
+    "cdsYear": "2025-26",
+    "meritShare": 0.23775,
+    "avgMeritGrant": 24468.0,
+    "meritPerFirstYear": 5817.26,
+    "earnings10yrMedian": 82721,
+    "medianDebtCompleters": 25028,
+    "medianDebtMonthlyPayment": 265.34,
+    "avgNetPrice": 34170,
+    "endowmentEnd": 160162385,
+    "undergraduateEnrollment": 3747,
+    "burden": 0.038492,
+    "gap": -970.16,
+    "endowmentPerStudent": 42744.16
   },
   {
     "schoolId": "wesleyan-university",
@@ -10051,7 +11138,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1583306000,
     "undergraduateEnrollment": 3067,
     "burden": 0.029267,
-    "gap": -2138.24,
+    "gap": -2206.2,
     "endowmentPerStudent": 516239.32
   },
   {
@@ -10068,7 +11155,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 69403013,
     "undergraduateEnrollment": 14164,
     "burden": 0.048805,
-    "gap": 579.34,
+    "gap": 523.01,
     "endowmentPerStudent": 4899.96
   },
   {
@@ -10085,7 +11172,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 137206458,
     "undergraduateEnrollment": 6917,
     "burden": 0.048891,
-    "gap": 488.45,
+    "gap": 441.79,
     "endowmentPerStudent": 19836.12
   },
   {
@@ -10102,7 +11189,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 60241105,
     "undergraduateEnrollment": 2603,
     "burden": 0.044344,
-    "gap": 50.62,
+    "gap": -16.66,
     "endowmentPerStudent": 23142.95
   },
   {
@@ -10119,7 +11206,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 125985155,
     "undergraduateEnrollment": 13544,
     "burden": 0.037615,
-    "gap": -784.03,
+    "gap": -841.57,
     "endowmentPerStudent": 9301.92
   },
   {
@@ -10136,7 +11223,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 72161507,
     "undergraduateEnrollment": 823,
     "burden": 0.04275,
-    "gap": -161.63,
+    "gap": -222.52,
     "endowmentPerStudent": 87681.05
   },
   {
@@ -10153,7 +11240,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 92162206,
     "undergraduateEnrollment": 1302,
     "burden": 0.045662,
-    "gap": 212.56,
+    "gap": 152.98,
     "endowmentPerStudent": 70785.1
   },
   {
@@ -10170,7 +11257,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 335902000,
     "undergraduateEnrollment": 10780,
     "burden": 0.050609,
-    "gap": 670.04,
+    "gap": 622.65,
     "endowmentPerStudent": 31159.74
   },
   {
@@ -10187,7 +11274,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 67211296,
     "undergraduateEnrollment": 1985,
     "burden": 0.052127,
-    "gap": 1014.42,
+    "gap": 956.06,
     "endowmentPerStudent": 33859.59
   },
   {
@@ -10204,33 +11291,16 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 1454415648,
     "undergraduateEnrollment": 7055,
     "burden": 0.032026,
-    "gap": -1728.14,
+    "gap": -1795.73,
     "endowmentPerStudent": 206153.88
-  },
-  {
-    "schoolId": "winona-state-university",
-    "schoolName": "Winona State University",
-    "cdsYear": "2024-25",
-    "meritShare": 0.450199,
-    "avgMeritGrant": 6544.0,
-    "meritPerFirstYear": 2946.1,
-    "earnings10yrMedian": 58532,
-    "medianDebtCompleters": 21500,
-    "medianDebtMonthlyPayment": 227.94,
-    "avgNetPrice": 17503,
-    "endowmentEnd": 62386000,
-    "undergraduateEnrollment": 5144,
-    "burden": 0.046731,
-    "gap": 315.08,
-    "endowmentPerStudent": 12127.92
   },
   {
     "schoolId": "wright-state-university-main-campus",
     "schoolName": "Wright State University-Main Campus",
     "cdsYear": "2024-25",
-    "meritShare": 0.333333,
-    "avgMeritGrant": 2846.0,
-    "meritPerFirstYear": 948.67,
+    "meritShare": 0.351114,
+    "avgMeritGrant": 7293.0,
+    "meritPerFirstYear": 2560.67,
     "earnings10yrMedian": 49500,
     "medianDebtCompleters": 22750,
     "medianDebtMonthlyPayment": 241.19,
@@ -10238,7 +11308,7 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "endowmentEnd": 153809620,
     "undergraduateEnrollment": 6762,
     "burden": 0.05847,
-    "gap": 1408.33,
+    "gap": 1362.8,
     "endowmentPerStudent": 22746.17
   }
 ];

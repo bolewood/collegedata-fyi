@@ -7,6 +7,7 @@ import { TrackedLink } from "@/components/TrackedLink";
 import { formatRecipeShare } from "@/lib/format";
 import {
   formatUsd,
+  rangeExclusionSentence,
   type AlignmentGapMeritRow,
   type AlignmentGapRow,
 } from "@/lib/alignment-gap-recipe-analysis";
@@ -72,16 +73,12 @@ const TRAPPED_EXAMPLES = TRAPPED_EXAMPLE_IDS.map(requireMerit);
 const quincy = requireMerit("quincy-university");
 const hollins = requireEndowment("hollins-university");
 const bennington = requireEndowment("bennington-college");
-const bard = requireEndowment("bard-college");
-const grinnell = requireEndowment("grinnell-college");
 const ex = ALIGNMENT_GAP_MERIT_META.exclusions;
 const medianEndowmentUsd = roundUsd(
   ALIGNMENT_GAP_META.medianEndowmentPerStudent,
   1000,
 );
 const hollinsEndowmentUsd = roundUsd(hollins.endowmentPerStudent, 1000);
-const bardEndowmentUsd = roundUsd(bard.endowmentPerStudent, 100);
-const grinnellEndowmentMillions = (grinnell.endowmentPerStudent / 1_000_000).toFixed(2);
 const benningtonInstructionPct = Math.round(bennington.instructionShare * 100);
 
 const REGIONS = [
@@ -89,7 +86,7 @@ const REGIONS = [
     num: "A",
     head: "Merit aid is larger than the gap",
     count: ALIGNMENT_GAP_MERIT_META.regions.covers,
-    body: `Among the ${ALIGNMENT_GAP_MERIT_META.positiveGap} schools in this view with above-median debt burden, ${ALIGNMENT_GAP_MERIT_META.regions.covers} (61%) report average non-need merit aid per first-year student that is larger than their annual alignment gap. Quincy University is an especially visible example. It reports non-need merit aid for every full-time first-year student, averaging ${formatUsd(quincy.avgMeritGrant)}, compared with an average net price of ${formatUsd(quincy.avgNetPrice)} and an alignment gap of ${formatUsd(quincy.gap)} per year. That does not mean Quincy could simply move ${formatUsd(quincy.gap)} from one budget line to another. It does show that the scale of its existing merit discount is large relative to the debt adjustment represented by the gap.`,
+    body: `Among the ${ALIGNMENT_GAP_MERIT_META.positiveGap} schools in this view with above-median debt burden, ${ALIGNMENT_GAP_MERIT_META.regions.covers} (${Math.round(ALIGNMENT_GAP_MERIT_META.coversShare * 100)}%) report average non-need merit aid per first-year student that is larger than their annual alignment gap. Quincy University is an especially visible example. It reports non-need merit aid for every full-time first-year student, averaging ${formatUsd(quincy.avgMeritGrant)}, compared with an average net price of ${formatUsd(quincy.avgNetPrice)} and an alignment gap of ${formatUsd(quincy.gap)} per year. That does not mean Quincy could simply move ${formatUsd(quincy.gap)} from one budget line to another. It does show that the scale of its existing merit discount is large relative to the debt adjustment represented by the gap.`,
   },
   {
     num: "B",
@@ -227,7 +224,7 @@ export default function AlignmentGapPage() {
           median debt burden in this group of schools.
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          The core finding: <strong>at {ALIGNMENT_GAP_MERIT_META.regions.covers} of {ALIGNMENT_GAP_MERIT_META.positiveGap} colleges (61%) with above-median debt burden, the freshman merit aid budget alone is larger than the entire annual alignment gap.</strong>
+          The core finding: <strong>at {ALIGNMENT_GAP_MERIT_META.regions.covers} of {ALIGNMENT_GAP_MERIT_META.positiveGap} colleges ({Math.round(ALIGNMENT_GAP_MERIT_META.coversShare * 100)}%) with above-median debt burden, the freshman merit aid budget alone is larger than the entire annual alignment gap.</strong>
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
           The gap is not a recommended tuition price or a claim that lowering
@@ -396,53 +393,6 @@ export default function AlignmentGapPage() {
 
       <section style={{ marginTop: 48, maxWidth: 760 }}>
         <h2 className="serif" style={{ fontSize: 28, margin: "0 0 12px", letterSpacing: "-0.015em" }}>
-          An example: Bard and Grinnell
-        </h2>
-        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: 0 }}>
-          Bard and Grinnell illustrate why putting these datasets together can
-          be useful.
-        </p>
-        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          Their published median SAT scores are similar: {bard.satCompositeP50}{" "}
-          for Bard and {grinnell.satCompositeP50} for Grinnell. But the financial
-          picture in the joined data is very different.
-        </p>
-        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          Grinnell&apos;s average net price is {formatUsd(grinnell.avgNetPrice)},
-          compared with {formatUsd(bard.avgNetPrice)}{" "}at Bard. Grinnell&apos;s
-          graduate debt burden is {formatRecipeShare(grinnell.burden, 1)},
-          compared with {formatRecipeShare(bard.burden, 1)} at Bard. And Grinnell
-          reports about ${grinnellEndowmentMillions} million in endowment per
-          undergraduate, compared with about {bardEndowmentUsd} at Bard.
-        </p>
-        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          Those numbers do <strong>not</strong> make Bard and Grinnell equivalent
-          colleges, nor do they prove that the difference in endowment caused
-          the difference in price or debt. Admissions alone make that clear:
-          Grinnell admitted 1,416 of 9,758 applicants in 2024–25, or 14.5%.
-        </p>
-        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          The comparison simply shows what becomes visible when data that
-          normally sits in separate systems is placed side by side. Two
-          colleges can enroll students with similar published test profiles
-          while having very different prices, graduate debt burdens, and
-          institutional resources.
-        </p>
-        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          Neither Bard nor Grinnell appears in the first chart because neither
-          has a usable H2A merit-aid row in this dataset. That is why the
-          second chart uses the broader endowment comparison.
-        </p>
-        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          For a student or family, that is the practical point of the exercise:
-          sticker price, financial aid, debt, earnings, and a college&apos;s
-          financial resources are usually presented separately. Looking at them
-          together gives a more complete picture.
-        </p>
-      </section>
-
-      <section style={{ marginTop: 48, maxWidth: 760 }}>
-        <h2 className="serif" style={{ fontSize: 28, margin: "0 0 12px", letterSpacing: "-0.015em" }}>
           How the alignment gap is calculated
         </h2>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: 0 }}>
@@ -580,8 +530,7 @@ export default function AlignmentGapPage() {
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
           Rows are removed when the merit profile is too incomplete, required
           values are missing, or published values fall outside reasonable
-          ranges. That includes {ex.rangeShare} reported merit-aid shares
-          outside 0–100% and {ex.rangeGrant} average grant above $80,000. A
+          ranges. {rangeExclusionSentence(ex.rangeShare, ex.rangeGrant)} A
           legitimate published value of $0 is kept.
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
@@ -621,7 +570,7 @@ export default function AlignmentGapPage() {
             overflowX: "auto",
           }}
         >
-{`# Panel A — CDS H2A merit × Scorecard (488 rows; under the 1,000-row cap)
+{`# Panel A — CDS H2A merit × Scorecard (${ALIGNMENT_GAP_MERIT_META.exclusions.universe} rows; under the 1,000-row cap)
 curl 'https://api.collegedata.fyi/rest/v1/school_merit_profile?select=school_id,school_name,canonical_year,merit_profile_quality,non_need_aid_share_first_year_ft,avg_non_need_grant_first_year_ft,avg_need_grant_first_year_ft,earnings_10yr_median,median_debt_completers,median_debt_monthly_payment,avg_net_price&limit=1000' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'

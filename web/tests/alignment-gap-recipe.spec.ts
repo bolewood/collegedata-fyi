@@ -97,17 +97,17 @@ test("alignment-gap reproducibility curl pages Panel B past the 1,000-row cap", 
   await expect(recipe).toContainText("limit=5000 and Range: 0-4999 are both capped");
 });
 
-test("alignment-gap endowment panel still names Bard and Grinnell", async ({ page }) => {
+test("alignment-gap endowment panel still names Grinnell and Bennington", async ({ page }) => {
   await page.goto("/recipes/alignment-gap");
   await expect(page.getByText(/compare debt burden with endowment per student/i)).toBeVisible();
 
   const endowmentChart = page.getByTestId("alignment-gap-endowment-chart");
-  await endowmentChart.locator("circle[data-school-id='bard-college']").hover({ force: true });
+  await endowmentChart.locator("circle[data-school-id='grinnell-college']").hover({ force: true });
   const tooltip = page.getByTestId("alignment-gap-tooltip");
-  await expect(tooltip).toContainText("Bard College");
-
-  await page.getByLabel("Find a school in the endowment join").fill("Grinnell College");
   await expect(tooltip).toContainText("Grinnell College");
+
+  await page.getByLabel("Find a school in the endowment join").fill("Bennington College");
+  await expect(tooltip).toContainText("Bennington College");
 });
 
 test("recipes index exposes the alignment-gap recipe as a three-source join", async ({ page }) => {

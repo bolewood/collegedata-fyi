@@ -632,7 +632,7 @@ def build_merit_panel(
                 "Dropped quality limited/missing, missing H2A, share outside [0, 1], average "
                 "grant outside [0, 80000], and rows without Scorecard earnings, debt, net "
                 "price, and endowment. A published $0 grant is kept. Gaps use the "
-                "375-school endowment-join median burden so both panels share one y-axis."
+                "endowment-join median burden so both panels share one y-axis."
             ),
         },
         "schools": schools,
