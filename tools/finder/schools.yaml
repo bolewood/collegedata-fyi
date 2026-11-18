@@ -22713,6 +22713,11 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
+- id: university-of-cincinnati-main-campus
+  name: University of Cincinnati-Main Campus
+  domain: uc.edu
+  ipeds_id: '201885'
+  scrape_policy: unknown
 - id: university-of-colorado-colorado-springs
   name: University of Colorado Colorado Springs
   domain: uccs.edu
@@ -23553,6 +23558,11 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
+- id: university-of-minnesota-twin-cities
+  name: University of Minnesota-Twin Cities
+  domain: umn.edu
+  ipeds_id: '174066'
+  scrape_policy: unknown
 - id: university-of-mississippi
   name: University of Mississippi
   domain: olemiss.edu

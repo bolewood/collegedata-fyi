@@ -1,0 +1,615 @@
+schema_version: 1
+program_id: cincinnatus-scholarship-program
+school_id: university-of-cincinnati-main-campus
+ipeds_id: '201885'
+applicable_campuses: []
+official_name: Cincinnatus Scholarship Program
+aliases:
+- Cincinnatus
+- Cincinnatus Scholarship
+program_family: other
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: cincinnatus-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Pages name no entering class; the deadline is November 1 of the senior year
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: verified
+  last_reviewed_at: '2026-11-18'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-cinci-mn
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-presidential
+    parent_offer_id: null
+    variant_name: Cincinnatus Presidential Scholarship
+    residency: any
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    advertised_totals:
+    - amount:
+        qualifier: exact
+        value: 120000
+        min: null
+        max: null
+        period: null
+      scope_text: School-quoted award value per Presidential Scholarship; the page gives no period for
+        the $120,000
+    - amount:
+        qualifier: approximate
+        value: 30000
+        min: null
+        max: null
+        period: academic_year
+      scope_text: School-quoted estimate of the yearly value of a Presidential Scholarship (est. $30,000
+        per year)
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Incoming first-year students in all academic disciplines. The chart notes that
+        scholarships are limited to students who do not have a bachelor's degree. The page names no citizenship,
+        residency or GPA minimum for consideration.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Up to 8 full-time in-class semesters
+      exclusions: null
+      scope_text: 'School wording: ''est. $30,000 per year covers full tuition, fees, room, board, and
+        a book allowance''; the estimate is of the dollar value, with no per-charge amount. The page
+        does not say whether full tuition includes the out-of-state surcharge; a separate $3,000 out-of-state
+        award is listed below'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Up to 8 full-time in-class semesters
+      exclusions: null
+      scope_text: 'School wording: ''est. $30,000 per year covers full tuition, fees, room, board, and
+        a book allowance''; the estimate is of the dollar value, with no per-charge amount'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Up to 8 full-time in-class semesters
+      exclusions: null
+      scope_text: 'School wording: ''est. $30,000 per year covers full tuition, fees, room, board, and
+        a book allowance''; the estimate is of the dollar value, with no per-charge amount. The limits
+        page caps room awards at the billed on-campus rate or the budgeted off-campus amount'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Up to 8 full-time in-class semesters
+      exclusions: null
+      scope_text: 'School wording: ''est. $30,000 per year covers full tuition, fees, room, board, and
+        a book allowance''; the estimate is of the dollar value, with no per-charge amount. The limits
+        page caps board awards at the cost of the basic full residential meal plan'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-books
+      category: books
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Up to 8 full-time in-class semesters
+      exclusions: null
+      scope_text: 'School wording: ''est. $30,000 per year covers full tuition, fees, room, board, and
+        a book allowance''; the page calls the figure an estimate and gives no per-charge amount'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-out-of-state
+      category: nonresident_differential
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 3000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: Up to 8 full-time in-class semesters
+      exclusions: null
+      scope_text: Added to Cincinnatus awards; the school's scholarship-limits page says it applies only
+        to the out-of-state portion of tuition charges. Not counted toward tuition coverage.
+      advertised_coverage_label: null
+      conditions_text: Added only for students not eligible for Indiana or Kentucky Metro Rate or Reciprocity,
+        or the National Outreach Scholarship award
+  - offer_id: o-century
+    parent_offer_id: o-presidential
+    variant_name: Cincinnatus Century Scholarship
+    residency: any
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    advertised_totals: []
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Incoming first-year students in all academic disciplines. The chart notes that
+        scholarships are limited to students who do not have a bachelor's degree. The page names no citizenship,
+        residency or GPA minimum for consideration.
+    benefits:
+    - benefit_id: b-award
+      category: other
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Up to 8 full-time in-class semesters
+      exclusions: null
+      scope_text: Numerous awards annually; no amount is published for this level. The limits page says
+        Cincinnatus Century and University awards are unrestricted (usable for any charge on the bill).
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-out-of-state
+      category: nonresident_differential
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 3000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: Up to 8 full-time in-class semesters
+      exclusions: null
+      scope_text: Added to Cincinnatus awards; the school's scholarship-limits page says it applies only
+        to the out-of-state portion of tuition charges. Not counted toward tuition coverage.
+      advertised_coverage_label: null
+      conditions_text: Added only for students not eligible for Indiana or Kentucky Metro Rate or Reciprocity,
+        or the National Outreach Scholarship award
+  - offer_id: o-university
+    parent_offer_id: o-presidential
+    variant_name: Cincinnatus University Scholarship
+    residency: any
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    advertised_totals: []
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Incoming first-year students in all academic disciplines. The chart notes that
+        scholarships are limited to students who do not have a bachelor's degree. The page names no citizenship,
+        residency or GPA minimum for consideration.
+    benefits:
+    - benefit_id: b-award
+      category: other
+      instrument: scholarship
+      coverage: unknown
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Up to 8 full-time in-class semesters
+      exclusions: null
+      scope_text: Level named only on the scholarship-limits page; no amount or count is published for
+        this level. The page says Cincinnatus Century and University awards are unrestricted.
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-out-of-state
+      category: nonresident_differential
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 3000
+        min: null
+        max: null
+        period: academic_year
+      duration_terms: Up to 8 full-time in-class semesters
+      exclusions: null
+      scope_text: Added to Cincinnatus awards; the school's scholarship-limits page says it applies only
+        to the out-of-state portion of tuition charges. Not counted toward tuition coverage.
+      advertised_coverage_label: null
+      conditions_text: Added only for students not eligible for Indiana or Kentucky Metro Rate or Reciprocity,
+        or the National Outreach Scholarship award
+  application:
+    separate_application: not_required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: November 1 of their senior year (complete first-year application)
+    admission_plan_requirement: Complete first-year application at UC by the November 1 early action deadline
+    prerequisites:
+    - kind: admission_application
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Common Application, $50 application fee (or fee waiver) and official high school transcript.
+        ACT/SAT scores are optional.
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: 'The school''s pages differ on the letter of recommendation: the Cincinnatus page lists it
+      as optional, the scholarship chart says a recommendation must be received by November 1, and the
+      incoming-freshmen page asks for at least one letter for maximum consideration. Not modeled as a
+      prerequisite.'
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.0
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: Reviewed following the spring term each year
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: 3.000 cumulative GPA and completion of the annual 30-hour community service requirement (15
+      hours per semester of scholarship funding); full-time in-class semesters, assuming continuous enrollment
+      in a UC degree program. The chart's 'renewable for length of undergraduate program' means 8 full-time
+      in-class semesters.
+  stacking_rules: null
+  award_counts:
+  - metric: offers
+    qualifier: exact
+    value: 10
+    cohort_year: null
+    source_ref: s-cincinnatus
+    claim: target
+    denominator: null
+  sources:
+  - source_id: s-cincinnatus
+    url: https://www.uc.edu/about/financial-aid/aid/scholarships/cincinnatus.html
+    authority: official_program
+    retrieved_at: '2026-11-18'
+    content_sha256: c28cbaaff6df67cfa702cfad48be328afdde3f92bcdaf7790bc3f5dd63323e5d
+    archive_url: null
+  - source_id: s-renewal
+    url: https://www.uc.edu/about/financial-aid/aid/scholarships/cincinnatus/renewal-faqs.html
+    authority: official_program
+    retrieved_at: '2026-11-18'
+    content_sha256: cefcfde28a27c363086a788948dcf4b3ec1eeebc581ef884830c4884d819fac4
+    archive_url: null
+  - source_id: s-freshmen
+    url: https://www.uc.edu/about/financial-aid/aid/scholarships/scholars/freshmen.html
+    authority: official_aid_policy
+    retrieved_at: '2026-11-18'
+    content_sha256: 5b8f9cefbdc4151b359113b049e2b9e58acce96ec0afe37b7a0766aba261a380
+    archive_url: null
+  - source_id: s-chart
+    url: https://www.uc.edu/about/financial-aid/aid/scholarships.html
+    authority: official_aid_policy
+    retrieved_at: '2026-11-18'
+    content_sha256: 3c6e8182441ea4a70cdfd4dbd42ec9a294c6500cc04d630a96d4a779ee18e139
+    archive_url: null
+  - source_id: s-limits
+    url: https://www.uc.edu/about/financial-aid/aid/scholarships/limits.html
+    authority: official_aid_policy
+    retrieved_at: '2026-11-18'
+    content_sha256: 5b2949d13bd08c36f31d275d8661e6117678cdcaaf4423d4816799763cc22edb
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-cincinnatus
+    locator: 'Cincinnatus page: no entering class or year is named; the deadline is November 1 of the
+      senior year'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-chart
+    locator: Scholarship chart, Cincinnatus Scholarship Program row, Description
+    short_excerpt: Brightest and most promising freshmen based on each academic program will be offered
+      scholarship awards at multiple levels
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, note on what a complete first-year application includes
+    short_excerpt: Official ACT or SAT test scores (optional)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/selection_mode
+    source_ref: s-chart
+    locator: Scholarship chart, Cincinnatus Scholarship Program row, Description
+    short_excerpt: Brightest and most promising freshmen based on each academic program will be offered
+      scholarship awards at multiple levels
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/eligibility/tests_policy_for_scholarship
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, note on what a complete first-year application includes
+    short_excerpt: Official ACT or SAT test scores (optional)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/selection_mode
+    source_ref: s-chart
+    locator: Scholarship chart, Cincinnatus Scholarship Program row, Description
+    short_excerpt: Brightest and most promising freshmen based on each academic program will be offered
+      scholarship awards at multiple levels
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/eligibility/tests_policy_for_scholarship
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, note on what a complete first-year application includes
+    short_excerpt: Official ACT or SAT test scores (optional)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, Presidential section
+    short_excerpt: est. $30,000 per year covers full tuition, fees, room, board, and a book allowance
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-cincinnatus
+    locator: 'Cincinnatus page, Presidential section: no per-charge amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, Presidential section
+    short_excerpt: est. $30,000 per year covers full tuition, fees, room, board, and a book allowance
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-cincinnatus
+    locator: 'Cincinnatus page, Presidential section: no per-charge amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, Presidential section
+    short_excerpt: est. $30,000 per year covers full tuition, fees, room, board, and a book allowance
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-cincinnatus
+    locator: 'Cincinnatus page, Presidential section: no per-charge amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, Presidential section
+    short_excerpt: est. $30,000 per year covers full tuition, fees, room, board, and a book allowance
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-cincinnatus
+    locator: 'Cincinnatus page, Presidential section: no per-charge amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, Presidential section
+    short_excerpt: est. $30,000 per year covers full tuition, fees, room, board, and a book allowance
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-cincinnatus
+    locator: 'Cincinnatus page, Presidential section: no per-charge amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/advertised_totals/0/amount
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, Presidential section
+    short_excerpt: 10 Presidential Scholarships of $120,000 are awarded annually to academically competitive
+      students
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/advertised_totals/1/amount
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, Presidential section, parenthetical
+    short_excerpt: est. $30,000 per year covers full tuition, fees, room, board, and a book allowance
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/0
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, Century section
+    short_excerpt: Numerous Century Scholarships are awarded annually to academically competitive students.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/0/amount
+    source_ref: s-cincinnatus
+    locator: 'Cincinnatus page, Century section: no amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/2/benefits/0
+    source_ref: s-limits
+    locator: Scholarship Limits, Scholarship Use, examples of unrestricted awards
+    short_excerpt: Cincinnatus Century and University awards are unrestricted.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/benefits/0/amount
+    source_ref: s-limits
+    locator: 'Scholarship Limits: no amount is given for the University level'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/5
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, Additional Information
+    short_excerpt: Annual $3,000 Cincinnatus Out-of-State Scholarship is added to awards for students
+      who are not eligible for Indiana Metro Rate or Reciprocity
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/5/amount
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, Additional Information
+    short_excerpt: Annual $3,000 Cincinnatus Out-of-State Scholarship is added to awards for students
+      who are not eligible for Indiana Metro Rate or Reciprocity
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/5/conditions_text
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, Additional Information
+    short_excerpt: not eligible for Indiana Metro Rate or Reciprocity, Kentucky Metro Rate or Reciprocity,
+      or the National Outreach Scholarship award
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/1
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, Additional Information
+    short_excerpt: Annual $3,000 Cincinnatus Out-of-State Scholarship is added to awards for students
+      who are not eligible for Indiana Metro Rate or Reciprocity
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/1/amount
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, Additional Information
+    short_excerpt: Annual $3,000 Cincinnatus Out-of-State Scholarship is added to awards for students
+      who are not eligible for Indiana Metro Rate or Reciprocity
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/1/conditions_text
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, Additional Information
+    short_excerpt: not eligible for Indiana Metro Rate or Reciprocity, Kentucky Metro Rate or Reciprocity,
+      or the National Outreach Scholarship award
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/benefits/1
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, Additional Information
+    short_excerpt: Annual $3,000 Cincinnatus Out-of-State Scholarship is added to awards for students
+      who are not eligible for Indiana Metro Rate or Reciprocity
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/benefits/1/amount
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, Additional Information
+    short_excerpt: Annual $3,000 Cincinnatus Out-of-State Scholarship is added to awards for students
+      who are not eligible for Indiana Metro Rate or Reciprocity
+    value_status: reported
+    reported_value: null
+  - field_path: offers/2/benefits/1/conditions_text
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, Additional Information
+    short_excerpt: not eligible for Indiana Metro Rate or Reciprocity, Kentucky Metro Rate or Reciprocity,
+      or the National Outreach Scholarship award
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, Award Determinations
+    short_excerpt: Qualifying students will be determined based on their overall admission application
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, introduction
+    short_excerpt: must submit a completed application* and required accompanying materials by November
+      1 of their senior year
+    value_status: reported
+    reported_value: null
+  - field_path: application/admission_plan_requirement
+    source_ref: s-freshmen
+    locator: Incoming Freshmen Scholarships, second paragraph
+    short_excerpt: by the early action deadline of November 1
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, Additional Information
+    short_excerpt: All Cincinnatus scholarships are renewed for up to 8 full-time in-class semesters providing
+      the student maintains a 3.0 GPA
+    value_status: reported
+    reported_value: null
+  - field_path: award_counts/0
+    source_ref: s-cincinnatus
+    locator: Cincinnatus page, Presidential section
+    short_excerpt: 10 Presidential Scholarships of $120,000 are awarded annually to academically competitive
+      students
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0/notes
+    source_ref: s-renewal
+    locator: Renewal FAQ, first answer
+    short_excerpt: must have a 3.000 cumulative GPA as well as have completed 15 community service hours
+      per semester of scholarship funding
+    value_status: reported
+    reported_value: null
