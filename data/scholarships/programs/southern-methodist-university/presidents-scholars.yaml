@@ -359,3 +359,356 @@ versions:
       first
     value_status: reported
     reported_value: null
+- version_id: presidents-scholars-class-2031-r2
+  supersedes: presidents-scholars-class-2031
+  entry_year: 2027
+  entry_year_label: null
+  entry_terms:
+  - unspecified
+  source_cohort_text: President's Scholars Class of 2031
+  verification_status: verified
+  last_reviewed_at: '2026-11-18'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-closeout-corrections
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: unknown
+    selection_mode: competitive
+    consideration_route: separate_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: required
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: The application page says a candidate should have 20 high school academic units
+        in a challenging curriculum, a top-10-percent class rank (or a strong record if the school does
+        not rank), and demonstrated engagement. It calls SAT above 1400 and ACT above 32 'competitive'
+        and says the median student invited to interview had a 4.0 unweighted GPA; these are typical ranges,
+        not stated minimums.
+    benefits:
+    - benefit_id: b-tuition
+      category: tuition
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight consecutive fall and spring semesters or graduation, whichever comes first
+      exclusions:
+      - Books
+      - Computers
+      - Mandatory health insurance
+      - Parking
+      - Summer and Jan Term courses
+      scope_text: Cannot be extended to a fifth year; may cover graduate courses in the 4+1 program within
+        the eight semesters with advance permission
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-fees
+      category: mandatory_fees
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions:
+      - Special fees included with some course work
+      scope_text: General fees
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-abroad
+      category: study_abroad
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Tuition for an SMU-approved program and round-trip airfare; scholars pay deposits, commitment
+        fees, and room and board abroad
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-housing
+      category: housing
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Residential Commons double occupancy, Thomas House, Multicultural House or Service House
+        only; not Greek housing, SMU apartments, single rooms or off-campus living
+      advertised_coverage_label: null
+      conditions_text: Paid by the separate Campus Community Award, not by the President's Scholarship
+        itself, under certain conditions including active engagement in community life
+    - benefit_id: b-meals
+      category: meals
+      instrument: scholarship
+      coverage: partial
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: 'SMU meal plans: The Works plus $200 Flex or Block 150 plus $500 Flex (first-years and
+        sophomores must choose The Works plus $200 Flex); seniors may also choose Senior Block 50 plus
+        $500 Flex'
+      advertised_coverage_label: null
+      conditions_text: Paid by the separate Campus Community Award, not by the President's Scholarship
+        itself, under certain conditions including active engagement in community life
+    advertised_totals: []
+  application:
+    separate_application: required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: by November 1st
+    - kind: application_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 16
+      precision: day
+      source_date_text: President’s Scholars Application Essay by November 16, 11:59 P.M. (CST)
+    - kind: interview
+      requirement: invitation_only
+      date: null
+      recurring:
+        month: 3
+        day: 1
+      precision: month
+      source_date_text: first Friday of March
+    - kind: notification
+      requirement: required
+      date: null
+      recurring:
+        month: 3
+        day: 1
+      precision: month
+      source_date_text: notified during the month of March
+    admission_plan_requirement: null
+    prerequisites:
+    - kind: admission_application
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: The essay can be submitted only after the application for admission has been submitted, through
+        the SMU Admissions student portal.
+    interview_mode: in_person
+    finalist_event_required: null
+    notes: Dates on the page carry no year; the pages name the 'Class of 2031', which this record
+      reads as the fall 2027 entering class. The application page says students must submit the
+      SMU application by November 1 and the President's Scholars essay by November 16, 11:59 P.M.
+      (CST). The admissions-aid page lists November 1 as the Early Action / Early Decision I date.
+      Finalists are notified in February and invited to campus for interviews, which are required;
+      SMU pays meals and lodging.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: null
+    gpa_scale: null
+    credit_load_min_per_term: null
+    credit_load_min_per_year: null
+    evaluation_timing: null
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Tuition and fees for eight consecutive fall and spring semesters or graduation, whichever comes
+      first; the pages give no GPA threshold. The Campus Community Award (room and board) has its own
+      conditions, including active engagement in community life.
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-prog
+    url: https://www.smu.edu/provost/saes/academic-enrichment/honors-and-scholars-programs/presidents-scholars
+    authority: official_program
+    retrieved_at: '2026-11-18'
+    content_sha256: 4c47a98e2e021671bfe0c45582a2c351550a3e0587d4a8cc0e886a6abe27b51c
+    archive_url: null
+  - source_id: s-ben
+    url: https://www.smu.edu/provost/saes/academic-enrichment/honors-and-scholars-programs/presidents-scholars/scholarship-information/benefits
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 7f64b1e2e82928d5392fd602f386f6f1b721ac22e1792350f490ba0aa6236b9e
+    archive_url: null
+  - source_id: s-app
+    url: https://www.smu.edu/provost/saes/academic-enrichment/honors-and-scholars-programs/presidents-scholars/scholarship-information/application
+    authority: official_program
+    retrieved_at: '2026-11-18'
+    content_sha256: 604551eb91c7e29117a94d80cafdf16e3fb9f061cb9eb3769db7b15e8d28a058
+    archive_url: null
+  - source_id: s-aid
+    url: https://www.smu.edu/admission/financial-aid-resources/scholarships-assistance
+    authority: official_admissions
+    retrieved_at: '2026-11-15'
+    content_sha256: aa3094f6c3aafa5e059c979b7fccadb430fc38ab2d2c623ef387c0b881572f69
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-prog
+    locator: Program page banner at the top
+    short_excerpt: Applications have closed for the President's Scholars Class of 2031.
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-app
+    locator: Application Information, Timeline and Selection Process
+    short_excerpt: Applications for the Class of 2032 will open Fall 2027.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-app
+    locator: Application Information, Timeline and Selection Process, February and March
+    short_excerpt: SMU faculty committees select finalists to be interviewed.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-app
+    locator: Application Information, How to Apply
+    short_excerpt: the President's Scholars Program Application Essay (topic below), by November 16th
+      11:59PM (CST)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-app
+    locator: Application Information, Eligibility, fourth bullet
+    short_excerpt: An SAT or ACT score submission is required.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-ben
+    locator: 'Financial Benefits, Tuition and General Fees: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-ben
+    locator: Financial Benefits, Tuition and General Fees
+    short_excerpt: The President’s Scholarship will cover tuition and fees for eight (8) consecutive fall
+      and spring academic semesters or graduation
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-ben
+    locator: 'Financial Benefits, Tuition and General Fees: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1
+    source_ref: s-ben
+    locator: Financial Benefits, Tuition and General Fees
+    short_excerpt: The President’s Scholarship will cover tuition and fees for eight (8) consecutive fall
+      and spring academic semesters or graduation
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/2/amount
+    source_ref: s-ben
+    locator: 'Financial Benefits, Education Abroad: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/2
+    source_ref: s-ben
+    locator: Financial Benefits, Education Abroad
+    short_excerpt: The President’s Scholarship will cover tuition for an SMU-approved program.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/3/amount
+    source_ref: s-ben
+    locator: 'Financial Benefits, The Campus Community Award: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/3/conditions_text
+    source_ref: s-ben
+    locator: Financial Benefits, The Campus Community Award, first paragraph
+    short_excerpt: pays for room and board on campus under certain conditions, including the requirement
+      of active engagement in community life
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/4/amount
+    source_ref: s-ben
+    locator: 'Financial Benefits, The Campus Community Award: no dollar amount is given'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/4/conditions_text
+    source_ref: s-ben
+    locator: Financial Benefits, The Campus Community Award, first paragraph
+    short_excerpt: pays for room and board on campus under certain conditions, including the requirement
+      of active engagement in community life
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-app
+    locator: Application Information, How to Apply
+    short_excerpt: students must submit the SMU application by November 1st and the the President's Scholars
+      Program Application Essay
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-app
+    locator: Application Information, How to Apply
+    short_excerpt: students must submit the SMU application by November 1st
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-app
+    locator: Application Information, Timeline and Selection Process
+    short_excerpt: by November 16th 11:59PM (CST)
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-app
+    locator: Application Information, Timeline and Selection Process, March
+    short_excerpt: Interview day for finalists will be the first Friday of March.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-app
+    locator: Application Information, Timeline and Selection Process, March
+    short_excerpt: Recipients of President's Scholar awards are notified during the month of March.
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-ben
+    locator: Financial Benefits, Tuition and General Fees
+    short_excerpt: eight (8) consecutive fall and spring academic semesters or graduation, whichever comes
+      first
+    value_status: reported
+    reported_value: null

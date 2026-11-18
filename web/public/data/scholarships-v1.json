@@ -1,6 +1,6 @@
 {
   "meta": {
-    "dataset_id": "collegedata-scholarships-v1-bf1a346bd140",
+    "dataset_id": "collegedata-scholarships-v1-1979e59897fa",
     "version": 1,
     "license": "CC-BY-SA-4.0",
     "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
@@ -4194,7 +4194,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "fsu-national-merit-package-undated-r2",
+      "version_id": "fsu-national-merit-package-undated-r3",
       "entry_year": null,
       "entry_year_label": "National Merit sections name no entering class; Vires amounts carry an 'Admitted first-year students starting Fall 2024' footnote",
       "entry_terms": [
@@ -4204,8 +4204,8 @@
       "verification_status": "conflicting",
       "cycle_basis": "none",
       "cycle_through_date": null,
-      "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-fable-5-2, after the Gemini 4 Carbon audit of 2026-11-15",
+      "last_reviewed_at": "2026-11-18",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-closeout-corrections",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -4231,7 +4231,7 @@
       "separate_application": "no_form_other_steps_required",
       "deadline_months": [],
       "key_deadline": null,
-      "source_retrieved_at": "2026-11-15",
+      "source_retrieved_at": "2026-11-18",
       "offers": [
         {
           "offer_id": "o-florida-resident",
@@ -4439,7 +4439,7 @@
           "source_id": "s-adm",
           "url": "https://admissions.fsu.edu/first-year/scholarships",
           "authority": "official_admissions",
-          "retrieved_at": "2026-11-15",
+          "retrieved_at": "2026-11-18",
           "archive_url": null
         },
         {
@@ -4558,9 +4558,27 @@
           "source_ref": "s-adm",
           "locator": "Admissions Scholarships page, Out-of-State Tuition Waiver",
           "value_status": "reported"
+        },
+        {
+          "field_path": "other_info/0",
+          "source_ref": "s-adm",
+          "locator": "Admissions Scholarships page, National Merit Finalist, Out-of-State Resident",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "other_info/0",
+          "source_ref": "s-adm",
+          "locator": "Admissions Scholarships page, National Merit Finalist / Benacquisto Scholarship, Florida Resident",
+          "value_status": "reported"
         }
       ],
-      "other_info": []
+      "other_info": [
+        {
+          "text": "The out-of-state offer is Florida State University's Out-of-State National Merit Award scholarship package; for the Florida-resident Benacquisto Scholarship, the page refers students to Florida Student Financial Aid for renewal information.",
+          "source_ref": "s-adm",
+          "source_url": "https://admissions.fsu.edu/first-year/scholarships"
+        }
+      ]
     },
     {
       "program_id": "fsu-stamps-scholars",
@@ -13257,7 +13275,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "presidents-scholars-class-2031",
+      "version_id": "presidents-scholars-class-2031-r2",
       "entry_year": 2027,
       "entry_year_label": null,
       "entry_terms": [
@@ -13267,8 +13285,8 @@
       "verification_status": "verified",
       "cycle_basis": "entry_year",
       "cycle_through_date": null,
-      "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b4",
+      "last_reviewed_at": "2026-11-18",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-closeout-corrections",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -13290,7 +13308,7 @@
         11
       ],
       "key_deadline": null,
-      "source_retrieved_at": "2026-11-15",
+      "source_retrieved_at": "2026-11-18",
       "offers": [
         {
           "offer_id": "o-main",
@@ -13430,10 +13448,10 @@
             "date": null,
             "recurring": {
               "month": 11,
-              "day": 4
+              "day": 1
             },
             "precision": "day",
-            "source_date_text": "extended SMU Deadline of November 4th"
+            "source_date_text": "by November 1st"
           },
           {
             "kind": "application_deadline",
@@ -13480,7 +13498,7 @@
         ],
         "interview_mode": "in_person",
         "finalist_event_required": null,
-        "notes": "Dates on the page carry no year; the banner names the 'Class of 2031', which this record reads as the fall 2027 entering class. The application page still says 'Submit your SMU Application by November 1' while the program page banner says the SMU deadline is extended to November 4; the banner is read as the current value and November 1 as the pre-extension passage. The admissions-aid page lists November 1 as the Early Action / Early Decision I date. Finalists are notified in February and invited to campus for interviews, which are required; SMU pays meals and lodging."
+        "notes": "Dates on the page carry no year; the pages name the 'Class of 2031', which this record reads as the fall 2027 entering class. The application page says students must submit the SMU application by November 1 and the President's Scholars essay by November 16, 11:59 P.M. (CST). The admissions-aid page lists November 1 as the Early Action / Early Decision I date. Finalists are notified in February and invited to campus for interviews, which are required; SMU pays meals and lodging."
       },
       "renewal_rules": [
         {
@@ -13509,7 +13527,7 @@
           "source_id": "s-app",
           "url": "https://www.smu.edu/provost/saes/academic-enrichment/honors-and-scholars-programs/presidents-scholars/scholarship-information/application",
           "authority": "official_program",
-          "retrieved_at": "2026-11-15",
+          "retrieved_at": "2026-11-18",
           "archive_url": null
         },
         {
@@ -13523,7 +13541,7 @@
           "source_id": "s-prog",
           "url": "https://www.smu.edu/provost/saes/academic-enrichment/honors-and-scholars-programs/presidents-scholars",
           "authority": "official_program",
-          "retrieved_at": "2026-11-15",
+          "retrieved_at": "2026-11-18",
           "archive_url": null
         }
       ],
@@ -13532,6 +13550,12 @@
           "field_path": "entry_year",
           "source_ref": "s-prog",
           "locator": "Program page banner at the top",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "entry_year",
+          "source_ref": "s-app",
+          "locator": "Application Information, Timeline and Selection Process",
           "value_status": "reported"
         },
         {
@@ -13620,8 +13644,8 @@
         },
         {
           "field_path": "application/milestones/0",
-          "source_ref": "s-prog",
-          "locator": "Program page banner: DEADLINE EXTENDED",
+          "source_ref": "s-app",
+          "locator": "Application Information, How to Apply",
           "value_status": "reported"
         },
         {
@@ -24559,7 +24583,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "miami-stamps-scholarship-undated",
+      "version_id": "miami-stamps-scholarship-undated-r2",
       "entry_year": null,
       "entry_year_label": "Pages name no entering class; the November 1 deadline has no year",
       "entry_terms": [
@@ -24569,8 +24593,8 @@
       "verification_status": "verified",
       "cycle_basis": "none",
       "cycle_through_date": null,
-      "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b1",
+      "last_reviewed_at": "2026-11-18",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-closeout-corrections",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -24592,7 +24616,7 @@
         11
       ],
       "key_deadline": null,
-      "source_retrieved_at": "2026-11-15",
+      "source_retrieved_at": "2026-11-18",
       "offers": [
         {
           "offer_id": "o-main",
@@ -24708,7 +24732,7 @@
           "source_id": "s-first",
           "url": "https://admissions.miami.edu/undergraduate/financial-aid/scholarships/freshman/index.html",
           "authority": "official_program",
-          "retrieved_at": "2026-11-15",
+          "retrieved_at": "2026-11-18",
           "archive_url": null
         },
         {
@@ -24803,9 +24827,21 @@
           "source_ref": "s-prog",
           "locator": "Scholarship Details",
           "value_status": "reported"
+        },
+        {
+          "field_path": "other_info/0",
+          "source_ref": "s-first",
+          "locator": "First-Year Merit Scholarships page, note inside the Merit Scholarships section, below the President's Scholarship and Canes Achievement Award",
+          "value_status": "reported"
         }
       ],
-      "other_info": []
+      "other_info": [
+        {
+          "text": "The First-Year Merit Scholarships page, in its Merit Scholarships section (President's Scholarship and Canes Achievement Award), says recipients may receive only one merit scholarship from the Office of Undergraduate Admission.",
+          "source_ref": "s-first",
+          "source_url": "https://admissions.miami.edu/undergraduate/financial-aid/scholarships/freshman/index.html"
+        }
+      ]
     },
     {
       "program_id": "singer-scholarship",
@@ -24824,7 +24860,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "singer-scholarship-undated",
+      "version_id": "singer-scholarship-undated-r2",
       "entry_year": null,
       "entry_year_label": "Pages name no entering class; the November 1 deadline has no year",
       "entry_terms": [
@@ -24834,8 +24870,8 @@
       "verification_status": "verified",
       "cycle_basis": "none",
       "cycle_through_date": null,
-      "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-sonnet-5-5/prd036-m5-b1",
+      "last_reviewed_at": "2026-11-18",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-closeout-corrections",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -24857,7 +24893,7 @@
         11
       ],
       "key_deadline": null,
-      "source_retrieved_at": "2026-11-15",
+      "source_retrieved_at": "2026-11-18",
       "offers": [
         {
           "offer_id": "o-main",
@@ -24955,7 +24991,7 @@
           "source_id": "s-first",
           "url": "https://admissions.miami.edu/undergraduate/financial-aid/scholarships/freshman/index.html",
           "authority": "official_program",
-          "retrieved_at": "2026-11-15",
+          "retrieved_at": "2026-11-18",
           "archive_url": null
         },
         {
@@ -25038,9 +25074,21 @@
           "source_ref": "s-prog",
           "locator": "Singer page: no dollar amount",
           "value_status": "not_published"
+        },
+        {
+          "field_path": "other_info/0",
+          "source_ref": "s-first",
+          "locator": "First-Year Merit Scholarships page, note inside the Merit Scholarships section, below the President's Scholarship and Canes Achievement Award",
+          "value_status": "reported"
         }
       ],
-      "other_info": []
+      "other_info": [
+        {
+          "text": "The First-Year Merit Scholarships page, in its Merit Scholarships section (President's Scholarship and Canes Achievement Award), says recipients may receive only one merit scholarship from the Office of Undergraduate Admission.",
+          "source_ref": "s-first",
+          "source_url": "https://admissions.miami.edu/undergraduate/financial-aid/scholarships/freshman/index.html"
+        }
+      ]
     },
     {
       "program_id": "umn-presidential-scholarship",
@@ -29274,7 +29322,7 @@
       "program_status": "active",
       "applicable_campuses": [],
       "related_programs": [],
-      "version_id": "top-scholars-undated-r2",
+      "version_id": "top-scholars-undated-r3",
       "entry_year": null,
       "entry_year_label": "Pages call their figures last year's recipient averages and date only the Top Scholar Weekend (Feb. 27 - March 1, 2027); no entering class is named",
       "entry_terms": [
@@ -29284,8 +29332,8 @@
       "verification_status": "verified",
       "cycle_basis": "milestone_dates",
       "cycle_through_date": "2027-02-27",
-      "last_reviewed_at": "2026-11-15",
-      "reviewed_by": "agent:claude-fable-5-2, after the Gemini 4 Carbon audit of 2026-11-15",
+      "last_reviewed_at": "2026-11-18",
+      "reviewed_by": "agent:claude-sonnet-5-5/prd036-closeout-corrections",
       "owner_spot_checked": false,
       "program_status_for_entry": "active",
       "coverages": [
@@ -29309,7 +29357,7 @@
         12
       ],
       "key_deadline": null,
-      "source_retrieved_at": "2026-11-15",
+      "source_retrieved_at": "2026-11-18",
       "offers": [
         {
           "offer_id": "r-stamps",
@@ -29846,6 +29894,17 @@
             "recurring": null,
             "precision": "day",
             "source_date_text": "February 27 - March 1, 2027 (in-person Top Scholar Weekend)"
+          },
+          {
+            "kind": "acceptance_deadline",
+            "requirement": "required",
+            "date": null,
+            "recurring": {
+              "month": 5,
+              "day": 1
+            },
+            "precision": "day",
+            "source_date_text": "May 1 (submit the nonrefundable $200 enrollment deposit to accept the award)"
           }
         ],
         "admission_plan_requirement": "Submit the general university application first; the South Carolina Honors College application then appears in the admissions portal about 48 hours later and is due Nov. 15",
@@ -29911,7 +29970,7 @@
           "source_id": "s-faq",
           "url": "https://sc.edu/about/offices_and_divisions/undergraduate_admissions/tuition_scholarships/scholarship_faqs/index.php",
           "authority": "official_aid_policy",
-          "retrieved_at": "2026-11-15",
+          "retrieved_at": "2026-11-18",
           "archive_url": null
         },
         {
@@ -30181,9 +30240,27 @@
           "source_ref": "s-apply",
           "locator": "Apply to Carolina Elite page, application instructions",
           "value_status": "reported"
+        },
+        {
+          "field_path": "application/milestones/5",
+          "source_ref": "s-faq",
+          "locator": "Scholarship FAQs, I've been awarded a scholarship. How do I accept it?",
+          "value_status": "reported"
+        },
+        {
+          "field_path": "other_info/0",
+          "source_ref": "s-faq",
+          "locator": "Scholarship FAQs, spring-semester question",
+          "value_status": "reported"
         }
       ],
-      "other_info": []
+      "other_info": [
+        {
+          "text": "Asked whether a student enrolling in the spring semester can be considered, the university says general merit scholarships are awarded to first-time, first-year freshmen for the fall semester only.",
+          "source_ref": "s-faq",
+          "source_url": "https://sc.edu/about/offices_and_divisions/undergraduate_admissions/tuition_scholarships/scholarship_faqs/index.php"
+        }
+      ]
     },
     {
       "program_id": "usf-golden-achievement-national-merit",

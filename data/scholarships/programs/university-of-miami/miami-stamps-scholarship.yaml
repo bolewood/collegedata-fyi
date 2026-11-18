@@ -227,3 +227,232 @@ versions:
     short_excerpt: Enrichment fund expenses are subject to prior approval
     value_status: reported
     reported_value: null
+- version_id: miami-stamps-scholarship-undated-r2
+  supersedes: miami-stamps-scholarship-undated
+  entry_year: null
+  entry_year_label: Pages name no entering class; the November 1 deadline has no year
+  entry_terms:
+  - unspecified
+  source_cohort_text: Miami pages describe the current scholarship without an entering class
+  verification_status: verified
+  last_reviewed_at: '2026-11-18'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-closeout-corrections
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: any
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: unclear
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Open to incoming first-year students admitted under Early Decision I or Early
+        Action. The Frost School of Music Stamps Ensemble Scholarship is a different award with its own
+        application.
+    benefits:
+    - benefit_id: b-coa
+      category: cost_of_attendance
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: not_published
+        value: null
+        min: null
+        max: null
+        period: null
+      duration_terms: Eight semesters (10 for five-year degree programs) or completion of the first degree,
+        whichever is sooner
+      exclusions: null
+      scope_text: Includes tuition and fees, on-campus housing, a meal plan, University health insurance,
+        textbooks and a laptop allowance; the page gives no dollar amounts for these
+      advertised_coverage_label: full cost of attendance
+      conditions_text: null
+    - benefit_id: b-enrich
+      category: enrichment
+      instrument: restricted_fund
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 12000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: Access to an enrichment fund; expenses are subject to prior approval and may support
+        study abroad, undergraduate research, unpaid internships and other educational pursuits; the page
+        does not say whether it is annual or a total
+      advertised_coverage_label: null
+      conditions_text: Enrichment fund expenses are subject to prior approval
+    advertised_totals: []
+  application:
+    separate_application: no_form_other_steps_required
+    milestones:
+    - kind: admission_deadline
+      requirement: required
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: Deadline EDI and EA – Nov. 1
+    admission_plan_requirement: Apply and be admitted under Early Decision I or Early Action
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: Semi-finalists are contacted and selected to interview with the Stamps Scholarship Committee
+      by mid-January; finalists are notified at the time of Early Action decision release (late January)
+      and interview with the Stamps Foundation; recipients are announced in early March. The page gives
+      no interview mode and no year.
+  renewal_rules:
+  - applies_to: []
+    gpa_min: 3.0
+    gpa_scale: null
+    credit_load_min_per_term: 12
+    credit_load_min_per_year: 24
+    evaluation_timing: Academic-year GPA, with the initial calculation at the end of the second semester
+      of attendance
+    summer_courses_can_fix_shortfall: null
+    max_semesters: 8
+    notes: Full-time program of no fewer than 12 credit hours in each fall and spring semester and at
+      least 24 per academic year; 3.0 minimum GPA for the academic year at Miami. Up to eight semesters,
+      or ten semesters for five-year programs (the freshman page says School of Architecture), or completion
+      of the first degree, whichever is sooner.
+  stacking_rules:
+  - other_aid_type: other
+    relation: counts_within_package
+    note: The award is subject to revision pending receipt of any grant, scholarship, or prepaid tuition
+      and/or housing aid not anticipated at the time the award is made.
+  award_counts: []
+  other_info:
+  - text: The First-Year Merit Scholarships page, in its Merit Scholarships section (President's Scholarship
+      and Canes Achievement Award), says recipients may receive only one merit scholarship from the
+      Office of Undergraduate Admission.
+    source_ref: s-first
+  sources:
+  - source_id: s-prog
+    url: https://admissions.miami.edu/undergraduate/financial-aid/scholarships/stamps/index.html
+    authority: official_program
+    retrieved_at: '2026-11-15'
+    content_sha256: 89210c17ec896dcb21149ccdc5902af0ce83d5ea184997fcdc704c2fd4f51419
+    archive_url: null
+  - source_id: s-first
+    url: https://admissions.miami.edu/undergraduate/financial-aid/scholarships/freshman/index.html
+    authority: official_program
+    retrieved_at: '2026-11-18'
+    content_sha256: bc96883ce4222dee4d33db917f620a0b6aa97bf76360a9e943d4e9f9d43411b2
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-prog
+    locator: Page names no entering class
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/consideration_route
+    source_ref: s-prog
+    locator: Eligibility Criteria
+    short_excerpt: There is no separate application outside of the Common Application to be considered.
+    value_status: reported
+    reported_value: admission_application
+  - field_path: application/separate_application
+    source_ref: s-prog
+    locator: Eligibility Criteria
+    short_excerpt: There is no separate application outside of the Common Application to be considered.
+    value_status: reported
+    reported_value: no_form_other_steps_required
+  - field_path: application/milestones/0
+    source_ref: s-first
+    locator: First-Year Merit Scholarships page, award/eligibility/deadline table
+    short_excerpt: EDI and EA – Nov. 1
+    value_status: reported
+    reported_value: 11-01
+  - field_path: renewal_rules/0/gpa_min
+    source_ref: s-prog
+    locator: Terms and Conditions
+    short_excerpt: A minimum of a 3.0 GPA for the academic year must be maintained at the University of
+      Miami
+    value_status: reported
+    reported_value: 3.0
+  - field_path: renewal_rules/0/credit_load_min_per_term
+    source_ref: s-prog
+    locator: Terms and Conditions
+    short_excerpt: no fewer than 12 credit hours during each of the fall and spring semesters for a minimum
+      of 24 credit hours per academic year
+    value_status: reported
+    reported_value: 12
+  - field_path: renewal_rules/0/credit_load_min_per_year
+    source_ref: s-prog
+    locator: Terms and Conditions
+    short_excerpt: no fewer than 12 credit hours during each of the fall and spring semesters for a minimum
+      of 24 credit hours per academic year
+    value_status: reported
+    reported_value: 24
+  - field_path: renewal_rules/0/max_semesters
+    source_ref: s-prog
+    locator: Stamps page, intro
+    short_excerpt: full cost of attendance for eight semesters (10 semesters for students in five-year
+      degree programs)
+    value_status: reported
+    reported_value: 8
+  - field_path: stacking_rules/0
+    source_ref: s-prog
+    locator: Terms and Conditions
+    short_excerpt: The award is subject to revision pending receipt of any grant, scholarship, or prepaid
+      tuition and/or housing aid
+    value_status: reported
+    reported_value: counts_within_package
+  - field_path: offers/0/selection_mode
+    source_ref: s-prog
+    locator: Eligibility Criteria
+    short_excerpt: Stamps Scholars are selected through our holistic review process.
+    value_status: reported
+    reported_value: competitive
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-prog
+    locator: Stamps page, intro
+    short_excerpt: Stamps Scholars receive the full cost of attendance
+    value_status: reported
+    reported_value: full
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-prog
+    locator: 'Stamps page: no dollar amount for the cost of attendance'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/benefits/1/amount
+    source_ref: s-prog
+    locator: Scholarship Details
+    short_excerpt: access to a $12,000 enrichment fund
+    value_status: reported
+    reported_value: 12000
+  - field_path: offers/0/benefits/1/conditions_text
+    source_ref: s-prog
+    locator: Scholarship Details
+    short_excerpt: Enrichment fund expenses are subject to prior approval
+    value_status: reported
+    reported_value: null
+  - field_path: other_info/0
+    source_ref: s-first
+    locator: First-Year Merit Scholarships page, note inside the Merit Scholarships section, below the
+      President's Scholarship and Canes Achievement Award
+    short_excerpt: Recipients may receive only one merit scholarship from the Office of Undergraduate
+      Admission.
+    value_status: reported
+    reported_value: null
