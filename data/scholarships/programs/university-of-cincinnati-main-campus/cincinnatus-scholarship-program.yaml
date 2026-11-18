@@ -71,7 +71,7 @@ versions:
     - benefit_id: b-tuition
       category: tuition
       instrument: scholarship
-      coverage: unknown
+      coverage: full
       amount:
         qualifier: not_published
         value: null
@@ -81,13 +81,15 @@ versions:
       duration_terms: Up to 8 full-time in-class semesters
       exclusions: null
       scope_text: 'School wording: ''est. $30,000 per year covers full tuition, fees, room, board, and
-        a book allowance''; the page calls the figure an estimate and gives no per-charge amount'
+        a book allowance''; the estimate is of the dollar value, with no per-charge amount. The page
+        does not say whether full tuition includes the out-of-state surcharge; a separate $3,000 out-of-state
+        award is listed below'
       advertised_coverage_label: null
       conditions_text: null
     - benefit_id: b-fees
       category: mandatory_fees
       instrument: scholarship
-      coverage: unknown
+      coverage: full
       amount:
         qualifier: not_published
         value: null
@@ -97,13 +99,13 @@ versions:
       duration_terms: Up to 8 full-time in-class semesters
       exclusions: null
       scope_text: 'School wording: ''est. $30,000 per year covers full tuition, fees, room, board, and
-        a book allowance''; the page calls the figure an estimate and gives no per-charge amount'
+        a book allowance''; the estimate is of the dollar value, with no per-charge amount'
       advertised_coverage_label: null
       conditions_text: null
     - benefit_id: b-housing
       category: housing
       instrument: scholarship
-      coverage: unknown
+      coverage: full
       amount:
         qualifier: not_published
         value: null
@@ -113,13 +115,14 @@ versions:
       duration_terms: Up to 8 full-time in-class semesters
       exclusions: null
       scope_text: 'School wording: ''est. $30,000 per year covers full tuition, fees, room, board, and
-        a book allowance''; the page calls the figure an estimate and gives no per-charge amount'
+        a book allowance''; the estimate is of the dollar value, with no per-charge amount. The limits
+        page caps room awards at the billed on-campus rate or the budgeted off-campus amount'
       advertised_coverage_label: null
       conditions_text: null
     - benefit_id: b-meals
       category: meals
       instrument: scholarship
-      coverage: unknown
+      coverage: full
       amount:
         qualifier: not_published
         value: null
@@ -129,7 +132,8 @@ versions:
       duration_terms: Up to 8 full-time in-class semesters
       exclusions: null
       scope_text: 'School wording: ''est. $30,000 per year covers full tuition, fees, room, board, and
-        a book allowance''; the page calls the figure an estimate and gives no per-charge amount'
+        a book allowance''; the estimate is of the dollar value, with no per-charge amount. The limits
+        page caps board awards at the cost of the basic full residential meal plan'
       advertised_coverage_label: null
       conditions_text: null
     - benefit_id: b-books
