@@ -1,7 +1,9 @@
 import { assertEquals, assertRejects } from "jsr:@std/assert";
 import {
+  chooseDocumentIpedsId,
   directoryProtectedIpeds,
   filterArchivable,
+  ipedsIdsForSlug,
   normalizeSchoolToken,
   resolveSchoolName,
   type SchoolEntry,
@@ -137,3 +139,24 @@ Deno.test("directoryProtectedIpeds protects only curated YAML-owned rows", () =>
 // tested here without stubbing fetch — done in an integration test against
 // a local schools.yaml fixture, or left to manual QA. The fuzzy suggester
 // (the part with actual logic) is covered above.
+
+Deno.test("ipedsIdsForSlug lists every UNITID a shared slug maps to", () => {
+  const entries = [
+    { id: "bethel-university", name: "Bethel University", ipeds_id: "150145", scrape_policy: "unknown" },
+    { id: "bethel-university", name: "Bethel University", ipeds_id: "173160", scrape_policy: "unknown" },
+    { id: "bethel-university", name: "Bethel University", ipeds_id: "219718", scrape_policy: "unknown" },
+    { id: "uf", name: "University of Florida", ipeds_id: "134130", scrape_policy: "active" },
+    { id: "uf", name: "University of Florida", ipeds_id: "134130", scrape_policy: "active" },
+  ] as SchoolEntry[];
+  assertEquals(ipedsIdsForSlug(entries, "bethel-university"), ["150145", "173160", "219718"]);
+  assertEquals(ipedsIdsForSlug(entries, "uf"), ["134130"]);
+  assertEquals(ipedsIdsForSlug(entries, "nowhere"), []);
+});
+
+Deno.test("chooseDocumentIpedsId lets the directory win and never invents an id", () => {
+  assertEquals(chooseDocumentIpedsId("173160", "219718"), { ipeds_id: "173160", conflict: true });
+  assertEquals(chooseDocumentIpedsId("173160", "173160"), { ipeds_id: "173160", conflict: false });
+  assertEquals(chooseDocumentIpedsId("110404", null), { ipeds_id: "110404", conflict: false });
+  assertEquals(chooseDocumentIpedsId(null, "134130"), { ipeds_id: "134130", conflict: false });
+  assertEquals(chooseDocumentIpedsId(null, null), { ipeds_id: null, conflict: false });
+});

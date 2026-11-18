@@ -28,6 +28,7 @@ import {
   recordRemoval,
   recordRepair,
   refreshDocumentWithNewSha,
+  resolveInsertIpedsId,
 } from "./db.ts";
 import {
   buildSourcePath,
@@ -721,17 +722,7 @@ async function effectiveIpedsIdForSchool(
   supabase: SupabaseClient,
   school: SchoolInput,
 ): Promise<string | null> {
-  let effectiveIpedsId: string | null = school.ipeds_id ?? null;
-  if (effectiveIpedsId) return effectiveIpedsId;
-  const { data: sibling } = await supabase
-    .from("cds_documents")
-    .select("ipeds_id")
-    .eq("school_id", school.school_id)
-    .not("ipeds_id", "is", null)
-    .limit(1)
-    .maybeSingle();
-  if (sibling?.ipeds_id) effectiveIpedsId = sibling.ipeds_id as string;
-  return effectiveIpedsId;
+  return await resolveInsertIpedsId(supabase, school.school_id, school.ipeds_id ?? null);
 }
 
 async function archiveSectionPackage(
@@ -990,22 +981,9 @@ async function archiveOneCandidate(
   // Branch A: no existing row → fresh insert.
   if (!existing) {
     await ensureObjectUploaded(supabase, storagePath, bytes, ext);
-    // If schools.yaml was transiently unreachable (school.ipeds_id
-    // swallowed to null by resolveSchoolIpedsId) but prior-year rows for
-    // this school DO carry ipeds_id, reuse that value so new-year rows
-    // don't end up correlated-inconsistent. Cheap fallback query, no-op
-    // when school.ipeds_id is already set from schools.yaml.
-    let effectiveIpedsId: string | null = school.ipeds_id ?? null;
-    if (!effectiveIpedsId) {
-      const { data: sibling } = await supabase
-        .from("cds_documents")
-        .select("ipeds_id")
-        .eq("school_id", school.school_id)
-        .not("ipeds_id", "is", null)
-        .limit(1)
-        .maybeSingle();
-      if (sibling?.ipeds_id) effectiveIpedsId = sibling.ipeds_id as string;
-    }
+    // The directory decides the UNITID (schools.yaml is the fallback); see
+    // resolveInsertIpedsId. No sibling-document inheritance.
+    const effectiveIpedsId = await effectiveIpedsIdForSchool(supabase, school);
     const docId = await insertFreshDocument(supabase, {
       school_id: school.school_id,
       school_name: school.school_name,

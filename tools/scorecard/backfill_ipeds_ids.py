@@ -52,7 +52,7 @@ def load_crosswalk() -> dict[str, str]:
     to stderr so operators notice schema drift."""
     with SCHOOLS_YAML.open() as f:
         data = yaml.safe_load(f)
-    crosswalk: dict[str, str] = {}
+    ids_by_slug: dict[str, set[str]] = {}
     skipped: list[tuple[str, str]] = []
     for entry in data.get("schools", []):
         sid = entry.get("id")
@@ -63,7 +63,20 @@ def load_crosswalk() -> dict[str, str]:
         if not IPEDS_RE.fullmatch(ipeds_str):
             skipped.append((sid, ipeds_str))
             continue
-        crosswalk[sid] = ipeds_str
+        ids_by_slug.setdefault(sid, set()).add(ipeds_str)
+    # A slug shared by several UNITIDs cannot be backfilled by slug: keeping
+    # the last row stamped Bethel Tennessee's id on Bethel Minnesota's
+    # documents. Skip them; the directory-based fix handles those schools.
+    ambiguous = sorted(sid for sid, ids in ids_by_slug.items() if len(ids) > 1)
+    if ambiguous:
+        print(
+            f"Skipped {len(ambiguous)} slugs shared by several UNITIDs: "
+            + ", ".join(ambiguous),
+            file=sys.stderr,
+        )
+    crosswalk: dict[str, str] = {
+        sid: next(iter(ids)) for sid, ids in ids_by_slug.items() if len(ids) == 1
+    }
     if skipped:
         print(
             f"Skipped {len(skipped)} schools with malformed ipeds_id: "

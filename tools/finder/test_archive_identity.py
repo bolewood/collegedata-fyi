@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 from tools.finder.archive_identity import (
+    AmbiguousArchiveSchoolError,
     UnknownArchiveSchoolError,
     resolve_archive_identity,
 )
@@ -23,6 +24,33 @@ class ArchiveIdentityTests(unittest.TestCase):
         self.assertEqual(identity["school_id"], "uf")
         self.assertEqual(identity["school_name"], "University of Florida")
         self.assertEqual(identity["ipeds_id"], "134130")
+
+    def test_shared_slug_is_refused_not_resolved_to_the_last_entry(self) -> None:
+        # bethel-university appears for IN, MN and TN in schools.yaml. The old
+        # dict lookup kept the last row (Tennessee) for every caller.
+        with self.assertRaises(AmbiguousArchiveSchoolError) as ctx:
+            resolve_archive_identity("bethel-university")
+        message = str(ctx.exception)
+        for unitid in ("150145", "173160", "219718"):
+            self.assertIn(unitid, message)
+
+    def test_shared_slug_resolves_when_the_unitid_is_given(self) -> None:
+        identity = resolve_archive_identity("bethel-university", ipeds_id="173160")
+        self.assertEqual(identity["ipeds_id"], "173160")
+        with self.assertRaises(UnknownArchiveSchoolError):
+            resolve_archive_identity("bethel-university", ipeds_id="999999")
+
+    def test_every_duplicate_slug_in_schools_yaml_is_refused(self) -> None:
+        from collections import Counter
+
+        from tools.finder.identity_guard import load_school_claims
+
+        counts = Counter(c["school_id"] for c in load_school_claims())
+        shared = sorted(slug for slug, n in counts.items() if n > 1)
+        self.assertTrue(shared)
+        for slug in shared:
+            with self.assertRaises(AmbiguousArchiveSchoolError, msg=slug):
+                resolve_archive_identity(slug)
 
     def test_unknown_slug_is_rejected(self) -> None:
         with self.assertRaises(UnknownArchiveSchoolError):

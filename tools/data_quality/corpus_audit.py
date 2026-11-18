@@ -16,6 +16,9 @@ Checks
                                the same fall by more than the tolerance
   name_in_file_mismatch        the institution named inside the file (A1) is
                                not the school the file is published under
+  document_ipeds_id_mismatch   a document's ipeds_id is not its school's
+                               directory ipeds_id, or is NULL when the
+                               directory has one
 
 Metrics (already withheld from the public tables; tracked for trend)
   sanity_rules                 values each projection sanity rule flags
@@ -215,6 +218,78 @@ def federal_applicants_mismatch(
     return findings, compared
 
 
+def _directory_ipeds_by_school(
+    directory_rows: Iterable[Mapping[str, Any]],
+    crosswalk_rows: Iterable[Mapping[str, Any]],
+) -> dict[str, set[str]]:
+    """``{school_id: {ipeds_id}}`` from the institution directory plus the live
+    (non-redirect) crosswalk aliases, so a document filed under a legacy slug is
+    still judged against its institution."""
+    direct: dict[str, set[str]] = defaultdict(set)
+    for row in directory_rows:
+        if row.get("school_id") and row.get("ipeds_id"):
+            direct[str(row["school_id"])].add(str(row["ipeds_id"]))
+    # A slug that is some institution's own directory school_id belongs to it
+    # alone, even when other institutions still list it as an alias (the
+    # crosswalk holds "bethel-university" for several Bethels). Aliases only
+    # speak for slugs the directory does not own.
+    aliased: dict[str, set[str]] = defaultdict(set)
+    for row in crosswalk_rows:
+        if row.get("source") == "redirect" or not row.get("ipeds_id"):
+            continue
+        slug = row.get("alias")
+        if slug and str(slug) not in direct:
+            aliased[str(slug)].add(str(row["ipeds_id"]))
+    return {**aliased, **direct}
+
+
+def document_ipeds_id_mismatch(
+    documents: Iterable[Mapping[str, Any]],
+    directory_rows: Iterable[Mapping[str, Any]],
+    crosswalk_rows: Iterable[Mapping[str, Any]] = (),
+) -> list[dict[str, Any]]:
+    """One finding per school whose documents carry a wrong or missing UNITID.
+
+    ``cds_documents.ipeds_id`` joins every federal table. A document stamped
+    with another institution's id shows that institution's federal data next
+    to the school's CDS numbers; a NULL id drops the document from those joins.
+    The directory is the authority. A school the directory does not know, or
+    one it maps to more than one UNITID, is skipped: the audit cannot say which
+    is right.
+    """
+    expected_by_school = _directory_ipeds_by_school(directory_rows, crosswalk_rows)
+    wrong: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for doc in documents:
+        if doc.get("removed_at"):
+            continue
+        expected = expected_by_school.get(str(doc.get("school_id")))
+        if not expected or len(expected) != 1:
+            continue
+        (want,) = expected
+        have = str(doc["ipeds_id"]).strip() if doc.get("ipeds_id") else ""
+        if have != want:
+            wrong[str(doc["school_id"])].append(
+                {"document_id": doc.get("id"), "cds_year": doc.get("cds_year"), "ipeds_id": have or None}
+            )
+    findings = []
+    for school in sorted(wrong):
+        rows = sorted(wrong[school], key=lambda r: str(r["cds_year"]))
+        (want,) = expected_by_school[school]
+        findings.append(
+            _finding(
+                "document_ipeds_id_mismatch",
+                [school],
+                schools=[school],
+                expected_ipeds_id=want,
+                documents=len(rows),
+                null_ipeds_id=sum(1 for r in rows if r["ipeds_id"] is None),
+                wrong_ipeds_ids=sorted({r["ipeds_id"] for r in rows if r["ipeds_id"]}),
+                document_ids=[r["document_id"] for r in rows],
+            )
+        )
+    return findings
+
+
 def _name_tokens(text: str) -> set[str]:
     folded = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode().lower()
     return {t for t in re.split(r"[^a-z0-9]+", folded.replace("&", " and ")) if t}
@@ -366,6 +441,12 @@ def _describe(finding: Mapping[str, Any]) -> str:
         )
     if check == "name_in_file_mismatch":
         return f"{finding['year']} {schools}: the file says \"{finding['name_in_file']}\""
+    if check == "document_ipeds_id_mismatch":
+        return (
+            f"{schools}: {finding['documents']} document(s) should carry "
+            f"{finding['expected_ipeds_id']}; {finding['null_ipeds_id']} NULL, "
+            f"wrong ids {', '.join(finding['wrong_ipeds_ids']) or 'none'}"
+        )
     return schools
 
 
@@ -433,6 +514,9 @@ def build_report(
     name_rows: Sequence[Mapping[str, Any]],
     parse_error_rows: Sequence[Mapping[str, Any]],
     accepted: Mapping[str, str],
+    identity_documents: Sequence[Mapping[str, Any]] = (),
+    directory_rows: Sequence[Mapping[str, Any]] = (),
+    crosswalk_rows: Sequence[Mapping[str, Any]] = (),
 ) -> dict[str, Any]:
     federal_findings, compared = federal_applicants_mismatch(browser_rows, federal_rows)
     by_check = {
@@ -440,6 +524,9 @@ def build_report(
         "shared_admissions_numbers": shared_admissions_numbers(browser_rows),
         "federal_applicants_mismatch": federal_findings,
         "name_in_file_mismatch": name_in_file_mismatch(name_rows),
+        "document_ipeds_id_mismatch": document_ipeds_id_mismatch(
+            identity_documents, directory_rows, crosswalk_rows
+        ),
     }
     all_findings = [f for findings in by_check.values() for f in findings]
     split = split_findings(all_findings, accepted)
@@ -509,6 +596,26 @@ def fetch_inputs(client: ReadOnlyPostgrest) -> dict[str, list[dict[str, Any]]]:
             lambda r: r["id"],
         ),
         "browser_rows": browser_rows,
+        # Every visible document, with or without a source hash: the UNITID
+        # check must see the rows whose id is missing.
+        "identity_documents": rows(
+            "identity_documents",
+            "cds_documents",
+            {"select": "id,school_id,cds_year,ipeds_id,removed_at", "removed_at": "is.null", "order": "id"},
+            lambda r: r["id"],
+        ),
+        "directory_rows": rows(
+            "directory",
+            "institution_directory",
+            {"select": "ipeds_id,school_id", "order": "ipeds_id"},
+            lambda r: r["ipeds_id"],
+        ),
+        "crosswalk_rows": rows(
+            "crosswalk",
+            "institution_slug_crosswalk",
+            {"select": "ipeds_id,school_id,alias,source", "order": "ipeds_id,alias"},
+            lambda r: (r["ipeds_id"], r["alias"]),
+        ),
         # ipeds_facts keeps every loaded year; the serving view keeps only the
         # newest, which would drop a CDS year from the check on each release.
         "federal_rows": rows(

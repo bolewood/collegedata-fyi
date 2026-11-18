@@ -4,6 +4,7 @@
 // layer.
 
 import { SupabaseClient } from "jsr:@supabase/supabase-js@2";
+import { chooseDocumentIpedsId } from "./schools.ts";
 
 export interface CdsDocumentRow {
   id: string;
@@ -352,4 +353,76 @@ export async function recordRemoval(
   if (error) {
     throw new Error(`recordRemoval (${reason}): ${error.message}`);
   }
+}
+
+// The UNITID the institution directory assigns to a public slug, or null when
+// the slug is unknown or maps to more than one institution. Looks at the
+// directory's own school_id first, then at live (non-redirect) crosswalk
+// aliases so a document filed under a legacy slug still resolves. Read-only.
+export async function fetchDirectoryIpedsId(
+  client: SupabaseClient,
+  schoolId: string,
+): Promise<string | null> {
+  const { data: direct, error: directErr } = await client
+    .from("institution_directory")
+    .select("ipeds_id")
+    .eq("school_id", schoolId)
+    .limit(2);
+  if (directErr) throw new Error(`fetchDirectoryIpedsId: ${directErr.message}`);
+  const directIds = new Set(
+    ((direct ?? []) as { ipeds_id: string | null }[])
+      .map((r) => r.ipeds_id)
+      .filter((v): v is string => !!v),
+  );
+  if (directIds.size === 1) return [...directIds][0];
+  if (directIds.size > 1) return null;
+
+  const { data: aliased, error: aliasErr } = await client
+    .from("institution_slug_crosswalk")
+    .select("ipeds_id, source")
+    .eq("alias", schoolId)
+    .neq("source", "redirect")
+    .limit(5);
+  if (aliasErr) throw new Error(`fetchDirectoryIpedsId: ${aliasErr.message}`);
+  const aliasIds = new Set(
+    ((aliased ?? []) as { ipeds_id: string | null }[])
+      .map((r) => r.ipeds_id)
+      .filter((v): v is string => !!v),
+  );
+  return aliasIds.size === 1 ? [...aliasIds][0] : null;
+}
+
+// The ipeds_id a new document row is written with. The institution directory
+// decides; schools.yaml (already resolved by the caller, null when its slug is
+// shared by several institutions) is the fallback. A sibling document's id is
+// never copied: that is how one wrong id spread to every year of a school.
+export async function resolveInsertIpedsId(
+  supabase: SupabaseClient,
+  schoolId: string,
+  yamlIpedsId: string | null,
+): Promise<string | null> {
+  let directoryId: string | null = null;
+  try {
+    directoryId = await fetchDirectoryIpedsId(supabase, schoolId);
+  } catch (e) {
+    console.log(JSON.stringify({
+      ts: new Date().toISOString(),
+      fn: "archive.ts",
+      event: "directory_ipeds_lookup_failed",
+      school_id: schoolId,
+      error: (e as Error).message,
+    }));
+  }
+  const choice = chooseDocumentIpedsId(directoryId, yamlIpedsId);
+  if (choice.conflict || !choice.ipeds_id) {
+    console.log(JSON.stringify({
+      ts: new Date().toISOString(),
+      fn: "archive.ts",
+      event: choice.conflict ? "document_ipeds_id_conflict" : "document_ipeds_id_unresolved",
+      school_id: schoolId,
+      directory_ipeds_id: directoryId,
+      schools_yaml_ipeds_id: yamlIpedsId,
+    }));
+  }
+  return choice.ipeds_id;
 }

@@ -393,6 +393,35 @@ export async function resolveSchoolName(
   );
 }
 
+// Distinct UNITIDs that schools.yaml lists under one slug. One element is the
+// normal case; more than one means the slug is shared by several institutions
+// and a slug-only lookup cannot say which one the caller means.
+export function ipedsIdsForSlug(entries: SchoolEntry[], schoolId: string): string[] {
+  const ids = new Set<string>();
+  for (const e of entries) {
+    if (e.id === schoolId && e.ipeds_id) ids.add(e.ipeds_id);
+  }
+  return [...ids].sort();
+}
+
+// Decide the ipeds_id a new cds_documents row is written with. The institution
+// directory keys every institution to its own public slug, so it is the
+// authority; schools.yaml is only used when the directory has no row. There is
+// deliberately no "copy it from a sibling document" step: that copied a wrong
+// id forward to every later year.
+export function chooseDocumentIpedsId(
+  directoryIpedsId: string | null,
+  yamlIpedsId: string | null,
+): { ipeds_id: string | null; conflict: boolean } {
+  if (directoryIpedsId) {
+    return {
+      ipeds_id: directoryIpedsId,
+      conflict: !!yamlIpedsId && yamlIpedsId !== directoryIpedsId,
+    };
+  }
+  return { ipeds_id: yamlIpedsId ?? null, conflict: false };
+}
+
 // Resolve the IPEDS Unit ID for a school_id from schools.yaml, or null
 // if the school isn't listed or carries no UNITID. Used by the archive
 // path so newly inserted cds_documents rows carry ipeds_id automatically
@@ -417,8 +446,22 @@ export async function resolveSchoolIpedsId(
       _schoolsYamlCache = fetchSchoolsYaml();
     }
     const result = await _schoolsYamlCache;
-    const entry = result.entries.find((e) => e.id === schoolId);
-    return entry?.ipeds_id ?? null;
+    const lookup = ipedsIdsForSlug(result.entries, schoolId);
+    if (lookup.length > 1) {
+      // schools.yaml still has slugs shared by several institutions. Taking
+      // the first match stamps whichever row happens to sort first. Refuse to
+      // guess: the caller falls back to the institution directory, which keys
+      // each institution to its own slug.
+      console.log(JSON.stringify({
+        ts: new Date().toISOString(),
+        fn: "schools.ts",
+        event: "school_ipeds_id_ambiguous",
+        school_id: schoolId,
+        ipeds_ids: lookup,
+      }));
+      return null;
+    }
+    return lookup[0] ?? null;
   } catch {
     // Reset cache on error so a transient failure doesn't poison the
     // whole isolate's future resolutions.
