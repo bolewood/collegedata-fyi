@@ -30,12 +30,12 @@ High-volume rows that report near-total wait-list admission are treated as data-
 
 ## What it shows
 
-The current generated dataset contains 191 complete school-year rows across 148 schools, plus 61 partial rows where the CDS projection reports only some wait-list values. After collapsing duplicate school-year rows, six high-volume near-total rows are flagged as reported anomalies, leaving 180 school-year rows across 144 schools in the rate analysis. Across those analysis rows:
+The current generated dataset contains 216 complete school-year rows across 163 schools, plus 54 partial rows where the CDS projection reports only some wait-list values. After collapsing duplicate school-year rows, 10 high-volume near-total rows are flagged as reported anomalies, leaving 201 school-year rows across 156 schools in the rate analysis. Across those analysis rows:
 
 - median success rate among accepted wait-list spots: 13%
 - weighted success rate: 22%
-- median "admitted / offered a spot" rate: 5.5%
-- rows under 2% success: 23
+- median "admitted / offered a spot" rate: 5.6%
+- rows under 2% success: 25
 
 The median is not the lesson by itself. The split matters:
 
@@ -60,7 +60,13 @@ The Berkeley history panel, inspired by a chart idea from [@neetu_arnold](https:
 
 ## How to reproduce
 
-The checked-in dataset (`web/src/lib/waitlist-recipe-data.ts`, `generatedAt` 2026-05-11) is a one-off snapshot with no checked-in generator, built from public-facing `school_browser_rows`; there is no generator script under `tools/`, so the page does not update on its own and may lag the current corpus. To rebuild it, start from:
+The checked-in dataset (`web/src/lib/waitlist-recipe-data.ts`) is generated from the public API by `tools/scorecard/build_waitlist_recipe.py`; its header and `generatedAt` say when. The page does not update on its own, so rebuild it after corpus corrections:
+
+```bash
+python tools/scorecard/build_waitlist_recipe.py
+```
+
+The builder needs only the public anon key (`SUPABASE_ANON_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY`). It keeps school-year rows that publish at least one of the three C2 counts, skips sub-institutional rows and malformed year labels, and excludes rows whose counts cannot all be true (more admitted from the wait list than accepted a spot, more accepted than offered, more admitted than offered). The excluded rows are listed in the generated file's header. To pull the underlying fields by hand, start from:
 
 ```bash
 curl 'https://api.collegedata.fyi/rest/v1/school_browser_rows?select=document_id,ipeds_id,school_id,school_name,canonical_year,acceptance_rate,wait_list_policy,wait_list_offered,wait_list_accepted,wait_list_admitted&wait_list_offered=not.is.null'
@@ -77,7 +83,7 @@ CDS rows with federal data, validate active `school_id` → `ipeds_id` claims wi
 is missing or fails that guard: a plausible slug can otherwise attach one institution's federal
 facts to another institution's CDS document.
 
-Then filter to complete rows where:
+Then filter to complete rows where (the builder drops rows that break this before they reach the file):
 
 ```text
 wait_list_offered >= wait_list_accepted >= wait_list_admitted >= 0
