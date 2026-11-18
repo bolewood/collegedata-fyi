@@ -108,9 +108,10 @@ curl 'https://www.collegedata.fyi/api/fields'
 curl 'https://www.collegedata.fyi/openapi.json'`}</CodeBlock>
       <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
         <code>GET /api/facts/{"{school_id}"}</code> is deprecated. It is an
-        older flat summary of one school&apos;s latest filing, and some of its
-        values are read from fixed question numbers that do not line up for
-        every school and year. Use{" "}
+        older flat summary of one school&apos;s latest filing. Its counts come
+        from the same year-aware data as the newer endpoint; its{" "}
+        <code>raw</code> block keeps legacy keys but is null wherever the CDS
+        question number does not match the key for that year. Use{" "}
         <code>/api/schools/{"{school_id}"}/facts</code> instead, which labels
         the source of each value.
       </p>
