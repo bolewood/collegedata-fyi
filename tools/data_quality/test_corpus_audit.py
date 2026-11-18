@@ -366,6 +366,61 @@ class AcceptedFindingsTests(unittest.TestCase):
         audit.load_accepted(audit.DEFAULT_ACCEPTED)
 
 
+class BrowserFederalFlagTests(unittest.TestCase):
+    @staticmethod
+    def row(school, ipeds, flag, mode, year="2024-25"):
+        return {**browser(school, year=year, ipeds=ipeds),
+                "federal_baseline_available": flag, "federal_source_mode": mode}
+
+    def test_cds_only_with_current_facts_is_flagged(self):
+        rows = [self.row("a", "1", False, "cds_only")]
+        (finding,) = audit.browser_federal_flag_mismatch(rows, ["1"])
+        self.assertEqual(finding["key"], "browser_federal_flag_mismatch:a:2024-25")
+        self.assertTrue(finding["has_current_facts"])
+        self.assertIn("has current IPEDS facts", audit._describe(finding))
+
+    def test_baseline_claimed_without_facts_or_ipeds_id_is_flagged(self):
+        rows = [
+            self.row("a", "2", True, "cds_plus_ipeds_baseline"),
+            self.row("b", None, True, "cds_plus_ipeds_baseline"),
+        ]
+        findings = audit.browser_federal_flag_mismatch(rows, ["1"])
+        self.assertEqual([f["schools"][0] for f in findings], ["a", "b"])
+        self.assertFalse(findings[0]["has_current_facts"])
+
+    def test_consistent_rows_are_clean(self):
+        rows = [
+            self.row("a", "1", True, "cds_plus_ipeds_baseline"),
+            self.row("b", "2", False, "cds_only"),
+            self.row("c", None, False, "cds_only"),
+        ]
+        self.assertEqual(audit.browser_federal_flag_mismatch(rows, ["1"]), [])
+
+    def test_flag_and_mode_must_agree_with_each_other(self):
+        rows = [self.row("a", "1", True, "cds_only")]
+        self.assertEqual(len(audit.browser_federal_flag_mismatch(rows, ["1"])), 1)
+
+    def test_rows_without_the_columns_or_unfetched_facts_are_skipped(self):
+        self.assertEqual(audit.browser_federal_flag_mismatch([browser("a", ipeds="1")], ["1"]), [])
+        rows = [self.row("a", "1", False, "cds_only")]
+        self.assertEqual(audit.browser_federal_flag_mismatch(rows, None), [])
+
+    def test_report_counts_it_and_accepted_keys_move_to_accepted(self):
+        kwargs = dict(
+            documents=[], federal_rows=[], rule_field_rows=[], name_rows=[], parse_error_rows=[],
+            browser_rows=[self.row("a", "1", False, "cds_only")], ipeds_ids_with_facts=["1"],
+        )
+        report = audit.build_report(accepted={}, **kwargs)
+        self.assertEqual(
+            report["summary"]["findings"]["browser_federal_flag_mismatch"], {"new": 1, "accepted": 0}
+        )
+        self.assertIn("browser_federal_flag_mismatch", audit.render_markdown(report))
+        accepted = audit.build_report(
+            accepted={"browser_federal_flag_mismatch:a:2024-25": "reason"}, **kwargs
+        )
+        self.assertEqual(accepted["summary"]["new_findings"], 0)
+
+
 class ReportTests(unittest.TestCase):
     def test_report_and_markdown_from_fixture_rows(self):
         report = audit.build_report(

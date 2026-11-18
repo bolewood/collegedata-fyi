@@ -22,6 +22,9 @@ Checks
   document_ipeds_id_mismatch   a document's ipeds_id is not its school's
                                directory ipeds_id, or is NULL when the
                                directory has one
+  browser_federal_flag_mismatch  a browser row says "CDS only" although its
+                               ipeds_id has current IPEDS facts, or claims a
+                               federal baseline when it has none (#351)
 
 Metrics (already withheld from the public tables; tracked for trend)
   sanity_rules                 values each projection sanity rule flags
@@ -294,6 +297,50 @@ def document_ipeds_id_mismatch(
     return findings
 
 
+def browser_federal_flag_mismatch(
+    browser_rows: Iterable[Mapping[str, Any]],
+    ipeds_ids_with_facts: Optional[Iterable[str]],
+) -> list[dict[str, Any]]:
+    """One finding per browser row whose federal-baseline columns disagree with
+    ``ipeds_current_facts``.
+
+    ``federal_baseline_available`` and ``federal_source_mode`` are meant to say
+    whether the row's UNITID has IPEDS baseline facts. The projection rewrites
+    the row and resets both to their defaults (false / cds_only) unless it sets
+    them again, which is how 757 of 762 rows came to say "CDS only" (#351). A
+    row without the columns in the fetched data is skipped, and ``None`` for
+    the fact ids (not fetched) skips the check.
+    """
+    if ipeds_ids_with_facts is None:
+        return []
+    have_facts = {str(i) for i in ipeds_ids_with_facts}
+    findings = []
+    for row in browser_rows:
+        if "federal_baseline_available" not in row or "federal_source_mode" not in row:
+            continue
+        expected = bool(row.get("ipeds_id")) and str(row["ipeds_id"]) in have_facts
+        flag = row["federal_baseline_available"]
+        mode = row["federal_source_mode"]
+        # ipeds_baseline_only is never produced; only the two CDS modes are judged.
+        expected_mode = "cds_plus_ipeds_baseline" if expected else "cds_only"
+        if flag is expected and mode == expected_mode:
+            continue
+        findings.append(
+            _finding(
+                "browser_federal_flag_mismatch",
+                [str(row["school_id"]), str(row.get("canonical_year"))],
+                schools=[str(row["school_id"])],
+                year=str(row.get("canonical_year")),
+                ipeds_id=row.get("ipeds_id"),
+                has_current_facts=expected,
+                federal_baseline_available=flag,
+                federal_source_mode=mode,
+            )
+        )
+    findings.sort(key=lambda f: f["key"])
+    return findings
+
+
 def shared_slug_domain_mismatch(
     documents: Iterable[Mapping[str, Any]],
     claims: Iterable[Mapping[str, Any]],
@@ -507,6 +554,13 @@ def _describe(finding: Mapping[str, Any]) -> str:
             f"{', '.join(finding['hosts'])}, a domain of "
             f"{', '.join(finding['host_ipeds_ids'])} not the stamped institution"
         )
+    if check == "browser_federal_flag_mismatch":
+        return (
+            f"{finding['year']} {schools}: {finding['ipeds_id'] or 'no ipeds_id'} "
+            f"{'has' if finding['has_current_facts'] else 'has no'} current IPEDS facts, "
+            f"row says {finding['federal_source_mode']} "
+            f"(available={finding['federal_baseline_available']})"
+        )
     if check == "document_ipeds_id_mismatch":
         return (
             f"{schools}: {finding['documents']} document(s) should carry "
@@ -584,6 +638,7 @@ def build_report(
     directory_rows: Sequence[Mapping[str, Any]] = (),
     crosswalk_rows: Sequence[Mapping[str, Any]] = (),
     shared_slug_claims: Sequence[Mapping[str, Any]] = (),
+    ipeds_ids_with_facts: Optional[Iterable[str]] = None,
 ) -> dict[str, Any]:
     federal_findings, compared = federal_applicants_mismatch(browser_rows, federal_rows)
     by_check = {
@@ -596,6 +651,9 @@ def build_report(
         ),
         "document_ipeds_id_mismatch": document_ipeds_id_mismatch(
             identity_documents, directory_rows, crosswalk_rows
+        ),
+        "browser_federal_flag_mismatch": browser_federal_flag_mismatch(
+            browser_rows, ipeds_ids_with_facts
         ),
     }
     all_findings = [f for findings in by_check.values() for f in findings]
@@ -647,13 +705,33 @@ def fetch_inputs(client: ReadOnlyPostgrest) -> dict[str, list[dict[str, Any]]]:
         "school_browser_rows",
         {
             "select": "document_id,school_id,sub_institutional,ipeds_id,canonical_year,"
-            "year_start,applied,admitted,enrolled_first_year",
+            "year_start,applied,admitted,enrolled_first_year,"
+            "federal_baseline_available,federal_source_mode",
             "order": "document_id",
         },
         lambda r: r["document_id"],
     )
     first_year = min((int(r["year_start"]) for r in browser_rows if r.get("year_start")), default=0)
+    # UNITIDs that have any current IPEDS fact, for the browser-flag check. The
+    # view has about 60 rows per school, so ask only about the ids the browser
+    # rows carry, in chunks that keep the URL short.
+    browser_ids = sorted({str(r["ipeds_id"]) for r in browser_rows if r.get("ipeds_id")})
+    fact_ids: set[str] = set()
+    for start in range(0, len(browser_ids), 100):
+        chunk = browser_ids[start : start + 100]
+        for fact in rows(
+            "ipeds_current_facts",
+            "ipeds_current_facts",
+            {
+                "select": "ipeds_id,field_key",
+                "ipeds_id": "in.(" + ",".join(chunk) + ")",
+                "order": "ipeds_id,field_key",
+            },
+            lambda r: (r["ipeds_id"], r["field_key"]),
+        ):
+            fact_ids.add(str(fact["ipeds_id"]))
     return {
+        "ipeds_ids_with_facts": sorted(fact_ids),
         "documents": rows(
             "documents",
             "cds_documents",

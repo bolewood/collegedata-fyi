@@ -1628,11 +1628,17 @@ def project_document(
     document: dict[str, Any],
     definitions: dict[str, dict[str, FieldDefinition]],
     apply: bool,
+    baseline_cache: Optional[dict[str, bool]] = None,
 ) -> tuple[int, bool]:
     document_id = document["document_id"]
     artifacts = fetch_artifacts(client, str(document_id))
     scorecard = fetch_scorecard(client, document.get("ipeds_id"))
     field_rows, browser_row = build_projection_rows(document, artifacts, definitions, scorecard)
+    if browser_row is not None:
+        apply_federal_baseline_flags(
+            browser_row,
+            ipeds_id_has_current_facts(client, document.get("ipeds_id"), baseline_cache),
+        )
 
     print(
         f"{document.get('school_id')} {document.get('canonical_year')} "
@@ -1656,7 +1662,15 @@ def replace_projection_rows(
 
     `overlay_producer_version` is sent only when it has a value (PRD 038 A15). The RPC reads `p_browser_row` through an explicit
     column list, so even a database that does not have the column yet (the window between this code merging and the migration
-    being applied) drops an extra key instead of failing; omitting a null key keeps the payload identical to today's."""
+    being applied) drops an extra key instead of failing; omitting a null key keeps the payload identical to today's.
+
+    The RPC deletes and re-inserts the browser row, so every federal-baseline column falls back to its table default
+    (false / cds_only) unless it is written again. The RPC's column list does not carry them, so they are taken out of the
+    payload and written with one update on the new row straight after (issue #351)."""
+    federal_flags: dict[str, Any] = {}
+    if browser_row is not None:
+        federal_flags = {k: browser_row[k] for k in FEDERAL_BASELINE_COLUMNS if k in browser_row}
+        browser_row = {k: v for k, v in browser_row.items() if k not in FEDERAL_BASELINE_COLUMNS}
     if browser_row is not None and browser_row.get("overlay_producer_version") is None:
         browser_row = {k: v for k, v in browser_row.items() if k != "overlay_producer_version"}
     client.rpc(
@@ -1667,6 +1681,44 @@ def replace_projection_rows(
             "p_browser_row": browser_row,
         },
     ).execute()
+    if federal_flags:
+        client.table("school_browser_rows").update(federal_flags).eq("document_id", document_id).execute()
+
+
+FEDERAL_BASELINE_COLUMNS = ("federal_baseline_available", "federal_source_mode")
+
+
+def apply_federal_baseline_flags(browser_row: dict[str, Any], has_current_facts: bool) -> None:
+    """Set the two federal-baseline columns the way public.refresh_ipeds_browser_source_modes() defines them."""
+    browser_row["federal_baseline_available"] = has_current_facts
+    browser_row["federal_source_mode"] = "cds_plus_ipeds_baseline" if has_current_facts else "cds_only"
+
+
+def ipeds_id_has_current_facts(
+    client: Any,
+    ipeds_id: Optional[str],
+    cache: Optional[dict[str, bool]] = None,
+) -> bool:
+    """True when ipeds_current_facts has at least one row for the UNITID. A NULL id has none.
+
+    One indexed single-row lookup per distinct UNITID (ipeds_current_facts is indexed on ipeds_id, field_key), memoized in
+    `cache` for a bulk run. Not a per-row query: a school with several documents is looked up once."""
+    if not ipeds_id:
+        return False
+    key = str(ipeds_id)
+    if cache is not None and key in cache:
+        return cache[key]
+    result = (
+        client.table("ipeds_current_facts")
+        .select("ipeds_id")
+        .eq("ipeds_id", key)
+        .limit(1)
+        .execute()
+    )
+    found = bool(result.data)
+    if cache is not None:
+        cache[key] = found
+    return found
 
 
 def refresh_public_serving_caches(client: Any) -> None:
@@ -1835,8 +1887,9 @@ def main() -> int:
     docs = fetch_documents(client, args.document_id)
     total_fields = 0
     total_browser_rows = 0
+    baseline_cache: dict[str, bool] = {}
     for document in docs:
-        count, has_browser_row = project_document(client, document, definitions, args.apply)
+        count, has_browser_row = project_document(client, document, definitions, args.apply, baseline_cache)
         total_fields += count
         total_browser_rows += int(has_browser_row)
 
