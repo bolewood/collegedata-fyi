@@ -7,6 +7,7 @@ import { TrackedLink } from "@/components/TrackedLink";
 import { formatRecipeShare } from "@/lib/format";
 import {
   formatUsd,
+  rangeExclusionSentence,
   type AlignmentGapMeritRow,
   type AlignmentGapRow,
 } from "@/lib/alignment-gap-recipe-analysis";
@@ -529,8 +530,7 @@ export default function AlignmentGapPage() {
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
           Rows are removed when the merit profile is too incomplete, required
           values are missing, or published values fall outside reasonable
-          ranges. That includes {ex.rangeShare} reported merit-aid shares
-          outside 0–100% and {ex.rangeGrant} average grant above $80,000. A
+          ranges. {rangeExclusionSentence(ex.rangeShare, ex.rangeGrant)} A
           legitimate published value of $0 is kept.
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>

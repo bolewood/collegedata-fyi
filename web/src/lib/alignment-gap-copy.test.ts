@@ -15,6 +15,7 @@ import {
   meritGrantInRange,
   meritRegion,
   meritShareInRange,
+  rangeExclusionSentence,
 } from "./alignment-gap-recipe-analysis";
 
 const src = (rel: string) => readFileSync(join(process.cwd(), "src", rel), "utf8");
@@ -252,5 +253,29 @@ describe("alignment-gap merit arithmetic", () => {
     expect(meritGrantInRange(85_600)).toBe(false);
     expect(meritGrantInRange(0)).toBe(true);
     expect(meritGrantInRange(27_587)).toBe(true);
+  });
+});
+
+describe("rangeExclusionSentence", () => {
+  it("names both counts when both are non-zero", () => {
+    expect(rangeExclusionSentence(2, 3)).toBe(
+      "That includes 2 reported merit-aid shares outside 0–100% and 3 average grants above $80,000.",
+    );
+    expect(rangeExclusionSentence(1, 1)).toBe(
+      "That includes 1 reported merit-aid share outside 0–100% and 1 average grant above $80,000.",
+    );
+  });
+
+  it("omits a clause whose count is zero", () => {
+    expect(rangeExclusionSentence(2, 0)).toBe(
+      "That includes 2 reported merit-aid shares outside 0–100%.",
+    );
+    expect(rangeExclusionSentence(0, 1)).toBe(
+      "That includes 1 average grant above $80,000.",
+    );
+  });
+
+  it("returns an empty string when both counts are zero", () => {
+    expect(rangeExclusionSentence(0, 0)).toBe("");
   });
 });

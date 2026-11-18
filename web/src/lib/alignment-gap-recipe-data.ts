@@ -6707,18 +6707,18 @@ export const ALIGNMENT_GAP_MERIT_META = {
     "2024-25",
     "2025-26"
   ],
-  "schoolCount": 268,
+  "schoolCount": 269,
   "sample": "merit-join",
   "medianBurden": 0.04446,
-  "sampleMedianBurden": 0.04616,
+  "sampleMedianBurden": 0.046012,
   "endowmentHighCut": 63217.76,
-  "endowmentLowCut": 18362.98,
+  "endowmentLowCut": 18384.22,
   "positiveGap": 149,
   "zeroMeritCount": 5,
   "regions": {
     "covers": 97,
     "constrained": 52,
-    "none": 119
+    "none": 120
   },
   "coversShare": 0.651,
   "exclusions": {
@@ -6728,7 +6728,7 @@ export const ALIGNMENT_GAP_MERIT_META = {
     "missingH2a": 100,
     "rangeShare": 2,
     "rangeGrant": 0,
-    "missingScorecard": 3
+    "missingScorecard": 2
   },
   "rangeShareSchools": [
     "California State University-Chico",
@@ -10987,6 +10987,23 @@ export const ALIGNMENT_GAP_MERIT_SCHOOLS: readonly AlignmentGapMeritRow[] = [
     "burden": 0.047056,
     "gap": 296.55,
     "endowmentPerStudent": 139050.11
+  },
+  {
+    "schoolId": "virginia-tech",
+    "schoolName": "Virginia Tech",
+    "cdsYear": "2025-26",
+    "meritShare": 0.154237,
+    "avgMeritGrant": 3169.33,
+    "meritPerFirstYear": 488.83,
+    "earnings10yrMedian": 81698,
+    "medianDebtCompleters": 21500,
+    "medianDebtMonthlyPayment": 227.94,
+    "avgNetPrice": 24953,
+    "endowmentEnd": 1939700000,
+    "undergraduateEnrollment": 30923,
+    "burden": 0.03348,
+    "gap": -1762.69,
+    "endowmentPerStudent": 62726.77
   },
   {
     "schoolId": "wabash-college",

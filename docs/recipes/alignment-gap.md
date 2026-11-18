@@ -11,9 +11,8 @@ Schools that award no non-need merit aid sit on a dedicated `$0` rail on the lef
 while schools with debt burden at or below median sit on a dedicated base shelf.
 The diagonal boundary partitions schools where merit spend exceeds the annual gap
 (forest green) from those where the debt gap exceeds merit aid (ochre). Panel B
-keeps a broader endowment comparison so schools without a usable H2A row —
-including Bard and Grinnell — stay on the page. Both panels measure the gap
-against the same 392-school median burden. Hover any dot for the school name.
+keeps a broader endowment comparison so schools without a usable H2A row
+stay on the page. Both panels measure the gap against the same 392-school median burden. Hover any dot for the school name.
 
 ## What the recipe computes
 

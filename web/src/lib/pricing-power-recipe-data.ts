@@ -31,7 +31,7 @@ export const PRICING_POWER_META = {
     "lowerYieldLowerBurden": 318
   },
   "cdsCrosscheckCount": 393,
-  "cdsAttachedCount": 383,
+  "cdsAttachedCount": 382,
   "annotationSchoolId": "syracuse-university",
   "annotationIpedsId": "196413",
   "exclusions": {
@@ -137,7 +137,7 @@ export const PRICING_POWER_SCHOOLS: readonly PricingPowerSchool[] = [
   {"schoolId":"bethel-college-north-newton","name":"Bethel College-North Newton","ipedsId":"154749","applied":1154,"admitted":1079,"enrolled":170,"acceptanceRate":0.935,"yieldRate":0.1576,"burden":0.0612,"medianDebt":24000,"monthlyPayment":254.44,"earnings10yr":49898,"avgNetPrice":32917,"instructionFte":8421,"instructionNetPriceRatio":0.2558},
   {"schoolId":"bethel-university-in","name":"Bethel University","ipedsId":"150145","applied":985,"admitted":962,"enrolled":264,"acceptanceRate":0.9766,"yieldRate":0.2744,"burden":0.0651,"medianDebt":25000,"monthlyPayment":265.04,"earnings10yr":48860,"avgNetPrice":18610,"instructionFte":8969,"instructionNetPriceRatio":0.4819},
   {"schoolId":"bethel-university","name":"Bethel University","ipedsId":"173160","applied":1754,"admitted":1540,"enrolled":415,"acceptanceRate":0.878,"yieldRate":0.2695,"cdsAcceptanceRate":0.878,"cdsYieldRate":0.2695,"cdsYear":"2024-25","burden":0.0429,"medianDebt":21500,"monthlyPayment":227.94,"earnings10yr":63764,"avgNetPrice":28556,"instructionFte":9737,"instructionNetPriceRatio":0.341},
-  {"schoolId":"bethel-university-tn","name":"Bethel University","ipedsId":"219718","applied":1486,"admitted":895,"enrolled":288,"acceptanceRate":0.6023,"yieldRate":0.3218,"cdsAcceptanceRate":0.878,"cdsYieldRate":0.2695,"cdsYear":"2024-25","burden":0.073,"medianDebt":27249,"monthlyPayment":288.88,"earnings10yr":47482,"avgNetPrice":12595,"instructionFte":5542,"instructionNetPriceRatio":0.44},
+  {"schoolId":"bethel-university-tn","name":"Bethel University","ipedsId":"219718","applied":1486,"admitted":895,"enrolled":288,"acceptanceRate":0.6023,"yieldRate":0.3218,"burden":0.073,"medianDebt":27249,"monthlyPayment":288.88,"earnings10yr":47482,"avgNetPrice":12595,"instructionFte":5542,"instructionNetPriceRatio":0.44},
   {"schoolId":"bethune-cookman-university","name":"Bethune-Cookman University","ipedsId":"132602","applied":10994,"admitted":9701,"enrolled":1012,"acceptanceRate":0.8824,"yieldRate":0.1043,"cdsAcceptanceRate":0.8953,"cdsYieldRate":0.1043,"cdsYear":"2024-25","burden":0.1024,"medianDebt":31000,"monthlyPayment":328.65,"earnings10yr":38518,"avgNetPrice":12030,"instructionFte":11053,"instructionNetPriceRatio":0.9188},
   {"schoolId":"binghamton-university","name":"Binghamton University","ipedsId":"196079","applied":53007,"admitted":20464,"enrolled":3248,"acceptanceRate":0.3861,"yieldRate":0.1587,"cdsAcceptanceRate":0.3861,"cdsYieldRate":0.1587,"cdsYear":"2024-25","burden":0.0292,"medianDebt":18500,"monthlyPayment":196.13,"earnings10yr":80596,"avgNetPrice":21620,"instructionFte":14520,"instructionNetPriceRatio":0.6716},
   {"schoolId":"biola-university","name":"Biola University","ipedsId":"110097","applied":3781,"admitted":2811,"enrolled":836,"acceptanceRate":0.7435,"yieldRate":0.2974,"burden":0.0535,"medianDebt":23875,"monthlyPayment":253.11,"earnings10yr":56778,"avgNetPrice":31495,"instructionFte":12866,"instructionNetPriceRatio":0.4085},
