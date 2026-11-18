@@ -84,7 +84,7 @@ CASE_STUDY_PAIRS: tuple[tuple[str, str], ...] = (
     ("stony-brook-university", "2025-26"),
     ("the-university-of-tennessee-knoxville", "2025-26"),
     ("uc-berkeley", "2025-26"),
-    ("uva", "2024-25"),
+    ("georgia-tech", "2024-25"),
 )
 
 SELECTIVITY_LABELS = (

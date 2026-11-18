@@ -100,23 +100,23 @@ export const WAITLIST_BUCKETS = {
     },
     {
       "label": "40%+ admit rate",
-      "rows": 109,
-      "schools": 91,
-      "medianSuccessRate": 0.3048,
-      "weightedSuccessRate": 0.3092,
-      "medianOfferSuccessRate": 0.0959,
-      "zeroishShare": 0.0734,
-      "medianAccepted": 607
+      "rows": 110,
+      "schools": 92,
+      "medianSuccessRate": 0.3103,
+      "weightedSuccessRate": 0.3093,
+      "medianOfferSuccessRate": 0.0986,
+      "zeroishShare": 0.0727,
+      "medianAccepted": 586
     },
     {
       "label": "No admit rate",
-      "rows": 15,
-      "schools": 15,
-      "medianSuccessRate": 0.274,
-      "weightedSuccessRate": 0.6239,
-      "medianOfferSuccessRate": 0.0518,
-      "zeroishShare": 0.1333,
-      "medianAccepted": 322
+      "rows": 14,
+      "schools": 14,
+      "medianSuccessRate": 0.2189,
+      "weightedSuccessRate": 0.6237,
+      "medianOfferSuccessRate": 0.0432,
+      "zeroishShare": 0.1429,
+      "medianAccepted": 368
     }
   ],
   "control": [
@@ -413,6 +413,37 @@ export const WAITLIST_CASES = [
     "waitListSuccessRate": 0.0002,
     "waitListOfferSuccessRate": 0.0001,
     "relativeToRegularAdmitRate": 0.0
+  },
+  {
+    "documentId": "46fe7517-7733-4102-aceb-0faa8ae72f42",
+    "ipedsId": "139755",
+    "schoolId": "georgia-tech",
+    "schoolName": "Georgia Institute of Technology",
+    "year": "2024-25",
+    "yearStart": 2024,
+    "state": "GA",
+    "control": "Public",
+    "carnegie": "Doctoral universities",
+    "size": "Large (10k-25k)",
+    "selectivity": "10-20% admit rate",
+    "applied": 59789,
+    "admitted": 8413,
+    "enrolledFirstYear": 3850,
+    "acceptanceRate": 0.1407,
+    "yieldRate": 0.4576,
+    "undergradEnrollment": 18785,
+    "waitListPolicy": true,
+    "waitListOffered": 6481,
+    "waitListAccepted": 4471,
+    "waitListAdmitted": 201,
+    "quality": "ok",
+    "schoolUrl": "/schools/georgia-tech/2024-25",
+    "archiveUrl": "https://www.collegedata.fyi/schools/georgia-tech/2024-25",
+    "complete": true,
+    "waitListOptInRate": 0.6899,
+    "waitListSuccessRate": 0.045,
+    "waitListOfferSuccessRate": 0.031,
+    "relativeToRegularAdmitRate": 0.32
   }
 ] as const satisfies readonly WaitlistRecipeRow[];
 
@@ -5853,12 +5884,12 @@ export const WAITLIST_ROWS = [
     "control": "Public",
     "carnegie": "Baccalaureate colleges",
     "size": "Midsize (2.5k-10k)",
-    "selectivity": "No admit rate",
-    "applied": 1962,
+    "selectivity": "40%+ admit rate",
+    "applied": 3707,
     "admitted": 3416,
     "enrolledFirstYear": 539,
-    "acceptanceRate": null,
-    "yieldRate": null,
+    "acceptanceRate": 0.9215,
+    "yieldRate": 0.1578,
     "undergradEnrollment": 2741,
     "waitListPolicy": true,
     "waitListOffered": 4,
@@ -5871,7 +5902,7 @@ export const WAITLIST_ROWS = [
     "waitListOptInRate": 1.0,
     "waitListSuccessRate": 1.0,
     "waitListOfferSuccessRate": 1.0,
-    "relativeToRegularAdmitRate": null
+    "relativeToRegularAdmitRate": 1.09
   },
   {
     "documentId": "d9aa8744-116f-4756-9ce7-84939cf8c3bc",
