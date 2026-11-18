@@ -638,3 +638,330 @@ versions:
       does it apply toward study-abroad programs.
     value_status: reported
     reported_value: null
+- version_id: fsu-national-merit-package-undated-r3
+  supersedes: fsu-national-merit-package-undated-r2
+  entry_year: null
+  entry_year_label: National Merit sections name no entering class; Vires amounts carry an 'Admitted first-year
+    students starting Fall 2024' footnote
+  entry_terms:
+  - unspecified
+  source_cohort_text: Admissions Scholarships page, National Merit sections
+  verification_status: conflicting
+  last_reviewed_at: '2026-11-18'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-closeout-corrections
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-florida-resident
+    parent_offer_id: null
+    variant_name: National Merit Finalist, Florida resident (Benacquisto)
+    residency: in_state
+    selection_mode: automatic_guaranteed
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - finalist
+      status_required_for_award: scholar
+      first_choice_required: true
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Available to National Merit Finalists graduating with a standard high school
+        diploma who are awarded a National Merit, Corporate National Merit or College-sponsored National
+        Merit Scholarship, and who list FSU first choice by May 1. Finalists who apply to UROP in the
+        first year are guaranteed admission to UROP. State program run through FSU; see Florida Student
+        Financial Aid for renewal terms.
+    benefits:
+    - benefit_id: b-benacquisto
+      category: cost_of_attendance
+      instrument: scholarship
+      coverage: full
+      amount:
+        qualifier: range
+        value: null
+        min: 16000
+        max: 25000
+        period: academic_year
+      duration_terms: null
+      exclusions: null
+      scope_text: Award equals the institutional cost of attendance for an in-state student minus the
+        sum of Bright Futures and any National Merit award, so the amount varies by student; the school
+        says it always equals the full in-state cost of attendance
+      advertised_coverage_label: null
+      conditions_text: null
+    advertised_totals: []
+  - offer_id: o-out-of-state
+    parent_offer_id: null
+    variant_name: National Merit Finalist, out-of-state (Out-of-State National Merit Award)
+    residency: out_of_state
+    selection_mode: unknown
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    eligibility:
+      national_merit_statuses:
+      - finalist
+      status_required_for_award: scholar
+      first_choice_required: true
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: unknown
+      citizenship_eligible: null
+      citizenship_text: null
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Same eligibility wording as the Florida-resident section. The school quotes a
+        package total of about $91,808 on the admissions page and $91,080 on the current-students renewal
+        page; the two disagree, so no total is recorded. Finalists who apply to UROP in the first year
+        are guaranteed admission to UROP.
+    benefits:
+    - benefit_id: b-waiver
+      category: nonresident_differential
+      instrument: tuition_waiver
+      coverage: full
+      amount: null
+      duration_terms: null
+      exclusions:
+      - Fees other than tuition
+      - Study-abroad programs
+      scope_text: 100 percent out-of-state tuition waiver; a waiver, not a scholarship. No separate value
+        is given on the National Merit section
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-vires
+      category: other
+      instrument: scholarship
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 16000
+        min: null
+        max: null
+        period: total_program
+      duration_terms: Eight semesters, paid in $2,000 increments at the start of each fall and spring
+        term
+      exclusions: null
+      scope_text: 'Vires scholarship as the package describes it: a $16,000 total over eight semesters,
+        not an annual amount. The admissions page also calls Vires an award for Florida residents. Amount
+        carries the ''Admitted first-year students starting Fall 2024'' footnote'
+      advertised_coverage_label: null
+      conditions_text: null
+    - benefit_id: b-nmsc
+      category: stipend
+      instrument: cash_stipend
+      coverage: fixed_amount
+      amount:
+        qualifier: exact
+        value: 2000
+        min: null
+        max: null
+        period: null
+      duration_terms: null
+      exclusions: null
+      scope_text: NMSC stipend
+      advertised_coverage_label: null
+      conditions_text: Only if the student's National Merit award is college sponsored
+  application:
+    separate_application: no_form_other_steps_required
+    milestones:
+    - kind: other
+      requirement: required
+      date: null
+      recurring:
+        month: 5
+        day: 1
+      precision: day
+      source_date_text: May 1 (list FSU as first-choice institution with the National Merit Scholarship
+        Corporation)
+    admission_plan_requirement: null
+    prerequisites: []
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: No FSU scholarship form; the student must list FSU first choice with NMSC. The page names no
+      year for May 1. FSU says all admitted students are automatically considered for admissions merit
+      scholarships and that Early Decision does not reduce consideration.
+  renewal_rules:
+  - applies_to:
+    - offer_id: o-florida-resident
+      benefit_id: null
+    gpa_min: 3.0
+    gpa_scale: null
+    credit_load_min_per_term: 12
+    credit_load_min_per_year: null
+    evaluation_timing: Reviewed each semester
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: 12 credit hours each semester, a 3.0 cumulative FSU GPA, consistent progress, and credit for
+      all hours enrolled by the end of the drop/add period; Benacquisto scholars cannot drop courses after
+      drop/add. The page points to Florida Student Financial Aid for detailed Benacquisto renewal terms.
+  - applies_to:
+    - offer_id: o-out-of-state
+      benefit_id: null
+    gpa_min: 3.0
+    gpa_scale: null
+    credit_load_min_per_term: 15
+    credit_load_min_per_year: null
+    evaluation_timing: Reviewed each semester
+    summer_courses_can_fix_shortfall: null
+    max_semesters: null
+    notes: 15 credit hours each semester, a 3.0 cumulative FSU GPA and consistent degree progress.
+  stacking_rules:
+  - other_aid_type: state_merit
+    relation: counts_within_package
+    note: Florida resident award equals in-state cost of attendance minus Bright Futures and any National
+      Merit award
+  - other_aid_type: outside_scholarship
+    relation: counts_within_package
+    note: National Merit award (corporate or college sponsored) is subtracted from the Benacquisto award
+  award_counts: []
+  other_info:
+  - text: Florida State University describes its Out-of-State National Merit Award scholarship package as a 100 percent out-of-state tuition waiver, a Vires scholarship and an NMSC stipend if college sponsored.
+    source_ref: s-adm
+  sources:
+  - source_id: s-adm
+    url: https://admissions.fsu.edu/first-year/scholarships
+    authority: official_admissions
+    retrieved_at: '2026-11-18'
+    content_sha256: 15e087c1d723431b0b6c46c06a93154bc80cf66ab7544048a920bbabb6f1d3e2
+    archive_url: null
+  - source_id: s-ren
+    url: https://admissions.fsu.edu/first-year/scholarships/current-students
+    authority: official_aid_policy
+    retrieved_at: '2026-11-15'
+    content_sha256: 21cb0aa601c58987cafa09304fa0388c648135275186c3088acd3f08d21d9661
+    archive_url: null
+  field_evidence:
+  - field_path: offers/0/selection_mode
+    source_ref: s-adm
+    locator: Admissions Scholarships page, National Merit Finalist / Benacquisto Scholarship > Florida
+      Resident
+    short_excerpt: Eligible scholars will receive an award equal to the institutional cost of attendance
+      for an in-state student
+    value_status: reported
+    reported_value: automatic_guaranteed
+  - field_path: offers/0/eligibility/national_merit_statuses
+    source_ref: s-adm
+    locator: Admissions Scholarships page, Florida Resident
+    short_excerpt: This prestigious scholarship is available to National Merit Finalists graduating with
+      a standard high school diploma
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-adm
+    locator: Admissions Scholarships page, Florida Resident
+    short_excerpt: The Benacquisto Scholarship disbursement can range between $16,000 - $25,000 per year
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/coverage
+    source_ref: s-adm
+    locator: Admissions Scholarships page, Florida Resident
+    short_excerpt: it will always equal the full in-state cost of attendance
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/eligibility/national_merit_statuses
+    source_ref: s-adm
+    locator: Admissions Scholarships page, Out-of-State Resident
+    short_excerpt: This prestigious scholarship is available to National Merit Finalists graduating with
+      a standard high school diploma
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/1/amount
+    source_ref: s-adm
+    locator: Admissions Scholarships page, Vires Scholarship
+    short_excerpt: Vires Scholarship is a total amount of $16,000*, which will be distributed throughout
+      eight semesters in $2,000 increments
+    value_status: reported
+    reported_value: 16000
+  - field_path: offers/1/benefits/2/amount
+    source_ref: s-adm
+    locator: Admissions Scholarships page, Out-of-State Resident
+    short_excerpt: a $2000 NMSC stipend (if college sponsored)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/benefits/2/conditions_text
+    source_ref: s-adm
+    locator: Admissions Scholarships page, Out-of-State Resident
+    short_excerpt: a $2000 NMSC stipend (if college sponsored)
+    value_status: reported
+    reported_value: null
+  - field_path: offers/1/advertised_totals
+    source_ref: s-adm
+    locator: Admissions Scholarships page, Out-of-State Resident
+    short_excerpt: has a total value of approximately $91,808
+    value_status: conflicting
+    reported_value: 91808
+  - field_path: offers/1/advertised_totals
+    source_ref: s-ren
+    locator: Current-students page, renewal table, Out-of-State National Merit Finalists Award Scholarship
+      row
+    short_excerpt: has a total value of approximately $91,080
+    value_status: conflicting
+    reported_value: 91080
+  - field_path: application/separate_application
+    source_ref: s-adm
+    locator: Admissions Scholarships page, intro and FAQ 'What is the process for applying'
+    short_excerpt: All accepted students are automatically considered for our admissions merit scholarships.
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-adm
+    locator: Admissions Scholarships page, Florida Resident
+    short_excerpt: you must list FSU as your first-choice institution by May 1
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/0
+    source_ref: s-ren
+    locator: Current-students page, renewal table, Benacquisto row
+    short_excerpt: Enrollment in 12 credit hours each semester
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules/1
+    source_ref: s-ren
+    locator: Current-students page, renewal table, Out-of-State National Merit Finalists row
+    short_excerpt: Enrollment in 15 credit hours each semester
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/0
+    source_ref: s-adm
+    locator: Admissions Scholarships page, Florida Resident
+    short_excerpt: minus the sum of Bright Futures and any National Merit award
+    value_status: reported
+    reported_value: null
+  - field_path: stacking_rules/1
+    source_ref: s-adm
+    locator: Admissions Scholarships page, Florida Resident
+    short_excerpt: minus the sum of Bright Futures and any National Merit award
+    value_status: reported
+    reported_value: null
+  - field_path: entry_year
+    source_ref: s-adm
+    locator: 'Admissions Scholarships page, National Merit sections: no entering class named; the Vires
+      amounts carry an ''Admitted first-year students starting Fall 2024'' footnote'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/1/benefits/0/exclusions
+    source_ref: s-adm
+    locator: Admissions Scholarships page, Out-of-State Tuition Waiver
+    short_excerpt: The waiver amount is only applied toward tuition and does not include other fees, nor
+      does it apply toward study-abroad programs.
+    value_status: reported
+    reported_value: null
+  - field_path: other_info/0
+    source_ref: s-adm
+    locator: Admissions Scholarships page, National Merit Finalist, Out-of-State National Merit Award package
+    short_excerpt: It includes a 100 percent out-of-state tuition waiver, a $16,000*, Vires scholarship, and a $2000 NMSC stipend (if college sponsored).
+    value_status: reported
+    reported_value: null
