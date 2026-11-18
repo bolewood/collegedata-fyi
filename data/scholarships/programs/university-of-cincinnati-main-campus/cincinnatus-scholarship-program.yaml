@@ -303,7 +303,7 @@ versions:
       maximum_lead_days: null
       notes: Common Application, $50 application fee (or fee waiver) and official high school transcript.
         ACT/SAT scores are optional.
-    interview_mode: none
+    interview_mode: unknown
     finalist_event_required: null
     notes: 'The school''s pages differ on the letter of recommendation: the Cincinnatus page lists it
       as optional, the scholarship chart says a recommendation must be received by November 1, and the
