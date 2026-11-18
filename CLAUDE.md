@@ -4,7 +4,7 @@ Open-source archive of U.S. college Common Data Set (CDS) documents.
 
 - **Live site:** https://collegedata.fyi (Next.js on Vercel)
 - **API:** https://api.collegedata.fyi (PostgREST on Supabase)
-- **Architecture:** `docs/ARCHITECTURE.md` (twelve pipelines: schema, corpus, discovery, mirror, extraction, scorecard, institution directory + coverage, IPEDS federal baseline, FSA institutional nonpayment, change intelligence, consumer API, frontend)
+- **Architecture:** `docs/ARCHITECTURE.md` (thirteen pipelines: schema, corpus, discovery, mirror, extraction, scorecard, institution directory + coverage, IPEDS federal baseline, FSA institutional nonpayment, change intelligence, consumer API, frontend, scholarship directory)
 - **Frontend PRD:** `docs/prd/002-frontend.md`
 - **Design system:** `web/DESIGN_SYSTEM.md` (canonical tokens in `web/src/app/tokens.css`; live reference at `/design-system/`). **Read before writing any UI.** Public copy: `web/VOICE.md`.
 
@@ -16,7 +16,9 @@ Open-source archive of U.S. college Common Data Set (CDS) documents.
 - `schemas/` — Canonical CDS schema JSON (1,105 fields)
 - `data/` — Versioned content datasets: `data/discovery/` (PRD 026 guided-discovery
   card library, ontology, deck, scenarios — CC BY-SA 4.0 with a contribution gate,
-  see its README) and `data/watchlists/` (change-intelligence school watchlists)
+  see its README), `data/scholarships/` (PRD 036 named scholarship records, one
+  YAML file per program — CC BY-SA 4.0 with the same contribution gate, see its
+  README) and `data/watchlists/` (change-intelligence school watchlists)
 - `docs/` — Architecture, PRDs, ADRs, research, backlog
 - `scratch/` — Throwaway operational outputs (gitignored). Default
   destination for any one-off run artifact: audit/drain JSON dumps,

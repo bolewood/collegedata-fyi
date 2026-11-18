@@ -115,7 +115,7 @@ collegedata.fyi sits between official higher-education data systems and the docu
 
 ## Docs and decisions
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — twelve-pipeline map of the whole system (schema, corpus, discovery, mirror, extraction, scorecard, institution directory + coverage, IPEDS federal baseline, FSA institutional nonpayment, change intelligence, consumer API, frontend), plus the cross-cutting ops and public surfaces (API usage, pipeline observation, RSS, brand colors, snapshots, Sentry, revalidation)
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — thirteen-pipeline map of the whole system (schema, corpus, discovery, mirror, extraction, scorecard, institution directory + coverage, IPEDS federal baseline, FSA institutional nonpayment, change intelligence, consumer API, frontend, scholarship directory), plus the cross-cutting ops and public surfaces (API usage, pipeline observation, RSS, brand colors, snapshots, Sentry, revalidation)
 - [`web/VOICE.md`](web/VOICE.md) and [`web/DESIGN_SYSTEM.md`](web/DESIGN_SYSTEM.md): public copy rules and the visual system; read before changing the UI
 - [`docs/frontend.md`](docs/frontend.md): route inventory, caching, and component map for the Next.js app
 - [`docs/community-feedback.md`](docs/community-feedback.md): how `/feedback` works and how stories are approved before publication
@@ -159,11 +159,15 @@ Created and maintained by Anthony S. at [Bolewood Group, LLC](https://bolewood.c
 
 MIT — see [`LICENSE`](LICENSE). Copyright © 2026 Anthony S. and Bolewood Group, LLC.
 
-One exception: the curated discovery content under [`data/discovery/`](data/discovery/)
+Two exceptions. The curated discovery content under [`data/discovery/`](data/discovery/)
 (experience-card library, interest ontology, explanation templates, discovery policy
 definitions) is licensed [CC BY-SA 4.0](data/discovery/LICENSE) — publicly inspectable,
 attribution and share-alike required. Contributions to that directory require a
 contribution agreement; see [`data/discovery/README.md`](data/discovery/README.md).
+
+The named scholarship records under [`data/scholarships/`](data/scholarships/) are
+licensed [CC BY-SA 4.0](data/scholarships/LICENSE) on the same terms; see
+[`data/scholarships/README.md`](data/scholarships/README.md) for the credit line.
 
 ## Using the data?
 

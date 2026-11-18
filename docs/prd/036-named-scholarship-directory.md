@@ -1,6 +1,6 @@
 # PRD 036: Named Scholarship Directory
 
-**Status:** Draft. Decisions recorded 2026-11-08: CC BY-SA 4.0 with attribution built in, agent verification with owner spot-checks, foundation-administered programs included.
+**Status:** Shipped (M0 earlier as #249; M1 to M4 in v0.6.23.0 on 2026-11-14; M5 and close-out in v0.6.24.0 on 2026-11-18). The directory holds 95 programs at 74 schools, 79 of them verified, against a launch target of 75. Not built, as planned: full automatic-award grids, Posse-style consortium awards, and an Open Scholarships import (see [Open decisions](#open-decisions-recommendations-included)). Ongoing work is operational: the change monitor and the annual review in [`docs/runbooks/scholarships-annual-review.md`](../runbooks/scholarships-annual-review.md). Decisions recorded 2026-11-08: CC BY-SA 4.0 with attribution built in, agent verification with owner spot-checks, foundation-administered programs included. The body below is the original plan.
 **Created:** 2026-11-08
 **Author:** Anthony + Claude (research: two GPT-6.1-Sol Orca workers)
 **Related:** [PRD 018](018-open-college-fit-data.md) (merit profile from CDS H2A/H14), [PRD 026](026-guided-college-discovery.md) (CC BY-SA content layer), [PRD 035](035-calibrated-information-density.md)

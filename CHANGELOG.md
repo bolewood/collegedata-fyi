@@ -8,6 +8,91 @@ History before 0.1.0.0 (2026-08-03), including the June and July 2026 work, is n
 
 ## [Unreleased]
 
+## [0.6.24.0] - 2026-11-18
+
+Covers #317 to #346: the named scholarship directory grows to its planned size
+and PRD 036 closes, and the site stops overloading its database each morning.
+
+### Added
+
+- The scholarship directory now lists 95 programs at 74 schools, up from 23 at
+  20. 79 are verified against the school's own pages, or those of a foundation
+  the school ties to the program, and 16 are published as conflicting because
+  those pages disagree. Browse them at
+  `/scholarships` or on each school's page (#321 to #326, #328, #329, #344).
+- "Other info" on scholarship cards: a sourced fact that fits no structured
+  field, such as "awarded for the fall semester only", shown as one sentence
+  with a link to the school's page. In the record format it is
+  `versions[].other_info`; in the API it is the `other_info` column of
+  `scholarship_directory`; the CSV download gains an `other_info_json` column
+  (#342, #343).
+- A size floor: a program is listed only when its top tier is worth at least
+  $10,000 a year (or $40,000 over four years), covers full tuition, or waives
+  the out-of-state tuition differential (#317).
+- The scholarship fetcher and monitor can fall back to a headless browser for
+  school sites that refuse a plain HTTP client. It loads only the one public
+  page and never passes a login, CAPTCHA or robots.txt block (#318, #319).
+- `tools/ops/revalidate_pages.py` and a daily "Page refresh sweep" workflow
+  (13:35 UTC) refresh the cached pages of schools whose data changed in the
+  last 26 hours. Run `python tools/ops/revalidate_pages.py --all` after a
+  federal data load or a school identity change (#336).
+- University of Cincinnati and University of Minnesota Twin Cities are back in
+  the discovery school list. Five more schools lost the same way are tracked in
+  #345 (#344).
+- PRD 039, a plan to make school pages cheaper to render. Work starts no
+  earlier than 2026-11-24 (#339, #341).
+
+### Changed
+
+- Coverage follows the school's promise. Full tuition stated for a standard
+  full-time credit load counts as full, and a full waiver of tuition itself
+  counts as full tuition; "up to" before a dollar amount is still partial
+  (#330, #332).
+- Scholarship benefit lines say "Duration: Four years." where they said "For
+  Four years." (#343).
+- School pages are cached for 7 days, not 24 hours, and are refreshed when
+  their data changes. A daily crawl had been making several hundred pages
+  rebuild in the same minute. In the API gateway logs for the same window,
+  the busiest minute was about 2,100 requests with 557 errors on 2026-11-16
+  and about 540 requests with one error on 2026-11-18, the first morning after
+  the change. One day is not proof (#336).
+- The public API key is read-only at the grant level, and can no longer call
+  the cache-refresh and other maintenance functions (#337).
+- CI builds and smoke-tests the web app only when `web/` or the workflow
+  changed (#338).
+
+### Fixed
+
+- Every published scholarship record was audited, first a sample of 20 and
+  then the other 73. 38 records got a corrected version and three more lost a
+  campus restriction the school's page does not state. Five more corrections
+  followed from re-checking what the monitor flagged, among them SMU's
+  admission deadline for President's Scholars, which is November 1. Published
+  versions are never edited: each correction is a new version (#330, #331,
+  #346).
+- A school URL containing non-ASCII characters returned a 500. It now returns
+  a 404 (#333, #335).
+- Every build read about 700 documents at once for the sitemap, which timed
+  out the database. It now reads three schools at a time (#334).
+- The scholarship loader finished green without refreshing the site, because
+  its refresh step used a `jq` function the runner lacks (#327).
+
+### Known limits
+
+- 10 of the 95 scholarship records have had an owner spot-check; the rest were
+  drafted and reviewed by agents against the school's pages.
+- The change monitor cannot read six script-rendered source pages (Duke's
+  scholarship office, Clemson, UT Dallas McDermott, Morehead-Cain, Indiana
+  Wells) and cannot reach Tulane's admission page or Prairie View's scholarship
+  page. Those are checked by hand in the annual review.
+- The monitor flags a record only when a change moves an amount, a date, a
+  year or a selection word. A rewording that moves none of those is caught
+  only by the annual review.
+- With 7-day page caching, a change that the sweep does not see can take up to
+  a week to appear: coverage wording that changes with no document change,
+  and federal data loads or identity changes when `--all` is not run.
+- Requests made straight to the data API are not rate-limited.
+
 ## [0.6.23.0] - 2026-11-14
 
 Named scholarship directory (PRD 036), merged as #310 to #315.
@@ -27,7 +112,7 @@ Named scholarship directory (PRD 036), merged as #310 to #315.
   `freshness_status` and the cycle basis. Joint programs appear once per
   participating school. Documented on `/api` (#312, #315).
 - Record format for programs under `data/scholarships/programs/`: one YAML
-  file per program, a JSON Schema, a field guide, a CC BY 4.0 licence with
+  file per program, a JSON Schema, a field guide, a CC BY-SA 4.0 licence with
   attribution text, and `tools/scholarships/validate.py`, which CI runs on
   every PR. Verified versions are immutable; a correction is a new version
   (#311).
