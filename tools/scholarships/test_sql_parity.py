@@ -32,7 +32,9 @@ import validate as v  # noqa: E402
 
 REPO = v.REPO_ROOT
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "valid"
-MIGRATION = sorted((REPO / "supabase" / "migrations").glob("*_scholarship_directory.sql"))[0]
+# Every migration that defines the cache or the view, in order: the base one, then the one that
+# recreates both to add other_info.
+MIGRATIONS = sorted((REPO / "supabase" / "migrations").glob("*_scholarship_directory*.sql"))
 CONTRACT = REPO / "docs" / "prd" / "036-view-contract.md"
 
 
@@ -95,7 +97,7 @@ def pg():
         db.run(
             "alter default privileges in schema public grant all on tables to anon, authenticated, service_role;\n"
             "alter default privileges in schema public grant all on functions to anon, authenticated, service_role;\n"
-            + MIGRATION.read_text(encoding="utf-8")
+            + "\n".join(m.read_text(encoding="utf-8") for m in MIGRATIONS)
         )
         yield db
     finally:
@@ -196,6 +198,19 @@ def seed_docs() -> Dict[str, Dict[str, Any]]:
     nv["offers"][0]["consideration_route"] = "invitation"
     nodates["versions"] = [nv]
     docs["zz-nodates.yaml"] = nodates
+
+    info = variant("zz-otherinfo")  # display-only facts: two entries, one per source; the others carry none
+    iv = info["versions"][1]
+    iv["other_info"] = [
+        {"text": "A student may hold only one merit scholarship.", "source_ref": "s-school"},
+        {"text": "Entry is in the fall term only.", "source_ref": "s-foundation"},
+    ]
+    for i, entry in enumerate(iv["other_info"]):
+        iv["field_evidence"].append(
+            {"field_path": f"other_info/{i}", "source_ref": entry["source_ref"], "locator": "x",
+             "value_status": "reported", "short_excerpt": f"quoted proof {i}"}
+        )
+    docs["zz-otherinfo.yaml"] = info
     return docs
 
 
@@ -295,3 +310,33 @@ def test_access_model_in_a_database_that_mimics_supabase_defaults(pg, seeded):
             with pytest.raises(RuntimeError, match="permission denied"):
                 pg.run(sql, role=role)
     assert pg.run("select public.refresh_scholarship_directory_cache();", role="service_role").strip().isdigit()
+
+
+def test_other_info_is_served_with_urls_and_defaults_to_an_empty_list(pg, seeded):
+    rows = {r["program_id"]: r for r in pg.rows("select row_to_json(d) from public.scholarship_directory d where school_id = 'uva';")}
+    got = rows["zz-otherinfo"]["other_info"]
+    assert [e["text"] for e in got] == ["A student may hold only one merit scholarship.", "Entry is in the fall term only."]
+    urls = {s_["source_id"]: s_["url"] for s_ in rows["zz-otherinfo"]["sources"]}
+    assert [e["source_url"] for e in got] == [urls["s-school"], urls["s-foundation"]]
+    assert all(set(e) == {"text", "source_ref", "source_url"} for e in got)
+    assert rows["zz-joint"]["other_info"] == []  # absent in the record: '[]', never null
+    assert "quoted proof" not in json.dumps(rows)  # the excerpt stays out of the public payload
+
+
+def test_other_info_does_not_change_derived_columns(pg, seeded):
+    rows = {r["program_id"]: r for r in pg.rows("select row_to_json(d) from public.scholarship_directory d where school_id = 'uva';")}
+    a, b = rows["zz-otherinfo"], rows["zz-joint"]
+    for col in ("coverages", "selection_modes", "freshness_status", "cycle_basis", "key_deadline", "deadline_months", "offers"):
+        assert a[col] == b[col], col
+
+
+def test_cache_and_view_stay_read_only_for_public_roles_after_the_rebuild(pg, seeded):
+    assert pg.run("select count(*) from public.scholarship_directory_cache;", role="anon").strip() != ""
+    for sql in (
+        "insert into public.scholarship_directory_cache (program_id) values ('x');",
+        "update public.scholarship_directory_cache set program_id = 'x';",
+        "delete from public.scholarship_directory_cache;",
+    ):
+        for role in ("anon", "authenticated"):
+            with pytest.raises(RuntimeError, match="permission denied|cannot|not allowed"):
+                pg.run(sql, role=role)

@@ -465,6 +465,19 @@ def public_evidence(record: Dict[str, Any]) -> List[Dict[str, Any]]:
     ]
 
 
+def public_other_info(record: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Display-only other_info entries for the public view: the text, which source, and its URL.
+
+    Never the quoted excerpt (same rule as public_evidence). Mirrors the SQL in
+    scholarship_directory_cache: '[]' when the key is absent or null.
+    """
+    urls = {s["source_id"]: s["url"] for s in record.get("sources") or []}
+    return [
+        {"text": e["text"], "source_ref": e["source_ref"], "source_url": urls.get(e["source_ref"])}
+        for e in record.get("other_info") or []
+    ]
+
+
 def public_record(program: Dict[str, Any], version: Dict[str, Any], school: Dict[str, str]) -> Dict[str, Any]:
     """One public record: the view's columns that are not time-dependent."""
     record = version["record"]
@@ -519,4 +532,5 @@ def public_record(program: Dict[str, Any], version: Dict[str, Any], school: Dict
             for s in sorted(record["sources"], key=lambda s: s["source_id"])  # the SQL orders by source_id too
         ],
         "evidence": public_evidence(record),
+        "other_info": public_other_info(record),
     }

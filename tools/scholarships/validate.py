@@ -16,7 +16,7 @@ Checks, each with a stable error code:
     E_OFF_DOMAIN                a source is not on the school or an allowlisted foundation domain
     E_DUPLICATE_ID              duplicate program, version, offer, benefit or source id
     E_EVIDENCE_PATH             field_evidence points at a path that does not exist
-    E_EVIDENCE_SOURCE           field_evidence or award_counts names an unknown source id
+    E_EVIDENCE_SOURCE           field_evidence, award_counts or other_info names an unknown source id
     E_EXCERPT_LENGTH            short_excerpt is longer than 25 words
     E_NO_EVIDENCE               a publication-grade field has no field_evidence
     E_GUARANTEED_NO_EVIDENCE    automatic_guaranteed without a quoted official promise
@@ -27,7 +27,7 @@ Checks, each with a stable error code:
     E_ENTRY_YEAR_UNKNOWN        dated milestone, no entry_year, and no conflicting/not_published evidence on entry_year
     E_MILESTONE_UNDATED         milestone with neither date nor recurring and no conflicting evidence
     E_APPLIES_TO                renewal rule scope names an offer or benefit that does not exist
-    E_TEXT_LENGTH               citizenship_text is longer than 40 words
+    E_TEXT_LENGTH               citizenship_text or an other_info text is longer than 40 words
     E_AMOUNT_RANGE              range amount with min >= max
     E_CONTRADICTION             aid_basis/need_role or consideration_route/separate_application disagree
     E_MILESTONE_WINDOW          dated milestone outside the version's application cycle
@@ -74,6 +74,7 @@ DEFAULT_PROGRAMS_DIR = REPO_ROOT / "data" / "scholarships" / "programs"
 ARCHIVE_HOSTS = {"web.archive.org"}
 MAX_EXCERPT_WORDS = 25
 MAX_CITIZENSHIP_WORDS = 40
+MAX_OTHER_INFO_WORDS = 40
 MISSING = object()
 
 
@@ -483,6 +484,12 @@ def _check_evidence(doc, version, vloc, schema_root, add):
     for ci, ac in enumerate(version.get("award_counts") or []):
         if ac["source_ref"] not in source_ids:
             add("E_EVIDENCE_SOURCE", f"{vloc}/award_counts/{ci}/source_ref", f"unknown source {ac['source_ref']!r}")
+    for oi, entry in enumerate(version.get("other_info") or []):
+        if entry["source_ref"] not in source_ids:
+            add("E_EVIDENCE_SOURCE", f"{vloc}/other_info/{oi}/source_ref", f"unknown source {entry['source_ref']!r}")
+        words = len(entry["text"].split())
+        if words > MAX_OTHER_INFO_WORDS:
+            add("E_TEXT_LENGTH", f"{vloc}/other_info/{oi}/text", f"{words} words; limit is {MAX_OTHER_INFO_WORDS}")
     for path, evs in by_path.items():
         conflicting = [e for e in evs if e["value_status"] == "conflicting"]
         if not conflicting:
@@ -512,6 +519,8 @@ def _required_evidence_paths(version) -> list[tuple[str, str]]:
             if _stated(amount):
                 kind = "total" if amount.get("period") == "total_program" else "plain"
                 out.append((f"{base}/benefits/{bi}/amount", kind))
+    for oi, _ in enumerate(version.get("other_info") or []):
+        out.append((f"other_info/{oi}", "quoted"))
     app = version.get("application")
     if app:
         if _stated(app["separate_application"]):
@@ -539,6 +548,14 @@ def _check_required_evidence(version, vloc, add):
         elif kind == "total":
             if not any(e.get("short_excerpt") for e in _reported(evidence, path, exact=True)):
                 add("E_SUMMED_TOTAL", f"{vloc}/{path}", "a total_program amount must be quoted by the school: reported evidence on this exact path with a short_excerpt; never add up components")
+        elif kind == "quoted":
+            # The card links the entry's own source, so the quote must come from that source.
+            entry = version["other_info"][int(path.rsplit("/", 1)[1])]
+            if not any(
+                e.get("short_excerpt") and e.get("source_ref") == entry["source_ref"]
+                for e in _reported(evidence, path, exact=True)
+            ):
+                add("E_NO_EVIDENCE", f"{vloc}/{path}", "an other_info entry needs reported field_evidence on this exact path, from the entry's own source_ref, with a short_excerpt")
         elif not _reported(evidence, path):
             add("E_NO_EVIDENCE", f"{vloc}/{path}", "stated value needs reported field_evidence on its own path or its direct parent; not_published evidence does not support a value")
 

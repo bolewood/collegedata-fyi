@@ -27,6 +27,9 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures" / "valid"
 _MATCHES = sorted((REPO / "supabase" / "migrations").glob("*_scholarship_directory.sql"))
 assert len(_MATCHES) == 1, _MATCHES  # resolved by name so a timestamp change at merge does not break the tests
 MIGRATION = _MATCHES[0]
+# The migration that last (re)defined the cache and the view: a materialized view cannot gain a
+# column in place, so the other_info migration recreates both. Column and cache pins read this one.
+VIEW_MIGRATION = sorted((REPO / "supabase" / "migrations").glob("*_scholarship_directory*.sql"))[-1]
 CONTRACT = REPO / "docs" / "prd" / "036-view-contract.md"
 FOUNDATION = "fixture-foundation-program"
 PARENT = "fixture-parent-program"
@@ -651,7 +654,7 @@ def test_migration_access_model():
 
 
 def test_migration_view_never_uses_now_inside_the_cache():
-    sql = MIGRATION.read_text(encoding="utf-8")
+    sql = VIEW_MIGRATION.read_text(encoding="utf-8")
     cache = sql.split("create materialized view public.scholarship_directory_cache", 1)[1].split("comment on materialized view", 1)[0]
     assert "now()" not in cache and "current_date" not in cache  # frozen at refresh; the view computes it
     assert "v.is_published" in cache and "is_chain_head" not in cache  # review 1: serve the newest publishable version
@@ -682,13 +685,13 @@ def contract_columns(text: str) -> List[str]:
 
 def test_contract_lists_exactly_the_view_columns_in_order():
     sql = MIGRATION.read_text(encoding="utf-8")
-    assert contract_columns(CONTRACT.read_text(encoding="utf-8")) == view_columns(sql)
+    assert contract_columns(CONTRACT.read_text(encoding="utf-8")) == view_columns(VIEW_MIGRATION.read_text(encoding="utf-8"))
 
 
 def test_contract_example_row_matches_the_view_columns():
     text = CONTRACT.read_text(encoding="utf-8")
     example = json.loads(text.split("```json\n", 1)[1].split("\n```", 1)[0])
-    assert sorted(example) == sorted(view_columns(MIGRATION.read_text(encoding="utf-8")))
+    assert sorted(example) == sorted(view_columns(VIEW_MIGRATION.read_text(encoding="utf-8")))
     assert example["license"] == model.LICENSE_ID
     assert example["attribution"] == model.ATTRIBUTION
     assert example["freshness_status"] in {
@@ -713,7 +716,7 @@ def test_contract_example_row_agrees_with_the_loader_output(ds):
     text = CONTRACT.read_text(encoding="utf-8")
     example = json.loads(text.split("```json\n", 1)[1].split("\n```", 1)[0])
     assert example == full_row(ds, dt.date(2026, 11, 14))
-    assert list(example) == view_columns(MIGRATION.read_text(encoding="utf-8"))  # same order as the view
+    assert list(example) == view_columns(VIEW_MIGRATION.read_text(encoding="utf-8"))  # same order as the view
 
 
 def test_freshness_rule_is_stated_in_the_migration_and_the_contract():
@@ -808,7 +811,7 @@ def test_view_pins_the_attribution_and_license_literals():
 def test_view_exposes_last_check_result_on_purpose():
     # Review 9: the cache is readable by anon, so every cache column the view omits would be a
     # second, undocumented endpoint. The cache and the view agree except for computed columns.
-    sql = MIGRATION.read_text(encoding="utf-8")
+    sql = VIEW_MIGRATION.read_text(encoding="utf-8")
     cache = sql.split("create materialized view public.scholarship_directory_cache", 1)[1].split("comment on materialized view", 1)[0]
     cache_cols = set(re.findall(r"\bas ([a-z_]+),?$", cache, re.M)) | set(re.findall(r"^  [a-z]+\.([a-z_]+),?$", cache, re.M))
     hidden = cache_cols - set(view_columns(sql))
@@ -827,3 +830,82 @@ def test_report_lists_every_participating_school_for_revalidation(ds):
     report = load.build_report(ds, None)
     expected = sorted({s["school_id"] for p in ds.programs for s in model.participants_of(p)})
     assert report["school_ids"] == expected and expected
+
+
+# ------------------------------------------------------------------ other_info
+
+
+def docs_with_other_info() -> Dict[str, Dict[str, Any]]:
+    docs = fixture_docs()
+    ver = next(v_ for v_ in foundation(docs)["versions"] if v_["version_id"] == "fixture-foundation-program-2027")
+    ver["other_info"] = [
+        {"text": "A student may hold only one merit scholarship.", "source_ref": "s-school"},
+        {"text": "Entry is in the fall term only.", "source_ref": "s-foundation"},
+    ]
+    for i in range(2):
+        ver["field_evidence"].append(
+            {"field_path": f"other_info/{i}", "source_ref": ver["other_info"][i]["source_ref"], "locator": "x",
+             "value_status": "reported", "short_excerpt": "one merit scholarship"}
+        )
+    return docs
+
+
+def test_other_info_round_trips_through_the_loader_and_the_public_record():
+    docs = docs_with_other_info()
+    ds = model.build_dataset(docs, root=REPO)
+    row = next(r for r in ds.versions if r["version_id"] == "fixture-foundation-program-2027")
+    assert [e["text"] for e in row["record"]["other_info"]] == [
+        "A student may hold only one merit scholarship.",
+        "Entry is in the fall term only.",
+    ]  # the stored record keeps the key verbatim
+    json.dumps(ds.versions)  # and the rows still serialize
+    program = ds.program(row["program_id"])
+    rec = model.public_record(program, row, model.participants_of(program)[0])
+    urls = {s["source_id"]: s["url"] for s in row["record"]["sources"]}
+    assert rec["other_info"] == [
+        {"text": "A student may hold only one merit scholarship.", "source_ref": "s-school", "source_url": urls["s-school"]},
+        {"text": "Entry is in the fall term only.", "source_ref": "s-foundation", "source_url": urls["s-foundation"]},
+    ]
+    assert "short_excerpt" not in json.dumps(rec["other_info"]) and "one merit scholarship\"" not in json.dumps(rec["other_info"])
+
+
+def test_other_info_is_empty_when_absent_or_null(ds, docs):
+    for row in ds.versions:
+        program = ds.program(row["program_id"])
+        assert model.public_record(program, row, model.participants_of(program)[0])["other_info"] == []
+    foundation(docs)["versions"][1]["other_info"] = None
+    ds2 = model.build_dataset(docs, root=REPO)
+    row = next(r for r in ds2.versions if r["version_id"] == "fixture-foundation-program-2027")
+    assert model.public_record(ds2.program(row["program_id"]), row, {"school_id": "uva", "ipeds_id": "234076"})["other_info"] == []
+
+
+def test_other_info_changes_no_derived_value():
+    base = model.build_dataset(fixture_docs(), root=REPO)
+    withinfo = model.build_dataset(docs_with_other_info(), root=REPO)
+    keep = lambda r: {k: r[k] for k in r if k != "record"}  # noqa: E731
+    key = lambda r: (r["program_id"], r["version_id"])  # noqa: E731
+    assert sorted(map(keep, base.versions), key=key) == sorted(map(keep, withinfo.versions), key=key)
+
+
+def test_other_info_validates_through_the_tree():
+    docs = docs_with_other_info()
+    ctx = v.load_context()
+    ctx.program_ids = {"fixture-parent-program", "fixture-foundation-program"}
+    assert v.validate_doc(foundation(docs), ctx, "fixture") == []
+
+
+def test_other_info_migration_recreates_cache_and_view_with_the_same_access():
+    sql = VIEW_MIGRATION.read_text(encoding="utf-8")
+    assert VIEW_MIGRATION != MIGRATION
+    assert sql.index("drop view public.scholarship_directory;") < sql.index("drop materialized view public.scholarship_directory_cache;")
+    assert "with (security_invoker = true)" in sql
+    for obj in ("scholarship_directory", "scholarship_directory_cache"):
+        assert f"revoke all on public.{obj} from public, anon, authenticated;" in sql
+        assert f"grant select on public.{obj} to anon, authenticated;" in sql
+    assert not re.search(r"grant (all|insert|update|delete)[^;]* to [^;]*(anon|authenticated)", sql)
+    for idx in ("scholarship_directory_cache_program_school_uidx", "scholarship_directory_cache_school_idx",
+                "scholarship_directory_cache_coverages_idx", "scholarship_directory_cache_nm_idx"):
+        assert f"create unique index {idx}" in sql or f"create index {idx}" in sql
+    assert f"'{model.ATTRIBUTION}'::text as attribution" in sql and f"'{model.LICENSE_ID}'::text as license" in sql
+    assert "coalesce(oi.other_info, '[]'::jsonb) as other_info" in sql
+    assert "short_excerpt" not in sql

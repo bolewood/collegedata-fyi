@@ -1,6 +1,6 @@
 {
   "meta": {
-    "dataset_id": "collegedata-scholarships-v1-2455e2905cca",
+    "dataset_id": "collegedata-scholarships-v1-637f4fc941ca",
     "version": 1,
     "license": "CC-BY-SA-4.0",
     "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
@@ -218,7 +218,8 @@
           "locator": "Home page, paragraph under 'An Opportunity for Leaders of Unusual Promise'",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "squire-scholarship",
@@ -479,7 +480,8 @@
           "locator": "Scholarships page, Squire entry: only \"four-year\"; no GPA or credit rule stated",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "clemson-national-scholars",
@@ -800,7 +802,8 @@
           "locator": "Program Experience: 'A small, select cohort'; no number stated",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "grewcock-presidential-scholarship",
@@ -1106,7 +1109,8 @@
           "locator": "How To Apply & Timeline: dates are given, the entering class is not named",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "belk-scholarship",
@@ -1504,7 +1508,8 @@
           "locator": "Belk page, endowment paragraph",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "james-b-duke-scholarship",
@@ -1751,7 +1756,8 @@
           "locator": "James B. Duke page, opening paragraph",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "ab-duke-scholars",
@@ -2126,7 +2132,8 @@
           "locator": "Incoming first-year page, scholarship list",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "bn-duke-scholars",
@@ -2471,7 +2478,8 @@
           "locator": "Incoming first-year page, scholarship list",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "karsh-international-scholars",
@@ -2756,7 +2764,8 @@
           "locator": "Merit scholarships for incoming first-year students",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "robertson-scholars",
@@ -3225,7 +3234,8 @@
           "locator": "robertsonscholars.org High School Students page, timeline",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "woodruff-scholars",
@@ -3782,7 +3792,8 @@
           "locator": "Oxford catalog, Robert W. Woodruff Scholars",
           "value_status": "conflicting"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "fiu-national-merit-finalist-non-florida",
@@ -4163,7 +4174,8 @@
           "locator": "Merit scholarships page, intro",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "fsu-national-merit-package",
@@ -4547,7 +4559,8 @@
           "locator": "Admissions Scholarships page, Out-of-State Tuition Waiver",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "fsu-stamps-scholars",
@@ -4912,7 +4925,8 @@
           "locator": "Application Process, Step 1",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "presidential-scholars",
@@ -5302,7 +5316,8 @@
           "locator": "Application Process, Step 1",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "fordham-presidential-scholarship",
@@ -5634,7 +5649,8 @@
           "locator": "Fordham Presidential Scholarship, third paragraph, last sentences",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "furman-james-b-duke-scholarship",
@@ -5950,7 +5966,8 @@
           "locator": "James B. Duke Scholarships, Learn more about the selection process, second paragraph",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "stamps-presidents-scholars",
@@ -6430,7 +6447,8 @@
           "locator": "Scholarship Calendar, Stamps Scholars Weekend row",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "wells-scholars",
@@ -6942,7 +6960,8 @@
           "locator": "Scholarship Details, first paragraph",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "founders-scholarship",
@@ -7112,7 +7131,8 @@
           "locator": "Lehigh University Founders Scholarship, second sentence",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "lsu-stamps-scholars",
@@ -7554,7 +7574,8 @@
           "locator": "Scholarships page: no award count stated",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "presidential-fellows",
@@ -7997,7 +8018,8 @@
           "locator": "Scholarship FAQs, question 4",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "alumni-distinguished-scholarship",
@@ -8612,7 +8634,8 @@
           "locator": "High-achieving student scholarships, Alumni Distinguished Scholarship entry",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "cheatham-white-scholarship",
@@ -9115,7 +9138,8 @@
           "locator": "Honors scholarships page, FAQ",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "nccu-cheatham-white-scholarship",
@@ -9761,7 +9785,8 @@
           "locator": "Apply page, Eligibility and Selection Criteria",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "park-scholarships",
@@ -10687,7 +10712,8 @@
           "locator": "FAQ, Who should write my letters of recommendation?",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "presidents-ohio-scholarship",
@@ -10981,7 +11007,8 @@
           "locator": "Merit-based scholarships page, opening paragraph",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "stamps-eminence",
@@ -11275,7 +11302,8 @@
           "locator": "Apply page, \"Requirements of the Program\"",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "pvamu-regents-student-merit-scholarship",
@@ -11661,7 +11689,8 @@
           "locator": "University Merit Scholarships page: no entering class named",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "presidential-scholarship",
@@ -11928,7 +11957,8 @@
           "locator": "First-year Scholarships page: no entering class named for the award terms",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "trustees-scholarship",
@@ -12195,7 +12225,8 @@
           "locator": "First-year Scholarships page: no entering class named for the award terms",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "alfond-scholars",
@@ -12525,7 +12556,8 @@
           "locator": "Alfond page, Key Dates, Late December",
           "value_status": "conflicting"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "scu-johnson-scholars-award",
@@ -13004,7 +13036,8 @@
           "locator": "Selection Process page: no entering class named",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "scu-presidential-at-entry-scholarship",
@@ -13204,7 +13237,8 @@
           "locator": "Merit Scholarships page: no entering class named",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "presidents-scholars",
@@ -13614,7 +13648,8 @@
           "locator": "Financial Benefits, Tuition and General Fees",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "dovey-johnson-roundtree-presidential-scholarship",
@@ -13879,7 +13914,8 @@
           "locator": "Types of Scholarships, Dovey Johnson Roundtree, Class of 38, Presidential Scholarship",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "spelman-presidential-scholarship",
@@ -14143,7 +14179,8 @@
           "locator": "Types of Scholarships, Presidential Scholarship",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "national-merit-scholars",
@@ -14747,7 +14784,8 @@
           "locator": "Competitive Scholarship Non-Resident Tuition Waiver page",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "tcu-chancellors-scholarship",
@@ -15039,7 +15077,8 @@
           "locator": "FAQ, What are my chances of receiving the Chancellor’s Scholarship?",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "texas-tech-national-merit-finalist",
@@ -15276,7 +15315,8 @@
           "locator": "Scholarships page: no award count stated",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "national-merit-finalist-package",
@@ -15855,7 +15895,8 @@
           "locator": "National Merit page",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "eugene-mcdermott-scholars",
@@ -16305,7 +16346,8 @@
           "locator": "Apply and Experience pages: no award count stated",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "deans-honor-scholarship",
@@ -16560,7 +16602,8 @@
           "locator": "Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot), Dean's Honor Scholarship",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "tulane-stamps-scholarship",
@@ -16840,7 +16883,8 @@
           "locator": "Admission merit scholarships page, read by the owner in a browser on 2026-11-15 (screenshot), Stamps Scholarship",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "distinguished-presidential-scholarship",
@@ -17331,7 +17375,8 @@
           "locator": "Scholarship Review Process",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "eugene-du-pont-memorial-scholars",
@@ -17636,7 +17681,8 @@
           "locator": "Honors College page: the Nov. 1 deadline and 'late January' invitations carry no year; no entering class is named",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "uf-stamps-scholars",
@@ -17920,7 +17966,8 @@
           "locator": "Overview page: 'Class of 2030 Scholars are expected to participate...'; the application page gives January and March 2026 dates; no entering class is named",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "foundation-fellowship",
@@ -18658,7 +18705,8 @@
           "locator": "Foundation Fellowship page; Stamps Scholars page, \"Selection\"",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "stamps-scholars",
@@ -18870,7 +18918,8 @@
           "locator": "Applying for the Foundation Fellowship",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "banneker-key-scholarship",
@@ -19443,7 +19492,8 @@
           "locator": "Honors page, What is Banneker/Key: amounts 'as of Fall 2026'; policy page amounts labeled '2026-2027'; no entering class named",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "morehead-cain",
@@ -20016,7 +20066,8 @@
           "locator": "About page, 'The Morehead-Cain Program at UNC–Chapel Hill': program run by the Morehead-Cain Foundation (page footer: © Morehead-Cain Foundation)",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "national-merit-scholars-tuition-award",
@@ -20329,7 +20380,8 @@
           "locator": "Terms and conditions, Study Abroad",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "bodenhamer-fellowship",
@@ -20651,7 +20703,8 @@
           "locator": "Academic Scholarship Office home page, New Freshman Scholarships",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "honors-college-fellowship",
@@ -20974,7 +21027,8 @@
           "locator": "Academic Scholarship Office home page, New Freshman Scholarships",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "national-merit-benacquisto",
@@ -21328,7 +21382,8 @@
           "locator": "Admissions page, '2026-27 Scholars Program Newsletter' heading; no entering class named",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "uconn-nutmeg-scholarship",
@@ -21725,7 +21780,8 @@
           "locator": "Policies, Award Amount",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "uconn-stamps-scholarship",
@@ -22140,7 +22196,8 @@
           "locator": "Policies, Award Amount",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "uh-manoa-regents-scholarship",
@@ -22602,7 +22659,8 @@
           "locator": "New Warrior Scholarships page, Criteria for Scholarship Consideration",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "stamps-scholarship",
@@ -22828,7 +22886,8 @@
           "locator": "Selection and Renewal, \"Renewal Criteria\"",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "otis-a-singletary-scholarship",
@@ -23295,7 +23354,8 @@
           "locator": "Incoming Freshmen Scholarships, heading and first line",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "mcconnell-scholars",
@@ -23621,7 +23681,8 @@
           "locator": "Prospective Students page, Important Dates: 2026 and 2027 dates; no entering class named",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "umass-chancellors-award",
@@ -23813,7 +23874,8 @@
           "locator": "UMass Amherst Chancellor's Award, first paragraph",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "miami-stamps-scholarship",
@@ -24076,7 +24138,8 @@
           "locator": "Scholarship Details",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "singer-scholarship",
@@ -24310,7 +24373,8 @@
           "locator": "Singer page: no dollar amount",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "national-merit-top-tiers",
@@ -24752,7 +24816,8 @@
           "locator": "How to Apply, Academic Excellence section",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "stamps-scholars-award",
@@ -25121,7 +25186,8 @@
           "locator": "Freshman scholarships page, table footnote",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "regents-scholar-tuition-commitment",
@@ -25379,7 +25445,8 @@
           "locator": "Regents Scholar Tuition Commitment page, \"Award\" note",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "unm-regents-scholarship",
@@ -25889,7 +25956,8 @@
           "locator": "Resident and non-resident scholarship sections, intro paragraph",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "levine-scholars",
@@ -26462,7 +26530,8 @@
           "locator": "Important Dates: dated 2026 and 2027 rows; no entering class named",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "national-merit-nonresident-package",
@@ -26770,7 +26839,8 @@
           "locator": "Scholarships page, note under the Non-Resident Freshman Scholarships table",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "uo-stamps-scholarship",
@@ -27397,7 +27467,8 @@
           "locator": "Stamps Scholarship, How to Apply",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "richmond-scholars",
@@ -27765,7 +27836,8 @@
           "locator": "Prospective Scholars page, opening paragraph",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "handler-scholarship",
@@ -28238,7 +28310,8 @@
           "locator": "Handler page, How to apply",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "top-scholars",
@@ -29165,7 +29238,8 @@
           "locator": "Apply to Carolina Elite page, application instructions",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "usf-golden-achievement-national-merit",
@@ -29419,7 +29493,8 @@
           "locator": "Benefits page: no award count stated",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "southern-miss-national-merit",
@@ -29964,7 +30039,8 @@
           "locator": "Page: no award count stated",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "national-merit-semifinalist-package",
@@ -30304,7 +30380,8 @@
           "locator": "National Merit Semifinalist Package page, Award section, Outside scholarships bullet",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "pitt-rees-chancellors-scholars-program",
@@ -30630,7 +30707,8 @@
           "locator": "Rees-Chancellor's Scholars page, Admission",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "national-merit-scholarship",
@@ -30778,7 +30856,8 @@
           "locator": "Scholarships page: the National Merit paragraph names no entering class",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "usc-trustee-scholarship",
@@ -31077,7 +31156,8 @@
           "locator": "Scholarship guide, USC Undergraduate Admission Merit Scholarships",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "jefferson-scholars",
@@ -31795,7 +31875,8 @@
           "locator": "Selection page, 'Final Selection': recipients 'have an opportunity to visit Charlottesville'; no required event",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "walentas-scholars",
@@ -32525,7 +32606,8 @@
           "locator": "Selection page, 'Final Selection': recipients 'have an opportunity to visit Charlottesville'; no required event",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "chancellors-scholarship",
@@ -32606,7 +32688,8 @@
           "locator": "Page describes no current terms (amount, deadline, application) for the retired award",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "cornelius-vanderbilt-scholarship",
@@ -32831,7 +32914,8 @@
           "locator": "Cornelius Vanderbilt Scholarship page, intro paragraphs",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "ingram-scholars",
@@ -33130,7 +33214,8 @@
           "locator": "Program page, Student Benefits",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "villanova-presidential-scholarship",
@@ -33545,7 +33630,8 @@
           "locator": "Scholarship Details: no dollar amount is given",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "vt-stamps-scholars",
@@ -33862,7 +33948,8 @@
           "locator": "Recruitment Scholarships page: dates are September 1, 2026 and January 8, 2027; the Stamps page names no entering class",
           "value_status": "not_published"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "johnson-scholarship",
@@ -34215,7 +34302,8 @@
           "locator": "Johnson Scholarship page, intro",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "distinguished-regents-scholars",
@@ -34649,7 +34737,8 @@
           "locator": "Terms page, 2027-28, Regents Scholars Program, Award Levels",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "danforth-scholars",
@@ -35056,7 +35145,8 @@
           "locator": "Scholar Program FAQ, How do I apply?",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "ervin-scholars",
@@ -35464,7 +35554,8 @@
           "locator": "Scholar Program FAQ, How do I apply?",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "rodriguez-scholars",
@@ -35872,7 +35963,8 @@
           "locator": "Scholar Program FAQ, How do I apply?",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     },
     {
       "program_id": "1693-scholars",
@@ -36491,7 +36583,8 @@
           "locator": "2026 Application, Nomination and Notification Timeline",
           "value_status": "reported"
         }
-      ]
+      ],
+      "other_info": []
     }
   ]
 }

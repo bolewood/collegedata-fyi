@@ -143,6 +143,8 @@ variants; a tier nests under another with `parent_offer_id`), each offer holds
   `renewal_rules` and `stacking_rules` are null when you did not find the
   terms, and `[]` only when the school says there are none. An empty
   `stacking_rules` needs evidence.
+  `other_info` is null or omitted when there is nothing to record; it never
+  means the school says nothing else.
 - **Renewal** is a list of rules; each `applies_to` names offers or benefits,
   and an empty `applies_to` covers the whole version.
 - **Status.** `status` is the program's current summary.
@@ -180,6 +182,17 @@ variants; a tier nests under another with `parent_offer_id`), each offer holds
   finals. `status_required_for_award: scholar` is a Finalist who receives a
   National Merit award. Renewal rules take `credit_load_min_per_year` and
   prerequisites take `maximum_lead_days`.
+- **Other info.** `other_info` is for a sourced fact that has no typed home,
+  such as "A student may hold only one merit scholarship" or "Entry is in the
+  fall term only". Write one plain sentence of 40 words or fewer in the school's
+  terms, with `source_ref` naming a source of the same version (at most 6
+  entries). Each entry needs `reported` evidence on the exact path
+  `other_info/N` with a `short_excerpt`. It is shown on the card as "Other
+  info" and never changes a label, filter, count or freshness status. Do not
+  use it when a typed field fits (conditions go in `conditions_text`, caps in
+  amounts, stacking in `stacking_rules`), and never for opinion, advice or
+  interpretation. Leave it null (or omit it) when there is nothing to record;
+  adding entries to a published version needs a new version with `supersedes`.
 - **Counts.** `award_counts[].metric` is the unit (`offers`, `new_recipients`,
   `share_of_class`), `claim` says `target` or `actual`, and a share needs a
   `denominator`.
