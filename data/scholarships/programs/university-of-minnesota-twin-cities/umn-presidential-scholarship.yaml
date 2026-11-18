@@ -1,0 +1,233 @@
+schema_version: 1
+program_id: umn-presidential-scholarship
+school_id: university-of-minnesota-twin-cities
+ipeds_id: '174066'
+applicable_campuses: []
+official_name: Presidential Scholarship
+aliases:
+- University of Minnesota Presidential Scholarship
+- UMN Presidential Scholarship
+program_family: presidential
+awarding_authority: institution
+related_programs: []
+status: active
+versions:
+- version_id: presidential-undated
+  supersedes: null
+  entry_year: null
+  entry_year_label: Pages name no entering class; deadlines are recurring November 1, December 1 and January
+    1 dates
+  entry_terms:
+  - unspecified
+  source_cohort_text: null
+  verification_status: verified
+  last_reviewed_at: '2026-11-18'
+  reviewed_by: agent:claude-sonnet-5-5/prd036-m5-cinci-mn
+  owner_spot_checked: false
+  program_status_for_entry: active
+  offers:
+  - offer_id: o-main
+    parent_offer_id: null
+    variant_name: null
+    residency: unknown
+    selection_mode: competitive
+    consideration_route: admission_application
+    aid_basis: merit_only
+    need_role: unknown
+    funds_limited: null
+    advertised_totals: []
+    eligibility:
+      national_merit_statuses: null
+      status_required_for_award: null
+      first_choice_required: null
+      gpa: null
+      test_rules: null
+      tests_policy_for_scholarship: optional
+      citizenship_eligible: null
+      citizenship_text: Recipients must be U.S. citizens or permanent residents, or be eligible for the
+        Minnesota Prosperity Act
+      majors_allowed: null
+      major_change_restrictions: null
+      honors_requirement: null
+      first_generation_rule: unknown
+      eligibility_notes: Admitted freshmen are considered through holistic review of the admission application
+        (academic and context factors). The page says a limited number of scholarships are available for
+        international students. The Presidential Scholarship row lists no residency, GPA or major rule.
+    benefits:
+    - benefit_id: b-award
+      category: other
+      instrument: scholarship
+      coverage: variable
+      amount:
+        qualifier: range
+        value: null
+        min: 1000
+        max: 10000
+        period: academic_year
+      duration_terms: Each year for four years
+      exclusions: null
+      scope_text: 'School wording: ''$1,000 - $10,000 each year for four years''; the page does not say
+        what decides the amount within the range'
+      advertised_coverage_label: null
+      conditions_text: null
+  application:
+    separate_application: not_required
+    milestones:
+    - kind: admission_deadline
+      requirement: priority
+      date: null
+      recurring:
+        month: 11
+        day: 1
+      precision: day
+      source_date_text: November 1 Early Action I Deadline
+    - kind: admission_deadline
+      requirement: priority
+      date: null
+      recurring:
+        month: 12
+        day: 1
+      precision: day
+      source_date_text: December 1 Early Action II Deadline
+    - kind: admission_deadline
+      requirement: priority
+      date: null
+      recurring:
+        month: 1
+        day: 1
+      precision: day
+      source_date_text: January 1 Regular Deadline
+    - kind: notification
+      requirement: recommended
+      date: null
+      recurring:
+        month: 3
+        day: 31
+      precision: day
+      source_date_text: 'Scholarship recipients ... notified by March 31 (scholarship page: by the end
+        of March of their senior year)'
+    admission_plan_requirement: Complete freshman application by the corresponding admission deadline
+      (Early Action I Nov. 1, Early Action II Dec. 1, Regular Jan. 1) for full consideration
+    prerequisites:
+    - kind: admission_application
+      minimum_lead_days: null
+      maximum_lead_days: null
+      notes: Admitted freshmen are considered based on an overall assessment of the application for freshman
+        admission.
+    interview_mode: unknown
+    finalist_event_required: null
+    notes: The financial aid overview says applying by the regular deadline gives automatic consideration,
+      while the awards page says full consideration goes to applications by the corresponding deadline
+      dates; all three dates are recorded as priority dates. Freshmen admitted for spring are considered
+      on a funds-available basis.
+  renewal_rules: null
+  stacking_rules: null
+  award_counts: []
+  sources:
+  - source_id: s-awards
+    url: https://admissions.tc.umn.edu/cost-aid/scholarships/university-wide-academic-scholarships
+    authority: official_admissions
+    retrieved_at: '2026-11-18'
+    content_sha256: 201459073080d479f03c7549ef4d9da62d9ae96055a859c7c3b24a816358384c
+    archive_url: null
+  - source_id: s-deadlines
+    url: https://admissions.tc.umn.edu/apply/freshman-application-deadlines
+    authority: official_admissions
+    retrieved_at: '2026-11-18'
+    content_sha256: 7b82d063cf9da74b70d1175b8a4ede7cc01fdf62815560f372d3f53bf9a7637c
+    archive_url: null
+  - source_id: s-overview
+    url: https://admissions.tc.umn.edu/cost-aid/scholarships
+    authority: official_admissions
+    retrieved_at: '2026-11-18'
+    content_sha256: 5d36609ad025457fae61e73c8fedad6fbdd7ed94b9e55c31022314fe8da34880
+    archive_url: null
+  field_evidence:
+  - field_path: entry_year
+    source_ref: s-awards
+    locator: 'University-Wide Academic Scholarships: no entering class or year is named for the award'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/selection_mode
+    source_ref: s-awards
+    locator: Page introduction
+    short_excerpt: University of Minnesota academic scholarships are highly competitive.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/tests_policy_for_scholarship
+    source_ref: s-awards
+    locator: Holistic Review, academic factors
+    short_excerpt: Submitting an ACT/SAT score is not required on applications through the fall 2029 terms.
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/eligibility/citizenship_text
+    source_ref: s-awards
+    locator: Page introduction
+    short_excerpt: Recipients must be U.S. citizens or permanent residents, or be eligible for the Minnesota
+      Prosperity Act
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0
+    source_ref: s-awards
+    locator: University-Wide Scholarships table, Presidential Scholarship row
+    short_excerpt: $1,000 - $10,000 each year for four years
+    value_status: reported
+    reported_value: null
+  - field_path: offers/0/benefits/0/amount
+    source_ref: s-awards
+    locator: University-Wide Scholarships table, Presidential Scholarship row
+    short_excerpt: $1,000 - $10,000 each year for four years
+    value_status: reported
+    reported_value: null
+  - field_path: application/separate_application
+    source_ref: s-awards
+    locator: Page introduction
+    short_excerpt: No separate application is needed
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/0
+    source_ref: s-deadlines
+    locator: Freshman Application Decision Deadlines, Early Action I
+    short_excerpt: Students who submit their complete applications by the November 1 Early Action I Deadline
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/1
+    source_ref: s-deadlines
+    locator: Freshman Application Decision Deadlines, Early Action II
+    short_excerpt: Students who submit their complete applications by the December 1 Early Action II Deadline
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/2
+    source_ref: s-deadlines
+    locator: Freshman Application Decision Deadlines, Regular
+    short_excerpt: Students who submit their complete applications by the January 1 Regular Deadline
+    value_status: reported
+    reported_value: null
+  - field_path: application/milestones/3
+    source_ref: s-deadlines
+    locator: Below the decision deadlines
+    short_excerpt: Scholarship recipients and students admitted to the University Honors Program will
+      be notified by March 31.
+    value_status: reported
+    reported_value: null
+  - field_path: application/admission_plan_requirement
+    source_ref: s-awards
+    locator: Page introduction
+    short_excerpt: Full consideration for academic scholarships is given to students who submit a complete
+      freshman application by the corresponding application deadline dates
+    value_status: reported
+    reported_value: null
+  - field_path: renewal_rules
+    source_ref: s-awards
+    locator: 'University-Wide Academic Scholarships: no renewal terms are published for the Presidential
+      Scholarship'
+    short_excerpt: null
+    value_status: not_published
+    reported_value: null
+  - field_path: offers/0/aid_basis
+    source_ref: s-overview
+    locator: Scholarships overview, introduction
+    short_excerpt: you will automatically be considered for these merit-based awards
+    value_status: reported
+    reported_value: null
