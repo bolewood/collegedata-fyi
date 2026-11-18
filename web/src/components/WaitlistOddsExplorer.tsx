@@ -198,7 +198,7 @@ function Chart({
           const y = yCenter(index) + jitter;
           const highlighted =
             row.schoolId === "uc-berkeley" ||
-            row.schoolId === "uva" ||
+            row.schoolId === "georgia-tech" ||
             row.schoolId === "baylor-university";
           return (
             <circle
