@@ -155,6 +155,140 @@ class NameInFileTests(unittest.TestCase):
         self.assertEqual(audit.name_in_file_mismatch(rows), [])
 
 
+class DocumentIpedsIdTests(unittest.TestCase):
+    DIRECTORY = [
+        {"ipeds_id": "173160", "school_id": "bethel-university"},
+        {"ipeds_id": "219718", "school_id": "bethel-university-tn"},
+        {"ipeds_id": "110404", "school_id": "caltech"},
+    ]
+
+    @staticmethod
+    def doc(doc_id, school, year, ipeds, removed_at=None):
+        return {"id": doc_id, "school_id": school, "cds_year": year,
+                "ipeds_id": ipeds, "removed_at": removed_at}
+
+    def test_wrong_and_null_ids_are_one_finding_per_school(self):
+        docs = [
+            self.doc("1", "bethel-university", "2024-25", "219718"),
+            self.doc("2", "bethel-university", "2025-26", "173160"),
+            self.doc("3", "caltech", "2012-13", None),
+            self.doc("4", "caltech", "2013-14", ""),
+            self.doc("5", "caltech", "2024-25", "110404"),
+        ]
+        findings = audit.document_ipeds_id_mismatch(docs, self.DIRECTORY)
+        self.assertEqual(
+            [f["key"] for f in findings],
+            ["document_ipeds_id_mismatch:bethel-university",
+             "document_ipeds_id_mismatch:caltech"],
+        )
+        bethel, caltech = findings
+        self.assertEqual(bethel["expected_ipeds_id"], "173160")
+        self.assertEqual(bethel["wrong_ipeds_ids"], ["219718"])
+        self.assertEqual(bethel["document_ids"], ["1"])
+        self.assertEqual(caltech["null_ipeds_id"], 2)
+        self.assertEqual(caltech["document_ids"], ["3", "4"])
+
+    def test_clean_removed_unknown_and_ambiguous_schools_are_not_flagged(self):
+        docs = [
+            self.doc("1", "caltech", "2024-25", "110404"),
+            self.doc("2", "caltech", "2023-24", None, removed_at="2026-01-01"),
+            self.doc("3", "not-in-directory", "2024-25", None),
+            self.doc("4", "shared", "2024-25", None),
+        ]
+        directory = self.DIRECTORY + [
+            {"ipeds_id": "1", "school_id": "shared"},
+            {"ipeds_id": "2", "school_id": "shared"},
+        ]
+        self.assertEqual(audit.document_ipeds_id_mismatch(docs, directory), [])
+
+    def test_a_legacy_alias_is_judged_against_its_institution(self):
+        crosswalk = [
+            {"ipeds_id": "110404", "school_id": "caltech",
+             "alias": "california-institute-of-technology", "source": "scorecard"},
+            {"ipeds_id": "999999", "school_id": "other", "alias": "old-caltech", "source": "redirect"},
+        ]
+        docs = [
+            self.doc("1", "california-institute-of-technology", "2024-25", None),
+            self.doc("2", "old-caltech", "2024-25", None),
+        ]
+        findings = audit.document_ipeds_id_mismatch(docs, self.DIRECTORY, crosswalk)
+        self.assertEqual([f["schools"] for f in findings], [["california-institute-of-technology"]])
+
+    def test_the_directory_owner_of_a_slug_beats_other_institutions_aliases(self):
+        # The crosswalk lists "bethel-university" as an alias of several Bethels.
+        crosswalk = [
+            {"ipeds_id": "173160", "school_id": "bethel-university", "alias": "bethel-university", "source": "schools_yaml"},
+            {"ipeds_id": "219718", "school_id": "bethel-university-tn", "alias": "bethel-university", "source": "scorecard"},
+        ]
+        docs = [self.doc("1", "bethel-university", "2024-25", "219718")]
+        findings = audit.document_ipeds_id_mismatch(docs, self.DIRECTORY, crosswalk)
+        self.assertEqual([f["expected_ipeds_id"] for f in findings], ["173160"])
+
+    def test_report_counts_it_as_a_new_finding_until_accepted(self):
+        kwargs = dict(
+            documents=[], browser_rows=[], federal_rows=[], rule_field_rows=[],
+            name_rows=[], parse_error_rows=[],
+            identity_documents=[self.doc("1", "caltech", "2024-25", None)],
+            directory_rows=self.DIRECTORY,
+        )
+        report = audit.build_report(accepted={}, **kwargs)
+        self.assertEqual(report["summary"]["new_findings"], 1)
+        self.assertIn("document_ipeds_id_mismatch", audit.render_markdown(report))
+        accepted = audit.build_report(
+            accepted={"document_ipeds_id_mismatch:caltech": "reason"}, **kwargs
+        )
+        self.assertEqual(accepted["summary"]["new_findings"], 0)
+
+
+class SharedSlugDomainTests(unittest.TestCase):
+    CLAIMS = [
+        {"school_id": "westminster-college", "ipeds_id": "179946", "claimed_domain": "wcmo.edu"},
+        {"school_id": "westminster-college", "ipeds_id": "216807", "claimed_domain": "westminster.edu"},
+        {"school_id": "university-of-st-thomas", "ipeds_id": "174914", "claimed_domain": "stthomas.edu"},
+        {"school_id": "university-of-st-thomas", "ipeds_id": "227863", "claimed_domain": "stthom.edu"},
+        {"school_id": "caltech", "ipeds_id": "110404", "claimed_domain": "caltech.edu"},
+    ]
+
+    @staticmethod
+    def doc(i, school, ipeds, url, removed_at=None):
+        return {"id": i, "school_id": school, "cds_year": "2023-24", "ipeds_id": ipeds,
+                "source_url": url, "removed_at": removed_at}
+
+    def test_the_twelve_misfiled_documents_are_found(self):
+        # The real shapes hidden on 2026-11-18: Missouri's wcmo.edu files under
+        # Pennsylvania's slug and id, Houston's stthom.edu file under Minnesota's.
+        docs = [
+            self.doc("w1", "westminster-college", "216807", "https://www.wcmo.edu/about/cds-2023-24.pdf"),
+            self.doc("w2", "westminster-college", "216807", "https://www.wcmo.edu/about/cds-2022-23.pdf"),
+            self.doc("s1", "university-of-st-thomas", "174914", "https://it.stthom.edu/wp-content/uploads/2023/05/CDS_2022-2023.pdf"),
+        ]
+        findings = audit.shared_slug_domain_mismatch(docs, self.CLAIMS)
+        self.assertEqual(
+            [f["key"] for f in findings],
+            ["shared_slug_domain_mismatch:university-of-st-thomas",
+             "shared_slug_domain_mismatch:westminster-college"],
+        )
+        self.assertEqual(findings[1]["documents"], 2)
+        self.assertEqual(findings[1]["host_ipeds_ids"], ["179946"])
+
+    def test_correct_removed_unmatched_and_unshared_documents_are_ignored(self):
+        docs = [
+            self.doc("ok", "westminster-college", "216807", "https://www.westminster.edu/cds.pdf"),
+            self.doc("gone", "westminster-college", "216807", "https://www.wcmo.edu/cds.pdf", removed_at="2026-11-18"),
+            self.doc("drive", "westminster-college", "216807", "https://drive.google.com/file/d/x"),
+            self.doc("other", "caltech", "110404", "https://www.wcmo.edu/cds.pdf"),
+        ]
+        self.assertEqual(audit.shared_slug_domain_mismatch(docs, self.CLAIMS), [])
+
+    def test_an_archive_org_capture_is_judged_by_its_original_host(self):
+        wrong = self.doc("a", "westminster-college", "216807",
+                         "https://web.archive.org/web/20250101000000id_/https://www.wcmo.edu/cds.pdf")
+        right = self.doc("b", "westminster-college", "216807",
+                         "https://web.archive.org/web/20250101000000id_/https://www.westminster.edu/cds.pdf")
+        self.assertEqual(len(audit.shared_slug_domain_mismatch([wrong], self.CLAIMS)), 1)
+        self.assertEqual(audit.shared_slug_domain_mismatch([right], self.CLAIMS), [])
+
+
 class SanityRuleReplayTests(unittest.TestCase):
     def test_withheld_value_is_recovered_from_its_text(self):
         rows = [

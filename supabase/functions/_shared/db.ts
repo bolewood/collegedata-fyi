@@ -4,6 +4,13 @@
 // layer.
 
 import { SupabaseClient } from "jsr:@supabase/supabase-js@2";
+import {
+  chooseDocumentIpedsId,
+  fetchSlugEntries,
+  ipedsIdForSharedSlug,
+  ipedsIdsForSlug,
+  type SchoolEntry,
+} from "./schools.ts";
 
 export interface CdsDocumentRow {
   id: string;
@@ -352,4 +359,103 @@ export async function recordRemoval(
   if (error) {
     throw new Error(`recordRemoval (${reason}): ${error.message}`);
   }
+}
+
+// The UNITID the institution directory assigns to a public slug, or null when
+// the slug is unknown or maps to more than one institution. Looks at the
+// directory's own school_id first, then at live (non-redirect) crosswalk
+// aliases so a document filed under a legacy slug still resolves. Read-only.
+export async function fetchDirectoryIpedsId(
+  client: SupabaseClient,
+  schoolId: string,
+): Promise<string | null> {
+  const { data: direct, error: directErr } = await client
+    .from("institution_directory")
+    .select("ipeds_id")
+    .eq("school_id", schoolId)
+    .limit(2);
+  if (directErr) throw new Error(`fetchDirectoryIpedsId: ${directErr.message}`);
+  const directIds = new Set(
+    ((direct ?? []) as { ipeds_id: string | null }[])
+      .map((r) => r.ipeds_id)
+      .filter((v): v is string => !!v),
+  );
+  if (directIds.size === 1) return [...directIds][0];
+  if (directIds.size > 1) return null;
+
+  const { data: aliased, error: aliasErr } = await client
+    .from("institution_slug_crosswalk")
+    .select("ipeds_id, source")
+    .eq("alias", schoolId)
+    .neq("source", "redirect")
+    .limit(5);
+  if (aliasErr) throw new Error(`fetchDirectoryIpedsId: ${aliasErr.message}`);
+  const aliasIds = new Set(
+    ((aliased ?? []) as { ipeds_id: string | null }[])
+      .map((r) => r.ipeds_id)
+      .filter((v): v is string => !!v),
+  );
+  return aliasIds.size === 1 ? [...aliasIds][0] : null;
+}
+
+// The ipeds_id a new document row is written with.
+//
+// Unambiguous slug: the institution directory decides; schools.yaml is the
+// fallback. Slug shared by several institutions in schools.yaml: the directory
+// can only name the slug's owner, which is wrong for another institution's
+// files, so the source URL's host must pick exactly one yaml entry by domain
+// (even against the directory, logged). No match or several: NULL, logged.
+// A sibling document's id is never copied.
+export async function resolveInsertIpedsId(
+  supabase: SupabaseClient,
+  schoolId: string,
+  yamlIpedsId: string | null,
+  sourceUrl: string | null = null,
+  slugEntries?: SchoolEntry[],
+): Promise<string | null> {
+  const log = (event: string, extra: Record<string, unknown>) =>
+    console.log(JSON.stringify({
+      ts: new Date().toISOString(),
+      fn: "db.ts",
+      event,
+      school_id: schoolId,
+      source_url: sourceUrl,
+      ...extra,
+    }));
+
+  let directoryId: string | null = null;
+  try {
+    directoryId = await fetchDirectoryIpedsId(supabase, schoolId);
+  } catch (e) {
+    log("directory_ipeds_lookup_failed", { error: (e as Error).message });
+  }
+
+  const entries = slugEntries ?? await fetchSlugEntries(schoolId);
+  const candidates = ipedsIdsForSlug(entries, schoolId);
+  if (candidates.length > 1) {
+    const byDomain = ipedsIdForSharedSlug(entries, schoolId, sourceUrl);
+    if (!byDomain) {
+      log("document_ipeds_id_unresolved_shared_slug", {
+        candidates,
+        directory_ipeds_id: directoryId,
+      });
+      return null;
+    }
+    if (directoryId && directoryId !== byDomain) {
+      log("document_ipeds_id_conflict", {
+        chosen_by_domain: byDomain,
+        directory_ipeds_id: directoryId,
+      });
+    }
+    return byDomain;
+  }
+
+  const choice = chooseDocumentIpedsId(directoryId, yamlIpedsId);
+  if (choice.conflict || !choice.ipeds_id) {
+    log(choice.conflict ? "document_ipeds_id_conflict" : "document_ipeds_id_unresolved", {
+      directory_ipeds_id: directoryId,
+      schools_yaml_ipeds_id: yamlIpedsId,
+    });
+  }
+  return choice.ipeds_id;
 }

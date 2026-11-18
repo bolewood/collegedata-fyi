@@ -281,6 +281,14 @@ def upload_and_record(sb, school_id: str, year: str, body: bytes,
             "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}[ext]
 
+    # Resolve identity first: a refusal (unknown or shared slug) must not leave
+    # an orphaned object in Storage.
+    identity = resolve_archive_identity(school_id, source_url=source_url)
+    official_name = identity["school_name"]
+    offered = (school_name or "").strip()
+    if offered and offered != school_id:
+        official_name = offered
+
     # Upload bytes to Storage.
     upload_res = sb.storage.from_(bucket).upload(
         storage_path, body,
@@ -288,11 +296,6 @@ def upload_and_record(sb, school_id: str, year: str, body: bytes,
     )
     # supabase-py returns different shapes on success; errors raise.
 
-    identity = resolve_archive_identity(school_id)
-    official_name = identity["school_name"]
-    offered = (school_name or "").strip()
-    if offered and offered != school_id:
-        official_name = offered
 
     # Upsert cds_documents row. Composite key (school_id, sub_institutional, cds_year);
     # sub_institutional is NULL for our top-100 schools.

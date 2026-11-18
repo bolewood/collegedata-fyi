@@ -48,6 +48,7 @@ import {
   refreshDocumentWithNewSha,
   recordRepair,
   bumpVerified,
+  resolveInsertIpedsId,
 } from "../_shared/db.ts";
 import {
   buildSourcePath,
@@ -201,7 +202,12 @@ Deno.serve(async (req: Request) => {
   // Branch A: no existing row → fresh insert
   if (!existing) {
     await ensureUploaded(supabase, storagePath, bytes, ext);
-    const ipedsId = await resolveSchoolIpedsId(schoolId);
+    const ipedsId = await resolveInsertIpedsId(
+      supabase,
+      schoolId,
+      await resolveSchoolIpedsId(schoolId),
+      sourceUrl,
+    );
     const docId = await insertFreshDocument(supabase, {
       school_id: schoolId,
       school_name: schoolName,
