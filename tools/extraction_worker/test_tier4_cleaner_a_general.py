@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
 
-from tier4_cleaner import clean
+from tier4_cleaner import SchemaIndex, clean
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 class Tier4CleanerAGeneralTest(unittest.TestCase):
@@ -201,6 +204,69 @@ A6   Diversity, Equity, and Inclusion
         self.assertEqual(values["A.112"]["value"], "kenyon.edu")
         self.assertNotIn("A.110", values)
         self.assertEqual(values["A.127"]["value"], "admissions@kenyon.edu")
+
+    def test_2024_25_schema_does_not_publish_zip_codes_as_urls(self):
+        # Kenyon 2024-25: the resolver numbers A claims by the 2025-26 form,
+        # where A.010 / A.107 are ZIP codes and A.008 is the city. In the
+        # 2024-25 form A.010 is the CDS web page URL, A.107 the school's WWW
+        # address and A.008 an email address, so "43022" was published there.
+        supplemental = """
+A0      Respondent Inform ation (Not for Publication)
+        Name:                                                                                               Erika Farfan
+        Mailing Address:                                                                                103 College Drive
+        City/State/Zip/Country:                                                                                Gambier
+        Phone:                                                                                                   Ohio
+        F  a  x:                                                                                                43022
+
+A1                                        Address Inform ation
+        Name of College/University:                                                                      Kenyon College
+        Mailing Address:                                                                                103 Chase Ave
+        City/State/Zip/Country:                                                                      Gambier, Ohio 43022
+        WWW Home Page Address:                             kenyon.edu
+"""
+        values = clean(
+            "",
+            schema=SchemaIndex(REPO_ROOT / "schemas" / "cds_schema_2024_25.json"),
+            supplemental_text=supplemental,
+        )
+        for question_number in ("A.008", "A.010", "A.112"):
+            self.assertNotIn(question_number, values)
+        # The WWW address moved from the 2025-26 A.112 to the 2024-25 A.107.
+        self.assertEqual(values["A.107"]["value"], "kenyon.edu")
+        self.assertEqual(values["A.102"]["value"], "103 Chase Ave")
+        # A question that reads the same in both forms is still kept.
+        self.assertEqual(values["A.101"]["value"], "Kenyon College")
+
+        # 2024-25 lists each answer of A2-A4 as its own checkbox field, so the
+        # answer becomes a tick on that option (published as "x" by the other
+        # producers).
+        options = supplemental + """
+A2   Source of institutional control (Check only one):
+ X   Private (nonprofit)
+
+A3   Classify your undergraduate institution:
+ X   Coeducational college
+
+A4   Academic year calendar:
+ X   Semester
+"""
+        option_values = clean(
+            "",
+            schema=SchemaIndex(REPO_ROOT / "schemas" / "cds_schema_2024_25.json"),
+            supplemental_text=options,
+        )
+        self.assertEqual(option_values["A.301"]["value"], "x")
+        self.assertEqual(option_values["A.401"]["value"], "x")
+        self.assertEqual(option_values["A.202"]["value"], "x")  # Private (nonprofit)
+        self.assertNotIn("A.201", option_values)
+
+        current = clean(
+            "",
+            schema=SchemaIndex(REPO_ROOT / "schemas" / "cds_schema_2025_26.json"),
+            supplemental_text=supplemental,
+        )
+        self.assertEqual(current["A.010"]["value"], "43022")
+        self.assertEqual(current["A.107"]["value"], "43022")
 
 
 if __name__ == "__main__":

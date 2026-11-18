@@ -514,6 +514,8 @@ _FIELD_MAP: list[tuple[str, str, str | int]] = [
     ("submitting act scores", "C.904", "number"),
 ]
 
+_C1_GENDERLESS_TOTAL_QNS = frozenset({"C.116", "C.117", "C.118"})
+
 _SCHEMA_FIXED_C1_FIELD_MAP_QNS = {
     f"C.{n:03d}" for n in range(101, 119)
 }
@@ -805,6 +807,69 @@ def _set_text(out: dict[str, dict], qn: str, value: str | None) -> None:
     value = html.unescape(value).strip()
     if value:
         out[qn] = {"value": value, "source": "tier4_cleaner"}
+
+
+# Differently worded in the two forms but the same question: A.102 is the
+# "Mailing Address" line in 2024-25 and "Street Address Line 1" in 2025-26.
+_A_SAME_MEANING_QNS = frozenset({"A.102"})
+
+# 2025-26 number -> 2024-25 number for questions that moved with the same
+# meaning (checked against both schemas): Phone, E-mail Address, "responses
+# posted" yes/no, its URL, WWW home page, and the admissions email, application
+# URL and application mailing address.
+_A_2025_TO_2024_QNS = {
+    "A.012": "A.006",
+    "A.013": "A.008",
+    "A.014": "A.009",
+    "A.015": "A.010",
+    "A.112": "A.107",
+    "A.127": "A.112",
+    "A.128": "A.113",
+    "A.129": "A.114",
+}
+# 2025-26 asks A2-A4 as one question whose answer is the option label; 2024-25
+# has one checkbox field per option.
+_A_OPTION_BLOCKS = ("A.201", "A.301", "A.401")
+
+
+def _a_fields_with_same_question_in_schema(
+    claims: dict[str, dict], schema: SchemaIndex
+) -> dict[str, dict]:
+    """Re-express resolve_a_general claims in the numbering of ``schema``.
+
+    The A resolver numbers its claims by the 2025-26 form. The 2024-25 form
+    numbers section A differently (A.010 is the CDS web page URL, A.107 the
+    school's WWW address, A.008 an email address), so under a 2024-25 schema a
+    ZIP code such as Kenyon's 43022 was published as the "URL" (issue #281).
+    A claim whose question is the same in both forms is kept; one that moved
+    with the same meaning is renumbered; an A2-A4 answer ("Public") becomes a
+    tick on that option's own field; anything else is dropped.
+    """
+    reference = _get_schema(None)
+    if schema.schema_path == reference.schema_path:
+        return claims
+    reference_questions = {f["question_number"]: f["_q_norm"] for f in reference.fields}
+    own_questions = {f["question_number"]: f["_q_norm"] for f in schema.fields}
+    out: dict[str, dict] = {}
+    for qn, rec in claims.items():
+        if qn in own_questions and (
+            own_questions[qn] == reference_questions.get(qn) or qn in _A_SAME_MEANING_QNS
+        ):
+            out[qn] = rec
+    for qn, rec in claims.items():
+        target = _A_2025_TO_2024_QNS.get(qn)
+        if target and target in own_questions:
+            out[target] = rec
+        elif qn in _A_OPTION_BLOCKS:
+            label = _normalize_label(str(rec.get("value", "")))
+            for option_qn, question in own_questions.items():
+                if option_qn.startswith(qn[:3]) and question == label and option_qn != qn:
+                    out[option_qn] = {"value": "x", "source": rec.get("source", "tier4_cleaner")}
+                    break
+            else:
+                if own_questions.get(qn) == label:
+                    out[qn] = {"value": "x", "source": rec.get("source", "tier4_cleaner")}
+    return out
 
 
 def resolve_a_general(
@@ -2583,6 +2648,111 @@ def _c1_multiple_action_hits(label_norm: str) -> bool:
     return hits > 1
 
 
+def _is_c1_residency_header(header_norm: str) -> bool:
+    """True for the C1 residency column header line (Total, In-State,
+    Out-of-State, International, Unknown), including wrapped variants such as
+    "Total  Out-of-  Interna  Unkno" with "In-State  State  tional  wn" below.
+    """
+    if "who " in header_norm:
+        return False
+    if "in state" in header_norm and "out of" in header_norm:
+        return True
+    return (
+        "total" in header_norm
+        and "out of" in header_norm
+        and ("interna" in header_norm or "unkno" in header_norm)
+    ) or (
+        "total" in header_norm
+        and "international" in header_norm
+        and "unknown" in header_norm
+    )
+
+
+_TOTAL_ROW_LABEL_WORDS = ("applicants", "first", "students", "number", "who", "degree")
+
+
+def _c1_total_column_positions(header_norm: str) -> list[int]:
+    """Positions of "total" that head a column, not the row-label column
+    ("TOTAL APPLICANTS  IN-STATE ... UNKNOWN  TOTAL" has a label total at 0)."""
+    positions = []
+    for match in re.finditer(r"total", header_norm):
+        following = header_norm[match.end():].split()
+        if following and following[0] in _TOTAL_ROW_LABEL_WORDS:
+            continue
+        positions.append(match.start())
+    return positions
+
+
+def _c1_residency_columns(header_norm: str) -> tuple[str, ...]:
+    """Column order of a C1 residency table from its header line.
+
+    The form lists Total, In-State, Out-of-State, International, Unknown, but
+    schools drop the Total column (UNC 2025-26) or move it last (MIT 2024-25).
+    A "total" that opens a row-label column is ignored. Returns the schema
+    residency keys in header order.
+    """
+    others = [
+        position
+        for position in (header_norm.find("in state"), header_norm.find("out of"))
+        if position >= 0
+    ]
+    totals = _c1_total_column_positions(header_norm)
+    if not totals:
+        return ("In-State", "Out-of-State", "Nonresidents", "Unknown")
+    if others and totals[-1] > min(others):
+        if "unknown" in header_norm or "unkno" in header_norm:
+            return ("In-State", "Out-of-State", "Nonresidents", "Unknown", "All")
+        return ("In-State", "Out-of-State", "Nonresidents", "All")
+    return ("All", "In-State", "Out-of-State", "Nonresidents", "Unknown")
+
+
+_C1_HEADER_TOKENS = {
+    "All": r"total",
+    "In-State": r"in-?\s*state",
+    "Out-of-State": r"out-?\s*of",
+    "Nonresidents": r"interna",
+    "Unknown": r"unkno",
+}
+
+
+def _c1_assign_by_position(
+    header_lines: list[str], columns: tuple[str, ...], row: str
+) -> list[tuple[str, str]] | None:
+    """Place the numbers of a residency row under their header words by
+    character position, for rows whose count of numbers differs from the
+    count of columns (a blank cell). None when it cannot be done reliably."""
+    anchors: dict[str, float] = {}
+    for column in columns:
+        centers = [
+            (m.start() + m.end()) / 2
+            for line in header_lines
+            for m in re.finditer(_C1_HEADER_TOKENS[column], line, re.IGNORECASE)
+        ]
+        if column == "All":
+            first_total_leads = columns[0] == "All"
+            centers = sorted(centers)
+            # Row-label "Total" words come first when Total is the last column.
+            centers = centers[:1] if first_total_leads else centers[-1:]
+        else:
+            centers = sorted(centers)[:1]
+        if not centers:
+            return None
+        anchors[column] = centers[0]
+    numbers = [((m.start() + m.end()) / 2, m.group()) for m in re.finditer(r"\b\d[\d,]*\b", row)]
+    if not numbers or len(numbers) > len(columns):
+        return None
+    placed: list[tuple[str, str]] = []
+    used: set[str] = set()
+    for center, value in numbers:
+        column = min(columns, key=lambda c: abs(anchors[c] - center))
+        if column in used:
+            return None
+        used.add(column)
+        placed.append((column, value))
+    order = [columns.index(c) for c, _ in placed]
+    return placed if order == sorted(order) else None
+
+
 def resolve_c1_applications(
     tables: list[dict], markdown: str, schema: SchemaIndex
 ) -> dict[str, dict]:
@@ -2649,12 +2819,56 @@ def resolve_c1_applications(
 
     def _apply_layout_lines(text: str) -> None:
         gender_sums: dict[tuple[str, str], int] = {}
-        for raw_line in text.splitlines():
+        # (gender, unit load) rows that actually contributed to a sum. A
+        # total synthesized from only some of the gender rows is a partial
+        # sum, not a total (Lenoir-Rhyne 2024-25: the "men" row was not
+        # recognized, so the women row alone became the "total who applied").
+        gender_rows_seen: set[tuple[str, str, str]] = set()
+        # True between a residency column header (Total / In-State /
+        # Out-of-State / International / Unknown) and the next gender header.
+        # The rows under it are not gender columns (SJSU, UTEP 2024-25).
+        in_residency_block = False
+        residency_columns: tuple[str, ...] = ()
+        header_lines: list[str] = []
+        raw_lines = text.splitlines()
+
+        def _next_or_previous_is_bare_number(index: int) -> bool:
+            """The value of a label-only line may sit on the line above or
+            below it (San Jose State's text layer)."""
+            for step in (-1, 1):
+                k = index + step
+                while 0 <= k < len(raw_lines) and not raw_lines[k].strip():
+                    k += step
+                if 0 <= k < len(raw_lines) and re.fullmatch(r"[\d,]+", raw_lines[k].strip()):
+                    return True
+            return False
+
+        for line_index, raw_line in enumerate(raw_lines):
             line = raw_line.strip()
             if not line:
                 continue
 
-            compact_match = re.search(
+            header_norm = _normalize_label_without_gender_rewrite(line).replace(".", " ")
+            header_norm = re.sub(r"\s+", " ", header_norm)
+            if _is_c1_residency_header(header_norm):
+                in_residency_block = True
+                residency_columns = _c1_residency_columns(header_norm)
+                header_lines = [raw_line]
+                continue
+            if (
+                in_residency_block
+                and len(header_lines) < 3
+                and not re.search(r"\d|who|first", header_norm)
+            ):
+                header_lines.append(raw_line)  # a wrapped second header line
+            if in_residency_block and re.search(
+                r"\b(men|women|males|females)\b", header_norm
+            ):
+                in_residency_block = False
+            if in_residency_block and re.match(r"c2\b", header_norm):
+                in_residency_block = False
+
+            compact_match = None if in_residency_block else re.search(
                 r"(?:total\s+)?"
                 r"(?:(full|part)[-\s]?time,\s*)?"
                 r"first[-\s]time,?\s*first[-\s]year"
@@ -2691,6 +2905,7 @@ def resolve_c1_applications(
                         if num is None:
                             continue
                         if gender == "All" and action == "enrolled" and unit_load in {"FT", "PT"}:
+                            gender_rows_seen.add(("enrolled", "All", unit_load))
                             gender_sums[("enrolled", "FTPT")] = (
                                 gender_sums.get(("enrolled", "FTPT"), 0) + int(float(num))
                             )
@@ -2711,6 +2926,39 @@ def resolve_c1_applications(
                 line,
                 re.IGNORECASE,
             )
+            label_only = None
+            if not gender_match and not in_residency_block:
+                label_only = re.search(
+                    r"total\s+"
+                    r"(?:(full|part)[-\s]?time,\s*)?"
+                    r"first[-\s]time,\s*first[-\s]year\s+"
+                    r"(men|women|of another gender|of unknown gender|another gender|unknown gender)"
+                    # Sidebar text (no digits) may share the line (Skidmore 2024-25).
+                    r"\s+who\s+(applied|were admitted|enrolled)(?:\s+\D*)?$",
+                    line,
+                    re.IGNORECASE,
+                )
+            if label_only and not _next_or_previous_is_bare_number(line_index):
+                # A row the school left blank (a women's college's men row, a
+                # part-time row with no part-time first-years) is a 0, so the
+                # rest still sums to the total. A line whose value sits on the
+                # next line is not blank and stays unread.
+                load_raw, gender_raw, action_raw = label_only.groups()
+                gender_norm = _normalize_label_without_gender_rewrite(gender_raw)
+                gender = (
+                    "Males" if gender_norm in {"men", "males"}
+                    else "Females" if gender_norm in {"women", "females"}
+                    else "Another Gender" if "another gender" in gender_norm
+                    else "Unknown"
+                )
+                action = "admitted" if "admitted" in action_raw.lower() else (
+                    "applied" if "applied" in action_raw.lower() else "enrolled"
+                )
+                unit_load = "All"
+                if action == "enrolled" and load_raw:
+                    unit_load = "FT" if load_raw.lower().startswith("full") else "PT"
+                gender_rows_seen.add((action, gender, unit_load))
+                continue
             if gender_match:
                 load_raw, gender_raw, action_raw, value = gender_match.groups()
                 gender_norm = _normalize_label_without_gender_rewrite(gender_raw)
@@ -2737,6 +2985,7 @@ def resolve_c1_applications(
                 if qn and num is not None:
                     out.setdefault(qn, {"value": num, "source": "tier4_cleaner"})
                 if num is not None:
+                    gender_rows_seen.add((action, gender, unit_load))
                     if unit_load == "All" or action != "enrolled":
                         gender_sums[(action, "All")] = (
                             gender_sums.get((action, "All"), 0) + int(float(num))
@@ -2748,7 +2997,13 @@ def resolve_c1_applications(
                 continue
 
             residency_norm = _normalize_label(line)
-            if "degree seeking" not in residency_norm:
+            if in_residency_block:
+                if (
+                    "first time first year" not in residency_norm
+                    and "degree seeking" not in residency_norm
+                ):
+                    continue
+            elif "degree seeking" not in residency_norm:
                 continue
             action = None
             if "who were admitted" in residency_norm:
@@ -2761,23 +3016,50 @@ def resolve_c1_applications(
                 continue
 
             numbers = re.findall(r"\b\d[\d,]*\b", line)
-            if len(numbers) < 4:
-                continue
-            if len(numbers) >= 5:
-                ordered = [
-                    ("In-State", numbers[-5]),
-                    ("Out-of-State", numbers[-4]),
-                    ("Nonresidents", numbers[-3]),
-                    ("Unknown", numbers[-2]),
-                    ("All", numbers[-1]),
-                ]
+            if in_residency_block:
+                # Columns come from the header just above. A row with as many
+                # numbers as columns is read in order; a row with fewer has a
+                # blank cell, so its numbers are placed by character position
+                # under the header words, or skipped when that is not possible.
+                columns = residency_columns
+                if len(numbers) == len(columns):
+                    ordered = list(zip(columns, numbers))
+                else:
+                    ordered = _c1_assign_by_position(header_lines, columns, raw_line)
+                    if (
+                        not ordered
+                        and columns[-1] == "All"
+                        and "Unknown" in columns
+                        and len(numbers) == len(columns) - 1
+                    ):
+                        # OCR text has no usable column positions. Total-last
+                        # tables with a blank Unknown cell were read this way
+                        # before; it is accepted only when the Total is the sum
+                        # of the other numbers, which a shifted row rarely is.
+                        figures = [float(f) if (f := _extract_number(n)) is not None else None for n in numbers]
+                        if None not in figures and sum(figures[:-1]) == figures[-1]:
+                            kept = tuple(c for c in columns if c != "Unknown")
+                            ordered = list(zip(kept, numbers))
+                    if not ordered or len(ordered) < 3:
+                        continue
             else:
-                ordered = [
-                    ("In-State", numbers[-4]),
-                    ("Out-of-State", numbers[-3]),
-                    ("Nonresidents", numbers[-2]),
-                    ("All", numbers[-1]),
-                ]
+                if len(numbers) < 4:
+                    continue
+                if len(numbers) >= 5:
+                    ordered = [
+                        ("In-State", numbers[-5]),
+                        ("Out-of-State", numbers[-4]),
+                        ("Nonresidents", numbers[-3]),
+                        ("Unknown", numbers[-2]),
+                        ("All", numbers[-1]),
+                    ]
+                else:
+                    ordered = [
+                        ("In-State", numbers[-4]),
+                        ("Out-of-State", numbers[-3]),
+                        ("Nonresidents", numbers[-2]),
+                        ("All", numbers[-1]),
+                    ]
             for residency, value in ordered:
                 num = _extract_number(value)
                 qn = _lookup("All", residency, action)
@@ -2789,8 +3071,20 @@ def resolve_c1_applications(
             if not qn or qn in out:
                 continue
             total = gender_sums.get((action, "All"))
+            if total is not None and not (
+                {(action, "Males", "All"), (action, "Females", "All")}
+                <= gender_rows_seen
+            ):
+                total = None
             if total is None and action == "enrolled":
                 total = gender_sums.get((action, "FTPT"))
+                if total is not None and not (
+                    {("enrolled", g, load) for g in ("Males", "Females") for load in ("FT", "PT")}
+                    <= gender_rows_seen
+                    or {("enrolled", "All", "FT"), ("enrolled", "All", "PT")}
+                    <= gender_rows_seen
+                ):
+                    total = None
             if total is not None:
                 out[qn] = {"value": str(total), "source": "tier4_cleaner"}
 
@@ -6787,6 +7081,17 @@ def clean(
                     continue
                 if substr not in label_norm:
                     continue
+                # A residency table without a leading Total column (UNC
+                # 2025-26: In-State, Out-of-State, International, Unknown):
+                # column 0 is In-State, not the all-students total.
+                if (
+                    qnum in _C1_GENDERLESS_TOTAL_QNS
+                    and col_hint == 0
+                    and len(headers_norm) > 1
+                    and any("in state" in header for header in headers_norm)
+                    and "total" not in headers_norm[1]
+                ):
+                    continue
                 # "first-year men who enrolled" is also a substring of the
                 # full-time/part-time rows below it. When the plain row's
                 # text is garbled (RIT/HCU 2025-26 print "enrolled" in a
@@ -6937,6 +7242,8 @@ def clean(
                         supplemental_override_qns.add(qn)
                 else:
                     new.setdefault(qn, rec)
+        if resolver is resolve_a_general:
+            new = _a_fields_with_same_question_in_schema(new, idx)
         for qn, rec in new.items():
             if qn in supplemental_override_qns:
                 values[qn] = rec
