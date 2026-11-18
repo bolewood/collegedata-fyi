@@ -19,6 +19,8 @@ In short:
   `cds.xlsx` and `cds.csv` downloads, PRD 025), `acceptance-rate`,
   `early-decision` and `gpa` stat pages (PRD 031), and `feed.xml` (PRD 029).
   Every school and school-year page also has an `opengraph-image`.
+- `/scholarships` named scholarship directory (PRD 036), with a scholarship
+  card on school pages that have a record and `/methodology/scholarships`.
 - `/browse` queryable CDS browser, `/match` local-only match-list builder,
   `/coverage` public coverage dashboard.
 - `/discover` guided discovery (PRD 026): card sort, preference ledger, and the

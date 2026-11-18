@@ -16,8 +16,9 @@ and PRD 036 closes, and the site stops overloading its database each morning.
 ### Added
 
 - The scholarship directory now lists 95 programs at 74 schools, up from 23 at
-  20. 79 are verified against the school's own pages and 16 are published as
-  conflicting because the school's pages disagree. Browse them at
+  20. 79 are verified against the school's own pages, or those of a foundation
+  the school ties to the program, and 16 are published as conflicting because
+  those pages disagree. Browse them at
   `/scholarships` or on each school's page (#321 to #326, #328, #329, #344).
 - "Other info" on scholarship cards: a sourced fact that fits no structured
   field, such as "awarded for the fall semester only", shown as one sentence
@@ -26,7 +27,8 @@ and PRD 036 closes, and the site stops overloading its database each morning.
   `scholarship_directory`; the CSV download gains an `other_info_json` column
   (#342, #343).
 - A size floor: a program is listed only when its top tier is worth at least
-  $10,000 a year or covers full tuition (#317).
+  $10,000 a year (or $40,000 over four years), covers full tuition, or waives
+  the out-of-state tuition differential (#317).
 - The scholarship fetcher and monitor can fall back to a headless browser for
   school sites that refuse a plain HTTP client. It loads only the one public
   page and never passes a login, CAPTCHA or robots.txt block (#318, #319).
@@ -50,8 +52,10 @@ and PRD 036 closes, and the site stops overloading its database each morning.
   Four years." (#343).
 - School pages are cached for 7 days, not 24 hours, and are refreshed when
   their data changes. A daily crawl had been making several hundred pages
-  rebuild in the same minute; on the first morning after the change the
-  busiest minute fell from about 2,100 database requests to about 540 (#336).
+  rebuild in the same minute. In the API gateway logs for the same window,
+  the busiest minute was about 2,100 requests with 557 errors on 2026-11-16
+  and about 540 requests with one error on 2026-11-18, the first morning after
+  the change. One day is not proof (#336).
 - The public API key is read-only at the grant level, and can no longer call
   the cache-refresh and other maintenance functions (#337).
 - CI builds and smoke-tests the web app only when `web/` or the workflow
@@ -59,10 +63,13 @@ and PRD 036 closes, and the site stops overloading its database each morning.
 
 ### Fixed
 
-- Two accuracy audits of every published scholarship record. 41 records got a
-  corrected version; five more followed from re-checking what the monitor
-  flagged. Published versions are never edited: each correction is a new
-  version (#330, #331, #346).
+- Every published scholarship record was audited, first a sample of 20 and
+  then the other 73. 38 records got a corrected version and three more lost a
+  campus restriction the school's page does not state. Five more corrections
+  followed from re-checking what the monitor flagged, among them SMU's
+  admission deadline for President's Scholars, which is November 1. Published
+  versions are never edited: each correction is a new version (#330, #331,
+  #346).
 - A school URL containing non-ASCII characters returned a 500. It now returns
   a 404 (#333, #335).
 - Every build read about 700 documents at once for the sitemap, which timed
@@ -78,6 +85,9 @@ and PRD 036 closes, and the site stops overloading its database each morning.
   scholarship office, Clemson, UT Dallas McDermott, Morehead-Cain, Indiana
   Wells) and cannot reach Tulane's admission page or Prairie View's scholarship
   page. Those are checked by hand in the annual review.
+- The monitor flags a record only when a change moves an amount, a date, a
+  year or a selection word. A rewording that moves none of those is caught
+  only by the annual review.
 - With 7-day page caching, a change that the sweep does not see can take up to
   a week to appear: coverage wording that changes with no document change,
   and federal data loads or identity changes when `--all` is not run.

@@ -8,7 +8,7 @@ row or the attribution string drift from it.
 
 Status: live. The view is applied in production and filled by
 `tools/scholarships/load.py --apply`, which the `scholarships-load.yml` workflow
-runs on every merge to `main`. It holds only the programs that have been merged
+runs when a merge to `main` changes the records or the loader. It holds only the programs that have been merged
 under `data/scholarships/programs/`.
 
 ## What a row is

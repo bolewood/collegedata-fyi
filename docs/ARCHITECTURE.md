@@ -388,7 +388,7 @@ One list of what `anon` can read through PostgREST (checked against `grant selec
 |---|---|---|
 | CDS archive | `cds_documents`, `cds_artifacts`, `cleaners`, `cds_manifest`, `cds_fields`, `school_browser_rows`, `cds_publish_events` (school-direct rows only) | Supported |
 | Merit and outcomes | `school_merit_profile`, `cds_scorecard`, `scorecard_summary` | Supported |
-| Scholarship directory | `scholarship_directory` (CC BY-SA 4.0; `license` and `attribution` on every row; partial, hand-built) | Supported once the PRD 036 migration is applied |
+| Scholarship directory | `scholarship_directory` (CC BY-SA 4.0; `license` and `attribution` on every row; partial, hand-built) | Supported |
 | Directory and coverage | `institution_directory`, `institution_slug_crosswalk`, `institution_cds_coverage` (out-of-scope rows hidden by RLS) | Supported |
 | IPEDS | `ipeds_facts`, `school_facts_unified`, `ipeds_current_facts`, release metadata tables (`ipeds_releases`, `ipeds_tables`, `ipeds_columns`, `ipeds_value_labels`) | Supported |
 | FSA | `fsa_nonpayment_current`, `fsa_nonpayment_facts`, `fsa_releases` | Supported |
@@ -414,7 +414,7 @@ Not anon-readable: `api_usage_events`, the `api_gateway_*` tables, the `pipeline
 
 | Component | Role |
 |---|---|
-| [`web/`](../web/) | Next.js 16 app hosted on Vercel at `collegedata.fyi`. Consumes the PostgREST API via `@supabase/supabase-js` with the anon key. Public pages are mostly read-only; the source-submission CTA and the `/feedback` form POST from the browser straight to Formspree when `NEXT_PUBLIC_FORMSPREE_ENDPOINT` / `NEXT_PUBLIC_FEEDBACK_FORMSPREE_ENDPOINT` are configured (see [`docs/community-feedback.md`](community-feedback.md)). No auth. Caching: home, browse, schools, and `/usage` are hourly ISR, `/coverage` is 15 minutes, school pages are static with daily revalidation plus on-demand `school:<id>` tags, and `/pipeline-observation` is rendered live. |
+| [`web/`](../web/) | Next.js 16 app hosted on Vercel at `collegedata.fyi`. Consumes the PostgREST API via `@supabase/supabase-js` with the anon key. Public pages are mostly read-only; the source-submission CTA and the `/feedback` form POST from the browser straight to Formspree when `NEXT_PUBLIC_FORMSPREE_ENDPOINT` / `NEXT_PUBLIC_FEEDBACK_FORMSPREE_ENDPOINT` are configured (see [`docs/community-feedback.md`](community-feedback.md)). No auth. Caching: home, browse, schools, and `/usage` are hourly ISR, `/coverage` is 15 minutes, school pages are static with a 7-day revalidation window, a daily refresh sweep and on-demand `school:<id>` tags, and `/pipeline-observation` is rendered live. |
 | [`web/src/app/page.tsx`](../web/src/app/page.tsx) | Landing page. Server-backed school search autocomplete (PRD 015 M4 — calls the `search_institutions` RPC, returns directory-only schools with coverage badges in addition to CDS-backed ones) plus live corpus stats. |
 | [`web/src/app/browse/page.tsx`](../web/src/app/browse/page.tsx) | Queryable school browser page backed by `browser-search`. Defaults to latest primary 2024-25+ rows and exposes answerability metadata plus CSV export. CDS-only (filtering by acceptance/yield/etc. requires CDS data). |
 | [`web/src/app/match/page.tsx`](../web/src/app/match/page.tsx) | PRD 017 match list builder. Reads `school_browser_rows`, directory rows, and Scorecard enrichment; ranks schools with the same student-profile model used by academic positioning; save/share codes are local and stateless. |
