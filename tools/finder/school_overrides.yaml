@@ -683,16 +683,23 @@ overrides:
 
   - school_id: penn-state
     browse_url: https://opair.psu.edu/project/common-data-set/
+    direct_archive_urls:
+      - { url: "https://bpb-us-e1.wpmucdn.com/sites.psu.edu/dist/d/114442/files/2026/09/CDS_2025_2026_UniversityPark_v3.pdf", year: "2025-26" }
+      - { url: "https://bpb-us-e1.wpmucdn.com/sites.psu.edu/dist/d/114442/files/2025/06/CDS_2024_2025_UniversityPark_v2.pdf", year: "2024-25" }
     hosting_override:
       file_storage: sharepoint
       cms: wordpress
       auth_required: none
       notes: >-
-        Penn State's OPAIR page links to a SharePoint folder labeled Access
-        Files Here. The current canonical archive rows are Penn State York
-        campus PDFs, not University Park/main-campus CDS files; reject York
-        sources for the penn-state slug and handle the SharePoint folder as
-        source-mapping follow-up.
+        Penn State publishes one CDS PDF per campus (about 20 a year) and the
+        OPAIR page links to a SharePoint folder labeled Access Files Here.
+        The penn-state slug is University Park (IPEDS 214777) only. The
+        resolver cannot tell the campus files apart: the 2024-25 row has
+        published York figures and then Abington figures. It was re-pointed
+        at the University Park file on 2026-11-18 (applied 88,478, matching
+        the federal figure). If section A of a penn-state document
+        names any campus other than University Park, re-archive the
+        UniversityPark file for that year with force_urls.
 
   - school_id: ut-austin
     browse_url: https://reports.utexas.edu/common-data-set/pdf
