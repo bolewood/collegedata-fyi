@@ -18,6 +18,36 @@ from tools.finder.headless_archive import build_targets
 from tools.finder.headless_download import upload_and_record
 
 
+def _claim(slug: str, ipeds: str, domain: str) -> dict:
+    return {
+        "school_id": slug,
+        "ipeds_id": ipeds,
+        "claimed_name": slug.replace("-", " ").title(),
+        "claimed_domain": domain,
+    }
+
+
+SHARED = {
+    "bethel-university": [
+        _claim("bethel-university", "150145", "betheluniversity.edu"),
+        _claim("bethel-university", "173160", "bethel.edu"),
+        _claim("bethel-university", "219718", "bethelu.edu"),
+    ],
+    "columbia-college": [
+        _claim("columbia-college", "177065", "ccis.edu"),
+        _claim("columbia-college", "217934", "columbiasc.edu"),
+    ],
+    "westminster-college": [
+        _claim("westminster-college", "179946", "wcmo.edu"),
+        _claim("westminster-college", "216807", "westminster.edu"),
+    ],
+    "university-of-st-thomas": [
+        _claim("university-of-st-thomas", "174914", "stthomas.edu"),
+        _claim("university-of-st-thomas", "227863", "stthom.edu"),
+    ],
+}
+
+
 class ArchiveIdentityTests(unittest.TestCase):
     def test_uf_maps_to_university_of_florida_unitid(self) -> None:
         identity = resolve_archive_identity("uf")
@@ -26,31 +56,52 @@ class ArchiveIdentityTests(unittest.TestCase):
         self.assertEqual(identity["ipeds_id"], "134130")
 
     def test_shared_slug_is_refused_not_resolved_to_the_last_entry(self) -> None:
-        # bethel-university appears for IN, MN and TN in schools.yaml. The old
-        # dict lookup kept the last row (Tennessee) for every caller.
+        # The old dict lookup kept the last row (Tennessee) for every caller.
         with self.assertRaises(AmbiguousArchiveSchoolError) as ctx:
-            resolve_archive_identity("bethel-university")
-        message = str(ctx.exception)
+            resolve_archive_identity("bethel-university", claims_by_school_id=SHARED)
         for unitid in ("150145", "173160", "219718"):
-            self.assertIn(unitid, message)
+            self.assertIn(unitid, str(ctx.exception))
 
     def test_shared_slug_resolves_when_the_unitid_is_given(self) -> None:
-        identity = resolve_archive_identity("bethel-university", ipeds_id="173160")
+        identity = resolve_archive_identity(
+            "bethel-university", ipeds_id="173160", claims_by_school_id=SHARED
+        )
         self.assertEqual(identity["ipeds_id"], "173160")
         with self.assertRaises(UnknownArchiveSchoolError):
-            resolve_archive_identity("bethel-university", ipeds_id="999999")
+            resolve_archive_identity(
+                "bethel-university", ipeds_id="999999", claims_by_school_id=SHARED
+            )
 
-    def test_every_duplicate_slug_in_schools_yaml_is_refused(self) -> None:
-        from collections import Counter
+    def test_shared_slug_resolves_when_the_source_host_picks_one_entry(self) -> None:
+        cases = [
+            ("bethel-university", "https://www.bethel.edu/x/cds.xlsx", "173160"),
+            ("columbia-college", "https://www.ccis.edu/_files/cds.pdf", "177065"),
+            ("westminster-college", "https://www.wcmo.edu/cds.pdf", "179946"),
+            ("university-of-st-thomas", "https://it.stthom.edu/cds.pdf", "227863"),
+            (
+                "westminster-college",
+                "https://web.archive.org/web/20250101000000id_/https://www.wcmo.edu/cds.pdf",
+                "179946",
+            ),
+        ]
+        for slug, url, want in cases:
+            identity = resolve_archive_identity(
+                slug, source_url=url, claims_by_school_id=SHARED
+            )
+            self.assertEqual(identity["ipeds_id"], want, url)
 
-        from tools.finder.identity_guard import load_school_claims
+    def test_shared_slug_with_no_or_unrelated_host_is_still_refused(self) -> None:
+        for url in (None, "", "https://drive.google.com/file/d/x", "https://notstthom.edu/a.pdf"):
+            with self.assertRaises(AmbiguousArchiveSchoolError, msg=str(url)):
+                resolve_archive_identity(
+                    "university-of-st-thomas", source_url=url, claims_by_school_id=SHARED
+                )
 
-        counts = Counter(c["school_id"] for c in load_school_claims())
-        shared = sorted(slug for slug, n in counts.items() if n > 1)
-        self.assertTrue(shared)
-        for slug in shared:
-            with self.assertRaises(AmbiguousArchiveSchoolError, msg=slug):
-                resolve_archive_identity(slug)
+    def test_a_slug_listed_twice_with_one_id_is_not_ambiguous(self) -> None:
+        twice = {"uf": [_claim("uf", "134130", "ufl.edu"), _claim("uf", "134130", "ufl.edu")]}
+        self.assertEqual(
+            resolve_archive_identity("uf", claims_by_school_id=twice)["ipeds_id"], "134130"
+        )
 
     def test_unknown_slug_is_rejected(self) -> None:
         with self.assertRaises(UnknownArchiveSchoolError):

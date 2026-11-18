@@ -721,8 +721,14 @@ async function insertSourcePartArtifacts(
 async function effectiveIpedsIdForSchool(
   supabase: SupabaseClient,
   school: SchoolInput,
+  sourceUrl: string | null,
 ): Promise<string | null> {
-  return await resolveInsertIpedsId(supabase, school.school_id, school.ipeds_id ?? null);
+  return await resolveInsertIpedsId(
+    supabase,
+    school.school_id,
+    school.ipeds_id ?? null,
+    sourceUrl,
+  );
 }
 
 async function archiveSectionPackage(
@@ -796,7 +802,7 @@ async function archiveSectionPackage(
     const docId = await insertFreshDocument(supabase, {
       school_id: school.school_id,
       school_name: school.school_name,
-      ipeds_id: await effectiveIpedsIdForSchool(supabase, school),
+      ipeds_id: await effectiveIpedsIdForSchool(supabase, school, sourceUrl),
       cds_year: pkg.cds_year,
       source_url: sourceUrl,
       source_sha256: bundleSha256,
@@ -983,7 +989,7 @@ async function archiveOneCandidate(
     await ensureObjectUploaded(supabase, storagePath, bytes, ext);
     // The directory decides the UNITID (schools.yaml is the fallback); see
     // resolveInsertIpedsId. No sibling-document inheritance.
-    const effectiveIpedsId = await effectiveIpedsIdForSchool(supabase, school);
+    const effectiveIpedsId = await effectiveIpedsIdForSchool(supabase, school, sourceUrl);
     const docId = await insertFreshDocument(supabase, {
       school_id: school.school_id,
       school_name: school.school_name,

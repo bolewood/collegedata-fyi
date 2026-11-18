@@ -87,6 +87,29 @@ def normalize_domain(value: Any) -> str:
     return host.removeprefix("www.")
 
 
+def source_host(url: Any) -> str:
+    """Host a source URL really came from ("" when unparseable).
+
+    An Archive.org capture (``web.archive.org/web/<ts>id_/<original>``) is
+    unwrapped to the original host so a pinned snapshot is judged by its origin.
+    """
+    text = str(url or "").strip()
+    match = re.match(
+        r"^https?://(?:www\.)?web\.archive\.org/web/\d+[a-z_]*/(https?://.+)$",
+        text,
+        re.IGNORECASE,
+    )
+    if match:
+        text = match.group(1)
+    return normalize_domain(text) if "://" in text else ""
+
+
+def host_matches_domain(host: str, domain: Any) -> bool:
+    """True when ``host`` equals ``domain`` or is a subdomain of it."""
+    d = normalize_domain(domain)
+    return bool(host and d and (host == d or host.endswith(f".{d}")))
+
+
 def domains_related(left: Any, right: Any) -> bool:
     """Accept the same host or a direct subdomain relationship."""
     a = normalize_domain(left)

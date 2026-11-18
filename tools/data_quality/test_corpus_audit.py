@@ -240,6 +240,55 @@ class DocumentIpedsIdTests(unittest.TestCase):
         self.assertEqual(accepted["summary"]["new_findings"], 0)
 
 
+class SharedSlugDomainTests(unittest.TestCase):
+    CLAIMS = [
+        {"school_id": "westminster-college", "ipeds_id": "179946", "claimed_domain": "wcmo.edu"},
+        {"school_id": "westminster-college", "ipeds_id": "216807", "claimed_domain": "westminster.edu"},
+        {"school_id": "university-of-st-thomas", "ipeds_id": "174914", "claimed_domain": "stthomas.edu"},
+        {"school_id": "university-of-st-thomas", "ipeds_id": "227863", "claimed_domain": "stthom.edu"},
+        {"school_id": "caltech", "ipeds_id": "110404", "claimed_domain": "caltech.edu"},
+    ]
+
+    @staticmethod
+    def doc(i, school, ipeds, url, removed_at=None):
+        return {"id": i, "school_id": school, "cds_year": "2023-24", "ipeds_id": ipeds,
+                "source_url": url, "removed_at": removed_at}
+
+    def test_the_twelve_misfiled_documents_are_found(self):
+        # The real shapes hidden on 2026-11-18: Missouri's wcmo.edu files under
+        # Pennsylvania's slug and id, Houston's stthom.edu file under Minnesota's.
+        docs = [
+            self.doc("w1", "westminster-college", "216807", "https://www.wcmo.edu/about/cds-2023-24.pdf"),
+            self.doc("w2", "westminster-college", "216807", "https://www.wcmo.edu/about/cds-2022-23.pdf"),
+            self.doc("s1", "university-of-st-thomas", "174914", "https://it.stthom.edu/wp-content/uploads/2023/05/CDS_2022-2023.pdf"),
+        ]
+        findings = audit.shared_slug_domain_mismatch(docs, self.CLAIMS)
+        self.assertEqual(
+            [f["key"] for f in findings],
+            ["shared_slug_domain_mismatch:university-of-st-thomas",
+             "shared_slug_domain_mismatch:westminster-college"],
+        )
+        self.assertEqual(findings[1]["documents"], 2)
+        self.assertEqual(findings[1]["host_ipeds_ids"], ["179946"])
+
+    def test_correct_removed_unmatched_and_unshared_documents_are_ignored(self):
+        docs = [
+            self.doc("ok", "westminster-college", "216807", "https://www.westminster.edu/cds.pdf"),
+            self.doc("gone", "westminster-college", "216807", "https://www.wcmo.edu/cds.pdf", removed_at="2026-11-18"),
+            self.doc("drive", "westminster-college", "216807", "https://drive.google.com/file/d/x"),
+            self.doc("other", "caltech", "110404", "https://www.wcmo.edu/cds.pdf"),
+        ]
+        self.assertEqual(audit.shared_slug_domain_mismatch(docs, self.CLAIMS), [])
+
+    def test_an_archive_org_capture_is_judged_by_its_original_host(self):
+        wrong = self.doc("a", "westminster-college", "216807",
+                         "https://web.archive.org/web/20250101000000id_/https://www.wcmo.edu/cds.pdf")
+        right = self.doc("b", "westminster-college", "216807",
+                         "https://web.archive.org/web/20250101000000id_/https://www.westminster.edu/cds.pdf")
+        self.assertEqual(len(audit.shared_slug_domain_mismatch([wrong], self.CLAIMS)), 1)
+        self.assertEqual(audit.shared_slug_domain_mismatch([right], self.CLAIMS), [])
+
+
 class SanityRuleReplayTests(unittest.TestCase):
     def test_withheld_value_is_recovered_from_its_text(self):
         rows = [

@@ -16,6 +16,9 @@ Checks
                                the same fall by more than the tolerance
   name_in_file_mismatch        the institution named inside the file (A1) is
                                not the school the file is published under
+  shared_slug_domain_mismatch  a document filed under a slug schools.yaml shares
+                               between institutions comes from another
+                               institution's domain than its own
   document_ipeds_id_mismatch   a document's ipeds_id is not its school's
                                directory ipeds_id, or is NULL when the
                                directory has one
@@ -45,11 +48,12 @@ from typing import Any, Iterable, Mapping, Optional, Sequence
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
-for _path in (HERE, REPO_ROOT / "tools" / "browser_backend"):
+for _path in (HERE, REPO_ROOT / "tools" / "browser_backend", REPO_ROOT / "tools" / "finder"):
     if str(_path) not in sys.path:
         sys.path.insert(0, str(_path))
 
 import sanity_rules  # noqa: E402
+from identity_guard import host_matches_domain, load_school_claims, source_host  # noqa: E402
 from run_data_integrity_audit import ReadOnlyPostgrest, load_env  # noqa: E402
 
 DEFAULT_ACCEPTED = HERE / "corpus_audit_accepted.yaml"
@@ -290,6 +294,62 @@ def document_ipeds_id_mismatch(
     return findings
 
 
+def shared_slug_domain_mismatch(
+    documents: Iterable[Mapping[str, Any]],
+    claims: Iterable[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    """One finding per shared slug with a document from another institution.
+
+    schools.yaml still lists some slugs for several institutions (two Westminster
+    Colleges, two St. Thomases). The directory gives the slug to one of them, so a
+    file from the other's website is stamped and published under the wrong school
+    while its ipeds_id agrees with the directory. The check: the host of the
+    document's source URL must not match the domain of a *different* institution
+    that shares the slug. Hosts that match no entry (mirrors, Drive) are ignored;
+    Archive.org captures are judged by their original host.
+    """
+    by_slug: dict[str, list[Mapping[str, Any]]] = defaultdict(list)
+    for claim in claims:
+        by_slug[str(claim["school_id"])].append(claim)
+    shared = {s: c for s, c in by_slug.items() if len({x["ipeds_id"] for x in c}) > 1}
+    found: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for doc in documents:
+        slug = str(doc.get("school_id"))
+        if doc.get("removed_at") or slug not in shared:
+            continue
+        host = source_host(doc.get("source_url"))
+        if not host:
+            continue
+        own = str(doc.get("ipeds_id") or "")
+        matched = {
+            str(c["ipeds_id"])
+            for c in shared[slug]
+            if host_matches_domain(host, c.get("claimed_domain"))
+        }
+        if matched and own not in matched:
+            found[slug].append(
+                {
+                    "document_id": doc.get("id"),
+                    "cds_year": doc.get("cds_year"),
+                    "host": host,
+                    "stamped_ipeds_id": own or None,
+                    "host_ipeds_ids": sorted(matched),
+                }
+            )
+    return [
+        _finding(
+            "shared_slug_domain_mismatch",
+            [slug],
+            schools=[slug],
+            documents=len(rows),
+            hosts=sorted({r["host"] for r in rows}),
+            host_ipeds_ids=sorted({i for r in rows for i in r["host_ipeds_ids"]}),
+            document_ids=[r["document_id"] for r in rows],
+        )
+        for slug, rows in sorted(found.items())
+    ]
+
+
 def _name_tokens(text: str) -> set[str]:
     folded = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode().lower()
     return {t for t in re.split(r"[^a-z0-9]+", folded.replace("&", " and ")) if t}
@@ -441,6 +501,12 @@ def _describe(finding: Mapping[str, Any]) -> str:
         )
     if check == "name_in_file_mismatch":
         return f"{finding['year']} {schools}: the file says \"{finding['name_in_file']}\""
+    if check == "shared_slug_domain_mismatch":
+        return (
+            f"{schools}: {finding['documents']} document(s) from "
+            f"{', '.join(finding['hosts'])}, a domain of "
+            f"{', '.join(finding['host_ipeds_ids'])} not the stamped institution"
+        )
     if check == "document_ipeds_id_mismatch":
         return (
             f"{schools}: {finding['documents']} document(s) should carry "
@@ -517,6 +583,7 @@ def build_report(
     identity_documents: Sequence[Mapping[str, Any]] = (),
     directory_rows: Sequence[Mapping[str, Any]] = (),
     crosswalk_rows: Sequence[Mapping[str, Any]] = (),
+    shared_slug_claims: Sequence[Mapping[str, Any]] = (),
 ) -> dict[str, Any]:
     federal_findings, compared = federal_applicants_mismatch(browser_rows, federal_rows)
     by_check = {
@@ -524,6 +591,9 @@ def build_report(
         "shared_admissions_numbers": shared_admissions_numbers(browser_rows),
         "federal_applicants_mismatch": federal_findings,
         "name_in_file_mismatch": name_in_file_mismatch(name_rows),
+        "shared_slug_domain_mismatch": shared_slug_domain_mismatch(
+            identity_documents, shared_slug_claims
+        ),
         "document_ipeds_id_mismatch": document_ipeds_id_mismatch(
             identity_documents, directory_rows, crosswalk_rows
         ),
@@ -601,9 +671,10 @@ def fetch_inputs(client: ReadOnlyPostgrest) -> dict[str, list[dict[str, Any]]]:
         "identity_documents": rows(
             "identity_documents",
             "cds_documents",
-            {"select": "id,school_id,cds_year,ipeds_id,removed_at", "removed_at": "is.null", "order": "id"},
+            {"select": "id,school_id,cds_year,ipeds_id,source_url,removed_at", "removed_at": "is.null", "order": "id"},
             lambda r: r["id"],
         ),
+        "shared_slug_claims": load_school_claims(),
         "directory_rows": rows(
             "directory",
             "institution_directory",

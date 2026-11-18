@@ -4,7 +4,13 @@
 // layer.
 
 import { SupabaseClient } from "jsr:@supabase/supabase-js@2";
-import { chooseDocumentIpedsId } from "./schools.ts";
+import {
+  chooseDocumentIpedsId,
+  fetchSlugEntries,
+  ipedsIdForSharedSlug,
+  ipedsIdsForSlug,
+  type SchoolEntry,
+} from "./schools.ts";
 
 export interface CdsDocumentRow {
   id: string;
@@ -392,37 +398,64 @@ export async function fetchDirectoryIpedsId(
   return aliasIds.size === 1 ? [...aliasIds][0] : null;
 }
 
-// The ipeds_id a new document row is written with. The institution directory
-// decides; schools.yaml (already resolved by the caller, null when its slug is
-// shared by several institutions) is the fallback. A sibling document's id is
-// never copied: that is how one wrong id spread to every year of a school.
+// The ipeds_id a new document row is written with.
+//
+// Unambiguous slug: the institution directory decides; schools.yaml is the
+// fallback. Slug shared by several institutions in schools.yaml: the directory
+// can only name the slug's owner, which is wrong for another institution's
+// files, so the source URL's host must pick exactly one yaml entry by domain
+// (even against the directory, logged). No match or several: NULL, logged.
+// A sibling document's id is never copied.
 export async function resolveInsertIpedsId(
   supabase: SupabaseClient,
   schoolId: string,
   yamlIpedsId: string | null,
+  sourceUrl: string | null = null,
+  slugEntries?: SchoolEntry[],
 ): Promise<string | null> {
+  const log = (event: string, extra: Record<string, unknown>) =>
+    console.log(JSON.stringify({
+      ts: new Date().toISOString(),
+      fn: "db.ts",
+      event,
+      school_id: schoolId,
+      source_url: sourceUrl,
+      ...extra,
+    }));
+
   let directoryId: string | null = null;
   try {
     directoryId = await fetchDirectoryIpedsId(supabase, schoolId);
   } catch (e) {
-    console.log(JSON.stringify({
-      ts: new Date().toISOString(),
-      fn: "archive.ts",
-      event: "directory_ipeds_lookup_failed",
-      school_id: schoolId,
-      error: (e as Error).message,
-    }));
+    log("directory_ipeds_lookup_failed", { error: (e as Error).message });
   }
+
+  const entries = slugEntries ?? await fetchSlugEntries(schoolId);
+  const candidates = ipedsIdsForSlug(entries, schoolId);
+  if (candidates.length > 1) {
+    const byDomain = ipedsIdForSharedSlug(entries, schoolId, sourceUrl);
+    if (!byDomain) {
+      log("document_ipeds_id_unresolved_shared_slug", {
+        candidates,
+        directory_ipeds_id: directoryId,
+      });
+      return null;
+    }
+    if (directoryId && directoryId !== byDomain) {
+      log("document_ipeds_id_conflict", {
+        chosen_by_domain: byDomain,
+        directory_ipeds_id: directoryId,
+      });
+    }
+    return byDomain;
+  }
+
   const choice = chooseDocumentIpedsId(directoryId, yamlIpedsId);
   if (choice.conflict || !choice.ipeds_id) {
-    console.log(JSON.stringify({
-      ts: new Date().toISOString(),
-      fn: "archive.ts",
-      event: choice.conflict ? "document_ipeds_id_conflict" : "document_ipeds_id_unresolved",
-      school_id: schoolId,
+    log(choice.conflict ? "document_ipeds_id_conflict" : "document_ipeds_id_unresolved", {
       directory_ipeds_id: directoryId,
       schools_yaml_ipeds_id: yamlIpedsId,
-    }));
+    });
   }
   return choice.ipeds_id;
 }

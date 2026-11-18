@@ -1,6 +1,7 @@
 import { assertEquals } from "jsr:@std/assert";
 import type { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import { fetchDirectoryIpedsId, resolveInsertIpedsId } from "./db.ts";
+import type { SchoolEntry } from "./schools.ts";
 
 type Rows = Record<string, Array<Record<string, unknown>>>;
 
@@ -60,11 +61,79 @@ Deno.test("directory lookup follows live aliases, skips redirects, refuses ambig
 
 Deno.test("a wrong schools.yaml id never beats the directory", async () => {
   // The old path took the last duplicate slug (Tennessee) for Minnesota's files.
-  assertEquals(await resolveInsertIpedsId(fakeClient(TABLES), "bethel-university", "219718"), "173160");
+  assertEquals(await resolveInsertIpedsId(fakeClient(TABLES), "bethel-university", "219718", null, []), "173160");
 });
 
 Deno.test("missing schools.yaml id is filled from the directory, not a sibling", async () => {
-  assertEquals(await resolveInsertIpedsId(fakeClient(TABLES), "caltech", null), "110404");
-  assertEquals(await resolveInsertIpedsId(fakeClient(TABLES), "unknown", null), null);
-  assertEquals(await resolveInsertIpedsId(fakeClient(TABLES), "unknown", "134130"), "134130");
+  assertEquals(await resolveInsertIpedsId(fakeClient(TABLES), "caltech", null, null, []), "110404");
+  assertEquals(await resolveInsertIpedsId(fakeClient(TABLES), "unknown", null, null, []), null);
+  assertEquals(await resolveInsertIpedsId(fakeClient(TABLES), "unknown", "134130", null, []), "134130");
+});
+
+const e = (id: string, ipeds_id: string, domain: string) =>
+  ({ id, name: id, ipeds_id, domain, scrape_policy: "unknown" }) as SchoolEntry;
+
+// Shared slugs as they stand in schools.yaml. The directory owner of each slug
+// is NOT always the institution whose files arrive.
+const SHARED: SchoolEntry[] = [
+  e("bethel-university", "150145", "betheluniversity.edu"),
+  e("bethel-university", "173160", "bethel.edu"),
+  e("bethel-university", "219718", "bethelu.edu"),
+  e("columbia-college", "177065", "ccis.edu"),
+  e("columbia-college", "217934", "columbiasc.edu"),
+  e("westminster-college", "179946", "wcmo.edu"),
+  e("westminster-college", "216807", "westminster.edu"),
+  e("university-of-st-thomas", "174914", "stthomas.edu"),
+  e("university-of-st-thomas", "227863", "stthom.edu"),
+];
+const SHARED_TABLES: Rows = {
+  institution_directory: [
+    { school_id: "bethel-university", ipeds_id: "173160" },
+    { school_id: "columbia-college", ipeds_id: "177065" },
+    { school_id: "westminster-college", ipeds_id: "216807" },
+    { school_id: "university-of-st-thomas", ipeds_id: "174914" },
+  ],
+};
+
+Deno.test("shared slugs are stamped by the source domain, not the directory owner", async () => {
+  const c = fakeClient(SHARED_TABLES);
+  const id = (slug: string, url: string) => resolveInsertIpedsId(c, slug, null, url, SHARED);
+  assertEquals(await id("bethel-university", "https://www.bethel.edu/x/cds-2425.xlsx"), "173160");
+  assertEquals(await id("columbia-college", "https://www.ccis.edu/_files/cds.pdf"), "177065");
+  assertEquals(await id("westminster-college", "https://www.wcmo.edu/cds.pdf"), "179946");
+  assertEquals(await id("university-of-st-thomas", "https://it.stthom.edu/wp-content/cds.pdf"), "227863");
+  // Archive.org capture unwraps to the original host.
+  assertEquals(
+    await id("westminster-college", "https://web.archive.org/web/20250101000000id_/https://www.wcmo.edu/cds.pdf"),
+    "179946",
+  );
+});
+
+Deno.test("shared slug with no domain match writes NULL, never the directory owner", async () => {
+  const c = fakeClient(SHARED_TABLES);
+  assertEquals(
+    await resolveInsertIpedsId(c, "westminster-college", null, "https://drive.google.com/file/d/abc", SHARED),
+    null,
+  );
+  assertEquals(await resolveInsertIpedsId(c, "westminster-college", null, null, SHARED), null);
+  // stthomas.edu must not match stthom.edu or the reverse by suffix accident.
+  assertEquals(
+    await resolveInsertIpedsId(c, "university-of-st-thomas", null, "https://www.notstthom.edu/x.pdf", SHARED),
+    null,
+  );
+});
+
+Deno.test("directory lookup returning an error falls back to the yaml id without throwing", async () => {
+  const failing = {
+    from: () => {
+      const q = {
+        select: () => q,
+        eq: () => q,
+        neq: () => q,
+        limit: () => Promise.resolve({ data: null, error: { message: "boom" } }),
+      };
+      return q;
+    },
+  } as unknown as SupabaseClient;
+  assertEquals(await resolveInsertIpedsId(failing, "caltech", "110404", null, []), "110404");
 });

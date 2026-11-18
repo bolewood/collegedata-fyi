@@ -206,6 +206,7 @@ Deno.serve(async (req: Request) => {
       supabase,
       schoolId,
       await resolveSchoolIpedsId(schoolId),
+      sourceUrl,
     );
     const docId = await insertFreshDocument(supabase, {
       school_id: schoolId,
