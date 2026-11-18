@@ -6,9 +6,10 @@ one YAML file per program, with one version per entering class
 important fact traces to an official page of the school or of a foundation
 the school ties to the program.
 
-This directory holds the record format, the validator inputs and, later, the
-records. The M1 milestone ships the format only; `programs/` is empty until
-the first batch is reviewed.
+This directory holds the record format, the validator inputs and the records
+under `programs/`. They are published at
+[collegedata.fyi/scholarships](https://collegedata.fyi/scholarships) and through
+the `scholarship_directory` API view.
 
 ## Licensing: read before contributing
 

@@ -1,14 +1,15 @@
 # PRD 036: `scholarship_directory` view contract
 
 The contract the web work (PRD 036 M3) builds against. Source of truth for
-column names is `supabase/migrations/20261114160000_scholarship_directory.sql`;
+column names is the newest `supabase/migrations/*_scholarship_directory*.sql`
+(currently `20261118120000_scholarship_directory_other_info.sql`);
 `tools/scholarships/test_load.py` fails if this file's column list, the example
 row or the attribution string drift from it.
 
-Status: written for the M2 migration, which is **not applied yet**. It is applied
-from `main` after merge, then `tools/scholarships/load.py --apply` fills it.
-Until then the view does not exist, and after that it holds only the programs
-that have been merged under `data/scholarships/programs/`.
+Status: live. The view is applied in production and filled by
+`tools/scholarships/load.py --apply`, which the `scholarships-load.yml` workflow
+runs on every merge to `main`. It holds only the programs that have been merged
+under `data/scholarships/programs/`.
 
 ## What a row is
 
