@@ -4,187 +4,190 @@ Editorial source of truth for public copy. Visual rules stay in
 [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md). If they conflict, this file wins
 for *what we say*; the design system wins for *how it looks*.
 
-Locked 2026-08-26 after Anthony’s Wave 1 decisions. Promise revised the
-same day: completeness over “tell the sources apart.” Persona-read the
-same evening: homepage says the gloss first; named sources stay on About.
-Follow-up calls: keep the punchier comprehensiveness claim; do not advertise
-takedowns; `/browse` is Compare; homepage title keeps “free.” Signed with
-API in the header (researchers and parents using LLMs); GitHub off the hero.
+Originally locked 2026-08-26 (Waves 1–4). Updated 2026-11-19 to add
+natural-prose rules, separate invariant tests from prose, and retire
+hedged front-door phrasing.
 
 ---
 
 ## Site promise
 
-The most comprehensive free college data we know of — each school’s Common
-Data Set, plus IPEDS and College Scorecard, in one public place.
-
-That sentence is the product. The benefit is *everything in one place, for
-free.* Naming the three sources is how we say what “everything” is, not a
-lecture on keeping them apart. Use this named-sources form on About and in
-PR copy.
-
-**Homepage lede** is the same promise in English first. Source names appear
-lower on the page, or as the labeled links they already are:
-
-The most comprehensive free college data we know of — the report each
-college publishes about itself, plus the government’s own numbers, in one
-public place.
-
-Counselors and IR still recognize the product from “the report each college
-publishes.” Do not open the homepage with three proper nouns.
-
-Labels on numbers stay as product behavior; they are not the homepage claim.
-
-Every public page should make the promise usable, not explain how the
+Every public page should make the product useful, not explain how the
 archive is built.
+
+- **About / PR form (named sources):**
+  Each college’s annual Common Data Set alongside federal IPEDS and
+  College Scorecard records, linked to the original files, free with no
+  account.
+- **Homepage form (plain English first):**
+  Admissions, test scores, financial aid, and graduate outcomes for U.S.
+  colleges, pulled from each school’s own annual report and federal
+  records. Every page links directly to the original file.
+
+Do not open the homepage with three proper nouns (`Common Data Set`,
+`IPEDS`, `College Scorecard`). Say what the reader actually gets in
+everyday terms, then let the labeled data and `/about/*` guides carry
+the formal names.
+
+Avoid hedged superlatives like *"the most comprehensive free college
+data we know of."* Specific facts carry more weight than qualified
+boasts.
+
+---
+
+## Natural prose (anti-slop)
+
+Banning operator jargon is only half the job. When writers (human or AI)
+draft under a long list of negative rules, they default to **faux-editorial
+minimalism**: breathy three-word sentences, defensive caveats up top,
+em dashes in every paragraph, and identical two-beat headlines on every
+page.
+
+Write like a knowledgeable, calm human explaining a useful tool to a
+parent or counselor across a table.
+
+### Five rules
+
+1. **Vary sentence length.** Never stack more than two short or fragment
+   sentences in a row.
+   - *Avoid:* "Search a school. Compare admissions, cost, and aid. Open
+     the original file. No account."
+   - *Prefer:* "Search any school, compare numbers side by side, or
+     download the source files for free, with no account required."
+
+2. **Lead with value, put caveats second.** Honesty is non-negotiable,
+   but opening a page with what it *isn’t* or *doesn’t have* makes the
+   product sound apologetic.
+   - *Avoid:* "This is a partial, hand-built list. A school that is not
+     here has not been documented yet, which is different from having no
+     named scholarships."
+   - *Prefer:* "Award amounts, eligibility rules, and deadlines for
+     named merit scholarships, each linked directly to the college’s own
+     page. We’re building this index by hand, so a missing school simply
+     hasn’t been added yet."
+
+3. **Don’t repeat one headline gimmick across the site.** Save split
+   italic turns (`College data,` *`straight from the source.`*) for the
+   homepage and brand moments. Utility pages (`/match`, `/browse`,
+   `/coverage`, `/scholarships`, `/methodology`) should use plain,
+   direct headings.
+
+4. **No internal spec or SEO talk in public prose.** Never publish
+   phrases written for PRDs, architecture docs, or search-engine strategy:
+   *"navigational query"*, *"non-goals"*, *"coverage layer"*, *"that
+   pairing is the product"*, *"start there, not on this page"*, *"this
+   page is not trying to replace…"*.
+
+5. **Cut throat-clearing and essay filler.** On recipes and methodology
+   pages, lead with the finding or question rather than *"College
+   affordability data lives in several different places."* Cut transitions
+   like *"That is an important distinction"*, *"In other words"*, and
+   *"That does not mean X. It does show Y."*
+
+### Em dashes
+Default to commas, colons, parentheses, or a clean period instead of em
+dashes. Never use more than one em dash on a page, and never pin one in
+a test.
 
 ---
 
 ## Personas (primary)
 
 Journalists and developers are welcome. They are not a fourth homepage
-audience. Point them at `/api` (already in the header), GitHub, and
-methodology.
+audience; point them at `/api` (in the header), GitHub, and methodology.
 
 ### Parents and students
+They may never have heard "Common Data Set." They want reliable, current
+numbers they can act on: is this school in range, what does it cost, and
+can I compare schools without a paywall or a student-data profile?
 
-They may never have heard “Common Data Set.” They want accurate, current
-numbers they can act on: is this school in range, what does it cost, can I
-compare without a paywall or a student-data profile.
-
-Say “the report the college publishes” once, then use the numbers. Link the
-original file. Do not teach the template. The homepage follows this rule
-in the lede; it does not lead with Common Data Set, IPEDS, and Scorecard.
+Name what they get (admissions, test scores, financial aid, outcomes),
+link the original school file, and don’t lecture them on the template.
 
 ### College counselors
-
-They know the CDS. Don’t teach sections A–J unless the page is the CDS
-explainer. Help them stay current, share a year URL instead of a 47-page PDF,
-and see coverage gaps and year-over-year shifts.
+They already know the CDS. Don’t explain sections A–J unless they are on
+the CDS explainer. Help them check the latest year, share a clean year
+URL instead of a 47-page PDF, and spot coverage gaps or year-over-year
+shifts.
 
 ### Researchers and IR
-
-They want peer files, definitions, bulk access, a way to contribute a missing
-year, and data they can take elsewhere. They care about sourcing, schema, and
-the API — not extractor war stories.
-
-**Recipes (`/recipes`)** are this persona first, data analysts with them.
-Counselors and journalists are welcome; they are not the H1. Analytical
-jargon is fine when it names the method (yield, C2, Carnegie class, draw
-rate, submission rate as a proxy). Field IDs belong in chips, captions, and
-the method note — not as the hook. Still no extractor war stories
-(Docling, AcroForm, drain, “extracted,” how we parsed the PDF).
+They want peer files, definitions, bulk access, a way to flag a missing
+year, and clean exports. Analytical terminology (`yield`, `C2`,
+`Carnegie class`, `draw rate`) belongs on `/recipes`, `/methodology/*`,
+and `/api`. Still no extractor war stories (`Docling`, `AcroForm`,
+`drain`, how we parsed the PDF).
 
 ---
 
 ## Three voice layers
 
-Keep plumbing visible to people who want it. Don’t put it on the front door.
+Keep plumbing visible to people who want it. Don’t put it on the front
+door.
 
-| Layer | Audience | Lives on | Says |
+| Layer | Audience | Lives on | Tone |
 |---|---|---|---|
-| **Product** | Parents/students first; counselors second | `/`, `/about`, school pages, `/browse`, `/match`, `/coverage`, cards, empty states, metadata | Benefit, then action, then one plain-English source line |
-| **Professional** | IR, researchers, analysts; counselors who want the trail | `/recipes`, `/methodology/*`, `/api`, rewritten source-story pages | The question, the method, the number, the source — jargon is fine when it earns the point. Still no extractor war stories |
-| **Operator** | Maintainers and OSS contributors | `/pipeline-observation`, `docs/`, `docs/known-issues/`, GitHub | Extractors, Docling vs AcroForm, Harvey Mudd C1, drains, heartbeats |
-
-**Harvey Mudd / Docling C1 shift** stays in `docs/known-issues/` and may
-appear in a methodology appendix. It does not belong on
-`/about/common-data-set`.
-
-**Three sources** belong in the named-sources promise (school CDS, IPEDS,
-College Scorecard) used on About and in PR copy. The homepage lede uses
-the gloss (“the report each college publishes,” “the government’s own
-numbers”). On every page, keep labels so a federal outcome is not mistaken
-for the school’s own report. Methodology may say that in one sentence.
-Homepage ledes do not name the three systems.
+| **Product** | Parents/students first; counselors second | `/`, `/about`, `/about/*`, school & year pages, `/browse`, `/match`, `/coverage`, `/scholarships`, cards, empty states, metadata | Clear, calm, everyday English. Benefit first, honest scope second, original file one click away. |
+| **Professional** | IR, researchers, analysts, reporters | `/recipes`, `/methodology/*`, `/api` | Lead with the question or finding, state the method and caveats plainly, show the query. Jargon is fine when it earns its keep. |
+| **Operator** | Maintainers and OSS contributors | `/pipeline-observation`, `docs/`, `docs/known-issues/`, GitHub | Extractors, Docling vs AcroForm, Harvey Mudd C1, drains, heartbeats. |
 
 ---
 
 ## Chrome
 
-- **Footer:** keep Pipeline, like a status link. Fine. GitHub belongs here
-  and in More, not in the header or the homepage hero.
-- **More menu:** do not treat Pipeline as a product destination. Wave 1
-  drops it from secondary nav and leaves it in the footer. More is Compare,
-  Coverage, Recipes, About, GitHub.
-- Public name for `/browse` is **Compare** — nav, buttons, later browse
-  chrome. Do not say “Browser” on product pages.
-- **Primary nav stays Match / Schools / API.** API is load-bearing in the
-  header: researchers, and parents who will point an LLM at a public
-  endpoint to build a college list. Do not demote it into More.
-
----
-
-## Page protocol
-
-1. Name the primary persona (and secondary, if any).
-2. Outline: **benefit → what to do on this page → what the number is → one
-   source line → link for people who want the trail.**
-3. Never start a product lede with process (extractors, field IDs, “print
-   form,” “canonical,” “drain”). Recipes may name section IDs (C2, Part H)
-   in the method line; they still do not open on extractors.
-4. Update title, description, and JSON-LD in the same change as the prose.
-5. Read-aloud test: would a parent, a counselor, and an IR director each
-   know what to do in 20 seconds?
-6. Homepage ledes use the gloss, not three proper nouns. When claiming
-   current or accurate, say “as the school published it.”
-
-Design-system rule **never hide a source** still holds. Added rule: **never
-make the pipeline the story on a product page.**
+- **Primary nav:** Match / Schools / API. API stays in the header (for
+  researchers, and for families pointing LLMs at a public endpoint).
+- **More menu:** Compare, Coverage, Recipes, About, GitHub. Do not put
+  Pipeline in More.
+- **Footer:** Pipeline stays here like a status link; GitHub lives here
+  and in More, not on the homepage hero.
+- **Public name for `/browse`:** always **Compare**, never "Browser."
 
 ---
 
 ## Glossary
 
-Product copy prefers the right-hand column. Operator docs may use the left.
+Product copy prefers the right-hand column. Operator docs may use the
+left.
 
 | Avoid on product pages | Prefer |
 |---|---|
-| extracted / extractor / Docling / AcroForm / Tier 4 | read from the school’s file |
-| canonical year | 2025–26 (the actual year) |
-| drain, manifest, projection, browser row, comparer, Browser | recently added files; schools you can compare; Compare |
-| “files a school has since taken down” | historical years; the original file (do not advertise takedowns) |
-| “we keep three sources separate” / “federal context you can tell apart” | the three public sources, in one place |
+| extracted / extractor / Docling / AcroForm / Tier 4 | read from the school’s file / published by the school |
+| canonical year | 2025–26 (the actual academic year) |
+| drain, manifest, projection, browser row, comparer, Browser, alias | recently added reports; comparable reports; Compare |
+| Title-IV (on parent ledes) | colleges that accept federal student aid |
+| "files a school has since taken down" | historical years; the original file (do not advertise takedowns) |
+| "the government’s own numbers" | federal tuition, debt, and earnings data (or federal records) |
 | CDS field IDs in a product lede (`C.101`, `AP_RECD_1ST_MEN_N`) | the fact in English; IDs in tables, recipe chips, or API docs |
-| “a 47-page PDF is not a database” as the hook | what a family or counselor can *do* with the report |
+| "admitted-class bands" / "% of admits submitted" for C.9 | enrolled first-years (the entering class) |
 
-Keep saying **Common Data Set** on the explainer and in SEO. School and
-year pages are a Google door: people search `{name} Common Data Set`.
-Put that phrase in the title, description, and first sentence. H1 can
-be the school name. Define the term once, then talk about the numbers.
+Keep **Common Data Set** on the explainer and in school/year SEO
+(`{name} Common Data Set` in title, description, and first sentence; H1
+stays the school name).
 
-When claiming **current** or **accurate**, anchor to “as the school
-published it.” Never imply we verified the school’s math. Parents want
-accurate numbers; our honest posture is the school’s own report, labeled,
-with the original file one click away. Federal figures stay labeled as
-federal.
+When claiming **current** or **accurate**, anchor to *"as the school
+published it."* Never imply we audited the school’s math. Federal
+figures stay labeled as federal.
 
 ---
 
-## Differentiation (say this, not rankings)
+## Shipping & testing copy
 
-Versus commercial college-search products: no account required, we don’t
-build or sell a student profile, the original school file is linked, this is
-not a ranking product.
-
-Versus a raw CDS PDF: a shareable year page, comparable fields, coverage you
-can see. Do not say “files a school has since taken down” on product pages.
-
-Versus IPEDS Data Center or Scorecard alone: those are one federal system
-each. We put the school’s own report next to them, in public, without a
-paywall. If a school hasn’t published its own report, you still get the
-federal numbers. That fallback is load-bearing: most in-scope schools have
-no archived CDS, so “search a school and see current numbers” is only true
-because of it.
-
----
-
-## Shipping copy
-
-1. Draft in a copy deck (`docs/copy/`), not in a 400-line React diff.
-2. Anthony reads as a reader.
-3. Then implement in `web/`.
-4. Small PRs per wave. Wave 1 (front door) shipped 2026-08-27. Wave 2
-   product surfaces shipped 2026-08-27. Wave 3 Recipes shipped 2026-08-27.
-   Wave 4 (methodology, API) wraps the public-voice project. Deck:
-   [`docs/copy/wave-4-methodology-api.md`](../docs/copy/wave-4-methodology-api.md).
+1. **Draft major pages in `docs/copy/`** so Anthony can read the prose
+   aloud without wading through JSX. For small UI labels or single-card
+   tweaks, review directly in the PR.
+2. **Run two distinct checks before merging:**
+   - *Factual & consistency audit* (AI persona review is great at this):
+     do captions match underlying SQL counts? Do empty states contradict
+     promises? Are C.9 enrolled vs. admits and source vintages accurate?
+   - *De-AI read-aloud pass*: strip stacked fragments, excess em dashes,
+     repeated headline templates, defensive first sentences, and spec
+     language.
+3. **Test invariants, not prose.** Automated tests in `web/src/lib/`
+   should enforce:
+   - Live data accuracy (`acceptance-lead-audit.ts`, computed headlines)
+   - Banned jargon and factual traps (`Docling`, `Tier 4`, `admitted-class`,
+     `Title-IV` on parent ledes)
+   - Structural/SEO requirements (length caps, `{name} Common Data Set`
+     in school metadata, license attribution)
+   Do **not** pin exact editorial phrasing with `expect(src).toContain(...)`.
+   That freezes mediocre copy and punishes future editing.

@@ -10,7 +10,7 @@ export const revalidate = 900; // ISR: 15 minutes, matches the refresh-coverage 
 export const metadata: Metadata = {
   title: "Coverage",
   description:
-    "Which schools have a current Common Data Set, which have only older years, and which have none we could find. Filter by state and size.",
+    "See which U.S. colleges have a current Common Data Set on file, which have older years, and which have federal data only. Filter by state and size.",
   alternates: { canonical: "/coverage" },
 };
 
@@ -40,7 +40,7 @@ export default async function CoveragePage() {
             letterSpacing: "-0.02em",
           }}
         >
-          What we have, <span style={{ fontStyle: "italic", color: "var(--forest-ink)" }}>and what we don&rsquo;t.</span>
+          Archive coverage
         </h1>
         <p
           className="serif"
@@ -53,9 +53,10 @@ export default async function CoveragePage() {
             maxWidth: 720,
           }}
         >
-          Every U.S. college that takes federal student aid, and whether we have
-          a public report on file. Publishing is voluntary. Some schools post
-          the file, some bury it, some don&rsquo;t publish one we could find.
+          Every U.S. college that participates in federal student aid, and
+          whether we have a public Common Data Set on file. Publishing is
+          voluntary: some schools post their report openly, some tuck it away,
+          and many never publish one at all.
         </p>
         <div style={{ marginTop: 18 }}>
           {/* No path: shares the address bar as it is, filter params included. */}
@@ -87,11 +88,11 @@ export default async function CoveragePage() {
           }}
         >
           <p style={{ margin: 0 }}>
-            We start with active Title-IV institutions that serve
-            undergraduates, then look for public Common Data Set files on
-            school-controlled sites and known public archives. The table shows
-            our current best status for each school, plus the last time we
-            checked.
+            We start with active U.S. colleges that serve undergraduates and
+            accept federal student aid, then look for public Common Data Set
+            files on school-controlled sites and known public archives. The
+            table shows our current best status for each school, plus the last
+            time we checked.
           </p>
           <p style={{ margin: 0 }}>
             A school marked <em>No public CDS found</em> was checked without a
@@ -109,9 +110,9 @@ export default async function CoveragePage() {
             Federal numbers stay labeled as federal.
           </p>
           <p style={{ margin: 0 }}>
-            Know where one of these is published? Open the school page and{" "}
-            <Link href="/about">send us the link</Link>. We&rsquo;ll archive
-            the source and update the coverage status.
+            Know where a missing report is posted? Open the school&rsquo;s page
+            and <Link href="/feedback">send us the link</Link> so we can archive
+            it and update this table.
           </p>
         </div>
       </section>

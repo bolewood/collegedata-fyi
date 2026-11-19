@@ -14,7 +14,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "Scholarship programs",
   description:
-    "A partial, hand-built list of named merit scholarships at U.S. colleges, each linked to the school's own page and dated. Not a ranking and not an estimate of your award.",
+    "Named merit scholarships at U.S. colleges: award amounts, eligibility, and deadlines, each linked to the school's own page and dated. Not a ranking or an award estimate.",
   alternates: { canonical: "/scholarships" },
   openGraph: { url: "/scholarships" },
 };
@@ -41,15 +41,16 @@ export default async function ScholarshipsPage() {
             letterSpacing: "-0.02em",
           }}
         >
-          Named scholarships,{" "}
-          <span style={{ fontStyle: "italic", color: "var(--forest-ink)" }}>as the schools published them.</span>
+          Named merit scholarships
         </h1>
         <p
           className="serif"
           style={{ marginTop: 18, fontSize: 18, fontStyle: "italic", lineHeight: 1.55, color: "var(--ink-2)", maxWidth: 720 }}
         >
-          This is a partial, hand-built list. A school that is not here has not been documented yet, which is
-          different from having no named scholarships. Every program links to the school&rsquo;s own page.
+          Award amounts, eligibility rules, and deadlines for named merit
+          scholarships, each linked directly to the college&rsquo;s own page.
+          We&rsquo;re building this index by hand, so a school missing from this
+          list simply hasn&rsquo;t been added yet.
         </p>
         <p className="mono" style={{ marginTop: 14, fontSize: 12, color: "var(--ink-3)" }}>
           {programCount > 0 ? (
@@ -84,7 +85,7 @@ export default async function ScholarshipsPage() {
       <ScholarshipIndex rows={rows} today={today} />
 
       <p className="sch-fine mono" style={{ marginTop: 28 }}>
-        The data is open to download and query; credit is required by the licence. See{" "}
+        The data is open to download and query; credit is required by the license. See{" "}
         <Link href="/methodology/scholarships#reuse">Reuse and credit</Link> and <Link href="/api">the API</Link>.{" "}
         {SCHOLARSHIP_LICENSE_LINE.replace(" how to cite", "")}{" "}
         <Link href="/methodology/scholarships#reuse">how to cite</Link>

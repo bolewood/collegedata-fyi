@@ -6,7 +6,7 @@ import { SITE_URL } from "./sitemap-static";
  */
 export const LLMS_TXT = `# CollegeData.FYI
 
-> The most comprehensive free college data we know of — each school’s Common Data Set, plus IPEDS and College Scorecard, in one public place.
+> Each college’s annual Common Data Set alongside federal IPEDS and College Scorecard records, linked to the original files, free with no account.
 
 Structured Common Data Set data, NCES/IPEDS federal baseline facts, and College Scorecard context are available as no-auth JSON from the public API. Please use the API rather than scraping HTML school pages: \`/schools*\` pages are limited to 120 requests per minute per IP. Send a short X-CollegeData-Client header naming your app, and follow 308 redirects (alias school slugs redirect to the canonical school_id).
 

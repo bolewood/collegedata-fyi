@@ -42,14 +42,14 @@ export const metadata: Metadata = {
     template: "%s | collegedata.fyi",
   },
   description:
-    "The most comprehensive free college data we know of — the report each college publishes, plus the government’s own numbers, in one public place.",
+    "Admissions, test scores, financial aid, and graduate outcomes for U.S. colleges, from each school’s annual report and federal records, with the original file linked.",
   alternates: {
     canonical: "/",
   },
   openGraph: {
     title: "collegedata.fyi — Free college data, straight from the source",
     description:
-      "The most comprehensive free college data we know of — the report each college publishes, plus the government’s own numbers, in one public place.",
+      "Admissions, test scores, financial aid, and graduate outcomes for U.S. colleges, from each school’s annual report and federal records, with the original file linked.",
     url: "/",
     siteName: "collegedata.fyi",
     type: "website",

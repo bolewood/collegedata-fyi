@@ -86,19 +86,19 @@ const REGIONS = [
     num: "A",
     head: "Merit aid is larger than the gap",
     count: ALIGNMENT_GAP_MERIT_META.regions.covers,
-    body: `Among the ${ALIGNMENT_GAP_MERIT_META.positiveGap} schools in this view with above-median debt burden, ${ALIGNMENT_GAP_MERIT_META.regions.covers} (${Math.round(ALIGNMENT_GAP_MERIT_META.coversShare * 100)}%) report average non-need merit aid per first-year student that is larger than their annual alignment gap. Quincy University is an especially visible example. It reports non-need merit aid for every full-time first-year student, averaging ${formatUsd(quincy.avgMeritGrant)}, compared with an average net price of ${formatUsd(quincy.avgNetPrice)} and an alignment gap of ${formatUsd(quincy.gap)} per year. That does not mean Quincy could simply move ${formatUsd(quincy.gap)} from one budget line to another. It does show that the scale of its existing merit discount is large relative to the debt adjustment represented by the gap.`,
+    body: `Among the ${ALIGNMENT_GAP_MERIT_META.positiveGap} schools with above-median debt burden, ${ALIGNMENT_GAP_MERIT_META.regions.covers} (${Math.round(ALIGNMENT_GAP_MERIT_META.coversShare * 100)}%) report average non-need merit aid per first-year student larger than their annual alignment gap. Quincy University is a stark example: it reports non-need merit aid for every full-time freshman, averaging ${formatUsd(quincy.avgMeritGrant)}, alongside an average net price of ${formatUsd(quincy.avgNetPrice)} and an alignment gap of ${formatUsd(quincy.gap)} a year. A college can’t simply shift budget lines dollar for dollar, but the comparison shows how large existing merit discounting is next to graduate debt.`,
   },
   {
     num: "B",
     head: "Merit aid is smaller than the gap",
     count: ALIGNMENT_GAP_MERIT_META.regions.constrained,
-    body: "These schools also have above-median debt burden, but their reported non-need merit aid per first-year student is smaller than the alignment gap. Some award very little non-need merit aid at all. The University of the Incarnate Word, for example, reports $0 in this CDS measure while still showing a positive alignment gap. For these schools, Panel A provides less evidence that a large non-need merit program is part of the affordability picture. Other factors—price, need-based aid, student borrowing, graduate earnings, and the institution's broader finances—matter more.",
+    body: "These schools also carry above-median debt burden, but their reported non-need merit aid per freshman is smaller than the gap, and some award almost none at all. The University of the Incarnate Word, for instance, reports $0 in CDS non-need merit aid while still showing a positive gap. At these schools, overall pricing, need-based aid, borrowing habits, and graduate earnings drive the picture far more than merit discounting.",
   },
   {
     num: "C",
     head: "Debt burden is at or below the median",
     count: ALIGNMENT_GAP_MERIT_META.regions.none,
-    body: `These schools have no positive alignment gap under this definition because their debt burden is already at or below the ${formatRecipeShare(ALIGNMENT_GAP_META.medianBurden, 2)} median used for the comparison. They remain on the chart so the relationship between merit aid and debt burden can be seen across the full sample.`,
+    body: `These schools have no positive alignment gap here because their graduate debt burden is already at or below the ${formatRecipeShare(ALIGNMENT_GAP_META.medianBurden, 2)} benchmark. They stay on the chart so you can see the full sample at once.`,
   },
 ];
 
@@ -107,25 +107,25 @@ const QUADRANTS = [
     num: "I",
     head: "Higher debt burden · higher endowment",
     count: ALIGNMENT_GAP_META.quadrants.capacity,
-    body: `These schools have debt burden above the sample median and endowment per undergraduate above the sample median. That combination does not tell us what a school should charge or how much of its endowment could be used for financial aid. It does tell us that the institution has relatively greater financial resources while its graduates still carry a relatively high federal-loan burden. Hollins University is near the outer edge of this group, with a ${formatRecipeShare(hollins.burden, 1)} debt burden and roughly ${hollinsEndowmentUsd} in endowment per undergraduate.`,
+    body: `Above-median debt burden paired with above-median endowment per undergraduate. Endowment rules and restricted gifts limit what any college can spend on aid, so this doesn’t prescribe a budget. It simply flags institutions with deeper financial reserves whose graduates still carry heavier federal debt. Hollins University sits near the outer edge, with a ${formatRecipeShare(hollins.burden, 1)} debt burden and roughly ${hollinsEndowmentUsd} in endowment per undergraduate.`,
   },
   {
     num: "II",
     head: "Higher debt burden · lower endowment",
     count: ALIGNMENT_GAP_META.quadrants.constrained,
-    body: `These schools also have above-median debt burden, but their endowment per undergraduate is below the median. That is an important distinction. Two colleges can produce a similar debt burden for graduates while having very different financial resources available to support students or subsidize the cost of instruction. Bennington College is one example: relatively high debt burden, a more modest endowment per student, and instructional spending equal to about ${benningtonInstructionPct}% of its average net price.`,
+    body: `Above-median debt burden with below-median endowment per undergraduate. Two colleges can leave graduates with similar debt while operating with very different financial cushions. Bennington College illustrates the tighter side: a relatively high debt burden, a modest endowment per student, and instructional spending equal to about ${benningtonInstructionPct}% of its average net price.`,
   },
   {
     num: "III",
     head: "Lower debt burden · higher endowment",
     count: ALIGNMENT_GAP_META.quadrants.absorbs,
-    body: "These schools combine debt burden at or below the median with above-median endowment per undergraduate. This group includes Grinnell, Princeton, Stanford, and Wellesley. At a number of highly endowed colleges, reported instructional spending per student exceeds average net price. In other words, tuition and other payments from students are only part of what funds the educational program.",
+    body: "Debt burden at or below the median alongside above-median endowment per undergraduate, a group that includes Grinnell, Princeton, Stanford, and Wellesley. At many heavily endowed colleges, reported instructional spending per student exceeds average net price because endowment income subsidizes a large share of the education.",
   },
   {
     num: "IV",
     head: "Lower debt burden · lower endowment",
     count: ALIGNMENT_GAP_META.quadrants.earnings,
-    body: "These schools keep debt burden at or below the median without an unusually large endowment per student. Graduate earnings can be an important part of that result because earnings are the denominator in the debt-burden calculation. Debt levels matter too. Bentley, Babson, and Santa Clara are examples in this part of the chart.",
+    body: "Debt burden at or below the median without a large endowment per student. Stronger post-college earnings often do the heavy lifting here (earnings sit in the denominator of debt burden), alongside lower borrowing. Bentley, Babson, and Santa Clara all land in this quadrant.",
   },
 ];
 
@@ -177,8 +177,7 @@ export default function AlignmentGapPage() {
               lineHeight: 1.05,
             }}
           >
-            Debt burden, aid, and{" "}
-            <span style={{ fontStyle: "italic" }}>financial resources</span>
+            Debt burden, merit aid, and financial resources
           </h1>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
@@ -199,38 +198,40 @@ export default function AlignmentGapPage() {
             lineHeight: 1.55,
           }}
         >
-          College affordability data lives in several different places.
+          At{" "}
+          <strong style={{ fontStyle: "normal", color: "var(--ink)" }}>
+            {ALIGNMENT_GAP_MERIT_META.regions.covers} of{" "}
+            {ALIGNMENT_GAP_MERIT_META.positiveGap} colleges (
+            {Math.round(ALIGNMENT_GAP_MERIT_META.coversShare * 100)}%)
+          </strong>{" "}
+          with above-median graduate debt burden, the freshman non-need merit
+          aid budget alone is larger than the school&apos;s entire annual
+          alignment gap.
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          At many colleges, graduating seniors leave with heavy student debt.
-          At the same time, many of those same colleges hand out thousands of
-          dollars in non-need &ldquo;merit&rdquo; scholarships to recruit freshmen
-          who do not have financial need. What if colleges used that merit
-          discount to lower debt for everyone instead?
+          Many colleges whose graduates leave with heavy federal student debt
+          also spend thousands of dollars per freshman on non-need
+          &ldquo;merit&rdquo; discounts to recruit students who do not have
+          financial need. Putting federal debt and earnings data next to
+          school-reported merit aid lets us ask a concrete question: how big
+          are those merit budgets compared with the debt burden graduates
+          carry?
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          The College Scorecard tells us about student debt, loan payments,
-          earnings, and net price. The Common Data Set tells us how colleges
-          use non-need merit aid. IPEDS tells us about institutional finances,
-          including endowment and instructional spending. This page joins those
-          sources to look at them together.
+          To measure that consistently across schools, we start with{" "}
+          <strong>debt burden</strong>: the share of median post-college
+          earnings required to cover annual federal loan payments (from College
+          Scorecard). A school&apos;s <strong>alignment gap</strong> is roughly
+          how much less debt its completers would need to borrow, expressed per
+          year of college, to match the {corpusMedianBurden} median debt burden
+          across this group.
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          The starting point is <strong>debt burden</strong>: the share of
-          median earnings that would go toward federal student-loan payments
-          each year. We then calculate an <strong>alignment gap</strong> for
-          each school: roughly how much less debt its completers would need to
-          carry, expressed per year of college, to reach the {corpusMedianBurden}{" "}
-          median debt burden in this group of schools.
-        </p>
-        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          The core finding: <strong>at {ALIGNMENT_GAP_MERIT_META.regions.covers} of {ALIGNMENT_GAP_MERIT_META.positiveGap} colleges ({Math.round(ALIGNMENT_GAP_MERIT_META.coversShare * 100)}%) with above-median debt burden, the freshman merit aid budget alone is larger than the entire annual alignment gap.</strong>
-        </p>
-        <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
-          The gap is not a recommended tuition price or a claim that lowering
-          price by exactly that amount would produce the same reduction in
-          borrowing. It is a common yardstick that lets us compare the size of
-          the debt burden with other financial measures from the college.
+          The gap is a yardstick, not a tuition prescription. Cutting sticker
+          price or redirecting merit grants wouldn&apos;t reduce student
+          borrowing dollar for dollar. What it shows is scale: how a
+          college&apos;s debt burden stacks up against its non-need merit
+          spending (Common Data Set H2A) and its endowment (IPEDS).
         </p>
       </div>
 

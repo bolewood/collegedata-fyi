@@ -8,10 +8,10 @@ describe("Wave 2 product copy", () => {
   it("keeps Compare chrome free of browser/primary/queryable", () => {
     const browse = src("app/browse/page.tsx");
     expect(browse).toContain('title: "Compare schools"');
-    expect(browse).toMatch(/as the school published it/);
+    expect(browse).toMatch(/as\s+the school published it/);
     expect(browse).toContain("side by side");
     expect(browse).toContain('label="Reports"');
-    expect(browse).toContain("2024-25 and newer");
+    expect(browse).toMatch(/2024[–-]25 and newer/);
     expect(browse).not.toMatch(/Queryable/);
     expect(browse).not.toMatch(/PRIMARY ROWS/);
     expect(browse).not.toMatch(/§ BROWSER/);
@@ -29,8 +29,8 @@ describe("Wave 2 product copy", () => {
     const page = src("app/schools/page.tsx");
     expect(page).toContain('title: "Schools"');
     expect(page).toContain("Common Data Set on file");
-    expect(page).toContain("Every school we have a report from");
     expect(page).toContain('href="/coverage"');
+    expect(page).toMatch(/federal data/i);
     expect(page).not.toMatch(/School Directory/);
     expect(page).not.toMatch(/text-gray-900/);
 
@@ -59,18 +59,17 @@ describe("Wave 2 product copy", () => {
   it("rewrites Match and Coverage in product voice", () => {
     const match = src("app/match/page.tsx");
     expect(match).toContain('title: "Match"');
-    expect(match).toContain("No student profile stored");
-    expect(match).toContain("school&apos;s own numbers");
-    expect(match).toContain("Enter scores and GPA");
+    expect(match).toMatch(/no stored student profile|never save a\s+student profile/i);
+    expect(match).toMatch(/published numbers|published admissions/i);
     expect(match).not.toMatch(/source-backed/);
     expect(match).not.toMatch(/corpus/);
 
     const coverage = src("app/coverage/page.tsx");
     expect(coverage).toContain('title: "Coverage"');
-    expect(coverage).toContain("takes federal student aid");
+    expect(coverage).toMatch(/federal student aid/i);
     expect(coverage).toContain("haven&rsquo;t checked this");
     expect(coverage).toContain("Federal numbers stay labeled as federal");
-    expect(coverage).not.toMatch(/Title-IV institution in the/);
+    expect(coverage).not.toMatch(/Title-IV/);
     expect(coverage).not.toMatch(/resolver has not scanned/);
     expect(coverage).not.toMatch(/labeled separately so readers can tell/);
     expect(coverage).not.toMatch(/resolver's last attempt/);

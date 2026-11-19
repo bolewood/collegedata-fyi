@@ -124,9 +124,9 @@ describe("index", () => {
     expect(indexText).toContain("See details");
     expect(indexHtml).not.toMatch(/sch-chip">Other</);
   });
-  it("the /scholarships footer says credit is required by the licence", () => {
+  it("the /scholarships footer says credit is required by the license", () => {
     const page = readFileSync(resolve(__dirname, "../app/scholarships/page.tsx"), "utf8");
-    expect(page).toContain("credit is required by the licence");
+    expect(page).toContain("credit is required by the license");
     expect(page).not.toContain("credit is requested");
   });
 });

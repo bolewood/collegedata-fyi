@@ -5,7 +5,7 @@ import { TrackedLink } from "@/components/TrackedLink";
 export const metadata: Metadata = {
   title: "Recipes",
   description:
-    "Worked examples from Common Data Set filings and federal data — method, chart, and the public API query behind each. Built for institutional researchers and analysts.",
+    "Worked analyses built from Common Data Set filings and federal data, each with its method, interactive chart, and underlying public API query.",
   alternates: { canonical: "/recipes" },
   openGraph: { url: "/recipes" },
 };
@@ -105,7 +105,7 @@ export default function RecipesPage() {
           margin: 0,
         }}
       >
-        Worked <span style={{ fontStyle: "italic", color: "var(--forest-ink)" }}>examples</span>.
+        Data analyses &amp; recipes
       </h1>
       <p
         className="serif"
@@ -118,8 +118,10 @@ export default function RecipesPage() {
           lineHeight: 1.55,
         }}
       >
-        One question, the method in sight, a chart you can operate, and the API
-        query behind it. Written for IR and analysts. Counselors are welcome.
+        Interactive analyses built from Common Data Set filings and federal
+        data, with the method, caveats, and public API query right beside each
+        chart. Written primarily for institutional researchers, analysts, and
+        education reporters.
       </p>
 
       <div className="mt-8 space-y-5">

@@ -52,7 +52,7 @@ test("homepage search opens an institution page", async ({ page }) => {
   ).toBeVisible();
 
   await page
-    .getByPlaceholder("Search schools by name, alias, or city...")
+    .getByPlaceholder(/Search any U\.S\. college by name or city/i)
     .fill("Rice");
   const result = page.getByText("Rice University").first();
   await expect(result).toBeVisible();
@@ -78,7 +78,7 @@ test("homepage latest drain rows link to school pages", async ({ page }) => {
 test("coverage page renders filterable accountability data", async ({ page }) => {
   await page.goto("/coverage");
   await expect(
-    page.getByRole("heading", { name: /What we have/i }),
+    page.getByRole("heading", { name: /Archive coverage/i }),
   ).toBeVisible();
   await expect(page.getByText("No public CDS found").first()).toBeVisible();
   await expect(page.getByText("Methodology")).toBeVisible();

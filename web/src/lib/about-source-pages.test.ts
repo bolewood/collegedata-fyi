@@ -19,8 +19,11 @@ describe("About source-story metadata", () => {
     ]);
     expect(aboutMetadata.alternates?.canonical).toBe("/about");
     expect(canonicals).not.toContain("/methodology/common-data-set");
-    expect(String(cdsMetadata.description)).toMatch(/yearly report a college publishes/i);
-    expect(String(aboutMetadata.description)).toMatch(/most comprehensive free college data/i);
+    expect(String(cdsMetadata.description)).toMatch(/Common Data Set/i);
+    expect(String(aboutMetadata.description)).toMatch(/Common Data Set/);
+    expect(String(aboutMetadata.description)).toMatch(/IPEDS/);
+    expect(String(aboutMetadata.description)).toMatch(/College Scorecard/);
+    expect(String(aboutMetadata.description)).not.toMatch(/most comprehensive.*we know of/i);
   });
 });
 
@@ -57,9 +60,18 @@ describe("Wave 1 product copy", () => {
     expect(cds).not.toMatch(/harvey-mudd-2025-26\.md/);
 
     const about = src("app/about/page.tsx");
-    expect(about).toMatch(/you still get the\s+federal numbers/);
+    expect(about).toMatch(/federal data/i);
     expect(about).not.toMatch(/Docling/);
     expect(about).not.toMatch(/Reducto/);
+
+    const scorecard = src("app/about/college-scorecard/page.tsx");
+    expect(scorecard).not.toMatch(/navigational result/i);
+    expect(scorecard).not.toMatch(/That pairing is the product/);
+
+    const ipeds = src("app/about/ipeds/page.tsx");
+    expect(ipeds).not.toMatch(/navigational query/i);
+    expect(ipeds).not.toMatch(/coverage layer.?s non-goals/i);
+    expect(ipeds).not.toMatch(/Source labels are the product/);
   });
 });
 

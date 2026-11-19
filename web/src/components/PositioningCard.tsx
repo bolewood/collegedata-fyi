@@ -23,7 +23,7 @@ function submitRateCaption(label: string, submitRate: number | null): string {
   const testName = label.split(" ")[0] ?? "Test";
   return submitRate == null
     ? "SUBMIT RATE NOT REPORTED"
-    : `${formatPercent(submitRate)} OF ADMITS SUBMITTED ${testName} SCORES`;
+    : `${formatPercent(submitRate)} OF ENROLLED FIRST-YEARS SUBMITTED ${testName} SCORES`;
 }
 
 function RangeStrip({

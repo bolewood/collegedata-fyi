@@ -10,7 +10,8 @@ import {
 const CANONICAL = "/about/ipeds";
 const TITLE = "What IPEDS is, and what it cannot replace";
 const DESCRIPTION =
-  "IPEDS is the NCES statistical system of record for U.S. colleges, keyed by UNITID. It cannot replace current-year Common Data Set wait-list, ED/EA, or H2A merit counts.";
+  "IPEDS is the federal statistical database filed each year by roughly 6,400 U.S. colleges. Here is what it covers, how we use it on school pages, and why it cannot replace a Common Data Set.";
+const REVIEWED = "2026-11-19";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -25,7 +26,7 @@ const jsonLd = {
   headline: TITLE,
   description: DESCRIPTION,
   datePublished: SOURCE_STORY_REVIEWED,
-  dateModified: SOURCE_STORY_REVIEWED,
+  dateModified: REVIEWED,
   author: { "@type": "Organization", name: "Bolewood Group", url: "https://bolewood.com" },
   publisher: { "@type": "Organization", name: "collegedata.fyi", url: "https://www.collegedata.fyi" },
   about: {
@@ -40,64 +41,71 @@ export default function IpedsPage() {
   return (
     <SourceStoryLayout
       kicker="IPEDS"
-      title={
-        <>
-          What IPEDS is, and what it cannot replace
-        </>
-      }
-      lede="NCES already has a statistical system of record. It is a stack of survey tables with dictionaries, not a PDF, and it is not this year’s school-authored Common Data Set."
+      title={<>{TITLE}</>}
+      lede="The federal government already maintains a comprehensive statistical record of U.S. colleges through IPEDS. It is essential for long-term trends, institutional finances, and broad coverage, but it moves on a slower federal schedule and leaves out key admissions details colleges publish in their Common Data Sets."
+      lastReviewed={REVIEWED}
       jsonLd={jsonLd}
     >
-      <h2>NCES and UNITID</h2>
+      <h2>The federal baseline (and UNITID)</h2>
       <p>
-        The{" "}
+        Run by the{" "}
         <a href="https://nces.ed.gov/" target="_blank" rel="noopener noreferrer">
           National Center for Education Statistics
-        </a>{" "}
-        runs{" "}
+        </a>
+        ,{" "}
         <a
           href="https://nces.ed.gov/ipeds"
           target="_blank"
           rel="noopener noreferrer"
         >
           IPEDS
-        </a>
-        , the Integrated Postsecondary Education Data System. About 6,400
-        Title IV institutions file interrelated annual surveys. The join key
-        this site actually uses is UNITID — Harvey Mudd is 115409, Virginia
-        Tech is 233921.
+        </a>{" "}
+        (the Integrated Postsecondary Education Data System) collects annual
+        survey data from roughly 6,400 U.S. institutions that participate in
+        federal financial aid. Every institution has a permanent numeric
+        identifier called a <code>UNITID</code> (for example,{" "}
+        <code>115409</code> for Harvey Mudd and <code>233921</code> for Virginia
+        Tech), which is how we reliably match federal records to each
+        school&apos;s published reports.
       </p>
       <p>
-        The navigational query “IPEDS” belongs to nces.ed.gov/ipeds. This
-        page is the counselor-facing explanation of what those tables are,
-        how they show up on a school page here, and what they cannot stand in
-        for.
+        For official definitions and raw downloads, go to{" "}
+        <a
+          href="https://nces.ed.gov/ipeds"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          nces.ed.gov/ipeds
+        </a>
+        . This guide explains how those federal tables appear on collegedata.fyi
+        and where they differ from a college&apos;s Common Data Set.
       </p>
 
-      <h2>How data gets in</h2>
+      <h2>How IPEDS data is structured</h2>
       <p>
-        Components include HD (directory), IC (characteristics), ADM
-        (admissions), EF (fall enrollment), GR (graduation rates), SFA
-        (student financial aid), and F (finance), among others. NCES releases
-        provisional files after quality control, including imputations for
-        nonrespondents, then final files with institutional revisions.
-        Recent years still arrive as Microsoft Access databases plus
-        dictionaries. That is the silo on the federal side: not a 47-page
-        PDF, a stack of tables.
+        Instead of one annual document, IPEDS is organized into separate survey
+        components: directory information (<code>HD</code>), institutional
+        characteristics (<code>IC</code>), admissions (<code>ADM</code>), fall
+        enrollment (<code>EF</code>), graduation rates (<code>GR</code>),
+        student financial aid (<code>SFA</code>), and finance (<code>F</code>).
+        NCES publishes provisional files first (after quality checks and
+        imputations for missing responses), followed later by revised final
+        files distributed as Microsoft Access databases and codebooks.
       </p>
       <StoryFigure
         src="/about/ipeds-survey-components.svg"
         alt="IPEDS described as survey components HD, IC, ADM, EF, GR, SFA, and F, released first as provisional then final Access databases."
-        caption="IPEDS survey-component stack. Official documentation: nces.ed.gov/ipeds. UNITID is the join key on this site."
+        caption="IPEDS survey components are released first as provisional files and later as final datasets, keyed by each school’s UNITID."
         href="/schools/virginia-tech"
         hrefLabel="See Virginia Tech’s federal baseline table"
       />
 
-      <h2>Worked examples on a live school page</h2>
+      <h2>How IPEDS appears on a school page</h2>
       <p>
-        The school-page federal baseline table (the IPEDS coverage layer)
-        keeps source_table, source_variable, release type, and
-        definition-alignment visible. Typical alignments:
+        On every school page, the federal baseline table lists the exact IPEDS
+        table, variable name, release status (<code>provisional</code> or{" "}
+        <code>final</code>), and how closely the federal definition aligns with
+        the Common Data Set:
       </p>
       <StoryTable
         caption="Example IPEDS facts and how they align to CDS"
@@ -106,7 +114,7 @@ export default function IpedsPage() {
           [
             "Admission rate",
             "Near CDS",
-            "ADM totals can match C1 in spirit and still differ in population, gender treatment, and vintage.",
+            "ADM totals track C1 closely, though definitions of student population, gender reporting, and release timing can differ.",
           ],
           [
             "Endowment",
@@ -116,69 +124,71 @@ export default function IpedsPage() {
           [
             "Locale",
             "Direct",
-            "HD locale is a federal classification, not a school-authored CDS cell.",
+            "HD locale is a federal geographic classification rather than a Common Data Set field.",
           ],
         ]}
       />
       <StoryFigure
         src="/about/virginia-tech-ipeds-baseline-source-column.svg"
         alt="Federal baseline table with source column showing ADM admission rate as near CDS, finance endowment as not CDS-equivalent, and HD locale as direct, with source_table.source_variable labels."
-        caption="Virginia Tech school page, NCES/IPEDS baseline table. Source column is source_table.source_variable plus release status. Not a substitute for the 2025-26 CDS extract."
+        caption="Virginia Tech’s federal baseline table, showing the IPEDS table, variable name, and release status for each figure."
         href="/schools/virginia-tech"
-        hrefLabel="Open the Virginia Tech hub"
+        hrefLabel="Open Virginia Tech"
       />
 
       <h2>What IPEDS cannot replace</h2>
       <p>
-        In public language, the coverage layer’s non-goals are: IPEDS is not
-        a drop-in Common Data Set. It does not give you current-year wait-list
-        behavior, Early Decision versus other rounds, H2A merit counts, or
-        the school-authored PDF as accountability. CDS files often publish
-        months before the matching IPEDS release. We do not silently blend
-        CDS and IPEDS into one unlabeled number.
-      </p>
-      <p>
-        For those CDS-native slices, use the year page:{" "}
+        IPEDS is not a substitute for a college&apos;s Common Data Set. It does
+        not report current-year waitlist numbers, Early Decision vs. Regular
+        Decision outcomes, non-need merit aid counts (Section H2A), or the
+        school&apos;s own published PDF. Common Data Sets also tend to appear
+        months before the corresponding IPEDS release. For those school-reported
+        details, open a year page such as{" "}
         <Link href="/schools/virginia-tech/2025-26">
-          Virginia Tech 2025-26
+          Virginia Tech 2025–26
         </Link>{" "}
-        and{" "}
+        or{" "}
         <Link href="/schools/harvey-mudd/2025-26">
-          Harvey Mudd 2025-26
+          Harvey Mudd 2025–26
         </Link>
         .
       </p>
 
-      <h2>Why we load it</h2>
+      <h2>Why we include it anyway</h2>
       <ul>
         <li>
-          Directory-scale coverage when no public CDS exists — the search
-          result is still a school page, not a dead end.
+          <strong>Broader coverage:</strong> When a college doesn&apos;t publish
+          a Common Data Set, IPEDS still gives you reliable enrollment, cost,
+          and admissions context.
         </li>
-        <li>Historical series that outlast a school’s current IR listing.</li>
         <li>
-          Finance (endowment draw, Part H) that the CDS template never had.
-          See the{" "}
+          <strong>Longer history:</strong> Federal series remain consistent over
+          time even when a college reorganizes its website or removes older
+          PDFs.
+        </li>
+        <li>
+          <strong>Institutional finance:</strong> IPEDS Finance filings include
+          endowment and spending figures that the Common Data Set doesn&apos;t
+          cover (see our{" "}
           <Link href="/recipes/endowment-draw-rate">
-            endowment draw-rate recipe
+            endowment draw-rate analysis
           </Link>
-          .
+          ).
         </li>
       </ul>
 
-      <h2>How to tell CDS from IPEDS on a school page</h2>
+      <h2>Telling the three sources apart on a school page</h2>
       <p>
-        CDS lives on the year page and in the document ledger: a downloadable
-        file, field IDs, an academic year in the URL. IPEDS lives in the
-        “source-labeled federal facts” table: UNITID, source_table,
-        source_variable, provisional or final. Scorecard is a third layer,
-        with its own vintage note. If a row does not name its source, do not
-        cite it.
+        Each school page keeps its sources visually separate. Common Data Set
+        figures live in the main school-year view alongside the downloadable
+        original file. IPEDS figures appear in the federal baseline table with
+        their <code>UNITID</code>, table, and variable names. College Scorecard
+        outcomes sit in their own section with cohort vintage notes.
       </p>
       <StoryFigure
         src="/about/virginia-tech-cds-and-ipeds-source-labels.svg"
         alt="Annotated split of a school page: Common Data Set extract with field IDs on one side, IPEDS source_table.source_variable on the other, both circled as separate source layers."
-        caption="Virginia Tech school page, CDS extract versus IPEDS baseline. Source labels are the product. Harvey Mudd uses the same two-layer layout."
+        caption="Virginia Tech’s school page, keeping school-published Common Data Set figures separate from the federal IPEDS baseline."
         href="/schools/virginia-tech"
         hrefLabel="Open Virginia Tech"
       />
@@ -187,7 +197,7 @@ export default function IpedsPage() {
         <Link href="/about/common-data-set">What is the Common Data Set</Link>
         {" · "}
         <Link href="/about/college-scorecard">
-          College Scorecard, and why it is not a CDS
+          College Scorecard, and how it differs from the Common Data Set
         </Link>
         .
       </p>

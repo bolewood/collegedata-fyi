@@ -8,8 +8,8 @@ import {
 const CANONICAL = "/about/common-data-set";
 const TITLE = "What is the Common Data Set";
 const DESCRIPTION =
-  "The Common Data Set is the yearly report a college publishes on admissions, enrollment, cost, and aid. We archive those reports and make the numbers easy to use.";
-const REVIEWED = "2026-08-26";
+  "The Common Data Set is the annual report U.S. colleges publish on admissions, enrollment, cost, and financial aid. Here is what it covers and how to use it.";
+const REVIEWED = "2026-11-19";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -23,7 +23,7 @@ const jsonLd = {
   "@type": "Article",
   headline: TITLE,
   description: DESCRIPTION,
-  datePublished: REVIEWED,
+  datePublished: "2026-08-26",
   dateModified: REVIEWED,
   author: { "@type": "Organization", name: "Bolewood Group", url: "https://bolewood.com" },
   publisher: { "@type": "Organization", name: "collegedata.fyi", url: "https://www.collegedata.fyi" },
@@ -40,7 +40,7 @@ export default function CommonDataSetPage() {
     <SourceStoryLayout
       kicker="Common Data Set"
       title={<>What is the Common Data Set</>}
-      lede="Colleges publish a yearly report of admissions, cost, and financial aid. It's called the Common Data Set. We keep those reports public and turn them into pages you can search, compare, and share."
+      lede="Every year, hundreds of U.S. colleges publish a standardized report covering admissions, enrollment, costs, and financial aid. It's called the Common Data Set. We archive those files and turn them into searchable pages you can compare and share."
       lastReviewed={REVIEWED}
       jsonLd={jsonLd}
     >
@@ -52,8 +52,9 @@ export default function CommonDataSetPage() {
         <a href="https://commondataset.org/" target="_blank" rel="noopener noreferrer">
           Common Data Set Initiative
         </a>{" "}
-        still publishes that template. Filling it out is voluntary. There is no
-        central filing cabinet. Each school posts a file, or doesn&apos;t.
+        still publishes that template. Filling it out is voluntary, and there is
+        no central federal repository. Each college decides whether and where to
+        post its own file.
       </p>
 
       <h2>What&apos;s in it</h2>
@@ -80,8 +81,9 @@ export default function CommonDataSetPage() {
       <h2>How to use it here</h2>
       <ul>
         <li>
-          Search a school, open a year, read the facts, download the original
-          file.
+          Families and students: search a school to see its latest admissions,
+          test-score, and aid numbers, with the college&apos;s original file
+          linked on the same page.
         </li>
         <li>
           Counselors: send the year page, not a 47-page PDF. The official file
@@ -89,8 +91,8 @@ export default function CommonDataSetPage() {
           scrape.
         </li>
         <li>
-          IR / researchers: the extract uses the template&apos;s field IDs; the{" "}
-          <Link href="/api">API</Link> and{" "}
+          IR / researchers: the dataset preserves the template&apos;s official
+          field IDs; the <Link href="/api">API</Link> and{" "}
           <a
             href="https://github.com/bolewood/collegedata-fyi"
             target="_blank"
@@ -102,14 +104,14 @@ export default function CommonDataSetPage() {
         </li>
       </ul>
 
-      <h2>We don&apos;t replace the school, or the feds</h2>
+      <h2>How it relates to federal data</h2>
       <p>
-        The numbers are the college&apos;s, as the school published them. We
-        aren&apos;t{" "}
-        <Link href="/about/ipeds">IPEDS</Link> and we aren&apos;t{" "}
-        <Link href="/about/college-scorecard">College Scorecard</Link>. Those
-        are different systems with different calendars. On this site they stay
-        labeled.
+        Every Common Data Set number on this site comes directly from the
+        college, as the school published it. We display it alongside federal
+        data from <Link href="/about/ipeds">IPEDS</Link> and{" "}
+        <Link href="/about/college-scorecard">College Scorecard</Link>, which
+        run on different calendars and definitions, and we keep each source
+        clearly labeled.
       </p>
     </SourceStoryLayout>
   );

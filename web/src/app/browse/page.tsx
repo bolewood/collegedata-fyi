@@ -6,7 +6,7 @@ import { formatCount, formatShortDate } from "@/lib/format";
 export const metadata: Metadata = {
   title: "Compare schools",
   description:
-    "Compare admissions, cost, and aid across schools. Each row is the latest school report we can compare, as the school published it. The original file is one click away.",
+    "Compare admissions, test scores, cost, and financial aid across U.S. colleges using each school’s latest published report, with the original file one click away.",
   alternates: { canonical: "/browse" },
   openGraph: { url: "/browse" },
 };
@@ -33,7 +33,7 @@ export default async function BrowsePage() {
       >
         <div className="meta" style={{ paddingTop: 10, lineHeight: 1.8 }}>
           <div>§ Compare</div>
-          <div>2024-25+</div>
+          <div>2024–25+</div>
         </div>
         <div>
           <h1
@@ -46,10 +46,7 @@ export default async function BrowsePage() {
               letterSpacing: "-0.02em",
             }}
           >
-            Compare schools,{" "}
-            <span style={{ fontStyle: "italic", color: "var(--forest-ink)" }}>
-              side by side.
-            </span>
+            Compare schools side by side
           </h1>
           <p
             className="serif"
@@ -62,9 +59,10 @@ export default async function BrowsePage() {
               lineHeight: 1.55,
             }}
           >
-            Filter admissions, cost, and aid. Each row is the latest school report
-            we can compare, as the school published it. Open the original file from
-            the same row.
+            Filter and sort admissions, test scores, cost, and financial aid
+            across colleges. Each row reflects the latest comparable report as
+            the school published it, with the original file linked right
+            alongside the numbers.
           </p>
           <div
             className="browser-hero-stats rule-2"
@@ -84,15 +82,15 @@ export default async function BrowsePage() {
             <BrowserHeroStat
               label="Reports"
               value={formatCount(stats.browser_primary_row_count)}
-              note="2024-25 and newer"
+              note="2024–25 and newer"
             />
             <BrowserHeroStat
-              label="Facts"
+              label="Metrics"
               value={formatCount(stats.queryable_field_count)}
-              note="From the latest reports"
+              note="Comparable fields per report"
             />
             <BrowserHeroStat
-              label="Refreshed"
+              label="Updated"
               value={formatShortDate(stats.browser_updated_at)}
             />
           </div>
