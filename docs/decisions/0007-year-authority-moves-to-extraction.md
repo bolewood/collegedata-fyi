@@ -400,3 +400,28 @@ and Tier 3 extractors when they ship.
 - Bucket B (~90 JS-rendered failing schools) is unaffected by this
   ADR and tracked separately. Year authority is the wrong lens on
   that problem.
+
+## Addendum, 2026-11-19: a fallback for documents filed without a year
+
+The strict rule (one unique "Common Data Set YYYY-YY" span, else no
+year) stays as it is for every document the archive filed under a
+year. For a document the archive filed under `unknown`, a `None` from
+the strict rule means nothing from the document is published. On
+2026-11-19 that was 38 documents, 22 of them real CDS files and 12 of
+those their school's only one.
+
+For those documents only, the worker now tries two more signals
+(`fallback_year_from_text` in `tools/extraction_worker/worker.py`):
+
+1. The template's reference date, "as of October 15, YYYY". One such
+   year gives YYYY-(YY+1), unless the strict patterns found spans and
+   it matches none of them.
+2. With no reference date and two or more strict spans, the fall term
+   the document mentions at least five times and at least twice as
+   often as any other picks among those spans.
+
+It never gives a year another live document of the same school
+already has. Measured on 67 documents with a known year: right for
+60, no answer for 7, wrong for none. Not covered: files whose text
+layer is unreadable, spreadsheets, and titles such as "Common Data
+Set - Fall 2018" or "Common Data Set 1998-99".

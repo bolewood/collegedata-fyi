@@ -1501,6 +1501,135 @@ def detect_year_from_pdf_bytes(data: bytes, max_pages: int = 10) -> Optional[str
     return unique_detected_year(spans)
 
 
+# ── Year fallback for documents the archive filed without a year ──────────
+#
+# The archive files a document under cds_year "unknown" when neither its URL
+# nor its link text names a year. If the strict title patterns above then
+# find no year, or two, nothing from the document is published: its
+# canonical year stays "unknown". 22 of 38 such documents on 2026-11-19 were
+# real CDS files, 12 of them their school's only one (Colorado State titles
+# its file "Common Data Set FY2026"; UC Davis's names two years).
+#
+# Two more signals, used ONLY for those documents, never to override a year
+# the archive or the strict patterns gave:
+#
+# 1. The template's reference date. Every CDS template since at least
+#    1999-00 asks for figures "as of October 15, <year>", the fall of the
+#    CDS year. On 67 known-year documents sampled 2026-11-19 a single such
+#    year was present in 59 and matched the known year in 58; the 59th
+#    (a reused template with a stale date) disagreed with the strict span,
+#    which rule (a) below refuses.
+#    (a) If the strict patterns found any span, the reference date must
+#        match one of them.
+# 2. When there is no reference date and the strict patterns found two or
+#    more spans, the fall term the document mentions far more than any
+#    other ("Fall 2022" in C1, C9, ...) picks among those spans. It never
+#    introduces a year the strict patterns did not find. (34 of 34 in the
+#    same sample.)
+_REFERENCE_DATE_RE = re.compile(r"October\s+15\s*,?\s+((?:19|20)\d{2})")
+_FALL_TERM_RE = re.compile(r"\bFall\s+((?:19|20)\d{2})\b")
+YEAR_FALLBACK_MAX_PAGES = 20
+YEAR_FALLBACK_STRICT_PAGES = 10  # the pages detect_year_from_pdf_bytes reads
+YEAR_FALLBACK_MIN_FALL_MENTIONS = 5
+UNKNOWN_CDS_YEAR = "unknown"
+
+
+def _span_starting(year: int) -> str:
+    return f"{year}-{(year + 1) % 100:02d}"
+
+
+def fallback_year_from_text(strict_text: str, text: str) -> Optional[str]:
+    """Year for a document with no year, from the reference date or the
+    dominant fall term. `strict_text` is the text the strict patterns read;
+    `text` is the wider text searched for the two signals. None when the
+    signals are missing, several, or contradict the strict spans."""
+    spans = collect_year_spans_from_text(strict_text)
+    reference_years = {int(y) for y in _REFERENCE_DATE_RE.findall(text or "")}
+    if len(reference_years) == 1:
+        candidate = _span_starting(next(iter(reference_years)))
+        return candidate if (not spans or candidate in spans) else None
+    if reference_years or len(spans) < 2:
+        return None
+    falls = Counter(int(y) for y in _FALL_TERM_RE.findall(text or "")).most_common(2)
+    if not falls or falls[0][1] < YEAR_FALLBACK_MIN_FALL_MENTIONS:
+        return None
+    if len(falls) > 1 and falls[0][1] < 2 * falls[1][1]:
+        return None
+    candidate = _span_starting(falls[0][0])
+    return candidate if candidate in spans else None
+
+
+def detect_year_fallback_from_pdf_bytes(data: bytes) -> Optional[str]:
+    """fallback_year_from_text over the first pages of a PDF. None for
+    anything that is not a readable PDF."""
+    if len(data) < 4 or data[:4] != b"%PDF":
+        return None
+    try:
+        pages = PdfPageTexts(data)
+        page_count = min(YEAR_FALLBACK_MAX_PAGES, len(pages))
+    except Exception as e:
+        print(
+            f"    pdf_error: year fallback could not open the PDF: {type(e).__name__}: {e}",
+            file=sys.stderr,
+            flush=True,
+        )
+        return None
+    texts = [pages.text(i) or "" for i in range(page_count)]
+    return fallback_year_from_text(
+        "\n".join(texts[:YEAR_FALLBACK_STRICT_PAGES]), "\n".join(texts)
+    )
+
+
+def school_has_document_for_year(client: Client, doc: dict, year: str) -> bool:
+    """True when another live document of the same school (and the same
+    sub-institution) already carries `year`. Giving a second document that
+    year would publish two rows for it."""
+    rows = (
+        client.table("cds_documents")
+        .select("id,cds_year,detected_year,sub_institutional")
+        .eq("school_id", doc.get("school_id"))
+        .is_("removed_at", "null")
+        .execute()
+        .data
+        or []
+    )
+    own = next((row for row in rows if row.get("id") == doc.get("id")), doc)
+    sub_institution = own.get("sub_institutional") or None
+    for row in rows:
+        if row.get("id") == doc.get("id"):
+            continue
+        if (row.get("sub_institutional") or None) != sub_institution:
+            continue
+        if (row.get("detected_year") or row.get("cds_year")) == year:
+            return True
+    return False
+
+
+def fallback_year_for_unfiled_document(
+    client: Client, doc: dict, pdf_bytes: bytes
+) -> Optional[str]:
+    """The fallback year for a document the archive filed without a year,
+    or None. Only for a document with no stored year of either kind, and
+    never a year another of the school's documents already has."""
+    if doc.get("detected_year"):
+        return None
+    if (doc.get("cds_year") or UNKNOWN_CDS_YEAR) != UNKNOWN_CDS_YEAR:
+        return None
+    year = detect_year_fallback_from_pdf_bytes(pdf_bytes)
+    if not year:
+        return None
+    label = f"school={doc.get('school_id')} document={doc.get('id')}"
+    if school_has_document_for_year(client, doc, year):
+        print(
+            f"    year_fallback_conflict: {label} year={year} is already "
+            "another document's; left without a year",
+            flush=True,
+        )
+        return None
+    print(f"    year_fallback: {label} year={year}", flush=True)
+    return year
+
+
 _DOCX_TAG_STRIPPER = re.compile(r"<[^>]+>")
 
 
@@ -2547,6 +2676,10 @@ def extract_one(
     detected_year = detect_year_from_bytes(pdf_bytes)
     stored_year = doc.get("cds_year")
     stored_detected = doc.get("detected_year")
+    if not detected_year:
+        # The archive filed this document without a year and the strict
+        # patterns did not settle one. See fallback_year_from_text.
+        detected_year = fallback_year_for_unfiled_document(client, doc, pdf_bytes)
     if detected_year and detected_year != stored_detected:
         if not dry_run:
             try:
