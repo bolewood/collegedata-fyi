@@ -224,6 +224,10 @@ Projection freshness has two paths:
 - Full rebuilds remain the operator tool after migrations, projection logic
   changes, metadata changes, or corpus-wide fallback backfills:
   `python tools/browser_backend/project_browser_data.py --full-rebuild --apply`.
+  A rebuild replaces each document's rows in place and then clears rows for
+  documents it no longer projects (removed, or no longer extracted). It does
+  not empty the tables first, and it refuses to clear an unusually large
+  number of documents unless `--allow-large-clear` is passed.
 
 ### Change intelligence projection
 

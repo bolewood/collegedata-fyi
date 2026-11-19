@@ -1447,6 +1447,12 @@ def build_projection_rows(
     definitions: dict[str, dict[str, FieldDefinition]],
     scorecard: Optional[dict[str, Any]] = None,
 ) -> Tuple[list[dict[str, Any]], Optional[dict[str, Any]]]:
+    # A removed document (taken down, or a copy filed under the wrong school)
+    # publishes nothing. Replacing its projection with nothing also clears any
+    # rows left from before it was removed.
+    if document.get("removed_at"):
+        return [], None
+
     canonical_year = document.get("canonical_year")
     year_start = parse_year_start(canonical_year)
     if year_start is None or year_start < MIN_YEAR_START:
@@ -1817,12 +1823,36 @@ def fetch_projected_document_ids(client: Any, table: str) -> set[str]:
     return document_ids
 
 
-def clear_projection_tables(client: Any) -> None:
-    document_ids = fetch_projected_document_ids(client, "school_browser_rows")
-    document_ids.update(fetch_projected_document_ids(client, "cds_fields"))
-    print(f"clearing projection rows for {len(document_ids)} document(s)")
-    for document_id in sorted(document_ids):
+# A rebuild refuses to clear more than this many documents' rows (or this
+# share of the projected documents, whichever is larger) in one go. Orphans
+# are normally a handful; a large number means the document list came back
+# short, and clearing on it would empty live school pages.
+MAX_ORPHANS_TO_CLEAR = 25
+MAX_ORPHAN_SHARE = 0.05
+
+
+def clear_orphaned_projection_rows(client: Any, keep_document_ids: set[str], allow_large: bool = False) -> int:
+    """Clear projection rows for documents a rebuild no longer projects: ones
+    removed, or no longer extracted, since their rows were written.
+
+    A rebuild used to empty both tables first and refill them. For as long as
+    that took, school pages had no figures, and a page regenerated in the gap
+    cached it. Rows are now replaced one document at a time and only the
+    leftovers are cleared, after everything else has been written.
+    """
+    projected = fetch_projected_document_ids(client, "school_browser_rows")
+    projected.update(fetch_projected_document_ids(client, "cds_fields"))
+    orphans = sorted(projected - keep_document_ids)
+    limit = max(MAX_ORPHANS_TO_CLEAR, int(len(projected) * MAX_ORPHAN_SHARE))
+    if len(orphans) > limit and not allow_large:
+        raise SystemExit(
+            f"refusing to clear projection rows for {len(orphans)} of {len(projected)} projected documents "
+            f"(limit {limit}): the document list may be incomplete. Check it, then pass --allow-large-clear."
+        )
+    print(f"clearing projection rows for {len(orphans)} document(s) no longer projected")
+    for document_id in orphans:
         replace_projection_rows(client, document_id, [], None)
+    return len(orphans)
 
 
 def fetch_artifacts(client: Any, document_id: str) -> list[dict[str, Any]]:
@@ -1853,9 +1883,11 @@ def fetch_scorecard(client: Any, ipeds_id: Optional[str]) -> Optional[dict[str, 
 
 
 def fetch_documents(client: Any, document_id: Optional[str] = None) -> list[dict[str, Any]]:
+    # removed_at is selected so a single-document refresh can tell a removed
+    # document from a live one (build_projection_rows projects nothing for it).
     select_cols = (
         "document_id,school_id,school_name,sub_institutional,ipeds_id,"
-        "canonical_year,source_format,extraction_status,data_quality_flag"
+        "canonical_year,source_format,extraction_status,data_quality_flag,removed_at"
     )
     if document_id:
         result = (
@@ -1875,6 +1907,7 @@ def fetch_documents(client: Any, document_id: Optional[str] = None) -> list[dict
             client.table("cds_manifest")
             .select(select_cols)
             .eq("extraction_status", "extracted")
+            .is_("removed_at", "null")
             .gte("canonical_year", "2024-25")
             .range(offset, offset + page_size - 1)
             .execute()
@@ -1915,6 +1948,11 @@ def main() -> int:
     group.add_argument("--document-id")
     parser.add_argument("--apply", action="store_true", help="Write to Supabase; default is dry-run")
     parser.add_argument(
+        "--allow-large-clear",
+        action="store_true",
+        help="With --full-rebuild --apply: clear leftover rows even when there are unusually many",
+    )
+    parser.add_argument(
         "--skip-metadata",
         action="store_true",
         help="Do not upsert field definitions and metric aliases first",
@@ -1929,10 +1967,6 @@ def main() -> int:
     if not args.skip_metadata:
         seed_metadata(client, definitions, args.apply)
 
-    if args.full_rebuild and args.apply:
-        print(f"clearing existing {MIN_YEAR_START}+ projection rows")
-        clear_projection_tables(client)
-
     docs = fetch_documents(client, args.document_id)
     total_fields = 0
     total_browser_rows = 0
@@ -1943,6 +1977,9 @@ def main() -> int:
         total_browser_rows += int(has_browser_row)
 
     if args.full_rebuild and args.apply:
+        clear_orphaned_projection_rows(
+            client, {str(document["document_id"]) for document in docs}, args.allow_large_clear,
+        )
         print("refreshing public serving caches")
         refresh_public_serving_caches(client)
 
