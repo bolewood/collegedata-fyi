@@ -1515,18 +1515,24 @@ def detect_year_from_pdf_bytes(data: bytes, max_pages: int = 10) -> Optional[str
 #
 # 1. The template's reference date. Every CDS template since at least
 #    1999-00 asks for figures "as of October 15, <year>", the fall of the
-#    CDS year. On 67 known-year documents sampled 2026-11-19 a single such
-#    year was present in 59 and matched the known year in 58; the 59th
-#    (a reused template with a stale date) disagreed with the strict span,
-#    which rule (a) below refuses.
+#    CDS year. On 67 known-year documents sampled 2026-11-19 it matched the
+#    known year in all but one, a reused template with a stale date, which
+#    disagreed with the strict span and is refused by (a).
 #    (a) If the strict patterns found any span, the reference date must
 #        match one of them.
+#    (b) If they found none, the reference date must not disagree with the
+#        fall term the document mentions most (rule 2's test).
 # 2. When there is no reference date and the strict patterns found two or
 #    more spans, the fall term the document mentions far more than any
 #    other ("Fall 2022" in C1, C9, ...) picks among those spans. It never
 #    introduces a year the strict patterns did not find. (34 of 34 in the
 #    same sample.)
-_REFERENCE_DATE_RE = re.compile(r"October\s+15\s*,?\s+((?:19|20)\d{2})")
+# "as of" is required: C21/C22 early-plan dates and H aid deadlines can also
+# fall on October 15, of the year before the CDS year.
+_REFERENCE_DATE_RE = re.compile(
+    r"as\s+of\s+October\s+15\s*,?\s+((?:19|20)\d{2})", re.IGNORECASE
+)
+_CDS_NAME_RE = re.compile(r"Common\s+Data\s+Set|\bCDS\b")
 _FALL_TERM_RE = re.compile(r"\bFall\s+((?:19|20)\d{2})\b")
 YEAR_FALLBACK_MAX_PAGES = 20
 YEAR_FALLBACK_STRICT_PAGES = 10  # the pages detect_year_from_pdf_bytes reads
@@ -1538,24 +1544,42 @@ def _span_starting(year: int) -> str:
     return f"{year}-{(year + 1) % 100:02d}"
 
 
-def fallback_year_from_text(strict_text: str, text: str) -> Optional[str]:
-    """Year for a document with no year, from the reference date or the
-    dominant fall term. `strict_text` is the text the strict patterns read;
-    `text` is the wider text searched for the two signals. None when the
-    signals are missing, several, or contradict the strict spans."""
-    spans = collect_year_spans_from_text(strict_text)
-    reference_years = {int(y) for y in _REFERENCE_DATE_RE.findall(text or "")}
-    if len(reference_years) == 1:
-        candidate = _span_starting(next(iter(reference_years)))
-        return candidate if (not spans or candidate in spans) else None
-    if reference_years or len(spans) < 2:
-        return None
+def _dominant_fall_year(text: str) -> Optional[int]:
+    """The fall term mentioned at least YEAR_FALLBACK_MIN_FALL_MENTIONS times
+    and at least twice as often as any other, or None."""
     falls = Counter(int(y) for y in _FALL_TERM_RE.findall(text or "")).most_common(2)
     if not falls or falls[0][1] < YEAR_FALLBACK_MIN_FALL_MENTIONS:
         return None
     if len(falls) > 1 and falls[0][1] < 2 * falls[1][1]:
         return None
-    candidate = _span_starting(falls[0][0])
+    return falls[0][0]
+
+
+def fallback_year_from_text(strict_text: str, text: str) -> Optional[str]:
+    """Year for a document with no year, from the reference date or the
+    dominant fall term. `strict_text` is the text the strict patterns read;
+    `text` is the wider text searched for the two signals. None when the
+    text never names the Common Data Set, or the signals are missing,
+    several, or contradict each other or the strict spans."""
+    text = text or ""
+    if not _CDS_NAME_RE.search(text):
+        return None  # an enrollment report or self-study, not a CDS
+    spans = collect_year_spans_from_text(strict_text)
+    reference_years = {int(y) for y in _REFERENCE_DATE_RE.findall(text)}
+    dominant_fall = _dominant_fall_year(text)
+    if len(reference_years) == 1:
+        reference_year = next(iter(reference_years))
+        candidate = _span_starting(reference_year)
+        if spans:
+            return candidate if candidate in spans else None
+        # No title span to check against: a reused template can carry last
+        # year's date, and then the fall term it is filled in for disagrees.
+        if dominant_fall is not None and dominant_fall != reference_year:
+            return None
+        return candidate
+    if reference_years or len(spans) < 2 or dominant_fall is None:
+        return None
+    candidate = _span_starting(dominant_fall)
     return candidate if candidate in spans else None
 
 
@@ -1610,19 +1634,28 @@ def fallback_year_for_unfiled_document(
 ) -> Optional[str]:
     """The fallback year for a document the archive filed without a year,
     or None. Only for a document with no stored year of either kind, and
-    never a year another of the school's documents already has."""
+    never a year another of the school's documents already has. Never
+    raises: a failure here leaves the document without a year, as before."""
     if doc.get("detected_year"):
         return None
     if (doc.get("cds_year") or UNKNOWN_CDS_YEAR) != UNKNOWN_CDS_YEAR:
         return None
-    year = detect_year_fallback_from_pdf_bytes(pdf_bytes)
-    if not year:
-        return None
     label = f"school={doc.get('school_id')} document={doc.get('id')}"
-    if school_has_document_for_year(client, doc, year):
+    try:
+        year = detect_year_fallback_from_pdf_bytes(pdf_bytes)
+        if not year:
+            return None
+        if school_has_document_for_year(client, doc, year):
+            print(
+                f"    year_fallback_conflict: {label} year={year} is already "
+                "another document's; left without a year",
+                flush=True,
+            )
+            return None
+    except Exception as e:
         print(
-            f"    year_fallback_conflict: {label} year={year} is already "
-            "another document's; left without a year",
+            f"    year_fallback_error: {label} {type(e).__name__}: {e}",
+            file=sys.stderr,
             flush=True,
         )
         return None

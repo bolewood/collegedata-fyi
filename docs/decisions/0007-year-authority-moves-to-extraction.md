@@ -414,14 +414,22 @@ For those documents only, the worker now tries two more signals
 (`fallback_year_from_text` in `tools/extraction_worker/worker.py`):
 
 1. The template's reference date, "as of October 15, YYYY". One such
-   year gives YYYY-(YY+1), unless the strict patterns found spans and
-   it matches none of them.
+   year gives YYYY-(YY+1). It is refused if the strict patterns found
+   spans and it matches none of them, or if they found none and the
+   fall term the document mentions most is a different year. The words
+   "as of" are required: early-plan and aid deadlines also fall on
+   October 15, of the year before.
 2. With no reference date and two or more strict spans, the fall term
    the document mentions at least five times and at least twice as
    often as any other picks among those spans.
 
-It never gives a year another live document of the same school
-already has. Measured on 67 documents with a known year: right for
-60, no answer for 7, wrong for none. Not covered: files whose text
-layer is unreadable, spreadsheets, and titles such as "Common Data
-Set - Fall 2018" or "Common Data Set 1998-99".
+The text must name the Common Data Set (or "CDS") at least once, so a
+census date in an enrollment report gives no year. A year another
+live document of the same school already has is never given again.
+
+Measured on 2026-11-19: right for 60 of 67 documents with a known
+year, no answer for 7, wrong for none; a year for 14 of the 22 real
+no-year files; no year for any of the 16 no-year files that are not
+CDS documents. Not covered: files whose text layer is unreadable,
+spreadsheets, and titles such as "Common Data Set - Fall 2018" or
+"Common Data Set 1998-99".

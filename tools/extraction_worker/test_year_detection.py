@@ -143,8 +143,10 @@ class FallbackYearFromTextTest(unittest.TestCase):
         self.assertEqual(fallback_year_from_text(text, text), "2025-26")
 
     def test_reference_date_without_a_comma_or_across_a_line_break(self):
-        self.assertEqual(fallback_year_from_text("", "as of October 15 2023"), "2023-24")
-        self.assertEqual(fallback_year_from_text("", "as of October\n15, 1999"), "1999-00")
+        self.assertEqual(fallback_year_from_text("", "Common Data Set\nas of October 15 2023"), "2023-24")
+        self.assertEqual(fallback_year_from_text("", "Common  Data Set\nAs of October\n15, 1999"), "1999-00")
+        # A file that only ever says "CDS" (no title page).
+        self.assertEqual(fallback_year_from_text("", "CDS responses: as of October 15, 2023"), "2023-24")
 
     def test_reference_date_picks_between_two_title_spans(self):
         text = "Common Data Set 2025-2026\nCommon Data Set 2024-2025 definitions\n" + self.REFERENCE
@@ -159,11 +161,38 @@ class FallbackYearFromTextTest(unittest.TestCase):
         self.assertIsNone(fallback_year_from_text(single, single))
 
     def test_two_reference_dates_give_no_year(self):
-        text = "as of October 15, 2024 ... as of October 15, 2025"
+        text = "Common Data Set ... as of October 15, 2024 ... as of October 15, 2025"
         self.assertIsNone(fallback_year_from_text("", text))
 
+    def test_an_october_15_deadline_is_not_the_reference_date(self):
+        # C21 early-plan dates and aid deadlines fall on October 15 of the
+        # year before the CDS year.
+        text = "Common Data Set FY2026\nEarly action closing date: October 15, 2024\nPriority date: October 15, 2024"
+        self.assertIsNone(fallback_year_from_text(text, text))
+        text += "\n" + self.REFERENCE
+        self.assertEqual(fallback_year_from_text(text, text), "2025-26")
+
+    def test_a_document_that_never_names_the_common_data_set_gets_no_year(self):
+        # An enrollment report with a census date.
+        text = "Fall Enrollment Report\nHeadcount as of October 15, 2023." + " Fall 2023" * 8
+        self.assertIsNone(fallback_year_from_text(text, text))
+
+    def test_reference_date_that_disagrees_with_the_dominant_fall_term_is_refused(self):
+        # A reused template with last year's date and no title span to
+        # check it against.
+        stale = "Common Data Set FY2026\nas of October 15, 2024." + " Fall 2025" * 6 + " Fall 2019" * 2
+        self.assertIsNone(fallback_year_from_text(stale, stale))
+        agrees = "Common Data Set FY2026\nas of October 15, 2025." + " Fall 2025" * 6 + " Fall 2019" * 2
+        self.assertEqual(fallback_year_from_text(agrees, agrees), "2025-26")
+        # No dominant fall term: the reference date stands.
+        mixed = "Common Data Set FY2026\nas of October 15, 2025." + " Fall 2025" * 3 + " Fall 2024" * 3
+        self.assertEqual(fallback_year_from_text(mixed, mixed), "2025-26")
+
     def test_reference_date_is_read_beyond_the_pages_the_title_patterns_read(self):
-        self.assertEqual(fallback_year_from_text("A. General Information", "page 14: " + self.REFERENCE), "2025-26")
+        self.assertEqual(
+            fallback_year_from_text("A. General Information", "Common Data Set FY2026 page 14: " + self.REFERENCE),
+            "2025-26",
+        )
 
     def test_dominant_fall_term_picks_between_two_title_spans(self):
         strict = "Common Data Set 2022-2023\nCommon Data Set 2021-2022 definitions"
@@ -172,7 +201,7 @@ class FallbackYearFromTextTest(unittest.TestCase):
 
     def test_fall_term_never_gives_a_year_the_title_patterns_did_not_find(self):
         fall_only = " Fall 2022" * 9
-        self.assertIsNone(fallback_year_from_text("", fall_only))
+        self.assertIsNone(fallback_year_from_text("", "Common Data Set" + fall_only))
         one_span = "Common Data Set 2021-2022"
         self.assertIsNone(fallback_year_from_text(one_span, one_span + fall_only))
         other_spans = "Common Data Set 2019-2020\nCommon Data Set 2020-2021"
@@ -262,6 +291,67 @@ class FallbackYearForUnfiledDocumentTest(unittest.TestCase):
     def test_no_fallback_year_means_no_year(self):
         worker.detect_year_fallback_from_pdf_bytes = lambda _data: None
         self.assertIsNone(fallback_year_for_unfiled_document(_Client([]), dict(self.DOC), b"%PDF"))
+
+    def test_the_documents_own_sub_institution_comes_from_its_row(self):
+        # The drain's document dict has no sub_institutional key.
+        rows = [_row("doc-1", "unknown", sub="law-school"), _row("doc-2", "2025-26", sub="law-school"), _row("doc-3", "2025-26")]
+        self.assertTrue(school_has_document_for_year(_Client(rows), dict(self.DOC), "2025-26"))
+        rows = [_row("doc-1", "unknown", sub="law-school"), _row("doc-3", "2025-26")]
+        self.assertFalse(school_has_document_for_year(_Client(rows), dict(self.DOC), "2025-26"))
+
+    def test_a_failure_leaves_the_document_without_a_year_and_does_not_raise(self):
+        class _Broken:
+            def table(self, _name):
+                raise RuntimeError("connection reset")
+
+        self.assertIsNone(fallback_year_for_unfiled_document(_Broken(), dict(self.DOC), b"%PDF"))
+
+        def _boom(_data):
+            raise IndexError("page 14")
+
+        worker.detect_year_fallback_from_pdf_bytes = _boom
+        self.assertIsNone(fallback_year_for_unfiled_document(_Client([]), dict(self.DOC), b"%PDF"))
+
+
+class FallbackYearFromPdfBytesTest(unittest.TestCase):
+    def _pdf(self, page_texts):
+        """A minimal PDF with one line of Helvetica text per page."""
+        pages = len(page_texts)
+        objects = []
+        kids = " ".join(f"{3 + 2 * i} 0 R" for i in range(pages))
+        objects.append(b"<< /Type /Catalog /Pages 2 0 R >>")
+        objects.append(f"<< /Type /Pages /Kids [{kids}] /Count {pages} >>".encode())
+        font_obj = 3 + 2 * pages
+        for i, text in enumerate(page_texts):
+            stream = f"BT /F1 12 Tf 50 700 Td ({text}) Tj ET".encode()
+            objects.append(
+                f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+                f"/Contents {4 + 2 * i} 0 R /Resources << /Font << /F1 {font_obj} 0 R >> >> >>".encode()
+            )
+            objects.append(b"<< /Length %d >>\nstream\n" % len(stream) + stream + b"\nendstream")
+        objects.append(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>")
+        out = bytearray(b"%PDF-1.4\n")
+        offsets = []
+        for n, body in enumerate(objects, start=1):
+            offsets.append(len(out))
+            out += f"{n} 0 obj\n".encode() + body + b"\nendobj\n"
+        xref = len(out)
+        out += f"xref\n0 {len(objects) + 1}\n0000000000 65535 f \n".encode()
+        for off in offsets:
+            out += f"{off:010d} 00000 n \n".encode()
+        out += f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode()
+        return bytes(out)
+
+    def test_reads_the_reference_date_past_page_ten_and_stops_at_page_twenty(self):
+        pages = ["Rivertown State University Common Data Set FY2026"] + ["filler"] * 12
+        found = pages + ["figures as of October 15, 2025"]
+        self.assertEqual(worker.detect_year_fallback_from_pdf_bytes(self._pdf(found)), "2025-26")
+        too_late = pages + ["filler"] * 8 + ["figures as of October 15, 2025"]
+        self.assertIsNone(worker.detect_year_fallback_from_pdf_bytes(self._pdf(too_late)))
+
+    def test_not_a_pdf_gives_no_year(self):
+        self.assertIsNone(worker.detect_year_fallback_from_pdf_bytes(b"PK\x03\x04 Common Data Set as of October 15, 2025"))
+        self.assertIsNone(worker.detect_year_fallback_from_pdf_bytes(b""))
 
 
 if __name__ == "__main__":
