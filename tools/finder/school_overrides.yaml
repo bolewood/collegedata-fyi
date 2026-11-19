@@ -706,6 +706,10 @@ overrides:
     pinned_archive_urls:
       - { url: "https://bpb-us-e1.wpmucdn.com/sites.psu.edu/dist/d/114442/files/2026/09/CDS_2025_2026_UniversityPark_v3.pdf", year: "2025-26" }
       - { url: "https://bpb-us-e1.wpmucdn.com/sites.psu.edu/dist/d/114442/files/2025/06/CDS_2024_2025_UniversityPark_v2.pdf", year: "2024-25" }
+      - { url: "https://bpb-us-e1.wpmucdn.com/sites.psu.edu/dist/d/114442/files/2024/10/CDS_2023-2024_UniversityPark_Final1.pdf", year: "2023-24" }
+      - { url: "https://bpb-us-e1.wpmucdn.com/sites.psu.edu/dist/d/114442/files/2023/07/CDS_2022-2023_University-Park_Final.pdf", year: "2022-23" }
+      - { url: "https://bpb-us-e1.wpmucdn.com/sites.psu.edu/dist/d/114442/files/2022/11/CDS_2021-2022_MASTER_University-Park.pdf", year: "2021-22" }
+      - { url: "https://bpb-us-e1.wpmucdn.com/sites.psu.edu/dist/d/114442/files/2022/11/CDS_2020-2021_MASTER_UP-1.pdf", year: "2020-21" }
     hosting_override:
       file_storage: sharepoint
       cms: wordpress
@@ -719,10 +723,14 @@ overrides:
         then Abington figures. It was re-pointed at the University Park
         file on 2026-11-18 (applied 88,478, matching the federal figure),
         and the nightly archive re-pointed it at Abington again the next
-        morning. pinned_archive_urls now holds both years to University
-        Park. Each new year needs its own pin: until then, if section A of
-        a penn-state document names any other campus, re-archive the
-        UniversityPark file for that year with force_urls and add the pin.
+        morning. pinned_archive_urls now holds 2020-21 through 2025-26 to
+        University Park. 2020-21 through 2023-24 had been Abington files
+        until they were re-pointed on 2026-11-19; 2019-20 was already the
+        University Park file and is the only one the page lists that year
+        under this slug. Each new year needs its own pin: until then, if
+        section A of a penn-state document names any other campus,
+        re-archive the UniversityPark file for that year with force_urls
+        and add the pin.
 
   - school_id: ut-austin
     browse_url: https://reports.utexas.edu/common-data-set/pdf
