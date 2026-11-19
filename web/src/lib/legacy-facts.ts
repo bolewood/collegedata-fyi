@@ -59,12 +59,12 @@ export function legacyAdmissions(
   };
 }
 
-// Verified against schemas/cds_schema_{2023_24,2024_25,2025_26}.json: only in
-// the 2025-26 template are C.116/C.117 applied/admitted. C.120 is never
+// Verified against schemas/cds_schema_{2023_24,2024_25,2025_26,2026_27}.json:
+// only in the 2025-26 and 2026-27 templates are C.116/C.117 applied/admitted. C.120 is never
 // "enrolled" in any template, and B.101/B.126 are first-time first-year men and
 // women, not total full-time enrollment, in every template. The schemas/ files
 // are outside the web app bundle, so this stays a deliberately tiny rule.
-const APPLIED_ADMITTED_AT_C116_C117 = new Set(["2025-26"]);
+const APPLIED_ADMITTED_AT_C116_C117 = new Set(["2025-26", "2026-27"]);
 
 /**
  * The legacy `raw` block. Keys are unchanged; a value is published only when

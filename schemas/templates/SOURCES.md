@@ -41,9 +41,19 @@ covers the derived schemas — the same reasoning extends to the template files.
 | `cds_2024-25_template.pdf`  | `8c02492902d1d7a6128581ab615df024db1ffa1ce8d38ae923a31aad1225d9f0` | `https://commondataset.org/wp-content/uploads/2024/11/CDS-2024-2025-TEMPLATE.pdf` | `https://web.archive.org/web/20250321004409/https://commondataset.org/wp-content/uploads/2024/11/CDS-2024-2025-TEMPLATE.pdf` |
 | `cds_2025-26_template.xlsx` | `2f4f8dabeb286578d68ded3dea39c65ce8d10f696ab160a109dd10126cb0f3fe` | `https://commondataset.org/wp-content/uploads/2025/11/CDS-PDF-2025-2026-Excel_Template.xlsx` | `https://web.archive.org/web/20260428185533/https://commondataset.org/wp-content/uploads/2025/11/CDS-PDF-2025-2026-Excel_Template.xlsx` |
 | `cds_2025-26_template.pdf`  | `d154e4f325bf17028cc2892cc4212164e68b24051685c56ccfa1d0b2b064e98e` | `https://commondataset.org/wp-content/uploads/2025/11/CDS-PDF-2025-2026_PDF_Template.pdf` | `https://web.archive.org/web/20260428185557/https://commondataset.org/wp-content/uploads/2025/11/CDS-PDF-2025-2026_PDF_Template.pdf` |
+| `cds_2026-27_template.xlsx` | `0f082ab7363f6f1de58d3c3ac662cf9a9960604310cad74a408a09b82991daf7` | `https://commondataset.org/wp-content/uploads/2026/11/CDS-Excel-2026-2027-Template.xlsx` | pending |
+| `cds_2026-27_template.pdf`  | `ea9ac56b9f0a2b9520a9db015cb32ef59cab0f0b4e8a7622f7c30345b2bed2d1` | `https://commondataset.org/wp-content/uploads/2026/11/CDS-PDF-2026-2027-Template.pdf` | pending |
+| `cds_2026-27_summary_of_changes.pdf` | `5bfad70aafddde145428fba995f2135b837e9f2ac444010b0a05a05cc8aa6cba` | `https://commondataset.org/wp-content/uploads/2026/11/CDS-2026-2027-Template-Summary-of-Changes.pdf` | pending |
 
 The Wayback Machine snapshot date for the 2024-25 files is 2025-03-21. The
 2025-26 files were captured on 2026-04-28.
+
+The 2026-27 files were downloaded on 2026-11-19 (the server's `Last-Modified`
+is 2026-11-17). They have no Wayback capture yet: the Wayback Machine had none,
+and its Save Page Now returned HTTP 520 for all three URLs that day.
+commondataset.org answered a plain `curl` with 403, so the files were fetched
+with a headless browser. The summary of changes is the Initiative's own
+one-page list of what the 2026-27 template adds.
 
 ## File naming
 
@@ -106,7 +116,8 @@ Tier 2 extraction.
 
 `cds_2023-24_template.pdf`, `cds_2024-25_template.pdf` and
 `cds_2025-26_template.pdf` are the blank sources for
-`schemas/field_maps/cds_pdf_field_map_YYYY_YY.json`, rebuilt with
+`schemas/field_maps/cds_pdf_field_map_YYYY_YY.json` (no 2026-27 map has been
+built yet, so the template overlay does not run on 2026-27 files), rebuilt with
 `tools/tier2_extractor/build_field_map.py` (see `tools/tier2_extractor/README.md`).
 The 2024-25 and 2025-26 PDFs match the SHA-256 values above byte for byte
 against their Wayback captures (fetched with the `id_` URL form). `*.pdf` is

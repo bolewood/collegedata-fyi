@@ -15,7 +15,9 @@ from worker import (
     artifact_already_extracted,
     canonical_year_for_doc,
     load_schema_registry,
+    resolve_schema_for_form,
     resolve_schema_for_year,
+    run_tier2,
 )
 from llm_fallback_worker import _find_eligible_docs
 
@@ -126,13 +128,113 @@ class SchemaDispatchTest(unittest.TestCase):
         self.assertFalse(resolution.fallback_used)
         self.assertEqual(resolution.schema["schema_version"], "2023-24")
 
-    def test_resolve_schema_falls_back_to_latest(self):
+    def test_resolve_schema_uses_2026_27_schema(self):
         registry = load_schema_registry()
         resolution = resolve_schema_for_year("2026-27", registry)
 
-        self.assertEqual(resolution.schema_version, "2025-26")
+        self.assertEqual(resolution.schema_version, "2026-27")
+        self.assertFalse(resolution.fallback_used)
+        self.assertEqual(resolution.schema["schema_version"], "2026-27")
+
+    def test_a_year_newer_than_every_schema_falls_back_to_the_newest(self):
+        registry = load_schema_registry()
+        newest = max(registry)
+        resolution = resolve_schema_for_year("2031-32", registry)
+
+        self.assertEqual(resolution.schema_version, newest)
+        self.assertGreaterEqual(newest, "2026-27")
         self.assertTrue(resolution.fallback_used)
-        self.assertEqual(resolution.fallback_reason, "no_schema_for_2026-27")
+        self.assertEqual(resolution.fallback_reason, "no_schema_for_2031-32")
+
+    def test_undated_and_older_documents_keep_the_2025_26_schema(self):
+        # These cannot be on a newer form, and their stored results are keyed
+        # by the 2025-26 numbering; a new template year must not move them.
+        registry = load_schema_registry()
+        for year, reason in (
+            (None, "missing_canonical_year"),
+            ("unknown", "no_schema_for_unknown"),
+            ("2019-20", "no_schema_for_2019-20"),
+            ("2022-23", "no_schema_for_2022-23"),
+        ):
+            with self.subTest(year=year):
+                resolution = resolve_schema_for_year(year, registry)
+                self.assertEqual(resolution.schema_version, "2025-26")
+                self.assertTrue(resolution.fallback_used)
+                self.assertEqual(resolution.fallback_reason, reason)
+
+    def test_fallback_without_the_baseline_schema_uses_the_newest(self):
+        registry = {
+            version: entry for version, entry in load_schema_registry().items()
+            if version != "2025-26"
+        }
+        resolution = resolve_schema_for_year("2019-20", registry)
+
+        self.assertEqual(resolution.schema_version, max(registry))
+        self.assertTrue(resolution.fallback_used)
+
+    def test_a_2026_27_file_built_on_the_2025_26_form_uses_the_2025_26_schema(self):
+        # The blank templates stand in for filled copies: a filled copy keeps
+        # the form's field names (PDF) and its hidden lookup columns (XLSX).
+        templates = TOOLS_ROOT.parent / "schemas" / "templates"
+        registry = load_schema_registry()
+        dated_2026 = resolve_schema_for_year("2026-27", registry)
+        for source_format, suffix in (("pdf_fillable", "pdf"), ("xlsx", "xlsx")):
+            with self.subTest(source_format=source_format):
+                old_form = (templates / f"cds_2025-26_template.{suffix}").read_bytes()
+                new_form = (templates / f"cds_2026-27_template.{suffix}").read_bytes()
+
+                on_old = resolve_schema_for_form(dated_2026, registry, source_format, old_form)
+                self.assertEqual(on_old.schema_version, "2025-26")
+                self.assertEqual(on_old.schema["schema_version"], "2025-26")
+                self.assertEqual(on_old.canonical_year, "2026-27")
+                self.assertTrue(on_old.fallback_used)
+                self.assertEqual(on_old.fallback_reason, "form_is_2025-26")
+                self.assertEqual(on_old.schema_path.name, "cds_schema_2025_26.json")
+
+                self.assertIs(resolve_schema_for_form(dated_2026, registry, source_format, new_form), dated_2026)
+
+    def test_the_2026_27_fillable_form_maps_every_form_name_under_its_own_schema(self):
+        templates = TOOLS_ROOT.parent / "schemas" / "templates"
+        registry = load_schema_registry()
+        form = (templates / "cds_2026-27_template.pdf").read_bytes()
+
+        own = run_tier2(form, registry["2026-27"][1])
+        self.assertEqual(own["unmapped_fields"], [])
+        self.assertEqual(own["schema_version"], "2026-27")
+        # The blank form prints 0 in both total rows; each lands on its own field.
+        self.assertEqual((own["values"]["C.116"]["value"], own["values"]["C.1T01"]["value"]), ("0", "0"))
+
+        # Read with the 2025-26 schema, the residency totals have nowhere to go.
+        older = run_tier2(form, registry["2025-26"][1])
+        self.assertEqual(
+            sorted(f["pdf_tag"] for f in older["unmapped_fields"]),
+            ["AP_ADMT_1ST_RES_N", "AP_RECD_1ST_RES_N", "EN_TOT_1ST_RES_N"],
+        )
+
+    def test_the_form_check_leaves_everything_else_alone(self):
+        templates = TOOLS_ROOT.parent / "schemas" / "templates"
+        registry = load_schema_registry()
+        old_pdf = (templates / "cds_2025-26_template.pdf").read_bytes()
+        dated_2026 = resolve_schema_for_year("2026-27", registry)
+        # A flattened PDF is read as text; the two years share their numbering.
+        for source_format in ("pdf_flat", "pdf_scanned", "html", "docx", None):
+            self.assertIs(resolve_schema_for_form(dated_2026, registry, source_format, old_pdf), dated_2026)
+        # A file it cannot judge keeps the schema it was given.
+        for junk in (b"", b"not a pdf", b"%PDF-1.4\n%%EOF"):
+            self.assertIs(resolve_schema_for_form(dated_2026, registry, "pdf_fillable", junk), dated_2026)
+            self.assertIs(resolve_schema_for_form(dated_2026, registry, "xlsx", junk), dated_2026)
+        # Years with no earlier same-numbering form are never changed.
+        for year in ("2025-26", "2024-25", "2023-24", None):
+            resolution = resolve_schema_for_year(year, registry)
+            self.assertIs(resolve_schema_for_form(resolution, registry, "pdf_fillable", old_pdf), resolution)
+
+    def test_the_cleaner_picks_the_same_schema_file_as_the_worker(self):
+        # The LLM fallback worker picks its schema through schema_path_for_year
+        # and skips a document whose base extraction used a different one.
+        registry = load_schema_registry()
+        for year in ("2026-27", "2025-26", "2024-25", "2023-24", "2031-32", "2022-23", "2019-20", "unknown", None):
+            with self.subTest(year=year):
+                self.assertEqual(schema_path_for_year(year), resolve_schema_for_year(year, registry).schema_path)
 
     def test_canonical_year_prefers_detected_year(self):
         self.assertEqual(

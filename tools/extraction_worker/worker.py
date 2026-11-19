@@ -764,6 +764,36 @@ def latest_schema_version(registry: dict[str, tuple[Path, dict[str, Any]]]) -> s
     return max(registry, key=key)
 
 
+# The schema for a document whose year has none of its own and is not newer
+# than every schema here: an undated file, or a year before the first canonical
+# schema. Those files cannot be on a newer form, every stored result for them
+# is keyed by this numbering, and a newer schema would file their values under
+# rows they do not print (2026-27 reassigns the C1 total form names and moves
+# the spreadsheet rows). Pinned, so adding a template year changes nothing for
+# them.
+BASELINE_FALLBACK_SCHEMA_VERSION = "2025-26"
+
+
+def _year_start(version: Optional[str]) -> Optional[int]:
+    match = re.match(r"^((?:19|20)\d{2})-\d{2}$", version or "")
+    return int(match.group(1)) if match else None
+
+
+def fallback_schema_version(
+    canonical_year: Optional[str],
+    registry: dict[str, tuple[Path, dict[str, Any]]],
+) -> str:
+    """A year newer than every schema here uses the newest one (the form it
+    was most likely built from); anything else uses the pinned baseline."""
+    latest = latest_schema_version(registry)
+    if BASELINE_FALLBACK_SCHEMA_VERSION not in registry:
+        return latest
+    year, newest = _year_start(canonical_year), _year_start(latest)
+    if year is not None and newest is not None and year > newest:
+        return latest
+    return BASELINE_FALLBACK_SCHEMA_VERSION
+
+
 def canonical_year_for_doc(doc: dict, detected_year: Optional[str] = None) -> Optional[str]:
     return detected_year or doc.get("detected_year") or doc.get("canonical_year") or doc.get("cds_year")
 
@@ -783,7 +813,7 @@ def resolve_schema_for_year(
             schema_path=path,
         )
 
-    fallback_version = latest_schema_version(registry)
+    fallback_version = fallback_schema_version(canonical_year, registry)
     path, schema = registry[fallback_version]
     reason = "missing_canonical_year" if not canonical_year else f"no_schema_for_{canonical_year}"
     return SchemaResolution(
@@ -793,6 +823,74 @@ def resolve_schema_for_year(
         fallback_used=True,
         fallback_reason=reason,
         schema_path=path,
+    )
+
+
+# A template year and the earlier year whose form it extends without
+# renumbering. A school can file a year's data on the earlier form (all five
+# 2026-27 documents archived before the 2026-27 template came out did). For a
+# flattened PDF that does not matter: the cleaner reads the text and the two
+# years share their numbering. A fillable PDF or a spreadsheet is read by form
+# name or by cell, and those differ: 2026-27 gave the C1 total form names to a
+# new row and moved 410 spreadsheet cells.
+PREVIOUS_FORM_OF = {"2026-27": "2025-26"}
+# A file must carry at least this many of the earlier form's names before its
+# missing new names are taken to mean anything.
+MIN_FORM_NAMES_TO_JUDGE = 100
+
+
+def _pdf_form_names(data: bytes) -> set[str]:
+    try:
+        return set((pypdf.PdfReader(BytesIO(data)).get_fields() or {}).keys())
+    except Exception:
+        return set()
+
+
+def _workbook_question_numbers(data: bytes) -> set[str]:
+    """Question numbers in a workbook's own lookup columns (the template's
+    hidden AA/AC layer, which a filled copy keeps)."""
+    try:
+        with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=True) as tmp:
+            tmp.write(data)
+            tmp.flush()
+            return set(build_cell_map(Path(tmp.name)))
+    except Exception:
+        return set()
+
+
+def resolve_schema_for_form(
+    resolution: SchemaResolution,
+    registry: dict[str, tuple[Path, dict[str, Any]]],
+    source_format: Optional[str],
+    data: bytes,
+) -> SchemaResolution:
+    """Use the earlier form's schema for a fillable PDF or spreadsheet that
+    was built on the earlier form.
+
+    The file is on the earlier form when it carries that form's names and none
+    of the names the newer template added. A file this cannot judge (too few
+    names, unreadable) keeps the schema it was given."""
+    previous = PREVIOUS_FORM_OF.get(resolution.schema_version)
+    if previous is None or previous not in registry:
+        return resolution
+    if source_format == "pdf_fillable":
+        key, present = "pdf_tag", _pdf_form_names(data)
+    elif source_format == "xlsx":
+        key, present = "question_number", _workbook_question_numbers(data)
+    else:
+        return resolution
+    previous_path, previous_schema = registry[previous]
+    previous_names = {f.get(key) for f in previous_schema["fields"]} - {None}
+    added_names = ({f.get(key) for f in resolution.schema["fields"]} - {None}) - previous_names
+    if len(present & previous_names) < MIN_FORM_NAMES_TO_JUDGE or present & added_names:
+        return resolution
+    return SchemaResolution(
+        schema=previous_schema,
+        schema_version=str(previous_schema.get("schema_version") or previous),
+        canonical_year=resolution.canonical_year,
+        fallback_used=True,
+        fallback_reason=f"form_is_{previous}",
+        schema_path=previous_path,
     )
 
 
@@ -2276,6 +2374,16 @@ def extract_one(
     # Activity is built after extract_one returns. Preserve the byte-sniffed
     # route on the in-memory row when the database label was stale or null.
     doc["source_format"] = source_format
+
+    form_resolution = resolve_schema_for_form(resolution, schema_registry, source_format, pdf_bytes)
+    if form_resolution is not resolution:
+        print(
+            f"    schema_for_form: school={school_id} document={document_id} "
+            f"canonical_year={canonical_year or 'unknown'} "
+            f"using={form_resolution.schema_version} reason={form_resolution.fallback_reason}",
+            flush=True,
+        )
+        resolution = form_resolution
 
     # Capture embedded source-file metadata (PDF /CreationDate, /ModDate,
     # /Producer or XLSX dcterms:created, dcterms:modified, /creator) and

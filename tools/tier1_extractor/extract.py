@@ -371,6 +371,9 @@ def recover_c9_academic_profile_values(
     return count
 
 
+_C1_BY_SEX_TOTAL_QNS = frozenset({"C.1T01", "C.1T02", "C.1T03"})
+
+
 def recover_c1_application_values(
     wb,
     qnum_to_field: dict[str, dict],
@@ -405,6 +408,13 @@ def recover_c1_application_values(
         }[gender]
         for qnum, field in qnum_to_field.items():
             if not str(qnum).startswith("C.1"):
+                continue
+            # 2026-27 adds a Total row to the table by sex (C.1T01-C.1T03) with
+            # the same dimensions as the residency table's Total (C.116-C.118)
+            # and an earlier place in the schema. Left in, the residency Total
+            # would land on it and C.116 would be refilled with a sum of the
+            # rows by sex. The row's own cell is read through the cell map.
+            if qnum in _C1_BY_SEX_TOTAL_QNS:
                 continue
             field_gender = _norm_label(field.get("gender"))
             if field_gender not in target_gender_aliases:

@@ -280,16 +280,21 @@ Stub tiers fail fast with a reason in `last_error` so the row exits the pending 
 PRD 014 M3 made schema selection year-aware for deterministic extraction paths.
 The worker loads all canonical `schemas/cds_schema_*.json` files at startup,
 then chooses the schema for each document from `detected_year || cds_year`.
-If no matching canonical schema exists, the worker uses the most recent
-available schema and records `notes.schema_fallback_used: true`,
-`notes.schema_fallback_reason`, and `notes.schema_version` on the artifact.
-The canonical years are 2023-24, 2024-25, and 2025-26 (the non-structural
-`schemas/cds_schema_*.json` files); 2019-20
+If no matching canonical schema exists, the worker falls back and records
+`notes.schema_fallback_used: true`, `notes.schema_fallback_reason`, and
+`notes.schema_version` on the artifact. A year newer than every schema falls
+back to the newest one. Anything else (an undated file, a year before 2023-24)
+falls back to 2025-26, which is pinned (`BASELINE_FALLBACK_SCHEMA_VERSION`):
+those files cannot be on a newer form, and their stored results are keyed by
+the 2025-26 numbering.
+The canonical years are 2023-24, 2024-25, 2025-26 and 2026-27 (the
+non-structural `schemas/cds_schema_*.json` files); 2019-20
 through 2022-23 still use structural schemas/overlays only and therefore fall
 back for deterministic extraction.
 
 Tier 1 uses a schema-matched template cell map when one exists. The 2025-26
-template uses hidden AA/AC lookup columns; the 2024-25 template uses the reduced
+and 2026-27 templates use hidden AA/AC lookup columns (410 cells moved between
+the two years, so the maps are not interchangeable); the 2024-25 template uses the reduced
 section-tab layout. The archived 2023-24 XLSX is a visual form layout and
 currently does not produce a Tier 1 cell map. If a map produces fewer than 25
 populated values, Tier 1 scans the workbook itself for embedded Question Number /
@@ -297,6 +302,15 @@ Answer columns and uses that map only when it recovers more fields. Tier 2 joins
 AcroForm values against the selected schema. Tier 4, Tier 5, and Tier 6 pass a
 year-matched `SchemaIndex` into the cleaner for schema filters and value
 metadata.
+
+2026-27 keeps the 2025-26 question numbers and adds twelve fields. Tier 1 and
+Tier 2 read all twelve through the template's own cell map and form names when
+the file is on the 2026-27 form. A school can also file 2026-27 data on the
+2025-26 form; `resolve_schema_for_form` detects a spreadsheet or fillable PDF
+that carries none of the names 2026-27 added and reads it with the 2025-26
+schema (`schema_fallback_reason: form_is_2025-26`). The
+Tier 4 cleaner treats 2026-27 as the 2025-26 numbering (`_NUMBERED_LIKE_2025_26`)
+and does not read the twelve new fields yet.
 
 Known limitation: Tier 4's hand-coded phrase/field maps are still maintained
 against the 2025-26 reference frame. M3 makes `SchemaIndex.filter()` and schema

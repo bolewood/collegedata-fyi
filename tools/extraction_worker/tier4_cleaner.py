@@ -516,6 +516,19 @@ _FIELD_MAP: list[tuple[str, str, str | int]] = [
 
 _C1_GENDERLESS_TOTAL_QNS = frozenset({"C.116", "C.117", "C.118"})
 
+# Template years that number their questions the way 2025-26 does. 2026-27
+# keeps every 2025-26 question number with the same meaning and adds twelve
+# (test_schema_2026_27.py checks that against the two schema files), so the
+# hand-coded 2025-26 maps and the section A numbering apply to it unchanged.
+_NUMBERED_LIKE_2025_26 = frozenset({"2025-26", "2026-27"})
+
+# 2026-27 adds a Total row to the C1 table by sex. Its fields carry the same
+# dimensions (all sexes, all residencies) as the residency table's Total column
+# (C.116-C.118) and sort before it, so a lookup by dimensions would move every
+# total a 2025-26-layout file prints from C.116-C.118 to these. No resolver
+# reads the new row yet; the total stays where the projection looks for it.
+_C1_BY_SEX_TOTAL_QNS = frozenset({"C.1T01", "C.1T02", "C.1T03"})
+
 _SCHEMA_FIXED_C1_FIELD_MAP_QNS = {
     f"C.{n:03d}" for n in range(101, 119)
 }
@@ -596,10 +609,24 @@ _DEFAULT_SCHEMA_PATH = _SCHEMA_DIR / "cds_schema_2025_26.json"
 
 
 def schema_path_for_year(canonical_year: str | None) -> Path:
+    """The schema file for a document year.
+
+    Same rule as worker.fallback_schema_version: a year with its own schema
+    uses it, a year newer than every schema uses the newest, and anything else
+    (undated, older than the first schema) uses 2025-26."""
     if not canonical_year:
         return _DEFAULT_SCHEMA_PATH
     candidate = _SCHEMA_DIR / f"cds_schema_{canonical_year.replace('-', '_')}.json"
-    return candidate if candidate.exists() else _DEFAULT_SCHEMA_PATH
+    if candidate.exists():
+        return candidate
+    year = re.fullmatch(r"((?:19|20)\d{2})-\d{2}", canonical_year)
+    canonical = sorted(
+        path for path in _SCHEMA_DIR.glob("cds_schema_*.json")
+        if re.fullmatch(r"cds_schema_(?:19|20)\d{2}_\d{2}\.json", path.name)
+    )
+    if year and canonical and int(year.group(1)) > int(canonical[-1].name[11:15]):
+        return canonical[-1]
+    return _DEFAULT_SCHEMA_PATH
 
 
 class SchemaIndex:
@@ -846,7 +873,7 @@ def _a_fields_with_same_question_in_schema(
     tick on that option's own field; anything else is dropped.
     """
     reference = _get_schema(None)
-    if schema.schema_path == reference.schema_path:
+    if schema.schema_path == reference.schema_path or schema.schema_version in _NUMBERED_LIKE_2025_26:
         return claims
     reference_questions = {f["question_number"]: f["_q_norm"] for f in reference.fields}
     own_questions = {f["question_number"]: f["_q_norm"] for f in schema.fields}
@@ -2758,7 +2785,10 @@ def resolve_c1_applications(
 ) -> dict[str, dict]:
     out: dict[str, dict] = {}
 
-    c1_fields = schema.filter(subsection="Applications")
+    c1_fields = [
+        f for f in schema.filter(subsection="Applications")
+        if f["question_number"] not in _C1_BY_SEX_TOTAL_QNS
+    ]
 
     def _gender_matches(field_gender: str, target_gender: str) -> bool:
         if field_gender == target_gender:
@@ -7070,12 +7100,12 @@ def clean(
             # --- Standard field map ---
             for substr, qnum, col_hint in field_map_norm:
                 if (
-                    idx.schema_version != "2025-26"
+                    idx.schema_version not in _NUMBERED_LIKE_2025_26
                     and qnum in _SCHEMA_FIXED_C1_FIELD_MAP_QNS
                 ):
                     continue
                 if (
-                    idx.schema_version != "2025-26"
+                    idx.schema_version not in _NUMBERED_LIKE_2025_26
                     and qnum in _SCHEMA_FIXED_B1_FIELD_MAP_QNS
                 ):
                     continue
@@ -7253,7 +7283,7 @@ def clean(
                 values[qn] = rec
 
     apply_h2a_range_guards(values)
-    if idx.schema_version == "2025-26":
+    if idx.schema_version in _NUMBERED_LIKE_2025_26:
         _fill_c1_enrolled_by_sex_totals(values)
     return values
 

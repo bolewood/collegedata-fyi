@@ -147,6 +147,13 @@ LABELS: dict[str, str] = {
 
     # Generic "none" fallback
     "/NON": "None",
+
+    # C7A generative AI policy (ESSAY_AI, new in 2026-27). The other two
+    # states are in PDF_TAG_OVERRIDES because the printed label differs from
+    # the export name.
+    "/Prohibited": "Prohibited",
+    "/Unmonitored": "Unmonitored",
+    "/No Policy": "No Policy",
 }
 
 # State codes where the single letter has multiple meanings depending
@@ -158,6 +165,13 @@ PDF_TAG_OVERRIDES: dict[str, dict[str, str]] = {
     "ROTC_ARMY":  {"/B": "On campus",             "/C": "At cooperating institution"},
     "ROTC_NAVY":  {"/B": "On campus",             "/C": "At cooperating institution"},
     "ROTC_AF":    {"/B": "On campus",             "/C": "At cooperating institution"},
+    # New in 2026-27. Labels are the text printed beside each widget in the
+    # blank template (checked by widget position, see test_decode_checkboxes.py).
+    "ESSAY_AI": {"/Permitted": "Permitted as an Editing Tool", "/Fully allowed": "Fully Allowed"},
+    "ADMS_TEST_POLICY": {"/TO": "Test-Optional", "/TR": "Test-Required", "/TB": "Test-Blind/Test-Free"},
+    # /O means "Open admission" on AD_OPEN_MOST; on G0's cost-of-attendance
+    # status it is the second box, "Firm and Final".
+    "EXP_I": {"/E": "Estimated", "/O": "Firm and Final"},
 }
 
 
@@ -171,11 +185,42 @@ def load_button_states(pdf_path: Path) -> dict[str, list[str]]:
     for name, f in fields.items():
         if f.get("/FT") != "/Btn":
             continue
-        states = f.get("/_States_")
+        states = f.get("/_States_") or _widget_states(f)
         if not states:
             continue
         result[name] = list(states)
     return result
+
+
+def _widget_states(field) -> list[str]:
+    """States for a button pypdf reports none for, read from its widgets.
+
+    pypdf fills /_States_ for radio groups and for checkboxes that carry their
+    own appearance. A checkbox whose appearance sits on a child widget
+    (2026-27 ACAD_COA) and a pair of exclusive boxes without the radio flag
+    (2026-27 EXP_I) get nothing. Each widget's normal appearance names its
+    on-state; a lone box also gets /Off, the list pypdf gives a plain checkbox.
+
+    One earlier template has such a button too: 2024-25 FORM_DOM_STATE
+    (H.804). Re-running the decoder on 2024-25 would add Yes / Not Selected
+    options to that field; the committed 2024-25 schema predates this and has
+    not been regenerated."""
+    ref = getattr(field, "indirect_reference", None)
+    obj = ref.get_object() if ref is not None else None
+    if obj is None:
+        return []
+    on_states: list[str] = []
+    for kid in obj.get("/Kids", []):
+        appearance = kid.get_object().get("/AP")
+        normal = appearance.get("/N") if appearance else None
+        if normal is None:
+            continue
+        for state in normal.keys():
+            if state != "/Off" and state not in on_states:
+                on_states.append(str(state))
+    if len(on_states) == 1:
+        on_states.append("/Off")
+    return on_states
 
 
 def label_for(pdf_tag: str, export: str) -> tuple[str, bool]:

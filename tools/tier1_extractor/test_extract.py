@@ -403,6 +403,49 @@ class Tier1ExtractTests(unittest.TestCase):
         self.assertEqual(result["values"]["C.123"]["value"], "519")
         self.assertEqual(result["values"]["C.126"]["value"], "248")
 
+    def test_2026_residency_total_stays_on_c116_when_the_schema_has_a_total_by_sex(self):
+        # The 2026-27 schema's C.1T01-C.1T03 share C.116-C.118's dimensions and
+        # come first. The residency table's Total must not land on them, or
+        # C.116 is refilled with the sum of the rows by sex (3100, not 3150).
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "CDS-C"
+        ws["B11"] = "Total first-time, first-year males who applied"
+        ws["E11"] = 1400
+        ws["B12"] = "Total first-time, first-year females who applied"
+        ws["E12"] = 1700
+        ws["E36"] = "In-State"
+        ws["F36"] = "Out-of-State"
+        ws["G36"] = "International"
+        ws["H36"] = "Unknown"
+        ws["I36"] = "Total"
+        ws["B37"] = "Total first-time, first-year (degree-seeking) who applied"
+        ws["E37"] = 900
+        ws["F37"] = 1800
+        ws["G37"] = 450
+        ws["I37"] = 3150
+
+        schema = _schema_2025_c1()
+        schema["schema_version"] = "2026-27"
+        by_sex_totals = [
+            _c1_field("C.1T01", "Applied total (by sex)"),
+            _c1_field("C.1T02", "Admitted total (by sex)"),
+            _c1_field("C.1T03", "Enrolled total (by sex)"),
+        ]
+        position = next(i for i, f in enumerate(schema["fields"]) if f["question_number"] == "C.116")
+        schema["fields"][position:position] = by_sex_totals      # where the real schema puts them
+        # The mapped C.116 cell is empty, so the residency block is recovered by label.
+        cell_map = {"C.101": ("CDS-C", "E11"), "C.102": ("CDS-C", "E12"), "C.116": ("CDS-C", "I40"), "C.1T01": ("CDS-C", "E14")}
+
+        with tempfile.NamedTemporaryFile(suffix=".xlsx") as tmp:
+            wb.save(tmp.name)
+            result = extract(Path(tmp.name), schema, cell_map)
+
+        values = {qn: rec["value"] for qn, rec in result["values"].items()}
+        self.assertEqual(values["C.116"], "3150")
+        self.assertNotIn("C.1T01", values)
+        self.assertEqual((values["C.119"], values["C.122"], values["C.125"]), ("900", "1800", "450"))
+
     def test_maps_2025_residency_block_when_unknown_column_is_filled(self):
         wb = openpyxl.Workbook()
         ws = wb.active

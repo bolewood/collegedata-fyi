@@ -61,11 +61,13 @@ When a school publishes their CDS as a filled Excel workbook, extraction is dete
 | Accuracy on standard template | Deterministic (cell-position read, no heuristics) |
 
 The median is pulled down by schools that use older templates or partial fills.
-PRD 014 M3 added year-aware schema/template dispatch for 2024-25 and 2025-26:
-2025-26 uses the hidden AA/AC lookup columns, while 2024-25 uses the reduced
-section-tab layout with question numbers in column A and answer cells in
-column C. Pre-2024 XLSX files still fall back to the latest canonical schema
-until older canonical mappings exist.
+PRD 014 M3 added year-aware schema/template dispatch for 2024-25 and 2025-26,
+and 2026-27 was added in November 2026:
+2025-26 and 2026-27 use the hidden AA/AC lookup columns, while 2024-25 uses the
+reduced section-tab layout with question numbers in column A and answer cells in
+column C. XLSX files from before 2023-24 still fall back to the 2025-26 schema
+until older canonical mappings exist. A 2026-27 file built on the 2025-26
+workbook or fillable PDF is detected and read with the 2025-26 schema.
 
 PR #44 added an embedded answer-column fallback. Some school-published
 workbooks preserve their own `Question Number` / `Answer` columns even when

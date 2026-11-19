@@ -1,5 +1,6 @@
 import { FIELD_LABELS, SECTION_NAMES, type FieldLabel } from "./labels";
 import { FIELD_LABELS_2024_25 } from "./labels-2024-25";
+import { FIELD_LABELS_2026_27 } from "./labels-2026-27";
 import type { FieldValue } from "./types";
 
 function clean(value?: string | null): string | undefined {
@@ -18,12 +19,21 @@ export function isSchema2024_25(schemaVersion?: string | null): boolean {
   return normalizeSchemaVersion(schemaVersion) === "2024-25";
 }
 
+export function isSchema2026_27(schemaVersion?: string | null): boolean {
+  return normalizeSchemaVersion(schemaVersion) === "2026-27";
+}
+
 export function getFieldLabel(
   id: string,
   schemaVersion?: string | null,
 ): FieldLabel | undefined {
   if (isSchema2024_25(schemaVersion)) {
     return FIELD_LABELS_2024_25[id] ?? FIELD_LABELS[id];
+  }
+  // 2026-27 keeps the 2025-26 numbering: only its new and reworded fields
+  // have their own entry.
+  if (isSchema2026_27(schemaVersion)) {
+    return FIELD_LABELS_2026_27[id] ?? FIELD_LABELS[id];
   }
   return FIELD_LABELS[id];
 }

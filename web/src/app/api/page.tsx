@@ -1722,8 +1722,9 @@ const { data } = await supabase
         Schema and licensing
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
-        Field IDs follow the canonical 1,105-field schema derived from the CDS
-        Initiative&apos;s 2025-26 XLSX template. The full schema is checked
+        Field IDs follow the canonical schema derived from the CDS
+        Initiative&apos;s XLSX templates: 1,105 fields for 2025-26, and 1,117
+        for 2026-27, which adds twelve and renumbers none. The full schema is checked
         into the repo at{" "}
         <a
           className={API_LINK_CLASS}

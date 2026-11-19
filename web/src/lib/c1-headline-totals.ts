@@ -9,6 +9,12 @@ export type C1HeadlineTotals = {
 type HeadlineSpec = {
   total: string;
   gender: string[];
+  /**
+   * The Total row printed under the table by sex (2026-27 on). It is the
+   * school's own total, so it is used before a sum of the rows by sex. A
+   * 2025-26 extract never has these ids.
+   */
+  bySexTotal?: string;
   residency?: {
     inState: string;
     outOfState: string;
@@ -16,6 +22,12 @@ type HeadlineSpec = {
     unknown: string;
   };
 };
+
+/**
+ * 2026-27 keeps the 2025-26 C1 numbering (it adds a Total row by sex,
+ * C.1T01-C.1T03, and renumbers nothing), so it is read as "2025-26" here.
+ */
+const NUMBERED_LIKE_2025_26: ReadonlySet<string> = new Set(["2025-26", "2026-27"]);
 
 function headlineSpecs(schemaVersion?: string | null): {
   applied: HeadlineSpec;
@@ -52,11 +64,12 @@ function headlineSpecs(schemaVersion?: string | null): {
     };
   }
 
-  if (schemaVersion === "2025-26") {
+  if (schemaVersion != null && NUMBERED_LIKE_2025_26.has(schemaVersion)) {
     return {
       applied: {
         total: "C.116",
         gender: ["C.101", "C.102", "C.103"],
+        bySexTotal: "C.1T01",
         residency: {
           inState: "C.119",
           outOfState: "C.122",
@@ -67,6 +80,7 @@ function headlineSpecs(schemaVersion?: string | null): {
       admitted: {
         total: "C.117",
         gender: ["C.104", "C.105", "C.106"],
+        bySexTotal: "C.1T02",
         residency: {
           inState: "C.120",
           outOfState: "C.123",
@@ -77,6 +91,7 @@ function headlineSpecs(schemaVersion?: string | null): {
       enrolled: {
         total: "C.118",
         gender: ["C.107", "C.108", "C.109"],
+        bySexTotal: "C.1T03",
         residency: {
           inState: "C.121",
           outOfState: "C.124",
@@ -134,19 +149,39 @@ function sumPresent(
   return { sum, max, count };
 }
 
+/**
+ * The printed Total row by sex, when it can be a total: positive (the blank
+ * form's auto-sum prints 0) and not smaller than a row it totals. Same rule as
+ * the projection's _c1_by_sex_total.
+ */
+function printedBySexTotal(
+  values: Record<string, FieldValue>,
+  spec: HeadlineSpec,
+  gender: { max: number } | null,
+): number | null {
+  if (!spec.bySexTotal) return null;
+  const printed = fieldNumber(values, spec.bySexTotal);
+  if (printed == null || printed <= 0) return null;
+  if (gender && printed < gender.max) return null;
+  return printed;
+}
+
 function preferCoherentTotal(
   values: Record<string, FieldValue>,
   spec: HeadlineSpec,
 ): number | null {
   const gender = sumPresent(values, spec.gender);
   const total = fieldNumber(values, spec.total);
+  // What stands in for a missing or impossible total: the printed Total row
+  // by sex when there is one, otherwise the sum of the rows by sex.
+  const fallback = printedBySexTotal(values, spec, gender) ?? gender?.sum ?? null;
 
-  if (total != null && total === 0 && gender && gender.sum > 0) {
-    return gender.sum;
+  if (total != null && total === 0 && fallback != null && fallback > 0) {
+    return fallback;
   }
 
   if (gender && total != null && total < gender.max) {
-    return gender.sum;
+    return fallback;
   }
 
   const residency = spec.residency;
@@ -164,7 +199,7 @@ function preferCoherentTotal(
       Math.abs(nonresidents - gender.sum) <= 1 &&
       Math.abs(total - nonresidents) > 1
     ) {
-      return gender.sum;
+      return fallback;
     }
     if (
       unknown != null &&
@@ -172,17 +207,17 @@ function preferCoherentTotal(
       total != null &&
       total < unknown
     ) {
-      return gender.sum;
+      return fallback;
     }
     // Older layouts with no C1 total row: the residency table's in-state
     // "Total first-time, first-year" row lands on the total id.
     if (total != null && inState != null && total === inState && gender.sum > total + 1) {
-      return gender.sum;
+      return fallback;
     }
   }
 
   if (total != null && total > 0) return total;
-  if (gender) return gender.sum;
+  if (fallback != null) return fallback;
   return total;
 }
 
@@ -193,7 +228,8 @@ export type C1TemplateResolution =
   | { template: null; reason: string };
 
 /**
- * Which C1 numbering an extract's values use. Artifacts without a
+ * Which C1 numbering an extract's values use ("2025-26" also covers 2026-27,
+ * which keeps that numbering). Artifacts without a
  * schema_version come from the Tier 4 / HTML cleaners, whose label map
  * writes 2025-26 ids on every template. Older XLSX files were read with the
  * 2025-26 cell map, which does not fit pre-2024 layouts, so their C1 cells
@@ -211,7 +247,7 @@ export function c1TemplateForArtifact({
   if (schemaVersion === "2023-24" || schemaVersion === "2024-25") {
     return { template: schemaVersion };
   }
-  if (schemaVersion === "2025-26") {
+  if (schemaVersion != null && NUMBERED_LIKE_2025_26.has(schemaVersion)) {
     if (producer === "tier1_xlsx" && yearStart != null && yearStart < 2024) {
       return { template: null, reason: "older XLSX layout read with the 2025-26 cell map" };
     }
@@ -432,8 +468,12 @@ const THIRD_CATEGORY_IDS: Record<C1Template, Record<keyof C1HeadlineTotals, stri
 };
 
 function usesPublishedTotal(values: Record<string, FieldValue>, spec: HeadlineSpec): boolean {
+  const chosen = preferCoherentTotal(values, spec);
   const published = fieldNumber(values, spec.total);
-  return published != null && published > 0 && preferCoherentTotal(values, spec) === published;
+  if (published != null && published > 0 && chosen === published) return true;
+  // The printed Total row by sex is also the school's own total.
+  const bySex = printedBySexTotal(values, spec, sumPresent(values, spec.gender));
+  return bySex != null && chosen === bySex;
 }
 
 /**

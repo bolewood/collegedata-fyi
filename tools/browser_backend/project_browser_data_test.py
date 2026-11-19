@@ -125,6 +125,19 @@ def defs():
     }
 
 
+def defs_2026():
+    """defs() plus a 2026-27 year: the 2025-26 fields renumbered nowhere, and the new C1 Total row by sex."""
+    out = defs()
+    fields = {
+        field_id: FieldDefinition("2026-27", field_id, d.field_label, d.section, d.subsection, d.value_kind_hint)
+        for field_id, d in out["2025-26"].items()
+    }
+    for field_id, label in (("C.1T01", "Applied total (by sex)"), ("C.1T02", "Admitted total (by sex)"), ("C.1T03", "Enrolled total (by sex)")):
+        fields[field_id] = FieldDefinition("2026-27", field_id, label, "Admission", "Applications", "Number")
+    out["2026-27"] = fields
+    return out
+
+
 def doc(**overrides):
     base = {
         "document_id": "00000000-0000-0000-0000-000000000001",
@@ -1628,7 +1641,106 @@ class BrowserProjectionTests(unittest.TestCase):
         metric = DIRECT_METRIC_DEFINITIONS["applied"]
 
         self.assertEqual(metric_field_ids_for_year(metric, "2025-26"), ("C.116",))
-        self.assertIsNone(metric_field_ids_for_year(metric, "2026-27"))
+        self.assertEqual(metric_field_ids_for_year(metric, "2026-27"), ("C.116",))
+        self.assertIsNone(metric_field_ids_for_year(metric, "2027-28"))
+
+    def test_2026_admissions_metrics_read_the_same_total_fields_as_2025(self):
+        values = {
+            "C.116": {"value": "50,264"}, "C.117": {"value": "2,387"}, "C.118": {"value": "1,633"},
+            # the residency table and the new Total row by sex agree in a consistent file
+            "C.1T01": {"value": "50,264"}, "C.1T02": {"value": "2,387"}, "C.1T03": {"value": "1,633"},
+        }
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2026-27"), [artifact(values=values, schema_version="2026-27")], defs_2026(),
+        )
+
+        self.assertEqual((browser["applied"], browser["admitted"], browser["enrolled_first_year"]), (50264, 2387, 1633))
+        self.assertEqual(browser["acceptance_rate"], "0.047489")
+
+    def test_2026_blank_residency_total_uses_the_printed_total_by_sex_not_a_partial_sum(self):
+        # Only the men rows were read; the printed Total row is the total, their sum is not.
+        values = {
+            "C.101": {"value": "22,819"}, "C.104": {"value": "1,189"}, "C.107": {"value": "799"},
+            "C.1T01": {"value": "50,264"}, "C.1T02": {"value": "2,387"}, "C.1T03": {"value": "1,633"},
+        }
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2026-27"), [artifact(values=values, schema_version="2026-27")], defs_2026(),
+        )
+
+        self.assertEqual((browser["applied"], browser["admitted"], browser["enrolled_first_year"]), (50264, 2387, 1633))
+
+    def test_2026_zero_residency_total_defers_to_the_printed_total_by_sex(self):
+        values = {
+            "C.116": {"value": "0"}, "C.117": {"value": "0"}, "C.118": {"value": "0"},
+            "C.101": {"value": "100"}, "C.102": {"value": "120"}, "C.104": {"value": "10"}, "C.105": {"value": "12"},
+            "C.1T01": {"value": "225"}, "C.1T02": {"value": "23"},
+        }
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2026-27"), [artifact(values=values, schema_version="2026-27")], defs_2026(),
+        )
+
+        self.assertEqual((browser["applied"], browser["admitted"]), (225, 23))
+
+    def test_2026_total_by_sex_that_is_zero_or_below_a_row_is_ignored(self):
+        # 0 is the blank form's auto-sum; a total smaller than the men row it totals is a misread.
+        values = {
+            "C.101": {"value": "100"}, "C.102": {"value": "120"}, "C.103": {"value": "0"},
+            "C.104": {"value": "10"}, "C.105": {"value": "12"}, "C.106": {"value": "0"},
+            "C.1T01": {"value": "0"}, "C.1T02": {"value": "9"},
+        }
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2026-27"), [artifact(values=values, schema_version="2026-27")], defs_2026(),
+        )
+
+        self.assertEqual((browser["applied"], browser["admitted"]), (220, 22))
+
+    def test_2026_impossible_total_row_by_sex_is_withheld_and_not_used(self):
+        # Admitted above applied in the printed Total row by sex: neither field is published, and the
+        # headline pair is cleared, as it is for an impossible C.116 / C.117 (implausible_funnel).
+        values = {
+            "C.101": {"value": "100"}, "C.102": {"value": "120"}, "C.103": {"value": "0"},
+            "C.104": {"value": "10"}, "C.105": {"value": "12"}, "C.106": {"value": "0"},
+            "C.1T01": {"value": "230"}, "C.1T02": {"value": "21,623"},
+        }
+        fields, browser = build_projection_rows(
+            doc(canonical_year="2026-27"), [artifact(values=values, schema_version="2026-27")], defs_2026(),
+        )
+        by_id = {row["field_id"]: row for row in fields}
+
+        self.assertEqual(by_id["C.1T01"]["value_status"], "parse_error")
+        self.assertEqual(by_id["C.1T02"]["value_status"], "parse_error")
+        self.assertEqual(by_id["C.101"]["value_status"], "reported")
+        self.assertEqual((browser["applied"], browser["admitted"]), (None, None))
+
+    def test_2026_blank_form_zero_total_by_sex_is_not_published_as_zero(self):
+        # The blank 2026-27 form auto-sums the Total row to 0. With nothing else read, that is "not reported", not 0.
+        values = {"C.1T01": {"value": "0"}, "C.1T02": {"value": "0"}, "C.1T03": {"value": "0"}}
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2026-27"), [artifact(values=values, schema_version="2026-27")], defs_2026(),
+        )
+
+        self.assertEqual((browser["applied"], browser["admitted"], browser["enrolled_first_year"]), (None, None, None))
+
+    def test_2025_documents_do_not_read_the_2026_total_by_sex_fields(self):
+        values = {
+            "C.101": {"value": "100"}, "C.102": {"value": "120"}, "C.104": {"value": "10"}, "C.105": {"value": "12"},
+            "C.1T01": {"value": "999"}, "C.1T02": {"value": "99"},
+        }
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2025-26"), [artifact(values=values, schema_version="2025-26")], defs_2026(),
+        )
+
+        self.assertEqual((browser["applied"], browser["admitted"]), (220, 22))
+
+    def test_2026_sanity_rules_withhold_an_impossible_total_funnel(self):
+        values = {"C.116": {"value": "5"}, "C.117": {"value": "21,623"}, "C.118": {"value": "3,000"}}
+        fields, _browser = build_projection_rows(
+            doc(canonical_year="2026-27"), [artifact(values=values, schema_version="2026-27")], defs_2026(),
+        )
+        by_id = {row["field_id"]: row for row in fields}
+
+        self.assertEqual(by_id["C.116"]["value_status"], by_id["C.117"]["value_status"])
+        self.assertNotEqual(by_id["C.116"]["value_status"], "reported")
 
     def test_replace_projection_rows_uses_atomic_rpc(self):
         client = FakeRpcClient()

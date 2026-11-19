@@ -111,6 +111,14 @@ describe("GET /api/facts/{school_id} (legacy)", () => {
     expect(body.raw.B_126_ft_women_enrolled).toBeNull();
   });
 
+  it("2026-27: raw keeps C.116/C.117, which the 2026-27 template numbers the same way", async () => {
+    setup({ ...PRINCETON_2025, schemaVersion: "2026-27" });
+    const { body } = await get("princeton");
+    expect(body.raw.C_116_applied_total).toBe("40,000");
+    expect(body.raw.C_117_admitted_total).toBe("2,000");
+    expect(body.raw.C_120_enrolled_total).toBeNull();
+  });
+
   it("uses the extract's schema_version over canonical_year when they disagree", async () => {
     // A 2025-26 filing that used the 2024-25 template: C.116 is not applied.
     setup({ ...PRINCETON_2025, schemaVersion: "2024-25" });

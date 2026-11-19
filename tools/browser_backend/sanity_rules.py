@@ -29,9 +29,12 @@ _ED_COUNT_FIELDS = {
     "2023-24": ("C.2106", "C.2107"),
     "2024-25": ("C.2106", "C.2107"),
     "2025-26": ("C.2110", "C.2111"),
+    "2026-27": ("C.2110", "C.2111"),
 }
 
-_H_SCHEMAS = frozenset({"2023-24", "2024-25", "2025-26"})
+# 2026-27 keeps the 2025-26 numbering throughout (it only adds rows), so every
+# table in this file gives it the 2025-26 entry.
+_H_SCHEMAS = frozenset({"2023-24", "2024-25", "2025-26", "2026-27"})
 
 
 def _ed_admitted_exceeds_applicants(
@@ -129,10 +132,17 @@ def _per_student_average_is_a_total(
 _C1_TOTAL_FIELDS = {
     "2024-25": ("C.117", "C.118", "C.119"),
     "2025-26": ("C.116", "C.117", "C.118"),
+    "2026-27": ("C.116", "C.117", "C.118"),
+}
+# 2026-27 also prints a Total row under the table by sex, which the projection
+# uses when the residency total is blank. It gets the same funnel check.
+_C1_BY_SEX_TOTAL_FIELDS = {
+    "2026-27": ("C.1T01", "C.1T02", "C.1T03"),
 }
 _C1_GENDER_PAIRS = {
     "2024-25": (("C.101", "C.105"), ("C.102", "C.106")),
     "2025-26": (("C.101", "C.104"), ("C.102", "C.105")),
+    "2026-27": (("C.101", "C.104"), ("C.102", "C.105")),
 }
 
 
@@ -163,9 +173,15 @@ def _c1_total_funnel_is_impossible(
     299 beside 7,737 admitted; Akron 2025-26 admitted = 0 beside 2,169
     enrolled).
     """
-    fields = _C1_TOTAL_FIELDS.get(schema_version)
-    if fields is None:
-        return ()
+    flagged: tuple[str, ...] = ()
+    for table in (_C1_TOTAL_FIELDS, _C1_BY_SEX_TOTAL_FIELDS):
+        fields = table.get(schema_version)
+        if fields is not None:
+            flagged += _c1_funnel_flags(fields, values)
+    return flagged
+
+
+def _c1_funnel_flags(fields: tuple[str, str, str], values: ReportedNumbers) -> tuple[str, ...]:
     applied_id, admitted_id, enrolled_id = fields
     applied, admitted, enrolled = (values.get(f) for f in fields)
     flagged = _c1_stage_pair(applied, admitted, applied_id, admitted_id) + _c1_stage_pair(
@@ -295,6 +311,7 @@ FIELD_IDS: frozenset[str] = frozenset(
     | set(_H2_COUNT_FIELDS)
     | {"H.501", "H.502", "H.503", "H.504"}
     | {f for fields in _C1_TOTAL_FIELDS.values() for f in fields}
+    | {f for fields in _C1_BY_SEX_TOTAL_FIELDS.values() for f in fields}
     | {f for pairs in _C1_GENDER_PAIRS.values() for pair in pairs for f in pair}
 )
 
