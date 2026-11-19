@@ -1,5 +1,6 @@
 import { assertEquals, assertExists } from "jsr:@std/assert";
 import {
+  applyPinnedUrls,
   pickCandidates,
   UNKNOWN_YEAR_SENTINEL,
   extractCdsAnchors,
@@ -1018,4 +1019,70 @@ Deno.test("findBestSourceAnchor: only subpages → null", () => {
     },
   ];
   assertEquals(findBestSourceAnchor(anchors), null);
+});
+
+
+// ─── applyPinnedUrls ─────────────────────────────────────────────────────────
+
+// A school that publishes one CDS per campus: several full, clean files for the
+// same year. pickCandidates takes the first on the page.
+const CAMPUS_PAGE = `
+  <html><body>
+    <a href="https://example.edu/files/CDS_2024_2025_Abington.pdf">Abington 2024-2025</a>
+    <a href="https://example.edu/files/CDS_2024_2025_MainCampus.pdf">Main Campus 2024-2025</a>
+    <a href="https://example.edu/files/CDS_2024_2025_York.pdf">York 2024-2025</a>
+    <a href="https://example.edu/files/CDS_2023_2024_Abington.pdf">Abington 2023-2024</a>
+    <a href="https://example.edu/files/CDS_2023_2024_MainCampus.pdf">Main Campus 2023-2024</a>
+  </body></html>
+`;
+const MAIN_2024 = "https://example.edu/files/CDS_2024_2025_MainCampus.pdf";
+
+Deno.test("applyPinnedUrls: a pin replaces the first-listed campus file for its year only", () => {
+  const anchors = extractCdsAnchors(CAMPUS_PAGE, BASE).filter((a) => a.kind === "document");
+  const picked = pickCandidates(anchors, "landing");
+  assertExists(picked);
+  // Without a pin the first file on the page wins: the wrong campus.
+  assertEquals(picked.find((d) => d.cds_year === "2024-25")?.url, "https://example.edu/files/CDS_2024_2025_Abington.pdf");
+
+  const pinned = applyPinnedUrls(picked, [{ url: MAIN_2024, year: "2024-25" }]);
+  assertEquals(pinned.length, picked.length);
+  const doc2024 = pinned.find((d) => d.cds_year === "2024-25");
+  assertEquals(doc2024?.url, MAIN_2024);
+  assertEquals(doc2024?.filename, "CDS_2024_2025_MainCampus.pdf");
+  assertEquals(doc2024?.candidate_kind, "single_document");
+  assertEquals(doc2024?.is_section_file, false);
+  assertEquals(doc2024?.discovered_via, "direct");
+  // The unpinned year keeps the resolver's choice.
+  assertEquals(pinned.find((d) => d.cds_year === "2023-24")?.url, "https://example.edu/files/CDS_2023_2024_Abington.pdf");
+});
+
+Deno.test("applyPinnedUrls: a pinned year the page does not list is added", () => {
+  const anchors = extractCdsAnchors(CAMPUS_PAGE, BASE).filter((a) => a.kind === "document");
+  const picked = pickCandidates(anchors, "landing")!;
+  const url = "https://example.edu/files/CDS_2022_2023_MainCampus.pdf";
+  const pinned = applyPinnedUrls(picked, [{ url, year: "2022-23" }]);
+  assertEquals(pinned.length, picked.length + 1);
+  assertEquals(pinned.find((d) => d.cds_year === "2022-23")?.url, url);
+});
+
+Deno.test("applyPinnedUrls: one document per pinned year, even when the resolver returned two", () => {
+  const anchors = extractCdsAnchors(CAMPUS_PAGE, BASE).filter((a) => a.kind === "document");
+  const picked = pickCandidates(anchors, "landing")!;
+  const doubled = [...picked, ...picked];
+  const pinned = applyPinnedUrls(doubled, [{ url: MAIN_2024, year: "2024-25" }]);
+  assertEquals(pinned.filter((d) => d.cds_year === "2024-25").map((d) => d.url), [MAIN_2024]);
+});
+
+Deno.test("applyPinnedUrls: no pins, an unsafe URL or a repeated year change nothing", () => {
+  const anchors = extractCdsAnchors(CAMPUS_PAGE, BASE).filter((a) => a.kind === "document");
+  const picked = pickCandidates(anchors, "landing")!;
+  assertEquals(applyPinnedUrls(picked, []), picked);
+  assertEquals(applyPinnedUrls(picked, [{ url: "http://169.254.169.254/latest", year: "2024-25" }]), picked);
+  assertEquals(applyPinnedUrls(picked, [{ url: "not a url", year: "2024-25" }]), picked);
+  // The first pin for a year is the one used.
+  const twice = applyPinnedUrls(picked, [
+    { url: MAIN_2024, year: "2024-25" },
+    { url: "https://example.edu/files/CDS_2024_2025_York.pdf", year: "2024-25" },
+  ]);
+  assertEquals(twice.find((d) => d.cds_year === "2024-25")?.url, MAIN_2024);
 });

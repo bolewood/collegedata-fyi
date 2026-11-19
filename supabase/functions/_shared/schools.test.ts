@@ -5,6 +5,7 @@ import {
   filterArchivable,
   ipedsIdsForSlug,
   normalizeSchoolToken,
+  pinnedArchiveUrls,
   resolveSchoolName,
   type SchoolEntry,
   suggestCanonicalSchool,
@@ -159,4 +160,27 @@ Deno.test("chooseDocumentIpedsId lets the directory win and never invents an id"
   assertEquals(chooseDocumentIpedsId("110404", null), { ipeds_id: "110404", conflict: false });
   assertEquals(chooseDocumentIpedsId(null, "134130"), { ipeds_id: "134130", conflict: false });
   assertEquals(chooseDocumentIpedsId(null, null), { ipeds_id: null, conflict: false });
+});
+
+
+Deno.test("pinnedArchiveUrls: keeps well-formed pins and drops the rest", () => {
+  assertEquals(pinnedArchiveUrls(undefined), []);
+  assertEquals(pinnedArchiveUrls({ school_id: "x" }), []);
+  const override = {
+    school_id: "x",
+    pinned_archive_urls: [
+      { url: " https://example.edu/a.pdf ", year: "2024-25" },
+      { url: "https://example.edu/no-year.pdf" },
+      { url: "https://example.edu/long-year.pdf", year: "2024-2025" },
+      { url: "", year: "2023-24" },
+      { year: "2023-24" },
+      "https://example.edu/string.pdf",
+      null,
+    ],
+  // deno-lint-ignore no-explicit-any
+  } as any;
+  assertEquals(pinnedArchiveUrls(override), [{ url: "https://example.edu/a.pdf", year: "2024-25" }]);
+  // A value that is not a list is ignored, not thrown on.
+  // deno-lint-ignore no-explicit-any
+  assertEquals(pinnedArchiveUrls({ school_id: "x", pinned_archive_urls: "https://example.edu/a.pdf" } as any), []);
 });
