@@ -144,10 +144,27 @@ class HasCanonicalForCurrentBytesTests(unittest.TestCase):
         # Written after the current bytes were archived, but it says it read the other file.
         stale = sources + [_canon("2026-06-01T00:00:00+00:00", source_sha=OLD)]
         self.assertFalse(has_canonical_for_current_bytes(self._client(stale), "doc", CUR))
-        # Written before the newest source row, and it says it read the current bytes.
+        # Written before the newest source row, and it says it read the current bytes: the other file was
+        # archived but never extracted, so this is still what the document serves.
         flipped_back = [_src(CUR, "2026-04-14T00:00:00+00:00"), _canon("2026-04-20T00:00:00+00:00", source_sha=CUR),
                         _src(OLD, "2026-05-01T00:00:00+00:00")]
         self.assertTrue(has_canonical_for_current_bytes(self._client(flipped_back), "doc", CUR))
+
+    def test_only_the_newest_extraction_counts(self):
+        # Current file extracted, then the other file extracted, then pointed back: the newest extraction is of
+        # the other file and is what gets served, so the document is not extracted.
+        for recorded in (True, False):
+            with self.subTest(hashes_recorded=recorded):
+                rows = [
+                    _src(CUR, "2026-04-14T00:00:00+00:00"),
+                    _canon("2026-04-20T00:00:00+00:00", source_sha=CUR if recorded else None),
+                    _src(OLD, "2026-05-01T00:00:00+00:00"),
+                    _canon("2026-05-03T00:00:00+00:00", source_sha=OLD if recorded else None),
+                ]
+                self.assertFalse(has_canonical_for_current_bytes(self._client(rows), "doc", CUR))
+                # A fresh extraction of the current file makes it extracted again.
+                rows.append(_canon("2026-11-19T00:00:00+00:00", source_sha=CUR))
+                self.assertTrue(has_canonical_for_current_bytes(self._client(rows), "doc", CUR))
 
     def test_an_earlier_fillable_source_chosen_over_the_current_reprint_counts(self):
         # The extraction read the older fillable file on purpose and records the reprint it was chosen over.

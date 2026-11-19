@@ -228,6 +228,24 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
             client, "doc", "tier4_docling", "0.3.4", "2025-26", "missing-sha",
         ))
 
+    def test_artifact_idempotency_ignores_an_extraction_superseded_by_one_of_another_file(self):
+        # This file was extracted, the document was pointed at another file and that was extracted, and it
+        # was pointed back. The later extraction is what gets served, so a new one has to be written.
+        mine = {"id": "mine", "created_at": "2026-04-20T00:00:00+00:00", "notes": {"source_sha256": "this-sha"}}
+        later_other = {"id": "other", "created_at": "2026-05-03T00:00:00+00:00", "notes": {"source_sha256": "other-sha"}}
+        earlier_other = {"id": "other", "created_at": "2026-04-01T00:00:00+00:00", "notes": {"source_sha256": "other-sha"}}
+        later_same = {"id": "again", "created_at": "2026-05-03T00:00:00+00:00", "notes": {"source_sha256": "this-sha"}}
+        later_unrecorded = {"id": "legacy", "created_at": "2026-05-03T00:00:00+00:00", "notes": {"stats": {}}}
+
+        def already(rows):
+            return artifact_already_extracted(_FakeClient(rows), "doc", "tier4_docling", "0.3.4", "2025-26", "this-sha")
+
+        self.assertFalse(already([mine, later_other]))
+        self.assertTrue(already([mine, earlier_other]))
+        self.assertTrue(already([mine, later_same]))
+        self.assertTrue(already([mine, later_unrecorded]))
+        self.assertTrue(already([mine]))
+
     def test_artifact_idempotency_treats_legacy_notes_as_stale_when_source_known(self):
         client = _FakeClient([{"id": "legacy", "notes": {"stats": {}}}])
 

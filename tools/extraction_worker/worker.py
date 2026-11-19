@@ -1549,7 +1549,7 @@ def artifact_already_extracted(
     """
     query = (
         client.table("cds_artifacts")
-        .select("id,notes")
+        .select("id,notes,created_at")
         .eq("document_id", document_id)
         .eq("kind", "canonical")
         .eq("producer", producer)
@@ -1576,7 +1576,44 @@ def artifact_already_extracted(
                 continue
             if selection.get("latest_sha256") != latest_source_sha256:
                 continue
-        return True
+        # An extraction of these bytes exists, but a later one read another
+        # file: the document was pointed elsewhere, extracted, and pointed
+        # back. The later one is what gets served, so this one does not make
+        # the document extracted; a fresh extraction has to be written.
+        return not _superseded_by_other_bytes(client, document_id, row, source_sha256)
+    return False
+
+
+def _superseded_by_other_bytes(
+    client: Client,
+    document_id: str,
+    matched: dict[str, Any],
+    source_sha256: str,
+) -> bool:
+    """True if a canonical artifact written after ``matched`` records a
+    different source file. Artifacts that record no source are not judged."""
+    matched_at = matched.get("created_at")
+    if not matched_at:
+        return False
+    rows = (
+        client.table("cds_artifacts")
+        .select("id,created_at,source_sha:notes->>source_sha256")
+        .eq("document_id", document_id)
+        .eq("kind", "canonical")
+        .execute()
+        .data
+        or []
+    )
+    for other in rows:
+        if other.get("id") == matched.get("id") or not other.get("created_at"):
+            continue
+        other_sha = other.get("source_sha") or (other.get("notes") or {}).get("source_sha256")
+        if (
+            other_sha
+            and other_sha != source_sha256
+            and _artifact_time(other["created_at"]) > _artifact_time(matched_at)
+        ):
+            return True
     return False
 
 
@@ -2012,16 +2049,20 @@ def has_canonical_for_current_bytes(
     document_id: str,
     source_sha256: Optional[str],
 ) -> bool:
-    """True if a canonical artifact produced from the document's CURRENT
-    source bytes already exists.
+    """True if the document's NEWEST canonical artifact was produced from its
+    current source bytes.
 
-    A canonical artifact that records the source it read
-    (``notes.source_sha256``, or ``notes.source_selection.latest_sha256`` when
-    an earlier fillable source was chosen over a flattened reprint) is matched
-    on that. One that records nothing is attributed to the source that was
-    current when it was written: the most recently archived source artifact
-    at or before its ``created_at``, because extraction always downloads the
-    document's current source.
+    The newest one is judged because it is the one that gets served: an older
+    extraction of the current bytes does not help when a later one read a
+    different file.
+
+    An artifact that records the source it read (``notes.source_sha256``, or
+    ``notes.source_selection.latest_sha256`` when an earlier fillable source
+    was chosen over a flattened reprint) is matched on that. One that records
+    nothing is attributed to the source that was current when it was written:
+    the most recently archived source artifact at or before its
+    ``created_at``, because extraction always downloads the document's current
+    source.
 
     "Written after the current bytes were first archived" is not enough. A
     document can go from file A to file B and back to A (Penn State's slug was
@@ -2052,24 +2093,21 @@ def has_canonical_for_current_bytes(
         or []
     )
     canonicals = [r for r in rows if r.get("kind") == "canonical"]
+    # Sources in the order they were archived. Rows written at the same
+    # instant keep the order the database returned them in.
     sources = sorted(
-        (_artifact_time(r["created_at"]), r.get("sha256"))
-        for r in rows
-        if r.get("kind") == "source"
+        ((_artifact_time(r["created_at"]), r.get("sha256")) for r in rows if r.get("kind") == "source"),
+        key=lambda item: item[0],
     )
     if not canonicals or not any(sha == source_sha256 for _, sha in sources):
         return False
-    for canonical in canonicals:
-        recorded = canonical.get("source_sha")
-        if recorded:
-            if source_sha256 in (recorded, canonical.get("selection_latest_sha")):
-                return True
-            continue
-        written_at = _artifact_time(canonical["created_at"])
-        current_then = [sha for archived_at, sha in sources if archived_at <= written_at]
-        if current_then and current_then[-1] == source_sha256:
-            return True
-    return False
+    newest = max(canonicals, key=lambda r: _artifact_time(r["created_at"]))
+    recorded = newest.get("source_sha")
+    if recorded:
+        return source_sha256 in (recorded, newest.get("selection_latest_sha"))
+    written_at = _artifact_time(newest["created_at"])
+    current_then = [sha for archived_at, sha in sources if archived_at <= written_at]
+    return bool(current_then) and current_then[-1] == source_sha256
 
 
 def reconcile_pending_documents(
