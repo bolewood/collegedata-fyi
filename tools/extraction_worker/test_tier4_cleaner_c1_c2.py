@@ -702,6 +702,84 @@ B22 For the cohort of all full-time bachelor's (or equivalent) degree-seeking un
         self.assertEqual(values["C.119"]["value"], "285")
         self.assertEqual(values["C.122"]["value"], "170")
 
+    def test_c1_percentage_sentence_is_not_a_residency_row(self):
+        # Wheaton (MA) 2025-26, an HTML CDS. The B22 sentence names the cohort
+        # ("first-time", "degree-seeking") and has six numbers; it was read as
+        # the enrolled row, so 3 was published as total enrolled and 2024, 2025
+        # and 88 as residency counts, ahead of the real row further down.
+        markdown = """
+**88.3%** percentage of first-time, full-time bachelor's degree-seeking undergraduates from Fall 2024 who were enrolled in Fall 2025 was 88.3% .
+
+| Category | In-state | Out-of-state | International | Unknown | Total |
+| --- | --- | --- | --- | --- | --- |
+| Total first-time, first-year (degree-seeking) who applied | 1,693 | 2,515 | 1,806 | 0 | 6,014 |
+| Total first-time, first-year (degree-seeking) who were admitted | 1,395 | 2,074 | 309 | 0 | 3,778 |
+| Total first-time, first-year (degree-seeking) who enrolled | 169 | 266 | 21 | 0 | 456 |
+"""
+        values = clean(markdown, schema=SchemaIndex(SCHEMA_2025_26))
+        got = {qn: values[qn]["value"] for qn in ("C.118", "C.121", "C.124", "C.127", "C.130")}
+        self.assertEqual(got, {"C.118": "456", "C.121": "169", "C.124": "266", "C.127": "21", "C.130": "0"})
+
+        # The sentence alone gives no C1 value at all.
+        values = clean(markdown.split("| Category")[0], schema=SchemaIndex(SCHEMA_2025_26))
+        self.assertEqual([qn for qn in values if qn.startswith("C.1")], [])
+
+    def test_c1_single_column_table_with_gender_unknown_and_total_rows(self):
+        # MIT 2024-25, an HTML CDS (issue #363 item 7): the rows read "of
+        # gender unknown who ..." and the totals sit under the rows by sex in
+        # the same one-column table. Both were left out, so the published
+        # totals were sums that missed the unknown-gender counts.
+        markdown = """
+| FIRST-TIME, FIRST YEAR STUDENT APPLICANTS | TOTAL |
+| --- | --- |
+| Total first-time, first-year men who applied | 17,210 |
+| Total first-time, first-year women who applied | 8,975 |
+| Total first-time, first-year of another gender who applied | 997 |
+| Total first-time, first-year of gender unknown who applied | 1,050 |
+| FIRST-TIME, FIRST-YEAR STUDENT ADMITS TOTAL | TOTAL |
+| Total first-time, first-year men who were admitted | 606 |
+| Total first-time, first-year women who were admitted | 612 |
+| Total first-time, first-year of another gender who were admitted | 36 |
+| Total first-time, first-year of gender unknown who were admitted | 30 |
+| FIRST-TIME, FIRST-YEAR STUDENT ENROLLEES BY STATUS | TOTAL |
+| Total full-time, first-time, first-year men who enrolled | 547 |
+| Total part-time, first-time, first-year men who enrolled | 0 |
+| Total full-time, first-time, first-year women who enrolled | 499 |
+| Total part-time, first-time, first-year women who enrolled | 0 |
+| Total full-time, first-time, first-year of another gender who enrolled | 34 |
+| Total part-time, first-time, first-year of another gender who enrolled | 0 |
+| Total full-time, first-time, first-year of gender unknown who enrolled | 26 |
+| Total part-time, first-time, first-year of gender unknown who enrolled | 0 |
+|  | TOTAL |
+| Total first-time, first-year who applied | 28,300 |
+| Total first-time, first-year who were admitted | 1,290 |
+| Total first-time, first-year enrolled | 1,110 |
+"""
+        # (MIT prints 28,232 / 1,284 / 1,106, which are the sums of the rows
+        # by sex. The totals here differ from those sums so the test shows the
+        # printed rows are what is read.)
+        values = clean(markdown, schema=SchemaIndex(SCHEMA_2024_25))
+        got = {qn: v["value"] for qn, v in values.items() if qn.startswith("C.1")}
+        self.assertEqual(got, {
+            "C.101": "17210", "C.102": "8975", "C.103": "997", "C.104": "1050",
+            "C.105": "606", "C.106": "612", "C.107": "36", "C.108": "30",
+            "C.109": "547", "C.110": "0", "C.111": "499", "C.112": "0",
+            "C.113": "34", "C.114": "0", "C.115": "26", "C.116": "0",
+            "C.117": "28300", "C.118": "1290", "C.119": "1110",
+        })
+
+    def test_c1_total_row_is_not_read_from_a_table_with_several_value_columns(self):
+        # With more than one value column the first may be In-State.
+        markdown = """
+| FIRST-TIME, FIRST YEAR STUDENT APPLICANTS | A | B |
+| --- | --- | --- |
+| Total first-time, first-year men who applied | 900 | 1 |
+| Total first-time, first-year women who applied | 800 | 2 |
+| Total first-time, first-year who applied | 400 | 1,700 |
+"""
+        values = clean(markdown, schema=SchemaIndex(SCHEMA_2024_25))
+        self.assertNotIn("C.117", values)
+
 
 if __name__ == "__main__":
     unittest.main()

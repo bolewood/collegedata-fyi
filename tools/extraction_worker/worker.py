@@ -1988,7 +1988,7 @@ def _run_tier6(
 
     canonical: dict = {
         "producer": "tier6_html",
-        "producer_version": "0.1.1",
+        "producer_version": "0.1.2",
         "schema_version": resolution.schema_version,
         "schema_fallback_used": resolution.fallback_used,
         "source_html": f"{document_id}.html",

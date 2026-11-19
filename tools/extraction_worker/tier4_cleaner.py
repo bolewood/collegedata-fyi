@@ -3064,7 +3064,18 @@ def resolve_c1_applications(
                     and "degree seeking" not in residency_norm
                 ):
                     continue
-            elif "degree seeking" not in residency_norm or "first time" not in residency_norm:
+            elif (
+                "degree seeking" not in residency_norm
+                or "first time" not in residency_norm
+                or re.search(r"%|\bpercent", line, re.IGNORECASE)
+            ):
+                # A C1 row holds counts, never a percentage. Wheaton (MA)
+                # 2025-26's B22 sentence ("88.3% ... first-time, full-time
+                # bachelor's degree-seeking undergraduates from Fall 2024 who
+                # were enrolled in Fall 2025 was 88.3%") names the cohort and
+                # was read as the enrolled row: 3, 2024, 2025 and 88 were its
+                # residency counts and 3 the total enrolled.
+                #
                 # Outside a residency table only a row that names the C1
                 # cohort is read. A sentence that merely mentions
                 # degree-seeking students and enrollment is not one: Quincy
@@ -3340,7 +3351,8 @@ def resolve_c1_applications(
             ln = _normalize_label(r["label"])
             if any(tok in ln for tok in ("men who", "women who",
                                           "another gender who",
-                                          "unknown gender who")):
+                                          "unknown gender who",
+                                          "gender unknown who")):
                 gender_hits += 1
         is_gender_table = gender_hits >= 1
         is_compact_gender_table = (
@@ -3456,10 +3468,29 @@ def resolve_c1_applications(
                     gender = "Females"
                 elif re.search(r"\banother gender who\b", label_raw_norm):
                     gender = "Another Gender"
-                elif re.search(r"\b(unknown gender|unknown sex) who\b",
-                                label_raw_norm):
+                elif re.search(
+                    r"\b(unknown gender|unknown sex|gender unknown|sex unknown) who\b",
+                    label_raw_norm,
+                ):
                     gender = "Unknown"
                 if gender is None:
+                    # The total rows, where the table has one value column
+                    # (MIT's HTML CDS lists them under the rows by sex). With
+                    # more columns the first may be In-State, so those are
+                    # left to the residency readers.
+                    total_match = re.fullmatch(
+                        # "(freshman)" is rewritten to a second "first year"
+                        r"total first time first year(?: first year)?(?: degree seeking)?(?: students)?"
+                        r" (?:who )?(applied|were admitted|enrolled)",
+                        label_norm,
+                    )
+                    if total_match and len(row["values"]) == 1:
+                        num = _extract_number(row["values"][0])
+                        qn = _lookup(
+                            "All", "All", total_match.group(1).replace("were ", "")
+                        )
+                        if qn and num is not None and qn not in out:
+                            out[qn] = {"value": num, "source": "tier4_cleaner"}
                     continue
 
                 action = None
