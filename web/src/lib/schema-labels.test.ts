@@ -62,4 +62,27 @@ describe("schema-aware field labels", () => {
       "Respondent Information",
     );
   });
+
+  it("labels the fields 2026-27 adds", () => {
+    const field = { value: "3150" };
+
+    expect(getFieldDisplayLabel("C.1T01", field, "2026-27")).toBe("Applied total (by sex)");
+    expect(getFieldValueType("C.1T01", field, "2026-27")).toBe("Number");
+    expect(getFieldSubsectionName("C.2207", field, "2026-27")).toBe("Admission Policies");
+    // Not a 2025-26 field: no label there, so the id is shown.
+    expect(getFieldDisplayLabel("C.1T01", field, "2025-26")).toBe("C.1T01");
+  });
+
+  it("uses the 2026-27 wording where it differs and the 2025-26 label otherwise", () => {
+    const field = { value: "12" };
+
+    expect(getFieldDisplayLabel("I.201", field, "2026-27")).toBe("Fall 2026 Student to Faculty ratio");
+    expect(getFieldDisplayLabel("I.201", field, "2025-26")).toBe("Fall 2025 Student to Faculty ratio");
+    // The suffix labels.ts adds to tell the three H2 columns apart is kept.
+    expect(getFieldDisplayLabel("H.227", field, "2026-27")).toMatch(/Fall 2026 cohort\) \(PT\)$/);
+    // Unchanged question: same label under either year.
+    expect(getFieldDisplayLabel("C.2106", field, "2026-27")).toBe(
+      getFieldDisplayLabel("C.2106", field, "2025-26"),
+    );
+  });
 });

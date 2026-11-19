@@ -691,6 +691,47 @@ it from PRD diffs.
     single change.** No drive-by code edits — keep the schema-onboarding PR
     isolated for review clarity.
 
+### What 2026-27 added to this process (November 2026)
+
+The schema file is live the moment it lands: the worker and the projection glob
+`schemas/cds_schema_*.json`. So the code that branches on a template year has
+to accept the new year in the same change. For 2026-27 that was:
+
+- **Worker fallback** (`fallback_schema_version` in `worker.py`). Only a year
+  newer than every schema falls back to the newest one. Undated files and years
+  before 2023-24 stay on 2025-26 (`BASELINE_FALLBACK_SCHEMA_VERSION`), so a new
+  template year does not change how those files are read.
+  `tier4_cleaner.schema_path_for_year` follows the same rule.
+- **Which form the file is on** (`resolve_schema_for_form`, `PREVIOUS_FORM_OF`
+  in `worker.py`). Schools file a new year's data on last year's form: all five
+  2026-27 documents archived before the template came out did. A fillable PDF
+  or spreadsheet that carries none of the names the new template added is read
+  with the previous year's schema.
+- **Tier 1 extractor** (`_C1_BY_SEX_TOTAL_QNS` in `tier1_extractor/extract.py`):
+  the same lookup-by-dimensions collision as the Tier 4 cleaner below.
+- **Tier 4 cleaner** (`_NUMBERED_LIKE_2025_26`, `_C1_BY_SEX_TOTAL_QNS` in
+  `tier4_cleaner.py`). Replay stored markdown under the old and the new schema
+  and diff the values before trusting it: schema-driven lookups pick up new
+  rows that share dimensions with old ones.
+- **Projection and sanity rules** (`DIRECT_METRIC_DEFINITIONS`,
+  `_C1_NUMBERED_LIKE_2025_26`, `C1_BY_SEX_TOTAL_FIELDS` in
+  `project_browser_data.py`; the year tables in `sanity_rules.py`).
+- **Web app** (`c1-headline-totals.ts`, `legacy-facts.ts`, `schema-labels.ts`
+  with a `labels-<year>.ts` file for new and reworded fields).
+- **Checkbox decoder** (`decode_checkboxes.py`): new option fields need labels,
+  checked against the text printed beside each box.
+- **A test that pins the relationship between the two years**
+  (`test_schema_2026_27.py`), so a corrected template that renumbers something
+  fails a test, not production.
+
+Not done for 2026-27 and still open: the Tier 4 cleaner does not read the
+twelve new fields, and there is no template-overlay field map
+(`schemas/field_maps/`) for the year.
+
+commondataset.org answered scripted clients with 403 in November 2026, and the
+Wayback Machine could not capture the files. Download with a headless browser
+and commit the files; do not rely on a later re-download.
+
 ### Estimated effort per year
 
 - Best case (no column-layout changes, AcroForm names stable): ~1 hour.

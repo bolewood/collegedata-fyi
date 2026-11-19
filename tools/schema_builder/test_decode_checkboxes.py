@@ -95,5 +95,56 @@ class TransferCreditLabelTests(unittest.TestCase):
         self.assertGreaterEqual(checked, 3 * 6 * 5)               # three schema years, six D5 rows, five states
 
 
+def printed_beside(pdf: Path, pdf_tag: str) -> dict[str, str]:
+    """{on-state: text printed to the right of that widget, whitespace removed, lower case} for one button field."""
+    reader = pypdf.PdfReader(str(pdf))
+    document = pdfium.PdfDocument(str(pdf))
+    out: dict[str, str] = {}
+    for page_index, page in enumerate(reader.pages):
+        for annot in page.get("/Annots") or []:
+            annot = annot.get_object()
+            parent = annot.get("/Parent")
+            name = annot.get("/T") or (parent.get_object().get("/T") if parent else None)
+            ap = annot.get("/AP")
+            if name != pdf_tag or not ap or "/N" not in ap:
+                continue
+            left, bottom, right, top = (float(v) for v in annot["/Rect"])
+            text = document[page_index].get_textpage().get_text_bounded(right, bottom - 2, right + 150, top + 2)
+            for state in (str(k) for k in ap["/N"].get_object().keys()):
+                if state != "/Off":
+                    out[state] = "".join(text.split()).lower()
+    return out
+
+
+class Template2026OptionLabelTests(unittest.TestCase):
+    """The three option fields 2026-27 adds: each decoder label is the text the blank template prints beside that box."""
+
+    PDF = TEMPLATES / "cds_2026-27_template.pdf"
+    FIELDS = {
+        "ESSAY_AI": {"/Prohibited", "/Permitted", "/Fully allowed", "/Unmonitored", "/No Policy"},
+        "ADMS_TEST_POLICY": {"/TO", "/TR", "/TB"},
+        "EXP_I": {"/E", "/O"},
+    }
+
+    def test_each_label_is_printed_beside_its_box(self):
+        for pdf_tag, states in self.FIELDS.items():
+            beside = printed_beside(self.PDF, pdf_tag)
+            self.assertEqual(set(beside), states, pdf_tag)
+            for state, text in beside.items():
+                label, known = dc.label_for(pdf_tag, state)
+                self.assertTrue(known, (pdf_tag, state))
+                self.assertIn("".join(label.split()).lower(), text, (pdf_tag, state))
+
+    def test_states_are_read_for_buttons_pypdf_reports_none_for(self):
+        states = dc.load_button_states(self.PDF)
+        self.assertEqual(states["EXP_I"], ["/E", "/O"])
+        self.assertEqual(states["ACAD_COA"], ["/On", "/Off"])        # the list pypdf gave this checkbox in 2025-26
+        self.assertEqual(states["ACAD_COA"], dc.load_button_states(TEMPLATES / "cds_2025-26_template.pdf")["ACAD_COA"])
+
+    def test_o_still_means_open_admission_on_its_own_field(self):
+        self.assertEqual(dc.label_for("AD_OPEN_MOST", "/O"), ("Open admission", True))
+        self.assertEqual(dc.label_for("EXP_I", "/O"), ("Firm and Final", True))
+
+
 if __name__ == "__main__":
     unittest.main()

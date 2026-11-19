@@ -9,10 +9,11 @@ Canonical and structural CDS schemas extracted from the commondataset.org Excel 
 | `cds_schema_2023_24.json` | synthesized | 2023-24 | Canonical question_numbers inherited from 2024-25, validated 2023-24 PDF tags, 2023-24 `Another Gender` field mapping. |
 | `cds_schema_2024_25.json` | `Answer Sheet` | 2024-25 | Canonical question_numbers (A.001, B.101, ...), section hierarchy. The source Answer Sheet omits pdf_tag and word_tag metadata. |
 | `cds_schema_2025_26.json` | `Answer Sheet` | 2025-26 | Canonical question_numbers (A.001, B.101, ...), pdf_tag, word_tag, section hierarchy, value_options decoder |
-| `cds_schema_YYYY_YY.structural.json` | `CDS-A` through `CDS-J` | 2019-20 through 2025-26 | Per-year structural layout: subsections, row labels, column headers, answer-cell refs. Includes canonical question_numbers only when the source sheet provides them. |
+| `cds_schema_2026_27.json` | `Answer Sheet` | 2026-27 | The 2025-26 shape: question_numbers, pdf_tag, section hierarchy, value_options decoder. Every 2025-26 question_number is kept with the same meaning; twelve are added (see `cds_schema_2025_26-to-2026_27.diff.md`). |
+| `cds_schema_YYYY_YY.structural.json` | `CDS-A` through `CDS-J` | 2019-20 through 2026-27 | Per-year structural layout: subsections, row labels, column headers, answer-cell refs. Includes canonical question_numbers only when the source sheet provides them. |
 | `cds_schema_YYYY_YY.core_table_overlay.json` | Structural schema + 2025-26 canonical schema | 2019-20 through 2023-24 | Conservative C1/C7/C9 mappings from older visual templates to current canonical question_numbers, plus explicit unmapped QA reasons. |
 
-The Answer Sheet tab exists in the 2024-25 and 2025-26 templates. It is the CDS Initiative's machine-readable canonical spec and is the authoritative source for question_numbers. The 2024-25 Answer Sheet is reduced: it omits `Sort Order`, `US News PDF Tag`, and `Word Tag`, so the generated schema records `pdf_tag: null` and `word_tag: null` until follow-on synthesis fills those gaps.
+The Answer Sheet tab exists in the 2024-25, 2025-26 and 2026-27 templates. It is the CDS Initiative's machine-readable canonical spec and is the authoritative source for question_numbers. The 2024-25 Answer Sheet is reduced: it omits `Sort Order`, `US News PDF Tag`, and `Word Tag`, so the generated schema records `pdf_tag: null` and `word_tag: null` until follow-on synthesis fills those gaps.
 
 Older templates do not have an Answer Sheet, so `cds_schema_YYYY_YY.structural.json` remains the best programmatic source for 2019-20 through 2022-23. The overlay files add field identity for the first accessible-table slice without mutating those source structural schemas. The 2023-24 year now has an additional synthesized canonical schema because its PDF AcroForm tags and 2024-25 structural continuity are strong enough to support year-specific extraction.
 
@@ -42,6 +43,9 @@ Older templates do not have an Answer Sheet, so `cds_schema_YYYY_YY.structural.j
 | 2023-24 | synthesized | ✅ | ✅ | `schemas/templates/cds_2023-24_template.xlsx` + `schemas/templates/cds_2023-24_template.pdf` |
 | 2024-25 | ✅ | ✅ | n/a | `schemas/templates/cds_2024-25_template.xlsx` (the `.pdf` is listed in `SOURCES.md` but not checked in) |
 | 2025-26 | ✅ | ✅ | n/a | `schemas/templates/cds_2025-26_template.xlsx` |
+| 2026-27 | ✅ | ✅ | n/a | `schemas/templates/cds_2026-27_template.xlsx` |
+
+2026-27 has no `-to-` diff JSON. It renumbers nothing, so each of its fields is its own canonical field id, and the code that branches on a template year gives it the 2025-26 entry. `tools/extraction_worker/test_schema_2026_27.py` fails if a later revision of the template breaks that.
 
 ## Question-number format
 

@@ -463,7 +463,7 @@ component share the same Supabase response within a single render.
 | `discovery/session.ts` | `lib/discovery/session.ts` | Browser-local (localStorage-only) discovery session: 30-day TTL, discarded on deck/library/policy version mismatch |
 | `discovery/signals.ts` | `lib/discovery/signals.ts` | Pure card-response → preference signal/ledger mapping per `discovery_policy_v1` bucket weights |
 | `discovery/types.ts` | `lib/discovery/types.ts` | Discovery runtime types mirroring the versioned `data/discovery/` artifact shapes |
-| `labels.ts` | `lib/labels.ts` | Auto-generated CDS field ID to plain-English label map (1,105 fields from `cds_schema_2025_26.json`) |
+| `labels.ts` | `lib/labels.ts` | CDS field ID to plain-English label map (1,105 fields from `cds_schema_2025_26.json`); `labels-2024-25.ts` and `labels-2026-27.ts` hold the entries that differ in those years |
 
 ---
 
@@ -481,10 +481,13 @@ inline labels. This means Tier 2 extracts (which include rich per-field
 metadata) display their own labels, while any future extracts that only
 carry raw values can still render human-readable field names.
 
-**Schema version limitation:** V1 ships with labels from the 2025-26
-schema only. Documents targeting older schema years may have field IDs
-that don't appear in the label map. The `FieldsView` component falls
-back to displaying the raw field ID when no label is found.
+**Schema versions:** `getFieldLabel` in `lib/schema-labels.ts` picks the map
+for the extract's schema version. 2024-25 has its own full map
+(`labels-2024-25.ts`). 2026-27 keeps the 2025-26 numbering, so
+`labels-2026-27.ts` lists only its twelve new fields and the ones whose wording
+changed; everything else falls through to `labels.ts`. Documents on other
+schema years may have field IDs that are not in any map, and `FieldsView` then
+shows the raw field ID.
 
 ---
 

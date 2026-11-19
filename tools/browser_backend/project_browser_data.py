@@ -180,10 +180,11 @@ DIRECT_METRIC_DEFINITIONS = {
         DerivedFormula({
             "2024-25": ("C.101", "C.102", "C.103", "C.104"),
             "2025-26": ("C.116",),
+            "2026-27": ("C.116",),
         }),
         "number",
         True,
-        "PRD 014 derived admissions metric; 2024-25 is gender-split, 2025-26 uses a total field.",
+        "PRD 014 derived admissions metric; 2024-25 is gender-split, 2025-26 and later use a total field.",
         "applied",
     ),
     "admitted": MetricDefinition(
@@ -191,10 +192,11 @@ DIRECT_METRIC_DEFINITIONS = {
         DerivedFormula({
             "2024-25": ("C.105", "C.106", "C.107", "C.108"),
             "2025-26": ("C.117",),
+            "2026-27": ("C.117",),
         }),
         "number",
         True,
-        "PRD 014 derived admissions metric; 2024-25 is gender-split, 2025-26 uses a total field.",
+        "PRD 014 derived admissions metric; 2024-25 is gender-split, 2025-26 and later use a total field.",
         "admitted",
     ),
     "first_year_enrolled": MetricDefinition(
@@ -202,10 +204,11 @@ DIRECT_METRIC_DEFINITIONS = {
         DerivedFormula({
             "2024-25": ("C.109", "C.110", "C.111", "C.112", "C.113", "C.114", "C.115", "C.116"),
             "2025-26": ("C.118",),
+            "2026-27": ("C.118",),
         }),
         "number",
         True,
-        "PRD 014 derived admissions metric; 2024-25 is gender and unit-load split, 2025-26 uses a total field.",
+        "PRD 014 derived admissions metric; 2024-25 is gender and unit-load split, 2025-26 and later use a total field.",
         "enrolled_first_year",
     ),
     "sat_submit_rate": MetricDefinition(
@@ -298,25 +301,48 @@ DERIVED_TOTAL_FALLBACK_FIELDS = {
     ("2024-25", "first_year_enrolled"): "C.119",
 }
 
+# Template years whose C1 numbering is the 2025-26 one. 2026-27 keeps every
+# 2025-26 question number and adds rows (schemas/README.md), so the two C1
+# tables below are written once and keyed for each of these years.
+_C1_NUMBERED_LIKE_2025_26 = ("2025-26", "2026-27")
+
 DERIVED_COMPONENT_FALLBACK_FIELDS = {
-    ("2025-26", "applied"): (
-        ("C.101", "C.102", "C.103"),
-    ),
-    ("2025-26", "admitted"): (
-        ("C.104", "C.105", "C.106"),
-    ),
-    ("2025-26", "first_year_enrolled"): (
-        ("C.107", "C.108", "C.109"),
-        ("C.110", "C.111", "C.112", "C.113", "C.114", "C.115"),
-    ),
+    (year, metric): groups
+    for year in _C1_NUMBERED_LIKE_2025_26
+    for metric, groups in {
+        "applied": (
+            ("C.101", "C.102", "C.103"),
+        ),
+        "admitted": (
+            ("C.104", "C.105", "C.106"),
+        ),
+        "first_year_enrolled": (
+            ("C.107", "C.108", "C.109"),
+            ("C.110", "C.111", "C.112", "C.113", "C.114", "C.115"),
+        ),
+    }.items()
+}
+
+# 2026-27 prints a Total row under the C1 table by sex. When the residency
+# table's total (C.116-C.118) is blank, this printed total is used before the
+# rows by sex are summed: a sum of the rows a file happens to report is not a
+# total (UPenn 2024-25 published men only as enrolled, issue #363).
+C1_BY_SEX_TOTAL_FIELDS = {
+    ("2026-27", "applied"): "C.1T01",
+    ("2026-27", "admitted"): "C.1T02",
+    ("2026-27", "first_year_enrolled"): "C.1T03",
 }
 
 # 2025-26 residency block after a Total-last zip: All, In-State, Out-of-State,
 # Nonresidents, Unknown. Used to detect the Issue #159 in-state-as-total shift.
 C1_RESIDENCY_SHIFT_FIELDS = {
-    ("2025-26", "applied"): ("C.116", "C.119", "C.122", "C.125", "C.128"),
-    ("2025-26", "admitted"): ("C.117", "C.120", "C.123", "C.126", "C.129"),
-    ("2025-26", "first_year_enrolled"): ("C.118", "C.121", "C.124", "C.127", "C.130"),
+    (year, metric): field_ids
+    for year in _C1_NUMBERED_LIKE_2025_26
+    for metric, field_ids in {
+        "applied": ("C.116", "C.119", "C.122", "C.125", "C.128"),
+        "admitted": ("C.117", "C.120", "C.123", "C.126", "C.129"),
+        "first_year_enrolled": ("C.118", "C.121", "C.124", "C.127", "C.130"),
+    }.items()
 }
 
 
@@ -1315,6 +1341,9 @@ def evaluate_component_fallback_metric(
     )
     if not fallback_groups:
         return None
+    by_sex_total = _c1_by_sex_total(metric, selected, schema_defs)
+    if by_sex_total is not None:
+        return by_sex_total
     for field_ids in fallback_groups:
         values = [
             parse_metric_component(field_id, selected, schema_defs, metric)
@@ -1324,6 +1353,26 @@ def evaluate_component_fallback_metric(
         if reported_values:
             return sum(reported_values, Decimal("0"))
     return None
+
+
+def _c1_by_sex_total(
+    metric: MetricDefinition,
+    selected: SelectedExtractionResult,
+    schema_defs: dict[str, FieldDefinition],
+) -> Optional[Decimal]:
+    """The Total row printed under the C1 table by sex (2026-27 on).
+
+    Ignored when it is 0 (the blank form's auto-sum prints 0) or smaller than
+    one of the rows it totals."""
+    field_id = C1_BY_SEX_TOTAL_FIELDS.get((selected.schema_version, metric.canonical_metric))
+    if not field_id:
+        return None
+    total = parse_metric_component(field_id, selected, schema_defs, metric)
+    if total is None or total <= 0:
+        return None
+    if any(total < component for component in _c1_gender_component_values(metric, selected, schema_defs)):
+        return None
+    return total
 
 
 def _c1_gender_component_values(
