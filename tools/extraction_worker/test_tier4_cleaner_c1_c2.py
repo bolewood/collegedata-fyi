@@ -625,5 +625,83 @@ Total part-time, first-time, first-year women who enrolled                      
         self.assertEqual(self._clean_layout(layout)["C.119"]["value"], "668")
 
 
+    # Quincy 2024-25 (issue #363). The markdown tables are right. In the PDF's
+    # layout text each table's heading is printed on its first row's line, so
+    # every value sits one line below its label. Numbers here are invented.
+    QUINCY_TABLES = """
+| First-Time, First-Year Student Applicants               |   Total |
+|---------------------------------------------------------|---------|
+| Total first-time, first-year men who applied            |     900 |
+| Total first-time, first-year women who applied          |     800 |
+| Total first-time, first-year another gender who applied |       0 |
+| Total first-time, first-year unknown gender who applied |       0 |
+
+| First-Time, First-Year Student Admits                         |   Total |
+|---------------------------------------------------------------|---------|
+| Total first-time, first-year men who were admitted            |     500 |
+| Total first-time, first-year women who were admitted          |     400 |
+| Total first-time, first-year another gender who were admitted |       0 |
+| Total first-time, first-year unknown gender who were admitted |       0 |
+
+| First-Time, First-Year Student Enrollees by Status                  |   Total |
+|---------------------------------------------------------------------|---------|
+| Total full-time, first-time, first-year men who enrolled            |     170 |
+| Total part-time, first-time, first-year men who enrolled            |       0 |
+| Total full-time, first-time, first-year women who enrolled          |      96 |
+| Total part-time, first-time, first-year women who enrolled          |       0 |
+"""
+    QUINCY_LAYOUT = """
+                  First-Time, First-Year Student Applicants                                             Total
+       Total first-time, first-year men who applied                                                             900
+       Total first-time, first-year women who applied                                                           800
+       Total first-time, first-year another gender who applied                                                   0
+       Total first-time, first-year unknown gender who applied                                                   0
+       Total first-time, first-year men who were admittedFirst-Time, First-Year Student Admits                 Total
+       Total first-time, first-year women who were admitted                                                     500
+       Total first-time, first-year another gender who were admitted                                            400
+       Total first-time, first-year unknown gender who were admitted                                             0
+                                                                                                                 0
+       Total full-time, first-time, first-year men who enrolledFirst-Time, First-Year Student Enrollees by StatusTotal
+       Total part-time, first-time, first-year men who enrolled                                                 170
+       Total full-time, first-time, first-year women who enrolled                                                0
+       Total part-time, first-time, first-year women who enrolled                                               96
+                                                                                                                 0
+"""
+
+    def test_c1_table_whose_heading_is_printed_on_its_first_row_is_not_read_from_layout_text(self):
+        values = clean(
+            self.QUINCY_TABLES, schema=SchemaIndex(SCHEMA_2024_25), supplemental_text=self.QUINCY_LAYOUT
+        )
+        read = {qn: values[qn]["value"] for qn in ("C.101", "C.102", "C.105", "C.106", "C.107", "C.109", "C.110", "C.111", "C.112")}
+        self.assertEqual(read, {
+            "C.101": "900", "C.102": "800",                 # applied: its heading is on its own line, read as before
+            "C.105": "500", "C.106": "400", "C.107": "0",   # admitted: men 500, women 400, not 500 / 500 / 400
+            "C.109": "170", "C.110": "0", "C.111": "96", "C.112": "0",   # enrolled: not 170 / 170 / 0 / 96
+        })
+
+    def test_c1_shifted_layout_without_tables_publishes_no_shifted_rows(self):
+        # With no table to fall back on, a shifted stage is left unread, not read one row off.
+        values = clean("", schema=SchemaIndex(SCHEMA_2024_25), supplemental_text=self.QUINCY_LAYOUT)
+        self.assertEqual((values["C.101"]["value"], values["C.102"]["value"]), ("900", "800"))
+        for qn in ("C.105", "C.106", "C.107", "C.109", "C.110", "C.111", "C.112"):
+            self.assertNotIn(qn, values)
+
+    def test_c1_prose_about_degree_seeking_students_is_not_a_residency_row(self):
+        # Quincy 2024-25's B22 retention sentence was read as the enrolled row by residency,
+        # publishing 2024, 327, 2023 and 229 as counts.
+        markdown = """
+B22 For the cohort of all full-time bachelor's (or equivalent) degree-seeking undergraduate students who entered your institution as first-year students in Fall 2023 (or the preceding summer term), what percentage was enrolled at your institution as of the date your institution calculates its official enrollment in Fall 2024. 327 in Fall 2023 cohort 229 retained Fall 2024
+"""
+        values = clean(markdown, schema=SchemaIndex(SCHEMA_2024_25))
+        for qn in ("C.119", "C.122", "C.125", "C.128", "C.131"):
+            self.assertNotIn(qn, values)
+
+        # A real row outside a residency table is still read.
+        row = "Total first-time, first-year (degree-seeking) who enrolled 170 110 5 0 285"
+        values = clean(row, schema=SchemaIndex(SCHEMA_2024_25))
+        self.assertEqual(values["C.119"]["value"], "285")
+        self.assertEqual(values["C.122"]["value"], "170")
+
+
 if __name__ == "__main__":
     unittest.main()
