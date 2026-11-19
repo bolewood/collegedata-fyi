@@ -323,6 +323,39 @@ DERIVED_COMPONENT_FALLBACK_FIELDS = {
     }.items()
 }
 
+# The rows for men and for women behind each admissions metric. A sum that is
+# standing in for a missing total has to include both: UPenn 2024-25 published
+# its men's rows alone as first-year enrollment (1,108 of 2,395), and Marshall
+# 2024-25 its men admitted as the admitted total (issue #363). The rule applies
+# only when no total was read at all. When a total was read but is smaller
+# than a row it should contain, the sum of the rows replaces it as before,
+# which is what a men's or women's college with one empty row relies on.
+C1_SEX_COMPONENT_FIELDS = {
+    ("2024-25", "applied"): (("C.101",), ("C.102",)),
+    ("2024-25", "admitted"): (("C.105",), ("C.106",)),
+    ("2024-25", "first_year_enrolled"): (("C.109", "C.110"), ("C.111", "C.112")),
+    **{
+        (year, metric): rows
+        for year in _C1_NUMBERED_LIKE_2025_26
+        for metric, rows in {
+            "applied": (("C.101",), ("C.102",)),
+            "admitted": (("C.104",), ("C.105",)),
+            "first_year_enrolled": (("C.107", "C.110", "C.111"), ("C.108", "C.112", "C.113")),
+        }.items()
+    },
+}
+
+
+def _sum_includes_both_sexes(schema_version: str, canonical_metric: str, reported_field_ids: set[str]) -> bool:
+    """False when the reported rows behind a sum leave out men or women
+    entirely. Metrics and years without a listing are not judged."""
+    rows = C1_SEX_COMPONENT_FIELDS.get((schema_version, canonical_metric))
+    if rows is None:
+        return True
+    men, women = rows
+    return bool(reported_field_ids & set(men)) and bool(reported_field_ids & set(women))
+
+
 # 2026-27 prints a Total row under the C1 table by sex. When the residency
 # table's total (C.116-C.118) is blank, this printed total is used before the
 # rows by sex are summed: a sum of the rows a file happens to report is not a
@@ -1299,7 +1332,9 @@ def evaluate_metric(
             schema_defs,
         )
         if not reported_values:
-            return component_fallback_value
+            # No total was read: only a sum that includes men and women stands in for it.
+            return evaluate_component_fallback_metric(metric, selected, schema_defs, require_both_sexes=True)
+        fallback_value = None
         if len(reported_values) != len(values):
             fallback_field_id = DERIVED_TOTAL_FALLBACK_FIELDS.get(
                 (selected.schema_version, metric.canonical_metric)
@@ -1316,6 +1351,14 @@ def evaluate_metric(
                     if fallback_value < max(reported_values):
                         return sum(reported_values, Decimal("0"))
                     return fallback_value
+        if len(field_ids) > 1 and not _sum_includes_both_sexes(
+            selected.schema_version,
+            metric.canonical_metric,
+            {field_id for field_id, value in zip(field_ids, values) if value is not None},
+        ):
+            # The formula is a sum of rows, no total was read, and the rows
+            # that were read are one sex only.
+            return None
         total = sum(reported_values, Decimal("0"))
         if component_fallback_value is not None:
             if total == 0 and component_fallback_value > 0:
@@ -1335,6 +1378,7 @@ def evaluate_component_fallback_metric(
     metric: MetricDefinition,
     selected: SelectedExtractionResult,
     schema_defs: dict[str, FieldDefinition],
+    require_both_sexes: bool = False,
 ) -> Optional[Decimal]:
     fallback_groups = DERIVED_COMPONENT_FALLBACK_FIELDS.get(
         (selected.schema_version, metric.canonical_metric)
@@ -1350,8 +1394,15 @@ def evaluate_component_fallback_metric(
             for field_id in field_ids
         ]
         reported_values = [value for value in values if value is not None]
-        if reported_values:
-            return sum(reported_values, Decimal("0"))
+        if not reported_values:
+            continue
+        if require_both_sexes and not _sum_includes_both_sexes(
+            selected.schema_version,
+            metric.canonical_metric,
+            {field_id for field_id, value in zip(field_ids, values) if value is not None},
+        ):
+            continue
+        return sum(reported_values, Decimal("0"))
     return None
 
 
