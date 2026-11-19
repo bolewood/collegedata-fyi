@@ -25,8 +25,15 @@ def _src(sha, created_at):
     return {"kind": "source", "sha256": sha, "created_at": created_at}
 
 
-def _canon(created_at):
-    return {"kind": "canonical", "sha256": "art-sha", "created_at": created_at}
+def _canon(created_at, source_sha=None, selection_latest_sha=None):
+    """A canonical row as the gate selects it: the two source hashes its notes may record are aliased columns."""
+    return {
+        "kind": "canonical",
+        "sha256": "art-sha",
+        "created_at": created_at,
+        "source_sha": source_sha,
+        "selection_latest_sha": selection_latest_sha,
+    }
 
 
 class _ArtifactQuery:
@@ -114,6 +121,50 @@ class HasCanonicalForCurrentBytesTests(unittest.TestCase):
 
     def test_no_source_row_matching_current_sha_is_conservative(self):
         rows = [_src(OLD, "2026-04-14T00:00:00+00:00"), _canon("2026-05-11T00:00:00+00:00")]
+        self.assertFalse(has_canonical_for_current_bytes(self._client(rows), "doc", CUR))
+
+    def test_extraction_of_another_file_between_two_archives_of_this_one_is_stale(self):
+        # Penn State 2022-23: University Park archived, then York, York extracted, then pointed back at
+        # University Park (whose source row is the old one). The York extraction is not an extraction of it.
+        rows = [
+            _src(CUR, "2026-04-18T14:20:00+00:00"),
+            _src(OLD, "2026-05-01T02:27:00+00:00"),
+            _canon("2026-05-03T10:31:00+00:00"),
+        ]
+        self.assertFalse(has_canonical_for_current_bytes(self._client(rows), "doc", CUR))
+        # The same history when pointing back wrote a new source row: still not extracted...
+        rows.append(_src(CUR, "2026-11-19T11:38:00+00:00"))
+        self.assertFalse(has_canonical_for_current_bytes(self._client(rows), "doc", CUR))
+        # ...until an extraction is written after it.
+        rows.append(_canon("2026-11-19T12:40:00+00:00"))
+        self.assertTrue(has_canonical_for_current_bytes(self._client(rows), "doc", CUR))
+
+    def test_a_recorded_source_hash_decides_whatever_the_timestamps_say(self):
+        sources = [_src(OLD, "2026-04-14T00:00:00+00:00"), _src(CUR, "2026-05-01T00:00:00+00:00")]
+        # Written after the current bytes were archived, but it says it read the other file.
+        stale = sources + [_canon("2026-06-01T00:00:00+00:00", source_sha=OLD)]
+        self.assertFalse(has_canonical_for_current_bytes(self._client(stale), "doc", CUR))
+        # Written before the newest source row, and it says it read the current bytes.
+        flipped_back = [_src(CUR, "2026-04-14T00:00:00+00:00"), _canon("2026-04-20T00:00:00+00:00", source_sha=CUR),
+                        _src(OLD, "2026-05-01T00:00:00+00:00")]
+        self.assertTrue(has_canonical_for_current_bytes(self._client(flipped_back), "doc", CUR))
+
+    def test_an_earlier_fillable_source_chosen_over_the_current_reprint_counts(self):
+        # The extraction read the older fillable file on purpose and records the reprint it was chosen over.
+        rows = [
+            _src(OLD, "2026-04-14T00:00:00+00:00"),
+            _src(CUR, "2026-05-01T00:00:00+00:00"),
+            _canon("2026-05-02T00:00:00+00:00", source_sha=OLD, selection_latest_sha=CUR),
+        ]
+        self.assertTrue(has_canonical_for_current_bytes(self._client(rows), "doc", CUR))
+
+    def test_timestamps_with_different_fraction_digits_are_ordered_by_time(self):
+        rows = [
+            _src(OLD, "2026-05-01T02:27:00.5+00:00"),
+            _src(CUR, "2026-05-01T02:27:00.123456+00:00"),
+            _canon("2026-05-01T02:27:00.6+00:00"),
+        ]
+        # OLD (.5) was archived after CUR (.123456): the extraction at .6 read OLD.
         self.assertFalse(has_canonical_for_current_bytes(self._client(rows), "doc", CUR))
 
     def test_missing_source_sha_returns_false(self):

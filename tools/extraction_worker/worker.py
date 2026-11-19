@@ -2002,6 +2002,11 @@ def clear_recoverable_quality_flag(client: Client, document_id: str) -> None:
     ).execute()
 
 
+def _artifact_time(value: Any) -> datetime:
+    """A PostgREST timestamp as an aware datetime (fraction digits vary)."""
+    return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+
+
 def has_canonical_for_current_bytes(
     client: Client,
     document_id: str,
@@ -2010,13 +2015,24 @@ def has_canonical_for_current_bytes(
     """True if a canonical artifact produced from the document's CURRENT
     source bytes already exists.
 
-    Notes-free heuristic, deliberately conservative: a canonical artifact
-    whose ``created_at`` is at or after the moment the current source bytes
-    were first archived was necessarily produced from those bytes, because
-    extraction always downloads the document's current source. When the
-    current source artifact can't be identified (no source row matching the
-    document's ``source_sha256``), this returns False so the document stays
-    pending rather than being marked extracted against stale bytes.
+    A canonical artifact that records the source it read
+    (``notes.source_sha256``, or ``notes.source_selection.latest_sha256`` when
+    an earlier fillable source was chosen over a flattened reprint) is matched
+    on that. One that records nothing is attributed to the source that was
+    current when it was written: the most recently archived source artifact
+    at or before its ``created_at``, because extraction always downloads the
+    document's current source.
+
+    "Written after the current bytes were first archived" is not enough. A
+    document can go from file A to file B and back to A (Penn State's slug was
+    pointed at each campus's file in turn): an extraction of B was written
+    after A was first archived, and counting it marked the document extracted
+    while it still served B's values.
+
+    When the current source artifact can't be identified (no source row
+    matching the document's ``source_sha256``), this returns False so the
+    document stays pending rather than being marked extracted against stale
+    bytes.
 
     This is the gate for the reconcile pass — it answers "is this document
     actually extracted?" without paying the cost of re-running Docling.
@@ -2025,26 +2041,35 @@ def has_canonical_for_current_bytes(
         return False
     rows = (
         client.table("cds_artifacts")
-        .select("kind,sha256,created_at")
+        .select(
+            "kind,sha256,created_at,"
+            "source_sha:notes->>source_sha256,"
+            "selection_latest_sha:notes->source_selection->>latest_sha256"
+        )
         .eq("document_id", document_id)
         .execute()
         .data
         or []
     )
-    canonical_times = [r["created_at"] for r in rows if r.get("kind") == "canonical"]
-    if not canonical_times:
-        return False
-    current_source_times = [
-        r["created_at"]
+    canonicals = [r for r in rows if r.get("kind") == "canonical"]
+    sources = sorted(
+        (_artifact_time(r["created_at"]), r.get("sha256"))
         for r in rows
-        if r.get("kind") == "source" and r.get("sha256") == source_sha256
-    ]
-    if not current_source_times:
+        if r.get("kind") == "source"
+    )
+    if not canonicals or not any(sha == source_sha256 for _, sha in sources):
         return False
-    current_bytes_archived_at = min(current_source_times)
-    # ISO-8601 timestamps from PostgREST compare correctly as strings here
-    # because they share the same +00:00 offset.
-    return any(t >= current_bytes_archived_at for t in canonical_times)
+    for canonical in canonicals:
+        recorded = canonical.get("source_sha")
+        if recorded:
+            if source_sha256 in (recorded, canonical.get("selection_latest_sha")):
+                return True
+            continue
+        written_at = _artifact_time(canonical["created_at"])
+        current_then = [sha for archived_at, sha in sources if archived_at <= written_at]
+        if current_then and current_then[-1] == source_sha256:
+            return True
+    return False
 
 
 def reconcile_pending_documents(
