@@ -732,6 +732,33 @@ overrides:
         re-archive the UniversityPark file for that year with force_urls
         and add the pin.
 
+  - school_id: carnegie-mellon
+    browse_url: https://www.cmu.edu/ira/CDS/previouscds.html
+    pinned_archive_urls:
+      - { url: "https://www.cmu.edu/ira/CDS/pdf/cds_2025_26/cds_2025_full_pdf_updated_11jun26.pdf", year: "2025-26" }
+      - { url: "https://www.cmu.edu/ira/CDS/pdf/cds_2022_23/common-data-set-2022-2023.pdf", year: "2022-23" }
+      - { url: "https://www.cmu.edu/ira/CDS/pdf/cds_2018-19/CDS%202018-19.pdf", year: "2018-19" }
+      - { url: "https://www.cmu.edu/ira/CDS/pdf/cds_2017-18/cds-2017-18.pdf", year: "2017-18" }
+      - { url: "https://www.cmu.edu/ira/CDS/pdf/cds_2016-17/cds-2016-2017.pdf", year: "2016-17" }
+    hosting_override:
+      file_storage: same_origin
+      notes: >-
+        CMU's CDS page (the discovery seed) lists only the newest year, as
+        one PDF per section. Every earlier year is on previouscds.html as
+        one full file. The resolver does not follow that link when the
+        first page already lists documents, so earlier years are no longer
+        refreshed (last verified 2026-06-15). Checked 2026-11-19: 2025-26
+        pointed at a file CMU has since replaced (404); 2017-18, 2018-19
+        and 2022-23 pointed at section A alone, left from April 2026 when
+        each section file was archived in turn, while the extraction
+        served came from the full file; 2016-17 was never archived. The
+        pins hold those five years to the full files previouscds.html
+        lists. 2023-24 is left unpinned on purpose: the page lists a
+        27 Aug 2024 revision whose text layer does not extract (no C1
+        rows, 189 fields), and the document stays on the 26 Jun 2024 file
+        (312 fields, same C1 figures), which CMU still serves. When CMU
+        moves 2026-27 to previouscds.html as a full file, pin it here.
+
   - school_id: ut-austin
     browse_url: https://reports.utexas.edu/common-data-set/pdf
     direct_archive_urls:
