@@ -19,6 +19,11 @@ on:
         description: "Optional comma-separated cds_documents.id values to re-extract in place (status unchanged until each finishes)."
         required: false
         default: ""
+      accept_headline_loss:
+        description: "Write a re-extraction even when it loses headline admissions fields the previous extraction of the same file had. Use only after checking the old values were wrong."
+        type: boolean
+        required: false
+        default: false
       include_failed:
         description: "Retry failed rows as well as pending rows."
         type: boolean
@@ -76,6 +81,7 @@ jobs:
       INPUT_DOCUMENT_IDS: ${{ github.event_name == 'workflow_dispatch' && inputs.document_ids || '' }}
       INPUT_REQUEUE_DOCUMENT_IDS: ${{ github.event_name == 'workflow_dispatch' && inputs.requeue_document_ids || '' }}
       INPUT_INCLUDE_FAILED: ${{ github.event_name == 'workflow_dispatch' && inputs.include_failed || false }}
+      INPUT_ACCEPT_HEADLINE_LOSS: ${{ github.event_name == 'workflow_dispatch' && inputs.accept_headline_loss || false }}
       INPUT_SEED_PROJECTION_METADATA: ${{ github.event_name != 'workflow_dispatch' || inputs.seed_projection_metadata }}
       INPUT_LOW_FIELD_THRESHOLD: ${{ github.event_name == 'workflow_dispatch' && inputs.low_field_threshold || '25' }}
       INPUT_MIN_YEAR_START: ${{ github.event_name == 'workflow_dispatch' && inputs.min_year_start || '' }}
@@ -186,6 +192,9 @@ jobs:
           fi
           if [[ -n "${INPUT_MIN_YEAR_START}" ]]; then
             args+=(--min-year-start "${INPUT_MIN_YEAR_START}")
+          fi
+          if [[ "${INPUT_ACCEPT_HEADLINE_LOSS}" == "true" ]]; then
+            args+=(--accept-headline-loss)
           fi
 
           python tools/extraction_worker/worker.py "${args[@]}" | tee ops-summary/worker.log

@@ -125,6 +125,31 @@ MAX_FIELDS_FOR_SWALLOW_FLAG = 300
 # should never silently replace a good artifact.
 MIN_FIELDS_FOR_REGRESSION_GUARD = 100
 MIN_REEXTRACT_FIELD_RATIO = 0.6
+# The same guard for the headline admissions rows, whatever the total field
+# count does. A re-extraction of the same file can gain fields overall and
+# still lose C1: Docling 2.148.0 dropped the tables by sex from SMU and
+# Wentworth 2025-26 and every C1 table from UPenn 2024-25, which went from 122
+# fields to 237 while its enrolled total disappeared. The fields are the
+# applied, admitted and enrolled totals and their rows for men and women.
+HEADLINE_C1_FIELDS = {
+    "2023-24": ("C.101", "C.102", "C.105", "C.106", "C.109", "C.110", "C.111", "C.112", "C.117", "C.118", "C.119"),
+    "2024-25": ("C.101", "C.102", "C.105", "C.106", "C.109", "C.110", "C.111", "C.112", "C.117", "C.118", "C.119"),
+    "2025-26": ("C.101", "C.102", "C.104", "C.105", "C.107", "C.108", "C.110", "C.111", "C.112", "C.113", "C.116", "C.117", "C.118"),
+    "2026-27": ("C.101", "C.102", "C.104", "C.105", "C.107", "C.108", "C.110", "C.111", "C.112", "C.113", "C.116", "C.117", "C.118"),
+}
+# A field counts as lost only when its old value is nowhere in the newly
+# converted text: the table it came from is gone. When the number is still in
+# the text and merely no longer assigned to the field, that is the cleaner
+# declining a value, usually a misread it used to accept, and re-extraction
+# must be able to correct those. Measured on the 378 PDF documents
+# re-extracted on 2026-11-18 and 19: 12 lost a headline value; in SMU and
+# Wentworth the numbers were gone from the text, and in the other ten (years
+# read as counts, a 9 as an applicant total) they were all still there.
+# Two or more, because a table carries several rows.
+MIN_HEADLINE_FIELDS_LOST = 2
+# Set by --accept-headline-loss: write the new extraction even so. For the
+# case the guard cannot tell apart, a fix that removes wrong headline values.
+ACCEPT_HEADLINE_LOSS = False
 MIN_TIER2_LABEL_FALLBACK_ACROFORM_FIELDS = 50
 # Flattened reprint guard: when a school republishes its fillable CDS PDF as a
 # flattened copy with no form fields, compare the earlier fillable PDF's
@@ -247,6 +272,88 @@ def previous_canonical_field_count(
         return int(row.get("schema_fields_populated") or 0)
     except (TypeError, ValueError):
         return None
+
+
+def _positive_number(record: Any) -> bool:
+    value = record.get("value") if isinstance(record, dict) else None
+    try:
+        return float(str(value).replace(",", "").strip()) > 0
+    except (TypeError, ValueError):
+        return False
+
+
+def headline_fields_lost(
+    previous_values: Optional[dict[str, Any]],
+    new_values: dict[str, Any],
+    schema_version: Optional[str],
+    new_text: str,
+) -> list[str]:
+    """Headline C1 fields the previous extraction read as a positive number,
+    the new one does not have, and whose number is nowhere in ``new_text``
+    (the new extraction's converted text)."""
+    if not previous_values:
+        return []
+    numbers_in_text = set(re.findall(r"\d+", (new_text or "").replace(",", "")))
+    lost = []
+    for field_id in HEADLINE_C1_FIELDS.get(str(schema_version), ()):
+        previous = previous_values.get(field_id)
+        if not _positive_number(previous):
+            continue
+        record = new_values.get(field_id)
+        value = record.get("value") if isinstance(record, dict) else None
+        if value is not None and str(value).strip() != "":
+            continue
+        digits = re.sub(r"\.0+$", "", str(previous.get("value")).replace(",", "").strip())
+        if digits not in numbers_in_text:
+            lost.append(field_id)
+    return lost
+
+
+def previous_canonical_values(
+    client: Client,
+    document_id: str,
+    source_sha256: Optional[str],
+    schema_version: Optional[str],
+) -> Optional[dict[str, Any]]:
+    """Values of the newest canonical artifact, when it was made from the same
+    source file under the same schema. None otherwise: a different file or a
+    different numbering is not comparable.
+
+    An artifact that records no source is attributed to the file that was
+    current when it was written, the rule the reconcile gate uses."""
+    if not source_sha256:
+        return None
+    rows = (
+        client.table("cds_artifacts")
+        .select(
+            "id,kind,sha256,created_at,schema_version,"
+            "source_sha:notes->>source_sha256,"
+            "selection_latest_sha:notes->source_selection->>latest_sha256"
+        )
+        .eq("document_id", document_id)
+        .execute()
+        .data
+        or []
+    )
+    canonicals = [r for r in rows if r.get("kind") == "canonical"]
+    if not canonicals:
+        return None
+    newest = max(canonicals, key=lambda r: _artifact_time(r["created_at"]))
+    if str(newest.get("schema_version") or "") != str(schema_version or ""):
+        return None
+    if _canonical_source_sha(newest, rows) != source_sha256:
+        return None
+    detail = (
+        client.table("cds_artifacts")
+        .select("notes->values")
+        .eq("id", newest["id"])
+        .limit(1)
+        .execute()
+        .data
+        or []
+    )
+    values = detail[0].get("values") if detail else None
+    return values if isinstance(values, dict) else None
 
 
 def normalized_ledger_source_format(value: Any) -> str:
@@ -1973,6 +2080,24 @@ def _run_tier4(
             return extraction_no_project(
                 f"tier4_field_regression ({fields} < {previous_fields} fields)"
             )
+        lost = [] if ACCEPT_HEADLINE_LOSS else headline_fields_lost(
+            previous_canonical_values(
+                client, document_id, canonical.get("source_sha256"), resolution.schema_version,
+            ),
+            canonical.get("values") or {},
+            resolution.schema_version,
+            str(canonical.get("markdown") or ""),
+        )
+        if len(lost) >= MIN_HEADLINE_FIELDS_LOST:
+            # Same file, same schema, and the admissions rows the previous
+            # extraction read are gone from the converted text. Keep serving
+            # the previous one; the failure action puts the document in the
+            # run summary for a look.
+            mark_extraction_status(client, document_id, "extracted", source_format)
+            return extraction_no_project(
+                f"tier4_headline_field_regression (lost {', '.join(lost)}; "
+                "the previous extraction of this file is kept)"
+            )
 
         try:
             insert_canonical_artifact(client, document_id, canonical)
@@ -2093,21 +2218,31 @@ def has_canonical_for_current_bytes(
         or []
     )
     canonicals = [r for r in rows if r.get("kind") == "canonical"]
+    if not canonicals or not any(
+        r.get("kind") == "source" and r.get("sha256") == source_sha256 for r in rows
+    ):
+        return False
+    newest = max(canonicals, key=lambda r: _artifact_time(r["created_at"]))
+    if newest.get("source_sha"):
+        return source_sha256 in (newest["source_sha"], newest.get("selection_latest_sha"))
+    return _canonical_source_sha(newest, rows) == source_sha256
+
+
+def _canonical_source_sha(canonical: dict[str, Any], rows: list[dict[str, Any]]) -> Optional[str]:
+    """The source file a canonical artifact was made from: the hash it
+    records, or failing that the source archived most recently at or before
+    it was written. ``rows`` are the document's artifact rows."""
+    if canonical.get("source_sha"):
+        return canonical["source_sha"]
     # Sources in the order they were archived. Rows written at the same
     # instant keep the order the database returned them in.
     sources = sorted(
         ((_artifact_time(r["created_at"]), r.get("sha256")) for r in rows if r.get("kind") == "source"),
         key=lambda item: item[0],
     )
-    if not canonicals or not any(sha == source_sha256 for _, sha in sources):
-        return False
-    newest = max(canonicals, key=lambda r: _artifact_time(r["created_at"]))
-    recorded = newest.get("source_sha")
-    if recorded:
-        return source_sha256 in (recorded, newest.get("selection_latest_sha"))
-    written_at = _artifact_time(newest["created_at"])
+    written_at = _artifact_time(canonical["created_at"])
     current_then = [sha for archived_at, sha in sources if archived_at <= written_at]
-    return bool(current_then) and current_then[-1] == source_sha256
+    return current_then[-1] if current_then else None
 
 
 def reconcile_pending_documents(
@@ -2875,6 +3010,14 @@ def main() -> int:
         help="Run even when installed packages or Python differ from requirements.lock",
     )
     parser.add_argument(
+        "--accept-headline-loss",
+        action="store_true",
+        help=(
+            "Write a Tier 4 re-extraction even when it loses headline C1 fields the previous "
+            "extraction of the same file had. Use after checking that the old values were wrong."
+        ),
+    )
+    parser.add_argument(
         "--force-reextract",
         action="store_true",
         help=(
@@ -2945,6 +3088,8 @@ def main() -> int:
         ),
     )
     args = parser.parse_args()
+    global ACCEPT_HEADLINE_LOSS
+    ACCEPT_HEADLINE_LOSS = bool(args.accept_headline_loss)
 
     from dependency_check import check_environment
 

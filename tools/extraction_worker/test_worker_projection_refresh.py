@@ -13,6 +13,7 @@ from worker import (
     extraction_run_exit_code,
     extraction_success,
     is_failure_action,
+    headline_fields_lost,
     is_field_regression,
     low_field_quality_flag,
     mean_or_none,
@@ -21,6 +22,7 @@ from worker import (
     select_drain_docs,
     drain_extraction_statuses,
     previous_canonical_field_count,
+    previous_canonical_values,
     should_fallback_tier2_to_tier4,
 )
 
@@ -91,6 +93,90 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
         self.assertIsNone(previous_canonical_field_count(client, "doc", None))
         legacy = _FakeClient([{"schema_fields_populated": 300, "sha256": "abc"}])
         self.assertEqual(previous_canonical_field_count(legacy, "doc", "abc"), 300)
+
+    def test_headline_loss_guard_counts_rows_whose_numbers_left_the_text(self):
+        # SMU 2025-26: Docling stopped emitting the applicants and admits tables by sex.
+        previous = {
+            "C.101": {"value": "11148"}, "C.102": {"value": "12,905"},
+            "C.104": {"value": "5217"}, "C.105": {"value": "6242"},
+            "C.116": {"value": "24053"}, "C.117": {"value": "11459"},
+        }
+        new = {"C.116": {"value": "24053"}, "C.117": {"value": "11459"}}
+        text = "| Total first-time, first-year (degree-seeking) who applied | 12254 | 9805 | 1767 | 227 | 24,053 |"
+        self.assertEqual(headline_fields_lost(previous, new, "2025-26", text), ["C.101", "C.102", "C.104", "C.105"])
+        self.assertTrue(is_failure_action(
+            "tier4_headline_field_regression (lost C.101, C.102; the previous extraction of this file is kept)"
+        ))
+
+    def test_headline_loss_guard_lets_the_cleaner_drop_a_value_still_in_the_text(self):
+        # Old Dominion 2024-25 read "2024" as its enrolled total, Eastern Connecticut a 9 and a 5 as its
+        # applied and admitted totals. The numbers are still in the text; the cleaner no longer assigns them.
+        previous = {"C.116": {"value": "9"}, "C.117": {"value": "5"}, "C.118": {"value": "2,024"}}
+        text = "enrolled (full- or part-time) in Fall 2024. 9 of the 5 programs"
+        self.assertEqual(headline_fields_lost(previous, {}, "2025-26", text), [])
+        # The same values with nothing in the text are lost.
+        self.assertEqual(headline_fields_lost(previous, {}, "2025-26", ""), ["C.116", "C.117", "C.118"])
+
+    def test_headline_loss_guard_ignores_what_was_not_a_reported_count(self):
+        previous = {
+            "C.101": {"value": "0"},        # a zero row is not a lost count
+            "C.102": {"value": ""},
+            "C.104": {"value": "n/a"},
+            "C.901": {"value": "55"},       # not a headline field
+            "C.105": {"value": "372.0"},    # kept: present in the new extraction
+        }
+        new = {"C.105": {"value": "372"}}
+        self.assertEqual(headline_fields_lost(previous, new, "2025-26", ""), [])
+        self.assertEqual(headline_fields_lost(None, new, "2025-26", ""), [])
+        # A year with no headline listing is never judged.
+        self.assertEqual(headline_fields_lost({"C.101": {"value": "900"}}, {}, "2019-20", ""), [])
+        # A blank new value is a lost one; "372.0" is looked for as 372.
+        self.assertEqual(headline_fields_lost(previous, {"C.105": {"value": " "}}, "2025-26", "x 372 y"), [])
+        self.assertEqual(headline_fields_lost(previous, {"C.105": {"value": " "}}, "2025-26", "x 3720 y"), ["C.105"])
+
+    def test_previous_values_require_the_same_file_and_schema(self):
+        class Client:
+            """Returns the artifact list for the first query and the values for the by-id one."""
+
+            def __init__(self, rows, values):
+                self.rows, self.values, self.by_id = rows, values, False
+
+            def table(self, _name):
+                self.by_id = False
+                return self
+
+            def select(self, columns):
+                self.by_id = columns == "notes->values"
+                return self
+
+            def eq(self, _column, _value):
+                return self
+
+            def limit(self, _count):
+                return self
+
+            def execute(self):
+                return SimpleNamespace(data=[{"values": self.values}] if self.by_id else list(self.rows))
+
+        values = {"C.101": {"value": "900"}}
+        recorded = [
+            {"id": "old", "kind": "canonical", "created_at": "2026-05-01T00:00:00+00:00", "schema_version": "2025-26", "source_sha": "other"},
+            {"id": "new", "kind": "canonical", "created_at": "2026-06-01T00:00:00+00:00", "schema_version": "2025-26", "source_sha": "this"},
+        ]
+        self.assertEqual(previous_canonical_values(Client(recorded, values), "doc", "this", "2025-26"), values)
+        self.assertIsNone(previous_canonical_values(Client(recorded, values), "doc", "this", "2026-27"))   # other numbering
+        self.assertIsNone(previous_canonical_values(Client(recorded, values), "doc", "changed", "2025-26"))  # other file
+        self.assertIsNone(previous_canonical_values(Client(recorded, values), "doc", None, "2025-26"))
+        self.assertIsNone(previous_canonical_values(Client([], values), "doc", "this", "2025-26"))
+
+        # An extraction that records no source is attributed to the file current when it was written.
+        unrecorded = [
+            {"id": "s1", "kind": "source", "sha256": "this", "created_at": "2026-04-01T00:00:00+00:00"},
+            {"id": "c1", "kind": "canonical", "created_at": "2026-04-02T00:00:00+00:00", "schema_version": "2025-26"},
+        ]
+        self.assertEqual(previous_canonical_values(Client(unrecorded, values), "doc", "this", "2025-26"), values)
+        unrecorded.insert(1, {"id": "s2", "kind": "source", "sha256": "other", "created_at": "2026-04-01T12:00:00+00:00"})
+        self.assertIsNone(previous_canonical_values(Client(unrecorded, values), "doc", "this", "2025-26"))
 
     def test_extraction_run_fails_when_any_document_failed(self):
         self.assertEqual(extraction_run_exit_code(0), 0)
