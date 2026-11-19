@@ -15,6 +15,9 @@ describe("Wave 2 product copy", () => {
     expect(browse).not.toMatch(/Queryable/);
     expect(browse).not.toMatch(/PRIMARY ROWS/);
     expect(browse).not.toMatch(/§ BROWSER/);
+    // queryable_field_count is a corpus total over 2024+ cds_fields, never a per-report count or metric-definition count
+    expect(browse).not.toMatch(/per report/i);
+    expect(browse).not.toContain('label="Metrics"');
 
     const browser = src("components/SchoolBrowser.tsx");
     expect(browser).toContain("Building a list? Use Match.");
@@ -63,6 +66,11 @@ describe("Wave 2 product copy", () => {
     expect(match).toMatch(/published numbers|published admissions/i);
     expect(match).not.toMatch(/source-backed/);
     expect(match).not.toMatch(/corpus/);
+    // MatchListBuilder has no size or cost filters (those live on /browse)
+    const matchBuilder = src("components/MatchListBuilder.tsx");
+    if (!/name="(size|cost|netPrice)"/.test(matchBuilder)) {
+      expect(match).not.toMatch(/\b(size|cost)\b/i);
+    }
 
     const coverage = src("app/coverage/page.tsx");
     expect(coverage).toContain('title: "Coverage"');
@@ -73,5 +81,16 @@ describe("Wave 2 product copy", () => {
     expect(coverage).not.toMatch(/resolver has not scanned/);
     expect(coverage).not.toMatch(/labeled separately so readers can tell/);
     expect(coverage).not.toMatch(/resolver's last attempt/);
+  });
+
+  it("keeps homepage stats and lede truthful to the underlying counts and directory pages", () => {
+    const home = src("app/page.tsx");
+    // total_schools counts schools, not reports, and scorecard_institution_count includes CDS schools
+    expect(home).toContain('label="Schools" value={schoolsValue}');
+    expect(home).not.toMatch(/plus\s+\$\{stats\.scorecard_institution_count/);
+    // queryable_field_count is a corpus total, never a per-report count
+    expect(home).not.toMatch(/per report/i);
+    // Federal-only directory school pages have no archived CDS file to link
+    expect(home).not.toMatch(/Every page links/i);
   });
 });

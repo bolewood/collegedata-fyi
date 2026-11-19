@@ -41,10 +41,11 @@ export default async function MatchPage() {
           Build your college list from published numbers
         </h1>
         <p className="serif" style={{ fontStyle: "italic", fontSize: 18, lineHeight: 1.55 }}>
-          Enter your test scores and GPA to filter schools by selectivity, size,
-          cost, and fit, then export your list with links to each school&apos;s
-          original report. Everything stays in your browser; we never save a
-          student profile.
+          Enter your test scores and GPA to see schools grouped by academic fit,
+          narrow the list by region, school type, admit rate, or test policy,
+          and export your results with links to each school&apos;s original
+          report. Everything stays in your browser; we never save a student
+          profile.
         </p>
       </header>
 

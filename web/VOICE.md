@@ -21,8 +21,8 @@ archive is built.
   account.
 - **Homepage form (plain English first):**
   Admissions, test scores, financial aid, and graduate outcomes for U.S.
-  colleges, pulled from each school’s own annual report and federal
-  records. Every page links directly to the original file.
+  colleges, pulled from published school reports and federal records.
+  Every school report links directly to the original file.
 
 Do not open the homepage with three proper nouns (`Common Data Set`,
 `IPEDS`, `College Scorecard`). Say what the reader actually gets in
