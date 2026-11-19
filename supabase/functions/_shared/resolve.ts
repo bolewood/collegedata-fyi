@@ -892,9 +892,11 @@ export function pickCandidates(
 // files for the same year, and pickCandidates takes the first. For Penn State
 // that is Abington, so the University Park slug was re-pointed at Abington's
 // file on every nightly run. A pin names the file for one year: it replaces
-// whatever was chosen for that year, and is added when the page lists nothing
-// for it. Other years are untouched. A pin whose URL fails the safety check
-// is ignored.
+// whatever was chosen for that year, and is added when the resolver found
+// documents for other years but none for that one. Other years are untouched.
+// A pin whose URL fails the safety check is ignored. The caller applies pins
+// only after a successful resolve, so they do not rescue a page that yields
+// no documents at all.
 export function applyPinnedUrls(
   docs: ResolvedCandidate[],
   pins: { url: string; year: string }[],

@@ -525,8 +525,17 @@ export async function resolveSchoolPinnedUrls(
     }
     const result = await _schoolsYamlCache;
     return pinnedArchiveUrls(result.overrides.get(schoolId));
-  } catch {
+  } catch (e) {
     _schoolsYamlCache = null;
+    // Without this line a pinned school is archived unpinned and nothing says
+    // why its document moved.
+    console.log(JSON.stringify({
+      ts: new Date().toISOString(),
+      fn: "schools.ts",
+      event: "school_pins_lookup_failed",
+      school_id: schoolId,
+      error: (e as Error).message,
+    }));
     return [];
   }
 }

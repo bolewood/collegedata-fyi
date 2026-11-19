@@ -324,8 +324,22 @@ export async function archiveOneSchool(
   }
 
   // 1b. Operator pins replace the resolver's choice for their year (a school
-  //     that lists one file per campus; see applyPinnedUrls).
+  //     that lists one file per campus; see applyPinnedUrls). Pins apply only
+  //     once the resolver has found at least one document: the early exits
+  //     above (nothing found, upstream gone) are unchanged.
   const docs = applyPinnedUrls(result.docs, school.pinned_urls ?? []);
+  const pinnedUrls = new Set(
+    docs.filter((d) => !result.docs.includes(d)).map((d) => d.url),
+  );
+  if (pinnedUrls.size > 0) {
+    console.log(JSON.stringify({
+      ts: new Date().toISOString(),
+      fn: "archive.ts",
+      event: "pinned_urls_applied",
+      school_id: school.school_id,
+      years: docs.filter((d) => pinnedUrls.has(d.url)).map((d) => d.cds_year),
+    }));
+  }
 
   // 2. Archive each candidate in order. PermanentError on one candidate
   //    (typically a 404 on a stale URL) is caught and skipped so the
@@ -348,6 +362,19 @@ export async function archiveOneSchool(
           reason: e.message,
           category: e.category,
         });
+        if (pinnedUrls.has(resolved.url)) {
+          // A skipped candidate is otherwise logged only when every candidate
+          // fails. A dead pin leaves its year unrefreshed, so say so.
+          console.log(JSON.stringify({
+            ts: new Date().toISOString(),
+            fn: "archive.ts",
+            event: "pinned_url_failed",
+            school_id: school.school_id,
+            cds_year: resolved.cds_year,
+            category: e.category,
+            error: e.message,
+          }));
+        }
         continue;
       }
       throw e;

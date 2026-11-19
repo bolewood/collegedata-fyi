@@ -45,7 +45,8 @@
 #                                             # replaces the resolver's
 #                                             # choice for that year and is
 #                                             # added when the page lists
-#                                             # nothing for it. For schools
+#                                             # other years but not that
+#                                             # one. For schools
 #                                             # that post one CDS per campus
 #                                             # under one page. `year` is
 #                                             # required. direct_archive_urls
