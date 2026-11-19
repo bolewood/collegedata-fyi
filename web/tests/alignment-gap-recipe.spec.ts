@@ -4,10 +4,10 @@ test("alignment-gap merit panel names the school on every dot", async ({ page })
   await page.goto("/recipes/alignment-gap");
 
   await expect(
-    page.getByRole("heading", { name: /debt burden, aid, and financial resources/i }),
+    page.getByRole("heading", { name: /debt burden, merit aid, and financial resources/i }),
   ).toBeVisible();
   await expect(page.locator("header + div p.serif")).toContainText(
-    /college affordability data lives in several different places/i,
+    /freshman non-need merit aid budget alone is larger/i,
   );
   await expect(page.getByText(/compare the debt gap with merit aid/i)).toBeVisible();
   await expect(page.getByText(/merit spend = annual gap/i).first()).toBeVisible();
