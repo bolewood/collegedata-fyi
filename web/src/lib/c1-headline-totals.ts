@@ -10,6 +10,11 @@ type HeadlineSpec = {
   total: string;
   gender: string[];
   /**
+   * The men's and the women's rows within `gender`. When no total was read, a
+   * sum has to include both to stand in for it (see sumLeavesOutASex).
+   */
+  sexes?: { men: string[]; women: string[] };
+  /**
    * The Total row printed under the table by sex (2026-27 on). It is the
    * school's own total, so it is used before a sum of the rows by sex. A
    * 2025-26 extract never has these ids.
@@ -29,6 +34,13 @@ type HeadlineSpec = {
  */
 const NUMBERED_LIKE_2025_26: ReadonlySet<string> = new Set(["2025-26", "2026-27"]);
 
+// 2023-24 and 2024-25 share these row numbers for men and women.
+const SEXES_2024 = {
+  applied: { men: ["C.101"], women: ["C.102"] },
+  admitted: { men: ["C.105"], women: ["C.106"] },
+  enrolled: { men: ["C.109", "C.110"], women: ["C.111", "C.112"] },
+};
+
 function headlineSpecs(schemaVersion?: string | null): {
   applied: HeadlineSpec;
   admitted: HeadlineSpec;
@@ -39,14 +51,17 @@ function headlineSpecs(schemaVersion?: string | null): {
       applied: {
         total: "C.117",
         gender: ["C.101", "C.102", "C.103", "C.104"],
+        sexes: SEXES_2024.applied,
       },
       admitted: {
         total: "C.118",
         gender: ["C.105", "C.106", "C.107", "C.108"],
+        sexes: SEXES_2024.admitted,
       },
       enrolled: {
         total: "C.119",
         gender: ["C.109", "C.110", "C.111", "C.112", "C.113", "C.114", "C.115", "C.116"],
+        sexes: SEXES_2024.enrolled,
       },
     };
   }
@@ -55,11 +70,12 @@ function headlineSpecs(schemaVersion?: string | null): {
   // unknown-gender rows (C.104, C.108, C.115, C.116).
   if (schemaVersion === "2023-24") {
     return {
-      applied: { total: "C.117", gender: ["C.101", "C.102", "C.103"] },
-      admitted: { total: "C.118", gender: ["C.105", "C.106", "C.107"] },
+      applied: { total: "C.117", gender: ["C.101", "C.102", "C.103"], sexes: SEXES_2024.applied },
+      admitted: { total: "C.118", gender: ["C.105", "C.106", "C.107"], sexes: SEXES_2024.admitted },
       enrolled: {
         total: "C.119",
         gender: ["C.109", "C.110", "C.111", "C.112", "C.113", "C.114"],
+        sexes: SEXES_2024.enrolled,
       },
     };
   }
@@ -69,6 +85,7 @@ function headlineSpecs(schemaVersion?: string | null): {
       applied: {
         total: "C.116",
         gender: ["C.101", "C.102", "C.103"],
+        sexes: { men: ["C.101"], women: ["C.102"] },
         bySexTotal: "C.1T01",
         residency: {
           inState: "C.119",
@@ -80,6 +97,7 @@ function headlineSpecs(schemaVersion?: string | null): {
       admitted: {
         total: "C.117",
         gender: ["C.104", "C.105", "C.106"],
+        sexes: { men: ["C.104"], women: ["C.105"] },
         bySexTotal: "C.1T02",
         residency: {
           inState: "C.120",
@@ -91,6 +109,7 @@ function headlineSpecs(schemaVersion?: string | null): {
       enrolled: {
         total: "C.118",
         gender: ["C.107", "C.108", "C.109"],
+        sexes: { men: ["C.107"], women: ["C.108"] },
         bySexTotal: "C.1T03",
         residency: {
           inState: "C.121",
@@ -166,6 +185,19 @@ function printedBySexTotal(
   return printed;
 }
 
+/**
+ * True when the rows that were read are men only or women only. With no total
+ * read, such a sum is not a total: UPenn 2024-25 showed its men's rows alone
+ * as first-year enrollment. Same rule as the projection's
+ * _sum_includes_both_sexes. A men's or women's college is unaffected when its
+ * other row is 0 or its total was read.
+ */
+function sumLeavesOutASex(values: Record<string, FieldValue>, spec: HeadlineSpec): boolean {
+  if (!spec.sexes) return false;
+  const any = (ids: string[]) => ids.some((id) => fieldNumber(values, id) != null);
+  return !(any(spec.sexes.men) && any(spec.sexes.women));
+}
+
 function preferCoherentTotal(
   values: Record<string, FieldValue>,
   spec: HeadlineSpec,
@@ -217,6 +249,9 @@ function preferCoherentTotal(
   }
 
   if (total != null && total > 0) return total;
+  if (total == null && printedBySexTotal(values, spec, gender) == null && sumLeavesOutASex(values, spec)) {
+    return null;
+  }
   if (fallback != null) return fallback;
   return total;
 }

@@ -105,6 +105,37 @@ describe("c1HeadlineTotals", () => {
   });
 });
 
+describe("a sum of one sex", () => {
+  it("does not stand in for a total that was not read", () => {
+    // UPenn / Marshall 2024-25: men's rows only, no total.
+    const totals = c1HeadlineTotals(
+      {
+        "C.101": field("2826"),
+        "C.102": field("3991"),
+        "C.105": field("2699"),
+        "C.109": field("1100"),
+        "C.110": field("8"),
+      },
+      "2024-25",
+    );
+    expect(totals).toEqual({ applied: 6817, admitted: null, enrolled: null });
+
+    expect(c1HeadlineTotals({ "C.101": field("932"), "C.105": field("237") }, "2025-26")).toEqual({
+      applied: null,
+      admitted: null,
+      enrolled: null,
+    });
+  });
+
+  it("is kept for a single-sex college whose other row is 0 or whose total was read", () => {
+    expect(c1HeadlineTotals({ "C.101": field("0"), "C.102": field("4100") }, "2025-26").applied).toBe(4100);
+    expect(c1HeadlineTotals({ "C.102": field("4100"), "C.116": field("4100") }, "2025-26").applied).toBe(4100);
+    // A total that was read but is smaller than the row it should contain is still replaced by the row.
+    expect(c1HeadlineTotals({ "C.101": field("2496"), "C.116": field("911") }, "2025-26").applied).toBe(2496);
+    expect(c1HeadlineTotals({ "C.101": field("2496"), "C.117": field("2496") }, "2024-25").applied).toBe(2496);
+  });
+});
+
 describe("the 2026-27 Total row by sex", () => {
   it("is used before a sum of the rows by sex when the residency total is blank", () => {
     // Only the men rows were read: their sum is not a total, the printed row is.

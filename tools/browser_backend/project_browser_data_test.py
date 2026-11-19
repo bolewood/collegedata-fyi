@@ -342,6 +342,60 @@ class BrowserProjectionTests(unittest.TestCase):
         self.assertEqual(browser["acceptance_rate"], "0.047489")
         self.assertEqual(browser["yield_rate"], "0.684122")
 
+    def test_a_sum_of_one_sex_does_not_stand_in_for_a_missing_total(self):
+        # UPenn 2024-25: the enrolled total and the women's rows were not read, and the men's rows alone
+        # (1,108 of 2,395) were published as first-year enrollment. Marshall 2024-25: men admitted as admitted.
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2024-25"),
+            [
+                artifact(schema_version="2024-25", values={
+                    "C.101": {"value": "2,826"}, "C.102": {"value": "3,991"},
+                    "C.105": {"value": "2,699"},
+                    "C.109": {"value": "1,100"}, "C.110": {"value": "8"},
+                })
+            ],
+            defs(),
+        )
+        self.assertEqual(browser["applied"], 6817)          # men and women: a sum is fine
+        self.assertIsNone(browser["admitted"])               # men only
+        self.assertIsNone(browser["enrolled_first_year"])    # men only, full- and part-time
+
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2025-26"),
+            [artifact(values={"C.101": {"value": "932"}, "C.105": {"value": "237"},
+                              "C.110": {"value": "107"}, "C.113": {"value": "1"}})],
+            defs(),
+        )
+        self.assertIsNone(browser["applied"])                # men only
+        self.assertIsNone(browser["admitted"])               # women only
+        self.assertEqual(browser["enrolled_first_year"], 108)  # a men's row and a women's row
+
+    def test_a_single_sex_college_keeps_its_figures(self):
+        # A women's college whose men rows are 0, and one whose men rows are empty but whose total was read.
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2025-26"),
+            [artifact(values={"C.101": {"value": "0"}, "C.102": {"value": "4,100"},
+                              "C.104": {"value": "0"}, "C.105": {"value": "1,900"}})],
+            defs(),
+        )
+        self.assertEqual((browser["applied"], browser["admitted"]), (4100, 1900))
+
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2025-26"),
+            [artifact(values={"C.102": {"value": "4,100"}, "C.116": {"value": "4,100"},
+                              "C.105": {"value": "1,900"}, "C.117": {"value": "1,900"}})],
+            defs(),
+        )
+        self.assertEqual((browser["applied"], browser["admitted"]), (4100, 1900))
+
+        # 2024-25, a men's college: women rows empty, total read.
+        _fields, browser = build_projection_rows(
+            doc(canonical_year="2024-25"),
+            [artifact(schema_version="2024-25", values={"C.101": {"value": "2,496"}, "C.117": {"value": "2,496"}})],
+            defs(),
+        )
+        self.assertEqual(browser["applied"], 2496)
+
     def test_2025_zero_total_fields_defer_to_positive_gender_components(self):
         _fields, browser = build_projection_rows(
             doc(canonical_year="2025-26"),
