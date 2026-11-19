@@ -1637,6 +1637,79 @@ class BrowserProjectionTests(unittest.TestCase):
         assert selected is not None
         self.assertEqual(selected.values["C.118"]["value"], "10")
 
+    def test_a_removed_document_projects_nothing(self):
+        # 2026-11-19: a rebuild published rows for 30 removed documents, mostly a main-campus file filed under a
+        # branch campus, because nothing checked removed_at.
+        values = {"C.116": {"value": "50,264"}, "C.117": {"value": "2,387"}, "C.118": {"value": "1,633"}}
+        live = doc(canonical_year="2025-26")
+        removed = doc(canonical_year="2025-26", removed_at="2026-11-14T00:00:00+00:00")
+
+        fields, browser = build_projection_rows(live, [artifact(values=values)], defs())
+        self.assertEqual(len(fields), 3)
+        self.assertEqual(browser["applied"], 50264)
+
+        fields, browser = build_projection_rows(removed, [artifact(values=values)], defs())
+        self.assertEqual(fields, [])
+        self.assertIsNone(browser)
+
+    def test_the_document_list_for_a_rebuild_leaves_out_removed_documents(self):
+        calls = []
+
+        class Query:
+            def __getattr__(self, name):
+                def method(*args, **_kwargs):
+                    calls.append((name, args))
+                    return self
+                return method
+
+            def execute(self):
+                return type("Result", (), {"data": []})()
+
+        class Client:
+            def table(self, name):
+                calls.append(("table", (name,)))
+                return Query()
+
+        from tools.browser_backend.project_browser_data import fetch_documents
+
+        fetch_documents(Client())
+        self.assertIn(("is_", ("removed_at", "null")), calls)
+        self.assertTrue(any(name == "select" and "removed_at" in args[0] for name, args in calls))
+
+        # A single-document refresh still fetches a removed document, so its old rows can be cleared.
+        calls.clear()
+        fetch_documents(Client(), "00000000-0000-0000-0000-000000000001")
+        self.assertNotIn(("is_", ("removed_at", "null")), calls)
+        self.assertTrue(any(name == "select" and "removed_at" in args[0] for name, args in calls))
+
+    def test_a_rebuild_clears_only_documents_it_no_longer_projects(self):
+        from tools.browser_backend import project_browser_data as pbd
+
+        projected = {"school_browser_rows": {"live-1", "live-2", "removed-1"}, "cds_fields": {"live-1", "failed-1"}}
+        cleared = []
+        originals = (pbd.fetch_projected_document_ids, pbd.replace_projection_rows)
+        pbd.fetch_projected_document_ids = lambda _client, table: set(projected[table])
+        pbd.replace_projection_rows = lambda _client, document_id, fields, browser: cleared.append((document_id, fields, browser))
+        try:
+            count = pbd.clear_orphaned_projection_rows(object(), {"live-1", "live-2", "new-1"})
+            self.assertEqual(count, 2)
+            self.assertEqual(cleared, [("failed-1", [], None), ("removed-1", [], None)])
+
+            # A short document list would look like a great many orphans: refuse, and clear nothing.
+            cleared.clear()
+            projected["school_browser_rows"] = {f"doc-{i}" for i in range(400)}
+            projected["cds_fields"] = set()
+            with self.assertRaises(SystemExit):
+                pbd.clear_orphaned_projection_rows(object(), {f"doc-{i}" for i in range(100)})
+            self.assertEqual(cleared, [])
+            # Up to the limit is cleared; more needs the explicit flag.
+            keep = {f"doc-{i}" for i in range(400 - pbd.MAX_ORPHANS_TO_CLEAR)}
+            self.assertEqual(pbd.clear_orphaned_projection_rows(object(), keep), pbd.MAX_ORPHANS_TO_CLEAR)
+            cleared.clear()
+            self.assertEqual(pbd.clear_orphaned_projection_rows(object(), set(), allow_large=True), 400)
+        finally:
+            pbd.fetch_projected_document_ids, pbd.replace_projection_rows = originals
+
     def test_derived_metric_formula_requires_explicit_schema_year(self):
         metric = DIRECT_METRIC_DEFINITIONS["applied"]
 
