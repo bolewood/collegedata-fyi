@@ -40,15 +40,14 @@ describe("alignment-gap recipe", () => {
   });
 
   it("writes the lede as debt burden, then an alignment gap, then two panels", () => {
-    const page = src("app/recipes/alignment-gap/page.tsx");
-    expect(page).toContain("Debt burden, aid, and");
-    expect(page).toContain("financial resources");
-    expect(page).toContain("College affordability data lives in several different places.");
-    expect(page).toContain("The starting point is");
+    const page = src("app/recipes/alignment-gap/page.tsx").replace(/\s+/g, " ");
+    expect(page).toContain("Debt burden, merit aid, and financial resources");
+    expect(page).toContain("ALIGNMENT_GAP_MERIT_META.coversShare");
     expect(page).toContain("debt burden");
     expect(page).toContain("alignment gap");
     expect(page).toContain("expressed per year of college");
     expect(page).toContain("completer");
+    expect(page).not.toContain("College affordability data lives in several different places.");
     expect(page).not.toContain("how much net price would have to fall");
     expect(page).not.toContain("or could rise");
     expect(page).not.toContain("already leaving the building");

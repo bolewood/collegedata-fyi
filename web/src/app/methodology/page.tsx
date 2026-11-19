@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Methodology",
   description:
-    "How the school-page cards read Common Data Set filings — academic profile, admission rounds, merit and need aid. What they use, what they skip, what they do not predict.",
+    "How the cards on each school page read Common Data Set filings and federal data, covering academic profiles, admission rounds, financial aid, and scholarships.",
   alternates: { canonical: "/methodology" },
   openGraph: { url: "/methodology" },
 };
@@ -13,22 +13,22 @@ const METHODS = [
   {
     href: "/methodology/positioning",
     title: "Academic profile",
-    body: "Where a student’s SAT or ACT lands in the score bands the school published for enrolled first-years. Not a chance-me.",
+    body: "How a student’s SAT or ACT score compares with the middle ranges each school published for enrolled first-years.",
   },
   {
     href: "/methodology/admission-strategy",
     title: "Admission rounds",
-    body: "ED, EA, wait-list, and yield from Section C — including what CDS will not let you compute.",
+    body: "Early Decision, Early Action, waitlists, and yield from Section C, including what the Common Data Set does and does not let you calculate.",
   },
   {
     href: "/methodology/merit-profile",
     title: "Merit and need aid",
-    body: "What the school reported in Section H, plus federal net-price and outcome context. Not a package estimate.",
+    body: "Need-based and non-need aid from Section H, paired with federal net-price and graduate outcome data.",
   },
   {
     href: "/methodology/scholarships",
     title: "Scholarship programs",
-    body: "Named merit scholarships at selected schools, with the date and page each term comes from. Not a ranking, not an estimate.",
+    body: "How we document named merit scholarships at selected schools, with source URLs and review dates for every term.",
   },
 ];
 
@@ -37,7 +37,7 @@ export default function MethodologyIndexPage() {
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
       <div className="meta">§ Methodology</div>
       <h1 className="serif mt-3 leading-none" style={{ fontSize: "clamp(40px, 6vw, 64px)" }}>
-        How the cards are <span style={{ fontStyle: "italic" }}>built.</span>
+        How the school-page cards work
       </h1>
       <p
         className="serif mt-5 max-w-2xl"
@@ -48,9 +48,10 @@ export default function MethodologyIndexPage() {
           lineHeight: 1.55,
         }}
       >
-        The trail behind the school-page cards. Each note names the CDS fields,
-        the derivation, and the caveat. Nothing here predicts an admissions
-        decision or a financial-aid package.
+        Each guide below documents the exact Common Data Set fields, formulas,
+        and limits behind the cards on a school page. These summaries show what
+        colleges reported; they do not predict admission decisions or
+        financial-aid offers.
       </p>
 
       <div className="mt-10 grid gap-4 sm:grid-cols-2">

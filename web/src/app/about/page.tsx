@@ -5,7 +5,7 @@ import { isUsageLaunched } from "@/lib/usage";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "The most comprehensive free college data we know of. School Common Data Set reports, IPEDS, and College Scorecard, in one public place. No account.",
+    "We collect colleges’ annual Common Data Set reports alongside federal IPEDS and College Scorecard data, linked to the original files and free with no account.",
   alternates: { canonical: "/about" },
   openGraph: { url: "/about" },
 };
@@ -38,63 +38,68 @@ export default function AboutPage() {
           maxWidth: "40rem",
         }}
       >
-        Choosing a college should not mean a dozen tabs, a paid search product,
-        and a PDF you can&apos;t compare. This is the most comprehensive free
-        college data we know of: each school&apos;s Common Data Set, plus IPEDS
-        and College Scorecard, in one public place.
+        Most U.S. colleges publish a detailed annual report called the Common
+        Data Set, then tuck it away as a PDF somewhere on their website. We
+        collect those reports alongside federal IPEDS and College Scorecard data
+        so families, counselors, and researchers can look up real numbers in one
+        free, public place.
       </p>
 
       <div className="cd-source-story">
         <h2>What you can do</h2>
         <ul>
-          <li>Search a school and open the latest report it published.</li>
           <li>
-            If a school hasn&apos;t published its own report, you still get the
-            federal numbers.
+            Look up any college and read its latest published report, or its
+            federal data when the school hasn&apos;t published a Common Data
+            Set.
           </li>
-          <li>Download the original file the school posted.</li>
+          <li>Download the original PDF or spreadsheet the college posted.</li>
           <li>
-            Compare admissions, enrollment, test scores, cost, and aid across
+            Compare admissions, test scores, tuition, and financial aid across
             schools.
           </li>
           <li>
-            Build a match list on your device. We don&apos;t store a student
-            profile.
+            Build a college match list in your browser without creating an
+            account or saving a student profile on our servers.
           </li>
           <li>
-            If you&apos;re in IR or research: use the same data through a{" "}
-            <Link href="/api">public API</Link>.
+            Pull the same underlying dataset for research, journalism, or LLM
+            tools through the <Link href="/api">public API</Link>.
           </li>
         </ul>
 
         <h2>How this is different</h2>
         <p>
-          Commercial college-search tools can be useful. They often want an
-          account, hide where a number came from, or build a student profile
-          along the way. We don&apos;t. The school&apos;s own report sits next
-          to the federal numbers, the original file is one click away, and you
-          don&apos;t have to pay or log in.
+          Commercial college-search sites can be helpful, though many require an
+          account, hide where a figure came from, or build a student profile
+          along the way. Here, each school&apos;s own report sits next to
+          federal data, every figure links back to its source, and nothing sits
+          behind a login or paywall.
         </p>
 
-        <h2>The reports, in one line each</h2>
+        <h2>The three data sources</h2>
         <ul>
           <li>
-            <Link href="/about/common-data-set">Common Data Set</Link>
-            {" "}— the yearly report the college writes.
+            <Link href="/about/common-data-set">Common Data Set</Link>: the
+            annual report colleges publish on admissions, enrollment, cost, and
+            financial aid.
           </li>
           <li>
-            <Link href="/about/college-scorecard">College Scorecard</Link>
-            {" "}— federal outcomes and net price.
+            <Link href="/about/college-scorecard">College Scorecard</Link>:
+            federal figures on net price, student debt, and post-college
+            earnings.
           </li>
           <li>
-            <Link href="/about/ipeds">IPEDS</Link>
-            {" "}— the federal statistical baseline.
+            <Link href="/about/ipeds">IPEDS</Link>: the federal statistical
+            baseline filed each year by U.S. colleges that receive federal
+            student aid.
           </li>
         </ul>
 
         <h2>Open source</h2>
         <p>
-          Code, schema, pipeline, and archived files are public (MIT).{" "}
+          Our code, schema, and archived files are open source under the MIT
+          license on{" "}
           <a
             href="https://github.com/bolewood/collegedata-fyi"
             target="_blank"
@@ -102,12 +107,15 @@ export default function AboutPage() {
           >
             GitHub
           </a>
-          . <Link href="/api">API</Link>. Developers who want extractors and
-          known issues start there, not on this page.
+          , and the full dataset is available through the{" "}
+          <Link href="/api">public API</Link>. If you&apos;re curious how files
+          are parsed or want to check known data quirks, GitHub is the best
+          place to look.
           {isUsageLaunched() ? (
             <>
               {" "}
-              How much the archive is used: <Link href="/usage">usage</Link>.
+              You can also see how the archive is used on the{" "}
+              <Link href="/usage">usage page</Link>.
             </>
           ) : null}
         </p>
@@ -138,10 +146,6 @@ export default function AboutPage() {
             </a>
           </li>
         </ul>
-
-        <div style={{ marginTop: 24, borderTop: "1px solid var(--rule)", paddingTop: 24, fontSize: 13, fontStyle: "italic", fontFamily: "var(--serif)", color: "var(--ink-3)" }}>
-          Better college decisions start with better access to the facts.
-        </div>
       </div>
     </div>
   );

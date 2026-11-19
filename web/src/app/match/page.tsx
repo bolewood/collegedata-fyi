@@ -9,7 +9,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "Match",
   description:
-    "Build a college list from the numbers schools publish. On this device. No account. No student profile stored.",
+    "Build a college list from each school’s published admissions and test-score data. Runs locally in your browser with no account and no stored student profile.",
   alternates: { canonical: "/match" },
   // Generic on purpose (PRD 024 M1): never put a Match code or any profile
   // value in preview metadata.
@@ -38,15 +38,13 @@ export default async function MatchPage() {
       <header className="match-hero">
         <div className="meta">Match</div>
         <h1 className="serif">
-          Build a list from the{" "}
-          <span style={{ fontStyle: "italic", color: "var(--forest-ink)" }}>
-            school&apos;s own numbers.
-          </span>
+          Build your college list from published numbers
         </h1>
         <p className="serif" style={{ fontStyle: "italic", fontSize: 18, lineHeight: 1.55 }}>
-          Enter scores and GPA — they stay on this device. Filter by fit and
-          admit rate. Export a list with the year and the original file. We
-          don&apos;t store a student profile.
+          Enter your test scores and GPA to filter schools by selectivity, size,
+          cost, and fit, then export your list with links to each school&apos;s
+          original report. Everything stays in your browser; we never save a
+          student profile.
         </p>
       </header>
 

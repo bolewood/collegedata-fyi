@@ -123,7 +123,7 @@ export function SchoolSearch() {
         onFocus={() => setIsOpen(true)}
         onBlur={() => setTimeout(() => setIsOpen(false), 200)}
         onKeyDown={handleKeyDown}
-        placeholder="Search schools by name, alias, or city..."
+        placeholder="Search any U.S. college by name or city…"
         className="w-full px-4 py-3"
         style={{
           border: "1px solid var(--rule-strong)",

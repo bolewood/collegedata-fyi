@@ -9,12 +9,8 @@ const docs = (rel: string) =>
 describe("Wave 3 Recipes copy", () => {
   it("rewrites the index for IR and analysts", () => {
     const page = src("app/recipes/page.tsx");
-    expect(page).toContain(
-      "Worked examples from Common Data Set filings and federal data",
-    );
-    expect(page).toContain("institutional researchers and analysts");
-    expect(page).toContain("a chart you can operate");
-    expect(page).toContain("Written for IR and analysts. Counselors are welcome.");
+    expect(page).toContain("Common Data Set filings and federal data");
+    expect(page).toMatch(/institutional researchers,\s+analysts/);
     expect(page).toContain(
       "IR and enrollment managers comparing peer yield and federal-loan burden; analysts joining IPEDS ADM counts to College Scorecard.",
     );

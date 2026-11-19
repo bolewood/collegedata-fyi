@@ -7,14 +7,17 @@ const src = (rel: string) => readFileSync(join(process.cwd(), "src", rel), "utf8
 describe("Wave 4 methodology and API copy", () => {
   it("aligns the methodology index with school-card kickers", () => {
     const page = src("app/methodology/page.tsx");
-    expect(page).toContain("How the school-page cards read Common Data Set filings");
-    expect(page).toContain("How the cards are");
-    expect(page).toContain("The trail behind the school-page cards");
-    expect(page).toContain("enrolled first-years. Not a chance-me.");
-    expect(page).toContain("what CDS will not let you compute");
-    expect(page).toContain("federal net-price and outcome context");
+    expect(page).toContain("Common Data Set filings");
+    expect(page).toContain("enrolled first-years");
+    expect(page).toContain("do not predict");
+    expect(page).toContain("Section C");
+    expect(page).toContain("Section H");
     expect(page).not.toMatch(/admitted-class bands/);
     expect(page).not.toMatch(/turns Common Data Set source documents into/);
+
+    const card = src("components/PositioningCard.tsx");
+    expect(card).toContain("OF ENROLLED FIRST-YEARS SUBMITTED");
+    expect(card).not.toContain("OF ADMITS SUBMITTED");
   });
 
   it("writes academic profile as enrolled first-years, not admits", () => {

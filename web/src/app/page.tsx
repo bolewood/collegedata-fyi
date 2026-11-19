@@ -8,7 +8,7 @@ import { SchoolGlyph } from "@/components/SchoolGlyph";
 export const revalidate = 3600; // ISR: revalidate every hour
 
 const HOME_DESCRIPTION =
-  "The most comprehensive free college data we know of — the report each college publishes, plus the government’s own numbers, in one public place.";
+  "Admissions, test scores, financial aid, and graduate outcomes for U.S. colleges, from each school’s annual report and federal records, with the original file linked.";
 
 const homeJsonLd = {
   "@context": "https://schema.org",
@@ -98,6 +98,10 @@ export default async function HomePage() {
   const drain = latestDrain(manifest, brandIndex);
 
   const schoolsValue = stats.total_schools.toLocaleString();
+  const schoolsNote =
+    stats.scorecard_institution_count != null
+      ? `Colleges with archived reports (plus ${stats.scorecard_institution_count.toLocaleString()} with federal data)`
+      : "Colleges with archived reports";
   const docsValue = stats.total_documents.toLocaleString();
   const yearRangeValue = compactYearRange(stats.earliest_year, stats.latest_year);
   const queryableFieldsValue = formatCount(stats.queryable_field_count);
@@ -127,9 +131,6 @@ export default async function HomePage() {
         </div>
 
         <div style={{ textAlign: "center", maxWidth: 780, margin: "0 auto" }}>
-          <div className="meta" style={{ marginBottom: 24 }}>
-            Free data · source links · federal numbers · public API
-          </div>
           <h1
             style={{
               fontFamily: "var(--serif)",
@@ -157,9 +158,9 @@ export default async function HomePage() {
               textWrap: "balance",
             }}
           >
-            The most comprehensive free college data we know of — the report each
-            college publishes about itself, plus the government&apos;s own numbers,
-            in one public place.
+            Admissions, test scores, financial aid, and graduate outcomes for
+            U.S. colleges, pulled from each school&apos;s own annual report and
+            federal records. Every page links directly to the original file.
           </p>
           <p
             style={{
@@ -172,8 +173,8 @@ export default async function HomePage() {
               textWrap: "balance",
             }}
           >
-            Search a school. Compare admissions, cost, and aid. Open the original
-            file. No account.
+            Search any school, compare numbers side by side, or download the
+            source files for free, with no account required.
           </p>
 
           <div style={{ marginTop: 36, maxWidth: 560, marginInline: "auto" }}>
@@ -214,13 +215,13 @@ export default async function HomePage() {
             gap: 40,
           }}
         >
-          <StatCell label="Schools" value={schoolsValue} note="Latest reports we have on file" />
-          <StatCell label="Documents" value={docsValue} note={`School files, ${yearRangeValue}`} />
-          <StatCell label="Facts" value={queryableFieldsValue} note="You can compare · from current school reports" />
+          <StatCell label="School reports" value={schoolsValue} note={schoolsNote} />
+          <StatCell label="Source files" value={docsValue} note={`Original school reports, ${yearRangeValue}`} />
+          <StatCell label="Data points" value={queryableFieldsValue} note="Admissions, cost, and aid fields per report" />
           <StatCell
-            label="Compare"
+            label="Recent reports"
             value={browserRowsValue}
-            note={`Side by side · refreshed ${formatShortDate(stats.browser_updated_at)}`}
+            note={`2024\u201325 and newer · updated ${formatShortDate(stats.browser_updated_at)}`}
           />
         </div>
       </section>
@@ -235,8 +236,8 @@ export default async function HomePage() {
           <div>
             <div className="meta" style={{ marginBottom: 6 }}>§ Recently added</div>
             <div style={{ fontSize: 14, color: "var(--ink-3)", lineHeight: 1.5 }}>
-              New school reports in the archive. Each row opens the school and
-              the original file.
+              The latest annual reports added to the archive. Select any school
+              to view the numbers alongside its original file.
             </div>
           </div>
           <div>

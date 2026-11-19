@@ -12,7 +12,7 @@ import { SchoolTable } from "@/components/SchoolTable";
 export const metadata: Metadata = {
   title: "Schools",
   description:
-    "Every college with a Common Data Set on file. Open the reports each school published.",
+    "Browse every U.S. college with an archived Common Data Set on file, and open the original reports each school published.",
   alternates: { canonical: "/schools" },
   openGraph: { url: "/schools" },
 };
@@ -59,9 +59,10 @@ export default async function SchoolsPage() {
             color: "var(--ink-2)",
           }}
         >
-          Every school we have a report from. Don&apos;t see yours? Check{" "}
-          <Link href="/coverage">Coverage</Link> — schools without a report still
-          get a page with the federal numbers.
+          Every college with an archived annual report on file. Don&apos;t see
+          a school listed? Use the search bar above or check{" "}
+          <Link href="/coverage">Coverage</Link>. Colleges without a published
+          Common Data Set still have pages with federal data.
         </p>
         <p className="meta" style={{ marginTop: 16 }}>
           {schools.length} schools
