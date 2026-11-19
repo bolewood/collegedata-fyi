@@ -2861,6 +2861,15 @@ def resolve_c1_applications(
         residency_columns: tuple[str, ...] = ()
         header_lines: list[str] = []
         raw_lines = text.splitlines()
+        # Stages (applied / admitted / enrolled) whose table by sex is shifted
+        # in this text: the table's heading sits on the first row's line, so
+        # every value is printed one line below its label (Quincy 2024-25:
+        # "... men who were admittedFirst-Time, First-Year Student Admits
+        # Total", then "... women who were admitted 480" carrying the men's
+        # 480). Reading those lines put the men's count on the women's row and
+        # the women's on the next. The rows of such a stage are not read here;
+        # whatever the tables gave for them stands.
+        shifted_stages: set[str] = set()
 
         def _next_or_previous_is_bare_number(index: int) -> bool:
             """The value of a label-only line may sit on the line above or
@@ -2946,6 +2955,28 @@ def resolve_c1_applications(
                         if qn:
                             out.setdefault(qn, {"value": num, "source": "tier4_cleaner"})
                     continue
+
+            heading_on_row = re.search(
+                r"total\s+"
+                r"(?:(?:full|part)[-\s]?time,\s*)?"
+                r"first[-\s]time,\s*first[-\s]year\s+"
+                r"(?:men|women|of another gender|of unknown gender|another gender|unknown gender)"
+                # the heading runs straight on from the label, and no value follows
+                r"\s+who\s+(applied|were admitted|enrolled)(?=[A-Za-z])\D*$",
+                line,
+                re.IGNORECASE,
+            )
+            if heading_on_row:
+                shifted_stages.add(heading_on_row.group(1).lower())
+                continue
+            if shifted_stages and (stage_on_line := re.search(
+                r"first[-\s]year\s+"
+                r"(?:men|women|of another gender|of unknown gender|another gender|unknown gender)"
+                r"\s+who\s+(applied|were admitted|enrolled)\b",
+                line,
+                re.IGNORECASE,
+            )) and stage_on_line.group(1).lower() in shifted_stages:
+                continue
 
             gender_match = re.search(
                 r"total\s+"
@@ -3033,7 +3064,15 @@ def resolve_c1_applications(
                     and "degree seeking" not in residency_norm
                 ):
                     continue
-            elif "degree seeking" not in residency_norm:
+            elif "degree seeking" not in residency_norm or "first time" not in residency_norm:
+                # Outside a residency table only a row that names the C1
+                # cohort is read. A sentence that merely mentions
+                # degree-seeking students and enrollment is not one: Quincy
+                # 2024-25's B22 retention sentence ("... degree-seeking ...
+                # first-year students in Fall 2023 ... enrolled ... Fall 2024.
+                # 327 in Fall 2023 cohort 229 retained Fall 2024") was read as
+                # the enrolled row, and 2024, 327, 2023 and 229 were published
+                # as its residency counts.
                 continue
             action = None
             if "who were admitted" in residency_norm:
