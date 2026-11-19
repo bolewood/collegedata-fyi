@@ -1,7 +1,10 @@
 import { assertEquals, assertExists } from "jsr:@std/assert";
 import {
   applyPinnedUrls,
+  mergeHintWithPageDocs,
   pickCandidates,
+  type ResolvedCandidate,
+  type ResolvedDocument,
   UNKNOWN_YEAR_SENTINEL,
   extractCdsAnchors,
   extractSubpageDocuments,
@@ -1085,4 +1088,101 @@ Deno.test("applyPinnedUrls: no pins, an unsafe URL or a repeated year change not
     { url: "https://example.edu/files/CDS_2024_2025_York.pdf", year: "2024-25" },
   ]);
   assertEquals(twice.find((d) => d.cds_year === "2024-25")?.url, MAIN_2024);
+});
+
+// ── mergeHintWithPageDocs: the preferred file for a direct-file hint's year comes first ──
+
+function hintDoc(url: string, year: string, flags: { section?: boolean; draft?: boolean } = {}): ResolvedDocument {
+  return {
+    candidate_kind: "single_document",
+    url,
+    cds_year: year,
+    filename: url.split("/").pop() ?? "",
+    is_section_file: flags.section ?? false,
+    is_test_artifact: flags.draft ?? false,
+    discovered_via: "direct",
+  };
+}
+
+function pageDoc(url: string, year: string, flags: { section?: boolean; draft?: boolean } = {}): ResolvedCandidate {
+  return { ...hintDoc(url, year, flags), discovered_via: "landing" };
+}
+
+const HINT_2024 = "https://example.edu/up/CDS-2024-2025.pdf";
+
+Deno.test("mergeHintWithPageDocs: the page's file for the hint's year goes first, the hint after it", () => {
+  // Worcester State 2024-25: the hint and the page name different files.
+  const merged = mergeHintWithPageDocs(hintDoc(HINT_2024, "2024-25"), [
+    pageDoc("https://example.edu/up/CDS-2025-2026.xlsx", "2025-26"),
+    pageDoc("https://example.edu/up/CDS-2024-2025-w-Cost.pdf", "2024-25"),
+    pageDoc("https://example.edu/up/CDS-2023-2024.pdf", "2023-24"),
+  ]);
+  assertEquals(merged.map((d) => d.url), [
+    "https://example.edu/up/CDS-2024-2025-w-Cost.pdf",
+    HINT_2024,
+    "https://example.edu/up/CDS-2025-2026.xlsx",
+    "https://example.edu/up/CDS-2023-2024.pdf",
+  ]);
+});
+
+Deno.test("mergeHintWithPageDocs: the hint is listed once when the page links it or has no file for its year", () => {
+  const hint = hintDoc(HINT_2024, "2024-25");
+  const sameUrl = mergeHintWithPageDocs(hint, [
+    pageDoc(HINT_2024 + "#page=1", "2024-25"),
+    pageDoc("https://example.edu/up/CDS-2023-2024.pdf", "2023-24"),
+  ]);
+  assertEquals(sameUrl.map((d) => [d.url, d.discovered_via]), [
+    [HINT_2024, "direct"],
+    ["https://example.edu/up/CDS-2023-2024.pdf", "landing"],
+  ]);
+  const otherYears = mergeHintWithPageDocs(hint, [
+    pageDoc("https://example.edu/up/CDS-2023-2024.pdf", "2023-24"),
+  ]);
+  assertEquals(otherYears.map((d) => d.url), [HINT_2024, "https://example.edu/up/CDS-2023-2024.pdf"]);
+  assertEquals(mergeHintWithPageDocs(hint, []).map((d) => d.url), [HINT_2024]);
+});
+
+Deno.test("mergeHintWithPageDocs: a clean full-file hint stays ahead of a section file, a section package or a draft", () => {
+  const hint = hintDoc(HINT_2024, "2024-25");
+  const section = "https://example.edu/up/CDS-2024-2025-Section-C.pdf";
+  assertEquals(
+    mergeHintWithPageDocs(hint, [pageDoc(section, "2024-25", { section: true })]).map((d) => d.url),
+    [HINT_2024, section],
+  );
+  const pkg: ResolvedCandidate = {
+    candidate_kind: "section_package",
+    url: "https://example.edu/up/CDS-2024-2025-A.pdf",
+    cds_year: "2024-25",
+    filename: "CDS-2024-2025-A.pdf",
+    is_section_file: true,
+    is_test_artifact: false,
+    discovered_via: "landing",
+    parts: [],
+  };
+  assertEquals(mergeHintWithPageDocs(hint, [pkg]).map((d) => d.url), [HINT_2024, pkg.url]);
+  const draft = "https://example.edu/up/CDS-2024-2025-DRAFT.pdf";
+  assertEquals(
+    mergeHintWithPageDocs(hint, [pageDoc(draft, "2024-25", { draft: true })]).map((d) => d.url),
+    [HINT_2024, draft],
+  );
+  // A section-file hint gives way to whatever the page has for that year.
+  const sectionHint = hintDoc("https://example.edu/up/CDS-2024-2025-Section-A.pdf", "2024-25", { section: true });
+  assertEquals(
+    mergeHintWithPageDocs(sectionHint, [pageDoc(section, "2024-25", { section: true })]).map((d) => d.url),
+    [section, sectionHint.url],
+  );
+});
+
+Deno.test("mergeHintWithPageDocs: a hint with no year keeps its place beside every page document", () => {
+  const hint = hintDoc("https://example.edu/up/cds_all.pdf", UNKNOWN_YEAR_SENTINEL);
+  const merged = mergeHintWithPageDocs(hint, [pageDoc(HINT_2024, "2024-25")]);
+  assertEquals(merged.map((d) => d.url), ["https://example.edu/up/cds_all.pdf", HINT_2024]);
+});
+
+Deno.test("applyPinnedUrls: a pin replaces both the page's file and the hint for its year", () => {
+  const merged = mergeHintWithPageDocs(hintDoc(HINT_2024, "2024-25"), [
+    pageDoc("https://example.edu/up/CDS-2024-2025-w-Cost.pdf", "2024-25"),
+  ]);
+  const pinned = applyPinnedUrls(merged, [{ url: "https://example.edu/up/pinned.pdf", year: "2024-25" }]);
+  assertEquals(pinned.map((d) => d.url), ["https://example.edu/up/pinned.pdf"]);
 });
