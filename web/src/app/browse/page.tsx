@@ -85,9 +85,9 @@ export default async function BrowsePage() {
               note="2024–25 and newer"
             />
             <BrowserHeroStat
-              label="Metrics"
+              label="Data points"
               value={formatCount(stats.queryable_field_count)}
-              note="Comparable fields per report"
+              note="Reported values across 2024–25+ reports"
             />
             <BrowserHeroStat
               label="Updated"

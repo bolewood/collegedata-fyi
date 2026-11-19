@@ -8,7 +8,7 @@ import { SchoolGlyph } from "@/components/SchoolGlyph";
 export const revalidate = 3600; // ISR: revalidate every hour
 
 const HOME_DESCRIPTION =
-  "Admissions, test scores, financial aid, and graduate outcomes for U.S. colleges, from each school’s annual report and federal records, with the original file linked.";
+  "Admissions, test scores, financial aid, and graduate outcomes for U.S. colleges, from published school reports and federal records, with original files linked.";
 
 const homeJsonLd = {
   "@context": "https://schema.org",
@@ -100,7 +100,7 @@ export default async function HomePage() {
   const schoolsValue = stats.total_schools.toLocaleString();
   const schoolsNote =
     stats.scorecard_institution_count != null
-      ? `Colleges with archived reports (plus ${stats.scorecard_institution_count.toLocaleString()} with federal data)`
+      ? `With archived reports · ${stats.scorecard_institution_count.toLocaleString()} total with federal data`
       : "Colleges with archived reports";
   const docsValue = stats.total_documents.toLocaleString();
   const yearRangeValue = compactYearRange(stats.earliest_year, stats.latest_year);
@@ -159,8 +159,8 @@ export default async function HomePage() {
             }}
           >
             Admissions, test scores, financial aid, and graduate outcomes for
-            U.S. colleges, pulled from each school&apos;s own annual report and
-            federal records. Every page links directly to the original file.
+            U.S. colleges, pulled from published school reports and federal
+            records. Every school report links directly to the original file.
           </p>
           <p
             style={{
@@ -215,9 +215,9 @@ export default async function HomePage() {
             gap: 40,
           }}
         >
-          <StatCell label="School reports" value={schoolsValue} note={schoolsNote} />
+          <StatCell label="Schools" value={schoolsValue} note={schoolsNote} />
           <StatCell label="Source files" value={docsValue} note={`Original school reports, ${yearRangeValue}`} />
-          <StatCell label="Data points" value={queryableFieldsValue} note="Admissions, cost, and aid fields per report" />
+          <StatCell label="Data points" value={queryableFieldsValue} note="Admissions, cost, and aid values across recent reports" />
           <StatCell
             label="Recent reports"
             value={browserRowsValue}

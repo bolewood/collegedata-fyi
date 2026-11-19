@@ -112,6 +112,9 @@ describe("alignment-gap recipe", () => {
       "reported instructional spending per student exceeds average net price",
     );
     expect(page).not.toContain("because the endowment, not tuition, is paying");
+    expect(page).not.toMatch(/because endowment income/i);
+    expect(page).not.toMatch(/drive the picture far more/i);
+    expect(page).not.toMatch(/often do the heavy lifting/i);
     expect(page).toContain("federal aggregate borrowing");
     expect(page).toContain("dependent undergraduates");
     expect(page).not.toContain("whether an applicant should be able to see both numbers before");

@@ -42,14 +42,14 @@ export const metadata: Metadata = {
     template: "%s | collegedata.fyi",
   },
   description:
-    "Admissions, test scores, financial aid, and graduate outcomes for U.S. colleges, from each school’s annual report and federal records, with the original file linked.",
+    "Admissions, test scores, financial aid, and graduate outcomes for U.S. colleges, from published school reports and federal records, with original files linked.",
   alternates: {
     canonical: "/",
   },
   openGraph: {
     title: "collegedata.fyi — Free college data, straight from the source",
     description:
-      "Admissions, test scores, financial aid, and graduate outcomes for U.S. colleges, from each school’s annual report and federal records, with the original file linked.",
+      "Admissions, test scores, financial aid, and graduate outcomes for U.S. colleges, from published school reports and federal records, with original files linked.",
     url: "/",
     siteName: "collegedata.fyi",
     type: "website",

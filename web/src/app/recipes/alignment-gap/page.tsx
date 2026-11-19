@@ -92,7 +92,7 @@ const REGIONS = [
     num: "B",
     head: "Merit aid is smaller than the gap",
     count: ALIGNMENT_GAP_MERIT_META.regions.constrained,
-    body: "These schools also carry above-median debt burden, but their reported non-need merit aid per freshman is smaller than the gap, and some award almost none at all. The University of the Incarnate Word, for instance, reports $0 in CDS non-need merit aid while still showing a positive gap. At these schools, overall pricing, need-based aid, borrowing habits, and graduate earnings drive the picture far more than merit discounting.",
+    body: "These schools also carry above-median debt burden, but their reported non-need merit aid per freshman is smaller than the gap, and some award almost none at all. The University of the Incarnate Word, for instance, reports $0 in CDS non-need merit aid while still showing a positive gap. Here, merit discounting is a smaller piece of the comparison alongside overall pricing, need-based aid, student borrowing, graduate earnings, and institutional finances.",
   },
   {
     num: "C",
@@ -119,13 +119,13 @@ const QUADRANTS = [
     num: "III",
     head: "Lower debt burden · higher endowment",
     count: ALIGNMENT_GAP_META.quadrants.absorbs,
-    body: "Debt burden at or below the median alongside above-median endowment per undergraduate, a group that includes Grinnell, Princeton, Stanford, and Wellesley. At many heavily endowed colleges, reported instructional spending per student exceeds average net price because endowment income subsidizes a large share of the education.",
+    body: "Debt burden at or below the median alongside above-median endowment per undergraduate, a group that includes Grinnell, Princeton, Stanford, and Wellesley. At many colleges in this group, reported instructional spending per student exceeds average net price, meaning student payments cover only part of what funds the academic program.",
   },
   {
     num: "IV",
     head: "Lower debt burden · lower endowment",
     count: ALIGNMENT_GAP_META.quadrants.earnings,
-    body: "Debt burden at or below the median without a large endowment per student. Stronger post-college earnings often do the heavy lifting here (earnings sit in the denominator of debt burden), alongside lower borrowing. Bentley, Babson, and Santa Clara all land in this quadrant.",
+    body: "Debt burden at or below the median without a large endowment per student. Both sides of the ratio show up here: lower graduate borrowing, stronger post-college earnings (the denominator of debt burden), or both. Bentley, Babson, and Santa Clara all land in this quadrant.",
   },
 ];
 
