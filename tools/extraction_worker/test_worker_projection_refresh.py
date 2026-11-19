@@ -14,6 +14,7 @@ from worker import (
     extraction_success,
     is_failure_action,
     headline_fields_lost,
+    headline_regression_action,
     is_field_regression,
     low_field_quality_flag,
     mean_or_none,
@@ -134,29 +135,78 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
         self.assertEqual(headline_fields_lost(previous, {"C.105": {"value": " "}}, "2025-26", "x 372 y"), [])
         self.assertEqual(headline_fields_lost(previous, {"C.105": {"value": " "}}, "2025-26", "x 3720 y"), ["C.105"])
 
+    class _ArtifactClient:
+        """cds_artifacts for one document: the artifact list for the first query, and the values of the
+        artifact asked for by id for the second. Filters are applied, so a wrong column shows."""
+
+        def __init__(self, rows, values_by_id):
+            self.rows, self.values_by_id = rows, values_by_id
+
+        def table(self, name):
+            assert name == "cds_artifacts", name
+            self.columns, self.filters = "", {}
+            return self
+
+        def select(self, columns):
+            self.columns = columns
+            return self
+
+        def eq(self, column, value):
+            self.filters[column] = value
+            return self
+
+        def limit(self, _count):
+            return self
+
+        def execute(self):
+            if self.columns == "notes->values":
+                values = self.values_by_id.get(self.filters.get("id"))
+                return SimpleNamespace(data=[{"values": values}] if values is not None else [])
+            assert self.filters == {"document_id": "doc"}, self.filters
+            return SimpleNamespace(data=list(self.rows))
+
+    def test_headline_regression_action_holds_only_a_same_file_table_loss(self):
+        import worker
+
+        previous = {
+            "C.101": {"value": "11148"}, "C.102": {"value": "12905"},
+            "C.116": {"value": "24053"}, "C.117": {"value": "11459"},
+        }
+        rows = [{"id": "prev", "kind": "canonical", "created_at": "2026-05-05T00:00:00+00:00",
+                 "schema_version": "2025-26", "source_sha": "file"}]
+        client = self._ArtifactClient(rows, {"prev": previous})
+        new = {
+            "source_sha256": "file",
+            "values": {"C.116": {"value": "24053"}, "C.117": {"value": "11459"}},
+            "markdown": "| who applied | 12254 | 9805 | 1767 | 227 | 24053 |",
+        }
+
+        action = headline_regression_action(client, "doc", new, "2025-26")
+        self.assertEqual(
+            action,
+            "tier4_headline_field_regression (lost C.101, C.102; the previous extraction of this file is kept)",
+        )
+        self.assertTrue(is_failure_action(action))
+
+        # One lost row is below the threshold.
+        one = dict(new, values=dict(new["values"], **{"C.101": {"value": "11148"}}))
+        self.assertIsNone(headline_regression_action(client, "doc", one, "2025-26"))
+        # The numbers are still in the text: the cleaner declined them.
+        declined = dict(new, markdown=new["markdown"] + " 11,148 and 12,905")
+        self.assertIsNone(headline_regression_action(client, "doc", declined, "2025-26"))
+        # A different file, or a different schema, is not comparable.
+        self.assertIsNone(headline_regression_action(client, "doc", dict(new, source_sha256="other"), "2025-26"))
+        self.assertIsNone(headline_regression_action(client, "doc", new, "2026-27"))
+        # The override.
+        worker.ACCEPT_HEADLINE_LOSS = True
+        try:
+            self.assertIsNone(headline_regression_action(client, "doc", new, "2025-26"))
+        finally:
+            worker.ACCEPT_HEADLINE_LOSS = False
+
     def test_previous_values_require_the_same_file_and_schema(self):
-        class Client:
-            """Returns the artifact list for the first query and the values for the by-id one."""
-
-            def __init__(self, rows, values):
-                self.rows, self.values, self.by_id = rows, values, False
-
-            def table(self, _name):
-                self.by_id = False
-                return self
-
-            def select(self, columns):
-                self.by_id = columns == "notes->values"
-                return self
-
-            def eq(self, _column, _value):
-                return self
-
-            def limit(self, _count):
-                return self
-
-            def execute(self):
-                return SimpleNamespace(data=[{"values": self.values}] if self.by_id else list(self.rows))
+        def Client(rows, values):
+            return self._ArtifactClient(rows, {row["id"]: values for row in rows if row.get("kind") == "canonical"})
 
         values = {"C.101": {"value": "900"}}
         recorded = [

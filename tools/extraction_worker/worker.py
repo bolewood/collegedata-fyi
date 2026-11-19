@@ -309,6 +309,41 @@ def headline_fields_lost(
     return lost
 
 
+def headline_regression_action(
+    client: Client,
+    document_id: str,
+    canonical: dict[str, Any],
+    schema_version: Optional[str],
+) -> Optional[str]:
+    """The failure action for a Tier 4 result that must not replace the
+    previous extraction of the same file, or None when it may be written.
+
+    Only the Docling markdown is searched for the lost numbers, not the PDF
+    layout text or OCR text the cleaner also reads. That is deliberate:
+    Wentworth 2025-26 still has its applied counts in the layout text, on
+    lines too broken for the cleaner to read, and the rows were lost all the
+    same. The cost is that a fix which stops accepting a value read only from
+    layout or OCR text is held too, and needs --accept-headline-loss. None of
+    the ten corrections measured on 2026-11-19 was of that kind.
+
+    The enrolled rows rarely trip it: a CDS repeats first-year enrollment in
+    section B, so those numbers are usually still in the text."""
+    if ACCEPT_HEADLINE_LOSS:
+        return None
+    lost = headline_fields_lost(
+        previous_canonical_values(client, document_id, canonical.get("source_sha256"), schema_version),
+        canonical.get("values") or {},
+        schema_version,
+        str(canonical.get("markdown") or ""),
+    )
+    if len(lost) < MIN_HEADLINE_FIELDS_LOST:
+        return None
+    return (
+        f"tier4_headline_field_regression (lost {', '.join(lost)}; "
+        "the previous extraction of this file is kept)"
+    )
+
+
 def previous_canonical_values(
     client: Client,
     document_id: str,
@@ -2080,24 +2115,12 @@ def _run_tier4(
             return extraction_no_project(
                 f"tier4_field_regression ({fields} < {previous_fields} fields)"
             )
-        lost = [] if ACCEPT_HEADLINE_LOSS else headline_fields_lost(
-            previous_canonical_values(
-                client, document_id, canonical.get("source_sha256"), resolution.schema_version,
-            ),
-            canonical.get("values") or {},
-            resolution.schema_version,
-            str(canonical.get("markdown") or ""),
-        )
-        if len(lost) >= MIN_HEADLINE_FIELDS_LOST:
-            # Same file, same schema, and the admissions rows the previous
-            # extraction read are gone from the converted text. Keep serving
-            # the previous one; the failure action puts the document in the
-            # run summary for a look.
+        held = headline_regression_action(client, document_id, canonical, resolution.schema_version)
+        if held:
+            # Keep serving the previous extraction; the failure action puts
+            # the document in the run summary for a look.
             mark_extraction_status(client, document_id, "extracted", source_format)
-            return extraction_no_project(
-                f"tier4_headline_field_regression (lost {', '.join(lost)}; "
-                "the previous extraction of this file is kept)"
-            )
+            return extraction_no_project(held)
 
         try:
             insert_canonical_artifact(client, document_id, canonical)
@@ -3088,6 +3111,10 @@ def main() -> int:
         ),
     )
     args = parser.parse_args()
+    if args.accept_headline_loss and not (args.document_ids or args.requeue_document_ids):
+        # The switch turns the guard off for every document in the run, so it
+        # is only taken for documents named one by one.
+        parser.error("--accept-headline-loss needs --document-ids or --requeue-document-ids")
     global ACCEPT_HEADLINE_LOSS
     ACCEPT_HEADLINE_LOSS = bool(args.accept_headline_loss)
 

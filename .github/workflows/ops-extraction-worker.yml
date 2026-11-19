@@ -20,7 +20,7 @@ on:
         required: false
         default: ""
       accept_headline_loss:
-        description: "Write a re-extraction even when it loses headline admissions fields the previous extraction of the same file had. Use only after checking the old values were wrong."
+        description: "Write a re-extraction even when it loses headline admissions fields the previous extraction of the same file had. Needs document_ids or requeue_document_ids. Use only after checking the old values were wrong."
         type: boolean
         required: false
         default: false
