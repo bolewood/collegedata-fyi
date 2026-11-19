@@ -92,11 +92,36 @@ export interface HostingOverride {
   notes?: string;
 }
 
+// The file the archiver must use for one year of one school, whatever the
+// school's page lists first. `year` is required: a pin replaces the resolver's
+// choice for exactly that year.
+export interface PinnedArchiveUrl {
+  url: string;
+  year: string;
+}
+
 export interface SchoolOverride {
   school_id: string;
   browse_url?: string;
   direct_archive_urls?: DirectArchiveUrl[];
+  pinned_archive_urls?: PinnedArchiveUrl[];
   hosting_override?: HostingOverride;
+}
+
+// The well-formed entries of an override's pinned_archive_urls. A malformed
+// entry (no url, no "YYYY-YY" year) is dropped, never guessed at.
+export function pinnedArchiveUrls(override: SchoolOverride | undefined): PinnedArchiveUrl[] {
+  const raw: unknown = override?.pinned_archive_urls;
+  if (!Array.isArray(raw)) return [];
+  const out: PinnedArchiveUrl[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const { url, year } = item as Record<string, unknown>;
+    if (typeof url !== "string" || url.trim() === "") continue;
+    if (typeof year !== "string" || !/^(19|20)\d{2}-\d{2}$/.test(year)) continue;
+    out.push({ url: url.trim(), year });
+  }
+  return out;
 }
 
 function isValidSchoolOverride(raw: unknown): raw is SchoolOverride {
@@ -487,6 +512,24 @@ export function chooseDocumentIpedsId(
 // lifetime is the isolate lifetime, which matches Supabase's per-request
 // isolation guarantees.
 let _schoolsYamlCache: Promise<FetchSchoolsYamlResult> | null = null;
+
+// The pinned archive URLs for a school, from school_overrides.yaml. Empty when
+// there are none or the lookup fails: a pin is a correction on top of the
+// resolver, so losing it must not stop the school from being archived.
+export async function resolveSchoolPinnedUrls(
+  schoolId: string,
+): Promise<PinnedArchiveUrl[]> {
+  try {
+    if (_schoolsYamlCache === null) {
+      _schoolsYamlCache = fetchSchoolsYaml();
+    }
+    const result = await _schoolsYamlCache;
+    return pinnedArchiveUrls(result.overrides.get(schoolId));
+  } catch {
+    _schoolsYamlCache = null;
+    return [];
+  }
+}
 
 export async function resolveSchoolIpedsId(
   schoolId: string,

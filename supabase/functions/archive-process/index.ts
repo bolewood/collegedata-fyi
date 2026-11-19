@@ -35,6 +35,7 @@ import {
   filterArchivable,
   resolveSchoolIpedsId,
   resolveSchoolName,
+  resolveSchoolPinnedUrls,
   UnknownSchoolError,
 } from "../_shared/schools.ts";
 import {
@@ -380,6 +381,7 @@ async function runQueueClaimInner(
       // cache from schools.yaml); SchoolInput uses the post-PR-5
       // discovery_seed_url terminology. Map at the boundary.
       discovery_seed_url: row.cds_url_hint,
+      pinned_urls: await resolveSchoolPinnedUrls(row.school_id),
     });
     finalStatus = "done";
   } catch (e) {
@@ -554,6 +556,7 @@ async function runForceSchool(
       ipeds_id: school.ipeds_id,
       discovery_seed_url: school.discovery_seed_url,
       ...(school.browse_url ? { browse_url: school.browse_url } : {}),
+      pinned_urls: await resolveSchoolPinnedUrls(school.id),
     });
     logEvent({
       event: "force_school_completed",

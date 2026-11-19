@@ -7,6 +7,7 @@
 import { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import { PDFDocument } from "npm:pdf-lib@1.17.1";
 import {
+  applyPinnedUrls,
   isSafeUrl,
   resolveCdsForSchool,
   ResolvedCandidate,
@@ -142,6 +143,9 @@ export interface SchoolInput {
   // because schools.yaml carries a small number of entries (mostly
   // verified_absent administrative offices) without a UNITID.
   ipeds_id?: string;
+  // Operator pins from school_overrides.yaml (pinned_archive_urls): the file
+  // to use for a year, in place of whatever the resolver chose for it.
+  pinned_urls?: { url: string; year: string }[];
 }
 
 // Rollup precedence: when a multi-candidate school has a mix of
@@ -319,6 +323,10 @@ export async function archiveOneSchool(
     );
   }
 
+  // 1b. Operator pins replace the resolver's choice for their year (a school
+  //     that lists one file per campus; see applyPinnedUrls).
+  const docs = applyPinnedUrls(result.docs, school.pinned_urls ?? []);
+
   // 2. Archive each candidate in order. PermanentError on one candidate
   //    (typically a 404 on a stale URL) is caught and skipped so the
   //    other candidates still land — e.g., Cornell's direct-PDF hint
@@ -330,7 +338,7 @@ export async function archiveOneSchool(
   //    before either upload completes.
   const candidates: CandidateOutcome[] = [];
   const skipped: { url: string; reason: string; category: ProbeOutcome }[] = [];
-  for (const resolved of result.docs) {
+  for (const resolved of docs) {
     try {
       candidates.push(await archiveOneCandidate(supabase, school, resolved));
     } catch (e) {
@@ -357,7 +365,7 @@ export async function archiveOneSchool(
     const reasons = skipped.map((s) => `${s.url}: ${s.reason}`).join("; ");
     const aggregate = pickAggregateCategory(skipped.map((s) => s.category));
     await recordHostingObservation(
-      supabase, school, result.probe, result.docs, aggregate, reasons,
+      supabase, school, result.probe, docs, aggregate, reasons,
     );
     throw new PermanentError(
       `all ${skipped.length} candidate(s) failed permanently: ${reasons}`,
@@ -372,7 +380,7 @@ export async function archiveOneSchool(
   // sees ALL candidate URLs, including ones that got skipped due to
   // per-candidate transient errors.
   await recordHostingObservation(
-    supabase, school, result.probe, result.docs, action, null,
+    supabase, school, result.probe, docs, action, null,
   );
   return {
     action,

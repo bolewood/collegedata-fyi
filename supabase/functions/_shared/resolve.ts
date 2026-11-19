@@ -886,6 +886,57 @@ export function pickCandidates(
   return chosen;
 }
 
+// applyPinnedUrls — operator pins from school_overrides.yaml.
+//
+// A school that publishes one CDS per campus lists about twenty full, clean
+// files for the same year, and pickCandidates takes the first. For Penn State
+// that is Abington, so the University Park slug was re-pointed at Abington's
+// file on every nightly run. A pin names the file for one year: it replaces
+// whatever was chosen for that year, and is added when the page lists nothing
+// for it. Other years are untouched. A pin whose URL fails the safety check
+// is ignored.
+export function applyPinnedUrls(
+  docs: ResolvedCandidate[],
+  pins: { url: string; year: string }[],
+): ResolvedCandidate[] {
+  const pinnedByYear = new Map<string, ResolvedDocument>();
+  for (const pin of pins) {
+    const url = rewriteWaybackUrl(rewriteBoxUrl(rewriteGoogleDriveUrl(pin.url)));
+    if (!isSafeUrl(url) || pinnedByYear.has(pin.year)) continue;
+    let filename = "";
+    try {
+      filename = decodeURIComponent(new URL(url).pathname.split("/").filter(Boolean).pop() ?? "");
+    } catch {
+      continue;
+    }
+    pinnedByYear.set(pin.year, {
+      candidate_kind: "single_document",
+      url,
+      cds_year: pin.year,
+      filename,
+      is_section_file: false,
+      is_test_artifact: false,
+      discovered_via: "direct",
+    });
+  }
+  if (pinnedByYear.size === 0) return docs;
+  const out: ResolvedCandidate[] = [];
+  const used = new Set<string>();
+  for (const doc of docs) {
+    const pinned = pinnedByYear.get(doc.cds_year);
+    if (!pinned) {
+      out.push(doc);
+    } else if (!used.has(doc.cds_year)) {
+      out.push(pinned);
+      used.add(doc.cds_year);
+    }
+  }
+  for (const [year, pinned] of pinnedByYear) {
+    if (!used.has(year)) out.push(pinned);
+  }
+  return out;
+}
+
 function anchorToResolvedDocument(
   d: CdsAnchor,
   discoveredVia: "landing" | "subpage",

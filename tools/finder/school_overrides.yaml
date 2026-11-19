@@ -36,6 +36,22 @@
 #                                             # PDF content.
 #       - { url: https://..., year: "2023-24" }
 #       - { url: https://..., year: "2024-25" }
+#     pinned_archive_urls:                    # the file the archiver must
+#                                             # use for a year, whatever the
+#                                             # school's page lists first.
+#                                             # Read by the archive function
+#                                             # (applyPinnedUrls in
+#                                             # _shared/resolve.ts): the pin
+#                                             # replaces the resolver's
+#                                             # choice for that year and is
+#                                             # added when the page lists
+#                                             # nothing for it. For schools
+#                                             # that post one CDS per campus
+#                                             # under one page. `year` is
+#                                             # required. direct_archive_urls
+#                                             # is a record only; nothing
+#                                             # reads it at archive time.
+#       - { url: https://..., year: "2024-25" }
 #     hosting_override:                       # operator-supplied hosting
 #                                             # facts the resolver can't
 #                                             # infer. Each field matches
@@ -686,6 +702,9 @@ overrides:
     direct_archive_urls:
       - { url: "https://bpb-us-e1.wpmucdn.com/sites.psu.edu/dist/d/114442/files/2026/09/CDS_2025_2026_UniversityPark_v3.pdf", year: "2025-26" }
       - { url: "https://bpb-us-e1.wpmucdn.com/sites.psu.edu/dist/d/114442/files/2025/06/CDS_2024_2025_UniversityPark_v2.pdf", year: "2024-25" }
+    pinned_archive_urls:
+      - { url: "https://bpb-us-e1.wpmucdn.com/sites.psu.edu/dist/d/114442/files/2026/09/CDS_2025_2026_UniversityPark_v3.pdf", year: "2025-26" }
+      - { url: "https://bpb-us-e1.wpmucdn.com/sites.psu.edu/dist/d/114442/files/2025/06/CDS_2024_2025_UniversityPark_v2.pdf", year: "2024-25" }
     hosting_override:
       file_storage: sharepoint
       cms: wordpress
@@ -694,12 +713,15 @@ overrides:
         Penn State publishes one CDS PDF per campus (about 20 a year) and the
         OPAIR page links to a SharePoint folder labeled Access Files Here.
         The penn-state slug is University Park (IPEDS 214777) only. The
-        resolver cannot tell the campus files apart: the 2024-25 row has
-        published York figures and then Abington figures. It was re-pointed
-        at the University Park file on 2026-11-18 (applied 88,478, matching
-        the federal figure). If section A of a penn-state document
-        names any campus other than University Park, re-archive the
-        UniversityPark file for that year with force_urls.
+        resolver takes the first full file a page lists for a year, which
+        here is Abington: the 2024-25 row has published York figures and
+        then Abington figures. It was re-pointed at the University Park
+        file on 2026-11-18 (applied 88,478, matching the federal figure),
+        and the nightly archive re-pointed it at Abington again the next
+        morning. pinned_archive_urls now holds both years to University
+        Park. Each new year needs its own pin: until then, if section A of
+        a penn-state document names any other campus, re-archive the
+        UniversityPark file for that year with force_urls and add the pin.
 
   - school_id: ut-austin
     browse_url: https://reports.utexas.edu/common-data-set/pdf
