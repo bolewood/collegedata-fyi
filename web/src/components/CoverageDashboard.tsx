@@ -558,11 +558,9 @@ function StatCell({
       aria-pressed={onClick ? active : undefined}
       style={{
         textAlign: "left",
-        padding: "8px 0 0",
+        padding: 0,
         background: "transparent",
         border: "none",
-        // Selected filters carry an ink bar; unselected ones dim to --ink-3.
-        borderTop: `2px solid ${onClick && active ? "var(--ink)" : "transparent"}`,
         font: "inherit",
         color: "inherit",
         cursor: onClick ? "pointer" : "default",
