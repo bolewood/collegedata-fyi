@@ -8,6 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 FINDER = (ROOT / ".github/workflows/ops-finder-probe.yml").read_text()
 CATCHUP = (ROOT / ".github/workflows/ops-archive-seed-catchup.yml").read_text()
+IR_BACKFILL = (ROOT / ".github/workflows/ops-ir-hub-backfill.yml").read_text()
 
 
 class FinderProbeWorkflowTests(unittest.TestCase):
@@ -58,6 +59,8 @@ class FinderProbeWorkflowTests(unittest.TestCase):
             "--audit-report-json finder-probe/active-html-audit.json",
             run,
         )
+        self.assertIn("--new-two-year-cap 300", run)
+        self.assertIn("--brave-budget", run)
 
     def test_failures_open_pipeline_alert_issues(self) -> None:
         self.assertIn("upsert_pipeline_alert_issue.py", FINDER)
@@ -79,6 +82,21 @@ class ArchiveSeedCatchupWorkflowTests(unittest.TestCase):
         self.assertIn("tools/finder/schools.yaml", CATCHUP)
         self.assertIn("HEAD^", CATCHUP)
         self.assertIn("--apply", CATCHUP)
+
+
+class IrHubBackfillWorkflowTests(unittest.TestCase):
+    def test_review_only_dispatch_does_not_touch_production(self) -> None:
+        self.assertIn("workflow_dispatch:", IR_BACKFILL)
+        self.assertNotIn("schedule:", IR_BACKFILL)
+        self.assertIn("backfill_ir_hubs.py", IR_BACKFILL)
+        self.assertIn("contents: read", IR_BACKFILL)
+        self.assertNotIn("archive-process", IR_BACKFILL)
+        self.assertNotIn("force_urls", IR_BACKFILL)
+        self.assertNotIn("tools/finder/schools.yaml", IR_BACKFILL.split("git add", 1)[0] if "git add" in IR_BACKFILL else IR_BACKFILL)
+        self.assertNotIn("git add", IR_BACKFILL)
+        self.assertNotIn("git commit", IR_BACKFILL)
+        self.assertIn("must not modify the working tree", IR_BACKFILL)
+        self.assertIn("published", IR_BACKFILL)
 
 
 if __name__ == "__main__":
