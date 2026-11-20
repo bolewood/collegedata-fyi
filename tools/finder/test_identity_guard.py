@@ -375,6 +375,49 @@ class SchoolListBuilderGuardTests(unittest.TestCase):
             self.assertIn("retired_aliases:", rendered)
             self.assertIn("- tufts-university", rendered)
 
+    def test_filter_ipeds_includes_two_year_degree_granting_nonprofits(self) -> None:
+        from tools.finder.build_school_list import filter_ipeds, unique_slug
+
+        rows = [
+            {
+                "UNITID": "207935",
+                "INSTNM": "Tulsa Community College",
+                "WEBADDR": "https://www.tulsacc.edu",
+                "STABBR": "OK",
+                "CONTROL": "1",
+                "ICLEVEL": "2",
+                "DEGGRANT": "1",
+                "FIPS": "40",
+            },
+            {
+                "UNITID": "168148",
+                "INSTNM": "Tufts University",
+                "WEBADDR": "https://www.tufts.edu",
+                "STABBR": "MA",
+                "CONTROL": "2",
+                "ICLEVEL": "1",
+                "DEGGRANT": "1",
+                "FIPS": "25",
+            },
+            {
+                "UNITID": "999999",
+                "INSTNM": "For Profit College",
+                "WEBADDR": "https://www.forprofit.edu",
+                "STABBR": "TX",
+                "CONTROL": "3",
+                "ICLEVEL": "2",
+                "DEGGRANT": "1",
+                "FIPS": "48",
+            },
+        ]
+        filtered = filter_ipeds(rows)
+        ids = {row["UNITID"] for row in filtered}
+        self.assertEqual(ids, {"207935", "168148"})
+        self.assertEqual(
+            unique_slug("Columbia College", "CA", "111111", {"columbia-college"}),
+            "columbia-college-ca",
+        )
+
 
 class RepositoryIdentityRegressionTests(unittest.TestCase):
     def test_checked_in_corpus_matches_official_snapshot(self):
