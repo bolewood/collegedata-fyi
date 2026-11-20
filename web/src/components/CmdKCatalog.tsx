@@ -370,12 +370,16 @@ export function CmdKCatalog() {
         type="button"
         onClick={openDialog}
         className="cd-chip cd-cmdk-trigger"
-        aria-label="Open index call-number command palette (Command+K)"
+        aria-keyshortcuts="Meta+K Control+K"
         data-testid="cmdk-trigger"
         style={{ cursor: "pointer" }}
       >
-        <span>⌘K</span>
+        {/* Name is "Open the INDEX command palette" so it contains the visible
+            label (WCAG 2.5.3); on phones INDEX is hidden and drops out. */}
+        <span aria-hidden="true">⌘K</span>
+        <span className="sr-only">Open the </span>
         <span className="cd-cmdk-trigger__label">INDEX</span>
+        <span className="sr-only"> command palette</span>
       </button>
 
       <dialog

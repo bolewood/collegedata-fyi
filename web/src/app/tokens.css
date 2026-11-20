@@ -3047,6 +3047,22 @@
   color: var(--paper);
   text-decoration-color: var(--paper);
 }
+/* Ghost buttons (Share) on the inked header: paper text, a border that
+   clears 3:1 on --ink-a, and a paper fill on hover. */
+.school-record .cd-school-header .cd-btn--ghost {
+  color: var(--paper);
+  border-color: color-mix(in srgb, var(--paper) 70%, var(--ink-a));
+}
+.school-record .cd-school-header .cd-btn--ghost:hover:not(:disabled) {
+  background: var(--paper);
+  color: var(--ink-a);
+  border-color: var(--paper);
+}
+.school-record .cd-school-header .cd-btn--ghost:disabled {
+  background: transparent;
+  color: color-mix(in srgb, var(--paper) 60%, var(--ink-a));
+  border-color: color-mix(in srgb, var(--paper) 35%, var(--ink-a));
+}
 .school-record .cd-school-header h2,
 .school-record .cd-school-header .cd-archive-lead__heading,
 .school-record .cd-school-header .cd-archive-lead p {
@@ -3469,6 +3485,10 @@
   padding: 8px 14px;
   background: var(--paper-2);
   border-bottom: 1px solid var(--rule);
+}
+/* --ink-3 is 4.24:1 on --paper-2; match the band link. */
+.cd-ribbon__band-head .meta {
+  color: var(--ink-2);
 }
 .cd-ribbon__band-link {
   font-size: 10.5px;
