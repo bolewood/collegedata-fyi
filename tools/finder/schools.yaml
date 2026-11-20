@@ -22080,6 +22080,12 @@ schools:
     patterns_tried: 0
     search_fallback_tried: true
   discovery_seed_url: https://oair.tulane.edu/common-data-set
+- id: tulsa-community-college
+  name: Tulsa Community College
+  domain: tulsacc.edu
+  ipeds_id: '207935'
+  scrape_policy: active
+  discovery_seed_url: https://www.tulsacc.edu/about-tcc/institutional-research
 - id: turtle-mountain-community-college
   name: Turtle Mountain Community College
   domain: tm.edu
