@@ -12,6 +12,9 @@ import {
   rewriteWaybackUrl,
   parentLandingCandidates,
   wellKnownPathUrls,
+  extractIrHubLinks,
+  extractAboutLinks,
+  wellKnownIrHubUrls,
 } from "./resolve.ts";
 
 const BASE = "https://example.edu/ir/cds/";
@@ -938,6 +941,64 @@ Deno.test("wellKnownPathUrls: expands to host-rooted CDS landing paths", () => {
   // Origin is preserved without the hint's path.
   for (const u of urls) {
     assertEquals(u.startsWith("https://irp.dpb.cornell.edu"), true);
+  }
+});
+
+Deno.test("extractIrHubLinks: Tulsa-style IR link on the homepage", () => {
+  const html = `
+    <html><body>
+      <a href="/admissions">Apply now</a>
+      <a href="/about-tcc">About TCC</a>
+      <a href="/about-tcc/institutional-research">Institutional Research</a>
+      <a href="https://other.edu/institutional-research">Someone else IR</a>
+    </body></html>
+  `;
+  const links = extractIrHubLinks(html, "https://www.tulsacc.edu/");
+  assertEquals(links, ["https://www.tulsacc.edu/about-tcc/institutional-research"]);
+});
+
+Deno.test("extractAboutLinks: one about hop toward an IR office", () => {
+  const html = `
+    <a href="/about-tcc">About TCC</a>
+    <a href="/admissions">Admissions</a>
+  `;
+  assertEquals(
+    extractAboutLinks(html, "https://www.tulsacc.edu/"),
+    ["https://www.tulsacc.edu/about-tcc"],
+  );
+  const aboutHtml = `
+    <a href="/about-tcc/leadership">Leadership</a>
+    <a href="/about-tcc/institutional-research">Institutional Research</a>
+  `;
+  assertEquals(
+    extractIrHubLinks(aboutHtml, "https://www.tulsacc.edu/about-tcc"),
+    ["https://www.tulsacc.edu/about-tcc/institutional-research"],
+  );
+});
+
+Deno.test("extractIrHubLinks: ira subdomain and short /ir path", () => {
+  assertEquals(
+    extractIrHubLinks(
+      '<a href="https://ira.example.edu/">IRA</a>',
+      "https://www.example.edu/",
+    ),
+    ["https://ira.example.edu/"],
+  );
+  assertEquals(
+    extractIrHubLinks(
+      '<a href="/first-year">First year</a><a href="/ir/">IR office</a>',
+      "https://example.edu/",
+    ),
+    ["https://example.edu/ir/"],
+  );
+});
+
+Deno.test("wellKnownIrHubUrls: conventional IR hubs on the landing origin", () => {
+  const urls = wellKnownIrHubUrls("https://www.tulsacc.edu/");
+  assertEquals(urls.includes("https://www.tulsacc.edu/institutional-research"), true);
+  assertEquals(urls.includes("https://www.tulsacc.edu/ir"), true);
+  for (const url of urls) {
+    assertEquals(url.startsWith("https://www.tulsacc.edu/"), true);
   }
 });
 

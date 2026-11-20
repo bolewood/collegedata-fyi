@@ -172,6 +172,7 @@ jobs:
             --include-active-no-hint \
             --cooldown-days "${INPUT_COOLDOWN_DAYS}" \
             --brave-budget "${INPUT_BRAVE_BUDGET}" \
+            --new-two-year-cap 300 \
             --school-budget-sec 20 \
             --save-every 50 \
             --summary-json finder-probe/unknown-summary.json \

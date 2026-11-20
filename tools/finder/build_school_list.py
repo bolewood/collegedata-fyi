@@ -2,9 +2,13 @@
 """Expand schools.yaml from ~84 hand-curated entries to ~2,000+ using IPEDS data.
 
 Downloads the IPEDS Institutional Characteristics (HD) file from NCES,
-filters to four-year degree-granting US institutions (excluding for-profits),
-and merges with the existing schools.yaml — preserving all hand-entered
-overrides (discovery_seed_url, browse_url, notes, scrape_policy, sub_institutions).
+filters to two- and four-year degree-granting US institutions (excluding
+for-profits), and merges with the existing schools.yaml — preserving all
+hand-entered overrides (discovery_seed_url, browse_url, notes, scrape_policy,
+sub_institutions).
+
+`--append-missing` adds newly in-scope UNITIDs (including ICLEVEL=2) onto
+the existing file without rewriting probe_state or other hand data.
 
 Dependencies: pyyaml (pip install pyyaml). Everything else is stdlib.
 
@@ -46,6 +50,7 @@ from tools.finder.identity_guard import (  # noqa: E402
     official_records_from_ipeds_rows,
     school_claims_from_entries,
 )
+from tools.finder.ir_hubs import enrollment_to_instsize  # noqa: E402
 
 # IPEDS download URL pattern — the HD (Header/Directory) file
 # contains institution-level characteristics.
@@ -53,7 +58,12 @@ IPEDS_URL = "https://nces.ed.gov/ipeds/datacenter/data/HD{year}.zip"
 
 # Columns we care about (upper-cased)
 WANT_COLS = {"UNITID", "INSTNM", "WEBADDR", "STABBR", "CONTROL",
-             "ICLEVEL", "DEGGRANT", "FIPS"}
+             "ICLEVEL", "DEGGRANT", "FIPS", "INSTSIZE", "CYACTIVE"}
+
+# Directory in-scope is ICLEVEL in (1, 2). The finder corpus used to keep
+# only four-year schools, which is why Tulsa Community College had to be
+# added by hand.
+ALLOWED_ICLEVELS = {1, 2}
 
 # US states + DC FIPS codes (exclude territories for V1)
 US_FIPS = set(range(1, 57)) - {3, 7, 14, 43, 52}  # exclude AS, GU, MH, PW, VI
@@ -136,13 +146,33 @@ def slugify(name: str) -> str:
     return s
 
 
-def filter_ipeds(rows: list[dict]) -> list[dict]:
-    """Filter to four-year, degree-granting, non-profit US institutions."""
-    n0 = len(rows)
+def unique_slug(name: str, state: str, ipeds_id: str, used_ids: set[str]) -> str:
+    """Kebab-case id, with state then UNITID suffixes when the slug is taken."""
+    base = slugify(name)
+    if base and base not in used_ids:
+        return base
+    state_slug = (state or "").strip().lower()
+    if base and state_slug:
+        with_state = f"{base}-{state_slug}"
+        if with_state not in used_ids:
+            return with_state
+    with_id = f"{base or 'school'}-{ipeds_id}"
+    suffix = 2
+    candidate = with_id
+    while candidate in used_ids:
+        candidate = f"{with_id}-{suffix}"
+        suffix += 1
+    return candidate
 
-    # Four-year
-    rows = [r for r in rows if safe_int(r.get("ICLEVEL", "")) == 1]
-    print(f"  After ICLEVEL=1 (four-year): {len(rows):,} (dropped {n0 - len(rows):,})")
+
+def filter_ipeds(rows: list[dict], iclevels: set[int] | None = None) -> list[dict]:
+    """Filter to two- and four-year, degree-granting, non-profit US institutions."""
+    n0 = len(rows)
+    allowed = iclevels if iclevels is not None else ALLOWED_ICLEVELS
+
+    rows = [r for r in rows if safe_int(r.get("ICLEVEL", "")) in allowed]
+    label = ",".join(str(level) for level in sorted(allowed))
+    print(f"  After ICLEVEL in ({label}): {len(rows):,} (dropped {n0 - len(rows):,})")
 
     n1 = len(rows)
     # Degree-granting
@@ -189,7 +219,12 @@ def merge(ipeds_rows: list[dict], existing: dict[str, dict]) -> list[dict]:
 
         domain = extract_domain(row.get("WEBADDR", ""))
         name = row.get("INSTNM", "").strip()
-        slug = slugify(name)
+        iclevel = safe_int(row.get("ICLEVEL", ""))
+        instsize = safe_int(row.get("INSTSIZE", ""))
+        state = (row.get("STABBR") or "").strip()
+        used_ids = {str(item.get("id") or "") for item in result}
+        used_ids.update(str(item.get("id") or "") for item in existing.values())
+        slug = unique_slug(name, state, iid, used_ids)
 
         entry: dict = {
             "id": slug,
@@ -198,6 +233,10 @@ def merge(ipeds_rows: list[dict], existing: dict[str, dict]) -> list[dict]:
             "ipeds_id": iid,
             "scrape_policy": "unknown",
         }
+        if iclevel in ALLOWED_ICLEVELS:
+            entry["iclevel"] = iclevel
+        if instsize and instsize > 0:
+            entry["ipeds_instsize"] = instsize
 
         # If we have a hand-curated entry, overlay it (hand data wins).
         # PR 5 of the URL hint refactor renamed cds_url_hint →
@@ -213,6 +252,9 @@ def merge(ipeds_rows: list[dict], existing: dict[str, dict]) -> list[dict]:
                 "scrape_policy", "notes", "sub_institutions",
                 "retired_aliases",
                 "probe_state",
+                "iclevel",
+                "ipeds_instsize",
+                "undergraduate_enrollment",
             ]:
                 if key in hand and hand[key] is not None:
                     entry[key] = hand[key]
@@ -409,6 +451,10 @@ def write_yaml(schools: list[dict], dry_run: bool = False) -> None:
                     for sub in s["sub_institutions"]:
                         f.write(f'      - id: {sub.get("id", "")}\n')
                         f.write(f'        label: "{sub.get("label", "")}"\n')
+                if s.get("iclevel"):
+                    f.write(f"    iclevel: {int(s['iclevel'])}\n")
+                if s.get("ipeds_instsize"):
+                    f.write(f"    ipeds_instsize: {int(s['ipeds_instsize'])}\n")
                 if s.get("notes"):
                     notes = s["notes"].replace('"', '\\"')
                     f.write(f'    notes: "{notes}"\n')
@@ -426,13 +472,235 @@ def write_yaml(schools: list[dict], dry_run: bool = False) -> None:
     print(f"  Verified absent: {n_absent}")
 
 
+def format_school_yaml_entry(school: dict) -> str:
+    """Render one schools.yaml list item in the hand-maintained style."""
+    lines = [f"- id: {school['id']}"]
+    name = school.get("name", "")
+    if any(c in name for c in ":&'\"[]{}#"):
+        lines.append(f'  name: "{name}"')
+    else:
+        lines.append(f"  name: {name}")
+    lines.append(f"  domain: {school.get('domain', '')}")
+    iid = str(school.get("ipeds_id", "")).strip('"')
+    lines.append(f'  ipeds_id: "{iid}"')
+    lines.append(f"  scrape_policy: {school.get('scrape_policy', 'unknown')}")
+    if school.get("iclevel"):
+        lines.append(f"  iclevel: {int(school['iclevel'])}")
+    if school.get("ipeds_instsize"):
+        lines.append(f"  ipeds_instsize: {int(school['ipeds_instsize'])}")
+    if school.get("undergraduate_enrollment") not in (None, ""):
+        lines.append(
+            f"  undergraduate_enrollment: {int(school['undergraduate_enrollment'])}"
+        )
+    return "\n".join(lines) + "\n"
+
+
+def append_schools_yaml(schools: list[dict], path: Path = SCHOOLS_YAML) -> None:
+    """Append new unknown rows without rewriting existing probe_state."""
+    if not schools:
+        return
+    existing_text = path.read_text() if path.exists() else "schools:\n"
+    if not existing_text.endswith("\n"):
+        existing_text += "\n"
+    block = "\n".join(format_school_yaml_entry(school) for school in schools)
+    path.write_text(existing_text + "\n" + block)
+    print(f"Appended {len(schools)} schools to {path}")
+
+
+def entry_from_directory_row(
+    row: dict,
+    official: dict[str, str] | None,
+    used_ids: set[str],
+) -> dict | None:
+    """Build a finder row for an in-scope 2-year (or other) directory school."""
+    iid = str(safe_int(row.get("unitid") or row.get("UNITID") or row.get("ipeds_id")) or "")
+    if not iid or iid == "None":
+        return None
+    name = (official or {}).get("official_name") or str(
+        row.get("name") or row.get("INSTNM") or ""
+    ).strip()
+    domain = extract_domain(
+        str(row.get("website_domain") or row.get("domain") or "")
+    ) or (official or {}).get("official_domain") or extract_domain(
+        str(row.get("WEBADDR") or "")
+    )
+    state = (
+        (official or {}).get("official_state")
+        or str(row.get("state") or row.get("STABBR") or "")
+    ).strip()
+    slug = unique_slug(name, state, iid, used_ids)
+    used_ids.add(slug)
+    iclevel = safe_int(row.get("iclevel") or row.get("ICLEVEL") or "")
+    if iclevel is None:
+        level = str(row.get("level") or "").strip().lower()
+        if level.startswith("2"):
+            iclevel = 2
+        elif level.startswith("4"):
+            iclevel = 1
+    enrollment = row.get("undergraduate_enrollment")
+    instsize = safe_int(row.get("ipeds_instsize") or row.get("INSTSIZE") or "")
+    if not instsize:
+        instsize = enrollment_to_instsize(enrollment)
+    entry: dict = {
+        "id": slug,
+        "name": name,
+        "domain": domain or "",
+        "ipeds_id": iid,
+        "scrape_policy": "unknown",
+    }
+    if iclevel in ALLOWED_ICLEVELS:
+        entry["iclevel"] = iclevel
+    if instsize:
+        entry["ipeds_instsize"] = instsize
+    if enrollment not in (None, ""):
+        try:
+            entry["undergraduate_enrollment"] = int(enrollment)
+        except (TypeError, ValueError):
+            pass
+    return entry
+
+
+def append_missing_from_sources(
+    *,
+    ipeds_rows: list[dict] | None,
+    directory_rows: list[dict] | None,
+    existing: dict[str, dict],
+    official_records: dict[str, dict[str, str]],
+    iclevels: set[int] | None = None,
+) -> list[dict]:
+    """Return new unknown-school dicts that are not already in schools.yaml."""
+    used_ids = {str(s.get("id") or "") for s in existing.values()}
+    seen_ipeds = set(existing)
+    added: list[dict] = []
+
+    def consider(entry: dict | None) -> None:
+        if not entry:
+            return
+        iid = str(entry.get("ipeds_id") or "")
+        if not iid or iid in seen_ipeds:
+            return
+        official = official_records.get(iid.zfill(6) if iid.isdigit() else iid)
+        if official is None and iid.isdigit():
+            official = official_records.get(f"{int(iid):06d}")
+        if official is None:
+            return
+        entry["name"] = official.get("official_name") or entry["name"]
+        if not entry.get("domain"):
+            entry["domain"] = official.get("official_domain") or ""
+        seen_ipeds.add(iid)
+        added.append(entry)
+
+    if ipeds_rows:
+        for row in filter_ipeds(ipeds_rows, iclevels=iclevels):
+            iid = str(safe_int(row.get("UNITID", "")))
+            if iid in seen_ipeds or iid == "None":
+                continue
+            official = official_records.get(iid.zfill(6) if iid.isdigit() else iid)
+            used = used_ids | {e["id"] for e in added}
+            consider(entry_from_directory_row(row, official, used))
+
+    if directory_rows:
+        for row in directory_rows:
+            sector = str(row.get("sector") or "").lower()
+            if "for-profit" in sector:
+                continue
+            iclevel = safe_int(row.get("iclevel") or row.get("ICLEVEL") or "")
+            level = str(row.get("level") or "").strip().lower()
+            if iclevels:
+                if iclevel is not None and iclevel not in iclevels:
+                    continue
+                if iclevel is None:
+                    if level.startswith("2") and 2 not in iclevels:
+                        continue
+                    if level.startswith("4") and 1 not in iclevels:
+                        continue
+            iid = str(safe_int(row.get("unitid") or row.get("ipeds_id")) or "")
+            if iid in seen_ipeds or iid == "None":
+                continue
+            official = official_records.get(
+                iid.zfill(6) if iid.isdigit() else iid
+            )
+            used = used_ids | {e["id"] for e in added}
+            consider(entry_from_directory_row(row, official, used))
+
+    added.sort(key=lambda s: s.get("name", "").lower())
+    return added
+
+
 def main():
     ap = argparse.ArgumentParser(description="Expand schools.yaml from IPEDS data")
     ap.add_argument("--year", type=int, default=2023,
                     help="IPEDS data year (default: 2023)")
     ap.add_argument("--dry-run", action="store_true",
                     help="Write to schools.preview.yaml instead of overwriting")
+    ap.add_argument(
+        "--append-missing",
+        action="store_true",
+        help="Add newly in-scope UNITIDs (including ICLEVEL=2) without "
+             "rewriting existing rows or probe_state.",
+    )
+    ap.add_argument(
+        "--from-csv",
+        type=Path,
+        help="Optional directory/missing-schools CSV (unitid, name, level, "
+             "website_domain, undergraduate_enrollment) used with --append-missing.",
+    )
+    ap.add_argument(
+        "--iclevel",
+        default="1,2",
+        help="Comma-separated ICLEVEL values to include (default: 1,2).",
+    )
     args = ap.parse_args()
+    iclevels = {int(part) for part in str(args.iclevel).split(",") if part.strip()}
+
+    if args.append_missing:
+        from tools.finder.identity_guard import (
+            DEFAULT_SNAPSHOT,
+            load_identity_snapshot,
+        )
+
+        existing = load_existing()
+        _, official_records = load_identity_snapshot(DEFAULT_SNAPSHOT)
+        ipeds_rows = None
+        directory_rows = None
+        if args.from_csv:
+            with args.from_csv.open(newline="", encoding="utf-8") as handle:
+                directory_rows = list(csv.DictReader(handle))
+        else:
+            try:
+                ipeds_rows = download_ipeds(args.year)
+            except (OSError, TimeoutError, zipfile.BadZipFile) as exc:
+                print(f"IPEDS download skipped ({exc}); nothing to append",
+                      file=sys.stderr)
+                raise SystemExit(1) from exc
+        added = append_missing_from_sources(
+            ipeds_rows=ipeds_rows,
+            directory_rows=directory_rows,
+            existing=existing,
+            official_records=official_records,
+            iclevels=iclevels,
+        )
+        identity_audit = audit_school_identities(
+            school_claims_from_entries(list(existing.values()) + added),
+            official_records,
+            load_identity_exceptions(),
+        )
+        for issue in identity_audit["warnings"]:
+            print(f"  identity warning: {issue}", file=sys.stderr)
+        if identity_audit["errors"]:
+            for issue in identity_audit["errors"]:
+                print(f"  identity error: {issue}", file=sys.stderr)
+            raise SystemExit(
+                "Refusing to append schools.yaml: an IPEDS identity claim failed validation"
+            )
+        out = SCHOOLS_YAML if not args.dry_run else SCHOOLS_YAML.with_suffix(".append-preview.yaml")
+        if args.dry_run:
+            out.write_text("".join(format_school_yaml_entry(school) for school in added))
+            print(f"Would append {len(added)} schools to {SCHOOLS_YAML} (wrote {out})")
+        else:
+            append_schools_yaml(added, out)
+        print(f"Append-missing complete: {len(added)} new rows")
+        return
 
     rows = download_ipeds(args.year)
     print(f"Raw IPEDS rows: {len(rows):,}")
