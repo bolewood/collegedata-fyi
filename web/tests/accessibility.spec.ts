@@ -53,4 +53,24 @@ test.describe("whole pages have no automated WCAG violations", () => {
       expect(open.violations).toEqual([]);
     });
   }
+
+  // Wait on markup that predates the fixes, so a regression fails in axe
+  // rather than on a locator.
+  test("coverage dashboard", async ({ page }) => {
+    await page.goto("/coverage");
+    await expect(page.locator('[aria-label="Coverage table"] [role="row"]').nth(1)).toBeVisible();
+    expect((await wcagScan(page).analyze()).violations).toEqual([]);
+  });
+
+  test("browse table", async ({ page }) => {
+    await page.goto("/browse");
+    await expect(page.locator(".browser-row").first()).toBeVisible();
+    expect((await wcagScan(page).analyze()).violations).toEqual([]);
+  });
+
+  test("school year page", async ({ page }) => {
+    await page.goto("/schools/bowdoin/2024-25");
+    await expect(page.locator(".cd-fields__gutter-sub").first()).toBeVisible();
+    expect((await wcagScan(page).analyze()).violations).toEqual([]);
+  });
 });

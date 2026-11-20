@@ -410,8 +410,7 @@ export function TestOptionalChart() {
                 border: "1px solid transparent",
                 borderRadius: 2,
                 cursor: "pointer",
-                color: off ? "var(--ink-4)" : "var(--ink-2)",
-                opacity: off ? 0.5 : 1,
+                color: off ? "var(--ink-3)" : "var(--ink-2)",
                 fontFamily: "var(--sans)",
                 fontSize: 12,
               }}
@@ -465,7 +464,7 @@ export function TestOptionalChart() {
           <div className="serif" style={{ fontSize: 14, color: "var(--paper)" }}>
             {hoverSchool.name}
           </div>
-          <div style={{ color: "var(--ink-4)", marginTop: 2 }}>
+          <div style={{ color: "color-mix(in srgb, var(--paper) 70%, var(--ink))", marginTop: 2 }}>
             CDS {hoverPoint.year}
           </div>
           <div style={{ marginTop: 6 }}>

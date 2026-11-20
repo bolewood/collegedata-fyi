@@ -9,12 +9,13 @@
   --paper-3:    #ded6c3;   /* strong separator */
   --ink:        #1c1e1b;   /* primary text */
   --ink-2:      #3a3b37;   /* secondary text */
-  --ink-3:      #6b6a63;   /* tertiary / meta */
-  --ink-4:      #a8a59a;   /* faint / placeholder */
+  --ink-3:      #65645d;   /* tertiary / meta */
+  --ink-4:      #a8a59a;   /* borders, dividers, decorative marks; never text */
   --forest:     #3f5b3a;   /* muted forest green — sole accent */
   --forest-2:   #5a7a52;
   --forest-ink: #27321f;
   --ochre:      #8a6a2b;   /* tertiary highlight (use sparingly) */
+  --ochre-ink:  #765a24;   /* ochre for small text (--ochre fails 4.5:1) */
   --brick:      #8c2a1f;   /* destructive / alarm only */
   --rule:       rgba(28,30,27,0.12);
   --rule-strong:rgba(28,30,27,0.28);
@@ -661,7 +662,8 @@
 }
 .cd-fields__gutter-sub {
   display: block;
-  padding: 2px 0 2px 32px;
+  min-height: 24px; /* WCAG 2.5.8 target size */
+  padding: 3px 0 3px 32px;
   font-family: var(--mono);
   font-size: 11.5px;
   letter-spacing: 0.02em;
@@ -3037,6 +3039,12 @@
 .school-record .cd-school-header__aside {
   color: var(--paper);
 }
+/* The share popover is a light card inside the inked header: put its
+   text back on the house inks. */
+.school-record .cd-school-header .cd-card { color: var(--ink); }
+.school-record .cd-school-header .cd-card .meta { color: var(--ink-3); }
+.school-record .cd-school-header .cd-card .mono { color: var(--ink); }
+.school-record .cd-school-header .cd-card :focus-visible { outline-color: var(--forest); }
 .school-record .cd-school-header__years::before {
   color: color-mix(in srgb, var(--paper) 55%, var(--ink-a));
 }
