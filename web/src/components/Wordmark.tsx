@@ -23,7 +23,7 @@ export function Wordmark({
   const domain = (
     <span style={{ whiteSpace: "nowrap", letterSpacing: "-0.015em" }}>
       <span style={{ fontStyle: "italic", fontWeight: 400 }}>collegedata</span>
-      <span style={{ opacity: 0.55 }}>.fyi</span>
+      <span style={{ opacity: 0.7 }}>.fyi</span>
     </span>
   );
   const base: React.CSSProperties = {
