@@ -446,7 +446,7 @@ function KVRows({
             <span
               className="nums"
               style={{
-                color: missing ? "var(--ink-4)" : "var(--ink)",
+                color: missing ? "var(--ink-3)" : "var(--ink)",
                 fontWeight: missing ? 400 : 500,
                 textAlign: "right",
                 fontVariantNumeric: "tabular-nums",

@@ -275,13 +275,13 @@ function Chart({
           <div className="serif" style={{ color: "var(--paper)", fontSize: 15 }}>
             {hover.schoolName}
           </div>
-          <div style={{ color: "var(--ink-4)" }}>CDS {hover.year} · {hover.selectivity}</div>
+          <div style={{ color: "color-mix(in srgb, var(--paper) 70%, var(--ink))" }}>CDS {hover.year} · {hover.selectivity}</div>
           <div style={{ marginTop: 6 }}>
             {formatNumber(hover.waitListAdmitted)} admitted from{" "}
             {formatNumber(hover.waitListAccepted)} accepted spots
           </div>
           <div>Wait-list success: {formatRecipeShare(hover.waitListSuccessRate)}</div>
-          <div style={{ color: "var(--ink-4)", marginTop: 6 }}>
+          <div style={{ color: "color-mix(in srgb, var(--paper) 70%, var(--ink))", marginTop: 6 }}>
             Offered {formatNumber(hover.waitListOffered)} · Admit rate{" "}
             {formatRecipeShare(hover.acceptanceRate)}
           </div>

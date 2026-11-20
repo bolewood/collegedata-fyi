@@ -36,15 +36,18 @@ Warm cream paper, near-black ink, one muted forest green. No blue. Ochre and bri
 | `--paper-3` | `#ded6c3` | strong separator |
 | `--ink` | `#1c1e1b` | primary text |
 | `--ink-2` | `#3a3b37` | secondary text |
-| `--ink-3` | `#6b6a63` | tertiary / meta |
-| `--ink-4` | `#a8a59a` | faint / placeholder |
+| `--ink-3` | `#65645d` | tertiary / meta |
+| `--ink-4` | `#a8a59a` | borders, dividers, decorative marks — never text |
 | `--forest` | `#3f5b3a` | **sole accent** |
 | `--forest-2` | `#5a7a52` | lighter forest |
 | `--forest-ink` | `#27321f` | button-hover, link-hover |
 | `--ochre` | `#8a6a2b` | rare emphasis |
+| `--ochre-ink` | `#765a24` | ochre for small text |
 | `--brick` | `#8c2a1f` | alarm/destructive only |
 | `--rule` | `rgba(28,30,27,.12)` | hairline between list items |
 | `--rule-strong` | `rgba(28,30,27,.28)` | above section bands |
+
+Text never goes lighter than `--ink-3`, which is the faintest ink that clears 4.5:1 on `--paper` and `--paper-2` (not on `--paper-3`; use `--ink-2` there). `--ink-4` is for rules and marks only. Ochre text at caption size uses `--ochre-ink`; `--ochre` itself is for borders, fills and large type.
 
 Card tint for index-card–style panels: `#faf6ec` (pale cream, slightly lighter than `--paper`). Apply via the `.cd-card` class, not raw hex.
 

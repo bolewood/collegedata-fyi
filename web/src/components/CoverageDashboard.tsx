@@ -354,9 +354,13 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
           overflowX: "auto",
           WebkitOverflowScrolling: "touch",
         }}
+        role="table"
         aria-label="Coverage table"
+        // Rows are virtualized, so give the full count and each row's index.
+        aria-rowcount={filteredRows.length + 1}
       >
         <div
+          role="presentation"
           style={{
             minWidth: TABLE_MIN_WIDTH,
           }}
@@ -364,6 +368,7 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
           {/* Sticky table header */}
           <div
             role="row"
+            aria-rowindex={1}
             style={{
               display: "grid",
               gridTemplateColumns: TABLE_COLUMNS,
@@ -392,12 +397,13 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
             />
             <SortHeader label="Status" col="status" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
             <SortHeader label="Last checked" col="checked" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
-            <span>Action</span>
+            <span role="columnheader">Action</span>
           </div>
 
           {/* Virtualized table body */}
           <div
             ref={parentRef}
+            role="rowgroup"
             style={{
               height: TABLE_VIEWPORT_HEIGHT,
               overflowY: "auto",
@@ -405,6 +411,7 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
             }}
           >
             <div
+              role="presentation"
               style={{
                 height: virtualizer.getTotalSize(),
                 position: "relative",
@@ -431,25 +438,29 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
                       borderTop: vi.index === 0 ? "none" : "1px solid var(--rule)",
                     }}
                     role="row"
+                    aria-rowindex={vi.index + 2}
                   >
-                    <ListLink
-                      href={`/schools/${r.school_id}`}
-                      className="school-name-with-glyph"
-                      style={{
-                        fontFamily: "var(--serif)",
-                        fontSize: 16,
-                        lineHeight: 1.25,
-                        color: "var(--ink)",
-                        textDecoration: "none",
-                      }}
-                    >
-                      <SchoolGlyph size="sm" brandColors={r.brand_colors} />
-                      {r.school_name}
-                    </ListLink>
-                    <span className="mono" style={{ fontSize: 12, color: "var(--ink-2)" }}>
+                    <span role="cell" style={{ minWidth: 0 }}>
+                      <ListLink
+                        href={`/schools/${r.school_id}`}
+                        className="school-name-with-glyph"
+                        style={{
+                          fontFamily: "var(--serif)",
+                          fontSize: 16,
+                          lineHeight: 1.25,
+                          color: "var(--ink)",
+                          textDecoration: "none",
+                        }}
+                      >
+                        <SchoolGlyph size="sm" brandColors={r.brand_colors} />
+                        {r.school_name}
+                      </ListLink>
+                    </span>
+                    <span role="cell" className="mono" style={{ fontSize: 12, color: "var(--ink-2)" }}>
                       {r.state ?? "—"}
                     </span>
                     <span
+                      role="cell"
                       className="mono nums"
                       style={{ fontSize: 13, color: "var(--ink-2)", textAlign: "right" }}
                     >
@@ -457,29 +468,31 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
                         ? r.undergraduate_enrollment.toLocaleString()
                         : "—"}
                     </span>
-                    <span style={{ minWidth: 0 }}>
+                    <span role="cell" style={{ minWidth: 0 }}>
                       <CoverageBadge status={r.coverage_status} label={r.coverage_label} />
                     </span>
-                    <span className="mono" style={{ fontSize: 12, color: "var(--ink-3)" }}>
+                    <span role="cell" className="mono" style={{ fontSize: 12, color: "var(--ink-3)" }}>
                       {formatChecked(r.last_checked_at)}
                     </span>
-                    {r.can_submit_source ? (
-                      <ListLink
-                        href={`/schools/${r.school_id}#submit`}
-                        className="mono"
-                        style={{ fontSize: 12 }}
-                      >
-                        Send the link
-                      </ListLink>
-                    ) : (
-                      <ListLink
-                        href={`/schools/${r.school_id}`}
-                        className="mono"
-                        style={{ fontSize: 12, color: "var(--ink-3)" }}
-                      >
-                        Open
-                      </ListLink>
-                    )}
+                    <span role="cell">
+                      {r.can_submit_source ? (
+                        <ListLink
+                          href={`/schools/${r.school_id}#submit`}
+                          className="mono"
+                          style={{ fontSize: 12 }}
+                        >
+                          Send the link
+                        </ListLink>
+                      ) : (
+                        <ListLink
+                          href={`/schools/${r.school_id}`}
+                          className="mono"
+                          style={{ fontSize: 12, color: "var(--ink-3)" }}
+                        >
+                          Open
+                        </ListLink>
+                      )}
+                    </span>
                   </div>
                 );
               })}
@@ -542,15 +555,17 @@ function StatCell({
   return (
     <Tag
       onClick={onClick}
+      aria-pressed={onClick ? active : undefined}
       style={{
         textAlign: "left",
-        padding: 0,
+        padding: "8px 0 0",
         background: "transparent",
         border: "none",
+        // Selected filters carry an ink bar; unselected ones dim to --ink-3.
+        borderTop: `2px solid ${onClick && active ? "var(--ink)" : "transparent"}`,
         font: "inherit",
         color: "inherit",
         cursor: onClick ? "pointer" : "default",
-        opacity: onClick && active === false ? 0.55 : 1,
       }}
     >
       <div className="meta" style={{ marginBottom: 6, color: emphasis ? "var(--ink)" : "var(--ink-3)" }}>
@@ -591,27 +606,33 @@ function SortHeader({
 }) {
   const active = sortKey === col;
   return (
-    <button
-      onClick={() => onSort(col)}
-      style={{
-        textAlign: align === "right" ? "right" : "left",
-        background: "transparent",
-        border: "none",
-        padding: 0,
-        font: "inherit",
-        color: active ? "var(--ink)" : "var(--ink-3)",
-        cursor: "pointer",
-        letterSpacing: "0.06em",
-        textTransform: "uppercase",
-      }}
+    <span
+      role="columnheader"
+      aria-sort={active ? (sortDir === "asc" ? "ascending" : "descending") : undefined}
+      style={{ textAlign: align === "right" ? "right" : "left" }}
     >
-      {label}
-      {active && (
-        <span style={{ marginLeft: 6 }}>
-          {sortDir === "asc" ? "▲" : "▼"}
-        </span>
-      )}
-    </button>
+      <button
+        onClick={() => onSort(col)}
+        style={{
+          textAlign: align === "right" ? "right" : "left",
+          background: "transparent",
+          border: "none",
+          padding: 0,
+          font: "inherit",
+          color: active ? "var(--ink)" : "var(--ink-3)",
+          cursor: "pointer",
+          letterSpacing: "0.06em",
+          textTransform: "uppercase",
+        }}
+      >
+        {label}
+        {active && (
+          <span style={{ marginLeft: 6 }}>
+            {sortDir === "asc" ? "▲" : "▼"}
+          </span>
+        )}
+      </button>
+    </span>
   );
 }
 

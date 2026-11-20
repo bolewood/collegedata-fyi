@@ -43,7 +43,7 @@ export function SchoolTable({ schools }: { schools: SchoolSummary[] }) {
   }
 
   function SortIcon({ col }: { col: SortKey }) {
-    if (sortKey !== col) return <span style={{ marginLeft: 6, color: "var(--ink-4)" }}>↕</span>;
+    if (sortKey !== col) return <span style={{ marginLeft: 6, color: "var(--ink-3)" }}>↕</span>;
     return <span style={{ marginLeft: 6 }}>{sortDir === "asc" ? "↑" : "↓"}</span>;
   }
 

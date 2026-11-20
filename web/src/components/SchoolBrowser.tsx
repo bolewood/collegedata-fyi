@@ -781,7 +781,7 @@ export function SchoolBrowser({
                               fontSize: 10,
                               color:
                                 row.sat_submit_rate != null && row.sat_submit_rate < 0.35
-                                  ? "var(--ochre)"
+                                  ? "var(--ochre-ink)"
                                   : "var(--ink-3)",
                             }}
                             title="Share of enrolled first-years who submitted SAT scores (§C9)"
