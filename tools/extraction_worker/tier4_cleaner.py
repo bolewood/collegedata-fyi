@@ -191,6 +191,74 @@ _NO_WRAP_EMPTY_LABELS = {
 }
 
 
+_WRAP_OPEN_END_RE = re.compile(
+    r"(?:[,/&(\-–]|\b(?:and|or|of|the|for|in|to|a|an|with|from|by|at|who|that|than|as|on|per|not|are|is|were|was|your|their))\s*$",
+    re.IGNORECASE,
+)
+# "H1 Self-Help", "C8C No college policy", and the cell ids some exports
+# print ("H115 Parent Loans").
+_LEADING_QUESTION_TAG_RE = re.compile(r"^(?:[A-J]\d{1,4}[A-Za-z]?\.?\s+)+")
+_KNOWN_ROW_LABELS: tuple[frozenset[str], frozenset[str]] | None = None
+
+
+def _row_label_words(text: str) -> list[str]:
+    return _normalize_label_without_gender_rewrite(re.sub(r"['’]", "", text)).split()
+
+
+def _known_row_labels() -> tuple[frozenset[str], frozenset[str]]:
+    """Every question text in the schemas of all years, normalized, and
+    every leading run of words of one. All years, because row wording
+    changes ("Room only:" is not in the 2025-26 form)."""
+    global _KNOWN_ROW_LABELS
+    if _KNOWN_ROW_LABELS is None:
+        full: set[str] = set()
+        starts: set[str] = set()
+        for path in sorted(_SCHEMA_DIR.glob("cds_schema_20??_??.json")):
+            if path not in _SCHEMA_CACHE:
+                _SCHEMA_CACHE[path] = SchemaIndex(path)
+            for field in _SCHEMA_CACHE[path].fields:
+                words = _row_label_words(str(field.get("question") or ""))
+                if not words:
+                    continue
+                full.add(" ".join(words))
+                for n in range(1, len(words) + 1):
+                    starts.add(" ".join(words[:n]))
+        _KNOWN_ROW_LABELS = (frozenset(full), frozenset(starts))
+    return _KNOWN_ROW_LABELS
+
+
+def _starts_its_own_row(first: str, second: str) -> bool:
+    """True when `second` is a row of its own, not the rest of `first`.
+
+    A row with a label and no values is either the first half of a label the
+    converter wrapped onto two rows ("Athletic" / "Awards", "Tuition:" /
+    "In-district") or a row the school left blank, or a group heading, above
+    a different row ("Other first-year, degree-seeking" above "All other
+    degree-seeking"). Joining the second kind files the lower row's numbers
+    under the blank row's field. The lower row is its own row when its label
+    begins the way a form question does, unless the upper label visibly
+    breaks off or the lower one visibly continues."""
+    first = _LEADING_QUESTION_TAG_RE.sub("", first.strip())
+    second = _LEADING_QUESTION_TAG_RE.sub("", second.strip())
+    if first.count("(") > first.count(")") or _WRAP_OPEN_END_RE.search(first):
+        return False
+    if re.match(r"[a-z(]", second):
+        return False
+    # A short heading that ends in a colon runs on: "Tuition:" over
+    # "In-district". A full question that ends in one does not ("Number
+    # accepting a place on the waiting list:"), nor does one form line over
+    # another ("City/State/Zip:" over "Main Phone Number:").
+    if first.endswith(":") and not second.endswith(":") and len(first.split()) <= 3:
+        return False
+    words = _row_label_words(second)
+    if not words:
+        return False
+    full, starts = _known_row_labels()
+    if " ".join(words) in starts:
+        return True
+    return any(" ".join(words[:n]) in full for n in range(len(words) - 1, 0, -1))
+
+
 _C1_ENROLLED_BY_SEX_TOTAL_QNS = {"C.107", "C.108"}
 _NUMERIC_CELL_RE = re.compile(r"-?\$?\d[\d,]*(?:\.\d+)?%?")
 _DOUBLED_CELLS_MIN = 10
@@ -444,6 +512,7 @@ def _parse_markdown_tables(markdown: str) -> list[dict]:
                     and rows[-1]["label"].strip()
                     and not any(v.strip() for v in rows[-1]["values"])
                     and _normalize_label(rows[-1]["label"]) not in _NO_WRAP_EMPTY_LABELS
+                    and not _starts_its_own_row(rows[-1]["label"], label)
                 ):
                     merged = rows[-1]["label"] + " " + label
                     rows[-1] = {"label": merged, "values": values, "headers": header_cells}
