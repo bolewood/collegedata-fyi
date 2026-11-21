@@ -2865,12 +2865,26 @@ def _c1_multiple_action_hits(label_norm: str) -> bool:
     return hits > 1
 
 
+# Templates through 2019-20 print "first-time, first-year (freshman) men who
+# applied". Layout text keeps the parenthetical; _normalize_label drops it.
+_C1_FRESHMAN_PAREN = r"(?:\s*\(fresh(?:man|men)\))?"
+
+# A line that opens a question other than C1: "C2. Freshman wait-listed",
+# "- C2.", "## H1. Enter total dollar amounts", "**D1.**", a bare "C2".
+_OTHER_QUESTION_START_RE = re.compile(
+    r"^[\s\-*#|]*(?!C1\b)[A-J]\d{1,2}[A-Za-z]?\b(?:[.:\s*|]|$)", re.IGNORECASE
+)
+
+
 def _is_c1_residency_header(header_norm: str) -> bool:
     """True for the C1 residency column header line (Total, In-State,
     Out-of-State, International, Unknown), including wrapped variants such as
     "Total  Out-of-  Interna  Unkno" with "In-State  State  tional  wn" below.
     """
     if "who " in header_norm:
+        return False
+    # G1's tuition rows: "In-state (out-of-district):", "In-district".
+    if "district" in header_norm:
         return False
     if "in state" in header_norm and "out of" in header_norm:
         return True
@@ -3114,7 +3128,11 @@ def resolve_c1_applications(
                 r"\b(men|women|males|females)\b", header_norm
             ):
                 in_residency_block = False
-            if in_residency_block and re.match(r"c2\b", header_norm):
+            if in_residency_block and _OTHER_QUESTION_START_RE.match(line):
+                # The table is over once another question starts. C2 was the
+                # only one checked, so a block that never met C2 ran to the
+                # end of the file and read any later sentence naming
+                # degree-seeking students who enrolled as a C1 row.
                 in_residency_block = False
 
             compact_match = None if in_residency_block else re.search(
@@ -3169,7 +3187,7 @@ def resolve_c1_applications(
             heading_on_row = re.search(
                 r"total\s+"
                 r"(?:(?:full|part)[-\s]?time,\s*)?"
-                r"first[-\s]time,\s*first[-\s]year\s+"
+                r"first[-\s]time,\s*first[-\s]year" + _C1_FRESHMAN_PAREN + r"\s+"
                 r"(?:men|women|of another gender|of unknown gender|another gender|unknown gender)"
                 # the heading runs straight on from the label, and no value follows
                 r"\s+who\s+(applied|were admitted|enrolled)(?=[A-Za-z])\D*$",
@@ -3180,7 +3198,7 @@ def resolve_c1_applications(
                 shifted_stages.add(heading_on_row.group(1).lower())
                 continue
             if shifted_stages and (stage_on_line := re.search(
-                r"first[-\s]year\s+"
+                r"first[-\s]year" + _C1_FRESHMAN_PAREN + r"\s+"
                 r"(?:men|women|of another gender|of unknown gender|another gender|unknown gender)"
                 r"\s+who\s+(applied|were admitted|enrolled)\b",
                 line,
@@ -3191,7 +3209,7 @@ def resolve_c1_applications(
             gender_match = re.search(
                 r"total\s+"
                 r"(?:(full|part)[-\s]?time,\s*)?"
-                r"first[-\s]time,\s*first[-\s]year\s+"
+                r"first[-\s]time,\s*first[-\s]year" + _C1_FRESHMAN_PAREN + r"\s+"
                 r"(men|women|of another gender|of unknown gender|another gender|unknown gender)"
                 r"\s+who\s+(applied|were admitted|enrolled)\s+([0-9][0-9,]*)\b",
                 line,
@@ -3202,14 +3220,24 @@ def resolve_c1_applications(
                 label_only = re.search(
                     r"total\s+"
                     r"(?:(full|part)[-\s]?time,\s*)?"
-                    r"first[-\s]time,\s*first[-\s]year\s+"
+                    r"first[-\s]time,\s*first[-\s]year" + _C1_FRESHMAN_PAREN + r"\s+"
                     r"(men|women|of another gender|of unknown gender|another gender|unknown gender)"
                     # Sidebar text (no digits) may share the line (Skidmore 2024-25).
                     r"\s+who\s+(applied|were admitted|enrolled)(?:\s+\D*)?$",
                     line,
                     re.IGNORECASE,
                 )
-            if label_only and not _next_or_previous_is_bare_number(line_index):
+            leading_value = None
+            if label_only:
+                # The text layer can print the value before its label
+                # (Baruch 2019-20: "C1   10649Total first-time, first-year
+                # (freshman) women who applied"). That row is not blank. Only a
+                # margin tag may come before the number: "Fall 2019 Total ..."
+                # and a second column's "... men 345   Total ..." are not values.
+                leading_value = re.fullmatch(
+                    r"(?:[A-J]\d{1,2}\.?\s+)?([0-9][0-9,]*)\s*", line[:label_only.start()]
+                )
+            if label_only and not leading_value and not _next_or_previous_is_bare_number(line_index):
                 # A row the school left blank (a women's college's men row, a
                 # part-time row with no part-time first-years) is a 0, so the
                 # rest still sums to the total. A line whose value sits on the
@@ -3230,8 +3258,12 @@ def resolve_c1_applications(
                     unit_load = "FT" if load_raw.lower().startswith("full") else "PT"
                 gender_rows_seen.add((action, gender, unit_load))
                 continue
-            if gender_match:
-                load_raw, gender_raw, action_raw, value = gender_match.groups()
+            if gender_match or leading_value:
+                if gender_match:
+                    load_raw, gender_raw, action_raw, value = gender_match.groups()
+                else:
+                    load_raw, gender_raw, action_raw = label_only.groups()
+                    value = leading_value.group(1)
                 gender_norm = _normalize_label_without_gender_rewrite(gender_raw)
                 if gender_norm in {"men", "males"}:
                     gender = "Males"
