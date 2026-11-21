@@ -109,3 +109,38 @@ export function rejectableHtmlSourceOutcome(
 
   return null;
 }
+
+// Some hosts answer a request for a .pdf URL with a small PDF.js viewer
+// page that loads the real file from a URL in a script constant
+// (archive.swarthmore.edu: `const PDF_URL = ".../cds2014.pdf?__raw=1";`).
+// Returns that URL when `bytes` is such a page, else null. The file must be
+// on the same host and scheme as the page and its path must end in .pdf, so
+// a page cannot send the archiver to another site.
+export function pdfViewerRawUrl(bytes: Uint8Array, pageUrl: string): string | null {
+  let page: URL;
+  try {
+    page = new URL(pageUrl);
+  } catch {
+    return null;
+  }
+  if (!page.pathname.toLowerCase().endsWith(".pdf")) return null;
+
+  const html = new TextDecoder("utf-8", { fatal: false }).decode(bytes.slice(0, 64 * 1024));
+  const lower = html.toLowerCase();
+  if (!lower.includes("<html") || !(lower.includes("pdf.js") || lower.includes("pdfjs"))) {
+    return null;
+  }
+  const match = html.match(/\bPDF_URL\s*=\s*(["'])([^"'\s<>]+)\1/);
+  if (!match) return null;
+
+  let raw: URL;
+  try {
+    raw = new URL(match[2], page);
+  } catch {
+    return null;
+  }
+  if (raw.protocol !== page.protocol || raw.host !== page.host) return null;
+  if (!raw.pathname.toLowerCase().endsWith(".pdf")) return null;
+  if (raw.href === page.href) return null;
+  return raw.href;
+}
