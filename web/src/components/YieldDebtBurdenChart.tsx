@@ -317,7 +317,7 @@ export function YieldDebtBurdenChart({
                 textAnchor="end"
                 fontFamily="var(--mono)"
                 fontSize="11"
-                fill="var(--chart-axis)"
+                fill="var(--ink-3)"
               >
                 {formatBurdenPercent(tick, 0)}
               </text>
@@ -338,7 +338,7 @@ export function YieldDebtBurdenChart({
                 textAnchor="middle"
                 fontFamily="var(--mono)"
                 fontSize="11"
-                fill="var(--chart-axis)"
+                fill="var(--ink-3)"
               >
                 {formatRatePercent(tick, 0)}
               </text>
@@ -466,7 +466,7 @@ export function YieldDebtBurdenChart({
             textAnchor="middle"
             fontFamily="var(--mono)"
             fontSize="10"
-            fill="var(--chart-axis)"
+            fill="var(--ink-3)"
             letterSpacing="0.08em"
           >
             DEBT BURDEN · ANNUAL FEDERAL LOAN PAYMENTS ÷ 10-YR EARNINGS
@@ -477,7 +477,7 @@ export function YieldDebtBurdenChart({
             textAnchor="middle"
             fontFamily="var(--mono)"
             fontSize="10"
-            fill="var(--chart-axis)"
+            fill="var(--ink-3)"
             letterSpacing="0.08em"
           >
             YIELD · ENROLLED ÷ ADMITTED

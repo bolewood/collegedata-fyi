@@ -559,6 +559,7 @@ export default function AlignmentGapPage() {
           in pages.
         </p>
         <pre
+          tabIndex={0}
           style={{
             background: "var(--ink)",
             color: "var(--paper)",

@@ -230,7 +230,7 @@ export function TestOptionalChart() {
               textAnchor="end"
               fontFamily="var(--mono)"
               fontSize="11"
-              fill="var(--chart-axis)"
+              fill="var(--ink-3)"
             >
               {v}%
             </text>
@@ -251,7 +251,7 @@ export function TestOptionalChart() {
               textAnchor="middle"
               fontFamily="var(--mono)"
               fontSize="11"
-              fill="var(--chart-axis)"
+              fill="var(--ink-3)"
             >
               {y}
             </text>

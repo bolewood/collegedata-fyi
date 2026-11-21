@@ -416,7 +416,7 @@ export function AlignmentGapMeritChart({
                 textAnchor="end"
                 fontFamily="var(--mono)"
                 fontSize="11"
-                fill="var(--chart-axis)"
+                fill="var(--ink-3)"
               >
                 {formatGapUsd(tick)}
               </text>
@@ -430,7 +430,7 @@ export function AlignmentGapMeritChart({
             textAnchor="end"
             fontFamily="var(--mono)"
             fontSize="11"
-            fill="var(--chart-axis)"
+            fill="var(--ink-3)"
           >
             $0
           </text>
@@ -454,7 +454,7 @@ export function AlignmentGapMeritChart({
             textAnchor="middle"
             fontFamily="var(--mono)"
             fontSize="11"
-            fill="var(--chart-axis)"
+            fill="var(--ink-3)"
           >
             $0
           </text>
@@ -486,7 +486,7 @@ export function AlignmentGapMeritChart({
                 textAnchor="middle"
                 fontFamily="var(--mono)"
                 fontSize="11"
-                fill="var(--chart-axis)"
+                fill="var(--ink-3)"
               >
                 {formatUsd(tick)}
               </text>
@@ -494,7 +494,7 @@ export function AlignmentGapMeritChart({
           ))}
 
           {/* Region Annotations */}
-          <text x={LOG_L} y={22} fontFamily="var(--mono)" fontSize="10" fill="var(--ochre)" letterSpacing="0.06em" fontWeight={600}>
+          <text x={LOG_L} y={22} fontFamily="var(--mono)" fontSize="10" fill="var(--ochre-ink)" letterSpacing="0.06em" fontWeight={600}>
             SMALLER THAN THE GAP · {ALIGNMENT_GAP_MERIT_META.regions.constrained}
           </text>
           <text
@@ -629,7 +629,7 @@ export function AlignmentGapMeritChart({
             textAnchor="middle"
             fontFamily="var(--mono)"
             fontSize="10"
-            fill="var(--chart-axis)"
+            fill="var(--ink-3)"
             letterSpacing="0.08em"
           >
             ALIGNMENT GAP · $ PER YEAR · SCORECARD
@@ -640,7 +640,7 @@ export function AlignmentGapMeritChart({
             textAnchor="middle"
             fontFamily="var(--mono)"
             fontSize="10"
-            fill="var(--chart-axis)"
+            fill="var(--ink-3)"
             letterSpacing="0.08em"
           >
             MERIT SPEND PER FIRST-YEAR · LOG SCALE · CDS H2A
@@ -696,8 +696,8 @@ export function AlignmentGapMeritChart({
         <span style={{ color: "var(--forest)", display: "inline-flex", alignItems: "center", gap: 5 }}>
           ● Merit aid exceeds gap ({ALIGNMENT_GAP_MERIT_META.regions.covers})
         </span>
-        <span style={{ color: "var(--ochre)", display: "inline-flex", alignItems: "center", gap: 5 }}>
-          ● Debt gap exceeds merit aid ({ALIGNMENT_GAP_MERIT_META.regions.constrained})
+        <span style={{ color: "var(--ochre-ink)", display: "inline-flex", alignItems: "center", gap: 5 }}>
+          <span aria-hidden="true" style={{ color: "var(--ochre)" }}>●</span> Debt gap exceeds merit aid ({ALIGNMENT_GAP_MERIT_META.regions.constrained})
         </span>
         <span style={{ color: "var(--ink)", display: "inline-flex", alignItems: "center", gap: 5 }}>
           ○ At or below median debt burden ({ALIGNMENT_GAP_MERIT_META.regions.none})

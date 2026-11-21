@@ -720,6 +720,7 @@ export default function AcceptanceVsYieldPage() {
           <code>yield_rate_total</code> fields.
         </p>
         <pre
+          tabIndex={0}
           style={{
             background: "var(--ink)",
             color: "var(--paper)",

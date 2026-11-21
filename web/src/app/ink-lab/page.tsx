@@ -84,7 +84,7 @@ export default function InkLabPage() {
                   <span>A {inks.contrast.aOnCream}:1</span>
                   <span>onB {inks.contrast.textOnB}:1</span>
                   <span>B {inks.contrast.bOnCream}:1</span>
-                  <span style={{ color: inks.bTypeOnA ? "var(--forest)" : "var(--ochre)" }}>
+                  <span style={{ color: inks.bTypeOnA ? "var(--forest)" : "var(--ochre-ink)" }}>
                     B/A {inks.contrast.bOnA}:1
                   </span>
                 </p>

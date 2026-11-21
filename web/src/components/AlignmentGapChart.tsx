@@ -361,7 +361,7 @@ export function AlignmentGapChart({
                 textAnchor="end"
                 fontFamily="var(--mono)"
                 fontSize="11"
-                fill="var(--chart-axis)"
+                fill="var(--ink-3)"
               >
                 {tick === 0 ? "$0" : formatGapUsd(tick)}
               </text>
@@ -384,7 +384,7 @@ export function AlignmentGapChart({
                 textAnchor="middle"
                 fontFamily="var(--mono)"
                 fontSize="11"
-                fill="var(--chart-axis)"
+                fill="var(--ink-3)"
               >
                 {formatEndowmentPerStudent(tick)}
               </text>
@@ -503,7 +503,7 @@ export function AlignmentGapChart({
             textAnchor="middle"
             fontFamily="var(--mono)"
             fontSize="10"
-            fill="var(--chart-axis)"
+            fill="var(--ink-3)"
             letterSpacing="0.08em"
           >
             ALIGNMENT GAP · $ PER YEAR
@@ -514,7 +514,7 @@ export function AlignmentGapChart({
             textAnchor="middle"
             fontFamily="var(--mono)"
             fontSize="10"
-            fill="var(--chart-axis)"
+            fill="var(--ink-3)"
             letterSpacing="0.08em"
           >
             ENDOWMENT PER UNDERGRADUATE · LOG SCALE
@@ -567,8 +567,8 @@ export function AlignmentGapChart({
         }}
       >
         <span>INSTRUCTION / NET PRICE</span>
-        <span style={{ color: "var(--ochre)", display: "inline-flex", alignItems: "center", gap: 5 }}>
-          ■ under 55%
+        <span style={{ color: "var(--ochre-ink)", display: "inline-flex", alignItems: "center", gap: 5 }}>
+          <span aria-hidden="true" style={{ color: "var(--ochre)" }}>■</span> under 55%
         </span>
         <span style={{ color: "var(--forest)", display: "inline-flex", alignItems: "center", gap: 5 }}>
           ■ 55–90%

@@ -51,7 +51,7 @@ Text never goes lighter than `--ink-3`, which is the faintest ink that clears 4.
 
 Card tint for index-card–style panels: `#faf6ec` (pale cream, slightly lighter than `--paper`). Apply via the `.cd-card` class, not raw hex.
 
-**Chart palette** (`--chart-ink`, `--chart-accent`, `--chart-grid`, `--chart-axis`, `--chart-faint`): primary series is always ink; callouts are forest; grid is near-transparent ink. See [`docs/design/reference/recipe.jsx`](../docs/design/reference/recipe.jsx) for the reference scatter implementation.
+**Chart palette** (`--chart-ink`, `--chart-accent`, `--chart-grid`, `--chart-axis`, `--chart-faint`): primary series is always ink; callouts are forest; grid is near-transparent ink. `--chart-axis` is for axis lines and tick marks only (about 3:1 on paper); axis and tick labels are text, so they use `--ink-3`. See [`docs/design/reference/recipe.jsx`](../docs/design/reference/recipe.jsx) for the reference scatter implementation.
 
 **No blue anywhere.** Any blue that appears in current code is a palette bug and should migrate to forest + ink. The remaining instances are listed under "Known deltas" below.
 
@@ -141,12 +141,11 @@ Mono captions may lead with `§` and use uppercase tracking (0.08em). Numbers an
 
 ## Known deltas (the live site vs. the reference)
 
-Checked against `web/src` with `grep -rnE "(bg|text|border)-(blue|gray)-|bg-white"` on 2026-11-09. The earlier list (NetPriceByIncome bars, API page toggle, KeyStats/OutcomesBand cards, recipe blue dots) is fixed. What is left is stock Tailwind blue/gray and white that predates the palette:
+Checked against `web/src` with `grep -rnE "(bg|text|border)-(blue|gray)-|bg-white"` on 2026-11-21. The earlier list (NetPriceByIncome bars, API page toggle, KeyStats/OutcomesBand cards, recipe blue dots, the error and not-found pages) is fixed. What is left is stock Tailwind blue/gray and white that predates the palette:
 
-1. **`src/app/error.tsx` and `src/app/not-found.tsx`**: `text-gray-*`, `bg-blue-600` buttons, `border-gray-300`. Should use ink text, `.cd-btn`, and the paper palette.
-2. **`src/components/MarkdownView.tsx`**: `text-blue-600` links, `border-gray-200`, `bg-gray-50`/`bg-gray-100`, `text-gray-*`. Should use ink, `--rule` borders and forest links.
-3. **`src/components/CopyButton.tsx`**: `bg-white`, `border-gray-300`, `text-gray-700`. Should use `.cd-btn` or `.cd-chip`.
-4. **`src/components/StatsBar.tsx`** (not imported anywhere; delete or restyle) and the bullet marker in `src/app/privacy/page.tsx`: `text-gray-*` only (no blue). Lower priority.
+1. **`src/components/MarkdownView.tsx`**: `text-blue-600` links, `border-gray-200`, `bg-gray-50`/`bg-gray-100`, `text-gray-*`. Should use ink, `--rule` borders and forest links.
+2. **`src/components/CopyButton.tsx`**: `bg-white`, `border-gray-300`, `text-gray-700`. Should use `.cd-btn` or `.cd-chip`.
+3. **`src/components/StatsBar.tsx`** (not imported anywhere; delete or restyle) and the bullet marker in `src/app/privacy/page.tsx`: `text-gray-*` only (no blue). Lower priority.
 
 None of these break functionality; they are palette-consistency debt. Re-run the grep above before editing this list.
 

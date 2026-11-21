@@ -267,7 +267,7 @@ export function AcceptanceYieldChart() {
                 textAnchor="end"
                 fontFamily="var(--mono)"
                 fontSize="11"
-                fill="var(--chart-axis)"
+                fill="var(--ink-3)"
               >
                 {formatRatePercent(tick, 0)}
               </text>
@@ -288,7 +288,7 @@ export function AcceptanceYieldChart() {
                 textAnchor="middle"
                 fontFamily="var(--mono)"
                 fontSize="11"
-                fill="var(--chart-axis)"
+                fill="var(--ink-3)"
               >
                 {formatRatePercent(tick, 0)}
               </text>
@@ -416,7 +416,7 @@ export function AcceptanceYieldChart() {
             textAnchor="middle"
             fontFamily="var(--mono)"
             fontSize="10"
-            fill="var(--chart-axis)"
+            fill="var(--ink-3)"
             letterSpacing="0.08em"
           >
             YIELD · ENROLLED ÷ ADMITTED
@@ -427,7 +427,7 @@ export function AcceptanceYieldChart() {
             textAnchor="middle"
             fontFamily="var(--mono)"
             fontSize="10"
-            fill="var(--chart-axis)"
+            fill="var(--ink-3)"
             letterSpacing="0.08em"
           >
             ACCEPTANCE RATE · ADMITTED ÷ APPLIED

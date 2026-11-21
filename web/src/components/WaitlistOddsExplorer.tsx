@@ -98,7 +98,7 @@ function Chart({
         </div>
       </div>
 
-      <div style={{ overflowX: "auto" }}>
+      <div role="region" aria-label="Wait-list success chart, scrolls sideways" tabIndex={0} style={{ overflowX: "auto" }}>
         <svg
           width={W}
           height={H}
@@ -147,7 +147,7 @@ function Chart({
               textAnchor="middle"
               fontFamily="var(--mono)"
               fontSize="11"
-              fill="var(--chart-axis)"
+              fill="var(--ink-3)"
             >
               {tick === 0 ? "0" : formatRecipeShare(tick, 0)}
             </text>
@@ -297,7 +297,7 @@ function BucketTable({
   summaries: readonly WaitlistBucketSummary[];
 }) {
   return (
-    <div className="cd-card" style={{ overflowX: "auto" }}>
+    <div className="cd-card" role="region" aria-label="Median wait-list success table, scrolls sideways" tabIndex={0} style={{ overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
         <thead>
           <tr className="mono" style={{ color: "var(--ink-3)", fontSize: 10.5, letterSpacing: "0.06em" }}>
@@ -459,7 +459,7 @@ function BerkeleyHistoryChart() {
             ADMITTED FROM WAIT LIST / ACCEPTED WAIT-LIST SPOTS
           </div>
         </div>
-        <div style={{ overflowX: "auto" }}>
+        <div role="region" aria-label="Berkeley wait-list success chart, scrolls sideways" tabIndex={0} style={{ overflowX: "auto" }}>
           <svg
             width={HISTORY_W}
             height={HISTORY_H}
@@ -483,7 +483,7 @@ function BerkeleyHistoryChart() {
                   textAnchor="end"
                   fontFamily="var(--mono)"
                   fontSize="11"
-                  fill="var(--chart-axis)"
+                  fill="var(--ink-3)"
                 >
                   {formatRecipeShare(tick, 0)}
                 </text>
@@ -521,7 +521,7 @@ function BerkeleyHistoryChart() {
                   textAnchor="middle"
                   fontFamily="var(--mono)"
                   fontSize="10.5"
-                  fill="var(--chart-axis)"
+                  fill="var(--ink-3)"
                 >
                   {row.year.slice(2)}
                 </text>
@@ -536,7 +536,7 @@ function BerkeleyHistoryChart() {
             />
           </svg>
         </div>
-        <div style={{ borderTop: "1px solid var(--rule)", marginTop: 14, overflowX: "auto" }}>
+        <div role="region" aria-label="Berkeley wait-list table by CDS year, scrolls sideways" tabIndex={0} style={{ borderTop: "1px solid var(--rule)", marginTop: 14, overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
               <tr className="mono" style={{ color: "var(--ink-3)", fontSize: 10.5, letterSpacing: "0.06em" }}>
@@ -702,7 +702,7 @@ export function WaitlistOddsExplorer() {
             source-reported anomalies, but excluded from medians, bucket summaries, and the main
             chart.
           </p>
-          <div style={{ overflowX: "auto", marginTop: 12 }}>
+          <div role="region" aria-label="Reported-data caveat table, scrolls sideways" tabIndex={0} style={{ overflowX: "auto", marginTop: 12 }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
               <thead>
                 <tr className="mono" style={{ color: "var(--ink-3)", fontSize: 10.5, letterSpacing: "0.06em" }}>
@@ -829,7 +829,7 @@ export function WaitlistOddsExplorer() {
             </button>
           </div>
         </div>
-        <div className="cd-card" style={{ marginTop: 14, overflowX: "auto" }}>
+        <div className="cd-card" role="region" aria-label="Extremes table, scrolls sideways" tabIndex={0} style={{ marginTop: 14, overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
               <tr className="mono" style={{ color: "var(--ink-3)", fontSize: 10.5, letterSpacing: "0.06em" }}>

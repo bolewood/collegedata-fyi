@@ -222,6 +222,7 @@ export default function TestOptionalTrackerPage() {
           § Pull this for any school
         </div>
         <pre
+          tabIndex={0}
           style={{
             background: "var(--ink)",
             color: "var(--paper)",
