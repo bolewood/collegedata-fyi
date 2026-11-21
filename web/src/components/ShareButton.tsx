@@ -36,7 +36,13 @@ type ShareButtonProps = {
 type CopyMethod = "clipboard" | "exec_command";
 const COPIED_MS = 1600;
 
-async function copyText(text: string): Promise<CopyMethod | null> {
+/**
+ * `container` holds the temporary textarea for the execCommand path. Selecting
+ * that textarea moves focus to it, so it must sit inside the share control:
+ * focus leaving the control closes the popover, and on a failed copy that hid
+ * the selectable-URL fallback before it could render.
+ */
+async function copyText(text: string, container: HTMLElement | null): Promise<CopyMethod | null> {
   try {
     if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(text);
@@ -45,19 +51,23 @@ async function copyText(text: string): Promise<CopyMethod | null> {
   } catch {
     // fall through to the textarea path
   }
+  const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const textarea = document.createElement("textarea");
   try {
-    const textarea = document.createElement("textarea");
     textarea.value = text;
     textarea.setAttribute("readonly", "true");
+    textarea.tabIndex = -1;
     textarea.style.position = "fixed";
     textarea.style.left = "-9999px";
-    document.body.appendChild(textarea);
+    (container ?? document.body).appendChild(textarea);
     textarea.select();
-    const ok = document.execCommand("copy");
-    textarea.remove();
-    return ok ? "exec_command" : null;
+    return document.execCommand("copy") ? "exec_command" : null;
   } catch {
     return null;
+  } finally {
+    // Hand focus back before removing the textarea so it never lands outside the control.
+    previous?.focus();
+    textarea.remove();
   }
 }
 
@@ -191,7 +201,7 @@ export function ShareButton({
 
   async function onCopyLink() {
     const url = payload().url;
-    const method = await copyText(url);
+    const method = await copyText(url, rootRef.current);
     if (method) {
       trackEvent("share_copy_link", props(method));
       onLinkShared?.();
@@ -206,7 +216,7 @@ export function ShareButton({
 
   async function onCopySummary() {
     if (!summary) return;
-    const method = await copyText(summary.text);
+    const method = await copyText(summary.text, rootRef.current);
     if (method) {
       trackEvent("share_copy_match_summary", props(method));
       flashCopied("summary");
