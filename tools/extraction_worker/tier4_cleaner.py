@@ -242,6 +242,70 @@ def _collapse_doubled_cells(markdown: str) -> str:
     return "\n".join(_collapse_line(line) for line in markdown.split("\n"))
 
 
+# Underscore rules that a word-processor form prints as a blank, as the
+# converter emits them: bare in tables, escaped ("\_") in running text.
+_BLANK_RUN = r"(?:\\_|_){2,}"
+_BLANK_ANY = r"(?:\\_|_)+"
+# What may follow a removed rule: not a letter or digit (the rule would be
+# inside a name) and not more underscore (the match would be a partial run).
+_BLANK_END = r"(?![A-Za-z0-9_\\])"
+# "___2,446___", "____ 141______", "\_17,488\_\_\_\_": an answer with a rule
+# attached to its right end and a rule (attached or one space away) on its
+# left. The answer may not itself contain an underscore, pipe or backslash.
+_WRAPPED_ANSWER_RE = re.compile(
+    rf"(?<![A-Za-z0-9\\_])({_BLANK_ANY})( ?)([^\s_|\\](?:[^_|\\\n]{{0,58}}[^\s_|\\])?)({_BLANK_RUN}){_BLANK_END}"
+)
+# "\_364\_": a number between two single underscores.
+_SINGLE_WRAPPED_NUMBER_RE = re.compile(
+    rf"(?<![A-Za-z0-9\\_])(\\_|_)(\$?\d[\d,.]*%?)(\\_|_){_BLANK_END}"
+)
+# A rule on one side only is removed when what it touches is plainly an
+# answer: a number, a web address or a lone X. A rule attached to a label
+# ("postponement:____", "____Yes") is an unanswered blank or an unchecked
+# option; removing it would let the text beside it be read as the answer.
+# "\_\_\_\_1524", "____http://...", "\_\_\_X":
+_LEADING_BLANK_RE = re.compile(
+    rf"(?<![A-Za-z0-9\\_])({_BLANK_RUN})(?=[\d$(]|https?://|[xX](?![A-Za-z]))"
+)
+# "3/1\_\_\_\_", "X\_\_\_ Yes, in full":
+_TRAILING_BLANK_RE = re.compile(
+    rf"(?:(?<=[0-9%)])|(?<=(?<![A-Za-z])[xX]))({_BLANK_RUN}){_BLANK_END}"
+)
+
+
+def _remove_fill_in_blanks(text: str, keep_width: bool = False) -> str:
+    """Remove the underscore rules a word-processor form prints around answers.
+
+    Older school-made forms leave the template's blanks in place and type
+    the answer into them: "men who applied ___2,446___". The numeric
+    parsers reject such a cell, so Swarthmore 2010-11 lost all of C1.
+
+    Only a rule that touches an answer is removed. A rule standing alone or
+    attached to a label is an unanswered blank and stays, both so the text
+    after it is not read as the answer and so an empty table row keeps a
+    non-empty cell (an empty row is merged into the row below it). A rule
+    with a letter or digit on both sides is part of a name, usually a URL
+    path ("Effectiveness__Research"), and stays too.
+
+    With keep_width each removed rule becomes the same number of spaces,
+    for layout text whose resolvers depend on column positions.
+    """
+    if "_" not in text:
+        return text
+
+    def gap(run: str) -> str:
+        return " " * len(run) if keep_width else " "
+
+    text = _WRAPPED_ANSWER_RE.sub(
+        lambda m: f"{gap(m.group(1))}{m.group(2)}{m.group(3)}{gap(m.group(4))}", text
+    )
+    text = _SINGLE_WRAPPED_NUMBER_RE.sub(
+        lambda m: f"{gap(m.group(1))}{m.group(2)}{gap(m.group(3))}", text
+    )
+    text = _LEADING_BLANK_RE.sub(lambda m: gap(m.group(1)), text)
+    return _TRAILING_BLANK_RE.sub(lambda m: gap(m.group(1)), text)
+
+
 _QUESTION_TAG_RE = re.compile(r"[A-J]\d{1,2}[A-Za-z]?\.?")
 _TABLE_SEPARATOR_RE = re.compile(r"^\|[\s\-:|]+\|$")
 
@@ -5527,18 +5591,18 @@ def _extract_i2_ratio_fields(text: str) -> dict[str, dict]:
             break
 
     student_m = re.search(
-        r"(?i)\bbased\s+on\s+(\d[\d,]*)\s+students?\b", flat
+        r"(?i)\bbased\s+on\s+(\d[\d,]*(?:\.\d+)?)\s+students?\b", flat
     )
     if not student_m:
-        student_m = re.search(r"(?i)\b(\d[\d,]*)\s+students?\b", flat)
+        student_m = re.search(r"(?i)\b(\d[\d,]*(?:\.\d+)?)\s+students?\b", flat)
     if student_m:
         value = _extract_number(student_m.group(1))
         if value is not None:
             out["I.202"] = {"value": value, "source": "tier4_cleaner"}
 
-    faculty_m = re.search(r"(?i)\band\s+(\d[\d,]*)\s+faculty\b", flat)
+    faculty_m = re.search(r"(?i)\band\s+(\d[\d,]*(?:\.\d+)?)\s+faculty\b", flat)
     if not faculty_m:
-        faculty_m = re.search(r"(?i)\b(\d[\d,]*)\s+faculty\b", flat)
+        faculty_m = re.search(r"(?i)\b(\d[\d,]*(?:\.\d+)?)\s+faculty\b", flat)
     if faculty_m:
         value = _extract_number(faculty_m.group(1))
         if value is not None:
@@ -7301,6 +7365,9 @@ def clean(
     resolver stage. Pass a pre-built SchemaIndex to share it across many
     clean() calls (e.g. batch survey runs).
     """
+    markdown = _remove_fill_in_blanks(markdown)
+    if supplemental_text:
+        supplemental_text = _remove_fill_in_blanks(supplemental_text, keep_width=True)
     markdown = _collapse_doubled_cells(markdown)
     tables = _parse_markdown_tables(markdown)
     values: dict[str, dict] = {}
@@ -7349,6 +7416,11 @@ def clean(
                 ):
                     continue
                 if substr not in label_norm:
+                    continue
+                # F1's "Percent who are from out of state (exclude
+                # international/nonresident aliens ...)" names nonresidents
+                # too, and its header also says first-time, first-year.
+                if qnum == "B.201" and "out of state" in label_norm:
                     continue
                 # A residency table without a leading Total column (UNC
                 # 2025-26: In-State, Out-of-State, International, Unknown):
