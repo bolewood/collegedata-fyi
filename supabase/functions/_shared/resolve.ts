@@ -1415,6 +1415,49 @@ async function resolvedOrNoCds(
 // scope rules — which for the common case means one row per historical
 // year for schools like Lafayette that expose a long archive on one
 // page.
+// Merge a direct-file hint with the documents found on the school's page:
+// dedupe by URL, then put the preferred file for the hint's own year first.
+//
+// The hint is a pointer recorded when the school list was built. When the
+// page now lists a different file for that year (a revision posted under a
+// new name), the archiver stored one and then the other on every run:
+// Worcester State 2024-25 flipped between WSU-Common-Data-Set-2024-2025.pdf
+// (the hint) and ...-2024-2025-w-2025-AY-Cost.pdf (the page) 25 times, and
+// each flip sent the document back for extraction.
+//
+// Both stay in the list, the preferred one first. archiveOneSchool archives
+// one file per year and takes the next candidate for a year only when the
+// one before it failed, so the other file is a fallback, not a second write.
+// The page is the school's current choice and is preferred, unless it has
+// only a section file or a draft for that year while the hint is a clean
+// full file.
+export function mergeHintWithPageDocs(
+  directDoc: ResolvedDocument,
+  pageDocs: ResolvedCandidate[],
+): ResolvedCandidate[] {
+  const directKey = directDoc.url.split("#")[0];
+  const byUrl = new Map<string, ResolvedCandidate>();
+  byUrl.set(directKey, directDoc);
+  for (const d of pageDocs) {
+    const key = d.url.split("#")[0];
+    if (!byUrl.has(key)) byUrl.set(key, d);
+  }
+  const merged = Array.from(byUrl.values());
+  if (directDoc.cds_year === UNKNOWN_YEAR_SENTINEL) return merged;
+  const sameYear = merged.filter((d) =>
+    d !== directDoc && d.cds_year === directDoc.cds_year
+  );
+  if (sameYear.length === 0) return merged;
+  const lesser = (d: ResolvedCandidate) => d.is_section_file || d.is_test_artifact;
+  const hintPreferred = !lesser(directDoc) && sameYear.every(lesser);
+  if (hintPreferred) return merged; // the hint is already first
+  return [
+    ...sameYear,
+    directDoc,
+    ...merged.filter((d) => d !== directDoc && !sameYear.includes(d)),
+  ];
+}
+
 export async function resolveCdsForSchool(
   hint: string,
 ): Promise<ResolveResult> {
@@ -1464,15 +1507,10 @@ export async function resolveCdsForSchool(
       ? await findDocsViaWellKnownPaths(hint)
       : [];
 
-    // Merge direct + siblings + fallback, dedupe by URL.
-    const byUrl = new Map<string, ResolvedCandidate>();
-    byUrl.set(directDoc.url.split("#")[0], directDoc);
-    for (const d of [...siblings, ...fallback]) {
-      const key = d.url.split("#")[0];
-      if (!byUrl.has(key)) byUrl.set(key, d);
-    }
-
-    return { kind: "resolved", docs: Array.from(byUrl.values()) };
+    return {
+      kind: "resolved",
+      docs: mergeHintWithPageDocs(directDoc, [...siblings, ...fallback]),
+    };
   }
 
   const landing = await fetchText(hint, LANDING_TIMEOUT_MS);
