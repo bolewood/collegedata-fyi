@@ -5,6 +5,7 @@ import {
   isShrinkingRefresh,
   pdfPageCount,
   PermanentError,
+  archiveOnePerYear,
   sectionPartsMatchSourceNotes,
 } from "./archive.ts";
 
@@ -163,4 +164,44 @@ Deno.test("pdfPageCount counts pages and returns null for non-PDF bytes", async 
   const sizes: [number, number][] = [[100, 100], [100, 100], [100, 100]];
   assertEquals(await pdfPageCount(await pdfWithPageSizes(sizes)), 3);
   assertEquals(await pdfPageCount(new TextEncoder().encode("<html></html>")), null);
+});
+
+// ── archiveOnePerYear: a second candidate for a year is a fallback ──────────
+
+function yearDoc(url: string, year: string) {
+  return {
+    candidate_kind: "single_document" as const,
+    url,
+    cds_year: year,
+    filename: url.split("/").pop() ?? "",
+    is_section_file: false,
+    is_test_artifact: false,
+    discovered_via: "landing" as const,
+  };
+}
+
+Deno.test("archiveOnePerYear: the second file for a year is not fetched once the first archived", async () => {
+  const docs = [yearDoc("https://e.edu/page-2024.pdf", "2024-25"), yearDoc("https://e.edu/hint-2024.pdf", "2024-25"), yearDoc("https://e.edu/2023.pdf", "2023-24")];
+  const fetched: string[] = [];
+  const outcomes = await archiveOnePerYear(docs, (d) => { fetched.push(d.url); return Promise.resolve(d.url); }, () => {});
+  assertEquals(fetched, ["https://e.edu/page-2024.pdf", "https://e.edu/2023.pdf"]);
+  assertEquals(outcomes, fetched);
+});
+
+Deno.test("archiveOnePerYear: the second file is the fallback when the first fails permanently", async () => {
+  const docs = [yearDoc("https://e.edu/page-2024.pdf", "2024-25"), yearDoc("https://e.edu/hint-2024.pdf", "2024-25")];
+  const failed: string[] = [];
+  const outcomes = await archiveOnePerYear(
+    docs,
+    (d) => d.url.includes("page") ? Promise.reject(new PermanentError("404")) : Promise.resolve(d.url),
+    (d) => failed.push(d.url),
+  );
+  assertEquals(outcomes, ["https://e.edu/hint-2024.pdf"]);
+  assertEquals(failed, ["https://e.edu/page-2024.pdf"]);
+});
+
+Deno.test("archiveOnePerYear: files with no known year are all tried, and other errors propagate", async () => {
+  const unknown = [yearDoc("https://e.edu/a.pdf", "unknown"), yearDoc("https://e.edu/b.pdf", "unknown")];
+  assertEquals(await archiveOnePerYear(unknown, (d) => Promise.resolve(d.url), () => {}), ["https://e.edu/a.pdf", "https://e.edu/b.pdf"]);
+  await assertRejects(() => archiveOnePerYear(unknown, () => Promise.reject(new Error("timeout")), () => {}), Error, "timeout");
 });

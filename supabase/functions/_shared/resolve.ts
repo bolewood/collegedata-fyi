@@ -1159,6 +1159,249 @@ async function findDocsViaWellKnownPaths(
   return [];
 }
 
+// Homepage seeds from institution_directory often 404 the CDS-specific
+// well-known paths. Tulsa Community College's files live on
+// /about-tcc/institutional-research, which is one hop off the homepage.
+// Cap extra fetches so a marketing homepage cannot fan out.
+const MAX_IR_HUB_FETCHES = 6;
+const MAX_ABOUT_FETCHES = 1;
+const WELL_KNOWN_IR_HUB_PATHS: readonly string[] = [
+  "/institutional-research",
+  "/institutional-research/",
+  "/ir",
+  "/ir/",
+  "/institutional-effectiveness",
+  "/institutional-effectiveness/",
+  "/about/institutional-research",
+  "/about/institutional-research/",
+  "/oir",
+  "/ie",
+];
+const IR_SUBDOMAIN_LABELS = ["ir", "oir", "oira", "ira", "ie"] as const;
+const IR_TEXT_RE =
+  /institutional\s+(?:research|effectiveness|analysis|assessment|planning)|office of institutional|fact[\s-]?books?|\b(?:OIR|OIRA|IRA|IEA)\b|(?<![A-Za-z])IR(?![A-Za-z])/i;
+const IR_PATH_RE =
+  /\/(?:institutional[-_ ]?(?:research|effectiveness|analysis|assessment)|office-of-institutional-[^/]+|fact[-_]?books?|factbook|oir|oira|ira|iea)(?:\/|$)/i;
+const IR_SHORT_PATH_RE = /(?:^|\/)ir(?:\/|$)/i;
+const ABOUT_TEXT_RE = /^about(?:\s|$)|about (?:us|the (?:college|university|school)\b)/i;
+const ABOUT_PATH_RE = /\/about(?:-[a-z0-9]+)?(?:\/|$)/i;
+const IR_SKIP_PATH_RE =
+  /\/(?:admissions?|apply|financial-aid|news|athletics|library|bookstore|careers?|jobs?|alumni|give|donate|login)(?:\/|$)/i;
+
+function registrableDomain(host: string): string {
+  const trimmed = host.toLowerCase().replace(/^www\./, "");
+  const parts = trimmed.split(".");
+  if (parts.length >= 2) return parts.slice(-2).join(".");
+  return trimmed;
+}
+
+function isIrSubdomain(host: string, pageHost: string): boolean {
+  const h = host.toLowerCase().replace(/^www\./, "");
+  const p = pageHost.toLowerCase().replace(/^www\./, "");
+  const label = h.split(".")[0] ?? "";
+  if (!IR_SUBDOMAIN_LABELS.includes(label as typeof IR_SUBDOMAIN_LABELS[number])) {
+    return false;
+  }
+  return h === p || h.endsWith("." + p) || registrableDomain(h) === registrableDomain(p);
+}
+
+function sameInstitutionHost(url: string, pageUrl: string): boolean {
+  let parsed: URL;
+  let page: URL;
+  try {
+    parsed = new URL(url);
+    page = new URL(pageUrl);
+  } catch {
+    return false;
+  }
+  const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+  const pageHost = page.hostname.toLowerCase().replace(/^www\./, "");
+  if (!host || !pageHost) return false;
+  if (host === pageHost || host.endsWith("." + pageHost) || pageHost.endsWith("." + host)) {
+    return true;
+  }
+  return isIrSubdomain(host, pageHost);
+}
+
+function pathLooksLikeIr(path: string): boolean {
+  const decoded = decodeURIComponent(path);
+  return IR_PATH_RE.test(decoded) || IR_SHORT_PATH_RE.test(decoded);
+}
+
+function htmlAnchors(html: string, baseUrl: string): Array<{ url: string; text: string }> {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  if (!doc) return [];
+  const base = new URL(baseUrl);
+  const out: Array<{ url: string; text: string }> = [];
+  for (const node of doc.querySelectorAll("a[href]")) {
+    const el = node as unknown as DomElement;
+    const href = el.getAttribute("href") ?? "";
+    if (!href || /^(#|mailto:|tel:|javascript:)/i.test(href)) continue;
+    let absolute: string;
+    try {
+      absolute = new URL(href, base).toString().split("#")[0];
+    } catch {
+      continue;
+    }
+    out.push({
+      url: absolute,
+      text: (el.textContent ?? "").replace(/\s+/g, " ").trim(),
+    });
+  }
+  return out;
+}
+
+export function extractIrHubLinks(
+  html: string,
+  baseUrl: string,
+  limit = MAX_IR_HUB_FETCHES,
+): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const anchor of htmlAnchors(html, baseUrl)) {
+    if (seen.has(anchor.url) || out.length >= limit) continue;
+    if (!sameInstitutionHost(anchor.url, baseUrl)) continue;
+    let path = "";
+    try {
+      path = new URL(anchor.url).pathname;
+    } catch {
+      continue;
+    }
+    if (IR_SKIP_PATH_RE.test(path)) continue;
+    if (!IR_TEXT_RE.test(anchor.text) && !pathLooksLikeIr(path)) continue;
+    seen.add(anchor.url);
+    out.push(anchor.url);
+  }
+  return out;
+}
+
+export function extractAboutLinks(
+  html: string,
+  baseUrl: string,
+  limit = MAX_ABOUT_FETCHES,
+): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  const landing = baseUrl.split("#")[0];
+  for (const anchor of htmlAnchors(html, baseUrl)) {
+    if (seen.has(anchor.url) || out.length >= limit) continue;
+    if (anchor.url === landing) continue;
+    if (!sameInstitutionHost(anchor.url, baseUrl)) continue;
+    let path = "";
+    try {
+      path = new URL(anchor.url).pathname;
+    } catch {
+      continue;
+    }
+    if (IR_SKIP_PATH_RE.test(path)) continue;
+    if (!ABOUT_TEXT_RE.test(anchor.text) && !ABOUT_PATH_RE.test(path)) continue;
+    seen.add(anchor.url);
+    out.push(anchor.url);
+  }
+  return out;
+}
+
+export function wellKnownIrHubUrls(
+  pageUrl: string,
+  limit = MAX_IR_HUB_FETCHES,
+): string[] {
+  let parsed: URL;
+  try {
+    parsed = new URL(pageUrl);
+  } catch {
+    return [];
+  }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return [];
+  const origin = `${parsed.protocol}//${parsed.host}`;
+  const urls: string[] = [];
+  for (const path of WELL_KNOWN_IR_HUB_PATHS) {
+    if (urls.length >= limit) break;
+    urls.push(origin + path);
+  }
+  return urls;
+}
+
+export function irSubdomainHomepages(pageUrl: string): string[] {
+  let parsed: URL;
+  try {
+    parsed = new URL(pageUrl);
+  } catch {
+    return [];
+  }
+  const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+  if (!host) return [];
+  return IR_SUBDOMAIN_LABELS.map((label) => `https://${label}.${host}/`);
+}
+
+function collectIrHubCandidates(
+  html: string,
+  pageUrl: string,
+  aboutPages: Array<{ url: string; html: string }> = [],
+): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  const add = (url: string) => {
+    if (!url || seen.has(url) || out.length >= MAX_IR_HUB_FETCHES) return;
+    if (url.split("#")[0] === pageUrl.split("#")[0]) return;
+    seen.add(url);
+    out.push(url);
+  };
+  for (const url of extractIrHubLinks(html, pageUrl)) add(url);
+  for (const about of aboutPages) {
+    for (const url of extractIrHubLinks(about.html, about.url)) add(url);
+  }
+  for (const url of wellKnownIrHubUrls(pageUrl)) add(url);
+  for (const url of irSubdomainHomepages(pageUrl).slice(0, 2)) add(url);
+  return out;
+}
+
+async function docsFromHtmlLanding(
+  html: string,
+  finalUrl: string,
+): Promise<ResolvedCandidate[]> {
+  const anchors = extractCdsAnchors(html, finalUrl);
+  const docs = anchors.filter((a) => a.kind === "document");
+  if (docs.length === 0) return [];
+  return pickCandidates(docs, "landing") ?? [];
+}
+
+async function findDocsViaIrHubs(
+  html: string,
+  pageUrl: string,
+): Promise<ResolvedCandidate[]> {
+  const aboutLinks = extractAboutLinks(html, pageUrl).filter((url) => isSafeUrl(url));
+  const aboutPages: Array<{ url: string; html: string }> = [];
+  for (const aboutUrl of aboutLinks.slice(0, MAX_ABOUT_FETCHES)) {
+    const resp = await fetchText(aboutUrl, SUBPAGE_TIMEOUT_MS);
+    if (!resp.ok || !resp.contentType.toLowerCase().includes("text/html")) continue;
+    aboutPages.push({ url: resp.finalUrl, html: resp.text });
+    const direct = await docsFromHtmlLanding(resp.text, resp.finalUrl);
+    if (direct.length > 0) return direct;
+  }
+
+  for (const url of collectIrHubCandidates(html, pageUrl, aboutPages)) {
+    if (!isSafeUrl(url)) continue;
+    const resp = await fetchText(url, SUBPAGE_TIMEOUT_MS);
+    if (!resp.ok || !resp.contentType.toLowerCase().includes("text/html")) continue;
+    const picked = await docsFromHtmlLanding(resp.text, resp.finalUrl);
+    if (picked.length > 0) return picked;
+  }
+  return [];
+}
+
+async function resolvedOrNoCds(
+  hintHtml: string,
+  hintUrl: string,
+  reason: string,
+  probe: ResolveProbeData,
+): Promise<ResolveResult> {
+  const docs = await findDocsViaIrHubs(hintHtml, hintUrl);
+  if (docs.length > 0) {
+    return { kind: "resolved", docs, probe };
+  }
+  return { kind: "no_cds_found", reason, probe };
+}
+
 // Top-level resolver. Given a hint URL, returns a ResolveResult discriminated
 // union. See the type for the six possible kinds. Callers branch on kind:
 // resolved → archive every doc in `docs`; upstream_gone → mark removed;
@@ -1172,6 +1415,49 @@ async function findDocsViaWellKnownPaths(
 // scope rules — which for the common case means one row per historical
 // year for schools like Lafayette that expose a long archive on one
 // page.
+// Merge a direct-file hint with the documents found on the school's page:
+// dedupe by URL, then put the preferred file for the hint's own year first.
+//
+// The hint is a pointer recorded when the school list was built. When the
+// page now lists a different file for that year (a revision posted under a
+// new name), the archiver stored one and then the other on every run:
+// Worcester State 2024-25 flipped between WSU-Common-Data-Set-2024-2025.pdf
+// (the hint) and ...-2024-2025-w-2025-AY-Cost.pdf (the page) 25 times, and
+// each flip sent the document back for extraction.
+//
+// Both stay in the list, the preferred one first. archiveOneSchool archives
+// one file per year and takes the next candidate for a year only when the
+// one before it failed, so the other file is a fallback, not a second write.
+// The page is the school's current choice and is preferred, unless it has
+// only a section file or a draft for that year while the hint is a clean
+// full file.
+export function mergeHintWithPageDocs(
+  directDoc: ResolvedDocument,
+  pageDocs: ResolvedCandidate[],
+): ResolvedCandidate[] {
+  const directKey = directDoc.url.split("#")[0];
+  const byUrl = new Map<string, ResolvedCandidate>();
+  byUrl.set(directKey, directDoc);
+  for (const d of pageDocs) {
+    const key = d.url.split("#")[0];
+    if (!byUrl.has(key)) byUrl.set(key, d);
+  }
+  const merged = Array.from(byUrl.values());
+  if (directDoc.cds_year === UNKNOWN_YEAR_SENTINEL) return merged;
+  const sameYear = merged.filter((d) =>
+    d !== directDoc && d.cds_year === directDoc.cds_year
+  );
+  if (sameYear.length === 0) return merged;
+  const lesser = (d: ResolvedCandidate) => d.is_section_file || d.is_test_artifact;
+  const hintPreferred = !lesser(directDoc) && sameYear.every(lesser);
+  if (hintPreferred) return merged; // the hint is already first
+  return [
+    ...sameYear,
+    directDoc,
+    ...merged.filter((d) => d !== directDoc && !sameYear.includes(d)),
+  ];
+}
+
 export async function resolveCdsForSchool(
   hint: string,
 ): Promise<ResolveResult> {
@@ -1221,15 +1507,10 @@ export async function resolveCdsForSchool(
       ? await findDocsViaWellKnownPaths(hint)
       : [];
 
-    // Merge direct + siblings + fallback, dedupe by URL.
-    const byUrl = new Map<string, ResolvedCandidate>();
-    byUrl.set(directDoc.url.split("#")[0], directDoc);
-    for (const d of [...siblings, ...fallback]) {
-      const key = d.url.split("#")[0];
-      if (!byUrl.has(key)) byUrl.set(key, d);
-    }
-
-    return { kind: "resolved", docs: Array.from(byUrl.values()) };
+    return {
+      kind: "resolved",
+      docs: mergeHintWithPageDocs(directDoc, [...siblings, ...fallback]),
+    };
   }
 
   const landing = await fetchText(hint, LANDING_TIMEOUT_MS);
@@ -1329,11 +1610,12 @@ export async function resolveCdsForSchool(
     .slice(0, MAX_SUBPAGES_PER_SCHOOL);
 
   if (subpages.length === 0) {
-    return {
-      kind: "no_cds_found",
-      reason: "landing parsed, no CDS-ish document anchors and no subpages",
-      probe: buildProbe(landingDocs.length),
-    };
+    return await resolvedOrNoCds(
+      landing.text,
+      landing.finalUrl,
+      "landing parsed, no CDS-ish document anchors and no subpages",
+      buildProbe(landingDocs.length),
+    );
   }
 
   const allSubDocs: CdsAnchor[] = [];
@@ -1389,11 +1671,12 @@ export async function resolveCdsForSchool(
   for (const docs of subResults) allSubDocs.push(...docs);
 
   if (allSubDocs.length === 0) {
-    return {
-      kind: "no_cds_found",
-      reason: "two-hop walk found no document anchors",
-      probe: buildProbe(landingDocs.length),
-    };
+    return await resolvedOrNoCds(
+      landing.text,
+      landing.finalUrl,
+      "two-hop walk found no document anchors",
+      buildProbe(landingDocs.length),
+    );
   }
 
   const subCandidates = pickCandidates(allSubDocs, "subpage");
@@ -1405,11 +1688,12 @@ export async function resolveCdsForSchool(
     };
   }
   if (subCandidates.length === 0) {
-    return {
-      kind: "no_cds_found",
-      reason: "two-hop walk found no qualifying document candidates",
-      probe: buildProbe(landingDocs.length),
-    };
+    return await resolvedOrNoCds(
+      landing.text,
+      landing.finalUrl,
+      "two-hop walk found no qualifying document candidates",
+      buildProbe(landingDocs.length),
+    );
   }
   return {
     kind: "resolved",

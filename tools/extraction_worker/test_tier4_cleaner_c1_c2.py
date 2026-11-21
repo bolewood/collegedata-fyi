@@ -780,6 +780,169 @@ B22 For the cohort of all full-time bachelor's (or equivalent) degree-seeking un
         values = clean(markdown, schema=SchemaIndex(SCHEMA_2024_25))
         self.assertNotIn("C.117", values)
 
+    WHEATON_C1 = """
+### C1. Applications, Admissions, and Enrollment
+
+| Category | Men | Women | Another Gender | Unknown | Total |
+| --- | --- | --- | --- | --- | --- |
+| Applied | 2095 | 3697 | 0 | 43 | 5835 |
+| Admitted | 1268 | 2668 | 0 | 16 | 3952 |
+| Enrolled | 186 | 321 | 0 | 4 | 511 |
+
+| Enrollment status | Men | Women | Another Gender | Unknown | Total |
+| --- | --- | --- | --- | --- | --- |
+| Full-time | 180 | 320 | 0 | 4 | 500 |
+| Part-time | 6 | 1 | 0 | 0 | 5 |
+
+| Category | In-state | Out-of-state | International | Unknown | Total |
+| --- | --- | --- | --- | --- | --- |
+| Applied | 1841 | 2706 | 1263 | 25 | 5835 |
+| Admitted | 1500 | 2220 | 211 | 21 | 3952 |
+| Enrolled | 212 | 279 | 20 | 0 | 511 |
+"""
+
+    def test_c1_one_row_per_stage_tables(self):
+        # Wheaton (MA) publishes its CDS as HTML with one row per stage and one
+        # column per sex, the full-time / part-time split in a table of its
+        # own, and residency rows labelled by stage alone. (The full-time and
+        # part-time figures here are changed from the file's 186/0 and 321/0 so
+        # that each cell can only have come from its own row, and their Total
+        # cells add up to 505: total enrolled is the Enrolled row's 511, not
+        # that sum.)
+        values = clean(self.WHEATON_C1, schema=SchemaIndex(SCHEMA_2024_25))
+        got = {qn: v["value"] for qn, v in values.items() if qn.startswith("C.1")}
+        self.assertEqual(got, {
+            "C.101": "2095", "C.102": "3697", "C.103": "0", "C.104": "43",
+            "C.105": "1268", "C.106": "2668", "C.107": "0", "C.108": "16",
+            "C.109": "180", "C.110": "6", "C.111": "320", "C.112": "1",
+            "C.113": "0", "C.114": "0", "C.115": "4", "C.116": "0",
+            "C.117": "5835", "C.118": "3952", "C.119": "511",
+            "C.120": "1841", "C.121": "1500", "C.122": "212",
+            "C.123": "2706", "C.124": "2220", "C.125": "279",
+            "C.126": "1263", "C.127": "211", "C.128": "20",
+            "C.129": "25", "C.130": "21", "C.131": "0",
+        })
+
+    def test_c1_enrolled_row_by_sex_is_kept_only_where_the_template_has_it(self):
+        # 2025-26 has a row for everyone of one sex who enrolled (C.107-C.109);
+        # 2024-25 has only the full-time and part-time rows, and an
+        # all-enrolled count is neither of those.
+        markdown = self.WHEATON_C1.split("| Enrollment status")[0].replace(
+            "| Another Gender ", "").replace("| 0 | 43 ", "| 43 ").replace(
+            "| 0 | 16 ", "| 16 ").replace("| 0 | 4 ", "| 4 ")
+        values = clean(markdown, schema=SchemaIndex(SCHEMA_2025_26))
+        self.assertEqual(
+            {qn: values[qn]["value"] for qn in ("C.107", "C.108", "C.109", "C.118")},
+            {"C.107": "186", "C.108": "321", "C.109": "4", "C.118": "511"},
+        )
+        values = clean(self.WHEATON_C1.split("| Enrollment status")[0], schema=SchemaIndex(SCHEMA_2024_25))
+        self.assertEqual(values["C.119"]["value"], "511")
+        for qn in ("C.109", "C.110", "C.111", "C.112", "C.113", "C.114", "C.115", "C.116"):
+            self.assertNotIn(qn, values)
+
+    def test_enrollment_status_table_is_read_only_directly_under_a_c1_table(self):
+        # The same shape elsewhere (an enrollment table by sex in section B)
+        # is not C1.
+        status_table = "| Enrollment status" + self.WHEATON_C1.split("| Enrollment status")[1].split("| Category")[0]
+        values = clean(status_table, schema=SchemaIndex(SCHEMA_2024_25))
+        self.assertEqual([qn for qn in values if qn.startswith("C.1")], [])
+
+        # A table in between breaks the link.
+        head, rest = self.WHEATON_C1.split("| Enrollment status")
+        other = "| Measure | Total |\n| --- | --- |\n| Something else | 5 |\n\n"
+        values = clean(head + other + "| Enrollment status" + rest, schema=SchemaIndex(SCHEMA_2024_25))
+        for qn in ("C.109", "C.110", "C.111", "C.112"):
+            self.assertNotIn(qn, values)
+
+    C1_ROWS_BY_SEX = """
+### C1. Applications
+
+| FIRST-TIME, FIRST YEAR STUDENT APPLICANTS | TOTAL |
+| --- | --- |
+| Total first-time, first-year men who applied | 900 |
+| Total first-time, first-year women who applied | 800 |
+| Total first-time, first-year men who were admitted | 400 |
+| Total first-time, first-year women who were admitted | 380 |
+| Total full-time, first-time, first-year men who enrolled | 100 |
+| Total part-time, first-time, first-year men who enrolled | 5 |
+| Total full-time, first-time, first-year women who enrolled | 120 |
+| Total part-time, first-time, first-year women who enrolled | 6 |
+"""
+
+    # Wheaton (MA) 2024-25's D2 table, and the same shapes for transfers.
+    TRANSFER_TABLES = """
+| Category | Men | Women | Unknown | Total |
+| --- | --- | --- | --- | --- |
+| Applied | 60 | 85 | 2 | 147 |
+| Admitted | 22 | 34 | 1 | 57 |
+| Enrolled | 9 | 17 | 1 | 27 |
+
+| Enrollment status | Men | Women | Unknown | Total |
+| --- | --- | --- | --- | --- |
+| Full-time | 8 | 16 | 1 | 25 |
+| Part-time | 1 | 1 | 0 | 2 |
+
+| Category | In-state | Out-of-state | International | Total |
+| --- | --- | --- | --- | --- |
+| Applied | 40 | 100 | 7 | 147 |
+| Admitted | 15 | 40 | 2 | 57 |
+| Enrolled | 8 | 18 | 1 | 27 |
+"""
+
+    def _c1(self, values):
+        return {qn: v["value"] for qn, v in values.items() if qn.startswith("C.1")}
+
+    def test_transfer_tables_in_section_d_are_not_read_as_c1(self):
+        # Section D has the same one-row-per-stage tables for transfer
+        # students. With the section marked, nothing in it reaches C1, which
+        # also stops its Applied and Admitted rows filling C1 cells that C1
+        # itself left empty (the unknown-sex and total rows here).
+        c1_only = self._c1(clean(self.C1_ROWS_BY_SEX, schema=SchemaIndex(SCHEMA_2025_26)))
+        for heading in ("### Section D. Transfer Admission", "## D. TRANSFER ADMISSION", "**D1.** Does your institution enroll transfer students?", "D1-D2: Fall Applicants"):
+            markdown = self.C1_ROWS_BY_SEX + "\n" + heading + "\n" + self.TRANSFER_TABLES
+            self.assertEqual(self._c1(clean(markdown, schema=SchemaIndex(SCHEMA_2025_26))), c1_only, heading)
+        self.assertEqual(c1_only["C.107"], "105")  # full-time plus part-time men
+        self.assertNotIn("C.118", c1_only)
+
+    def test_one_row_per_stage_tables_after_c1_was_already_read_add_no_enrolled_rows(self):
+        # The same tables with no section D heading to go by. C1's applied row
+        # was read from the rows by sex, so a later table with one row per
+        # stage is not C1's: its Enrolled row, the full-time / part-time table
+        # under it and its residency rows are left alone.
+        values = self._c1(clean(self.C1_ROWS_BY_SEX + self.TRANSFER_TABLES, schema=SchemaIndex(SCHEMA_2025_26)))
+        self.assertEqual(
+            {qn: values.get(qn) for qn in ("C.107", "C.108", "C.110", "C.111", "C.112", "C.113")},
+            {"C.107": "105", "C.108": "126", "C.110": "100", "C.111": "5", "C.112": "120", "C.113": "6"},
+        )
+        for qn in ("C.109", "C.114", "C.115", "C.118"):
+            self.assertNotIn(qn, values)
+        for qn in ("C.119", "C.120", "C.121", "C.122", "C.123", "C.124", "C.125", "C.126", "C.127"):
+            self.assertNotIn(qn, values)
+
+    def test_second_one_row_per_stage_table_does_not_add_enrolled_rows(self):
+        # C1 as a compact table with full-time / part-time enrolled rows (a
+        # layout read before this change), then a transfer table of the same
+        # shape with an Enrolled row. The by-sex enrolled totals stay the sums
+        # of C1's own rows.
+        c1 = """
+|                    | Men | Women | Unknown | Total |
+|--------------------|-----|-------|---------|-------|
+| Applied            | 900 | 800   | 3       | 1,703 |
+| Admitted           | 400 | 380   | 1       | 781   |
+| Full-time enrolled | 100 | 120   | 0       | 220   |
+| Part-time enrolled | 5   | 6     | 0       | 11    |
+"""
+        values = self._c1(clean(c1 + self.TRANSFER_TABLES, schema=SchemaIndex(SCHEMA_2025_26)))
+        self.assertEqual(
+            {qn: values.get(qn) for qn in ("C.107", "C.108", "C.109", "C.118")},
+            {"C.107": "105", "C.108": "126", "C.109": "0", "C.118": "231"},
+        )
+        self.assertEqual(values, self._c1(clean(c1, schema=SchemaIndex(SCHEMA_2025_26))))
+
+    def test_stage_only_residency_rows_need_a_c1_table_just_above(self):
+        residency = "| Category | In-state" + self.TRANSFER_TABLES.split("| Category | In-state")[1]
+        self.assertEqual(self._c1(clean(residency, schema=SchemaIndex(SCHEMA_2025_26))), {})
+
 
 if __name__ == "__main__":
     unittest.main()

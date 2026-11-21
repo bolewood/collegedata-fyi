@@ -28,6 +28,7 @@ from tools.finder.probe_urls import (
     is_cds_page,
     looks_like_search_junk,
     may_mark_active,
+    prioritize_probe_candidates,
     process_school,
     select_brave_cds_url,
     should_replace_seed,
@@ -900,6 +901,7 @@ class IdentityActivateTests(unittest.TestCase):
             brave_fallback=False,
             google_fallback=False,
             dry_run=False,
+            skip_ir_hubs=True,
         )
         with mock.patch(
             "tools.finder.probe_urls.probe_school",
@@ -910,6 +912,147 @@ class IdentityActivateTests(unittest.TestCase):
         self.assertEqual(school["scrape_policy"], "unknown")
         self.assertEqual(school["probe_state"]["last_result"], "not_found")
         self.assertNotIn("discovery_seed_url", school)
+
+
+class BraveNameQueryAndPriorityTests(unittest.TestCase):
+    def test_name_query_runs_only_after_site_query_misses(self) -> None:
+        site_empty = {"web": {"results": []}}
+        name_hit = {
+            "web": {
+                "results": [
+                    {
+                        "url": "https://www.tulsacc.edu/about-tcc/institutional-research",
+                        "title": "Tulsa Community College Common Data Set",
+                        "description": "Common Data Set",
+                    }
+                ]
+            }
+        }
+        calls: list[str] = []
+
+        def fake_get_full(url, **_kwargs):
+            calls.append(url)
+            payload = name_hit if "Tulsa" in url else site_empty
+            return 200, {}, json.dumps(payload).encode()
+
+        with (
+            mock.patch("tools.finder.probe_urls._get_full", side_effect=fake_get_full),
+            mock.patch(
+                "tools.finder.probe_urls.validate_cds_url",
+                return_value=(VALIDATION_VALID, "html_cds"),
+            ),
+        ):
+            found = brave_search(
+                "tulsacc.edu",
+                "test-key",
+                school_name="Tulsa Community College",
+                allow_name_query=True,
+            )
+        self.assertEqual(
+            found,
+            "https://www.tulsacc.edu/about-tcc/institutional-research",
+        )
+        self.assertEqual(len(calls), 2)
+        self.assertIn("site%3Atulsacc.edu", calls[0])
+        self.assertIn("Tulsa", calls[1])
+
+    def test_name_query_rejects_george_mason_for_nvcc(self) -> None:
+        site_empty = {"web": {"results": []}}
+        gmu = {
+            "web": {
+                "results": [
+                    {
+                        "url": "https://oiep.gmu.edu/resources/common-data-set/",
+                        "title": "George Mason University Common Data Set",
+                        "description": "Common Data Set 2023-2024",
+                    }
+                ]
+            }
+        }
+
+        def fake_get_full(url, **_kwargs):
+            payload = gmu if "Northern" in url else site_empty
+            return 200, {}, json.dumps(payload).encode()
+
+        with mock.patch("tools.finder.probe_urls._get_full", side_effect=fake_get_full):
+            found = brave_search(
+                "nvcc.edu",
+                "test-key",
+                school_name="Northern Virginia Community College",
+                identity_index={
+                    "names": [
+                        "Northern Virginia Community College",
+                        "George Mason University",
+                    ],
+                    "domains": ["nvcc.edu", "gmu.edu"],
+                },
+                allow_name_query=True,
+            )
+        self.assertIsNone(found)
+
+    def test_site_hit_does_not_spend_a_second_query(self) -> None:
+        site_hit = {
+            "web": {
+                "results": [
+                    {
+                        "url": "https://www.elms.edu/ir/common-data-set/",
+                        "title": "Common Data Set",
+                        "description": "Common Data Set",
+                    }
+                ]
+            }
+        }
+        with (
+            mock.patch(
+                "tools.finder.probe_urls._get_full",
+                return_value=(200, {}, json.dumps(site_hit).encode()),
+            ) as get_full,
+            mock.patch(
+                "tools.finder.probe_urls.validate_cds_url",
+                return_value=(VALIDATION_VALID, "html_cds"),
+            ),
+        ):
+            found = brave_search(
+                "elms.edu",
+                "test-key",
+                school_name="Elms College",
+                allow_name_query=True,
+            )
+        self.assertEqual(found, "https://www.elms.edu/ir/common-data-set/")
+        self.assertEqual(get_full.call_count, 1)
+
+    def test_two_year_never_checked_are_capped_and_midsize_first(self) -> None:
+        schools = [
+            {
+                "id": "mega-online",
+                "name": "Mega Online College",
+                "iclevel": 2,
+                "ipeds_instsize": 5,
+            },
+            {
+                "id": "mid-campus",
+                "name": "Midsize Community College",
+                "iclevel": 2,
+                "ipeds_instsize": 3,
+            },
+            {
+                "id": "tiny",
+                "name": "Tiny Technical College",
+                "iclevel": 2,
+                "ipeds_instsize": 1,
+            },
+            {
+                "id": "four-year",
+                "name": "Already Probed University",
+                "iclevel": 1,
+                "probe_state": {"last_probed_at": "2026-11-03T00:00:00Z"},
+            },
+        ]
+        ordered = prioritize_probe_candidates(schools, new_two_year_cap=2)
+        self.assertEqual(
+            [row["id"] for row in ordered],
+            ["mid-campus", "tiny", "four-year"],
+        )
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 # finder
 
-Discovers CDS document URLs across the 2,424-school US four-year higher-ed corpus and writes them back into a single YAML manifest.
+Discovers CDS document URLs across the US two- and four-year higher-ed corpus and writes them back into a single YAML manifest.
 
 ## Why this exists
 
@@ -12,9 +12,11 @@ This directory turns that problem into a reproducible pipeline. You run one comm
 
 | File | Purpose |
 |---|---|
-| `schools.yaml` | The corpus: about 2,400 schools keyed by IPEDS ID (live counts: [/coverage](https://www.collegedata.fyi/coverage)), with `discovery_seed_url` (the resolver's seed URL; renamed from `cds_url_hint` in PR 5 of the URL hint refactor), optional `browse_url` (human-friendly URL for contributor tools), `scrape_policy`, `probe_state`. |
+| `schools.yaml` | The corpus: about 3,000 in-scope 2-year and 4-year schools keyed by IPEDS ID (live counts: [/coverage](https://www.collegedata.fyi/coverage)), with `discovery_seed_url` (the resolver's seed URL; renamed from `cds_url_hint` in PR 5 of the URL hint refactor), optional `browse_url` (human-friendly URL for contributor tools), `scrape_policy`, `probe_state`. |
 | `school_overrides.yaml` | Operator-supplied per-school overrides keyed by `school_id`. Hand-curated `browse_url`, `direct_archive_urls` (year-tagged for Box/Drive/SharePoint-hosted schools and Archive.org snapshots of taken-down school PDFs; use Wayback `id_` URLs, not toolbar captures), `hosting_override` (CMS/file_storage/auth_required/rendering/waf/notes). Read at edge-function runtime by `_shared/schools.ts`; NOT touched by `build_school_list.py`. |
-| `build_school_list.py` | Rebuilds `schools.yaml` from IPEDS HD data, preserving hand-curated overrides. Run rarely (once per IPEDS release). Includes `assert_no_duplicates()` build-time guard. |
+| `build_school_list.py` | Rebuilds `schools.yaml` from IPEDS HD data (ICLEVEL 1 and 2, degree-granting, nonprofit, US states+DC), preserving hand-curated overrides. Run rarely (once per IPEDS release). `--append-missing` adds new UNITIDs without rewriting `probe_state`. Includes `assert_no_duplicates()` build-time guard. |
+| `ir_hubs.py` | Shared IR/IE/fact-book link detection and the Brave name-collision guard. Used by the resolver, the monthly probe, and the review-only backfill. |
+| `backfill_ir_hubs.py` | One-off homepage → IR-hub crawl for `no_pdfs_found` homepage seeds and never-checked schools. Writes a review CSV (`cds` = yes/no/unclear). Does not archive, enqueue, or edit `schools.yaml`. |
 | `identity_guard.py` | CI and loader guard that checks every `schools.yaml` UNITID against a checked-in official NCES HD identity snapshot. It blocks when neither official name nor website domain agrees; exact reviewed exceptions cannot use wildcards and must remain in use. |
 | `school_redirect_guard.py` | CI guard that derives reviewed retired aliases from `schools.yaml` and verifies `web/src/data/school-redirects.json` has exactly one valid permanent redirect for each alias, with no canonical-slug collisions or conflicting destinations. |
 | `ipeds_identity_snapshot.csv` | Offline NCES HD identity snapshot used by CI, including all official UNITIDs, names, domains, active flags, and successor IDs. Refresh deliberately with `identity_guard.py --build-snapshot ...` after reviewing a new HD release. |
@@ -39,9 +41,12 @@ This directory turns that problem into a reproducible pipeline. You run one comm
 
 For every school in `schools.yaml` with `scrape_policy: unknown`, tries to find a CDS URL by:
 
-1. **URL pattern ladder** (free, fast). DNS-short-circuit each candidate base (`www.X.edu`, `ir.X.edu`, `oair.X.edu`, etc.) so we only HTTP-probe hosts that actually resolve. Then for each live base, try ~30 known IR/provost paths (`/ir/cds/`, `/institutional-research/common-data-set/`, `/provost/oira/common-data-set.cfm`, …). First 200 with a CDS-shaped body wins.
-2. **Brave Search API fallback** (cheap, $0.005/query). If no pattern hits, query `site:{domain} "Common Data Set"` and return the first PDF or CDS-titled landing page.
-3. **Bing HTML scraping** and **Google Custom Search** (optional alternatives, not used by default).
+1. **URL pattern ladder** (free, fast). DNS-short-circuit each candidate base (`www.X.edu`, `ir.X.edu`, `oair.X.edu`, etc.) so we only HTTP-probe hosts that actually resolve. Then for each live base, try known IR/provost CDS paths (`/ir/cds/`, `/institutional-research/common-data-set/`, `/provost/oira/common-data-set.cfm`, …). First 200 with a CDS-shaped body wins.
+2. **IR hub crawl** (free). If the CDS-specific ladder misses, fetch the homepage, follow at most one About page plus a handful of Institutional Research / Institutional Effectiveness / fact-book links (and a few conventional `/institutional-research` paths). This is how a seed like Tulsa's `/about-tcc/institutional-research` is found without burning Brave quota.
+3. **Brave Search API fallback** (cheap, $0.005/query). If no pattern or IR-hub hits, query `site:{domain} "Common Data Set"`. For never-checked schools only, when that query returns no accepted candidate, a second query `"School Name" "Common Data Set"` runs. Off-domain hits count only when the document's host or institution name matches the school (so George Mason is not stored as Northern Virginia CC). Both queries count toward `--brave-budget` (default 1,800 of the 2,000/month free tier).
+4. **Bing HTML scraping** and **Google Custom Search** (optional alternatives, not used by default).
+
+Never-checked ICLEVEL=2 schools are probed first, mid-size traditional campuses before mega/online, and capped at `--new-two-year-cap` (default 300) so the new 2-year corpus spreads over several monthly runs instead of one burst.
 
 When a URL is found, write it as `discovery_seed_url` and flip `scrape_policy` to `active`. On failure, write a `probe_state` with `last_result: not_found` so a 30-day cooldown skips the school on the next run.
 
@@ -286,7 +291,30 @@ The monthly Action used to die quietly in two ways:
 
 Related workflows: `ops-headless-archive.yml` (daily, WAF-gated schools), `ops-archive-seed-catchup.yml` (runs on push to `main` when `schools.yaml` changes and enqueues the changed seeds), and `ops-api-usage-ingest.yml` (unrelated to discovery; see `tools/api_usage/`).
 
-GitHub Actions runs this on the 2nd of each month (`ops-finder-probe.yml`). It needs the `BRAVE_API_KEY` repository secret — the finder talks to `api.search.brave.com`, not public brave.com. Manual dispatch:
+### IR-hub backfill (review CSV only)
+
+When a directory homepage seed archived as `no_pdfs_found`, or a school has never been checked, run the IR-hub crawl locally or via `ops-ir-hub-backfill.yml` (`workflow_dispatch` only). It does **not** write `schools.yaml`, call `archive-process`, or publish anything uncertain.
+
+```bash
+mkdir -p scratch/ir-hub-backfill
+python tools/finder/backfill_ir_hubs.py \
+  --from-csv path/to/missing-in-scope.csv \
+  --out scratch/ir-hub-backfill/review.csv \
+  --limit 50 --rps 0.5
+```
+
+The review CSV columns are `school_id,name,ipeds_id,cds,url,notes` with `cds` in `{yes,no,unclear}`. Promote a `yes` row by adding `discovery_seed_url` on a finder seed PR the way Tulsa Community College was added; leave `unclear` for a human.
+
+To add newly in-scope 2-year UNITIDs to `schools.yaml` without regenerating probe_state:
+
+```bash
+python tools/finder/build_school_list.py \
+  --append-missing --iclevel 2 \
+  --from-csv path/to/missing-in-scope.csv
+python tools/finder/identity_guard.py
+```
+
+GitHub Actions runs the monthly Brave probe on the 2nd of each month (`ops-finder-probe.yml`). It needs the `BRAVE_API_KEY` repository secret — the finder talks to `api.search.brave.com`, not public brave.com. Manual dispatch:
 
 ```bash
 gh workflow run ops-finder-probe.yml

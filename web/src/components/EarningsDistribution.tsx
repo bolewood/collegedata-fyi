@@ -126,7 +126,7 @@ export function EarningsDistribution({
               left: `${pct(v)}%`,
               transform: "translateX(-50%)",
               fontSize: 10,
-              color: "var(--ink-4)",
+              color: "var(--ink-3)",
               letterSpacing: "0.04em",
             }}
           >

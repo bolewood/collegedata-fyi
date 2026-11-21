@@ -1,0 +1,104 @@
+name: Ops IR hub backfill
+
+on:
+  workflow_dispatch:
+    inputs:
+      from_csv:
+        description: "Path to a missing-schools CSV already in the repo (or uploaded in a prior commit)."
+        required: false
+        default: ""
+      limit:
+        description: "Max schools to crawl this run (0 = all selected)."
+        required: false
+        default: "50"
+      rps:
+        description: "Requests per second (keep low; default 0.5)."
+        required: false
+        default: "0.5"
+      only:
+        description: "Optional comma-separated school ids or UNITIDs."
+        required: false
+        default: ""
+
+concurrency:
+  group: ops-ir-hub-backfill
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  backfill:
+    name: Review-only IR hub crawl
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      INPUT_FROM_CSV: ${{ inputs.from_csv }}
+      INPUT_LIMIT: ${{ inputs.limit }}
+      INPUT_RPS: ${{ inputs.rps }}
+      INPUT_ONLY: ${{ inputs.only }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/ci-requirements.txt
+
+      - name: Install Python dependencies
+        run: python -m pip install -r tools/ci-requirements.txt
+
+      - name: Require a missing-schools CSV
+        run: |
+          set -euo pipefail
+          mkdir -p scratch/ir-hub-backfill
+          if [[ -n "${INPUT_FROM_CSV}" ]]; then
+            cp "${INPUT_FROM_CSV}" scratch/ir-hub-backfill/missing.csv
+          elif [[ -f tools/finder/missing_in_scope.csv ]]; then
+            cp tools/finder/missing_in_scope.csv scratch/ir-hub-backfill/missing.csv
+          else
+            echo "::error::Pass from_csv or commit tools/finder/missing_in_scope.csv. This job does not read production."
+            exit 2
+          fi
+
+      - name: Crawl IR hubs into a review CSV
+        run: |
+          set -euo pipefail
+          extra=()
+          if [[ -n "${INPUT_ONLY}" ]]; then
+            extra+=(--only "${INPUT_ONLY}")
+          fi
+          PYTHONUNBUFFERED=1 python tools/finder/backfill_ir_hubs.py \
+            --from-csv scratch/ir-hub-backfill/missing.csv \
+            --out scratch/ir-hub-backfill/review.csv \
+            --summary-json scratch/ir-hub-backfill/summary.json \
+            --limit "${INPUT_LIMIT}" \
+            --rps "${INPUT_RPS}" \
+            "${extra[@]}" \
+            2>&1 | tee scratch/ir-hub-backfill/backfill.log
+
+      - name: Guard against production writes
+        run: |
+          set -euo pipefail
+          if git diff --name-only | grep -q .; then
+            echo "::error::IR hub backfill must not modify the working tree"
+            git diff --name-only
+            exit 1
+          fi
+          python -c '
+          import json
+          from pathlib import Path
+          summary = json.loads(Path("scratch/ir-hub-backfill/summary.json").read_text())
+          if summary.get("published"):
+              raise SystemExit("review crawl must set published=false")
+          print("review-only summary ok", summary)
+          '
+
+      - name: Upload review artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ir-hub-backfill
+          path: scratch/ir-hub-backfill/
+          if-no-files-found: warn

@@ -31,6 +31,7 @@ WATCHED_WORKFLOWS = {
     "Deploy Edge Functions": "deploy-edge-functions.yml",
     "IPEDS release probe": "ipeds-release-probe.yml",
     "Ops finder probe": "ops-finder-probe.yml",
+    "Ops IR hub backfill": "ops-ir-hub-backfill.yml",
     "API usage ingest": "ops-api-usage-ingest.yml",
     "Ops extraction worker": "ops-extraction-worker.yml",
     "Ops archive seed catchup": "ops-archive-seed-catchup.yml",

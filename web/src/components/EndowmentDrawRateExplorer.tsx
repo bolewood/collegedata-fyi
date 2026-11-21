@@ -508,7 +508,7 @@ function SchoolHistoryChart({ school }: { school: EndowmentDrawRateSchool }) {
                   textAnchor="middle"
                   fontFamily="var(--mono)"
                   fontSize="12"
-                  fill="var(--ink-4)"
+                  fill="var(--ink-3)"
                 >
                   n/a
                 </text>

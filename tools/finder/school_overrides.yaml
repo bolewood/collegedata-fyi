@@ -1053,3 +1053,32 @@ overrides:
       notes: >-
         Newest CDS on the listing is 2022-23 (Google Drive, verified Fall 2022
         data). No 2023-24 or later file is published (checked 2026-11-18).
+
+  # Two-year college (IPEDS 207935). Hand-added before ICLEVEL=2 entered
+  # the finder corpus; build_school_list.py --append-missing now keeps
+  # two-year UNITIDs. Do not drop this override.
+  # (ICLEVEL=1 only); the schools.yaml row is a hand-curated exception
+  # preserved on IPEDS regen. Maps to institution_directory
+  # tulsa-community-college. IR listing currently shows 2022-23 through
+  # 2024-25; older PDFs remain under /sites/default/files/2023-10/.
+  - school_id: tulsa-community-college
+    browse_url: https://www.tulsacc.edu/about-tcc/institutional-research
+    pinned_archive_urls:
+      - { url: https://www.tulsacc.edu/documents/tcc-cds-2024-2025-final20250414, year: "2024-25" }
+      - { url: https://www.tulsacc.edu/documents/tcc-common-data-set-2023-2024, year: "2023-24" }
+      - { url: https://www.tulsacc.edu/sites/default/files/2023-10/tcc_cds_2022-2023_final_sr-2223-5794.pdf, year: "2022-23" }
+      - { url: https://www.tulsacc.edu/sites/default/files/2023-10/tcc-cds-2021-22-final-sr-2122-5208.pdf, year: "2021-22" }
+      - { url: https://www.tulsacc.edu/sites/default/files/2023-10/tcc-common-data-set-2020-21.pdf, year: "2020-21" }
+      - { url: https://www.tulsacc.edu/sites/default/files/2023-10/tcc-common-data-set-2019-20.pdf, year: "2019-20" }
+      - { url: https://www.tulsacc.edu/sites/default/files/2023-10/tcc-common-data-set-2018-19.pdf, year: "2018-19" }
+    hosting_override:
+      file_storage: same_origin
+      cms: drupal
+      notes: >-
+        TCC IR (https://www.tulsacc.edu/about-tcc/institutional-research)
+        lists 2024-25 and 2023-24 as Drupal document nodes that serve
+        application/pdf (no .pdf in the URL) and 2022-23 as a direct PDF.
+        2018-19 through 2021-22 are still at /sites/default/files/2023-10/
+        but are not linked from the current page. 2018-19 is section H
+        (financial aid) only, 5 pages. No 2025-26 or 2017-18 file found
+        (checked 2026-11-20). Two-year school, UNITID 207935.

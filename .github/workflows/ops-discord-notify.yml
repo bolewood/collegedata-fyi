@@ -11,6 +11,7 @@ on:
       - Deploy Edge Functions
       - IPEDS release probe
       - Ops finder probe
+      - Ops IR hub backfill
       - API usage ingest
       - Ops extraction worker
       - Ops archive seed catchup

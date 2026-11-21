@@ -263,6 +263,7 @@ def _parse_markdown_tables(markdown: str) -> list[dict]:
 
         # Detect table start: a line starting with |
         if line.startswith("|") and "|" in line[1:]:
+            table_start_line = i
             # Collect all contiguous table lines.
             table_lines = []
             while i < len(lines) and lines[i].strip().startswith("|"):
@@ -343,6 +344,7 @@ def _parse_markdown_tables(markdown: str) -> list[dict]:
                 "section": current_section,
                 "headers": header_cells,
                 "rows": rows,
+                "line": table_start_line,
             })
         else:
             i += 1
@@ -2733,6 +2735,26 @@ def _c1_residency_columns(header_norm: str) -> tuple[str, ...]:
     return ("All", "In-State", "Out-of-State", "Nonresidents", "Unknown")
 
 
+# The first line of section D (transfer admission) after C1: "## D. TRANSFER
+# ADMISSION", "### Section D. Transfer Admission", "D1-D2: Fall Applicants",
+# "**D1.** Does your institution enroll transfer students?".
+_SECTION_D_START_RE = re.compile(
+    r"^[ \t]*(?:[-*][ \t]*)?(?:#+[ \t]*)?(?:\*\*)?[ \t]*"
+    r"(?:Section[ \t]+D\b|D\.[ \t]+TRANSFER ADMISSION|D1\b)",
+    re.IGNORECASE | re.MULTILINE,
+)
+
+
+def _section_d_start_line(markdown: str) -> int | None:
+    """Index of the line where section D starts, counted the way
+    _parse_markdown_tables counts lines. None when C1 or D is not marked."""
+    c1 = re.search(r"\bC1\b", markdown)
+    if not c1:
+        return None
+    d = _SECTION_D_START_RE.search(markdown, c1.end())
+    return markdown.count("\n", 0, d.start()) if d else None
+
+
 _C1_HEADER_TOKENS = {
     "All": r"total",
     "In-State": r"in-?\s*state",
@@ -3333,13 +3355,43 @@ def resolve_c1_applications(
             if total_qn and total_qn not in out and total_all:
                 out[total_qn] = {"value": str(total_all), "source": "tier4_cleaner"}
 
+    def _lookup_enrolled_by_sex_total(gender: str) -> str | None:
+        """The row for everyone of one sex who enrolled, full- and part-time
+        together (2025-26 on). None for a template that has only the
+        full-time and part-time rows: an all-enrolled count is not either."""
+        for f in c1_fields:
+            if not _gender_matches(str(f["gender"]), gender):
+                continue
+            if f["residency"] != "All":
+                continue
+            q_norm = str(f["_q_norm"])
+            if "enrolled" in q_norm and "full time" not in q_norm and "part time" not in q_norm:
+                return f["question_number"]
+        return None
+
     _apply_layout_lines(markdown)
     _apply_ku_application_data_blocks(markdown)
     _apply_tableau_c1_layout_block(markdown)
 
-    for table in tables:
+    # Section D has tables of the same shapes for transfer students (Wheaton
+    # MA 2024-25's D2 is "Category | Men | Women | Unknown | Total" with
+    # Applied / Admitted / Enrolled rows). Nothing past its first line is C1.
+    section_d_line = _section_d_start_line(markdown)
+
+    # Index of the table with one column per sex and one row per stage that
+    # gave C1 its applied row, if there is one. Its "Enrolled" row, the
+    # full-time / part-time table right under it and the residency table after
+    # that are read as C1 (Wheaton MA's HTML CDS). The same shapes anywhere
+    # else are not: they may be another section's.
+    men_applied_qn = _lookup_compact_gender_column("Males", "applied", "All")
+    c1_compact_table_index = -3
+
+    for table_index, table in enumerate(tables):
         headers_norm = [_normalize_label(h) for h in table.get("headers", [])]
         joined_hdr = " ".join(headers_norm)
+        past_section_d = (
+            section_d_line is not None and table.get("line", -1) > section_d_line
+        )
 
         # --- Residency breakdown table detection ---
         is_residency = ("in state" in joined_hdr
@@ -3356,7 +3408,8 @@ def resolve_c1_applications(
                 gender_hits += 1
         is_gender_table = gender_hits >= 1
         is_compact_gender_table = (
-            "men" in joined_hdr
+            not past_section_d
+            and "men" in joined_hdr
             and "women" in joined_hdr
             and any(
                 _normalize_label(r["label"]) in {
@@ -3368,8 +3421,31 @@ def resolve_c1_applications(
                 for r in table["rows"][:8]
             )
         )
+        # "Enrollment status | Men | Women | ... | Total" with only Full-time
+        # and Part-time rows, directly under a compact C1 table.
+        is_enrollment_status_table = (
+            not is_compact_gender_table
+            and not past_section_d
+            and table_index == c1_compact_table_index + 1
+            and bool(headers_norm)
+            and headers_norm[0] == "enrollment status"
+            and "men" in joined_hdr
+            and "women" in joined_hdr
+            and bool(table["rows"])
+            and all(
+                _normalize_label(r["label"]) in {"full time", "part time"}
+                for r in table["rows"]
+            )
+        )
+        # This table is C1's own when it is the first to give the men's
+        # applied count: nothing read it before, and this table has it.
+        supplies_c1_applied = (
+            is_compact_gender_table
+            and men_applied_qn is not None
+            and men_applied_qn not in out
+        )
 
-        if is_compact_gender_table:
+        if is_compact_gender_table or is_enrollment_status_table:
             col_to_gender: list[tuple[int, str]] = []
             raw_headers = [str(h).strip().lower() for h in table.get("headers", [])]
             for ci, hdr in enumerate(raw_headers[1:]):
@@ -3389,7 +3465,10 @@ def resolve_c1_applications(
             saw_total_enrolled = False
             for row in table["rows"]:
                 label_norm = _normalize_label(row["label"])
-                if label_norm == "applied":
+                if is_enrollment_status_table:
+                    action = "enrolled"
+                    unit_load = "FT" if label_norm == "full time" else "PT"
+                elif label_norm == "applied":
                     action = "applied"
                     unit_load = "All"
                 elif label_norm == "admitted":
@@ -3401,6 +3480,26 @@ def resolve_c1_applications(
                 elif label_norm == "part time enrolled":
                     action = "enrolled"
                     unit_load = "PT"
+                elif label_norm == "enrolled":
+                    # Everyone who enrolled, by sex. Its Total cell is the
+                    # printed total; a by-sex cell is kept only where the
+                    # template has a row for it.
+                    if not supplies_c1_applied:
+                        continue
+                    for col_idx, gender in col_to_gender:
+                        if col_idx >= len(row["values"]):
+                            continue
+                        num = _extract_number(row["values"][col_idx])
+                        if num is None:
+                            continue
+                        qn = (
+                            _lookup("All", "All", "enrolled")
+                            if gender == "All"
+                            else _lookup_enrolled_by_sex_total(gender)
+                        )
+                        if qn and qn not in out:
+                            out[qn] = {"value": num, "source": "tier4_cleaner"}
+                    continue
                 else:
                     continue
 
@@ -3423,7 +3522,16 @@ def resolve_c1_applications(
                 if qn and qn not in out:
                     out[qn] = {"value": str(total_enrolled), "source": "tier4_cleaner"}
 
+            if supplies_c1_applied and men_applied_qn in out:
+                c1_compact_table_index = table_index
+
         elif is_residency:
+            # Rows labelled by their stage alone are read only in the
+            # residency table that follows C1's one-row-per-stage table.
+            stage_only_rows = (
+                not past_section_d
+                and 0 <= c1_compact_table_index < table_index <= c1_compact_table_index + 2
+            )
             # Map each value column index → residency key.
             col_to_res: list[tuple[int, str]] = []
             for ci, hdr in enumerate(headers_norm[1:]):
@@ -3440,6 +3548,12 @@ def resolve_c1_applications(
                     if kw in label_norm:
                         action = akey
                         break
+                if (
+                    not action
+                    and stage_only_rows
+                    and label_norm in {"applied", "admitted", "enrolled"}
+                ):
+                    action = label_norm
                 if not action:
                     continue
                 for col_idx, res in col_to_res:

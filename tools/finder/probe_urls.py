@@ -63,6 +63,15 @@ from tools.finder.stuck_pdf_seeds import (  # noqa: E402
     choose_canonical_school,
     is_direct_doc_seed,
 )
+from tools.finder.ir_hubs import (  # noqa: E402
+    MAX_ABOUT_PAGES,
+    MAX_IR_HUB_URLS,
+    collect_ir_hub_candidates,
+    extract_about_links,
+    host_belongs_to_domain,
+    ir_subdomain_homepages,
+    result_matches_school,
+)
 
 ROOT = Path(__file__).parent
 SCHOOLS_YAML = ROOT / "schools.yaml"
@@ -128,6 +137,12 @@ PATTERNS = [
     "/ir/reports/",
     "/iea/university-data",
     "/iea/university-data/",
+    # IR hubs (not CDS-specific). is_cds_page still requires a "Common Data
+    # Set" heading, so a fact-book-only IR page does not count as a hit.
+    "/institutional-research",
+    "/institutional-research/",
+    "/institutional-effectiveness",
+    "/institutional-effectiveness/",
 ]
 
 # Subdomains to try. `sites` catches Wordpress-multisite institutions
@@ -148,6 +163,10 @@ DEFAULT_COOLDOWN_DAYS = 30
 # for a fully-live school to probe ~60 URLs at the default 1 rps cadence
 # while keeping monthly cron runtime bounded at 2400 schools × 60s / workers.
 DEFAULT_SCHOOL_BUDGET_SEC = 60.0
+
+# Spread newly added ICLEVEL=2 schools across several monthly Brave runs
+# instead of burning the 1,800-call budget on one burst.
+DEFAULT_NEW_TWO_YEAR_CAP = 300
 
 # Search hits and active HTML seeds are untrusted URLs. One MiB is enough to
 # inspect a landing page and document magic without downloading a whole CDS.
@@ -619,6 +638,166 @@ def probe_school(domain: str, rps: float, max_seconds: float = DEFAULT_SCHOOL_BU
     return None, tried
 
 
+def _fetch_html(url: str, timeout: int = 10) -> tuple[str, str] | None:
+    """Return (final_url, html_text) for an HTML page, else None."""
+    status, headers, body, final_url, _truncated = _get_bounded(
+        url, timeout=timeout, max_bytes=MAX_VALIDATION_BYTES,
+    )
+    if status != 200:
+        return None
+    content_type = headers.get("content-type", "").lower()
+    looks_html = "html" in content_type or bool(
+        re.search(br"(?is)<!doctype\s+html|<html(?:\s|>)", body[:4096])
+    )
+    if not looks_html:
+        return None
+    return final_url or url, body.decode("utf-8", errors="ignore")
+
+
+def probe_ir_hubs(domain: str, rps: float = 1.0) -> str | None:
+    """Homepage → IR hub crawl when the CDS-specific pattern ladder missed.
+
+    Extra requests stay small: one homepage, at most one About page, then
+    at most MAX_IR_HUB_URLS hub URLs (real links first, then well-known
+    paths and a couple of IR subdomains).
+    """
+    if not domain:
+        return None
+    delay = 1.0 / rps if rps > 0 else 1.0
+    homepage = None
+    homepage_url = ""
+    for url in (f"https://www.{domain}/", f"https://{domain}/"):
+        host = urllib.parse.urlparse(url).hostname or ""
+        if not _dns_ok(host):
+            continue
+        fetched = _fetch_html(url)
+        time.sleep(delay)
+        if fetched:
+            homepage_url, homepage = fetched
+            break
+    if not homepage:
+        return None
+
+    about_pages: list[tuple[str, str]] = []
+    for about_url in extract_about_links(homepage, homepage_url)[:MAX_ABOUT_PAGES]:
+        fetched = _fetch_html(about_url)
+        time.sleep(delay)
+        if not fetched:
+            continue
+        about_final, about_html = fetched
+        about_pages.append((about_final, about_html))
+        if is_cds_page(about_html.encode("utf-8", errors="ignore"), "text/html"):
+            return about_final
+
+    include_subdomains = False
+    for sub_url in ir_subdomain_homepages(domain)[:2]:
+        host = urllib.parse.urlparse(sub_url).hostname or ""
+        if _dns_ok(host):
+            include_subdomains = True
+            break
+
+    hubs = collect_ir_hub_candidates(
+        homepage,
+        homepage_url,
+        about_pages=about_pages,
+        domain=domain,
+        include_well_known=True,
+        include_subdomains=include_subdomains,
+        limit=MAX_IR_HUB_URLS,
+    )
+    for hub in hubs:
+        host = urllib.parse.urlparse(hub).hostname or ""
+        if host and not _dns_ok(host):
+            continue
+        fetched = _fetch_html(hub)
+        time.sleep(delay)
+        if not fetched:
+            continue
+        final_url, html = fetched
+        if is_cds_page(html.encode("utf-8", errors="ignore"), "text/html"):
+            return final_url
+        if html_has_cds_content_or_anchors(html.encode("utf-8", errors="ignore")):
+            return final_url
+    return None
+
+
+def is_never_checked(school: dict) -> bool:
+    ps = school.get("probe_state") or {}
+    return not ps.get("last_probed_at")
+
+
+def is_online_like(name: str) -> bool:
+    lowered = (name or "").lower()
+    return any(
+        token in lowered
+        for token in (
+            "online",
+            "global campus",
+            "worldwide",
+        )
+    )
+
+
+def instsize_rank(school: dict) -> int:
+    size = school.get("ipeds_instsize")
+    try:
+        size_int = int(size)
+    except (TypeError, ValueError):
+        size_int = 0
+    return {3: 0, 2: 1, 4: 2, 1: 3, 5: 4}.get(size_int, 5)
+
+
+def school_iclevel(school: dict) -> int:
+    try:
+        return int(school.get("iclevel") or 1)
+    except (TypeError, ValueError):
+        return 1
+
+
+def prioritize_probe_candidates(
+    candidates: list[dict],
+    *,
+    new_two_year_cap: int = DEFAULT_NEW_TWO_YEAR_CAP,
+) -> list[dict]:
+    """Never-checked mid-size 2-year campuses first, capped per monthly run."""
+    never_two: list[dict] = []
+    rest: list[dict] = []
+    for school in candidates:
+        if is_never_checked(school) and school_iclevel(school) == 2:
+            never_two.append(school)
+        else:
+            rest.append(school)
+
+    def two_year_key(school: dict) -> tuple:
+        return (
+            1 if is_online_like(school.get("name", "")) else 0,
+            instsize_rank(school),
+            school.get("name", "").lower(),
+        )
+
+    def rest_key(school: dict) -> tuple:
+        never = is_never_checked(school)
+        return (
+            0 if never else 1,
+            1 if is_online_like(school.get("name", "")) else 0,
+            instsize_rank(school) if never else 0,
+            school.get("name", "").lower(),
+        )
+
+    never_two.sort(key=two_year_key)
+    rest.sort(key=rest_key)
+    if new_two_year_cap and new_two_year_cap > 0:
+        return never_two[:new_two_year_cap] + rest
+    return never_two + rest
+
+
+def build_identity_index(schools: list[dict]) -> dict:
+    """Name/domain lists for the Brave name-collision guard."""
+    names = [str(s.get("name") or "") for s in schools if s.get("name")]
+    domains = [str(s.get("domain") or "") for s in schools if s.get("domain")]
+    return {"names": names, "domains": domains}
+
+
 # ── Search fallbacks ────────────────────────────────────────────────────────
 
 class _BingResultParser(html.parser.HTMLParser):
@@ -679,12 +858,12 @@ def bing_html_search(domain: str) -> str | None:
     return None
 
 
-def brave_search(domain: str, api_key: str, tracker: dict | None = None) -> str | None:
-    """Use Brave Search API to find CDS PDFs for a school.
-
-    Free tier: 2,000 queries/month. Paid: $0.003/query.
-    Independent index, no domain pre-registration.
-    """
+def _brave_web_results(
+    query: str,
+    api_key: str,
+    tracker: dict | None = None,
+) -> list[dict] | None:
+    """Run one Brave web search. None means HTTP/parse failure, not zero hits."""
     if tracker is not None:
         with tracker["lock"]:
             budget = tracker.get("budget")
@@ -692,18 +871,9 @@ def brave_search(domain: str, api_key: str, tracker: dict | None = None) -> str 
                 print("  [brave] budget exhausted — skipping remaining queries", flush=True)
                 return None
             tracker["calls"] += 1
-    # NOTE: do not add `filetype:pdf` here. Many schools publish CDS as an
-    # HTML landing page (oair.tulane.edu/common-data-set) or a .cfm page
-    # (american.edu/provost/oira/common-data-set.cfm), not a raw PDF.
-    # Hand-verified via Brave web UI on 2026-04-14: the filetype restriction
-    # returned 0 hits for Tulane while the un-restricted query returned the
-    # live landing page as result #1. The overnight $5 Brave run burned
-    # quota for 0 finds because of this one word.
-    query = f'site:{domain} "Common Data Set"'
     params = urllib.parse.urlencode({"q": query, "count": 10})
     url = f"https://api.search.brave.com/res/v1/web/search?{params}"
-
-    status, headers, body = _get_full(
+    status, _headers, body = _get_full(
         url, timeout=15,
         extra_headers={
             "Accept": "application/json",
@@ -712,34 +882,83 @@ def brave_search(domain: str, api_key: str, tracker: dict | None = None) -> str 
         },
     )
     if status != 200:
-        # Surface quota exhaustion (402) and rate limiting (429) instead
-        # of silently returning None like the previous version did.
         if status in (402, 429):
             print(f"  [brave] HTTP {status} — quota/rate limit hit", flush=True)
         return None
-
     try:
         data = json.loads(body)
     except json.JSONDecodeError:
         return None
+    return data.get("web", {}).get("results", []) or []
 
-    results = data.get("web", {}).get("results", [])
-    for candidate in brave_cds_candidates(results, domain):
+
+def _first_valid_brave_candidate(
+    results: list[dict],
+    domain: str | None,
+    *,
+    school_name: str | None = None,
+    identity_index: dict | None = None,
+    require_domain: bool = True,
+) -> str | None:
+    for candidate in brave_cds_candidates(
+        results,
+        domain,
+        school_name=school_name,
+        identity_index=identity_index,
+        require_domain=require_domain,
+    ):
         validation, _reason = validate_cds_url(candidate)
         if validation == VALIDATION_VALID:
             return candidate
     return None
 
 
-def host_belongs_to_domain(url: str, domain: str) -> bool:
-    """True when the URL is on the school's own host, not a random search hit."""
-    host = (urllib.parse.urlparse(url).hostname or "").lower()
-    if host.startswith("www."):
-        host = host[4:]
-    domain = domain.lower().removeprefix("www.")
-    if not host or not domain:
-        return False
-    return host == domain or host.endswith("." + domain)
+def brave_search(
+    domain: str,
+    api_key: str,
+    tracker: dict | None = None,
+    *,
+    school_name: str | None = None,
+    identity_index: dict | None = None,
+    allow_name_query: bool = False,
+) -> str | None:
+    """Use Brave Search API to find CDS PDFs for a school.
+
+    Free tier: 2,000 queries/month. Paid: $0.003/query.
+    Independent index, no domain pre-registration.
+
+    The monthly query is `site:{domain} "Common Data Set"`. A second
+    `"School Name" "Common Data Set"` query runs only when that first
+    query returns no accepted candidate, and only when the caller opts
+    in (never-checked schools). Both calls count toward `--brave-budget`.
+    """
+    # NOTE: do not add `filetype:pdf` here. Many schools publish CDS as an
+    # HTML landing page (oair.tulane.edu/common-data-set) or a .cfm page
+    # (american.edu/provost/oira/common-data-set.cfm), not a raw PDF.
+    # Hand-verified via Brave web UI on 2026-04-14: the filetype restriction
+    # returned 0 hits for Tulane while the un-restricted query returned the
+    # live landing page as result #1. The overnight $5 Brave run burned
+    # quota for 0 finds because of this one word.
+    site_results = _brave_web_results(
+        f'site:{domain} "Common Data Set"', api_key, tracker,
+    )
+    if site_results is None:
+        return None
+    hit = _first_valid_brave_candidate(
+        site_results, domain, school_name=school_name,
+        identity_index=identity_index, require_domain=True,
+    )
+    if hit or not allow_name_query or not school_name:
+        return hit
+    name_results = _brave_web_results(
+        f'"{school_name}" "Common Data Set"', api_key, tracker,
+    )
+    if not name_results:
+        return None
+    return _first_valid_brave_candidate(
+        name_results, domain, school_name=school_name,
+        identity_index=identity_index, require_domain=False,
+    )
 
 
 def looks_like_search_junk(url: str) -> bool:
@@ -801,7 +1020,14 @@ def looks_like_non_cds_document(url: str) -> bool:
     return not re.search(r"cds|common[-_]?data", path)
 
 
-def brave_cds_candidates(results: list[dict], domain: str | None = None) -> list[str]:
+def brave_cds_candidates(
+    results: list[dict],
+    domain: str | None = None,
+    *,
+    school_name: str | None = None,
+    identity_index: dict | None = None,
+    require_domain: bool = True,
+) -> list[str]:
     """Return plausible Brave candidates in listing-before-document order.
 
     Prefer an HTML listing over a year-specific PDF. A PDF seed locks the
@@ -814,6 +1040,10 @@ def brave_cds_candidates(results: list[dict], domain: str | None = None) -> list
     definitions / instructions documents rather than a school's filled-out
     data. Filter added 2026-04-14 after Amherst's hint turned out to be
     the definitions PDF.
+
+    Name-query hits (require_domain=False) still have to match the school's
+    host or institution name, and must not belong to a different school in
+    the finder corpus.
     """
     bad_keywords = ("definition", "definitions", "template", "instructions",
                     "blank", "glossary")
@@ -821,6 +1051,9 @@ def brave_cds_candidates(results: list[dict], domain: str | None = None) -> list
     def looks_like_template(url_str: str) -> bool:
         p = url_str.lower()
         return any(kw in p for kw in bad_keywords)
+
+    other_names = (identity_index or {}).get("names") or ()
+    other_domains = (identity_index or {}).get("domains") or ()
 
     landing: list[str] = []
     documents: list[str] = []
@@ -835,15 +1068,27 @@ def brave_cds_candidates(results: list[dict], domain: str | None = None) -> list
             continue
         if looks_like_non_cds_document(link):
             continue
-        if domain and not host_belongs_to_domain(link, domain):
+        title = r.get("title", "")
+        desc = r.get("description", "")
+        if require_domain:
+            if domain and not host_belongs_to_domain(link, domain):
+                continue
+        elif school_name and domain:
+            if not result_matches_school(
+                link, title, desc,
+                school_name=school_name,
+                school_domain=domain,
+                other_names=other_names,
+                other_domains=other_domains,
+            ):
+                continue
+        elif domain and not host_belongs_to_domain(link, domain):
             continue
         seen.add(link)
         if link.lower().endswith(".pdf"):
             documents.append(link)
             continue
-        desc = r.get("description", "").lower()
-        title = r.get("title", "").lower()
-        if "common data set" in desc or "common data set" in title:
+        if "common data set" in desc.lower() or "common data set" in title.lower():
             landing.append(link)
     return landing + documents
 
@@ -905,6 +1150,15 @@ def process_school(school: dict, args: argparse.Namespace,
     if not args.search_only:
         url, patterns_tried = probe_school(domain, args.rps, args.school_budget_sec)
 
+    # Step 1b: IR hub crawl (homepage / about / well-known IR paths).
+    # Free, and it is how Tulsa's /about-tcc/institutional-research is
+    # reached. Runs only when the CDS-specific ladder missed.
+    if not url and not args.search_only and not getattr(args, "skip_ir_hubs", False):
+        last_attempted_method = "ir_hub"
+        url = probe_ir_hubs(domain, args.rps)
+        if url:
+            method = "ir_hub"
+
     # Step 2: Bing HTML scraping (free)
     if not url and args.bing_fallback:
         search_tried = True
@@ -918,7 +1172,14 @@ def process_school(school: dict, args: argparse.Namespace,
     if not url and args.brave_fallback and env.get("brave_api_key"):
         search_tried = True
         last_attempted_method = "brave"
-        url = brave_search(domain, env["brave_api_key"], env.get("brave_tracker"))
+        url = brave_search(
+            domain,
+            env["brave_api_key"],
+            env.get("brave_tracker"),
+            school_name=name,
+            identity_index=env.get("identity_index"),
+            allow_name_query=is_never_checked(school),
+        )
         if url:
             method = "brave"
         time.sleep(0.5)
@@ -1250,6 +1511,19 @@ def main():
     ap.add_argument("--brave-budget", type=int, default=1800,
                     help="Max Brave Search API calls this run (default 1800, "
                          "under the 2000/month free tier). 0 means unlimited.")
+    ap.add_argument(
+        "--new-two-year-cap",
+        type=int,
+        default=DEFAULT_NEW_TWO_YEAR_CAP,
+        help="Max never-checked ICLEVEL=2 schools to probe this run "
+             f"(default {DEFAULT_NEW_TWO_YEAR_CAP}). Spreads the new 2-year "
+             "corpus over several monthly Brave budgets. 0 means unlimited.",
+    )
+    ap.add_argument(
+        "--skip-ir-hubs",
+        action="store_true",
+        help="Skip the homepage/IR-hub crawl (pattern ladder and search only).",
+    )
     ap.add_argument("--school-budget-sec", type=float, default=DEFAULT_SCHOOL_BUDGET_SEC,
                     help=f"Per-school wall-clock budget for the pattern "
                          f"ladder in seconds (default: {DEFAULT_SCHOOL_BUDGET_SEC}). "
@@ -1286,6 +1560,7 @@ def main():
         "google_cx": os.environ.get("GOOGLE_CX"),
         "brave_api_key": os.environ.get("BRAVE_API_KEY"),
         "official_records": official_records,
+        "identity_index": build_identity_index(schools),
         "brave_tracker": {
             "calls": 0,
             "budget": None if args.brave_budget == 0 else args.brave_budget,
@@ -1407,8 +1682,14 @@ def main():
             continue
 
         candidates.append(school)
-        if args.limit and len(candidates) >= args.limit:
-            break
+
+    if not targeted:
+        candidates = prioritize_probe_candidates(
+            candidates,
+            new_two_year_cap=args.new_two_year_cap,
+        )
+    if args.limit:
+        candidates = candidates[: args.limit]
 
     total = len(candidates)
     print(f"Probing {total} schools with {args.workers} workers (rps={args.rps} per worker)")

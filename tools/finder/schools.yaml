@@ -22080,6 +22080,12 @@ schools:
     patterns_tried: 0
     search_fallback_tried: true
   discovery_seed_url: https://oair.tulane.edu/common-data-set
+- id: tulsa-community-college
+  name: Tulsa Community College
+  domain: tulsacc.edu
+  ipeds_id: '207935'
+  scrape_policy: active
+  discovery_seed_url: https://www.tulsacc.edu/about-tcc/institutional-research
 - id: turtle-mountain-community-college
   name: Turtle Mountain Community College
   domain: tm.edu
@@ -27483,3 +27489,5155 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
+
+# ── In-scope two-year (ICLEVEL=2) — discovery needed ──
+# Appended by build_school_list.py --append-missing. Never-checked 2-year
+# schools are Brave-probed first, capped at 300/month.
+
+- id: academy-for-nursing-and-health-occupations
+  name: Academy for Nursing and Health Occupations
+  domain: anho.edu
+  ipeds_id: "412173"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 558
+
+- id: academy-of-interactive-entertainment
+  name: Academy of Interactive Entertainment
+  domain: lafayette.aie.edu
+  ipeds_id: "487658"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 89
+
+- id: aiken-technical-college
+  name: Aiken Technical College
+  domain: atc.edu
+  ipeds_id: "217615"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1925
+
+- id: alamance-community-college
+  name: Alamance Community College
+  domain: alamancecc.edu
+  ipeds_id: "199786"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3080
+
+- id: alaska-christian-college
+  name: Alaska Christian College
+  domain: alaskacc.edu
+  ipeds_id: "442523"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 44
+
+- id: alexandria-technical-and-community-college
+  name: "Alexandria Technical & Community College"
+  domain: alextech.edu
+  ipeds_id: "172918"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1533
+
+- id: allan-hancock-college
+  name: Allan Hancock College
+  domain: hancockcollege.edu
+  ipeds_id: "108807"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 8052
+
+- id: allegany-college-of-maryland
+  name: Allegany College of Maryland
+  domain: allegany.edu
+  ipeds_id: "161688"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1831
+
+- id: allen-county-community-college
+  name: Allen County Community College
+  domain: allencc.edu
+  ipeds_id: "154642"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 810
+
+- id: amarillo-college
+  name: Amarillo College
+  domain: actx.edu
+  ipeds_id: "222576"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7399
+
+- id: american-academy-mcallister-institute-of-funeral-service
+  name: American Academy McAllister Institute of Funeral Service
+  domain: funeraleducation.org
+  ipeds_id: "188687"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 270
+
+- id: american-academy-of-dramatic-arts-new-york
+  name: American Academy of Dramatic Arts-New York
+  domain: aada.edu
+  ipeds_id: "188678"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 187
+
+- id: american-river-college
+  name: American River College
+  domain: arc.losrios.edu
+  ipeds_id: "109208"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 5
+  undergraduate_enrollment: 25621
+
+- id: anne-arundel-community-college
+  name: Anne Arundel Community College
+  domain: aacc.edu
+  ipeds_id: "161767"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 8997
+
+- id: anoka-ramsey-community-college
+  name: Anoka-Ramsey Community College
+  domain: anokaramsey.edu
+  ipeds_id: "172963"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4201
+
+- id: arizona-western-college
+  name: Arizona Western College
+  domain: azwestern.edu
+  ipeds_id: "104160"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6374
+
+- id: arkansas-state-university-beebe
+  name: Arkansas State University-Beebe
+  domain: asub.edu
+  ipeds_id: "106449"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1986
+
+- id: arnot-ogden-medical-center
+  name: Arnot Ogden Medical Center
+  domain: arnothealth.org
+  ipeds_id: "188915"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 52
+
+- id: aspira-city-college
+  name: ASPIRA City College
+  domain: aspiracitycollege.edu
+  ipeds_id: "214023"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 8
+
+- id: assumption-college-for-sisters
+  name: Assumption College for Sisters
+  domain: acs350.org
+  ipeds_id: "183600"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 30
+
+- id: atlantic-cape-community-college
+  name: Atlantic Cape Community College
+  domain: atlanticcape.edu
+  ipeds_id: "183655"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3755
+
+- id: baltimore-city-community-college
+  name: Baltimore City Community College
+  domain: bccc.edu
+  ipeds_id: "161864"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3700
+
+- id: baptist-health-college-little-rock
+  name: Baptist Health College Little Rock
+  domain: bhclr.edu
+  ipeds_id: "106546"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 569
+
+- id: barstow-community-college
+  name: Barstow Community College
+  domain: barstow.edu
+  ipeds_id: "109907"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2657
+
+- id: barton-county-community-college
+  name: Barton County Community College
+  domain: bartonccc.edu
+  ipeds_id: "154697"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2455
+
+- id: bay-de-noc-community-college
+  name: Bay de Noc Community College
+  domain: baycollege.edu
+  ipeds_id: "168883"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1223
+
+- id: beaufort-county-community-college
+  name: Beaufort County Community College
+  domain: beaufortccc.edu
+  ipeds_id: "197966"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1074
+
+- id: belanger-school-of-nursing
+  name: Belanger School of Nursing
+  domain: ellismedicine.org
+  ipeds_id: "190956"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 162
+
+- id: belmont-college
+  name: Belmont College
+  domain: belmontcollege.edu
+  ipeds_id: "201283"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 600
+
+- id: bergen-community-college
+  name: Bergen Community College
+  domain: bergen.edu
+  ipeds_id: "183743"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 10557
+
+- id: berkeley-city-college
+  name: Berkeley City College
+  domain: berkeleycitycollege.edu
+  ipeds_id: "125170"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4456
+
+- id: berkshire-community-college
+  name: Berkshire Community College
+  domain: berkshirecc.edu
+  ipeds_id: "164775"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1358
+
+- id: bladen-community-college
+  name: Bladen Community College
+  domain: bladencc.edu
+  ipeds_id: "198011"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1030
+
+- id: blinn-college-district
+  name: Blinn College District
+  domain: blinn.edu
+  ipeds_id: "223427"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 15535
+
+- id: blue-mountain-community-college
+  name: Blue Mountain Community College
+  domain: bluecc.edu
+  ipeds_id: "208275"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 962
+
+- id: blue-ridge-community-and-technical-college
+  name: Blue Ridge Community and Technical College
+  domain: blueridgectc.edu
+  ipeds_id: "446774"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1661
+
+- id: bon-secours-st-marys-hospital-school-of-medical-imaging
+  name: "Bon Secours St Mary's Hospital School of Medical Imaging"
+  domain: smhsomi.edu
+  ipeds_id: "233480"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 35
+
+- id: bridgevalley-community-and-technical-college
+  name: "BridgeValley Community & Technical College"
+  domain: bridgevalley.edu
+  ipeds_id: "484932"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1854
+
+- id: brightpoint-community-college
+  name: Brightpoint Community College
+  domain: brightpoint.edu
+  ipeds_id: "232450"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5792
+
+- id: bristol-community-college
+  name: Bristol Community College
+  domain: bristolcc.edu
+  ipeds_id: "165033"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6083
+
+- id: brookdale-community-college
+  name: Brookdale Community College
+  domain: brookdalecc.edu
+  ipeds_id: "183859"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7901
+
+- id: brunswick-community-college
+  name: Brunswick Community College
+  domain: brunswickcc.edu
+  ipeds_id: "198084"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1211
+
+- id: bucks-county-community-college
+  name: Bucks County Community College
+  domain: bucks.edu
+  ipeds_id: "211307"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5289
+
+- id: bunker-hill-community-college
+  name: Bunker Hill Community College
+  domain: bhcc.edu
+  ipeds_id: "165112"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 8612
+
+- id: butler-community-college
+  name: Butler Community College
+  domain: butlercc.edu
+  ipeds_id: "154800"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5104
+
+- id: butler-county-community-college
+  name: Butler County Community College
+  domain: bc3.edu
+  ipeds_id: "211343"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1789
+
+- id: butte-college
+  name: Butte College
+  domain: butte.edu
+  ipeds_id: "110246"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 8890
+
+- id: cabrillo-college
+  name: Cabrillo College
+  domain: cabrillo.edu
+  ipeds_id: "110334"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 8002
+
+- id: caldwell-community-college-and-technical-institute
+  name: Caldwell Community College and Technical Institute
+  domain: cccti.edu
+  ipeds_id: "198118"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2393
+
+- id: california-indian-nations-college
+  name: California Indian Nations College
+  domain: cincollege.org
+  ipeds_id: "495271"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 142
+
+- id: camden-county-college
+  name: Camden County College
+  domain: camdencc.edu
+  ipeds_id: "183938"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6636
+
+- id: canada-college
+  name: Canada College
+  domain: canadacollege.edu
+  ipeds_id: "111434"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5175
+
+- id: cankdeska-cikana-community-college
+  name: Cankdeska Cikana Community College
+  domain: littlehoop.edu
+  ipeds_id: "200208"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 222
+
+- id: cape-cod-community-college
+  name: Cape Cod Community College
+  domain: capecod.edu
+  ipeds_id: "165194"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2911
+
+- id: cape-fear-community-college
+  name: Cape Fear Community College
+  domain: cfcc.edu
+  ipeds_id: "198154"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 9764
+
+- id: carl-albert-state-college
+  name: Carl Albert State College
+  domain: carlalbert.edu
+  ipeds_id: "206923"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1308
+
+- id: carl-sandburg-college
+  name: Carl Sandburg College
+  domain: sandburg.edu
+  ipeds_id: "143613"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1051
+
+- id: carroll-community-college
+  name: Carroll Community College
+  domain: carrollcc.edu
+  ipeds_id: "405872"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1990
+
+- id: casper-college
+  name: Casper College
+  domain: caspercollege.edu
+  ipeds_id: "240505"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2204
+
+- id: catawba-valley-community-college
+  name: Catawba Valley Community College
+  domain: cvcc.edu
+  ipeds_id: "198233"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2741
+
+- id: cayuga-county-community-college
+  name: Cayuga County Community College
+  domain: cayuga-cc.edu
+  ipeds_id: "189839"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1187
+
+- id: cecil-college
+  name: Cecil College
+  domain: cecil.edu
+  ipeds_id: "162104"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1363
+
+- id: central-carolina-community-college
+  name: Central Carolina Community College
+  domain: cccc.edu
+  ipeds_id: "198251"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3237
+
+- id: central-carolina-technical-college
+  name: Central Carolina Technical College
+  domain: cctech.edu
+  ipeds_id: "218858"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2163
+
+- id: central-lakes-college-brainerd
+  name: Central Lakes College-Brainerd
+  domain: clcmn.edu
+  ipeds_id: "173203"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1614
+
+- id: central-maine-community-college
+  name: Central Maine Community College
+  domain: cmcc.edu
+  ipeds_id: "161077"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2952
+
+- id: central-oregon-community-college
+  name: Central Oregon Community College
+  domain: cocc.edu
+  ipeds_id: "208318"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3789
+
+- id: central-piedmont-community-college
+  name: Central Piedmont Community College
+  domain: cpcc.edu
+  ipeds_id: "198260"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 15067
+
+- id: central-texas-college
+  name: Central Texas College
+  domain: ctcd.edu
+  ipeds_id: "223816"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6247
+
+- id: century-college
+  name: Century College
+  domain: century.edu
+  ipeds_id: "175315"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6280
+
+- id: cerro-coso-community-college
+  name: Cerro Coso Community College
+  domain: cerrocoso.edu
+  ipeds_id: "111896"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3171
+
+- id: chabot-college
+  name: Chabot College
+  domain: chabotcollege.edu
+  ipeds_id: "111920"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 11392
+
+- id: chaffey-college
+  name: Chaffey College
+  domain: chaffey.edu
+  ipeds_id: "111939"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 18132
+
+- id: chattanooga-state-community-college
+  name: Chattanooga State Community College
+  domain: chattanoogastate.edu
+  ipeds_id: "219824"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5284
+
+- id: chesapeake-college
+  name: Chesapeake College
+  domain: chesapeake.edu
+  ipeds_id: "162168"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1320
+
+- id: chief-dull-knife-college
+  name: Chief Dull Knife College
+  domain: cdkc.edu
+  ipeds_id: "180160"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 183
+
+- id: cisco-college
+  name: Cisco College
+  domain: cisco.edu
+  ipeds_id: "223898"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1620
+
+- id: city-colleges-of-chicago-harold-washington-college
+  name: City Colleges of Chicago-Harold Washington College
+  domain: ccc.edu
+  ipeds_id: "144209"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4207
+
+- id: city-colleges-of-chicago-wilbur-wright-college
+  name: City Colleges of Chicago-Wilbur Wright College
+  domain: ccc.edu
+  ipeds_id: "144218"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4372
+
+- id: clackamas-community-college
+  name: Clackamas Community College
+  domain: clackamas.edu
+  ipeds_id: "208406"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4963
+
+- id: clatsop-community-college
+  name: Clatsop Community College
+  domain: clatsopcc.edu
+  ipeds_id: "208415"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 493
+
+- id: cleveland-community-college
+  name: Cleveland Community College
+  domain: clevelandcc.edu
+  ipeds_id: "198321"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1097
+
+- id: clinton-community-college
+  name: Clinton Community College
+  domain: clinton.edu
+  ipeds_id: "190053"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 400
+
+- id: clovis-community-college
+  name: Clovis Community College
+  domain: cloviscollege.edu
+  ipeds_id: "489201"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7956
+
+- id: coalinga-college
+  name: Coalinga College
+  domain: westhillscollege.com
+  ipeds_id: "125462"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2522
+
+- id: coastal-alabama-community-college
+  name: Coastal Alabama Community College
+  domain: coastalalabama.edu
+  ipeds_id: "101161"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4798
+
+- id: coastal-bend-college
+  name: Coastal Bend College
+  domain: coastalbend.edu
+  ipeds_id: "223320"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1958
+
+- id: coastal-carolina-community-college
+  name: Coastal Carolina Community College
+  domain: coastalcarolina.edu
+  ipeds_id: "198330"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2724
+
+- id: coastline-community-college
+  name: Coastline Community College
+  domain: coastline.edu
+  ipeds_id: "112385"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7393
+
+- id: cochran-school-of-nursing
+  name: Cochran School of Nursing
+  domain: cochranschoolofnursing.us
+  ipeds_id: "190071"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 117
+
+- id: coffeyville-community-college
+  name: Coffeyville Community College
+  domain: coffeyville.edu
+  ipeds_id: "154925"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 850
+
+- id: college-of-alameda
+  name: College of Alameda
+  domain: alameda.edu
+  ipeds_id: "108667"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4487
+
+- id: college-of-dupage
+  name: College of DuPage
+  domain: cod.edu
+  ipeds_id: "144865"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 16114
+
+- id: college-of-eastern-idaho
+  name: College of Eastern Idaho
+  domain: cei.edu
+  ipeds_id: "142179"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1478
+
+- id: college-of-marin
+  name: College of Marin
+  domain: marin.edu
+  ipeds_id: "118347"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4042
+
+- id: college-of-san-mateo
+  name: College of San Mateo
+  domain: collegeofsanmateo.edu
+  ipeds_id: "122791"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7977
+
+- id: college-of-southern-maryland
+  name: College of Southern Maryland
+  domain: csmd.edu
+  ipeds_id: "162122"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4512
+
+- id: college-of-the-albemarle
+  name: College of the Albemarle
+  domain: albemarle.edu
+  ipeds_id: "197814"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2001
+
+- id: college-of-the-canyons
+  name: College of the Canyons
+  domain: canyons.edu
+  ipeds_id: "111461"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 15832
+
+- id: college-of-the-desert
+  name: College of the Desert
+  domain: collegeofthedesert.edu
+  ipeds_id: "113573"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 10207
+
+- id: college-of-the-muscogee-nation
+  name: College of the Muscogee Nation
+  domain: cmn.edu
+  ipeds_id: "480967"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 222
+
+- id: college-of-the-redwoods
+  name: College of the Redwoods
+  domain: redwoods.edu
+  ipeds_id: "121707"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3829
+
+- id: college-of-the-sequoias
+  name: College of the Sequoias
+  domain: cos.edu
+  ipeds_id: "123217"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 11562
+
+- id: college-of-the-siskiyous
+  name: College of the Siskiyous
+  domain: siskiyous.edu
+  ipeds_id: "123484"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1190
+
+- id: college-of-western-idaho
+  name: College of Western Idaho
+  domain: cwi.edu
+  ipeds_id: "455114"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6459
+
+- id: columbia-college-ca
+  name: Columbia College
+  domain: gocolumbia.edu
+  ipeds_id: "112561"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1984
+
+- id: columbia-gorge-community-college
+  name: Columbia Gorge Community College
+  domain: cgcc.edu
+  ipeds_id: "420556"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 543
+
+- id: columbia-state-community-college
+  name: Columbia State Community College
+  domain: columbiastate.edu
+  ipeds_id: "219888"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3897
+
+- id: columbia-greene-community-college
+  name: Columbia-Greene Community College
+  domain: columbiagreene.edu
+  ipeds_id: "190169"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 876
+
+- id: commonwealth-institute-of-funeral-service
+  name: Commonwealth Institute of Funeral Service
+  domain: commonwealth.edu
+  ipeds_id: "366261"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 254
+
+- id: community-christian-college
+  name: Community Christian College
+  domain: cccollege.edu
+  ipeds_id: "446163"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 424
+
+- id: community-college-of-allegheny-county
+  name: Community College of Allegheny County
+  domain: ccac.edu
+  ipeds_id: "210605"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 9544
+
+- id: community-college-of-aurora
+  name: Community College of Aurora
+  domain: ccaurora.edu
+  ipeds_id: "126863"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3250
+
+- id: community-college-of-baltimore-county
+  name: Community College of Baltimore County
+  domain: ccbcmd.edu
+  ipeds_id: "434672"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 13872
+
+- id: community-college-of-beaver-county
+  name: Community College of Beaver County
+  domain: ccbc.edu
+  ipeds_id: "211079"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1247
+
+- id: community-college-of-philadelphia
+  name: Community College of Philadelphia
+  domain: ccp.edu
+  ipeds_id: "215239"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 11948
+
+- id: community-college-of-rhode-island
+  name: Community College of Rhode Island
+  domain: ccri.edu
+  ipeds_id: "217475"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 11171
+
+- id: community-college-of-vermont
+  name: Community College of Vermont
+  domain: ccv.edu
+  ipeds_id: "230861"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2841
+
+- id: compton-college
+  name: Compton College
+  domain: compton.edu
+  ipeds_id: "112686"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3142
+
+- id: connecticut-state-community-college
+  name: Connecticut State Community College
+  domain: ctstate.edu
+  ipeds_id: "129367"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 5
+  undergraduate_enrollment: 33645
+
+- id: connors-state-college
+  name: Connors State College
+  domain: connorsstate.edu
+  ipeds_id: "206996"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2076
+
+- id: contra-costa-college
+  name: Contra Costa College
+  domain: contracosta.edu
+  ipeds_id: "112826"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5203
+
+- id: copiah-lincoln-community-college
+  name: Copiah-Lincoln Community College
+  domain: colin.edu
+  ipeds_id: "175573"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1922
+
+- id: copper-mountain-community-college
+  name: Copper Mountain Community College
+  domain: cmccd.edu
+  ipeds_id: "395362"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1323
+
+- id: cosumnes-river-college
+  name: Cosumnes River College
+  domain: crc.losrios.edu
+  ipeds_id: "113096"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 14023
+
+- id: county-college-of-morris
+  name: County College of Morris
+  domain: ccm.edu
+  ipeds_id: "184180"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5360
+
+- id: craven-community-college
+  name: Craven Community College
+  domain: cravencc.edu
+  ipeds_id: "198367"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1989
+
+- id: crowder-college
+  name: Crowder College
+  domain: crowder.edu
+  ipeds_id: "177135"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2570
+
+- id: cuny-borough-of-manhattan-community-college
+  name: CUNY Borough of Manhattan Community College
+  domain: bmcc.cuny.edu
+  ipeds_id: "190521"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 18623
+
+- id: cuny-bronx-community-college
+  name: CUNY Bronx Community College
+  domain: bcc.cuny.edu
+  ipeds_id: "190530"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5964
+
+- id: cuny-hostos-community-college
+  name: CUNY Hostos Community College
+  domain: hostos.cuny.edu
+  ipeds_id: "190585"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4900
+
+- id: cuny-kingsborough-community-college
+  name: CUNY Kingsborough Community College
+  domain: kbcc.cuny.edu
+  ipeds_id: "190619"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7670
+
+- id: cuny-laguardia-community-college
+  name: CUNY LaGuardia Community College
+  domain: lagcc.cuny.edu
+  ipeds_id: "190628"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 11254
+
+- id: cuny-queensborough-community-college
+  name: CUNY Queensborough Community College
+  domain: qcc.cuny.edu
+  ipeds_id: "190673"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 8940
+
+- id: cuny-stella-and-charles-guttman-community-college
+  name: CUNY Stella and Charles Guttman Community College
+  domain: guttman.cuny.edu
+  ipeds_id: "475565"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 978
+
+- id: cuyamaca-college
+  name: Cuyamaca College
+  domain: cuyamaca.edu
+  ipeds_id: "113218"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7177
+
+- id: dakota-college-at-bottineau
+  name: Dakota College at Bottineau
+  domain: dakotacollege.edu
+  ipeds_id: "200314"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 399
+
+- id: dakota-county-technical-college
+  name: Dakota County Technical College
+  domain: dctc.edu
+  ipeds_id: "173416"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2168
+
+- id: dallas-institute-of-funeral-service
+  name: Dallas Institute of Funeral Service
+  domain: dallasinstitute.edu
+  ipeds_id: "224271"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 454
+
+- id: danville-area-community-college
+  name: Danville Area Community College
+  domain: dacc.edu
+  ipeds_id: "144564"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1508
+
+- id: dawson-community-college
+  name: Dawson Community College
+  domain: dawson.edu
+  ipeds_id: "180151"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 189
+
+- id: de-anza-college
+  name: De Anza College
+  domain: deanza.edu
+  ipeds_id: "113333"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 15264
+
+- id: delaware-county-community-college
+  name: Delaware County Community College
+  domain: dccc.edu
+  ipeds_id: "211927"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6861
+
+- id: delta-college
+  name: Delta College
+  domain: delta.edu
+  ipeds_id: "169521"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6573
+
+- id: diablo-valley-college
+  name: Diablo Valley College
+  domain: dvc.edu
+  ipeds_id: "113634"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 15358
+
+- id: dodge-city-community-college
+  name: Dodge City Community College
+  domain: dc3.edu
+  ipeds_id: "154998"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1106
+
+- id: durham-technical-community-college
+  name: Durham Technical Community College
+  domain: durhamtech.edu
+  ipeds_id: "198455"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3890
+
+- id: dutchess-community-college
+  name: Dutchess Community College
+  domain: sunydutchess.edu
+  ipeds_id: "190840"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3824
+
+- id: dyersburg-state-community-college
+  name: Dyersburg State Community College
+  domain: dscc.edu
+  ipeds_id: "220057"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2103
+
+- id: east-central-college
+  name: East Central College
+  domain: eastcentral.edu
+  ipeds_id: "177250"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1639
+
+- id: east-central-community-college
+  name: East Central Community College
+  domain: eccc.edu
+  ipeds_id: "175643"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1520
+
+- id: east-los-angeles-college
+  name: East Los Angeles College
+  domain: elac.edu
+  ipeds_id: "113856"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 5
+  undergraduate_enrollment: 27753
+
+- id: east-mississippi-community-college
+  name: East Mississippi Community College
+  domain: eastms.edu
+  ipeds_id: "175652"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2838
+
+- id: eastern-iowa-community-college-district
+  name: Eastern Iowa Community College District
+  domain: eicc.edu
+  ipeds_id: "153311"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3520
+
+- id: eastern-maine-community-college
+  name: Eastern Maine Community College
+  domain: emcc.edu
+  ipeds_id: "161138"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1840
+
+- id: eastern-new-mexico-university-ruidoso-branch-community
+  name: Eastern New Mexico University Ruidoso Branch Community College
+  domain: ruidoso.enmu.edu
+  ipeds_id: "383996"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 377
+
+- id: eastern-oklahoma-state-college
+  name: Eastern Oklahoma State College
+  domain: eosc.edu
+  ipeds_id: "207050"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 964
+
+- id: eastern-west-virginia-community-and-technical-college
+  name: Eastern West Virginia Community and Technical College
+  domain: easternwv.edu
+  ipeds_id: "438708"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 225
+
+- id: eastern-wyoming-college
+  name: Eastern Wyoming College
+  domain: ewc.wy.edu
+  ipeds_id: "240596"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 482
+
+- id: el-camino-community-college-district
+  name: El Camino Community College District
+  domain: elcamino.edu
+  ipeds_id: "113980"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 19210
+
+- id: el-paso-community-college
+  name: El Paso Community College
+  domain: epcc.edu
+  ipeds_id: "224642"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 5
+  undergraduate_enrollment: 24214
+
+- id: ellsworth-community-college
+  name: Ellsworth Community College
+  domain: ecc.iavalley.edu
+  ipeds_id: "153296"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 499
+
+- id: elyon-college
+  name: Elyon College
+  domain: elyon.edu
+  ipeds_id: "490346"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 79
+
+- id: emory-university-oxford-college
+  name: Emory University-Oxford College
+  domain: oxford.emory.edu
+  ipeds_id: "487092"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 967
+
+- id: erie-community-college
+  name: Erie Community College
+  domain: ecc.edu
+  ipeds_id: "191083"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6099
+
+- id: essex-county-college
+  name: Essex County College
+  domain: essex.edu
+  ipeds_id: "184481"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5855
+
+- id: evangel-university-james-river-assembly-of-god-church
+  name: Evangel University-James River Assembly of God Church
+  domain: evangel.edu
+  ipeds_id: "477233"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 89
+
+- id: evergreen-valley-college
+  name: Evergreen Valley College
+  domain: evc.edu
+  ipeds_id: "114266"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7688
+
+- id: fayetteville-technical-community-college
+  name: Fayetteville Technical Community College
+  domain: faytechcc.edu
+  ipeds_id: "198534"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 9471
+
+- id: finger-lakes-community-college
+  name: Finger Lakes Community College
+  domain: flcc.edu
+  ipeds_id: "191199"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2980
+
+- id: finger-lakes-health-college-of-nursing-and-health-sciences
+  name: "Finger Lakes Health College of Nursing & Health Sciences"
+  domain: flhcon.edu
+  ipeds_id: "475422"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 65
+
+- id: flathead-valley-community-college
+  name: Flathead Valley Community College
+  domain: fvcc.edu
+  ipeds_id: "180197"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1202
+
+- id: florence-darlington-technical-college
+  name: Florence-Darlington Technical College
+  domain: fdtc.edu
+  ipeds_id: "218025"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3055
+
+- id: folsom-lake-college
+  name: Folsom Lake College
+  domain: flc.losrios.edu
+  ipeds_id: "444219"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 9414
+
+- id: forsyth-technical-community-college
+  name: Forsyth Technical Community College
+  domain: forsythtech.edu
+  ipeds_id: "198552"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7113
+
+- id: fort-peck-community-college
+  name: Fort Peck Community College
+  domain: fpcc.edu
+  ipeds_id: "180212"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 282
+
+- id: frank-phillips-college
+  name: Frank Phillips College
+  domain: fpctx.edu
+  ipeds_id: "224891"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 623
+
+- id: frederick-community-college
+  name: Frederick Community College
+  domain: frederick.edu
+  ipeds_id: "162557"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4203
+
+- id: fullerton-college
+  name: Fullerton College
+  domain: fullcoll.edu
+  ipeds_id: "114859"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 17121
+
+- id: fulton-montgomery-community-college
+  name: Fulton-Montgomery Community College
+  domain: fmcc.edu
+  ipeds_id: "191302"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1001
+
+- id: garrett-college
+  name: Garrett College
+  domain: garrettcollege.edu
+  ipeds_id: "162609"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 411
+
+- id: gavilan-college
+  name: Gavilan College
+  domain: gavilan.edu
+  ipeds_id: "114938"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4786
+
+- id: generations-college
+  name: Generations College
+  domain: generations.edu
+  ipeds_id: "146816"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 310
+
+- id: genesee-community-college
+  name: Genesee Community College
+  domain: genesee.edu
+  ipeds_id: "191339"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1973
+
+- id: george-c-wallace-state-community-college-selma
+  name: George C Wallace State Community College-Selma
+  domain: wccs.edu
+  ipeds_id: "101301"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 855
+
+- id: georgia-state-university-perimeter-college
+  name: Georgia State University-Perimeter College
+  domain: perimeter.gsu.edu
+  ipeds_id: "244437"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 13693
+
+- id: germanna-community-college
+  name: Germanna Community College
+  domain: germanna.edu
+  ipeds_id: "232195"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5508
+
+- id: glen-oaks-community-college
+  name: Glen Oaks Community College
+  domain: glenoaks.edu
+  ipeds_id: "169974"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 600
+
+- id: glendale-community-college-ca
+  name: Glendale Community College
+  domain: glendale.edu
+  ipeds_id: "115001"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 10509
+
+- id: gogebic-community-college
+  name: Gogebic Community College
+  domain: gogebic.edu
+  ipeds_id: "169992"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 511
+
+- id: golden-west-college
+  name: Golden West College
+  domain: goldenwestcollege.edu
+  ipeds_id: "115126"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 9034
+
+- id: grand-rapids-community-college
+  name: Grand Rapids Community College
+  domain: grcc.edu
+  ipeds_id: "170055"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 10698
+
+- id: great-bay-community-college
+  name: Great Bay Community College
+  domain: greatbay.edu
+  ipeds_id: "183150"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1259
+
+- id: great-falls-college-montana-state-university
+  name: Great Falls College Montana State University
+  domain: gfcmsu.edu
+  ipeds_id: "180249"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 894
+
+- id: greenfield-community-college
+  name: Greenfield Community College
+  domain: gcc.mass.edu
+  ipeds_id: "165981"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1395
+
+- id: grossmont-college
+  name: Grossmont College
+  domain: grossmont.edu
+  ipeds_id: "115296"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 12163
+
+- id: guilford-technical-community-college
+  name: Guilford Technical Community College
+  domain: gtcc.edu
+  ipeds_id: "198622"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 9260
+
+- id: gupton-jones-college-of-funeral-service
+  name: Gupton Jones College of Funeral Service
+  domain: gupton-jones.edu
+  ipeds_id: "139995"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 338
+
+- id: h-councill-trenholm-state-community-college
+  name: H Councill Trenholm State Community College
+  domain: trenholmstate.edu
+  ipeds_id: "102313"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1674
+
+- id: hagerstown-community-college
+  name: Hagerstown Community College
+  domain: hagerstowncc.edu
+  ipeds_id: "162690"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2948
+
+- id: halifax-community-college
+  name: Halifax Community College
+  domain: halifaxcc.edu
+  ipeds_id: "198640"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 723
+
+- id: harcum-college
+  name: Harcum College
+  domain: harcum.edu
+  ipeds_id: "212869"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 876
+
+- id: harford-community-college
+  name: Harford Community College
+  domain: harford.edu
+  ipeds_id: "162706"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3696
+
+- id: harrisburg-area-community-college
+  name: Harrisburg Area Community College
+  domain: hacc.edu
+  ipeds_id: "212878"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 9533
+
+- id: hartnell-college
+  name: Hartnell College
+  domain: hartnell.edu
+  ipeds_id: "115393"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 9453
+
+- id: hawaii-community-college
+  name: Hawaii Community College
+  domain: hawaii.hawaii.edu
+  ipeds_id: "383190"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1546
+
+- id: hawaii-tokai-international-college
+  name: Hawaii Tokai International College
+  domain: htic.edu
+  ipeds_id: "497657"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 24
+
+- id: hawkeye-community-college
+  name: Hawkeye Community College
+  domain: hawkeyecollege.edu
+  ipeds_id: "153445"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2626
+
+- id: haywood-community-college
+  name: Haywood Community College
+  domain: haywood.edu
+  ipeds_id: "198668"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 849
+
+- id: helena-college-university-of-montana
+  name: Helena College University of Montana
+  domain: helenacollege.edu
+  ipeds_id: "180276"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 585
+
+- id: herkimer-county-community-college
+  name: Herkimer County Community College
+  domain: herkimer.edu
+  ipeds_id: "191612"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1168
+
+- id: hill-college
+  name: Hill College
+  domain: hillcollege.edu
+  ipeds_id: "225371"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2253
+
+- id: hinds-community-college
+  name: Hinds Community College
+  domain: hindscc.edu
+  ipeds_id: "175786"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6397
+
+- id: hocking-college
+  name: Hocking College
+  domain: hocking.edu
+  ipeds_id: "203155"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1311
+
+- id: holmes-community-college
+  name: Holmes Community College
+  domain: holmescc.edu
+  ipeds_id: "175810"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3958
+
+- id: holyoke-community-college
+  name: Holyoke Community College
+  domain: hcc.edu
+  ipeds_id: "166133"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3591
+
+- id: honolulu-community-college
+  name: Honolulu Community College
+  domain: honolulu.hawaii.edu
+  ipeds_id: "141680"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1897
+
+- id: horry-georgetown-technical-college
+  name: Horry-Georgetown Technical College
+  domain: hgtc.edu
+  ipeds_id: "218140"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6274
+
+- id: howard-college
+  name: Howard College
+  domain: howardcollege.edu
+  ipeds_id: "225520"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1611
+
+- id: howard-community-college
+  name: Howard Community College
+  domain: howardcc.edu
+  ipeds_id: "162779"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6649
+
+- id: hudson-county-community-college
+  name: Hudson County Community College
+  domain: hccc.edu
+  ipeds_id: "184995"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6626
+
+- id: hudson-valley-community-college
+  name: Hudson Valley Community College
+  domain: hvcc.edu
+  ipeds_id: "191719"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6499
+
+- id: huntington-junior-college
+  name: Huntington Junior College
+  domain: hjc.edu
+  ipeds_id: "237437"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 181
+
+- id: hutchinson-community-college
+  name: Hutchinson Community College
+  domain: hutchcc.edu
+  ipeds_id: "155195"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3039
+
+- id: illinois-central-college
+  name: Illinois Central College
+  domain: icc.edu
+  ipeds_id: "145682"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5052
+
+- id: imperial-valley-college
+  name: Imperial Valley College
+  domain: imperial.edu
+  ipeds_id: "115861"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7652
+
+- id: independence-community-college
+  name: Independence Community College
+  domain: indycc.edu
+  ipeds_id: "155201"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 486
+
+- id: indian-hills-community-college
+  name: Indian Hills Community College
+  domain: indianhills.edu
+  ipeds_id: "153472"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1495
+
+- id: instituto-tecnologico-de-puerto-rico-recinto-de-guayama
+  name: Instituto Tecnologico de Puerto Rico-Recinto de Guayama
+  domain: de.gov
+  ipeds_id: "242556"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 216
+
+- id: instituto-tecnologico-de-puerto-rico-recinto-de-manati
+  name: Instituto Tecnologico de Puerto Rico-Recinto de Manati
+  domain: itec.pr
+  ipeds_id: "242042"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 323
+
+- id: instituto-tecnologico-de-puerto-rico-recinto-de-san-juan
+  name: Instituto Tecnologico de Puerto Rico-Recinto de San Juan
+  domain: instituto-tecnologico-de-puerto-rico-1.jimdosite.com
+  ipeds_id: "242583"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 179
+
+- id: inver-hills-community-college
+  name: Inver Hills Community College
+  domain: inverhills.edu
+  ipeds_id: "173799"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2193
+
+- id: iowa-central-community-college
+  name: Iowa Central Community College
+  domain: iowacentral.edu
+  ipeds_id: "153524"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3103
+
+- id: iowa-lakes-community-college
+  name: Iowa Lakes Community College
+  domain: iowalakes.edu
+  ipeds_id: "153533"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 941
+
+- id: iowa-western-community-college
+  name: Iowa Western Community College
+  domain: iwcc.edu
+  ipeds_id: "153630"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2916
+
+- id: irvine-valley-college
+  name: Irvine Valley College
+  domain: ivc.edu
+  ipeds_id: "116439"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 10286
+
+- id: itawamba-community-college
+  name: Itawamba Community College
+  domain: iccms.edu
+  ipeds_id: "175829"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4167
+
+- id: j-sargeant-reynolds-community-college
+  name: J Sargeant Reynolds Community College
+  domain: reynolds.edu
+  ipeds_id: "232414"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5586
+
+- id: jackson-state-community-college
+  name: Jackson State Community College
+  domain: jscc.edu
+  ipeds_id: "220400"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2511
+
+- id: jacksonville-college-main-campus
+  name: Jacksonville College-Main Campus
+  domain: jacksonvillecollege.edu
+  ipeds_id: "225876"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 157
+
+- id: jamestown-community-college
+  name: Jamestown Community College
+  domain: sunyjcc.edu
+  ipeds_id: "191986"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1739
+
+- id: jefferson-college
+  name: Jefferson College
+  domain: jeffco.edu
+  ipeds_id: "177676"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2552
+
+- id: jefferson-community-college
+  name: Jefferson Community College
+  domain: sunyjefferson.edu
+  ipeds_id: "192022"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1499
+
+- id: jefferson-regional-school-of-nursing
+  name: Jefferson Regional School of Nursing
+  domain: jrmc.org
+  ipeds_id: "107123"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 92
+
+- id: jefferson-state-community-college
+  name: Jefferson State Community College
+  domain: jeffersonstate.edu
+  ipeds_id: "101505"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5470
+
+- id: john-a-gupton-college
+  name: John A Gupton College
+  domain: guptoncollege.edu
+  ipeds_id: "220464"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 166
+
+- id: john-a-logan-college
+  name: John A Logan College
+  domain: jalc.edu
+  ipeds_id: "146205"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2016
+
+- id: john-wood-community-college
+  name: John Wood Community College
+  domain: jwcc.edu
+  ipeds_id: "146278"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1371
+
+- id: johnson-college
+  name: Johnson College
+  domain: johnson.edu
+  ipeds_id: "213233"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 590
+
+- id: johnson-county-community-college
+  name: Johnson County Community College
+  domain: jccc.edu
+  ipeds_id: "155210"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 11332
+
+- id: johnston-community-college
+  name: Johnston Community College
+  domain: johnstoncc.edu
+  ipeds_id: "198774"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3453
+
+- id: jones-county-junior-college
+  name: Jones County Junior College
+  domain: jcjc.edu
+  ipeds_id: "175883"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3535
+
+- id: jones-technical-institute
+  name: Jones Technical Institute
+  domain: jtech.org
+  ipeds_id: "487311"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 659
+
+- id: kalamazoo-valley-community-college
+  name: Kalamazoo Valley Community College
+  domain: kvcc.edu
+  ipeds_id: "170541"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4997
+
+- id: kapiolani-community-college
+  name: Kapiolani Community College
+  domain: kapiolani.hawaii.edu
+  ipeds_id: "141796"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3910
+
+- id: kellogg-community-college
+  name: Kellogg Community College
+  domain: kellogg.edu
+  ipeds_id: "170550"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2971
+
+- id: kennebec-valley-community-college
+  name: Kennebec Valley Community College
+  domain: kvcc.me.edu
+  ipeds_id: "161192"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1597
+
+- id: kilgore-college
+  name: Kilgore College
+  domain: kilgore.edu
+  ipeds_id: "226019"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3215
+
+- id: kirkwood-community-college
+  name: Kirkwood Community College
+  domain: kirkwood.edu
+  ipeds_id: "153737"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7591
+
+- id: kirtland-community-college
+  name: Kirtland Community College
+  domain: kirtland.edu
+  ipeds_id: "170587"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1023
+
+- id: labette-community-college
+  name: Labette Community College
+  domain: labette.edu
+  ipeds_id: "155450"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 801
+
+- id: lake-area-technical-college
+  name: Lake Area Technical College
+  domain: lakeareatech.edu
+  ipeds_id: "219143"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1812
+
+- id: lake-michigan-college
+  name: Lake Michigan College
+  domain: lakemichigancollege.edu
+  ipeds_id: "170620"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2105
+
+- id: lake-region-state-college
+  name: Lake Region State College
+  domain: lrsc.edu
+  ipeds_id: "200192"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 611
+
+- id: lake-superior-college
+  name: Lake Superior College
+  domain: lsc.edu
+  ipeds_id: "173461"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2471
+
+- id: lake-tahoe-community-college
+  name: Lake Tahoe Community College
+  domain: ltcc.edu
+  ipeds_id: "117195"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3660
+
+- id: lakeland-community-college
+  name: Lakeland Community College
+  domain: lakelandcc.edu
+  ipeds_id: "203599"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2773
+
+- id: lakes-region-community-college
+  name: Lakes Region Community College
+  domain: lrcc.edu
+  ipeds_id: "183123"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 482
+
+- id: lamar-community-college
+  name: Lamar Community College
+  domain: lamarcc.edu
+  ipeds_id: "127389"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 400
+
+- id: lamar-institute-of-technology
+  name: Lamar Institute of Technology
+  domain: lit.edu
+  ipeds_id: "441760"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3055
+
+- id: lamar-state-college-port-arthur
+  name: Lamar State College-Port Arthur
+  domain: lamarpa.edu
+  ipeds_id: "226116"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1508
+
+- id: laney-college
+  name: Laney College
+  domain: laney.edu
+  ipeds_id: "117247"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6842
+
+- id: lansing-community-college
+  name: Lansing Community College
+  domain: lcc.edu
+  ipeds_id: "170657"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 8207
+
+- id: las-positas-college
+  name: Las Positas College
+  domain: laspositascollege.edu
+  ipeds_id: "366401"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7299
+
+- id: lassen-community-college
+  name: Lassen Community College
+  domain: lassencollege.edu
+  ipeds_id: "117274"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1741
+
+- id: laurel-ridge-community-college
+  name: Laurel Ridge Community College
+  domain: laurelridge.edu
+  ipeds_id: "232575"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3195
+
+- id: lawrence-memorial-hospital-school-of-nursing
+  name: Lawrence Memorial Hospital School of Nursing
+  domain: lmregis.org
+  ipeds_id: "166407"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 174
+
+- id: lawson-state-community-college
+  name: Lawson State Community College
+  domain: lawsonstate.edu
+  ipeds_id: "101569"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2900
+
+- id: leech-lake-tribal-college
+  name: Leech Lake Tribal College
+  domain: lltc.edu
+  ipeds_id: "413626"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 197
+
+- id: leeward-community-college
+  name: Leeward Community College
+  domain: leeward.hawaii.edu
+  ipeds_id: "141811"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3438
+
+- id: lehigh-carbon-community-college
+  name: Lehigh Carbon Community College
+  domain: lccc.edu
+  ipeds_id: "213525"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4148
+
+- id: lemoore-college
+  name: Lemoore College
+  domain: westhillscollege.com
+  ipeds_id: "448594"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3373
+
+- id: lenoir-community-college
+  name: Lenoir Community College
+  domain: lenoircc.edu
+  ipeds_id: "198817"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1469
+
+- id: linn-benton-community-college
+  name: Linn-Benton Community College
+  domain: linnbenton.edu
+  ipeds_id: "209074"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5174
+
+- id: little-big-horn-college
+  name: Little Big Horn College
+  domain: lbhc.edu
+  ipeds_id: "180328"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 253
+
+- id: little-priest-tribal-college
+  name: Little Priest Tribal College
+  domain: littlepriest.edu
+  ipeds_id: "434016"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 182
+
+- id: los-angeles-city-college
+  name: Los Angeles City College
+  domain: lacc.edu
+  ipeds_id: "117788"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 11198
+
+- id: los-angeles-county-college-of-nursing-and-allied-health
+  name: Los Angeles County College of Nursing and Allied Health
+  domain: dhs.lacounty.gov
+  ipeds_id: "117803"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 204
+
+- id: los-angeles-harbor-college
+  name: Los Angeles Harbor College
+  domain: lahc.edu
+  ipeds_id: "117690"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6694
+
+- id: los-angeles-pierce-college
+  name: Los Angeles Pierce College
+  domain: lapc.edu
+  ipeds_id: "117706"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 13436
+
+- id: los-angeles-southwest-college
+  name: Los Angeles Southwest College
+  domain: lasc.edu
+  ipeds_id: "117715"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3706
+
+- id: los-medanos-college
+  name: Los Medanos College
+  domain: losmedanos.edu
+  ipeds_id: "117894"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7320
+
+- id: louisburg-college
+  name: Louisburg College
+  domain: louisburg.edu
+  ipeds_id: "198871"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 402
+
+- id: louisiana-state-university-eunice
+  name: Louisiana State University-Eunice
+  domain: lsue.edu
+  ipeds_id: "159407"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2826
+
+- id: luna-community-college
+  name: Luna Community College
+  domain: luna.edu
+  ipeds_id: "363633"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 423
+
+- id: luzerne-county-community-college
+  name: Luzerne County Community College
+  domain: luzerne.edu
+  ipeds_id: "213659"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3317
+
+- id: macomb-community-college
+  name: Macomb Community College
+  domain: macomb.edu
+  ipeds_id: "170790"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 13876
+
+- id: madera-community-college
+  name: Madera Community College
+  domain: maderacollege.edu
+  ipeds_id: "497046"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4808
+
+- id: manchester-community-college
+  name: Manchester Community College
+  domain: mccnh.edu
+  ipeds_id: "183132"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1587
+
+- id: marion-military-institute
+  name: Marion Military Institute
+  domain: marionmilitary.edu
+  ipeds_id: "101648"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 329
+
+- id: massachusetts-bay-community-college
+  name: Massachusetts Bay Community College
+  domain: massbay.edu
+  ipeds_id: "166647"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3837
+
+- id: massasoit-community-college
+  name: Massasoit Community College
+  domain: massasoit.edu
+  ipeds_id: "166823"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4235
+
+- id: mayland-community-college
+  name: Mayland Community College
+  domain: mayland.edu
+  ipeds_id: "198914"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 362
+
+- id: mcdowell-technical-community-college
+  name: McDowell Technical Community College
+  domain: mcdowelltech.edu
+  ipeds_id: "198923"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 608
+
+- id: mclennan-community-college
+  name: McLennan Community College
+  domain: mclennan.edu
+  ipeds_id: "226578"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5668
+
+- id: mendocino-college
+  name: Mendocino College
+  domain: mendocino.edu
+  ipeds_id: "118684"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2870
+
+- id: merced-college
+  name: Merced College
+  domain: mccd.edu
+  ipeds_id: "118718"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 10001
+
+- id: mercer-county-community-college
+  name: Mercer County Community College
+  domain: mccc.edu
+  ipeds_id: "185509"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5404
+
+- id: meridian-community-college
+  name: Meridian Community College
+  domain: meridiancc.edu
+  ipeds_id: "175935"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2156
+
+- id: merritt-college
+  name: Merritt College
+  domain: merritt.edu
+  ipeds_id: "118772"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5288
+
+- id: metropolitan-community-college-area
+  name: Metropolitan Community College Area
+  domain: mccneb.edu
+  ipeds_id: "181303"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 8775
+
+- id: metropolitan-community-college-kansas-city
+  name: Metropolitan Community College-Kansas City
+  domain: mcckc.edu
+  ipeds_id: "177995"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 10649
+
+- id: mid-michigan-college
+  name: Mid Michigan College
+  domain: midmich.edu
+  ipeds_id: "171155"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2098
+
+- id: mid-plains-community-college
+  name: Mid-Plains Community College
+  domain: mpcc.edu
+  ipeds_id: "181312"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 937
+
+- id: middlesex-college
+  name: Middlesex College
+  domain: middlesexcollege.edu
+  ipeds_id: "185536"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 8469
+
+- id: middlesex-community-college
+  name: Middlesex Community College
+  domain: middlesex.mass.edu
+  ipeds_id: "166887"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5412
+
+- id: midlands-technical-college
+  name: Midlands Technical College
+  domain: midlandstech.edu
+  ipeds_id: "218353"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7564
+
+- id: miles-community-college
+  name: Miles Community College
+  domain: milescc.edu
+  ipeds_id: "180373"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 332
+
+- id: mineral-area-college
+  name: Mineral Area College
+  domain: mineralarea.edu
+  ipeds_id: "178217"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1592
+
+- id: minneapolis-community-and-technical-college
+  name: Minneapolis Community and Technical College
+  domain: minneapolis.edu
+  ipeds_id: "174136"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5268
+
+- id: minnesota-north-college
+  name: Minnesota North College
+  domain: minnesotanorth.edu
+  ipeds_id: "173735"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2013
+
+- id: minnesota-state-community-and-technical-college
+  name: Minnesota State Community and Technical College
+  domain: minnesota.edu
+  ipeds_id: "173559"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2942
+
+- id: mission-college
+  name: Mission College
+  domain: missioncollege.edu
+  ipeds_id: "118930"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5784
+
+- id: mississippi-delta-community-college
+  name: Mississippi Delta Community College
+  domain: msdelta.edu
+  ipeds_id: "176008"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1413
+
+- id: mississippi-gulf-coast-community-college
+  name: Mississippi Gulf Coast Community College
+  domain: mgccc.edu
+  ipeds_id: "176071"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6353
+
+- id: missouri-state-university-west-plains
+  name: Missouri State University-West Plains
+  domain: wp.missouristate.edu
+  ipeds_id: "179344"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 965
+
+- id: mitchell-technical-college
+  name: Mitchell Technical College
+  domain: mitchelltech.edu
+  ipeds_id: "219189"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 990
+
+- id: moberly-area-community-college
+  name: Moberly Area Community College
+  domain: macc.edu
+  ipeds_id: "178448"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3100
+
+- id: mohawk-valley-community-college
+  name: Mohawk Valley Community College
+  domain: mvcc.edu
+  ipeds_id: "193283"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2950
+
+- id: monroe-community-college
+  name: Monroe Community College
+  domain: monroecc.edu
+  ipeds_id: "193326"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7623
+
+- id: monroe-county-community-college
+  name: Monroe County Community College
+  domain: monroeccc.edu
+  ipeds_id: "171225"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1435
+
+- id: montcalm-community-college
+  name: Montcalm Community College
+  domain: montcalm.edu
+  ipeds_id: "171234"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1122
+
+- id: montefiore-school-of-nursing
+  name: Montefiore School of Nursing
+  domain: montefiorenewrochelle.org
+  ipeds_id: "193380"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 121
+
+- id: monterey-peninsula-college
+  name: Monterey Peninsula College
+  domain: mpc.edu
+  ipeds_id: "119067"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5624
+
+- id: montgomery-college
+  name: Montgomery College
+  domain: montgomerycollege.edu
+  ipeds_id: "163426"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 13773
+
+- id: montgomery-county-community-college
+  name: Montgomery County Community College
+  domain: mc3.edu
+  ipeds_id: "214111"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7301
+
+- id: moreno-valley-college
+  name: Moreno Valley College
+  domain: mvc.edu
+  ipeds_id: "460394"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 9346
+
+- id: morrison-institute-of-technology
+  name: Morrison Institute of Technology
+  domain: morrisontech.edu
+  ipeds_id: "147396"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 59
+
+- id: morton-college
+  name: Morton College
+  domain: morton.edu
+  ipeds_id: "147411"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2640
+
+- id: motlow-state-community-college
+  name: Motlow State Community College
+  domain: mscc.edu
+  ipeds_id: "221096"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3962
+
+- id: mott-community-college
+  name: Mott Community College
+  domain: mcc.edu
+  ipeds_id: "169275"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5251
+
+- id: mount-wachusett-community-college
+  name: Mount Wachusett Community College
+  domain: mwcc.edu
+  ipeds_id: "166957"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3059
+
+- id: mountwest-community-and-technical-college
+  name: Mountwest Community and Technical College
+  domain: mctc.edu
+  ipeds_id: "444954"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1160
+
+- id: mt-san-antonio-college
+  name: Mt San Antonio College
+  domain: mtsac.edu
+  ipeds_id: "119164"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 5
+  undergraduate_enrollment: 26140
+
+- id: mt-san-jacinto-community-college-district
+  name: Mt San Jacinto Community College District
+  domain: msjc.edu
+  ipeds_id: "119216"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 15259
+
+- id: muskegon-community-college
+  name: Muskegon Community College
+  domain: muskegoncc.edu
+  ipeds_id: "171304"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2760
+
+- id: napa-valley-college
+  name: Napa Valley College
+  domain: napavalley.edu
+  ipeds_id: "119331"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3813
+
+- id: nash-community-college
+  name: Nash Community College
+  domain: nashcc.edu
+  ipeds_id: "199087"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1689
+
+- id: nashua-community-college
+  name: Nashua Community College
+  domain: nashuacc.edu
+  ipeds_id: "183141"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1135
+
+- id: nashville-state-community-college
+  name: Nashville State Community College
+  domain: nscc.edu
+  ipeds_id: "221184"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5653
+
+- id: nassau-community-college
+  name: Nassau Community College
+  domain: ncc.edu
+  ipeds_id: "193478"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 10630
+
+- id: nebraska-college-of-technical-agriculture
+  name: Nebraska College of Technical Agriculture
+  domain: ncta.unl.edu
+  ipeds_id: "181765"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 196
+
+- id: new-mexico-junior-college
+  name: New Mexico Junior College
+  domain: nmjc.edu
+  ipeds_id: "187903"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2175
+
+- id: new-mexico-military-institute
+  name: New Mexico Military Institute
+  domain: nmmi.edu
+  ipeds_id: "187912"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 331
+
+- id: new-mexico-state-university-alamogordo
+  name: New Mexico State University-Alamogordo
+  domain: alamogordo.nmsu.edu
+  ipeds_id: "187994"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 591
+
+- id: new-mexico-state-university-dona-ana
+  name: New Mexico State University-Dona Ana
+  domain: dacc.nmsu.edu
+  ipeds_id: "187620"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5177
+
+- id: new-mexico-state-university-grants
+  name: New Mexico State University-Grants
+  domain: grants.nmsu.edu
+  ipeds_id: "188021"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 356
+
+- id: new-river-community-and-technical-college
+  name: New River Community and Technical College
+  domain: newriver.edu
+  ipeds_id: "447582"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 770
+
+- id: new-river-community-college
+  name: New River Community College
+  domain: nr.edu
+  ipeds_id: "232867"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1965
+
+- id: nhti-concords-community-college
+  name: "NHTI-Concord's Community College"
+  domain: nhti.edu
+  ipeds_id: "183099"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2154
+
+- id: niagara-county-community-college
+  name: Niagara County Community College
+  domain: niagaracc.suny.edu
+  ipeds_id: "193946"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3084
+
+- id: norco-college
+  name: Norco College
+  domain: norcocollege.edu
+  ipeds_id: "460464"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 8779
+
+- id: normandale-community-college
+  name: Normandale Community College
+  domain: normandale.edu
+  ipeds_id: "174428"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7044
+
+- id: north-central-michigan-college
+  name: North Central Michigan College
+  domain: ncmich.edu
+  ipeds_id: "171395"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 942
+
+- id: north-central-missouri-college
+  name: North Central Missouri College
+  domain: ncmissouri.edu
+  ipeds_id: "179715"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1286
+
+- id: north-central-texas-college
+  name: North Central Texas College
+  domain: nctc.edu
+  ipeds_id: "224110"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5863
+
+- id: north-country-community-college
+  name: North Country Community College
+  domain: nccc.edu
+  ipeds_id: "194028"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 819
+
+- id: north-dakota-state-college-of-science
+  name: North Dakota State College of Science
+  domain: ndscs.edu
+  ipeds_id: "200305"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1909
+
+- id: north-hennepin-community-college
+  name: North Hennepin Community College
+  domain: nhcc.edu
+  ipeds_id: "174376"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3451
+
+- id: north-iowa-area-community-college
+  name: North Iowa Area Community College
+  domain: niacc.edu
+  ipeds_id: "154059"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1320
+
+- id: north-shore-community-college
+  name: North Shore Community College
+  domain: northshore.edu
+  ipeds_id: "167312"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4393
+
+- id: northampton-county-area-community-college
+  name: Northampton County Area Community College
+  domain: northampton.edu
+  ipeds_id: "214379"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7667
+
+- id: northeast-community-college
+  name: Northeast Community College
+  domain: northeast.edu
+  ipeds_id: "181491"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2387
+
+- id: northeast-iowa-community-college
+  name: Northeast Iowa Community College
+  domain: nicc.edu
+  ipeds_id: "154110"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1697
+
+- id: northeast-lakeview-college
+  name: Northeast Lakeview College
+  domain: alamo.edu
+  ipeds_id: "488730"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6471
+
+- id: northeast-mississippi-community-college
+  name: Northeast Mississippi Community College
+  domain: nemcc.edu
+  ipeds_id: "176169"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2698
+
+- id: northeast-state-community-college
+  name: Northeast State Community College
+  domain: northeaststate.edu
+  ipeds_id: "221908"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4404
+
+- id: northeast-texas-community-college
+  name: Northeast Texas Community College
+  domain: ntcc.edu
+  ipeds_id: "227225"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1973
+
+- id: northeastern-oklahoma-aandm-college
+  name: "Northeastern Oklahoma A&M College"
+  domain: neo.edu
+  ipeds_id: "207290"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1720
+
+- id: northern-essex-community-college
+  name: Northern Essex Community College
+  domain: necc.mass.edu
+  ipeds_id: "167376"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3685
+
+- id: northern-maine-community-college
+  name: Northern Maine Community College
+  domain: nmcc.edu
+  ipeds_id: "161484"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 638
+
+- id: northern-oklahoma-college
+  name: Northern Oklahoma College
+  domain: noc.edu
+  ipeds_id: "207281"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1941
+
+- id: northern-pennsylvania-regional-college
+  name: Northern Pennsylvania Regional College
+  domain: regionalcollegepa.org
+  ipeds_id: "494959"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 75
+
+- id: northern-virginia-community-college
+  name: Northern Virginia Community College
+  domain: nvcc.edu
+  ipeds_id: "232946"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 5
+  undergraduate_enrollment: 33048
+
+- id: northern-wyoming-community-college-district
+  name: Northern Wyoming Community College District
+  domain: sheridan.edu
+  ipeds_id: "240666"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1610
+
+- id: northland-community-and-technical-college
+  name: Northland Community and Technical College
+  domain: northlandcollege.edu
+  ipeds_id: "174473"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1554
+
+- id: northwest-arkansas-community-college
+  name: NorthWest Arkansas Community College
+  domain: nwacc.edu
+  ipeds_id: "367459"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4953
+
+- id: northwest-iowa-community-college
+  name: Northwest Iowa Community College
+  domain: nwicc.edu
+  ipeds_id: "154129"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 864
+
+- id: northwest-mississippi-community-college
+  name: Northwest Mississippi Community College
+  domain: northwestms.edu
+  ipeds_id: "176178"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5452
+
+- id: northwest-school-of-wooden-boat-building
+  name: Northwest School of Wooden Boat Building
+  domain: nwswb.edu
+  ipeds_id: "458140"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 50
+
+- id: northwest-state-community-college
+  name: Northwest State Community College
+  domain: northweststate.edu
+  ipeds_id: "204440"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1115
+
+- id: northwest-technical-college
+  name: Northwest Technical College
+  domain: ntcmn.edu
+  ipeds_id: "173115"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 751
+
+- id: oakland-community-college
+  name: Oakland Community College
+  domain: oaklandcc.edu
+  ipeds_id: "171535"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 12748
+
+- id: ocean-county-college
+  name: Ocean County College
+  domain: ocean.edu
+  ipeds_id: "185873"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5424
+
+- id: ohio-state-university-agricultural-technical-institute
+  name: Ohio State University Agricultural Technical Institute
+  domain: ati.osu.edu
+  ipeds_id: "204662"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 464
+
+- id: ohlone-college
+  name: Ohlone College
+  domain: ohlone.edu
+  ipeds_id: "120290"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7099
+
+- id: oklahoma-city-community-college
+  name: Oklahoma City Community College
+  domain: occc.edu
+  ipeds_id: "207449"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 9758
+
+- id: onondaga-community-college
+  name: Onondaga Community College
+  domain: sunyocc.edu
+  ipeds_id: "194222"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4456
+
+- id: orange-county-community-college
+  name: Orange County Community College
+  domain: sunyorange.edu
+  ipeds_id: "194240"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3989
+
+- id: oregon-coast-community-college
+  name: Oregon Coast Community College
+  domain: oregoncoastcc.org
+  ipeds_id: "423652"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 376
+
+- id: owens-community-college
+  name: Owens Community College
+  domain: owens.edu
+  ipeds_id: "204945"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4361
+
+- id: oxnard-college
+  name: Oxnard College
+  domain: oxnardcollege.edu
+  ipeds_id: "120421"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6240
+
+- id: pacific-northwest-christian-college
+  name: Pacific Northwest Christian College
+  domain: pnwcc.edu
+  ipeds_id: "495147"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 129
+
+- id: palau-community-college
+  name: Palau Community College
+  domain: palau.edu
+  ipeds_id: "243647"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 393
+
+- id: palo-verde-college
+  name: Palo Verde College
+  domain: paloverde.edu
+  ipeds_id: "120953"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3381
+
+- id: panola-college
+  name: Panola College
+  domain: panola.edu
+  ipeds_id: "227386"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1388
+
+- id: pasadena-city-college
+  name: Pasadena City College
+  domain: pasadena.edu
+  ipeds_id: "121044"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 5
+  undergraduate_enrollment: 21466
+
+- id: passaic-county-community-college
+  name: Passaic County Community College
+  domain: web.pccc.edu
+  ipeds_id: "186034"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4260
+
+- id: patrick-and-henry-community-college
+  name: "Patrick & Henry Community College"
+  domain: patrickhenry.edu
+  ipeds_id: "233019"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1350
+
+- id: paul-d-camp-community-college
+  name: Paul D Camp Community College
+  domain: pdc.edu
+  ipeds_id: "233037"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 613
+
+- id: pearl-river-community-college
+  name: Pearl River Community College
+  domain: prcc.edu
+  ipeds_id: "176239"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4903
+
+- id: pellissippi-state-community-college
+  name: Pellissippi State Community College
+  domain: pstcc.edu
+  ipeds_id: "221643"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6715
+
+- id: pennsylvania-highlands-community-college
+  name: Pennsylvania Highlands Community College
+  domain: pennhighlands.edu
+  ipeds_id: "414911"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 788
+
+- id: piedmont-community-college
+  name: Piedmont Community College
+  domain: piedmontcc.edu
+  ipeds_id: "199324"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 457
+
+- id: piedmont-virginia-community-college
+  name: Piedmont Virginia Community College
+  domain: pvcc.edu
+  ipeds_id: "233116"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3045
+
+- id: pierpont-community-and-technical-college
+  name: Pierpont Community and Technical College
+  domain: pierpont.edu
+  ipeds_id: "443492"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 959
+
+- id: pitt-community-college
+  name: Pitt Community College
+  domain: pittcc.edu
+  ipeds_id: "199333"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5317
+
+- id: pittsburgh-institute-of-aeronautics
+  name: Pittsburgh Institute of Aeronautics
+  domain: pia.edu
+  ipeds_id: "215381"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 663
+
+- id: pittsburgh-institute-of-mortuary-science-inc
+  name: Pittsburgh Institute of Mortuary Science Inc
+  domain: pims.edu
+  ipeds_id: "215390"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 351
+
+- id: pomeroy-college-of-nursing-at-crouse-hospital
+  name: Pomeroy College of Nursing at Crouse Hospital
+  domain: crouse.org
+  ipeds_id: "190451"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 173
+
+- id: porterville-college
+  name: Porterville College
+  domain: portervillecollege.edu
+  ipeds_id: "121363"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2834
+
+- id: portland-community-college
+  name: Portland Community College
+  domain: pcc.edu
+  ipeds_id: "209746"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 19531
+
+- id: prince-georges-community-college
+  name: "Prince George's Community College"
+  domain: pgcc.edu
+  ipeds_id: "163657"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 8815
+
+- id: quinsigamond-community-college
+  name: Quinsigamond Community College
+  domain: qcc.edu
+  ipeds_id: "167534"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6447
+
+- id: ranger-college
+  name: Ranger College
+  domain: rangercollege.edu
+  ipeds_id: "227687"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 971
+
+- id: raritan-valley-community-college
+  name: Raritan Valley Community College
+  domain: raritanval.edu
+  ipeds_id: "186645"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5416
+
+- id: reading-area-community-college
+  name: Reading Area Community College
+  domain: racc.edu
+  ipeds_id: "215585"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3703
+
+- id: red-lake-nation-college
+  name: Red Lake Nation College
+  domain: rlnc.education
+  ipeds_id: "491844"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 332
+
+- id: redlands-community-college
+  name: Redlands Community College
+  domain: redlandscc.edu
+  ipeds_id: "207069"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 946
+
+- id: richard-bland-college
+  name: Richard Bland College
+  domain: rbc.edu
+  ipeds_id: "233338"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 894
+
+- id: ridgewater-college
+  name: Ridgewater College
+  domain: ridgewater.edu
+  ipeds_id: "175236"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2162
+
+- id: river-valley-community-college
+  name: River Valley Community College
+  domain: rivervalley.edu
+  ipeds_id: "183114"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 608
+
+- id: riverland-community-college
+  name: Riverland Community College
+  domain: riverland.edu
+  ipeds_id: "173063"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2003
+
+- id: riverside-city-college
+  name: Riverside City College
+  domain: rcc.edu
+  ipeds_id: "121901"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 18346
+
+- id: roane-state-community-college
+  name: Roane State Community College
+  domain: roanestate.edu
+  ipeds_id: "221397"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3250
+
+- id: roanoke-chowan-community-college
+  name: Roanoke-Chowan Community College
+  domain: roanokechowan.edu
+  ipeds_id: "199467"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 309
+
+- id: robeson-community-college
+  name: Robeson Community College
+  domain: robeson.edu
+  ipeds_id: "199476"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1551
+
+- id: rochester-community-and-technical-college
+  name: Rochester Community and Technical College
+  domain: rctc.edu
+  ipeds_id: "174738"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3365
+
+- id: rock-valley-college
+  name: Rock Valley College
+  domain: rockvalleycollege.edu
+  ipeds_id: "148380"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4359
+
+- id: rockingham-community-college
+  name: Rockingham Community College
+  domain: rockinghamcc.edu
+  ipeds_id: "199485"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1065
+
+- id: rockland-community-college
+  name: Rockland Community College
+  domain: sunyrockland.edu
+  ipeds_id: "195058"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3834
+
+- id: rogue-community-college
+  name: Rogue Community College
+  domain: roguecc.edu
+  ipeds_id: "209940"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3559
+
+- id: rosedale-bible-college
+  name: Rosedale Bible College
+  domain: rosedale.edu
+  ipeds_id: "439899"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 96
+
+- id: rosedale-technical-college
+  name: Rosedale Technical College
+  domain: rosedaletech.edu
+  ipeds_id: "215682"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 475
+
+- id: rowan-college-at-burlington-county
+  name: Rowan College at Burlington County
+  domain: rcbc.edu
+  ipeds_id: "183877"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6267
+
+- id: rowan-college-of-south-jersey-cumberland-campus
+  name: Rowan College of South Jersey-Cumberland Campus
+  domain: rcsj.edu
+  ipeds_id: "184205"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2074
+
+- id: rowan-college-of-south-jersey-gloucester-campus
+  name: Rowan College of South Jersey-Gloucester Campus
+  domain: rcsj.edu
+  ipeds_id: "184791"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4234
+
+- id: rowan-cabarrus-community-college
+  name: Rowan-Cabarrus Community College
+  domain: rccc.edu
+  ipeds_id: "199494"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4164
+
+- id: roxbury-community-college
+  name: Roxbury Community College
+  domain: rcc.mass.edu
+  ipeds_id: "167631"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1977
+
+- id: saber-college
+  name: SABER College
+  domain: sabercollege.edu
+  ipeds_id: "449506"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 482
+
+- id: sacramento-city-college
+  name: Sacramento City College
+  domain: scc.losrios.edu
+  ipeds_id: "122180"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 17657
+
+- id: saddleback-college
+  name: Saddleback College
+  domain: saddleback.edu
+  ipeds_id: "122205"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 17684
+
+- id: saginaw-chippewa-tribal-college
+  name: Saginaw Chippewa Tribal College
+  domain: sagchip.edu
+  ipeds_id: "441070"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 164
+
+- id: saint-elizabeth-college-of-nursing
+  name: Saint Elizabeth College of Nursing
+  domain: secon.edu
+  ipeds_id: "195702"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 153
+
+- id: salem-community-college
+  name: Salem Community College
+  domain: salemcc.edu
+  ipeds_id: "186469"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 910
+
+- id: salt-lake-community-college
+  name: Salt Lake Community College
+  domain: slcc.edu
+  ipeds_id: "230746"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 18136
+
+- id: samaritan-hospital-school-of-nursing
+  name: Samaritan Hospital School of Nursing
+  domain: sphp.com
+  ipeds_id: "195289"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 129
+
+- id: sampson-community-college
+  name: Sampson Community College
+  domain: sampsoncc.edu
+  ipeds_id: "199625"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 846
+
+- id: san-bernardino-valley-college
+  name: San Bernardino Valley College
+  domain: valleycollege.edu
+  ipeds_id: "123527"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 12234
+
+- id: san-diego-city-college
+  name: San Diego City College
+  domain: sdcity.edu
+  ipeds_id: "122339"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 10441
+
+- id: san-diego-miramar-college
+  name: San Diego Miramar College
+  domain: sdmiramar.edu
+  ipeds_id: "122384"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 11271
+
+- id: san-joaquin-delta-college
+  name: San Joaquin Delta College
+  domain: deltacollege.edu
+  ipeds_id: "122658"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 15781
+
+- id: san-jose-city-college
+  name: San Jose City College
+  domain: sjcc.edu
+  ipeds_id: "122746"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7105
+
+- id: sandhills-community-college
+  name: Sandhills Community College
+  domain: sandhills.edu
+  ipeds_id: "199634"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2539
+
+- id: santa-barbara-city-college
+  name: Santa Barbara City College
+  domain: sbcc.edu
+  ipeds_id: "122889"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 9889
+
+- id: schenectady-county-community-college
+  name: Schenectady County Community College
+  domain: sunysccc.edu
+  ipeds_id: "195322"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1507
+
+- id: seminole-state-college
+  name: Seminole State College
+  domain: sscok.edu
+  ipeds_id: "207740"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1086
+
+- id: shorter-college
+  name: Shorter College
+  domain: shortercollege.edu
+  ipeds_id: "107840"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 287
+
+- id: sierra-college
+  name: Sierra College
+  domain: sierracollege.edu
+  ipeds_id: "123341"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 14122
+
+- id: south-central-college
+  name: South Central College
+  domain: southcentral.edu
+  ipeds_id: "173911"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1946
+
+- id: south-piedmont-community-college
+  name: South Piedmont Community College
+  domain: spcc.edu
+  ipeds_id: "197850"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1833
+
+- id: south-plains-college
+  name: South Plains College
+  domain: southplainscollege.edu
+  ipeds_id: "228158"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6005
+
+- id: south-suburban-college
+  name: South Suburban College
+  domain: ssc.edu
+  ipeds_id: "149365"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2042
+
+- id: southeast-community-college-area
+  name: Southeast Community College Area
+  domain: southeast.edu
+  ipeds_id: "181640"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6773
+
+- id: southeast-new-mexico-college
+  name: Southeast New Mexico College
+  domain: senmc.edu
+  ipeds_id: "188003"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 469
+
+- id: southeast-technical-college
+  name: Southeast Technical College
+  domain: southeasttech.edu
+  ipeds_id: "219426"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2310
+
+- id: southeastern-community-college
+  name: Southeastern Community College
+  domain: sccnc.edu
+  ipeds_id: "199722"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 820
+
+- id: southern-maine-community-college
+  name: Southern Maine Community College
+  domain: smccme.edu
+  ipeds_id: "161545"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5675
+
+- id: southern-state-community-college
+  name: Southern State Community College
+  domain: sscc.edu
+  ipeds_id: "205966"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 761
+
+- id: southern-university-at-shreveport
+  name: Southern University at Shreveport
+  domain: susla.edu
+  ipeds_id: "160649"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1910
+
+- id: southern-west-virginia-community-and-technical-college
+  name: Southern West Virginia Community and Technical College
+  domain: southernwv.edu
+  ipeds_id: "237817"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1064
+
+- id: southside-college-of-health-sciences
+  name: Southside College of Health Sciences
+  domain: schs.edu
+  ipeds_id: "233082"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 151
+
+- id: southwest-college-for-the-deaf
+  name: Southwest College for the Deaf
+  domain: howardcollege.edu
+  ipeds_id: "382911"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 47
+
+- id: southwest-mississippi-community-college
+  name: Southwest Mississippi Community College
+  domain: smcc.edu
+  ipeds_id: "176354"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1474
+
+- id: southwest-tennessee-community-college
+  name: Southwest Tennessee Community College
+  domain: southwest.tn.edu
+  ipeds_id: "221485"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5047
+
+- id: southwest-texas-college
+  name: Southwest Texas College
+  domain: swtjc.edu
+  ipeds_id: "228316"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3306
+
+- id: southwestern-college-ca
+  name: Southwestern College
+  domain: swccd.edu
+  ipeds_id: "123800"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 18614
+
+- id: southwestern-community-college
+  name: Southwestern Community College
+  domain: swcciowa.edu
+  ipeds_id: "154396"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 729
+
+- id: southwestern-indian-polytechnic-institute
+  name: Southwestern Indian Polytechnic Institute
+  domain: sipi.edu
+  ipeds_id: "188216"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 215
+
+- id: southwestern-michigan-college
+  name: Southwestern Michigan College
+  domain: swmich.edu
+  ipeds_id: "172307"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1431
+
+- id: southwestern-oregon-community-college
+  name: Southwestern Oregon Community College
+  domain: socc.edu
+  ipeds_id: "210155"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1270
+
+- id: spartanburg-community-college
+  name: Spartanburg Community College
+  domain: sccsc.edu
+  ipeds_id: "218830"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5006
+
+- id: springfield-technical-community-college
+  name: Springfield Technical Community College
+  domain: stcc.edu
+  ipeds_id: "167905"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4759
+
+- id: st-charles-community-college
+  name: St Charles Community College
+  domain: stchas.edu
+  ipeds_id: "262031"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5017
+
+- id: st-clair-county-community-college
+  name: St Clair County Community College
+  domain: sc4.edu
+  ipeds_id: "172291"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2138
+
+- id: st-cloud-technical-and-community-college
+  name: St Cloud Technical and Community College
+  domain: sctcc.edu
+  ipeds_id: "174756"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3113
+
+- id: st-joseph-school-of-nursing
+  name: St Joseph School of Nursing
+  domain: sjson.edu
+  ipeds_id: "183248"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 93
+
+- id: st-josephs-college-of-nursing
+  name: "St. Joseph's College of Nursing"
+  domain: sjhcon.edu
+  ipeds_id: "195191"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 313
+
+- id: st-peters-hospital-college-of-nursing
+  name: "St. Peter's Hospital College of Nursing"
+  domain: sphp.com
+  ipeds_id: "192961"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 123
+
+- id: stark-state-college
+  name: Stark State College
+  domain: starkstate.edu
+  ipeds_id: "205841"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5749
+
+- id: state-fair-community-college
+  name: State Fair Community College
+  domain: sfccmo.edu
+  ipeds_id: "179539"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2694
+
+- id: state-technical-college-of-missouri
+  name: State Technical College of Missouri
+  domain: statetechmo.edu
+  ipeds_id: "177977"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2123
+
+- id: suffolk-county-community-college
+  name: Suffolk County Community College
+  domain: sunysuffolk.edu
+  ipeds_id: "366395"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 14218
+
+- id: sullivan-county-community-college
+  name: Sullivan County Community College
+  domain: sunysullivan.edu
+  ipeds_id: "195988"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 836
+
+- id: suny-adirondack
+  name: SUNY Adirondack
+  domain: sunyacc.edu
+  ipeds_id: "188438"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1844
+
+- id: suny-broome-community-college
+  name: SUNY Broome Community College
+  domain: sunybroome.edu
+  ipeds_id: "189547"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3055
+
+- id: suny-corning-community-college
+  name: SUNY Corning Community College
+  domain: corning-cc.edu
+  ipeds_id: "190442"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1138
+
+- id: suny-westchester-community-college
+  name: SUNY Westchester Community College
+  domain: sunywcc.edu
+  ipeds_id: "197294"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 8078
+
+- id: sussex-county-community-college
+  name: Sussex County Community College
+  domain: sussex.edu
+  ipeds_id: "247603"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2086
+
+- id: tarrant-county-college-district
+  name: Tarrant County College District
+  domain: tccd.edu
+  ipeds_id: "228547"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 5
+  undergraduate_enrollment: 42300
+
+- id: technical-college-of-the-lowcountry
+  name: Technical College of the Lowcountry
+  domain: tcl.edu
+  ipeds_id: "217712"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1679
+
+- id: temple-college
+  name: Temple College
+  domain: templejc.edu
+  ipeds_id: "228608"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3178
+
+- id: texarkana-college
+  name: Texarkana College
+  domain: texarkanacollege.edu
+  ipeds_id: "228699"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1502
+
+- id: texas-southmost-college
+  name: Texas Southmost College
+  domain: tsc.edu
+  ipeds_id: "227377"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3372
+
+- id: texas-state-technical-college
+  name: Texas State Technical College
+  domain: tstc.edu
+  ipeds_id: "487320"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 9437
+
+- id: thaddeus-stevens-college-of-technology
+  name: Thaddeus Stevens College of Technology
+  domain: stevenscollege.edu
+  ipeds_id: "216296"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1446
+
+- id: three-rivers-college
+  name: Three Rivers College
+  domain: trcc.edu
+  ipeds_id: "179645"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1844
+
+- id: tidewater-community-college
+  name: Tidewater Community College
+  domain: tcc.edu
+  ipeds_id: "233772"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 12082
+
+- id: tillamook-bay-community-college
+  name: Tillamook Bay Community College
+  domain: tillamookbaycc.edu
+  ipeds_id: "420723"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 294
+
+- id: tohono-oodham-community-college
+  name: "Tohono O'odham Community College"
+  domain: tocc.edu
+  ipeds_id: "442781"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 998
+
+- id: tompkins-cortland-community-college
+  name: Tompkins Cortland Community College
+  domain: tompkinscortland.edu
+  ipeds_id: "196565"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1469
+
+- id: tri-county-community-college
+  name: Tri-County Community College
+  domain: tricountycc.edu
+  ipeds_id: "199795"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 472
+
+- id: trident-technical-college
+  name: Trident Technical College
+  domain: tridenttech.edu
+  ipeds_id: "218894"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 10512
+
+- id: triton-college
+  name: Triton College
+  domain: triton.edu
+  ipeds_id: "149532"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6902
+
+- id: ucnj-union-college-of-union-county-new-jersey
+  name: UCNJ Union College of Union County, New Jersey
+  domain: ucc.edu
+  ipeds_id: "187198"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7939
+
+- id: ulster-county-community-college
+  name: Ulster County Community College
+  domain: sunyulster.edu
+  ipeds_id: "196699"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1341
+
+- id: ultimate-medical-academy
+  name: Ultimate Medical Academy
+  domain: ultimatemedical.edu
+  ipeds_id: "441371"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 8932
+
+- id: umpqua-community-college
+  name: Umpqua Community College
+  domain: umpqua.edu
+  ipeds_id: "210270"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2219
+
+- id: university-of-new-mexico-gallup-campus
+  name: University of New Mexico-Gallup Campus
+  domain: gallup.unm.edu
+  ipeds_id: "187958"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 808
+
+- id: university-of-new-mexico-los-alamos-campus
+  name: University of New Mexico-Los Alamos Campus
+  domain: losalamos.unm.edu
+  ipeds_id: "187976"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 218
+
+- id: university-of-new-mexico-valencia-county-campus
+  name: University of New Mexico-Valencia County Campus
+  domain: valencia.unm.edu
+  ipeds_id: "188049"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 525
+
+- id: university-of-pittsburgh-titusville
+  name: University of Pittsburgh-Titusville
+  domain: titusville.pitt.edu
+  ipeds_id: "215309"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 33
+
+- id: university-of-south-carolina-lancaster
+  name: University of South Carolina-Lancaster
+  domain: sc.edu
+  ipeds_id: "218672"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 668
+
+- id: university-of-south-carolina-salkehatchie
+  name: University of South Carolina-Salkehatchie
+  domain: sc.edu
+  ipeds_id: "218681"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 271
+
+- id: university-of-south-carolina-sumter
+  name: University of South Carolina-Sumter
+  domain: sc.edu
+  ipeds_id: "218690"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 716
+
+- id: university-of-south-carolina-union
+  name: University of South Carolina-Union
+  domain: sc.edu
+  ipeds_id: "218706"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 270
+
+- id: urban-college-of-boston
+  name: Urban College of Boston
+  domain: urbancollege.edu
+  ipeds_id: "429128"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 438
+
+- id: valley-forge-military-college
+  name: Valley Forge Military College
+  domain: vfmac.edu
+  ipeds_id: "216551"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 90
+
+- id: vance-granville-community-college
+  name: Vance-Granville Community College
+  domain: vgcc.edu
+  ipeds_id: "199838"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1665
+
+- id: ventura-college
+  name: Ventura College
+  domain: venturacollege.edu
+  ipeds_id: "125028"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 10150
+
+- id: vernon-college
+  name: Vernon College
+  domain: vernoncollege.edu
+  ipeds_id: "229504"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2113
+
+- id: victoria-college
+  name: Victoria College
+  domain: victoriacollege.edu
+  ipeds_id: "229540"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2351
+
+- id: virginia-peninsula-community-college
+  name: Virginia Peninsula Community College
+  domain: vpcc.edu
+  ipeds_id: "233754"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3941
+
+- id: virginia-western-community-college
+  name: Virginia Western Community College
+  domain: virginiawestern.edu
+  ipeds_id: "233949"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3898
+
+- id: volunteer-state-community-college
+  name: Volunteer State Community College
+  domain: volstate.edu
+  ipeds_id: "222053"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5339
+
+- id: wake-technical-community-college
+  name: Wake Technical Community College
+  domain: waketech.edu
+  ipeds_id: "199856"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 4
+  undergraduate_enrollment: 19675
+
+- id: walters-state-community-college
+  name: Walters State Community College
+  domain: ws.edu
+  ipeds_id: "222062"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3591
+
+- id: warren-county-community-college
+  name: Warren County Community College
+  domain: warren.edu
+  ipeds_id: "245625"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 836
+
+- id: waubonsee-community-college
+  name: Waubonsee Community College
+  domain: waubonsee.edu
+  ipeds_id: "149727"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 5721
+
+- id: wayne-county-community-college-district
+  name: Wayne County Community College District
+  domain: wcccd.edu
+  ipeds_id: "172635"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 7423
+
+- id: west-shore-community-college
+  name: West Shore Community College
+  domain: westshore.edu
+  ipeds_id: "172671"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 782
+
+- id: west-valley-college
+  name: West Valley College
+  domain: westvalley.edu
+  ipeds_id: "125499"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 3
+  undergraduate_enrollment: 6416
+
+- id: west-virginia-northern-community-college
+  name: West Virginia Northern Community College
+  domain: wvncc.edu
+  ipeds_id: "238014"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1014
+
+- id: western-dakota-technical-college
+  name: Western Dakota Technical College
+  domain: wdt.edu
+  ipeds_id: "219480"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 753
+
+- id: western-nebraska-community-college
+  name: Western Nebraska Community College
+  domain: wncc.edu
+  ipeds_id: "181817"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 893
+
+- id: western-oklahoma-state-college
+  name: Western Oklahoma State College
+  domain: wosc.edu
+  ipeds_id: "208035"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 815
+
+- id: western-piedmont-community-college
+  name: Western Piedmont Community College
+  domain: wpcc.edu
+  ipeds_id: "199908"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1339
+
+- id: western-technical-college
+  name: Western Technical College
+  domain: westerntc.edu
+  ipeds_id: "240170"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3183
+
+- id: western-texas-college
+  name: Western Texas College
+  domain: wtc.edu
+  ipeds_id: "229832"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 599
+
+- id: westmoreland-county-community-college
+  name: Westmoreland County Community College
+  domain: westmoreland.edu
+  ipeds_id: "216825"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2441
+
+- id: wharton-county-junior-college
+  name: Wharton County Junior College
+  domain: wcjc.edu
+  ipeds_id: "229841"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4585
+
+- id: white-earth-tribal-and-community-college
+  name: White Earth Tribal and Community College
+  domain: wetcc.edu
+  ipeds_id: "434751"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 110
+
+- id: williamson-college-of-the-trades
+  name: Williamson College of the Trades
+  domain: williamson.edu
+  ipeds_id: "216940"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 322
+
+- id: williston-state-college
+  name: Williston State College
+  domain: willistonstate.edu
+  ipeds_id: "200341"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 651
+
+- id: wilson-community-college
+  name: Wilson Community College
+  domain: wilsoncc.edu
+  ipeds_id: "199953"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1373
+
+- id: windward-community-college
+  name: Windward Community College
+  domain: windward.hawaii.edu
+  ipeds_id: "141990"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1159
+
+- id: woodland-community-college
+  name: Woodland Community College
+  domain: wcc.yccd.edu
+  ipeds_id: "455512"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 3154
+
+- id: wor-wic-community-college
+  name: Wor-Wic Community College
+  domain: worwic.edu
+  ipeds_id: "164313"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 2169
+
+- id: wytheville-community-college
+  name: Wytheville Community College
+  domain: wcc.vccs.edu
+  ipeds_id: "234377"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1255
+
+- id: york-county-community-college
+  name: York County Community College
+  domain: yccc.edu
+  ipeds_id: "420440"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 1133
+
+- id: young-americans-college-of-the-performing-arts
+  name: Young Americans College of the Performing Arts
+  domain: yacollege.edu
+  ipeds_id: "493619"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 1
+  undergraduate_enrollment: 15
+
+- id: yuba-college
+  name: Yuba College
+  domain: yc.yccd.edu
+  ipeds_id: "126119"
+  scrape_policy: unknown
+  iclevel: 2
+  ipeds_instsize: 2
+  undergraduate_enrollment: 4779

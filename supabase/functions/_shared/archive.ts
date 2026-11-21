@@ -14,6 +14,7 @@ import {
   ResolveProbeData,
   ResolveResult,
   ResolvedSectionPackage,
+  UNKNOWN_YEAR_SENTINEL,
   USER_AGENT,
 } from "./resolve.ts";
 import { inferHosting, inferWaf, type HostingInference } from "./hosting.ts";
@@ -271,6 +272,35 @@ async function recordHostingObservation(
   }
 }
 
+// Archive candidates in order, one file per year. A second candidate for a
+// year that already archived is a fallback (a direct-file hint beside the
+// page's file for the same year, see mergeHintWithPageDocs) and is not
+// fetched; it is tried only when the one before it failed permanently.
+// Candidates with no known year are all tried. A PermanentError is reported
+// and skipped; anything else propagates.
+export async function archiveOnePerYear<T>(
+  docs: ResolvedCandidate[],
+  archive: (doc: ResolvedCandidate) => Promise<T>,
+  onPermanentError: (doc: ResolvedCandidate, error: PermanentError) => void,
+): Promise<T[]> {
+  const outcomes: T[] = [];
+  const archivedYears = new Set<string>();
+  for (const doc of docs) {
+    if (archivedYears.has(doc.cds_year)) continue;
+    try {
+      outcomes.push(await archive(doc));
+      if (doc.cds_year !== UNKNOWN_YEAR_SENTINEL) archivedYears.add(doc.cds_year);
+    } catch (e) {
+      if (e instanceof PermanentError) {
+        onPermanentError(doc, e);
+        continue;
+      }
+      throw e;
+    }
+  }
+  return outcomes;
+}
+
 export async function archiveOneSchool(
   supabase: SupabaseClient,
   school: SchoolInput,
@@ -350,36 +380,33 @@ export async function archiveOneSchool(
   //    parallelism would race against the existing-row lookup and
   //    risk double-inserting rows for the same (school, cds_year)
   //    before either upload completes.
-  const candidates: CandidateOutcome[] = [];
+  //
+  //    One file per year: see archiveOnePerYear.
   const skipped: { url: string; reason: string; category: ProbeOutcome }[] = [];
-  for (const resolved of docs) {
-    try {
-      candidates.push(await archiveOneCandidate(supabase, school, resolved));
-    } catch (e) {
-      if (e instanceof PermanentError) {
-        skipped.push({
-          url: resolved.url,
-          reason: e.message,
+  const candidates = await archiveOnePerYear(
+    docs,
+    (resolved) => archiveOneCandidate(supabase, school, resolved),
+    (resolved, e) => {
+      skipped.push({
+        url: resolved.url,
+        reason: e.message,
+        category: e.category,
+      });
+      if (pinnedUrls.has(resolved.url)) {
+        // A skipped candidate is otherwise logged only when every candidate
+        // fails. A dead pin leaves its year unrefreshed, so say so.
+        console.log(JSON.stringify({
+          ts: new Date().toISOString(),
+          fn: "archive.ts",
+          event: "pinned_url_failed",
+          school_id: school.school_id,
+          cds_year: resolved.cds_year,
           category: e.category,
-        });
-        if (pinnedUrls.has(resolved.url)) {
-          // A skipped candidate is otherwise logged only when every candidate
-          // fails. A dead pin leaves its year unrefreshed, so say so.
-          console.log(JSON.stringify({
-            ts: new Date().toISOString(),
-            fn: "archive.ts",
-            event: "pinned_url_failed",
-            school_id: school.school_id,
-            cds_year: resolved.cds_year,
-            category: e.category,
-            error: e.message,
-          }));
-        }
-        continue;
+          error: e.message,
+        }));
       }
-      throw e;
-    }
-  }
+    },
+  );
 
   // If ALL candidates failed permanently, surface as school-level
   // PermanentError so the queue row lands in failed_permanent instead
