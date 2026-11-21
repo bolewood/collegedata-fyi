@@ -18,7 +18,7 @@ import {
   USER_AGENT,
 } from "./resolve.ts";
 import { inferHosting, inferWaf, type HostingInference } from "./hosting.ts";
-import { rejectableHtmlSourceOutcome } from "./html_source_guard.ts";
+import { pdfViewerRawUrl, rejectableHtmlSourceOutcome } from "./html_source_guard.ts";
 import {
   ARCHIVER_PRODUCER,
   ARCHIVER_VERSION,
@@ -38,6 +38,7 @@ import {
   isTruncatedWaybackPdf,
   MAX_SOURCE_BYTES,
   objectExists,
+  sniffBytesForExt,
   SOURCES_BUCKET,
   uploadSource,
 } from "./storage.ts";
@@ -990,7 +991,7 @@ async function archiveOneCandidate(
 
   // Download with a hard memory + wall clock cap.
   const { bytes, sha256, contentType, finalUrl, httpLastModified } =
-    await downloadWithCaps(resolved.url);
+    await downloadThroughPdfViewer(resolved.url, downloadWithCaps);
 
   const authCategory = authWallOutcome(finalUrl);
   if (authCategory) {
@@ -1210,7 +1211,7 @@ async function ensureObjectUploaded(
   }
 }
 
-interface DownloadResult {
+export interface DownloadResult {
   bytes: Uint8Array;
   sha256: string;
   contentType: string;
@@ -1281,6 +1282,46 @@ function detectBotChallenge(
     return waf;
   }
   return null;
+}
+
+// Downloads `url`; when the answer is a PDF.js viewer page standing in for
+// a .pdf (see pdfViewerRawUrl), downloads the file the page names instead.
+// One hop only. The result keeps the page's URL as finalUrl: that is the
+// link a reader can open, and the one the school's page lists.
+export async function downloadThroughPdfViewer(
+  url: string,
+  download: (url: string) => Promise<DownloadResult>,
+): Promise<DownloadResult> {
+  const first = await download(url);
+  const rawUrl = pdfViewerRawUrl(first.bytes, first.finalUrl);
+  if (!rawUrl) return first;
+
+  const raw = await download(rawUrl);
+  const authCategory = authWallOutcome(raw.finalUrl);
+  if (authCategory) {
+    throw new PermanentError(
+      `auth-walled: file named by PDF viewer page at ${first.finalUrl} redirected to ${raw.finalUrl}`,
+      authCategory,
+    );
+  }
+  if (new URL(raw.finalUrl).host !== new URL(first.finalUrl).host) {
+    throw new PermanentError(
+      `PDF viewer page at ${first.finalUrl} names a file that redirects off its host, to ${raw.finalUrl}`,
+      "wrong_content_type",
+    );
+  }
+  if (sniffBytesForExt(raw.bytes) !== "pdf") {
+    throw new PermanentError(
+      `PDF viewer page at ${first.finalUrl} names ${rawUrl}, which is not a PDF`,
+      "wrong_content_type",
+    );
+  }
+  console.log(JSON.stringify({
+    event: "pdf_viewer_unwrapped",
+    page_url: first.finalUrl,
+    raw_url: raw.finalUrl,
+  }));
+  return { ...raw, finalUrl: first.finalUrl };
 }
 
 async function downloadWithCaps(url: string): Promise<DownloadResult> {

@@ -2,6 +2,8 @@ import { assertEquals, assertFalse, assertRejects } from "jsr:@std/assert";
 import { PDFDocument } from "npm:pdf-lib@1.17.1";
 import {
   buildPdfBundle,
+  type DownloadResult,
+  downloadThroughPdfViewer,
   isShrinkingRefresh,
   pdfPageCount,
   PermanentError,
@@ -204,4 +206,95 @@ Deno.test("archiveOnePerYear: files with no known year are all tried, and other 
   const unknown = [yearDoc("https://e.edu/a.pdf", "unknown"), yearDoc("https://e.edu/b.pdf", "unknown")];
   assertEquals(await archiveOnePerYear(unknown, (d) => Promise.resolve(d.url), () => {}), ["https://e.edu/a.pdf", "https://e.edu/b.pdf"]);
   await assertRejects(() => archiveOnePerYear(unknown, () => Promise.reject(new Error("timeout")), () => {}), Error, "timeout");
+});
+
+const VIEWER_PAGE = `<!doctype html>
+<html dir="ltr"><head><title>PDF.js viewer</title>
+<script src="/src/pdfjs/build/pdf.mjs" type="module"></script>
+<script>
+  const PDF_URL = "https://archive.example.edu/files/ir/cds2014.pdf?__raw=1";
+</script></head><body></body></html>`;
+
+function downloaded(url: string, body: string, contentType: string): DownloadResult {
+  return {
+    bytes: new TextEncoder().encode(body),
+    sha256: `sha-of-${url}`,
+    contentType,
+    finalUrl: url,
+    httpLastModified: null,
+  };
+}
+
+Deno.test("downloadThroughPdfViewer: a viewer page is replaced by the file it names, under the page's URL", async () => {
+  const fetched: string[] = [];
+  const result = await downloadThroughPdfViewer(
+    "https://archive.example.edu/files/ir/cds2014.pdf",
+    (url) => {
+      fetched.push(url);
+      return Promise.resolve(
+        url.endsWith("__raw=1")
+          ? downloaded(url, "%PDF-1.4 body", "application/pdf")
+          : downloaded(url, VIEWER_PAGE, "text/html; charset=utf-8"),
+      );
+    },
+  );
+  assertEquals(fetched, [
+    "https://archive.example.edu/files/ir/cds2014.pdf",
+    "https://archive.example.edu/files/ir/cds2014.pdf?__raw=1",
+  ]);
+  assertEquals(result.finalUrl, "https://archive.example.edu/files/ir/cds2014.pdf");
+  assertEquals(result.contentType, "application/pdf");
+  assertEquals(result.sha256, "sha-of-https://archive.example.edu/files/ir/cds2014.pdf?__raw=1");
+});
+
+Deno.test("downloadThroughPdfViewer: a real PDF is returned as downloaded, with one fetch", async () => {
+  let fetches = 0;
+  const result = await downloadThroughPdfViewer(
+    "https://www.example.edu/cds.pdf",
+    (url) => {
+      fetches++;
+      return Promise.resolve(downloaded(url, "%PDF-1.7 const PDF_URL = \"x.pdf\"; pdfjs", "application/pdf"));
+    },
+  );
+  assertEquals(fetches, 1);
+  assertEquals(result.sha256, "sha-of-https://www.example.edu/cds.pdf");
+});
+
+Deno.test("downloadThroughPdfViewer: refuses a named file that redirects off the page's host or to a login", async () => {
+  const landing = async (finalUrl: string) =>
+    await assertRejects(
+      () =>
+        downloadThroughPdfViewer(
+          "https://archive.example.edu/files/ir/cds2014.pdf",
+          (url) =>
+            Promise.resolve(
+              url.endsWith("__raw=1")
+                ? { ...downloaded(url, "%PDF-1.4 body", "application/pdf"), finalUrl }
+                : downloaded(url, VIEWER_PAGE, "text/html"),
+            ),
+        ),
+      PermanentError,
+    );
+  assertEquals((await landing("https://cdn.example.com/cds2014.pdf")).category, "wrong_content_type");
+  assertEquals(
+    (await landing("https://login.microsoftonline.com/common/oauth2/authorize")).category,
+    "auth_walled_microsoft",
+  );
+});
+
+Deno.test("downloadThroughPdfViewer: follows one hop only, and refuses a named file that is not a PDF", async () => {
+  let fetches = 0;
+  const error = await assertRejects(
+    () =>
+      downloadThroughPdfViewer(
+        "https://archive.example.edu/files/ir/cds2014.pdf",
+        (url) => {
+          fetches++;
+          return Promise.resolve(downloaded(url, VIEWER_PAGE, "text/html"));
+        },
+      ),
+    PermanentError,
+  );
+  assertEquals(fetches, 2);
+  assertEquals(error.category, "wrong_content_type");
 });
