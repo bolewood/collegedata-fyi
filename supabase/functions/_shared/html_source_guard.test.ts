@@ -53,11 +53,22 @@ Deno.test("rejectableHtmlSourceOutcome: CDS-like HTML is accepted", () => {
   );
 });
 
+// The page archive.swarthmore.edu serves, with the host changed.
 const viewerPage = (pdfUrl: string) =>
   encode(`<!doctype html>
 <html dir="ltr" mozdisallowselectionprint>
-  <head>
+  <head><!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-XXXXXXXX');</script>
+<!-- End Google Tag Manager -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="google" content="notranslate" />
     <title>PDF.js viewer</title>
+    <link rel="resource" type="application/l10n" href="/src/pdfjs/web/locale/locale.json" />
     <script src="/src/pdfjs/build/pdf.mjs" type="module"></script>
     <script>
       const PDF_URL = "${pdfUrl}";
@@ -106,7 +117,7 @@ Deno.test("pdfViewerRawUrl: null unless the page is a viewer at a .pdf URL namin
     null,
   );
   assertEquals(
-    pdfViewerRawUrl(encode(`%PDF-1.7 pdfjs const PDF_URL = "${PAGE_URL}?__raw=1";`), PAGE_URL),
+    pdfViewerRawUrl(encode(`%PDF-1.7 <html> pdfjs const PDF_URL = "${PAGE_URL}?__raw=1";`), PAGE_URL),
     null,
   );
 });

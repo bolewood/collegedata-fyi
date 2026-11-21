@@ -1,4 +1,5 @@
 import { authWallOutcome, type ProbeOutcome } from "./probe_outcome.ts";
+import { sniffBytesForExt } from "./storage.ts";
 
 function htmlPreview(bytes: Uint8Array): string {
   return new TextDecoder("utf-8", { fatal: false })
@@ -113,9 +114,10 @@ export function rejectableHtmlSourceOutcome(
 // Some hosts answer a request for a .pdf URL with a small PDF.js viewer
 // page that loads the real file from a URL in a script constant
 // (archive.swarthmore.edu: `const PDF_URL = ".../cds2014.pdf?__raw=1";`).
-// Returns that URL when `bytes` is such a page, else null. The file must be
+// Returns that URL when `bytes` is such a page, else null. The URL must be
 // on the same host and scheme as the page and its path must end in .pdf, so
-// a page cannot send the archiver to another site.
+// a page cannot name a file on another site. (Where that URL redirects to
+// is the caller's check.)
 export function pdfViewerRawUrl(bytes: Uint8Array, pageUrl: string): string | null {
   let page: URL;
   try {
@@ -124,6 +126,9 @@ export function pdfViewerRawUrl(bytes: Uint8Array, pageUrl: string): string | nu
     return null;
   }
   if (!page.pathname.toLowerCase().endsWith(".pdf")) return null;
+  // Bytes are authoritative: a real PDF that happens to contain these
+  // strings is not a viewer page.
+  if (sniffBytesForExt(bytes) !== "html") return null;
 
   const html = new TextDecoder("utf-8", { fatal: false }).decode(bytes.slice(0, 64 * 1024));
   const lower = html.toLowerCase();

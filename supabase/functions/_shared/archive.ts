@@ -1297,6 +1297,19 @@ export async function downloadThroughPdfViewer(
   if (!rawUrl) return first;
 
   const raw = await download(rawUrl);
+  const authCategory = authWallOutcome(raw.finalUrl);
+  if (authCategory) {
+    throw new PermanentError(
+      `auth-walled: file named by PDF viewer page at ${first.finalUrl} redirected to ${raw.finalUrl}`,
+      authCategory,
+    );
+  }
+  if (new URL(raw.finalUrl).host !== new URL(first.finalUrl).host) {
+    throw new PermanentError(
+      `PDF viewer page at ${first.finalUrl} names a file that redirects off its host, to ${raw.finalUrl}`,
+      "wrong_content_type",
+    );
+  }
   if (sniffBytesForExt(raw.bytes) !== "pdf") {
     throw new PermanentError(
       `PDF viewer page at ${first.finalUrl} names ${rawUrl}, which is not a PDF`,
@@ -1306,7 +1319,7 @@ export async function downloadThroughPdfViewer(
   console.log(JSON.stringify({
     event: "pdf_viewer_unwrapped",
     page_url: first.finalUrl,
-    raw_url: rawUrl,
+    raw_url: raw.finalUrl,
   }));
   return { ...raw, finalUrl: first.finalUrl };
 }

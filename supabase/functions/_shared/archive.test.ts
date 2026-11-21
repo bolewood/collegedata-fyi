@@ -260,6 +260,28 @@ Deno.test("downloadThroughPdfViewer: a real PDF is returned as downloaded, with 
   assertEquals(result.sha256, "sha-of-https://www.example.edu/cds.pdf");
 });
 
+Deno.test("downloadThroughPdfViewer: refuses a named file that redirects off the page's host or to a login", async () => {
+  const landing = async (finalUrl: string) =>
+    await assertRejects(
+      () =>
+        downloadThroughPdfViewer(
+          "https://archive.example.edu/files/ir/cds2014.pdf",
+          (url) =>
+            Promise.resolve(
+              url.endsWith("__raw=1")
+                ? { ...downloaded(url, "%PDF-1.4 body", "application/pdf"), finalUrl }
+                : downloaded(url, VIEWER_PAGE, "text/html"),
+            ),
+        ),
+      PermanentError,
+    );
+  assertEquals((await landing("https://cdn.example.com/cds2014.pdf")).category, "wrong_content_type");
+  assertEquals(
+    (await landing("https://login.microsoftonline.com/common/oauth2/authorize")).category,
+    "auth_walled_microsoft",
+  );
+});
+
 Deno.test("downloadThroughPdfViewer: follows one hop only, and refuses a named file that is not a PDF", async () => {
   let fetches = 0;
   const error = await assertRejects(
