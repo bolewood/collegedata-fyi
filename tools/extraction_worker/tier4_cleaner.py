@@ -242,6 +242,54 @@ def _collapse_doubled_cells(markdown: str) -> str:
     return "\n".join(_collapse_line(line) for line in markdown.split("\n"))
 
 
+_QUESTION_TAG_RE = re.compile(r"[A-J]\d{1,2}[A-Za-z]?\.?")
+_TABLE_SEPARATOR_RE = re.compile(r"^\|[\s\-:|]+\|$")
+
+
+def _strip_question_tag_column(table_lines: list[str]) -> tuple[list[str], str | None]:
+    """Drop a leading column that only repeats the margin question tag.
+
+    Some converter output carries the tag printed in the page margin
+    ("J1", "H1", "C11") into every table row as its own first column:
+
+        | J1 | Agriculture | | 0 | | 1 |
+
+    Read as-is, the tag becomes the row label and the real label becomes a
+    value, so the whole table is skipped (Concordia Texas 2014-15 lost 49
+    section J cells this way). Rebuild the lines without that column so
+    the rest of the parser sees the table the form printed.
+
+    Returns the lines and, when every tag in the column is the same one,
+    that tag ("J1"), which callers can use to tell which question a table
+    belongs to. A column is only dropped when every filled cell in it is a
+    bare tag, at least two rows carry one, and the next column mostly holds
+    text: compact row ids such as "C901" (three digits) and tables keyed by
+    a short code with numbers beside it are left alone.
+    """
+    parsed = []
+    for tl in table_lines:
+        cells = None if _TABLE_SEPARATOR_RE.match(tl) else [c.strip() for c in tl.split("|")[1:-1]]
+        parsed.append(cells)
+    data = [cells for cells in parsed if cells]
+    if any(len(cells) < 2 for cells in data):
+        return table_lines, None
+    filled = [cells for cells in data if cells[0]]
+    if len(filled) < 2 or len(filled) * 2 < len(data):
+        return table_lines, None
+    if not all(_QUESTION_TAG_RE.fullmatch(cells[0]) for cells in filled):
+        return table_lines, None
+    with_text = sum(1 for cells in filled if re.search(r"[A-Za-z]", cells[1]))
+    if with_text * 2 < len(filled):
+        return table_lines, None
+
+    out = []
+    for tl in table_lines:
+        cells = tl.split("|")[1:-1]
+        out.append("|" + "|".join(cells[1:]) + "|")
+    tags = {cells[0].rstrip(".").upper() for cells in filled}
+    return out, (tags.pop() if len(tags) == 1 else None)
+
+
 def _parse_markdown_tables(markdown: str) -> list[dict]:
     """Extract every markdown table as a list of {section, rows} dicts.
 
@@ -272,6 +320,8 @@ def _parse_markdown_tables(markdown: str) -> list[dict]:
 
             if len(table_lines) < 2:
                 continue
+
+            table_lines, question_tag = _strip_question_tag_column(table_lines)
 
             # Parse the nominal header row, then decide whether it's really
             # a header or a data row. Aims-style CDS tables often omit a
@@ -345,6 +395,7 @@ def _parse_markdown_tables(markdown: str) -> list[dict]:
                 "headers": header_cells,
                 "rows": rows,
                 "line": table_start_line,
+                "question_tag": question_tag,
             })
         else:
             i += 1
@@ -1159,7 +1210,11 @@ def resolve_j_disciplines(
         joined_hdr = " ".join(headers_norm)
         hits_hdr = sum(1 for tok, _ in _J_COL_TO_SUBSECTION if tok in joined_hdr)
 
-        is_j_section = "j1" in section_norm or "disciplinary" in section_norm
+        is_j_section = (
+            "j1" in section_norm
+            or "disciplinary" in section_norm
+            or table.get("question_tag") == "J1"
+        )
 
         # If headers look empty, promote the first data row to a synthetic
         # header and skip it. Same treatment if the section flag matches —
