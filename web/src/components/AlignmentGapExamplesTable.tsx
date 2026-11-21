@@ -43,7 +43,7 @@ export function AlignmentGapExamplesTable({
   };
 
   return (
-    <section style={{ marginTop: 28, overflowX: "auto" }}>
+    <section aria-label={`${title}, scrolls sideways`} tabIndex={0} style={{ marginTop: 28, overflowX: "auto" }}>
       <div
         className="meta"
         style={{
@@ -99,7 +99,7 @@ export function AlignmentGapExamplesTable({
                     padding: "8px 12px",
                     fontWeight: 600,
                     fontFamily: "var(--mono)",
-                    color: row.meritPerFirstYear >= row.gap ? "var(--forest)" : "var(--ochre)",
+                    color: row.meritPerFirstYear >= row.gap ? "var(--forest)" : "var(--ochre-ink)",
                   }}
                 >
                   {formatUsd(row.meritPerFirstYear)}

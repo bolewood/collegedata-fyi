@@ -141,7 +141,7 @@ function SectorDistributionChart() {
                 textAnchor="middle"
                 fontFamily="var(--mono)"
                 fontSize="11"
-                fill="var(--chart-axis)"
+                fill="var(--ink-3)"
               >
                 {formatPct(tick, 0)}
               </text>
@@ -267,7 +267,7 @@ function ThresholdTable() {
                         className="endowment-bucket-toggle"
                         aria-expanded={isOpen}
                         aria-controls={panelId}
-                        aria-label={`${isOpen ? "Hide" : "Show"} schools above ${thresholdLabel}% in FY${summary.year}: ${count.toLocaleString()} schools, ${formatPct(bucket.share(summary))} of eligible schools`}
+                        aria-label={`${formatPct(bucket.share(summary))} (${count.toLocaleString()}) of eligible schools above ${thresholdLabel}% in FY${summary.year}. ${isOpen ? "Hide" : "Show"} schools`}
                         onClick={() => setActiveBucket(
                           isOpen
                             ? null
@@ -463,7 +463,7 @@ function SchoolHistoryChart({ school }: { school: EndowmentDrawRateSchool }) {
                 textAnchor="end"
                 fontFamily="var(--mono)"
                 fontSize="10"
-                fill="var(--chart-axis)"
+                fill="var(--ink-3)"
               >
                 {formatPct(threshold, 0)}
               </text>

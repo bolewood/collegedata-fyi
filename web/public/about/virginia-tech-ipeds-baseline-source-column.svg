@@ -2,13 +2,13 @@
 <svg width="920" height="420" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 420" role="img">
   <rect width="920" height="420" fill="#faf6ec"/>
   <rect x="24" y="24" width="872" height="372" fill="#f1ece1" stroke="rgba(28,30,27,.28)"/>
-  <text x="44" y="56" font-family="ui-monospace, Menlo, monospace" font-size="12" letter-spacing="1.2" fill="#6b6a63">NCES/IPEDS BASELINE · SOURCE COLUMN VISIBLE</text>
+  <text x="44" y="56" font-family="ui-monospace, Menlo, monospace" font-size="12" letter-spacing="1.2" fill="#65645d">NCES/IPEDS BASELINE · SOURCE COLUMN VISIBLE</text>
   <text x="44" y="88" font-family="Georgia, serif" font-size="24" fill="#1c1e1b">Federal facts stay labeled</text>
   <g font-family="ui-sans-serif, system-ui, sans-serif" font-size="14">
     <rect x="44" y="112" width="832" height="32" fill="#e9e3d4"/>
-    <text x="56" y="133" font-family="ui-monospace, Menlo, monospace" font-size="11" letter-spacing="1" fill="#6b6a63">FACT</text>
-    <text x="360" y="133" font-family="ui-monospace, Menlo, monospace" font-size="11" letter-spacing="1" fill="#6b6a63">ALIGNMENT</text>
-    <text x="560" y="133" font-family="ui-monospace, Menlo, monospace" font-size="11" letter-spacing="1" fill="#6b6a63">SOURCE</text>
+    <text x="56" y="133" font-family="ui-monospace, Menlo, monospace" font-size="11" letter-spacing="1" fill="#65645d">FACT</text>
+    <text x="360" y="133" font-family="ui-monospace, Menlo, monospace" font-size="11" letter-spacing="1" fill="#65645d">ALIGNMENT</text>
+    <text x="560" y="133" font-family="ui-monospace, Menlo, monospace" font-size="11" letter-spacing="1" fill="#65645d">SOURCE</text>
     <text x="56" y="172" fill="#1c1e1b">Admission rate</text>
     <text x="360" y="172" fill="#3a3b37">Near CDS</text>
     <text x="560" y="172" font-family="ui-monospace, Menlo, monospace" font-size="13" fill="#1c1e1b">ADM.DRVADM_RATE</text>

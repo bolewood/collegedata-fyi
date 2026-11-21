@@ -151,6 +151,7 @@ export default function WaitlistOddsPage() {
           § Pull the fields yourself
         </div>
         <pre
+          tabIndex={0}
           style={{
             background: "var(--ink)",
             borderRadius: 2,

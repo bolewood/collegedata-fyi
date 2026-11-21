@@ -79,7 +79,7 @@ export function DocumentCard({
         {dqLabel && (
           <span
             className="cd-chip"
-            style={{ borderColor: "var(--ochre)", color: "var(--ochre)" }}
+            style={{ borderColor: "var(--ochre)", color: "var(--ochre-ink)" }}
           >
             {dqLabel}
           </span>
