@@ -1,0 +1,45 @@
+{
+  "schools": 446,
+  "yes": 6,
+  "no": 325,
+  "unclear": 115,
+  "published": false,
+  "review_only": true,
+  "sequential": true,
+  "rate_rps": 0.5,
+  "timeout_seconds": 25,
+  "retries_on_first_homepage_url": 1,
+  "try_url_variants": true,
+  "network": "residential connection, same finder user agent as the cloud run",
+  "finished": "2026-11-22",
+  "input": "the 446 unclear UNITIDs of the first crawl (tools/finder/audits/ir-hub-backfill-2026-11/review.csv)",
+  "unclear_reasons": {
+    "http_403": 85,
+    "http_404": 8,
+    "http_307": 8,
+    "timeout": 4,
+    "dns_miss": 2,
+    "network": 2,
+    "http_302": 1,
+    "http_500": 1,
+    "http_429": 1,
+    "http_405": 1,
+    "http_521": 1,
+    "http_503": 1
+  },
+  "yes_rows": {
+    "new_seed": [
+      "184348",
+      "180249"
+    ],
+    "already_seeded": [
+      "160612",
+      "210146",
+      "240426"
+    ],
+    "parent_collision": [
+      "492801"
+    ]
+  },
+  "no_rows_with_a_refused_hub_or_about_fetch": 4
+}

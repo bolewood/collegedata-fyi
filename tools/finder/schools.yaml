@@ -6868,6 +6868,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
+  discovery_seed_url: https://drew.edu/about/institutional-research/
 - id: drury-university
   name: Drury University
   domain: drury.edu
@@ -29247,6 +29248,7 @@ schools:
   iclevel: 2
   ipeds_instsize: 1
   undergraduate_enrollment: 894
+  discovery_seed_url: https://www.gfcmsu.edu/campus-departments/institutional-effectiveness/common-data-set/
 
 - id: greenfield-community-college
   name: Greenfield Community College
