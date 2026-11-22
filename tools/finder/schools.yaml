@@ -7314,14 +7314,13 @@ schools:
   name: Embry-Riddle Aeronautical University-Daytona Beach
   domain: daytonabeach.erau.edu
   ipeds_id: '133553'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-11-22T14:00:00Z'
-    last_result: found
-    last_method: ir_hub_backfill
+    last_probed_at: '2026-11-02T23:34:05Z'
+    last_result: not_found
+    last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://erau.edu/institutional-research/common-data-set
 - id: embry-riddle-aeronautical-university-prescott
   name: Embry-Riddle Aeronautical University-Prescott
   domain: prescott.erau.edu
@@ -8055,7 +8054,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.fortlewis.edu/about-flc/leadership/institutional-effectiveness/institutional-research/institutional-research-home
+  discovery_seed_url: https://www.fortlewis.edu/about-flc/leadership/institutional-effectiveness/institutional-research/common-data-sets
 - id: fort-valley-state-university
   name: Fort Valley State University
   domain: fvsu.edu
@@ -14939,14 +14938,13 @@ schools:
   name: Northwest Florida State College
   domain: nwfsc.edu
   ipeds_id: '136233'
-  scrape_policy: active
+  scrape_policy: unknown
   probe_state:
-    last_probed_at: '2026-11-22T14:00:00Z'
-    last_result: found
-    last_method: ir_hub_backfill
+    last_probed_at: '2026-11-03T00:16:05Z'
+    last_result: not_found
+    last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.nwfsc.edu/institutional-research/
 - id: northwest-indian-college
   name: Northwest Indian College
   domain: nwic.edu
@@ -26099,7 +26097,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.wiu.edu/ir/
+  discovery_seed_url: https://www.wiu.edu/ir/common_data_set.php
 - id: western-kentucky-university
   name: Western Kentucky University
   domain: wku.edu
@@ -32245,7 +32243,7 @@ schools:
     last_method: ir_hub_backfill
     patterns_tried: 0
     search_fallback_tried: false
-  discovery_seed_url: https://www.ucc.edu/administration/institutional-research/
+  discovery_seed_url: https://www.ucc.edu/administration/institutional-research/common-data-set/
   iclevel: 2
   ipeds_instsize: 3
   undergraduate_enrollment: 7939
@@ -32281,14 +32279,7 @@ schools:
   name: University of New Mexico-Gallup Campus
   domain: gallup.unm.edu
   ipeds_id: "187958"
-  scrape_policy: active
-  probe_state:
-    last_probed_at: '2026-11-22T14:00:00Z'
-    last_result: found
-    last_method: ir_hub_backfill
-    patterns_tried: 0
-    search_fallback_tried: false
-  discovery_seed_url: https://www.gallup.unm.edu/ir/facts-and-figures/common-data-set.html
+  scrape_policy: unknown
   iclevel: 2
   ipeds_instsize: 1
   undergraduate_enrollment: 808
