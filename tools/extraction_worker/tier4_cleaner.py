@@ -6717,7 +6717,63 @@ def _h2a_row_letter(row: dict) -> str | None:
     return None
 
 
+_H1_QN_RE = re.compile(r"H\.1\d\d")
+
+
+def _h1_fields_with_same_question_in_schema(
+    claims: dict[str, dict], schema: SchemaIndex
+) -> dict[str, dict]:
+    """Re-express H1 claims in the numbering of ``schema``.
+
+    The H resolver numbers H1 (H.102-H.127) by the 2025-26 form. The 2023-24
+    and 2024-25 forms have one more field ahead of the methodology options,
+    so every H1 row is numbered one higher there: H.105 is "Both FM and IM"
+    and Federal need-based aid is H.106. Under those schemas the resolver's
+    numbers put each dollar amount on the row above its own (273 of 278
+    published 2024-25 PDF extractions had a dollar amount in H.105).
+
+    A claim is moved to the field with the same subsection and question in
+    ``schema``; one with no such field is dropped. That includes H.101: in
+    2025-26 it is the reporting year as text, in the older forms H.101 and
+    H.102 are tick boxes for "estimated" and "final", and the resolver's
+    text ("2023-2024 estimated") is found whichever one is ticked.
+    """
+    reference = _get_schema(None)
+    if schema.schema_path == reference.schema_path or schema.schema_version in _NUMBERED_LIKE_2025_26:
+        return claims
+
+    def key(field: dict) -> tuple[str, str]:
+        return (_normalize_label(field.get("subsection") or ""), field["_q_norm"])
+
+    own: dict[tuple[str, str], list[str]] = {}
+    for field in schema.fields:
+        if _H1_QN_RE.fullmatch(field["question_number"]):
+            own.setdefault(key(field), []).append(field["question_number"])
+    target: dict[str, str] = {}
+    for field in reference.fields:
+        qn = field["question_number"]
+        if _H1_QN_RE.fullmatch(qn):
+            matches = own.get(key(field), [])
+            if len(matches) == 1:
+                target[qn] = matches[0]
+    out: dict[str, dict] = {}
+    for qn, rec in claims.items():
+        if not _H1_QN_RE.fullmatch(qn):
+            out[qn] = rec
+        elif qn in target:
+            out.setdefault(target[qn], rec)
+    return out
+
+
 def resolve_h_financial_aid(
+    tables: list[dict], markdown: str, schema: SchemaIndex
+) -> dict[str, dict]:
+    return _h1_fields_with_same_question_in_schema(
+        _resolve_h_financial_aid_as_2025_26(tables, markdown, schema), schema
+    )
+
+
+def _resolve_h_financial_aid_as_2025_26(
     tables: list[dict], markdown: str, schema: SchemaIndex
 ) -> dict[str, dict]:
     out: dict[str, dict] = {}
