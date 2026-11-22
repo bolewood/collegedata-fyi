@@ -2650,11 +2650,20 @@ def _resolve_b1_compact_full_part_time_grid(block: str, schema: SchemaIndex) -> 
     student_group: str | None = None
     pending_label = ""
     gender_major = _b1_gender_major_columns(block)
+    # Workbook rows whose last sex's two cells are blank, by student group:
+    # each row's (field, value) cells in column order. A row is kept only
+    # when the group's total row shows 0 in those two cells and no value of
+    # the row exceeds the total above it. The blanks are then that sex's, not
+    # cells lost elsewhere on the row.
+    short_rows: dict[str, list[list[tuple[str | None, str]]]] = {}
+    group_totals: dict[str, list[float]] = {}
+    block_lines = [
+        stripped
+        for raw_line in block.splitlines()
+        if (stripped := raw_line.strip().strip("_").strip())
+    ]
 
-    for raw_line in block.splitlines():
-        line = raw_line.strip().strip("_").strip()
-        if not line:
-            continue
+    for line_index, line in enumerate(block_lines):
         line_norm = _normalize_label(line)
 
         if gender_major and line_norm in ("undergraduate students", "graduate students"):
@@ -2706,6 +2715,20 @@ def _resolve_b1_compact_full_part_time_grid(block: str, schema: SchemaIndex) -> 
                 label = f"{pending_label} {label}".strip()
             pending_label = ""
         label_norm = _normalize_label(label)
+        if (
+            gender_major
+            and line_index + 1 < len(block_lines)
+            and not re.search(r"\d", block_lines[line_index + 1])
+            and _normalize_label(block_lines[line_index + 1])
+            not in ("undergraduate students", "graduate students")
+            and (label.endswith((",", "-")) or _match_b1_row(label_norm) is None)
+        ):
+            # The label wraps under its numbers (Indiana 2024-25:
+            # "Degree-seeking, first-time,   4,708  10 ..." above "first-year
+            # students"). Only a label that stops mid-phrase or names no row
+            # takes the next line; a complete one is followed by the next
+            # row's label.
+            label_norm = _normalize_label(f"{label} {block_lines[line_index + 1]}")
 
         rollup_qn = _b1_rollup_qn(label_norm, schema)
         if rollup_qn:
@@ -2731,13 +2754,22 @@ def _resolve_b1_compact_full_part_time_grid(block: str, schema: SchemaIndex) -> 
             continue
 
         grid_values: list[tuple[str, str, str]] = []
+        short_row = False
         if gender_major:
-            # A row with a blank cell has too few numbers to place.
-            if len(nums) != 2 * len(gender_major):
+            width = 2 * len(gender_major)
+            if len(nums) == width:
+                if (cohort, category) == ("Total", "All"):
+                    group_totals[local_sg] = [
+                        float(_extract_number(n) or 0) for n in nums
+                    ]
+            elif len(nums) == width - 2 and len(gender_major) > 2:
+                short_row = True
+            else:
+                # Blank cells that cannot be placed.
                 continue
             grid_values = [
                 (unit_load, gender, nums[2 * position + offset])
-                for position, gender in enumerate(gender_major)
+                for position, gender in enumerate(gender_major[:len(nums) // 2])
                 for offset, unit_load in enumerate(("FT", "PT"))
             ]
         elif len(nums) >= 6:
@@ -2757,6 +2789,7 @@ def _resolve_b1_compact_full_part_time_grid(block: str, schema: SchemaIndex) -> 
                 ("PT", "Females", nums[3]),
             ]
 
+        row_cells: list[tuple[str | None, str]] = []
         for unit_load, gender, raw_value in grid_values:
             num = _extract_number(raw_value)
             if num is None:
@@ -2769,8 +2802,23 @@ def _resolve_b1_compact_full_part_time_grid(block: str, schema: SchemaIndex) -> 
                 cohort=cohort,
                 category=category,
             )
-            if qn:
+            if short_row:
+                row_cells.append((qn, num))
+            elif qn:
                 out[qn] = {"value": num, "source": "tier4_cleaner"}
+        if short_row and len(row_cells) == len(nums):
+            short_rows.setdefault(local_sg, []).append(row_cells)
+
+    for group, rows in short_rows.items():
+        totals = group_totals.get(group)
+        if not totals or any(totals[-2:]):
+            continue
+        for row_cells in rows:
+            if any(float(num) > total for (_, num), total in zip(row_cells, totals)):
+                continue
+            for qn, num in row_cells:
+                if qn:
+                    out.setdefault(qn, {"value": num, "source": "tier4_cleaner"})
 
     return out
 
