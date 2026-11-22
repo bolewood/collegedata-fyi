@@ -2733,8 +2733,17 @@ def _resolve_b1_layout(markdown: str, schema: SchemaIndex) -> dict[str, dict]:
 
         rollup_qn = _b1_rollup_qn(label_norm, schema)
         if rollup_qn and nums:
+            candidates = nums
+            if not line.startswith("|") and "(" in label and ")" not in label.rsplit("(", 1)[-1]:
+                # Older forms cite IPEDS inside the label, so the first number
+                # on the line is inside a bracket: "Total all undergraduates
+                # (2002 IPEDS sum of lines 8 and 22, cols. 15 and 16):
+                # 14,270". The count follows the closing bracket; when the
+                # citation wraps to the next line it is the last number here.
+                after_citation = re.search(r"\)\s*:?[\s_]*(\d[\d,]*)", line)
+                candidates = [after_citation.group(1)] if after_citation else nums[::-1]
             first_num = next(
-                (n for n in nums if _b1_extract_cell_number(n) is not None),
+                (n for n in candidates if _b1_extract_cell_number(n) is not None),
                 None,
             )
             if first_num is not None:
