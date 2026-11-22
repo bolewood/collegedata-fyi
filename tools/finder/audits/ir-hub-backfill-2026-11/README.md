@@ -90,3 +90,19 @@ display name — several campuses share names.
 
 A follow-up seed PR should only write `discovery_seed_url` for yes rows
 verified as the same institution’s CDS listing.
+
+## Timeout recrawl — 2026-11-22
+
+The 446 unclear rows were recrawled the same day with a 25s timeout, one
+retry, https/http and www/non-www variants, and a per-request process
+kill. Record: `recrawl-timeouts/`.
+
+| Outcome | Count |
+| --- | ---: |
+| yes | 0 |
+| no | 13 |
+| still unclear | 433 |
+
+399 of the remaining unclears are HTTP 403 from this VM, not confirmed
+misses. No new same-institution CDS listings, so nothing to add to the
+seed PR. Re-run command is in `recrawl-timeouts/README.md`.
