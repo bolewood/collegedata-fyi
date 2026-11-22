@@ -1518,10 +1518,23 @@ def resolve_b2_race(
             return out
 
     for table in tables:
-        headers_norm = [_normalize_label(h) for h in table.get("headers", [])]
+        headers = table.get("headers", [])
+        titles_from_first_row = False
+        if not any(h.strip() for h in headers) and table["rows"]:
+            # The table parser treats a title row holding any digit as data
+            # and leaves the headers blank: a title that absorbed a value from
+            # the row below ("Total Undergraduates (...) * (7.3%) 111",
+            # Swarthmore 2010-11) or one that just contains a number ("IPEDS
+            # sum of lines 1 and 15", Cal Poly 1999-00). The titles are then
+            # the first row, which has no label.
+            first_row = table["rows"][0]
+            if not first_row["label"].strip():
+                headers = ["", *first_row["values"]]
+                titles_from_first_row = True
+        headers_norm = [_normalize_label(h) for h in headers]
         joined = " ".join(headers_norm)
-        # Detect B2: header mentions "first-time first-year" AND race-table
-        # hallmark words ("degree seeking" or "undergraduates").
+        # Detect B2: a header mentions "first-time first-year" or
+        # "degree seeking".
         if "first time first year" not in joined and "degree seeking" not in joined:
             continue
 
@@ -1539,19 +1552,34 @@ def resolve_b2_race(
         # Build label → schema-field lookup scoped to this table's columns.
         # Each column has a distinct (cohort, category), so the question_norm
         # is the unique-within-column key.
+        found: dict[str, dict] = {}
+        rows_matched = 0
         for row in table["rows"]:
             label_norm = _normalize_label(row["label"])
             if not label_norm:
                 continue
+            row_matched = False
             for col_idx, key in col_map:
                 if col_idx >= len(row["values"]):
+                    continue
+                # B2 asks for head counts. A school that prints each count's
+                # share beside it can get two columns under one repeated
+                # title, "(9.5%)" then "37"; a percentage is never the count.
+                if "%" in row["values"][col_idx]:
                     continue
                 num = _extract_number(row["values"][col_idx])
                 if num is None:
                     continue
                 qn = _match_b2_label(all_b2, label_norm, key)
-                if qn and qn not in out:
-                    out[qn] = {"value": num, "source": "tier4_cleaner"}
+                if qn and qn not in out and qn not in found:
+                    found[qn] = {"value": num, "source": "tier4_cleaner"}
+                    row_matched = True
+            rows_matched += row_matched
+        # Titles recovered from a first row are a weaker signal than real
+        # headers, and a lone "Total" row matches the B2 total in any table.
+        if titles_from_first_row and rows_matched < 2:
+            continue
+        out.update(found)
 
     return out
 
