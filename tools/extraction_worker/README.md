@@ -139,6 +139,13 @@ python worker.py \
 # Use only for managed cleaner/extractor redrains after code changes.
 python worker.py --requeue-document-ids <uuid> --force-reextract --limit 1
 
+# A re-extraction of the same file is held (the previous artifact stays) when
+# it ends 10 or more fields lower, or loses headline admissions rows. The
+# worker then exits 1 and names the document. After checking that the lost
+# values were wrong, write the new result with the matching switch:
+python worker.py --requeue-document-ids <uuid> --document-ids <uuid> --force-reextract --accept-field-loss
+python worker.py --requeue-document-ids <uuid> --document-ids <uuid> --force-reextract --accept-headline-loss
+
 # Fresh-year drain: process the newest archived CDS rows before old backlog
 python worker.py --min-year-start 2025 --include-failed --limit 25
 

@@ -119,12 +119,22 @@ TEMPLATE_DIR = SCHEMA_DIR / "templates"
 MIN_TIER1_FIELDS = 5
 MIN_TIER4_FIELDS = 25
 MAX_FIELDS_FOR_SWALLOW_FLAG = 300
-# A Tier 4 re-extraction of the same source PDF that keeps less than this
-# share of the previous artifact's fields is held back, not written. Docling
-# drift (Sacramento State 2023-24: 274 -> 108 fields on an older Docling)
-# should never silently replace a good artifact.
-MIN_FIELDS_FOR_REGRESSION_GUARD = 100
-MIN_REEXTRACT_FIELD_RATIO = 0.6
+# A Tier 4 re-extraction of the same source PDF that ends this many fields or
+# more below the previous artifact is held back, not written. Docling drift
+# (Sacramento State 2023-24: 274 -> 108 fields on an older Docling) should
+# never silently replace a good artifact, and neither should the smaller
+# differences between two machines on the same Docling: of 135 documents
+# re-extracted on a Mac on 2026-11-21 (112 of them last extracted on the
+# GitHub runner), seven ended 13 to 41 fields lower (Concordia Texas 2014-15:
+# 222 -> 181) and were written, because the guard then only held a result
+# under 60% of the previous count.
+# The count is the net one. Fields that merely moved are not a loss: 31 of
+# those 135 documents no longer had 10 or more of their old fields, and 15 of
+# the 31 ended level or higher (Swarthmore 2001-02: 137 -> 175).
+MIN_REEXTRACT_FIELDS_LOST = 10
+# Set by --accept-field-loss: write the new extraction even so. For a fix
+# that removes ten or more wrong values from one document.
+ACCEPT_FIELD_LOSS = False
 # The same guard for the headline admissions rows, whatever the total field
 # count does. A re-extraction of the same file can gain fields overall and
 # still lose C1: Docling 2.148.0 dropped the tables by sex from SMU and
@@ -238,9 +248,30 @@ def select_drain_docs(
 
 
 def is_field_regression(previous_fields: Optional[int], new_fields: int) -> bool:
-    if not previous_fields or previous_fields < MIN_FIELDS_FOR_REGRESSION_GUARD:
+    if not previous_fields:
         return False
-    return new_fields < previous_fields * MIN_REEXTRACT_FIELD_RATIO
+    return previous_fields - new_fields >= MIN_REEXTRACT_FIELDS_LOST
+
+
+def field_regression_action(
+    client: Client,
+    document_id: str,
+    canonical: dict[str, Any],
+    new_fields: int,
+) -> Optional[str]:
+    """The failure action for a Tier 4 result with too few fields to replace
+    the previous extraction of the same file, or None when it may be written."""
+    if ACCEPT_FIELD_LOSS:
+        return None
+    previous_fields = previous_canonical_field_count(
+        client, document_id, canonical.get("source_sha256"),
+    )
+    if not is_field_regression(previous_fields, new_fields):
+        return None
+    return (
+        f"tier4_field_regression ({new_fields} < {previous_fields} fields; "
+        "the previous extraction of this file is kept)"
+    )
 
 
 def previous_canonical_field_count(
@@ -2267,16 +2298,12 @@ def _run_tier4(
                 clear_recoverable_quality_flag(client, document_id)
             return extraction_no_project("already_extracted")
 
-        previous_fields = previous_canonical_field_count(
-            client, document_id, canonical.get("source_sha256"),
-        )
-        if is_field_regression(previous_fields, fields):
+        held = field_regression_action(client, document_id, canonical, fields)
+        if held:
             # Keep the existing artifact (and its flag) current; the
             # document is still extracted, just not by this run.
             mark_extraction_status(client, document_id, "extracted", source_format)
-            return extraction_no_project(
-                f"tier4_field_regression ({fields} < {previous_fields} fields)"
-            )
+            return extraction_no_project(held)
         held = headline_regression_action(client, document_id, canonical, resolution.schema_version)
         if held:
             # Keep serving the previous extraction; the failure action puts
@@ -3207,6 +3234,14 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--accept-field-loss",
+        action="store_true",
+        help=(
+            f"Write a Tier 4 re-extraction even when it ends {MIN_REEXTRACT_FIELDS_LOST} or more fields below "
+            "the previous extraction of the same file. Use after checking that the lost values were wrong."
+        ),
+    )
+    parser.add_argument(
         "--force-reextract",
         action="store_true",
         help=(
@@ -3277,12 +3312,14 @@ def main() -> int:
         ),
     )
     args = parser.parse_args()
-    if args.accept_headline_loss and not (args.document_ids or args.requeue_document_ids):
-        # The switch turns the guard off for every document in the run, so it
-        # is only taken for documents named one by one.
-        parser.error("--accept-headline-loss needs --document-ids or --requeue-document-ids")
-    global ACCEPT_HEADLINE_LOSS
+    for switch in ("accept_headline_loss", "accept_field_loss"):
+        if getattr(args, switch) and not (args.document_ids or args.requeue_document_ids):
+            # Each switch turns its guard off for every document in the run,
+            # so it is only taken for documents named one by one.
+            parser.error(f"--{switch.replace('_', '-')} needs --document-ids or --requeue-document-ids")
+    global ACCEPT_HEADLINE_LOSS, ACCEPT_FIELD_LOSS
     ACCEPT_HEADLINE_LOSS = bool(args.accept_headline_loss)
+    ACCEPT_FIELD_LOSS = bool(args.accept_field_loss)
 
     from dependency_check import check_environment
 
