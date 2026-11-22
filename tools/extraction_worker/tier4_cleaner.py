@@ -1392,6 +1392,11 @@ _J_COL_TO_SUBSECTION = [
 ]
 
 
+# The CIP column's header: "CIP 2020 Categories to Include", sometimes printed
+# "CIP2020". A bare substring test would also match "disciplinary".
+_J_CIP_HEADER_RE = re.compile(r"\bcip(?:\b|(?=\d))")
+
+
 def resolve_j_disciplines(
     tables: list[dict], markdown: str, schema: SchemaIndex
 ) -> dict[str, dict]:
@@ -1483,14 +1488,25 @@ def resolve_j_disciplines(
         # header and skip it. Same treatment if the section flag matches —
         # that catches templates where the header/separator rows got absorbed
         # into the data rows.
+        #
+        # The nearest heading is not always J's own. The converter also makes
+        # headings of the subtitle under it ("Degrees conferred between July
+        # 1, 2022 and June 30, 2023") and of the page banner above the half
+        # of the table that continues on the next page ("Common Data Set
+        # 2023-2024"); Ferris State 2023-24 has both. A first row that names
+        # all three award levels and the CIP column is J1's header whatever
+        # heading sits above it.
         synthetic_skip = 0
-        if (hits_hdr < 2 and is_j_section and table["rows"]):
+        if hits_hdr < 2 and table["rows"]:
             first_row = table["rows"][0]
             synthetic_cells = [first_row["label"]] + list(first_row["values"])
             synthetic_norm = [_normalize_label(c) for c in synthetic_cells]
             joined_syn = " ".join(synthetic_norm)
             hits_syn = sum(1 for tok, _ in _J_COL_TO_SUBSECTION if tok in joined_syn)
-            if hits_syn >= 2:
+            names_every_column = hits_syn == len(_J_COL_TO_SUBSECTION) and any(
+                _J_CIP_HEADER_RE.search(cell) for cell in synthetic_norm
+            )
+            if hits_syn >= 2 and (is_j_section or names_every_column):
                 headers_norm = synthetic_norm
                 synthetic_skip = 1
                 # Also skip a follow-up separator row if present.
@@ -1510,8 +1526,10 @@ def resolve_j_disciplines(
             subs = [sub for tok, sub in _J_COL_TO_SUBSECTION if tok in hdr]
             # A header naming two columns ("Diploma/Certificates Associate")
             # is two columns the converter merged; a value under it cannot be
-            # given to either one.
-            if len(subs) == 1:
+            # given to either one. The same goes for an award level merged
+            # with the CIP column ("Bachelor's CIP 2020 Categories to
+            # Include"): the cell under it may be the code, not a percentage.
+            if len(subs) == 1 and not _J_CIP_HEADER_RE.search(hdr):
                 col_map.append((col_idx, subs[0]))
         if not col_map:
             continue
