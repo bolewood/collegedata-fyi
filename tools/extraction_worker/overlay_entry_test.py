@@ -555,7 +555,7 @@ def test_no_newest_canonical_reader_sees_an_overlay_artifact():
                      "created_at": "2026-11-05T00:00:00+00:00",
                      "notes": {"stats": {"schema_fields_populated": 550}, "source_sha256": "S"}}]
     client = FakeClient({"cds_artifacts": overlay_only})
-    assert worker.previous_canonical_field_count(client, "d1", "S") is None
+    assert worker.previous_canonical_field_count(client, "d1", "S", "2025-26") is None
     source = {"document_id": "d1", "kind": "source", "sha256": "S", "created_at": "2026-10-01T00:00:00+00:00"}
     client = FakeClient({"cds_artifacts": overlay_only + [source]})
     assert worker.has_canonical_for_current_bytes(client, "d1", "S") is False
