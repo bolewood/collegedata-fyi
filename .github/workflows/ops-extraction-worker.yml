@@ -106,8 +106,37 @@ jobs:
       - name: Install extraction worker dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends poppler-utils tesseract-ocr
+          sudo apt-get install -y --no-install-recommends poppler-utils tesseract-ocr fonts-dejavu-core
           python -m pip install -r tools/extraction_worker/requirements.lock
+
+      - name: Remove Liberation fonts
+        # docling-parse draws each page for the layout model. For a font the
+        # PDF does not embed it picks an installed one, and with Liberation
+        # standing in for Times New Roman or Arial the model misses checkboxes
+        # and merges lines (Arkansas State 2008-09: 208 fields, 257 without
+        # Liberation). See "Installed fonts change the output" in the worker
+        # README.
+        run: |
+          font_dirs=()
+          for dir in /usr/share/fonts /usr/local/share/fonts "$HOME/.fonts" "${XDG_DATA_HOME:-$HOME/.local/share}/fonts"; do
+            if [ -d "$dir" ]; then font_dirs+=("$dir"); fi
+          done
+          if [ "${#font_dirs[@]}" -eq 0 ]; then
+            echo "No font directory found" >&2
+            exit 1
+          fi
+          sudo find "${font_dirs[@]}" -iname 'liberation*' -prune -exec rm -rf {} +
+          fc-cache -f 2>/dev/null || true
+          if [ -n "$(find "${font_dirs[@]}" -iname 'liberation*' -print -quit)" ]; then
+            echo "Liberation fonts are still installed" >&2
+            exit 1
+          fi
+          if [ -z "$(find "${font_dirs[@]}" -name 'DejaVuSans.ttf' -print -quit)" ]; then
+            echo "No DejaVu font installed for substitution" >&2
+            exit 1
+          fi
+          echo "Font files by directory:"
+          find "${font_dirs[@]}" -type f \( -iname '*.ttf' -o -iname '*.otf' -o -iname '*.ttc' -o -iname '*.pfb' \) -printf '%h\n' 2>/dev/null | sort | uniq -c || true
 
       - name: Verify visual OCR tooling
         run: |
