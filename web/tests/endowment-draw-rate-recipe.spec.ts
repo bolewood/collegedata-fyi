@@ -77,7 +77,7 @@ test("threshold cells disclose their complete school membership", async ({ page 
   const bucketToggle = page.locator("#endowment-bucket-toggle-2024-15");
   await expect(bucketToggle).toBeVisible();
   await expect(bucketToggle).toHaveAccessibleName(
-    /^Show schools above 15% in FY2024: [\d,]+ schools, \d+\.\d% of eligible schools$/,
+    /^\d+\.\d% \([\d,]+\) of eligible schools above 15% in FY2024\. Show schools$/,
   );
   await expect(page.getByText(BUCKET_DISCLAIMER, { exact: true })).toHaveCount(1);
 
@@ -89,7 +89,7 @@ test("threshold cells disclose their complete school membership", async ({ page 
   await page.keyboard.press("Enter");
   await expect(bucketToggle).toHaveAttribute("aria-expanded", "true");
   await expect(bucketToggle).toHaveAccessibleName(
-    /^Hide schools above 15% in FY2024: [\d,]+ schools, \d+\.\d% of eligible schools$/,
+    /^\d+\.\d% \([\d,]+\) of eligible schools above 15% in FY2024\. Hide schools$/,
   );
 
   const panel = page.getByRole("region", {

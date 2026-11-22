@@ -81,7 +81,7 @@
 .cd-chip--solid { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .cd-chip--forest { background: var(--forest); color: var(--paper); border-color: var(--forest); }
 .cd-chip--brick { background: transparent; color: var(--brick); border-color: var(--brick); }
-.cd-chip--ochre { background: transparent; color: var(--ochre); border-color: var(--ochre); }
+.cd-chip--ochre { background: transparent; color: var(--ochre-ink); border-color: var(--ochre); }
 
 /* Buttons */
 .cd-btn {
@@ -835,7 +835,7 @@
   line-height: 1.5;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--ochre);
+  color: var(--ochre-ink);
 }
 .positioning-card__stats {
   display: flex;
@@ -1672,7 +1672,7 @@
   color: var(--ink-3);
 }
 .sch-line--amber {
-  color: var(--ochre);
+  color: var(--ochre-ink);
 }
 .sch-scope {
   color: var(--ink-3);
@@ -1834,7 +1834,7 @@
   text-transform: uppercase;
 }
 .sch-amber {
-  color: var(--ochre);
+  color: var(--ochre-ink);
 }
 .sch-muted {
   color: var(--ink-3);
@@ -1949,7 +1949,7 @@
 }
 .what-changed-severity--notable {
   border-color: var(--ochre);
-  color: var(--ochre);
+  color: var(--ochre-ink);
 }
 .what-changed-severity--watch {
   color: var(--ink-3);
@@ -2293,8 +2293,10 @@
   background: var(--match-fit-bg);
   outline: 0;
 }
+/* The count is 18px text on the tier tint, so it needs 4.5:1. Three tier
+   accents fall short there; --match-fit-ink is their darker text shade. */
 .match-fit-summary__count {
-  color: var(--match-fit-accent);
+  color: var(--match-fit-ink, var(--match-fit-accent));
   font-size: 18px;
   line-height: 1;
   letter-spacing: 0;
@@ -2318,11 +2320,13 @@
 .match-fit-summary__item--above_range,
 .match-tier-group--above_range {
   --match-fit-accent: var(--ochre);
+  --match-fit-ink: var(--ochre-ink);
   --match-fit-bg: rgba(138, 106, 43, 0.12);
 }
 .match-fit-summary__item--in_range,
 .match-tier-group--in_range {
   --match-fit-accent: #586a58;
+  --match-fit-ink: #506150;
   --match-fit-bg: rgba(88, 106, 88, 0.12);
 }
 .match-fit-summary__item--below_range,
@@ -2333,6 +2337,7 @@
 .match-fit-summary__item--unknown,
 .match-tier-group--unknown {
   --match-fit-accent: var(--ink-3);
+  --match-fit-ink: var(--ink-2);
   --match-fit-bg: rgba(28, 30, 27, 0.07);
 }
 .match-tier-group__head {
