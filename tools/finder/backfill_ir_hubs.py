@@ -527,7 +527,11 @@ def crawl_school_bounded(row: dict, deadline: float, kwargs: dict) -> dict:
     if deadline <= 0:
         return crawl_school(row, **kwargs)
     parent, child = mp.Pipe(duplex=False)
-    proc = mp.Process(target=_crawl_worker, args=(row, child, kwargs), daemon=True)
+    # Not a daemon: each fetch runs in its own child process, and a daemonic
+    # process may not start children (every fetch then failed with
+    # AssertionError). A school killed at its deadline can leave one fetch
+    # child behind; that child ends on its own within the request timeout.
+    proc = mp.Process(target=_crawl_worker, args=(row, child, kwargs), daemon=False)
     proc.start()
     child.close()
     proc.join(deadline)

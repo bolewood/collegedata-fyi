@@ -106,3 +106,19 @@ kill. Record: `recrawl-timeouts/`.
 399 of the remaining unclears are HTTP 403 from this VM, not confirmed
 misses. No new same-institution CDS listings, so nothing to add to the
 seed PR. Re-run command is in `recrawl-timeouts/README.md`.
+
+## Recrawl from a residential network — 2026-11-22
+
+The same 446 UNITIDs were crawled again from a residential connection
+with the same flags. Record: `recrawl-mac/`.
+
+| Outcome | Count |
+| --- | ---: |
+| yes | 6 |
+| no | 325 |
+| still unclear | 115 |
+
+Two of the six yes rows are new seeds (Drew University, Great Falls
+College MSU); three were already seeded and one is a parent collision.
+85 of the 115 unclear rows answer 403 to the finder user agent from any
+network.

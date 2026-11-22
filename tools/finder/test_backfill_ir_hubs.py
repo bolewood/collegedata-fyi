@@ -5,6 +5,7 @@ from __future__ import annotations
 import unittest
 
 from tools.finder.backfill_ir_hubs import (
+    crawl_school_bounded,
     homepage_start_urls,
     is_homepage_seed,
     sanitize_url,
@@ -136,6 +137,24 @@ class RecrawlHelperTests(unittest.TestCase):
         ]
         self.assertEqual(select_recrawl_unitids(rows), {"1", "2", "3"})
 
+
+class SchoolDeadlineTests(unittest.TestCase):
+    def test_fetch_runs_inside_the_per_school_process(self) -> None:
+        # Port 9 on localhost refuses the connection, so nothing leaves the
+        # machine. With a deadline the school runs in its own process, and
+        # the fetch inside it must still be able to start.
+        row = {
+            "school_id": "local",
+            "name": "Local",
+            "ipeds_id": "0",
+            "domain": "",
+            "website_url": "http://127.0.0.1:9/",
+        }
+        kwargs = {"rps": 0, "timeout": 3, "retries": 0, "backoff": 0, "variants": False}
+        result = crawl_school_bounded(row, 60, kwargs)
+        self.assertEqual(result["cds"], "unclear")
+        self.assertIn("homepage_fail:network:http://127.0.0.1:9/", result["notes"])
+        self.assertNotIn("AssertionError", result["notes"])
 
 if __name__ == "__main__":
     unittest.main()
