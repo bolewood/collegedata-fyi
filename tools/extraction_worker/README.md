@@ -41,11 +41,18 @@ regenerate the lock (command at the top of `requirements.txt`), bump
 `tier4_extractor.PRODUCER_VERSION` when extraction output can change, and
 compare field counts on a re-extraction sample before merging.
 
-Large re-extractions (more than a few dozen documents) should run in CI through
-the `ops-extraction-worker` workflow (`workflow_dispatch`), not on a laptop.
-Even with identical pins, Docling's models can produce slightly different
-output on macOS than on CI's Linux runners. Local runs are for debugging
-and small batches.
+Re-extractions an operator starts, of any size, run on the operator's Mac
+while a working session is open. The GitHub-hosted `ops-extraction-worker`
+workflow is for the scheduled drain and other unattended runs; do not dispatch
+re-extraction batches to it by default. The reasons are cost and speed: a
+document takes about 30 seconds on an Apple-silicon Mac and 3 to 4 minutes on
+a hosted runner (November 2026). Even with identical pins, the two machines do
+not convert every document the same way (next section), so compare field
+counts for each batch.
+
+A local run cannot refresh the site's cached pages unless `.env` carries
+`REVALIDATE_SECRET`. Afterwards run
+`gh workflow run ops-page-refresh.yml -f hours=<hours since the batch started> -f dry_run=false`.
 
 ### Installed fonts change the output
 
@@ -122,8 +129,8 @@ python worker.py --limit 25 --deadline-minutes 25 --summary-json ../../scratch/e
 # writing the current canonical artifact.
 python worker.py --reconcile-pending --limit 100 --summary-json ../../scratch/reconcile-summary.json
 
-# Targeted managed Docling re-drain on an operator laptop (small batches;
-# large ones belong in CI, see above). Requeued documents are processed in
+# Managed Docling re-drain on the operator's Mac (see "Reproducible
+# extraction"). Requeued documents are processed in
 # place: each keeps its status and served data until its own re-extraction
 # finishes, then cds_fields/school_browser_rows refresh for it.
 python worker.py \
@@ -157,11 +164,10 @@ Env vars (read from `.env` at the repo root): `SUPABASE_URL`, `SUPABASE_SERVICE_
 
 ## Managed Docling runs
 
-Small managed Docling drains can run locally on an operator machine.
-Local runs have no 60-minute GitHub-hosted timeout and can write complete logs
-under `scratch/`. Large re-extractions belong in the `ops-extraction-worker`
-workflow (see "Reproducible extraction"). GitHub Actions is for automation: the
-small scheduled backlog drain, CI, and other unattended jobs.
+Managed Docling drains run locally on the operator's Mac, whatever their size
+(see "Reproducible extraction"). Local runs have no 60-minute GitHub-hosted
+timeout and can write complete logs under `scratch/`. GitHub Actions is for
+automation: the small scheduled backlog drain, CI, and other unattended jobs.
 
 For extractor or cleaner changes, bump the relevant `producer_version` before
 re-draining. The worker is idempotent by `(document_id, producer,
