@@ -1,0 +1,27 @@
+{
+  "schools": 446,
+  "yes": 0,
+  "no": 13,
+  "unclear": 433,
+  "published": false,
+  "review_only": true,
+  "sequential": true,
+  "rate_rps": 0.5,
+  "timeout_seconds": 25,
+  "retries_on_first_homepage_url": 1,
+  "try_url_variants": true,
+  "per_request_process_kill": true,
+  "finished": "2026-11-22T16:42:59Z",
+  "input": "unclear rows from tools/finder/audits/ir-hub-backfill-2026-11/review.csv whose notes contain homepage_unreachable, homepage_fail, dns_miss, or crawl_error (446 UNITIDs)",
+  "unclear_reasons": {
+    "http_403": 399,
+    "timeout": 7,
+    "http_404": 8,
+    "dns_miss": 2,
+    "redirect_not_followed": 9,
+    "network": 3,
+    "http_5xx": 3,
+    "http_429": 1,
+    "http_405": 1
+  }
+}
