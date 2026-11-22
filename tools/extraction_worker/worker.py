@@ -257,6 +257,7 @@ def field_regression_action(
     client: Client,
     document_id: str,
     canonical: dict[str, Any],
+    schema_version: Optional[str],
     new_fields: int,
 ) -> Optional[str]:
     """The failure action for a Tier 4 result with too few fields to replace
@@ -264,7 +265,7 @@ def field_regression_action(
     if ACCEPT_FIELD_LOSS:
         return None
     previous_fields = previous_canonical_field_count(
-        client, document_id, canonical.get("source_sha256"),
+        client, document_id, canonical.get("source_sha256"), schema_version,
     )
     if not is_field_regression(previous_fields, new_fields):
         return None
@@ -278,14 +279,20 @@ def previous_canonical_field_count(
     client: Client,
     document_id: str,
     source_sha256: Optional[str],
+    schema_version: Optional[str],
 ) -> Optional[int]:
-    """Field count of the newest canonical artifact built from the same
-    source PDF, or None when there is none (or the source is unknown)."""
+    """Field count of the newest canonical artifact, when it was built from
+    the same source PDF under the same schema. None otherwise (or when the
+    source is unknown): another year's schema numbers its fields differently,
+    so its count is not comparable to within ten fields."""
     if not source_sha256:
         return None
     rows = (
         client.table("cds_artifacts")
-        .select("notes->stats->schema_fields_populated,notes->source_sha256,notes->source_artifact->sha256")
+        .select(
+            "schema_version,notes->stats->schema_fields_populated,"
+            "notes->source_sha256,notes->source_artifact->sha256"
+        )
         .eq("document_id", document_id)
         .eq("kind", "canonical")
         .order("created_at", desc=True)
@@ -297,6 +304,8 @@ def previous_canonical_field_count(
     if not rows:
         return None
     row = rows[0]
+    if str(row.get("schema_version") or "") != str(schema_version or ""):
+        return None
     if source_sha256 not in (row.get("source_sha256"), row.get("sha256")):
         return None
     try:
@@ -2298,7 +2307,7 @@ def _run_tier4(
                 clear_recoverable_quality_flag(client, document_id)
             return extraction_no_project("already_extracted")
 
-        held = field_regression_action(client, document_id, canonical, fields)
+        held = field_regression_action(client, document_id, canonical, resolution.schema_version, fields)
         if held:
             # Keep the existing artifact (and its flag) current; the
             # document is still extracted, just not by this run.
@@ -3312,8 +3321,12 @@ def main() -> int:
         ),
     )
     args = parser.parse_args()
+    named_documents = any(
+        value.strip()
+        for value in f"{args.document_ids or ''},{args.requeue_document_ids or ''}".split(",")
+    )
     for switch in ("accept_headline_loss", "accept_field_loss"):
-        if getattr(args, switch) and not (args.document_ids or args.requeue_document_ids):
+        if getattr(args, switch) and not named_documents:
             # Each switch turns its guard off for every document in the run,
             # so it is only taken for documents named one by one.
             parser.error(f"--{switch.replace('_', '-')} needs --document-ids or --requeue-document-ids")

@@ -99,34 +99,38 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
     def test_field_regression_action_holds_only_a_same_file_loss(self):
         import worker
 
-        client = _FakeClient([{"schema_fields_populated": 222, "source_sha256": "file"}])
+        client = _FakeClient([{"schema_version": "2019-20", "schema_fields_populated": 222, "source_sha256": "file"}])
         new = {"source_sha256": "file"}
 
-        action = field_regression_action(client, "doc", new, 181)
+        action = field_regression_action(client, "doc", new, "2019-20", 181)
         self.assertEqual(
             action,
             "tier4_field_regression (181 < 222 fields; the previous extraction of this file is kept)",
         )
         self.assertTrue(is_failure_action(action))
 
-        self.assertIsNone(field_regression_action(client, "doc", new, 213))
-        # A different file is not comparable, and a first extraction has nothing before it.
-        self.assertIsNone(field_regression_action(client, "doc", {"source_sha256": "other"}, 181))
-        self.assertIsNone(field_regression_action(_FakeClient([]), "doc", new, 181))
+        self.assertIsNone(field_regression_action(client, "doc", new, "2019-20", 213))
+        # A different file or schema is not comparable, and a first extraction has nothing before it.
+        self.assertIsNone(field_regression_action(client, "doc", {"source_sha256": "other"}, "2019-20", 181))
+        self.assertIsNone(field_regression_action(client, "doc", new, "2020-21", 181))
+        self.assertIsNone(field_regression_action(_FakeClient([]), "doc", new, "2019-20", 181))
         # The override.
         worker.ACCEPT_FIELD_LOSS = True
         try:
-            self.assertIsNone(field_regression_action(client, "doc", new, 181))
+            self.assertIsNone(field_regression_action(client, "doc", new, "2019-20", 181))
         finally:
             worker.ACCEPT_FIELD_LOSS = False
 
     def test_previous_field_count_requires_same_source(self):
-        client = _FakeClient([{"schema_fields_populated": 274, "source_sha256": "abc"}])
-        self.assertEqual(previous_canonical_field_count(client, "doc", "abc"), 274)
-        self.assertIsNone(previous_canonical_field_count(client, "doc", "new-pdf"))
-        self.assertIsNone(previous_canonical_field_count(client, "doc", None))
-        legacy = _FakeClient([{"schema_fields_populated": 300, "sha256": "abc"}])
-        self.assertEqual(previous_canonical_field_count(legacy, "doc", "abc"), 300)
+        client = _FakeClient([{"schema_version": "2025-26", "schema_fields_populated": 274, "source_sha256": "abc"}])
+        self.assertEqual(previous_canonical_field_count(client, "doc", "abc", "2025-26"), 274)
+        self.assertIsNone(previous_canonical_field_count(client, "doc", "new-pdf", "2025-26"))
+        self.assertIsNone(previous_canonical_field_count(client, "doc", None, "2025-26"))
+        legacy = _FakeClient([{"schema_version": "2025-26", "schema_fields_populated": 300, "sha256": "abc"}])
+        self.assertEqual(previous_canonical_field_count(legacy, "doc", "abc", "2025-26"), 300)
+        # A 2026-27 file first read with the 2025-26 schema: the counts are of different field sets.
+        self.assertIsNone(previous_canonical_field_count(client, "doc", "abc", "2026-27"))
+        self.assertIsNone(previous_canonical_field_count(client, "doc", "abc", None))
 
     def test_headline_loss_guard_counts_rows_whose_numbers_left_the_text(self):
         # SMU 2025-26: Docling stopped emitting the applicants and admits tables by sex.
