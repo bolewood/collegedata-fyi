@@ -47,6 +47,46 @@ Even with identical pins, Docling's models can produce slightly different
 output on macOS than on CI's Linux runners. Local runs are for debugging
 and small batches.
 
+### Installed fonts change the output
+
+Some PDFs in the corpus do not embed their fonts (mostly older Word exports
+that name Times New Roman or Arial). docling-parse draws every page
+for the layout model and, for a font that is not embedded, substitutes one it
+finds in the system and user font directories. The layout model is sensitive to that
+choice. With identical code, models and text cells, the first page of
+Arkansas State 2008-09 drawn with Liberation fonts gave 58 detected regions;
+the same page drawn with Times New Roman gave 112.
+
+Measured in November 2026 on six PDFs without embedded fonts (same code,
+models and cleaner):
+
+| Fonts installed | Fields | Checked boxes found |
+|---|---|---|
+| macOS system fonts | 1,354 | 376 |
+| Linux: Microsoft core fonts, DejaVu | 1,352 | 383 |
+| Linux: DejaVu only | 1,340 | 364 |
+| Linux: DejaVu, Noto, FreeFont, URW | 1,338 | 363 |
+| Linux: the row above plus Liberation | 1,171 | 142 |
+
+Two PDFs with embedded fonts gave the same result on every setup. The last
+setup reproduces, character for character, what the GitHub runner produced for
+Portland State 2016-17. What the Liberation setup loses is checkbox answers
+and lines merged into one paragraph (Arkansas State 2008-09: 2 checked boxes
+found against 77 on macOS).
+
+The `ops-extraction-worker` workflow therefore deletes Liberation fonts before
+it runs the worker and makes sure a DejaVu font is installed. Do both on any
+other Linux host. The remaining setups still differ from each other on
+individual documents, so compare field counts when a document moves between
+machines.
+
+Not measured: the visual OCR fallback draws pages with `pdftoppm`, which also
+substitutes installed fonts, so its input changes with the font set too.
+
+A document already extracted with Liberation installed is not redone on its
+own, because its producer version and source are unchanged. Re-extract it with
+`--requeue-document-ids <uuid> --force-reextract`.
+
 ## Usage
 
 ```bash
