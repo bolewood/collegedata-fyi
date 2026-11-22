@@ -422,6 +422,47 @@ def _strip_question_tag_column(table_lines: list[str]) -> tuple[list[str], str |
     return out, (tags.pop() if len(tags) == 1 else None)
 
 
+_HYPHEN_BREAK_RE = re.compile(r"\b(first|full|part)-[ \t]+(?=(?:time|year)\b)", re.IGNORECASE)
+
+
+def _join_hyphen_breaks(text: str) -> str:
+    """Rejoin "first- time", "first- year", "full-  time" and "part- time".
+
+    Some PDFs carry a space after the hyphen in their text layer:
+
+        Total first- time, first- year (freshman) men who applied     __394__
+
+    No row pattern expects that, so every C1 row of Bluefield State 2012-13
+    went unread. The spaces taken out are put back in the next gap of two
+    or more spaces, so a value further along the line keeps its column. A
+    line with no such gap after a join ends up that much shorter.
+    """
+    out = []
+    for line in text.split("\n"):
+        parts = []
+        pos = 0
+        owed = 0
+        for match in _HYPHEN_BREAK_RE.finditer(line):
+            segment, owed = _pad_first_gap(line[pos:match.start()], owed)
+            parts.append(segment + match.group(1) + "-")
+            owed += match.end() - match.start() - len(match.group(1)) - 1
+            pos = match.end()
+        if not parts:
+            out.append(line)
+            continue
+        segment, _ = _pad_first_gap(line[pos:], owed)
+        out.append("".join(parts) + segment)
+    return "\n".join(out)
+
+
+def _pad_first_gap(segment: str, owed: int) -> tuple[str, int]:
+    """Insert `owed` spaces at the first run of two or more spaces."""
+    gap = re.search(r" {2,}", segment) if owed else None
+    if not gap:
+        return segment, owed
+    return segment[:gap.start()] + " " * owed + segment[gap.start():], 0
+
+
 def _parse_markdown_tables(markdown: str) -> list[dict]:
     """Extract every markdown table as a list of {section, rows} dicts.
 
@@ -7497,6 +7538,7 @@ def clean(
     markdown = _remove_fill_in_blanks(markdown)
     if supplemental_text:
         supplemental_text = _remove_fill_in_blanks(supplemental_text, keep_width=True)
+        supplemental_text = _join_hyphen_breaks(supplemental_text)
     markdown = _collapse_doubled_cells(markdown)
     tables = _parse_markdown_tables(markdown)
     values: dict[str, dict] = {}
