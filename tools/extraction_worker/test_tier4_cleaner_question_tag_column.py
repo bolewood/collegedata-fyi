@@ -256,6 +256,124 @@ class CleanWithQuestionTagColumnTest(unittest.TestCase):
 
         self.assertNotIn("A.001", values)
 
+    def test_a_repeated_tag_counts_as_that_tag(self):
+        # A row merged from two carries both rows' margin tags.
+        lines = _lines(
+            """
+| J1    | Category                                       | Bachelor's | CIP 2010 Categories |
+|-------|------------------------------------------------|------------|---------------------|
+| J1    | Agriculture                                    |            | 1                   |
+|       |                                                | 0          | 19                  |
+| J1 J1 | Family and consumer sciences Law/legal studies | 0          | 22                  |
+| J1. J1. | Psychology Homeland security                 | 0.1 0      | 42 43               |
+"""
+        )
+
+        out, tag = _strip_question_tag_column(lines)
+
+        self.assertEqual(tag, "J1")
+        self.assertEqual(
+            [ln.split("|")[1].strip() for ln in out],
+            [
+                "Category",
+                "------------------------------------------------",
+                "Agriculture",
+                "",
+                "Family and consumer sciences Law/legal studies",
+                "Psychology Homeland security",
+            ],
+        )
+
+    def test_repeated_tags_of_two_questions_name_no_question(self):
+        lines = _lines(
+            """
+| C5 C5 | English Mathematics | 4 | 3 |
+| C5    | Science             | 3 |   |
+| C7 C7 | Rigor Class rank    | X | X |
+"""
+        )
+
+        out, tag = _strip_question_tag_column(lines)
+
+        self.assertIsNone(tag)
+        self.assertTrue(out[0].lstrip("| ").startswith("English Mathematics"))
+
+    def test_leaves_a_cell_naming_two_different_tags_alone(self):
+        lines = _lines(
+            """
+| H2 H2a | Number of degree-seeking undergraduates | 312 |
+| H2 H2a | Number who applied for need-based aid   | 280 |
+| H2 H2a | Number determined to have need          | 251 |
+"""
+        )
+
+        self.assertIs(_strip_question_tag_column(lines)[0], lines)
+
+    def test_j1_table_with_merged_rows_and_a_merged_header(self):
+        # Concordia University Texas 2014-15 as converted on macOS: the
+        # Diploma and Associate columns share one header cell, and some rows
+        # are two rows joined. Before, the "J1 J1" cells kept the tag column
+        # in place and the whole table went unread.
+        markdown = """
+## J. DEGREES CONFERRED
+
+- J1 For each of the following discipline areas, provide the percentage of diplomas/certificates, associate, and bachelor's degrees awarded.
+
+| J1    | Category                                                       | Diploma/Certificates Associate   | Bachelor's   | CIP 2010 Categories to Include   |
+|-------|----------------------------------------------------------------|----------------------------------|--------------|----------------------------------|
+| J1    | Agriculture                                                    | 0                                |              | 1                                |
+| J1    | Natural resources and conservation                             | 0                                | 0.003        | 3                                |
+|       |                                                                | 0                                |              | 19                               |
+| J1 J1 | Family and consumer sciences Law/legal studies                 | 0                                | 0.02         | 22                               |
+| J1 J1 | Transportation and materials moving Visual and performing arts | 0 0                              | 0.009        | 49 50                            |
+| J1    | Business/marketing                                             | 0                                | 0.343        | 52                               |
+"""
+
+        values = clean(markdown, schema=SCHEMA)
+        j = {k: v["value"] for k, v in values.items() if k.startswith("J.")}
+
+        def qn(subsection: str, category: str) -> str:
+            (field,) = [
+                f
+                for f in SCHEMA.filter(
+                    section="Disciplinary Areas of Degrees Conferred",
+                    subsection=subsection,
+                )
+                if str(f["category"]).strip() == category
+            ]
+            return field["question_number"]
+
+        # Bachelor's column: read, and the row joined from two is placed by
+        # its one CIP code (22, Law/legal studies).
+        self.assertEqual(
+            j,
+            {
+                qn("Bachelors", "03"): "0.003",
+                qn("Bachelors", "22"): "0.02",
+                qn("Bachelors", "52"): "0.343",
+            },
+        )
+        # Not read: the column under the two-name header (the 0 could be a
+        # diploma or an associate figure), and the row with two CIP codes
+        # (0.009 could be Transportation or Visual and performing arts).
+
+    def test_j1_row_the_form_prints_for_two_categories_is_still_read(self):
+        # Older templates have one row for two CIP categories.
+        markdown = """
+## J1 Degrees conferred
+
+| Category                             | Diploma/Certificates | Associate | Bachelor's | CIP Categories to Include |
+|--------------------------------------|----------------------|-----------|------------|---------------------------|
+| Agriculture                          |                      |           | 2          | 1                         |
+| Engineering/engineering technologies |                      |           | 24         | 14 and 15                 |
+"""
+
+        values = clean(markdown, schema=SCHEMA)
+        j = {k: v["value"] for k, v in values.items() if k.startswith("J.")}
+
+        self.assertIn("24", j.values())
+        self.assertEqual(len(j), 2)
+
 
 if __name__ == "__main__":
     unittest.main()
