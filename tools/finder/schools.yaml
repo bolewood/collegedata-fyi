@@ -4123,7 +4123,6 @@ schools:
     patterns_tried: 0
     search_fallback_tried: true
   discovery_seed_url: https://www.csustan.edu/iea/common-data-set
-    & Analytics/IEA1/updated_2018-2019_common_data_set.pdf
 - id: california-university-of-science-and-medicine
   name: California University of Science and Medicine
   domain: cusm.org
@@ -8055,7 +8054,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www-dev.fortlewis.edu/about-flc/leadership/institutional-effectiveness/institutional-research/common-data-sets
+  discovery_seed_url: https://www.fortlewis.edu/about-flc/leadership/institutional-effectiveness/institutional-research/common-data-sets
 - id: fort-valley-state-university
   name: Fort Valley State University
   domain: fvsu.edu
@@ -17560,13 +17559,14 @@ schools:
   name: Rochester University
   domain: rochesteru.edu
   ipeds_id: '170967'
-  scrape_policy: unknown
+  scrape_policy: active
   probe_state:
-    last_probed_at: '2026-11-03T00:31:19Z'
-    last_result: not_found
-    last_method: brave
+    last_probed_at: '2026-11-22T14:00:00Z'
+    last_result: found
+    last_method: ir_hub_backfill
     patterns_tried: 0
     search_fallback_tried: true
+  discovery_seed_url: https://rcu.edu/academics/institutional-reasearch/
 - id: rockford-university
   name: Rockford University
   domain: rockford.edu
@@ -17990,12 +17990,12 @@ schools:
   ipeds_id: '215770'
   scrape_policy: active
   probe_state:
-    last_probed_at: '2026-11-02T22:53:23Z'
-    last_result: not_found
-    last_method: brave
+    last_probed_at: '2026-11-22T14:00:00Z'
+    last_result: found
+    last_method: ir_hub_backfill
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://sites.sju.edu/academicadmin/files/2017/01/SJU-Common-Data-Set-2015-2016-Part-One.pdf
+  discovery_seed_url: https://www.sju.edu/offices/institutional-research
 - id: saint-leo-university
   name: Saint Leo University
   domain: saintleo.edu
@@ -26097,7 +26097,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.wiu.edu/irp/peers.php
+  discovery_seed_url: https://www.wiu.edu/ir/common_data_set.php
 - id: western-kentucky-university
   name: Western Kentucky University
   domain: wku.edu
@@ -26659,13 +26659,14 @@ schools:
   name: Wingate University
   domain: wingate.edu
   ipeds_id: '199962'
-  scrape_policy: unknown
+  scrape_policy: active
   probe_state:
-    last_probed_at: '2026-11-03T01:15:34Z'
-    last_result: not_found
-    last_method: brave
+    last_probed_at: '2026-11-22T14:00:00Z'
+    last_result: found
+    last_method: ir_hub_backfill
     patterns_tried: 0
     search_fallback_tried: true
+  discovery_seed_url: https://www.wingate.edu/institutional-research/common-data-sets
 - id: winona-state-university
   name: Winona State University
   domain: winona.edu
@@ -28497,7 +28498,14 @@ schools:
   name: Community College of Allegheny County
   domain: ccac.edu
   ipeds_id: "210605"
-  scrape_policy: unknown
+  scrape_policy: active
+  probe_state:
+    last_probed_at: '2026-11-22T14:00:00Z'
+    last_result: found
+    last_method: ir_hub_backfill
+    patterns_tried: 0
+    search_fallback_tried: false
+  discovery_seed_url: https://www.ccac.edu/about/assessment-and-institutional-effectiveness.php
   iclevel: 2
   ipeds_instsize: 3
   undergraduate_enrollment: 9544
@@ -31161,7 +31169,14 @@ schools:
   name: Passaic County Community College
   domain: web.pccc.edu
   ipeds_id: "186034"
-  scrape_policy: unknown
+  scrape_policy: active
+  probe_state:
+    last_probed_at: '2026-11-22T14:00:00Z'
+    last_result: found
+    last_method: ir_hub_backfill
+    patterns_tried: 0
+    search_fallback_tried: false
+  discovery_seed_url: https://pccc.edu/ir/
   iclevel: 2
   ipeds_instsize: 2
   undergraduate_enrollment: 4260
@@ -31350,7 +31365,14 @@ schools:
   name: Redlands Community College
   domain: redlandscc.edu
   ipeds_id: "207069"
-  scrape_policy: unknown
+  scrape_policy: active
+  probe_state:
+    last_probed_at: '2026-11-22T14:00:00Z'
+    last_result: found
+    last_method: ir_hub_backfill
+    patterns_tried: 0
+    search_fallback_tried: false
+  discovery_seed_url: https://www.redlandscc.edu/about/institutional-compliance/institutional-research-and-effectiveness.php
   iclevel: 2
   ipeds_instsize: 1
   undergraduate_enrollment: 946
@@ -32214,7 +32236,14 @@ schools:
   name: UCNJ Union College of Union County, New Jersey
   domain: ucc.edu
   ipeds_id: "187198"
-  scrape_policy: unknown
+  scrape_policy: active
+  probe_state:
+    last_probed_at: '2026-11-22T14:00:00Z'
+    last_result: found
+    last_method: ir_hub_backfill
+    patterns_tried: 0
+    search_fallback_tried: false
+  discovery_seed_url: https://www.ucc.edu/administration/institutional-research/common-data-set/
   iclevel: 2
   ipeds_instsize: 3
   undergraduate_enrollment: 7939
@@ -32484,7 +32513,14 @@ schools:
   name: Western Nebraska Community College
   domain: wncc.edu
   ipeds_id: "181817"
-  scrape_policy: unknown
+  scrape_policy: active
+  probe_state:
+    last_probed_at: '2026-11-22T14:00:00Z'
+    last_result: found
+    last_method: ir_hub_backfill
+    patterns_tried: 0
+    search_fallback_tried: false
+  discovery_seed_url: https://www.wncc.edu/about-wncc/institutional-effectiveness/public-reports
   iclevel: 2
   ipeds_instsize: 1
   undergraduate_enrollment: 893
