@@ -112,6 +112,73 @@ B2. Enrollment by Racial/Ethnic Category
         self.assertNotIn("B.177", values)
         self.assertEqual(values.get("B.122"), "471")
 
+    def test_rows_with_the_last_sex_blank_are_read_when_its_total_is_zero(self):
+        text = B1_HEADER + """\
+    Degree-seeking, first-time, first-year       243           0            395           0
+    students
+    Other first-year, degree-seeking students     75           3             66           1
+ Total degree-seeking undergraduate students   1,028          38          1,574          29            0           0
+                 Total Undergraduate Students  1,031          56          1,576          39            0           0
+B2. Enrollment by Racial/Ethnic Category
+"""
+
+        values = _values(clean("", schema=SCHEMA_2023, supplemental_text=text))
+
+        self.assertEqual(values.get("B.101"), "243")
+        self.assertEqual(values.get("B.102"), "395")
+        self.assertEqual(values.get("B.125"), "0")
+        self.assertEqual(values.get("B.126"), "0")
+        self.assertEqual(values.get("B.105"), "75")
+        self.assertEqual(values.get("B.130"), "1")
+        self.assertEqual(values.get("B.122"), "1576")
+        self.assertEqual(values.get("B.146"), "39")
+
+    def test_short_rows_are_dropped_when_no_full_row_shows_the_last_sex_at_zero(self):
+        text = B1_HEADER + """\
+    Other first-year, degree-seeking students     75           3             66           1
+                 Total Undergraduate Students  1,031          56          1,576          39            4           1
+B2. Enrollment by Racial/Ethnic Category
+"""
+
+        values = _values(clean("", schema=SCHEMA_2023, supplemental_text=text))
+
+        self.assertNotIn("B.105", values)
+        self.assertNotIn("B.129", values)
+        self.assertEqual(values.get("B.122"), "1576")
+        self.assertEqual(values.get("B.123"), "4")
+
+    def test_a_short_row_larger_than_the_total_above_it_is_dropped(self):
+        # A women's college that leaves the men's cells blank: 395 and 0 are
+        # the women's, not the men's, and the men's total says so.
+        text = B1_HEADER + """\
+    Degree-seeking, first-time, first-year                                   395           0             0           0
+    students
+                 Total Undergraduate Students      0           0          1,576          39            0           0
+B2. Enrollment by Racial/Ethnic Category
+"""
+
+        values = _values(clean("", schema=SCHEMA_2023, supplemental_text=text))
+
+        self.assertNotIn("B.101", values)
+        self.assertNotIn("B.102", values)
+        self.assertEqual(values.get("B.122"), "1576")
+
+    def test_zeros_on_a_detail_row_do_not_vouch_for_a_short_row(self):
+        # Only the total row says the last sex is empty.
+        text = B1_HEADER + """\
+    Degree-seeking, first-time, first-year       243           0            395           0            0           0
+    students
+    Other first-year, degree-seeking students     75           3             66           1
+                 Total Undergraduate Students  1,031          56          1,576          39            4           1
+B2. Enrollment by Racial/Ethnic Category
+"""
+
+        values = _values(clean("", schema=SCHEMA_2023, supplemental_text=text))
+
+        self.assertEqual(values.get("B.101"), "243")
+        self.assertNotIn("B.105", values)
+        self.assertNotIn("B.130", values)
+
     def test_a_truncated_heading_and_excel_characters_do_not_hide_the_grid(self):
         text = (
             B1_FULL_ROWS.replace("Institutional Enrollment", "Institutional Enrollmen")
@@ -123,6 +190,67 @@ B2. Enrollment by Racial/Ethnic Category
 
         self.assertEqual(values.get("B.122"), "10848")
         self.assertEqual(values.get("B.145"), "771")
+
+
+B1_FOUR_SEXES_WRAPPED = """\
+B1. Institutional Enrollment - Men and Women
+Provide numbers of students for each of the following categories.
+                                        MEN                   WOMEN              ANOTHER GENDER               UNKNOWN
+                               Full Time   Part Time    Full Time   Part Time   Full Time   Part Time    Full Time   Part Time
+                              Enrollment  Enrollment   Enrollment  Enrollment  Enrollment   Enrollment  Enrollment  Enrollment
+                                                                              UNDERGRADUATE STUDENTS
+Degree-seeking, first-time,      4,708         10         4,882         11           0           0           0            0
+first-year students
+Other first-year, degree-         343           4          266          14           0           0           0            0
+seeking students
+All other degree-seeking         13,436        422       13,370        338           0           0           2            0
+students
+Total degree-seeking            18,487        436        18,518        363           0           0           2            0
+undergraduate students
+All other undergraduates            68           82           52           81           0            0            0            4
+enrolled in credit courses
+Total undergraduate               18,555        518         18,570        444           0            0            2            4
+students
+Total of all undergraduate students enrolled                                                                                 38,093
+                                                                                        GRADUATE STUDENTS
+Degree-seeking, first-time         1,357         189         1,243        221           0            0            1            0
+All other degree-seeking           2,033        1,553        1,905       1,678          0            0            0            0
+Total graduate students            3,390        1,742        3,148       1,899          0            0            1            0
+B2. Enrollment by Racial/Ethnic Category
+"""
+
+
+class WorkbookB1WrappedLabelTest(unittest.TestCase):
+    """Indiana 2024-25: four sexes, and each label wraps under its numbers."""
+
+    @classmethod
+    def setUpClass(cls):
+        schema = SchemaIndex(REPO_ROOT / "schemas" / "cds_schema_2024_25.json")
+        cls.values = _values(
+            clean("", schema=schema, supplemental_text=B1_FOUR_SEXES_WRAPPED)
+        )
+
+    def test_a_label_cut_mid_phrase_takes_the_line_below(self):
+        # "Degree-seeking, first-time," alone is the graduate row's label.
+        self.assertEqual(self.values.get("B.101"), "4708")
+        self.assertEqual(self.values.get("B.102"), "4882")
+        self.assertEqual(self.values.get("B.125"), "10")
+        self.assertEqual(self.values.get("B.105"), "343")
+        self.assertEqual(self.values.get("B.130"), "14")
+
+    def test_a_label_that_names_no_row_takes_the_line_below(self):
+        self.assertEqual(self.values.get("B.117"), "68")
+        self.assertEqual(self.values.get("B.144"), "4")
+        self.assertEqual(self.values.get("B.121"), "18555")
+        self.assertEqual(self.values.get("B.146"), "444")
+        self.assertEqual(self.values.get("B.124"), "2")
+
+    def test_a_complete_label_does_not_take_the_next_rows_label(self):
+        self.assertEqual(self.values.get("B.109"), "13436")
+        self.assertEqual(self.values.get("B.113"), "18487")
+        self.assertEqual(self.values.get("B.153"), "1357")
+        self.assertEqual(self.values.get("B.157"), "2033")
+        self.assertEqual(self.values.get("B.193"), "38093")
 
 
 if __name__ == "__main__":
