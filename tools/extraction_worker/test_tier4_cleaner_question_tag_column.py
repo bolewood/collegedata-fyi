@@ -357,6 +357,28 @@ class CleanWithQuestionTagColumnTest(unittest.TestCase):
         # diploma or an associate figure), and the row with two CIP codes
         # (0.009 could be Transportation or Visual and performing arts).
 
+    def test_j1_row_that_only_picked_up_a_neighbouring_cip_code_is_still_read(self):
+        # The converter moved the Health professions code (51) into the
+        # Business/marketing row. The row itself is one discipline with one
+        # value, so it is read by its label.
+        markdown = """
+## J1 Degrees conferred
+
+| Category                                 | Diploma/Certificates | Associate | Bachelor's | CIP 2020 Categories to Include |
+|------------------------------------------|----------------------|-----------|------------|--------------------------------|
+| Visual and performing arts               | 4.0%                 | 1.5%      |            | 50                             |
+| Health professions and related programs  |                      |           | 12.00%     |                                |
+| Business/marketing                       |                      |           | 30.00%     | 51 52                          |
+| Social sciences History                  |                      |           | 4.4% 0.1%  | 45 54                          |
+"""
+
+        values = clean(markdown, schema=SCHEMA)
+        j = {k: v["value"] for k, v in values.items() if k.startswith("J.")}
+
+        self.assertEqual(j.get("J.217"), "30.00")   # Business/marketing, Bachelor's
+        self.assertEqual(j.get("J.135"), "4.0")     # Visual and performing arts, Diploma
+        self.assertNotIn("4.4", j.values())         # two rows joined: left unread
+
     def test_j1_row_the_form_prints_for_two_categories_is_still_read(self):
         # Older templates have one row for two CIP categories.
         markdown = """

@@ -377,7 +377,7 @@ def _remove_fill_in_blanks(text: str, keep_width: bool = False) -> str:
 _QUESTION_TAG_RE = re.compile(r"[A-J]\d{1,2}[A-Za-z]?\.?")
 # The same tag once, or repeated: a converter that merges two table rows into
 # one merges their margin tags as well ("J1 J1").
-_REPEATED_QUESTION_TAG_RE = re.compile(r"([A-J]\d{1,2}[A-Za-z]?)\.?(?:\s+\1\.?)*", re.IGNORECASE)
+_REPEATED_QUESTION_TAG_RE = re.compile(r"([A-J]\d{1,2}[A-Za-z]?)\.?(?:\s+\1\.?)*")
 _TABLE_SEPARATOR_RE = re.compile(r"^\|[\s\-:|]+\|$")
 
 
@@ -1489,7 +1489,7 @@ def resolve_j_disciplines(
             label_norm = _normalize_label(row["label"])
             if not label_norm:
                 continue
-            two_rows = _is_two_j_rows(row)
+            two_rows = _is_two_j_rows(lookup_by_sub["Bachelors"], row, label_norm)
             for col_idx, sub in col_map:
                 if col_idx >= len(row["values"]):
                     continue
@@ -1508,20 +1508,32 @@ def resolve_j_disciplines(
 _TWO_CIP_CODES_RE = re.compile(r"\d{1,2}\s+\d{1,2}")
 
 
-def _is_two_j_rows(row: dict) -> bool:
+def _is_two_j_rows(lookup: dict[str, str], row: dict, label_norm: str) -> bool:
     """True for a row the converter merged from two disciplines.
 
         | Transportation and materials moving Visual and performing arts | 0 0 | 0.009 | 49 50 |
 
-    The sign is two bare codes in the CIP cell. A value in such a row belongs
-    to either discipline, so the row is not matched by its label. Without
-    this the prefix match gave 0.009 to Transportation; the form has it under
-    Visual and performing arts (Concordia Texas 2014-15). A row the form
-    itself prints for two categories ("14 and 15", "28 & 29") is not one of
-    these.
+    A value in such a row belongs to either discipline, so the row is not
+    matched by its label. Without this the prefix match gave 0.009 to
+    Transportation; the form has it under Visual and performing arts
+    (Concordia Texas 2014-15).
+
+    Two bare codes in the last cell are not enough on their own. The
+    converter also moves a neighbouring row's code into an unmerged row:
+
+        | Business/marketing | | | 30.00% | 51 52 |
+
+    So the row counts as two only when, besides the two codes, its label is
+    not exactly one discipline or another cell holds two numbers. A row the
+    form itself prints for two categories ("14 and 15", "28 & 29") never
+    matches.
     """
     values = row.get("values", [])
-    return bool(values) and bool(_TWO_CIP_CODES_RE.fullmatch(values[-1].strip()))
+    if not values or not _TWO_CIP_CODES_RE.fullmatch(values[-1].strip()):
+        return False
+    if label_norm not in lookup:
+        return True
+    return any(len(re.findall(r"\d+(?:\.\d+)?", cell)) >= 2 for cell in values[:-1])
 
 
 def _match_j_cip_category(lookup: dict[str, str], row: dict) -> str | None:
