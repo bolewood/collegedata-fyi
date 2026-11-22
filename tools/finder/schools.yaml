@@ -6861,11 +6861,11 @@ schools:
   name: Drew University
   domain: drew.edu
   ipeds_id: '184348'
-  scrape_policy: unknown
+  scrape_policy: active
   probe_state:
-    last_probed_at: '2026-11-02T23:32:02Z'
-    last_result: not_found
-    last_method: brave
+    last_probed_at: '2026-11-22T22:00:00Z'
+    last_result: found
+    last_method: ir_hub_backfill
     patterns_tried: 0
     search_fallback_tried: true
   discovery_seed_url: https://drew.edu/about/institutional-research/
@@ -29244,10 +29244,16 @@ schools:
   name: Great Falls College Montana State University
   domain: gfcmsu.edu
   ipeds_id: "180249"
-  scrape_policy: unknown
+  scrape_policy: active
   iclevel: 2
   ipeds_instsize: 1
   undergraduate_enrollment: 894
+  probe_state:
+    last_probed_at: '2026-11-22T22:00:00Z'
+    last_result: found
+    last_method: ir_hub_backfill
+    patterns_tried: 0
+    search_fallback_tried: false
   discovery_seed_url: https://www.gfcmsu.edu/campus-departments/institutional-effectiveness/common-data-set/
 
 - id: greenfield-community-college
