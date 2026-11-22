@@ -1,0 +1,13 @@
+{
+  "schools": 2273,
+  "unique_ipeds": 2273,
+  "yes": 56,
+  "no": 1771,
+  "unclear": 446,
+  "published": false,
+  "finished": "2026-11-22T06:00:00Z",
+  "rate_rps": 0.5,
+  "sequential": true,
+  "review_only": true,
+  "github_workflow_dispatch": "403 Resource not accessible by integration; ran locally from main code 51d476a"
+}
