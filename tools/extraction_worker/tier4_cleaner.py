@@ -422,6 +422,53 @@ def _strip_question_tag_column(table_lines: list[str]) -> tuple[list[str], str |
     return out, (tags.pop() if len(tags) == 1 else None)
 
 
+_FUSED_ROW_TAG_RE = re.compile(r"([A-J]\d{1,2})\.?\s+(?=\S)")
+
+
+def _strip_fused_question_tag(table_lines: list[str]) -> tuple[list[str], str | None]:
+    """Remove a margin question tag that was joined to every row label.
+
+    The same margin tag that can arrive as its own column (see
+    _strip_question_tag_column) can also be glued to the front of the label
+    cell:
+
+        | B2 Nonresident aliens | 26 | 65 | 74 |
+
+    "b2 nonresident aliens" matches no schema row, so College of Southern
+    Idaho 2011-12 kept only one of the three B2 columns. The tag is removed
+    only when at least three rows carry it and every filled label cell
+    starts with the same one, so a table in which only some labels begin
+    with a reference ("C1 applicants ...") is left alone. A table whose
+    every row starts with its own question's tag is stripped too; the rows
+    read the same without it.
+
+    Returns the lines and the tag that was removed, or None.
+    """
+    firsts = []
+    for tl in table_lines:
+        if _TABLE_SEPARATOR_RE.match(tl):
+            continue
+        cells = tl.split("|")[1:-1]
+        if cells and cells[0].strip():
+            firsts.append(cells[0].strip())
+    matches = [_FUSED_ROW_TAG_RE.match(first) for first in firsts]
+    if len(firsts) < 3 or not all(matches):
+        return table_lines, None
+    tags = {m.group(1) for m in matches}
+    if len(tags) != 1:
+        return table_lines, None
+
+    out = []
+    for tl in table_lines:
+        cells = tl.split("|")[1:-1]
+        if _TABLE_SEPARATOR_RE.match(tl) or not cells or not cells[0].strip():
+            out.append(tl)
+            continue
+        cells[0] = " " + _FUSED_ROW_TAG_RE.sub("", cells[0].strip(), count=1) + " "
+        out.append("|" + "|".join(cells) + "|")
+    return out, tags.pop()
+
+
 def _parse_markdown_tables(markdown: str) -> list[dict]:
     """Extract every markdown table as a list of {section, rows} dicts.
 
@@ -454,6 +501,8 @@ def _parse_markdown_tables(markdown: str) -> list[dict]:
                 continue
 
             table_lines, question_tag = _strip_question_tag_column(table_lines)
+            if question_tag is None:
+                table_lines, question_tag = _strip_fused_question_tag(table_lines)
 
             # Parse the nominal header row, then decide whether it's really
             # a header or a data row. Aims-style CDS tables often omit a
@@ -1499,20 +1548,55 @@ def resolve_b2_race(
             {"cohort": "All", "category": "Degree-seeking"},
             {"cohort": "All", "category": "All"},
         ]
+        wrapped_label = ""
         for raw_line in b2_block.splitlines():
             nums = re.findall(r"\b\d[\d,]*\b", raw_line)
             if len(nums) != 3:
+                # A long label can wrap in the text layer:
+                #   Native Hawaiian or other Pacific Islander, non-
+                #   Hispanic                          4       9       9
+                # Keep the first half, or the second is read as the Hispanic
+                # row (UNC 2024-25, College of Southern Idaho 2011-12). Only
+                # the start of a real row label is kept: a wrapped column
+                # title or instruction line that begins "Total ..." or
+                # "Hispanic/Latino ..." must not capture the row below it.
+                text = raw_line.strip()
+                text_norm = _normalize_label(_LEADING_QUESTION_TAG_RE.sub("", text))
+                wrapped_label = (
+                    text
+                    if not nums
+                    and len(text_norm) >= 6
+                    and _WRAP_OPEN_END_RE.search(text)
+                    and any(
+                        f["_q_norm"] != text_norm and f["_q_norm"].startswith(text_norm)
+                        for f in all_b2
+                    )
+                    else ""
+                )
                 continue
             first_num = re.search(r"\b\d[\d,]*\b", raw_line)
             if not first_num:
                 continue
-            label_norm = _normalize_label(raw_line[:first_num.start()])
-            qns = [_match_b2_label(all_b2, label_norm, key) for key in b2_keys]
+            # Markdown table rows keep their leading "|", match no schema
+            # row here, and are left to the table reader below, which copes
+            # with blank cells.
+            label = raw_line[:first_num.start()].strip()
+            candidates = [f"{wrapped_label} {label}", label] if wrapped_label else [label]
+            wrapped_label = ""
+            qns: list[str | None] = []
+            for candidate in candidates:
+                # The margin tag ("B2") can sit in front of every row label.
+                label_norm = _normalize_label(_LEADING_QUESTION_TAG_RE.sub("", candidate))
+                qns = [_match_b2_label(all_b2, label_norm, key) for key in b2_keys]
+                if all(qns):
+                    break
             if not all(qns):
                 continue
             for qn, raw_value in zip(qns, nums):
                 value = _extract_number(raw_value)
-                if qn and value is not None:
+                # First row wins: a stray second half of a wrapped label must
+                # not replace a row already read.
+                if qn and value is not None and qn not in out:
                     out[qn] = {"value": value, "source": "tier4_cleaner"}
         if out:
             return out
