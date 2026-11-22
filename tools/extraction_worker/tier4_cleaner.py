@@ -511,6 +511,37 @@ def _join_hyphen_breaks(text: str) -> str:
     return "\n".join(out)
 
 
+# A CDS workbook printed to PDF from Excel can write every space as U+00A0 and
+# every hyphen as U+2010 (Saint Joseph's 2023-24: 11,674 and 579 of them). No
+# row pattern expects either, so each is replaced by its ASCII twin.
+_TEXT_LAYER_CHARACTERS = str.maketrans({"\u00a0": " ", "\u2010": "-", "\u2011": "-"})
+
+# The same workbooks print a count with one decimal: "13,263.0". Readers that
+# split a line into numbers took that as 13,263 and 0, which put Iowa State
+# 2023-24's full-time women at 0 and its part-time women at 10,848.
+_GROUPED_WHOLE_DECIMAL_RE = re.compile(r"(?<![\d.,])\d{1,3}(?:,\d{3})+\.0(?![\d.])")
+# A whole number with ".0" that stands as a cell: after a column gap, a table
+# pipe or another cell, and before a gap, a pipe or the line end. Numbers
+# inside a sentence ("a GPA of 4.0") are not cells.
+_WHOLE_DECIMAL_CELL_RE = re.compile(
+    r"(?:^|(?<=\s\s)|(?<=\d )|(?<=\| ))(\$?\d[\d,]*)\.0(?=\s|\||$)", re.MULTILINE
+)
+# Three counts in the thousands printed that way mark the document as one of
+# these workbooks. An ordinary CDS has none.
+_MIN_GROUPED_WHOLE_DECIMALS = 3
+
+
+def _strip_whole_number_decimals(text: str) -> str:
+    """Drop the ".0" from whole-number cells of an Excel-printed workbook.
+
+    The two characters become spaces, so every later column keeps its
+    position. Text without the workbook's signature is returned unchanged.
+    """
+    if len(_GROUPED_WHOLE_DECIMAL_RE.findall(text)) < _MIN_GROUPED_WHOLE_DECIMALS:
+        return text
+    return _WHOLE_DECIMAL_CELL_RE.sub(lambda m: m.group(1) + "  ", text)
+
+
 def _pad_first_gap(segment: str, owed: int) -> tuple[str, int]:
     """Insert `owed` spaces at the first run of two or more spaces."""
     gap = re.search(r" {2,}", segment) if owed else None
@@ -7671,8 +7702,11 @@ def clean(
     resolver stage. Pass a pre-built SchemaIndex to share it across many
     clean() calls (e.g. batch survey runs).
     """
+    markdown = _strip_whole_number_decimals(markdown)
     markdown = _remove_fill_in_blanks(markdown)
     if supplemental_text:
+        supplemental_text = supplemental_text.translate(_TEXT_LAYER_CHARACTERS)
+        supplemental_text = _strip_whole_number_decimals(supplemental_text)
         supplemental_text = _remove_fill_in_blanks(supplemental_text, keep_width=True)
         supplemental_text = _join_hyphen_breaks(supplemental_text)
     markdown = _collapse_doubled_cells(markdown)
