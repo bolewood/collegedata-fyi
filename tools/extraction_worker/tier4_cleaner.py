@@ -2339,9 +2339,16 @@ def _b1_rollup_qn(label_norm: str, schema: SchemaIndex | None = None) -> str | N
     )
     if "grand total all students" in label_norm:
         return "B.195" if interleaved else "B.178"
-    if "total all undergraduates" in label_norm:
+    # The 2023-24 workbook words these two "Total of all ... students enrolled".
+    if (
+        "total all undergraduates" in label_norm
+        or "total of all undergraduate students enrolled" in label_norm
+    ):
         return "B.193" if interleaved else "B.176"
-    if "total all graduate" in label_norm:
+    if (
+        "total all graduate" in label_norm
+        or "total of all graduate students enrolled" in label_norm
+    ):
         return "B.194" if interleaved else "B.177"
     return None
 
@@ -2595,6 +2602,45 @@ def _resolve_b1_field_id_rows(markdown: str, schema: SchemaIndex) -> dict[str, d
     return out
 
 
+_WHOLE_DECIMAL_COUNT_RE = re.compile(r"(?<![\d.,])(\d[\d,]*)\.0(?![\d.])")
+
+_B1_GRID_GENDERS = (
+    ("another gender", "Another Gender"),
+    ("women", "Females"),
+    ("men", "Males"),
+    ("unknown", "Unknown"),
+)
+
+
+def _b1_gender_major_columns(block: str) -> list[str]:
+    """Sexes of a B1 grid whose columns run sex by sex, each split into
+    full-time and part-time (the 2023-24 CDS workbook):
+
+                    Men                 Women            Another Gender
+            Full Time  Part Time  Full Time  Part Time  Full Time  Part Time
+
+    Returns them in column order, or [] when the grid is not laid out so.
+    """
+    lines = [line for line in block.splitlines() if line.strip()]
+    for index, line in enumerate(lines):
+        pairs = len(re.findall(r"full time part time", _normalize_label(line)))
+        if pairs < 2:
+            continue
+        for above in reversed(lines[max(0, index - 3):index]):
+            above_norm = _normalize_label_without_gender_rewrite(above)
+            found = []
+            for token, gender in _B1_GRID_GENDERS:
+                match = re.search(rf"\b{token}\b", above_norm)
+                if match:
+                    found.append((match.start(), gender))
+                    above_norm = above_norm.replace(token, " " * len(token), 1)
+            # The line must name sexes and nothing else: the section title
+            # "B1. Institutional Enrollment - Men and Women" is not a header.
+            if len(found) == pairs and not above_norm.strip():
+                return [gender for _, gender in sorted(found)]
+    return []
+
+
 def _resolve_b1_compact_full_part_time_grid(block: str, schema: SchemaIndex) -> dict[str, dict]:
     """Parse OCR layout where FT and PT B1 columns are side-by-side."""
     if "full time part time" not in _normalize_label(block):
@@ -2603,6 +2649,7 @@ def _resolve_b1_compact_full_part_time_grid(block: str, schema: SchemaIndex) -> 
     out: dict[str, dict] = {}
     student_group: str | None = None
     pending_label = ""
+    gender_major = _b1_gender_major_columns(block)
 
     for raw_line in block.splitlines():
         line = raw_line.strip().strip("_").strip()
@@ -2610,6 +2657,13 @@ def _resolve_b1_compact_full_part_time_grid(block: str, schema: SchemaIndex) -> 
             continue
         line_norm = _normalize_label(line)
 
+        if gender_major and line_norm in ("undergraduate students", "graduate students"):
+            # The workbook heads each half of the grid with a banner line.
+            student_group = (
+                "Undergraduates" if line_norm.startswith("under") else "Graduates"
+            )
+            pending_label = ""
+            continue
         if "undergraduate students undergraduate students" in line_norm:
             student_group = "Undergraduates"
             pending_label = ""
@@ -2619,6 +2673,11 @@ def _resolve_b1_compact_full_part_time_grid(block: str, schema: SchemaIndex) -> 
             pending_label = ""
             continue
 
+        if gender_major:
+            # Every cell of this grid is a count. A workbook whose only
+            # decimals are its sum cells ("0.0") has no ".0" signature, so
+            # the decimal is dropped here as well.
+            line = _WHOLE_DECIMAL_COUNT_RE.sub(r"\1", line)
         nums = re.findall(r"\b\d[\d,]*\b", line)
         if not nums:
             if (
@@ -2639,7 +2698,12 @@ def _resolve_b1_compact_full_part_time_grid(block: str, schema: SchemaIndex) -> 
             continue
         label = line[:first_num.start()].strip()
         if pending_label:
-            label = f"{pending_label} {label}".strip()
+            if gender_major and _normalize_label(label).startswith("total "):
+                # The rows above were blank (a school with no graduate
+                # students): their labels are not part of this total's.
+                pass
+            else:
+                label = f"{pending_label} {label}".strip()
             pending_label = ""
         label_norm = _normalize_label(label)
 
@@ -2667,7 +2731,16 @@ def _resolve_b1_compact_full_part_time_grid(block: str, schema: SchemaIndex) -> 
             continue
 
         grid_values: list[tuple[str, str, str]] = []
-        if len(nums) >= 6:
+        if gender_major:
+            # A row with a blank cell has too few numbers to place.
+            if len(nums) != 2 * len(gender_major):
+                continue
+            grid_values = [
+                (unit_load, gender, nums[2 * position + offset])
+                for position, gender in enumerate(gender_major)
+                for offset, unit_load in enumerate(("FT", "PT"))
+            ]
+        elif len(nums) >= 6:
             grid_values = [
                 ("FT", "Males", nums[0]),
                 ("FT", "Females", nums[1]),
@@ -2713,7 +2786,8 @@ def _resolve_b1_layout(markdown: str, schema: SchemaIndex) -> dict[str, dict]:
     out: dict[str, dict] = {}
     block = _section_between(
         markdown,
-        r"\bB1\b\.?\s+Institutional Enrollment",
+        # Northeastern Illinois 2023-24 prints "B1. Institutional Enrollmen".
+        r"\bB1\b\.?\s+Institutional Enrollmen",
         r"\bB2\b\.?\s+Enrollment by Racial/Ethnic Category",
     )
     if not block:
