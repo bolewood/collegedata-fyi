@@ -3234,6 +3234,31 @@ _OTHER_QUESTION_START_RE = re.compile(
 )
 
 
+# Row labels of the 2023-24 workbook's C1 table by sex, which has one column
+# per sex: "Total first-time, first-year students who applied in Fall 2023",
+# "... students admitted in Fall 2023", "Full-time, first-time, first-year
+# students enrolled in Fall 2023".
+_C1_SENTENCE_ROW_RE = re.compile(
+    r"(total|full time|part time) first time first year students"
+    r" (?:who )?(applied|were admitted|admitted|enrolled)(?: in fall \d{4})?"
+)
+
+
+def _c1_sentence_row(label_norm: str) -> tuple[str, str] | None:
+    """(stage, unit load) of such a row. The row for everyone who enrolled
+    comes back with unit load "All"."""
+    match = _C1_SENTENCE_ROW_RE.fullmatch(label_norm)
+    if not match:
+        return None
+    prefix, stage = match.groups()
+    stage = "admitted" if "admitted" in stage else stage
+    if prefix == "total":
+        return stage, "All"
+    if stage != "enrolled":
+        return None
+    return stage, "FT" if prefix == "full time" else "PT"
+
+
 def _is_c1_residency_header(header_norm: str) -> bool:
     """True for the C1 residency column header line (Total, In-State,
     Out-of-State, International, Unknown), including wrapped variants such as
@@ -3996,6 +4021,7 @@ def resolve_c1_applications(
                     "full time enrolled",
                     "part time enrolled",
                 }
+                or _c1_sentence_row(_normalize_label(r["label"])) is not None
                 for r in table["rows"][:8]
             )
         )
@@ -4043,9 +4069,15 @@ def resolve_c1_applications(
             saw_total_enrolled = False
             for row in table["rows"]:
                 label_norm = _normalize_label(row["label"])
+                sentence_row = _c1_sentence_row(label_norm)
+                if sentence_row == ("enrolled", "All"):
+                    label_norm = "enrolled"
+                    sentence_row = None
                 if is_enrollment_status_table:
                     action = "enrolled"
                     unit_load = "FT" if label_norm == "full time" else "PT"
+                elif sentence_row:
+                    action, unit_load = sentence_row
                 elif label_norm == "applied":
                     action = "applied"
                     unit_load = "All"
@@ -4132,12 +4164,29 @@ def resolve_c1_applications(
                     and label_norm in {"applied", "admitted", "enrolled"}
                 ):
                     action = label_norm
+                if not action and re.fullmatch(
+                    # The 2023-24 workbook's third row has no "who".
+                    r"total first time first year(?: degree seeking)?(?: students)? enrolled",
+                    label_norm,
+                ):
+                    action = "enrolled"
                 if not action:
                     continue
-                for col_idx, res in col_to_res:
-                    if col_idx >= len(row["values"]):
-                        continue
-                    num = _extract_number(row["values"][col_idx])
+                cells = {
+                    res: _extract_number(row["values"][col_idx])
+                    for col_idx, res in col_to_res
+                    if col_idx < len(row["values"])
+                }
+                if (
+                    len(cells) > 1
+                    and cells.get("All") is not None
+                    and float(cells["All"]) == 0
+                    and all(num is None for res, num in cells.items() if res != "All")
+                ):
+                    # The workbook's Total cell is a sum. Over cells left
+                    # blank it prints 0, which is not a count of anyone.
+                    continue
+                for res, num in cells.items():
                     if num is None:
                         continue
                     qn = _lookup("All", res, action)
