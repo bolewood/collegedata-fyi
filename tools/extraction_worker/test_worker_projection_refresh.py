@@ -13,7 +13,9 @@ from worker import (
     extraction_run_exit_code,
     extraction_success,
     is_failure_action,
+    field_collapse_action,
     field_regression_action,
+    is_field_collapse,
     headline_fields_lost,
     headline_regression_action,
     table_regression_action,
@@ -98,6 +100,78 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
         # Nothing to compare with.
         self.assertFalse(is_field_regression(None, 10))
         self.assertFalse(is_field_regression(0, 0))
+
+    def test_field_collapse_holds_a_result_that_would_be_served_with_under_half_the_fields(self):
+        import worker
+
+        def row(producer, fields, created_at, schema_version="2024-25", **extra):
+            return dict(id=producer + created_at, producer=producer, fields=fields, created_at=created_at,
+                        schema_version=schema_version, **extra)
+
+        def new(producer, fields, schema_version="2024-25"):
+            return {"producer": producer, "schema_version": schema_version, "schema_fallback_used": False,
+                    "stats": {"schema_fields_populated": fields}}
+
+        # Northern Michigan: a re-extraction routed to the workbook reader.
+        tier4_served = _FakeClient([row("tier4_docling", 568, "2026-05-11T17:10:47+00:00"),
+                                    row("tier4_docling", 473, "2026-05-11T16:41:58+00:00")])
+        action = field_collapse_action(tier4_served, "doc", "tier1", new("tier1_xlsx", 124), "2024-25")
+        self.assertEqual(
+            action,
+            "tier1_field_regression (124 < 568 fields, under half of the extraction being served; "
+            "that extraction is kept)",
+        )
+        self.assertTrue(is_failure_action(action))
+        # Half or more is not a collapse; the Tier 4 guards handle smaller losses.
+        self.assertIsNone(field_collapse_action(tier4_served, "doc", "tier1", new("tier1_xlsx", 284), "2024-25"))
+        self.assertTrue(is_field_collapse(229, 114))
+        self.assertFalse(is_field_collapse(229, 115))
+        # A stub or a blank template is what a re-extraction should replace.
+        self.assertFalse(is_field_collapse(49, 0))
+        stub = _FakeClient([row("tier4_docling", 49, "2026-05-11T17:10:47+00:00")])
+        self.assertIsNone(field_collapse_action(stub, "doc", "tier1", new("tier1_xlsx", 8), "2024-25"))
+        # A first extraction.
+        self.assertIsNone(field_collapse_action(_FakeClient([]), "doc", "tier1", new("tier1_xlsx", 8), "2024-25"))
+
+        # The projection serves by producer before recency. An older workbook
+        # extraction is what is served, not the newer, fuller PDF one, so a
+        # workbook re-run close to it is not a collapse ...
+        workbook_served = _FakeClient([row("tier1_xlsx", 300, "2026-04-01T00:00:00+00:00"),
+                                       row("tier4_docling", 600, "2026-06-01T00:00:00+00:00")])
+        self.assertIsNone(field_collapse_action(workbook_served, "doc", "tier1", new("tier1_xlsx", 280), "2024-25"))
+        # ... and a small one is, even though the newest artifact is a stub.
+        newest_is_stub = _FakeClient([row("tier1_xlsx", 300, "2026-04-01T00:00:00+00:00"),
+                                      row("tier4_docling", 40, "2026-06-01T00:00:00+00:00")])
+        self.assertIsNotNone(field_collapse_action(newest_is_stub, "doc", "tier1", new("tier1_xlsx", 10), "2024-25"))
+        # A PDF result that would be stored but not served loses nothing visible.
+        self.assertIsNone(field_collapse_action(workbook_served, "doc", "tier4", new("tier4_docling", 100), "2024-25"))
+        # A result under the fallback schema does not displace one under the document's own.
+        fallback = dict(new("tier1_xlsx", 100), schema_fallback_used=True)
+        self.assertIsNone(field_collapse_action(tier4_served, "doc", "tier1", fallback, "2024-25"))
+
+        # Ranking goes by the document's year, not the schema the result was
+        # read under. A 2026-27 workbook on the 2025-26 form is read as
+        # 2025-26; the projection keeps serving the PDF extraction under
+        # 2026-27, so the small workbook result is stored, not held.
+        own_year_served = _FakeClient([row("tier4_docling", 300, "2026-10-01T00:00:00+00:00", "2026-27")])
+        on_older_form = new("tier1_xlsx", 100, schema_version="2025-26")
+        self.assertIsNone(field_collapse_action(own_year_served, "doc", "tier1", on_older_form, "2026-27"))
+        # Under its own year the same result would be served, and is held.
+        self.assertIsNotNone(
+            field_collapse_action(own_year_served, "doc", "tier1", new("tier1_xlsx", 100, "2026-27"), "2026-27")
+        )
+        # An older row with no schema_version column is ranked by the year in its notes.
+        noted_year = _FakeClient([row("tier4_docling", 300, "2026-05-01T00:00:00+00:00", None,
+                                      notes_schema_version="2024-25"),
+                                  row("tier4_docling", 60, "2026-06-01T00:00:00+00:00", "2025-26")])
+        self.assertIsNotNone(field_collapse_action(noted_year, "doc", "tier4", new("tier4_docling", 100), "2024-25"))
+
+        # The override.
+        worker.ACCEPT_FIELD_LOSS = True
+        try:
+            self.assertIsNone(field_collapse_action(tier4_served, "doc", "tier1", new("tier1_xlsx", 124), "2024-25"))
+        finally:
+            worker.ACCEPT_FIELD_LOSS = False
 
     def test_field_regression_action_holds_only_a_same_file_loss(self):
         import worker
@@ -295,6 +369,21 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
         respelled = {f"C.9{n:02d}": {"value": float(f"{n}.7")} for n in range(1, 9)}
         self.assertEqual(tables_lost(percents, respelled), {})
         self.assertEqual(tables_lost({"C.901": {"value": "nan"}, "C.902": {"value": "(5)"}}, {}), {})
+
+        # A month and a day that an older extraction kept in two fields are
+        # still there when the new one holds them as one date (issue #421).
+        month_day = {f"D.9{n:02d}": {"value": v} for n, v in zip(
+            (9, 10, 13, 14, 17, 18, 21, 22), ("3", "01", "11", "1", "5", "15", "12", "20"))}
+        dates = {"D.905": {"value": "3/1"}, "D.907": {"value": "11/1"}, "D.909": {"value": "5/15"},
+                 "D.911": {"value": "12/20"}}
+        self.assertEqual(tables_lost(month_day, dates), {})
+        self.assertEqual(tables_lost(month_day, {"D.905": {"value": "3/1"}}), {"D9": (6, 8)})
+        # ... in the date's own table only. Dates in C14 to C22 do not stand
+        # in for C5's unit counts.
+        c5 = {f"C.5{n:02d}": {"value": v} for n, v in enumerate("44332112", start=1)}
+        c_dates = {"C.1402": {"value": "4/4"}, "C.1403": {"value": "3/3"}, "C.1602": {"value": "2/1"},
+                   "C.2104": {"value": "1/2"}}
+        self.assertEqual(tables_lost(c5, c_dates), {"C5": (8, 8)})
 
         # Section A is never compared, and nothing to compare means no loss.
         self.assertEqual(tables_lost({f"A.1{n:02d}": {"value": str(900 + n)} for n in range(1, 9)}, {}), {})

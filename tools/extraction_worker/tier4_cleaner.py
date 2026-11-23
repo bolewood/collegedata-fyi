@@ -943,6 +943,8 @@ _C1_GENDERLESS_TOTAL_QNS = frozenset({"C.116", "C.117", "C.118"})
 # (test_schema_2026_27.py checks that against the two schema files), so the
 # hand-coded 2025-26 maps and the section A numbering apply to it unchanged.
 _NUMBERED_LIKE_2025_26 = frozenset({"2025-26", "2026-27"})
+# The two forms with their own schema that are numbered differently.
+_OLDER_FORM_YEARS = frozenset({"2023-24", "2024-25"})
 
 # 2026-27 adds a Total row to the C1 table by sex. Its fields carry the same
 # dimensions (all sexes, all residencies) as the residency table's Total column
@@ -7376,13 +7378,26 @@ _D2_ROW_BASES = [
     ("enrolled",   208),   # D.209-D.212
 ]
 
-# Column header fragment → gender slot index (1=men, 2=women, 3=unknown, 4=total)
+# Column header fragment → gender slot index (1=men, 2=women, 3=unknown, 4=total).
+# "women" is tested before "men", which it contains: in the other order the
+# Women column was read as a second Men column and dropped.
 _D2_COL_GENDERS = [
     ("another gender", 3),
     ("unknown",        3),
-    ("men",            1),
     ("women",          2),
+    ("men",            1),
     ("total",          4),
+]
+
+# The 2023-24 and 2024-25 forms have five D2 rows per column: men, women,
+# another gender, unknown (2024-25 only) and total.
+_D2_ROW_BASES_OLDER_FORM = [("applicants", 200), ("admitted", 205), ("enrolled", 210)]
+_D2_COL_GENDERS_OLDER_FORM = [
+    ("another gender", 3),
+    ("unknown",        4),
+    ("women",          2),
+    ("men",            1),
+    ("total",          5),
 ]
 
 
@@ -7404,6 +7419,14 @@ def resolve_d_transfer(
     tables: list[dict], markdown: str, schema: SchemaIndex
 ) -> dict[str, dict]:
     out: dict[str, dict] = {}
+    # D2 is numbered by the document's own form. 2023-24 has no "Unknown"
+    # row, so a number is written only where the schema has the field.
+    older_form = schema.schema_version in _OLDER_FORM_YEARS
+    d2_row_bases = _D2_ROW_BASES_OLDER_FORM if older_form else _D2_ROW_BASES
+    d2_col_genders = _D2_COL_GENDERS_OLDER_FORM if older_form else _D2_COL_GENDERS
+    d2_schema_qns = {
+        f["question_number"] for f in schema.fields if re.fullmatch(r"D\.2\d\d", f["question_number"])
+    }
 
     d_full = _section_between(
         markdown,
@@ -7426,12 +7449,21 @@ def resolve_d_transfer(
         if d102:
             out["D.102"] = {"value": d102, "source": "tier4_cleaner"}
 
-        d2_rows = [
-            (r"\bM\s*en\b", ("D.201", "D.205", "D.209")),
-            (r"\bW\s*omen\b", ("D.202", "D.206", "D.210")),
-            (r"\bAnother\s+Gender\b", ("D.203", "D.207", "D.211")),
-            (r"\bTotal\b", ("D.204", "D.208", "D.212")),
-        ]
+        if schema.schema_version in _OLDER_FORM_YEARS:
+            d2_rows = [
+                (r"\bM\s*en\b", ("D.201", "D.206", "D.211")),
+                (r"\bW\s*omen\b", ("D.202", "D.207", "D.212")),
+                (r"\bAnother\s+Gender\b", ("D.203", "D.208", "D.213")),
+                (r"\bUnknown\b", ("D.204", "D.209", "D.214")),
+                (r"\bTotal\b", ("D.205", "D.210", "D.215")),
+            ]
+        else:
+            d2_rows = [
+                (r"\bM\s*en\b", ("D.201", "D.205", "D.209")),
+                (r"\bW\s*omen\b", ("D.202", "D.206", "D.210")),
+                (r"\bAnother\s+Gender\b", ("D.203", "D.207", "D.211")),
+                (r"\bTotal\b", ("D.204", "D.208", "D.212")),
+            ]
         d2_section = _section_between(d_block, r"D2\b", r"D3-D11\b")
         for row_re, qns in d2_rows:
             match = re.search(
@@ -7441,7 +7473,8 @@ def resolve_d_transfer(
             )
             if match:
                 for qn, raw in zip(qns, match.groups()):
-                    out[qn] = {"value": raw.replace(",", ""), "source": "tier4_cleaner"}
+                    if qn in d2_schema_qns:
+                        out[qn] = {"value": raw.replace(",", ""), "source": "tier4_cleaner"}
 
         if re.search(r"(?:^|\n)\s*[✔xX]\s+Fall\b", d_block, re.IGNORECASE):
             out["D.301"] = {"value": "X", "source": "tier4_cleaner"}
@@ -7673,8 +7706,14 @@ def resolve_d_transfer(
         # multiple; first rule wins (order above picks "another gender"
         # before "unknown" which aliases to slot 3).
         col_to_slot: list[tuple[int, int]] = []
+        raw_headers = [str(h).lower() for h in table.get("headers", [])]
         for ci, hdr in enumerate(hdr_norm[1:]):
-            for frag, slot in _D2_COL_GENDERS:
+            # _normalize_label turns "another gender" into "unknown". The
+            # older forms have both columns, so tell them apart on the raw
+            # header there.
+            if older_form and "another gender" in raw_headers[ci + 1]:
+                hdr = "another gender"
+            for frag, slot in d2_col_genders:
                 if frag in hdr:
                     col_to_slot.append((ci, slot))
                     break
@@ -7685,7 +7724,7 @@ def resolve_d_transfer(
         for row in table["rows"]:
             label_norm = _normalize_label(row["label"])
             matched_base = None
-            for substr, base in _D2_ROW_BASES:
+            for substr, base in d2_row_bases:
                 if substr in label_norm:
                     matched_base = base
                     break
@@ -7698,7 +7737,7 @@ def resolve_d_transfer(
                 if num is None:
                     continue
                 qn = f"D.{matched_base + slot}"
-                if qn not in out:
+                if qn not in out and qn in d2_schema_qns:
                     out[qn] = {"value": num, "source": "tier4_cleaner"}
 
     return out
@@ -8114,6 +8153,127 @@ def apply_h2a_range_guards(values: dict[str, dict]) -> None:
         values.pop("H.2A02", None)
 
 
+# --- 2023-24 and 2024-25 form numbering for policy and date tables ----------
+#
+# The resolvers below number these tables by the 2025-26 form. The two older
+# forms number them differently, and where 2025-26 has a month field and a
+# day field the older forms have one date field. Read under an older schema,
+# a 2025-26 number is a different question: of 290 published 2024-25 PDF
+# extractions, 141 had "X" in H.901 (a date), 153 had a bare month in C.1402
+# and 172 a bare month in D.909. `_claims_in_older_form` moves each claim to
+# the older form's field.
+#
+# Section A, B1, C1, C21, D2 and H1 are numbered per year where they are read
+# and are not listed here.
+
+# 2025-26 number -> older number, for a value that means the same in both.
+_OLDER_FORM_SAME_VALUE = {
+    # B22: the older forms ask only for the retention percentage.
+    "B.2203": "B.2201",
+    "C.1301": "C.1301", "C.1302": "C.1302", "C.1303": "C.1303",
+    # The resolver's C.1304 is the "Same fee" box, which is C.1304 there too.
+    "C.1304": "C.1304", "C.1305": "C.1307",
+    "C.1401": "C.1401",
+    "C.1601": "C.1601", "C.1604": "C.1603", "C.1607": "C.1605",
+    "C.1704": "C.1702", "C.1705": "C.1703", "C.1707": "C.1704",
+    # The resolver's C.1712 is the "Yes, in full" box.
+    "C.1711": "C.1707", "C.1712": "C.1708",
+    "C.2201": "C.2201", "C.2206": "C.2204",
+    # D9 rolling admission, by term.
+    "D.933": "D.917", "D.934": "D.918", "D.935": "D.919", "D.936": "D.920",
+    "D.2201": "D.2202",
+    # E1/E3 "Other": the older forms have one text field, 2025-26 a box
+    # and a text field.
+    "E.120": "E.119", "E.314": "E.313",
+    "F.302": "F.303", "F.304": "F.304", "F.305": "F.307", "F.307": "F.310",
+    "G.601": "G.601", "G.602": "G.603", "G.603": "G.604", "G.604": "G.605", "G.605": "G.606",
+    "H.701": "H.7101", "H.702": "H.7102", "H.704": "H.7103",
+    "H.907": "H.903",
+    "H.1103": "H.1102",
+}
+
+# Older date field -> the 2025-26 month and day fields it holds together.
+_OLDER_FORM_DATE = {
+    "C.1402": ("C.1402", "C.1403"), "C.1403": ("C.1404", "C.1405"),
+    "C.1602": ("C.1602", "C.1603"), "C.1604": ("C.1605", "C.1606"),
+    "C.1701": ("C.1702", "C.1703"), "C.1706": ("C.1709", "C.1710"),
+    "C.2202": ("C.2202", "C.2203"), "C.2203": ("C.2204", "C.2205"),
+    # D9: priority, closing, notification and reply dates, four terms each.
+    **{f"D.{901 + i}": (f"D.{901 + 2 * i}", f"D.{902 + 2 * i}") for i in range(16)},
+    "H.901": ("H.902", "H.903"), "H.902": ("H.905", "H.906"),
+    "H.1001": ("H.1002", "H.1003"), "H.1003": ("H.1005", "H.1006"),
+    "H.1101": ("H.1101", "H.1102"),
+}
+
+# F3: 2025-26 has one field per service saying where ROTC is offered; the
+# older forms have a box for each place. (on campus, at cooperating institution)
+_OLDER_FORM_ROTC_PLACE = {
+    "F.301": ("F.301", "F.302"),
+    "F.303": ("F.305", "F.306"),
+    "F.306": ("F.308", "F.309"),
+}
+
+# A claim numbered in one of these tables that the maps above do not place
+# has no field in the older forms (the 2025-26 "a date is given" boxes, for
+# one) and is dropped.
+_OLDER_FORM_TABLE_RE = re.compile(
+    r"B\.22\d\d|C\.8G07|C\.1[3467]\d\d|C\.22\d\d|D\.9\d\d|D\.22\d\d"
+    r"|E\.1(?:19|20)|E\.31[34]|F\.3\d\d|G\.6\d\d|H\.7\d\d|H\.9\d\d|H\.1[01]\d\d"
+)
+
+
+def _claims_in_older_form(claims: dict[str, dict], schema: SchemaIndex) -> dict[str, dict]:
+    """Re-express a resolver's 2025-26-numbered claims for a 2023-24 or
+    2024-25 document. Claims outside the listed tables pass through."""
+    if schema.schema_version not in _OLDER_FORM_YEARS:
+        return claims
+    own = {field["question_number"] for field in schema.fields}
+    out = {qn: rec for qn, rec in claims.items() if not _OLDER_FORM_TABLE_RE.fullmatch(qn)}
+
+    def put(qn: str, value: str, like: dict) -> None:
+        if qn in own:
+            out.setdefault(qn, {**like, "value": value})
+
+    for qn, target in _OLDER_FORM_SAME_VALUE.items():
+        if qn in claims:
+            put(target, claims[qn]["value"], claims[qn])
+    for target, (month_qn, day_qn) in _OLDER_FORM_DATE.items():
+        month, day = claims.get(month_qn), claims.get(day_qn)
+        if not month or not day:
+            continue
+        month_text, day_text = str(month["value"]).strip(), str(day["value"]).strip()
+        if (
+            month_text.isdigit() and day_text.isdigit()
+            and 1 <= int(month_text) <= 12 and 1 <= int(day_text) <= 31
+        ):
+            put(target, f"{int(month_text)}/{int(day_text)}", month)
+    for qn, (on_campus, cooperating) in _OLDER_FORM_ROTC_PLACE.items():
+        place = str(claims.get(qn, {}).get("value", "")).strip().lower()
+        if place.startswith("on campus"):
+            put(on_campus, "X", claims[qn])
+        elif place.startswith("at cooperating"):
+            put(cooperating, "X", claims[qn])
+    # H10 rolling notification is a tick box in 2025-26 and Yes/No before.
+    if str(claims.get("H.1004", {}).get("value", "")).strip().upper() == "X":
+        put("H.1002", "Yes", claims["H.1004"])
+    return out
+
+
+# The resolvers that write the tables above with 2025-26 numbers. Others
+# (the checkbox resolver, for one) read the document's own schema and must
+# not be renumbered.
+_RESOLVERS_NUMBERED_BY_2025_26 = (
+    resolve_b22_retention,
+    resolve_c8_entrance_exams,
+    resolve_c13_application_fee,
+    resolve_g_expenses,
+    resolve_h_financial_aid,
+    resolve_d_transfer,
+    resolve_e_academic_offerings,
+    resolve_f_student_life,
+)
+
+
 def clean(
     markdown: str,
     schema: SchemaIndex | None = None,
@@ -8353,6 +8513,8 @@ def clean(
                     new.setdefault(qn, rec)
         if resolver is resolve_a_general:
             new = _a_fields_with_same_question_in_schema(new, idx)
+        if resolver in _RESOLVERS_NUMBERED_BY_2025_26:
+            new = _claims_in_older_form(new, idx)
         for qn, rec in new.items():
             if qn in supplemental_override_qns:
                 values[qn] = rec

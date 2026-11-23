@@ -18633,7 +18633,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://spu.edu/-/media/administration/office-of-institutional-effectiveness/docs/SPU-CDS-2024-2025-finalv2.ashx
+  discovery_seed_url: https://spu.edu/administration/office-of-institutional-effectiveness/common-data-sets
 - id: seattle-university
   name: Seattle University
   domain: seattleu.edu
