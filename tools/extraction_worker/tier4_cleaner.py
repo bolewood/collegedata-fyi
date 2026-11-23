@@ -802,12 +802,11 @@ def _c9_percentile_header_roles(headers_norm: list[str]) -> dict[int, str]:
     for value_idx, header in enumerate(headers_norm[1:]):
         if "mean" in header or "average" in header:
             continue
-        if re.search(r"\b25(?:th)?\b", header):
-            roles[value_idx] = "p25"
-        elif re.search(r"\b50(?:th)?\b", header):
-            roles[value_idx] = "p50"
-        elif re.search(r"\b75(?:th)?\b", header):
-            roles[value_idx] = "p75"
+        # Docling joins a spanning header to the one under it ("50th
+        # Percentile - 25th Percentile Score"): the column's own name is last.
+        named = re.findall(r"\b(25|50|75)(?:th)?\b", header)
+        if named:
+            roles[value_idx] = f"p{named[-1]}"
     return roles
 
 
@@ -5888,6 +5887,16 @@ def _c9_section_text(markdown: str) -> str:
 
 def _c9_percentile_roles_from_context(context: str) -> list[str]:
     def line_roles(line: str) -> list[str]:
+        if line.lstrip().startswith("|"):
+            # A table header row: one role per cell, named last in the cell
+            # when a spanning header was joined in front of it ("50th
+            # Percentile - 25th Percentile Score").
+            roles = []
+            for cell in line.strip().strip("|").split("|"):
+                cell_roles = line_roles(cell)
+                if cell_roles:
+                    roles.append(cell_roles[-1])
+            return roles
         roles: list[str] = []
         for match in re.finditer(
             r"\b(25(?:th)?|50(?:th)?|75(?:th)?)\s+percentile\b|\b(?:average|mean)\b",
