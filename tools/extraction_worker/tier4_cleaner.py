@@ -1787,6 +1787,16 @@ def resolve_b2_race(
         r"\bB2\b\s+Enrollment by Racial/Ethnic Category",
         r"\bB3\b\s+Number of degrees awarded",
     )
+    if not b2_block:
+        # Forms that print "B2. Enrollment ...". Read only between both
+        # headings: without the B3 heading the block would run to the end of
+        # the document, where any "Total" line with three numbers matches.
+        dotted = re.search(
+            r"\bB2\.\s+Enrollment by Racial/Ethnic Category(.*?)\bB3\.\s+(?:Persistence|Number of degrees awarded)",
+            markdown,
+            re.IGNORECASE | re.DOTALL,
+        )
+        b2_block = dotted.group(1) if dotted else ""
     if b2_block:
         b2_keys = [
             {"cohort": "First-time, first-year", "category": "Degree-seeking"},
@@ -1918,6 +1928,9 @@ def _match_b2_label(
 ) -> str | None:
     """Find the schema field in b2_fields whose question matches the row
     label AND whose (cohort, category) matches the column key."""
+    if label_norm == "international nonresidents":
+        # One 2023-24 form prints the first row "International (nonresidents)".
+        label_norm = "nonresidents"
     # Exact match first
     for f in b2_fields:
         if (f["_q_norm"] == label_norm
