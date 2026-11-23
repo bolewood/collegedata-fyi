@@ -71,6 +71,11 @@ class RunCheck(unittest.TestCase):
         self.assertEqual(scoreboard.run_check(check, numbers(C_117=30, C_101=10)), "nc")
         self.assertEqual(scoreboard.run_check(check, numbers(C_101=10, C_102=20)), "nc")
 
+    def test_a_zero_total_beside_filled_rows_is_not_checkable(self) -> None:
+        check = scoreboard.SUM_CHECKS["2024-25"][0]
+        self.assertEqual(scoreboard.run_check(check, numbers(C_117=0, C_101=10, C_102=20)), "nc")
+        self.assertEqual(scoreboard.run_check(check, numbers(C_117=0, C_101=0, C_102=0)), "pass")
+
     def test_second_group_is_used_when_the_first_was_not_read(self) -> None:
         enrolled = next(c for c in scoreboard.SUM_CHECKS["2025-26"] if c.name == "enrolled by sex")
         self.assertEqual(scoreboard.run_check(enrolled, numbers(C_118=50, C_110=20, C_112=25, C_113=5)), "pass")

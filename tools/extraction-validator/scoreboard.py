@@ -178,7 +178,10 @@ SUM_TABLES = ("B1", "C1", "H1")
 
 
 def run_check(check: SumCheck, numbers: dict[str, Decimal]) -> str:
-    """'pass', 'fail' or 'nc' (not checkable)."""
+    """'pass', 'fail' or 'nc' (not checkable).
+
+    A total of 0 beside rows that add to more is an unfilled auto-sum cell,
+    which the projection also ignores: not checkable."""
     total = numbers.get(check.total)
     if total is None:
         return "nc"
@@ -186,7 +189,10 @@ def run_check(check: SumCheck, numbers: dict[str, Decimal]) -> str:
         read = [numbers[r] for r in rows if r in numbers]
         if not read or any(r not in numbers for r in required):
             continue
-        return "pass" if abs(sum(read, Decimal(0)) - total) <= check.tolerance else "fail"
+        row_sum = sum(read, Decimal(0))
+        if total == 0 and row_sum > 0:
+            return "nc"
+        return "pass" if abs(row_sum - total) <= check.tolerance else "fail"
     return "nc"
 
 
@@ -595,7 +601,8 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
             picked = pick_served_artifact(candidates, year, load_notes)
             if picked is not None:
                 values = projection._values_dict(picked.get("notes") or {})
-                schema_version = projection.artifact_schema_version(picked)
+                # An artifact that records no schema is read as the default one, as in the projection.
+                schema_version = projection.artifact_schema_version(picked) or projection.DEFAULT_SCHEMA_VERSION
                 numbers = numbers_from_values(values, definitions.get(schema_version or "") or {}, schema_version)
                 entry.update(producer=picked.get("producer"), version=picked.get("producer_version"),
                              schema_version=schema_version, fields=len(values))
@@ -609,6 +616,12 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
             for metric, key in FEDERAL_KEYS.items()
         }
         entry["sums"] = table_outcomes(entry["schema_version"], numbers)
+        entry["check_numbers"] = {
+            field_id: str(numbers[field_id])
+            for check in SUM_CHECKS.get(entry["schema_version"] or "", [])
+            for field_id in (check.total, *(r for rows, _ in check.groups for r in rows))
+            if field_id in numbers
+        }
         hold = holds.get(document_id)
         if hold and (entry["newest_at"] or "") < hold["at"]:
             entry["hold"] = hold["guard"]
@@ -681,6 +694,7 @@ def aggregate(data: dict[str, Any]) -> dict[str, Any]:
         metrics[f"{key}|tier4_current"] = sum(1 for d in tier4 if d["version"] == current)
         metrics[f"{key}|no_extraction"] = sum(1 for d in docs if not d["producer"])
         metrics[f"{key}|held"] = sum(1 for d in docs if d.get("hold"))
+        metrics[f"{key}|other_schema"] = sum(1 for d in docs if d["producer"] and d["schema_version"] != year)
         metrics[f"{key}|newest_not_served"] = sum(
             1 for d in docs
             if d["producer"] and d["newest_producer"]
@@ -758,8 +772,8 @@ def render(data: dict[str, Any], previous: Optional[dict[str, Any]] = None) -> s
 
     lines += ["", "### 4. Fix reach",
               "", f"| Year | Served | Tier 4 | On {current} | Tier 4, older | Other extractors | No extraction | "
-              "Flagged | Held by a guard | Newest is not the served one |",
-              "|---|---:|---:|---:|---|---|---:|---:|---:|---:|"]
+              "Numbered by another year's form | Flagged | Held by a guard | Newest is not the served one |",
+              "|---|---:|---:|---:|---|---|---:|---:|---:|---:|---:|"]
     for year in data["years"]:
         key = f"{year}|all"
         if f"{key}|docs" not in metrics:
@@ -772,7 +786,7 @@ def render(data: dict[str, Any], previous: Optional[dict[str, Any]] = None) -> s
         lines.append(
             f"| {year} | {len(year_docs):,} | {cell(key + '|tier4')} | {cell(key + '|tier4_current')} | "
             f"{older_text or '–'} | {others_text or '–'} | {cell(key + '|no_extraction')} | "
-            f"{cell(key + '|flagged')} | {cell(key + '|held')} | {cell(key + '|newest_not_served')} |")
+            f"{cell(key + '|other_schema')} | {cell(key + '|flagged')} | {cell(key + '|held')} | {cell(key + '|newest_not_served')} |")
 
     flags = Counter((d["year"], d["flag"]) for d in docs if d["flag"] in HIDDEN_FLAGS)
     if flags:
@@ -784,6 +798,8 @@ def render(data: dict[str, Any], previous: Optional[dict[str, Any]] = None) -> s
             f"{d['school_id']} {d['year']} ({d['hold']})" for d in sorted(held, key=lambda d: (d["year"], d["school_id"]))) + ".")
     elif not data["hold_summaries_read"]:
         lines.append("\nGuard holds are read from local worker run summaries; none were found on this machine.")
+    lines.append("\n\"Numbered by another year's form\": the served extraction's field numbers follow a different "
+                 "year's form than the document's own, so the same number can mean a different question.")
     lines.append("\n\"Newest is not the served one\": the school's year page shows the newest extraction, "
                  "the browser shows the projection's pick, and for these documents the two differ.")
     unread = sum(1 for d in docs if d.get("gap_fill_not_read"))

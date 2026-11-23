@@ -25,6 +25,8 @@ Read-only. For each live, extracted document of 2023-24, 2024-25 and 2025-26 it 
 
 Output: `scratch/extraction-scoreboard/scoreboard-<UTC>.json` (one record per document, for drill-down and deltas) and `.md`. Post the Markdown as a comment on [issue #431](https://github.com/bolewood/collegedata-fyi/issues/431) after every re-extraction batch or cleaner merge. `--from-json` re-renders a saved run; `--limit N` is a smoke test.
 
+Federal figures come from `ipeds_facts` (the unified view keeps only each school's latest year). 2023-24 is not projected, so its figures are computed here the way the projection computes 2024-25; a school's year page shows the newest extraction, which section 4 compares with the projection's pick.
+
 Guard holds are read from local worker `--summary-json` files (`scratch/extraction-drain/local/` by default), so that column is complete only on the machine that ran the re-extractions.
 
 Tests: `python -m unittest discover -s tools/extraction-validator -p "test_*.py"`.
