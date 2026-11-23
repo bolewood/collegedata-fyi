@@ -1,10 +1,33 @@
 # Extraction Quality
 
-*Benchmark tables: May 5, 2026 snapshot. Repair log: updated November 9, 2026.*
+*Current measure: the [extraction scoreboard](#corpus-scoreboard-the-current-measure), from November 23, 2026. Benchmark tables: historical, May 5, 2026 snapshot. Repair log: updated November 9, 2026.*
 
 > **How to read the dates.** The summary table, tier tables, and ground-truth scores below were measured in April and May 2026 and have not been re-run since. They are a dated snapshot, not current counts. For current coverage use [`/coverage`](https://collegedata.fyi/coverage); for pipeline health use [`/pipeline-observation`](https://collegedata.fyi/pipeline-observation). The August 6, 2026 data-integrity audit ([`docs/plans/audit-2026-08-06-final/`](plans/audit-2026-08-06-final/README.md)) counted 6,322 directory institutions, 4,071 archived CDS documents, 262,537 `cds_fields` rows, and 558 `school_browser_rows`; that audit is the later, broader measurement and its counts supersede the May figures. What changed in extraction between June and November 2026 is in [June to November 2026 repairs](#june-to-november-2026-repairs).
 
-This document records current extraction accuracy across our pipeline. It's meant as an honest, calibrated self-assessment, not a marketing page. The numbers here are produced by reproducible scorers you can run yourself against our ground-truth fixtures in [`tools/extraction-validator/`](../tools/extraction-validator/).
+## Corpus scoreboard (the current measure)
+
+One script measures what the site serves, across the corpus, and is re-run after every re-extraction batch or cleaner change:
+
+```bash
+tools/extraction_worker/.venv/bin/python tools/extraction-validator/scoreboard.py
+
+# with the changes since an earlier run
+tools/extraction_worker/.venv/bin/python tools/extraction-validator/scoreboard.py \
+  --compare scratch/extraction-scoreboard/scoreboard-<earlier>.json
+```
+
+For every live, extracted document of CDS years 2023-24, 2024-25 and 2025-26 it takes the extraction the browser projection serves (not the newest artifact) and reports, by year and source format:
+
+1. **Federal match on admissions.** C1 applied, admitted and enrolled against IPEDS for the same fall: within 2%, blank, or present but different.
+2. **Coverage.** Median and 10th-percentile field count per served extraction.
+3. **Internal consistency.** The sums the form defines (B1 totals, C1 by sex against the total, H1 grant and self-help totals): pass, fail, not checkable.
+4. **Fix reach.** Served extractions on the current cleaner version and on each older one, documents a worker guard is holding, and documents hidden behind a quality flag.
+
+The baseline (November 23, 2026) and every later run are posted as comments on [issue #431, "Extraction scoreboard"](https://github.com/bolewood/collegedata-fyi/issues/431). A cleaner change states which of these numbers it expects to move. The script is read-only, paces its reads, and writes its output to `scratch/extraction-scoreboard/`. Guard holds come from the worker run summaries on the machine that ran the re-extraction, so that column is complete only there.
+
+**Everything below this section is historical**: the summary, tier tables and ground-truth scores were measured in April and May 2026 and are kept as a record, not as current numbers.
+
+This document records extraction accuracy across our pipeline as of that snapshot. It's meant as an honest, calibrated self-assessment, not a marketing page. The numbers here are produced by reproducible scorers you can run yourself against our ground-truth fixtures in [`tools/extraction-validator/`](../tools/extraction-validator/).
 
 We report two different kinds of number, because they measure different things:
 
@@ -13,7 +36,7 @@ We report two different kinds of number, because they measure different things:
 
 The gap between the two is where the real work is.
 
-## Summary (May 5, 2026 snapshot)
+## Summary (historical: May 5, 2026 snapshot)
 
 | Measure | Value (May 5, 2026) |
 |---|---|
@@ -91,7 +114,7 @@ A meaningful minority of schools publish fillable PDFs (136 artifacts at the May
 
 Most schools publish their CDS as a flattened PDF. We run Docling over the PDF to produce structured markdown, then apply a schema-targeting cleaner ([`tools/extraction_worker/tier4_cleaner.py`](../tools/extraction_worker/tier4_cleaner.py)) that maps cleaned markdown back to the canonical CDS field IDs.
 
-### Ground-truth scores (post-Phase 6, April 2026)
+### Ground-truth scores (historical: post-Phase 6, April 2026)
 
 Hand-audited against full ground-truth fixtures for three schools:
 
@@ -232,7 +255,7 @@ PDFs. Producer changes, source-provenance crossings, and document-quality
 regressions are explicit event types or severity caps, not silent inputs to a
 "school stopped reporting" claim.
 
-### Corpus-wide coverage by section
+### Corpus-wide coverage by section (historical: April 2026, three documents)
 
 The single-digit averages mask wide section-to-section variance. These numbers are from the three-document benchmark (Harvard, Yale, Dartmouth 2024-25), post-Phase 6 expansion of the cleaner from 72 to ~380 fields:
 
@@ -306,7 +329,7 @@ python tools/extraction-validator/score_tier4.py \
   --id-map tools/extraction-validator/id_maps/harvard-2024-25.yaml
 ```
 
-Corpus-wide surveys are available via [`corpus_survey_tier4.py`](../tools/extraction-validator/corpus_survey_tier4.py).
+The corpus-level measure is [`scoreboard.py`](../tools/extraction-validator/scoreboard.py) (see [Corpus scoreboard](#corpus-scoreboard-the-current-measure)). A Tier 4 re-clean survey is available via [`corpus_survey_tier4.py`](../tools/extraction-validator/corpus_survey_tier4.py).
 
 ## June to November 2026 repairs
 
