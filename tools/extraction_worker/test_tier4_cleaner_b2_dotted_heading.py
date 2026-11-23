@@ -46,6 +46,34 @@ class B2DottedHeadingTests(unittest.TestCase):
         self.assertEqual(values["B.210"]["value"], "3988")
         self.assertEqual(values["B.230"]["value"], "21263")
 
+    def test_a_number_broken_across_columns_is_not_read_as_three_values(self):
+        # Two value columns; the layout breaks "4,483" into "483 4,".
+        two = (
+            "B2. Enrollment by Racial/Ethnic Category\n"
+            "International (nonresidents)                                     75                    169\n"
+            "Hispanic/Latino                                                  69                    267\n"
+            "White, non-Hispanic                                             983               483 4,\n"
+            "   Total                                                      1,473                  6,330                      0\n"
+            "  B3. Persistence / Degrees\n"
+        )
+        values = clean("", supplemental_text=two, canonical_year="2023-24")
+        self.assertFalse([qn for qn in ("B.204", "B.214", "B.224") if qn in values])
+        # The first two columns were not read row by row, so a printed 0
+        # total over the empty third column is the blank, not a count.
+        self.assertNotIn("B.230", values)
+        self.assertEqual(values["B.210"]["value"], "1473")
+        self.assertEqual(values["B.220"]["value"], "6330")
+
+    def test_a_zero_total_over_rows_that_were_read_is_kept(self):
+        zeros = _B2
+        for old_row in _ROWS.strip().splitlines():
+            parts = old_row.rsplit(None, 3) if not old_row.endswith("non-") else None
+            if parts and len(parts) == 4 and parts[1].replace(",", "").isdigit():
+                zeros = zeros.replace(old_row, old_row[: old_row.rfind(parts[3])] + "0")
+        values = clean("", supplemental_text=zeros, canonical_year="2023-24")
+        self.assertEqual(values["B.221"]["value"], "0")
+        self.assertEqual(values["B.230"]["value"], "0")
+
 
 if __name__ == "__main__":
     unittest.main()

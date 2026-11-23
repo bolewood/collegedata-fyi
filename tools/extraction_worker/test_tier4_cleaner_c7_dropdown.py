@@ -63,6 +63,24 @@ class C7DropdownTextTests(unittest.TestCase):
         self.assertEqual(values["C.701"]["value"], "Important")
         self.assertEqual(values["C.707"]["value"], "Not Considered")
 
+    def test_a_marked_grid_wins_within_one_pass_too(self):
+        # Both readings in the converted text itself: the grid still wins.
+        lines = "\n".join(line for line in _C7.splitlines() if line.strip()).replace(
+            "Rigor of secondary school record                                        Very Important",
+            "Rigor of secondary school record                                        Considered    ")
+        values = clean(_GRID + "\n" + lines, canonical_year="2023-24")
+        self.assertEqual(values["C.701"]["value"], "Important")
+        self.assertEqual(values["C.707"]["value"], "Not Considered")
+
+    def test_a_level_printed_with_extra_spaces_is_read_whole(self):
+        spaced = _C7.replace("Class rank                                                              Very Important",
+                             "Class rank                                                              Very  Important")
+        spaced = spaced.replace("Interview                                                               Not Considered",
+                                "Interview                                                               Not   Considered")
+        values = clean("", supplemental_text=spaced, canonical_year="2023-24")
+        self.assertEqual(values["C.702"]["value"], "Very Important")
+        self.assertEqual(values["C.707"]["value"], "Not Considered")
+
     def test_fewer_than_five_factor_lines_are_not_read(self):
         lines = _C7.splitlines()
         few = "\n".join(lines[:7] + lines[-3:])

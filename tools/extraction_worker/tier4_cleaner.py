@@ -1806,6 +1806,10 @@ def resolve_b2_race(
         wrapped_label = ""
         for raw_line in b2_block.splitlines():
             nums = re.findall(r"\b\d[\d,]*\b", raw_line)
+            if len(nums) == 3 and re.search(r"\d,\s*$", raw_line):
+                # "983    483 4," is 983 and 4,483 with the thousands broken
+                # off: two values, not three.
+                nums = []
             if len(nums) != 3:
                 # A long label can wrap in the text layer:
                 #   Native Hawaiian or other Pacific Islander, non-
@@ -1853,6 +1857,11 @@ def resolve_b2_race(
                 # not replace a row already read.
                 if qn and value is not None and qn not in out:
                     out[qn] = {"value": value, "source": "tier4_cleaner"}
+        # A form with a column left empty prints its total as 0. With no row
+        # read above it, that 0 is the blank, not a count.
+        for total, first_row in (("B.210", 201), ("B.220", 211), ("B.230", 221)):
+            if _field_float(out.get(total)) == 0 and not any(f"B.{first_row + i}" in out for i in range(9)):
+                del out[total]
         if out:
             return out
 
@@ -4731,7 +4740,7 @@ _C7_FACTOR_ROWS = [
 #
 # That form spells three labels its own way.
 _C7_DROPDOWN_LINE_RE = re.compile(
-    r"(?m)^[ \t]*(\S.*?)[ \t]{2,}(Very Important|Important|Considered|Not Considered)[ \t]*$"
+    r"(?m)^[ \t]*(\S.*?)[ \t]{2,}(Very[ \t]+Important|Not[ \t]+Considered|Important|Considered)[ \t]*$"
 )
 _C7_DROPDOWN_FACTOR_ROWS = [
     ("academic grade point average", "Academic GPA", "Academic Factors"),
@@ -4748,6 +4757,7 @@ def _resolve_c7_dropdown_text(text: str, by_cat_q: dict) -> dict[str, dict]:
     if not block:
         return out
     for label, level in _C7_DROPDOWN_LINE_RE.findall(block):
+        level = " ".join(level.split())
         label_norm = _normalize_label(label.replace("\ufb00", "ff"))
         for substr, question, category in _C7_DROPDOWN_FACTOR_ROWS:
             if substr in label_norm:
@@ -4771,7 +4781,7 @@ def resolve_c7_basis_for_selection(
     for f in bs_fields:
         by_cat_q[(f["category"], f["_q_norm"])] = f["question_number"]
 
-    out: dict[str, dict] = _resolve_c7_dropdown_text(markdown, by_cat_q)
+    out: dict[str, dict] = {}
 
     for table in tables:
         headers_norm = [_normalize_label(h) for h in table.get("headers", [])]
@@ -4884,6 +4894,9 @@ def resolve_c7_basis_for_selection(
             if chosen and qn not in out:
                 out[qn] = {"value": chosen, "source": "tier4_cleaner"}
 
+    # A marked grid is the stronger reading; text lines fill what it left.
+    for qn, rec in _resolve_c7_dropdown_text(markdown, by_cat_q).items():
+        out.setdefault(qn, rec)
     return out
 
 
