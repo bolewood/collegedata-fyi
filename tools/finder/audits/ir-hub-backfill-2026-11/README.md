@@ -122,3 +122,21 @@ Two of the six yes rows are new seeds (Drew University, Great Falls
 College MSU); three were already seeded and one is a parent collision.
 85 of the 115 unclear rows answer 403 to the finder user agent from any
 network.
+
+## Browser pass over the user-agent-blocked schools — 2026-11-23
+
+The 85 schools that answer 403 to the finder user agent were loaded in
+headless Chromium, review-only, stopping at any challenge page. Record:
+`recrawl-browser/`.
+
+| Outcome | Count |
+| --- | ---: |
+| yes | 1 (Seattle Pacific, already seeded) |
+| no, every page loaded | 37 |
+| no, but an IR page was challenged | 34 |
+| unclear | 13 |
+
+Across the three passes, the 446 schools the first crawl could not reach
+now stand at 7 listing a CDS, 362 with no CDS on the pages tried, and 77
+still open (47 from this pass plus 30 the residential crawl could not
+reach for other reasons).

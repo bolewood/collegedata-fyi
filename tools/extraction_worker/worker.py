@@ -262,6 +262,124 @@ def select_drain_docs(
     ]
 
 
+# Whatever reader made either one, and whichever file it read: a result that
+# would become the extraction the site serves, with under half of that one's
+# fields, is held. The Tier 4 guards compare re-extractions of one PDF. They
+# do not see a document whose current source turns out to be a workbook:
+# Northern Michigan's CDS is archived as a PDF and as an .xlsx, and on
+# 2026-11-22 a re-extraction routed to Tier 1 replaced 229 fields with 8
+# (2023-24) and 568 with 124 (2024-25).
+#
+# "Served" is the projection's own choice, which goes by producer before
+# recency (Tier 1 over Tier 2 over Tier 6 over Tier 4), so the comparison uses
+# its ordering and not the newest artifact. A small served extraction is not
+# compared: a blank template or a stub is what a re-extraction should replace.
+MIN_FIELDS_FOR_COLLAPSE_CHECK = 50
+
+
+def is_field_collapse(previous_fields: Optional[int], new_fields: int) -> bool:
+    if not previous_fields or previous_fields < MIN_FIELDS_FOR_COLLAPSE_CHECK:
+        return False
+    return new_fields * 2 < previous_fields
+
+
+def _projection_candidate(row: dict[str, Any]) -> dict[str, Any]:
+    """A light artifact row in the shape the projection's ordering reads."""
+    return {
+        "id": row.get("id"),
+        "producer": row.get("producer"),
+        "created_at": row.get("created_at"),
+        "schema_version": row.get("schema_version"),
+        "notes": {
+            # The column is empty on older rows; the projection then reads
+            # the year recorded in the notes.
+            "schema_version": row.get("notes_schema_version"),
+            "schema_fallback_used": row.get("schema_fallback_used"),
+            "stats": {
+                "schema_fields_populated": row.get("fields"),
+                "acroform_fields_total": row.get("acroform_fields_total"),
+                "unmapped_acroform_fields": row.get("unmapped_acroform_fields"),
+            },
+        },
+    }
+
+
+def field_collapse_action(
+    client: Client,
+    document_id: str,
+    tier: str,
+    canonical: dict[str, Any],
+    canonical_year: Optional[str],
+) -> Optional[str]:
+    """The failure action for a result that would be served in place of an
+    extraction with more than twice its fields, or None when it may be
+    written. ``--accept-field-loss`` writes it anyway.
+
+    ``canonical_year`` is the document's own year, which is what the
+    projection ranks by. It is not always the schema the result was read
+    under: a 2026-27 workbook built on the 2025-26 form is read under
+    2025-26, and the projection ranks it below an extraction under 2026-27.
+
+    Two known limits. The count is the served artifact's own; values the
+    projection merges in from an LLM-fallback artifact are not added. And
+    Tier 2 counts every form field with a value, unticked boxes included,
+    so its counts run higher than the other tiers'.
+    """
+    if ACCEPT_FIELD_LOSS:
+        return None
+    from browser_backend.project_browser_data import BASE_PRODUCER_RANK, sort_base_candidates
+
+    rows = (
+        client.table("cds_artifacts")
+        .select(
+            "id,producer,created_at,schema_version,"
+            "notes_schema_version:notes->>schema_version,"
+            "fields:notes->stats->schema_fields_populated,"
+            "schema_fallback_used:notes->schema_fallback_used,"
+            "acroform_fields_total:notes->stats->acroform_fields_total,"
+            "unmapped_acroform_fields:notes->stats->unmapped_acroform_fields"
+        )
+        .eq("document_id", document_id)
+        .eq("kind", "canonical")
+        .execute()
+        .data
+        or []
+    )
+    candidates = [_projection_candidate(row) for row in rows if row.get("producer") in BASE_PRODUCER_RANK]
+    if not candidates:
+        return None
+    served = sort_base_candidates(candidates, canonical_year)[0]
+    served_fields = _populated_fields(served["notes"])
+    new_fields = _populated_fields(canonical)
+    if not is_field_collapse(served_fields, new_fields):
+        return None
+    incoming = {
+        "id": "",
+        "producer": canonical.get("producer"),
+        # Sorts after every stored timestamp: the new artifact is the newest.
+        "created_at": "9999-12-31T23:59:59+00:00",
+        "schema_version": canonical.get("schema_version"),
+        "notes": {
+            "schema_fallback_used": canonical.get("schema_fallback_used"),
+            "stats": canonical.get("stats") or {},
+        },
+    }
+    if sort_base_candidates(candidates + [incoming], canonical_year)[0] is not incoming:
+        # It would be stored but not served, so nothing visible is lost.
+        return None
+    return (
+        f"{tier}_field_regression ({new_fields} < {served_fields} fields, under half of "
+        "the extraction being served; that extraction is kept)"
+    )
+
+
+def _populated_fields(canonical: dict[str, Any]) -> int:
+    try:
+        return int((canonical.get("stats") or {}).get("schema_fields_populated") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
 def is_field_regression(previous_fields: Optional[int], new_fields: int) -> bool:
     if not previous_fields:
         return False
@@ -2285,6 +2403,13 @@ def _run_tier1(
             apply_extraction_quality_flag(client, document_id, quality_flag)
             return extraction_no_project("already_extracted")
 
+        held = field_collapse_action(client, document_id, "tier1", canonical, resolution.canonical_year)
+        if held:
+            # The extraction being served stays, with its quality flag and
+            # the source format it was read from.
+            mark_extraction_status(client, document_id, "extracted")
+            return extraction_no_project(held)
+
         try:
             insert_canonical_artifact(client, document_id, canonical)
         except Exception as e:
@@ -2383,6 +2508,11 @@ def _run_tier6(
                 clear_recoverable_quality_flag(client, document_id)
             return extraction_no_project("already_extracted")
 
+        held = field_collapse_action(client, document_id, "tier6", canonical, resolution.canonical_year)
+        if held:
+            mark_extraction_status(client, document_id, "extracted")
+            return extraction_no_project(held)
+
         try:
             insert_canonical_artifact(client, document_id, canonical)
         except Exception as e:
@@ -2462,7 +2592,11 @@ def _run_tier4(
                 clear_recoverable_quality_flag(client, document_id)
             return extraction_no_project("already_extracted")
 
-        held = field_regression_action(client, document_id, canonical, resolution.schema_version, fields)
+        held = field_collapse_action(
+            client, document_id, "tier4", canonical, resolution.canonical_year,
+        ) or field_regression_action(
+            client, document_id, canonical, resolution.schema_version, fields,
+        )
         if held:
             # Keep the existing artifact (and its flag) current; the
             # document is still extracted, just not by this run.
@@ -3099,6 +3233,11 @@ def extract_one(
             apply_extraction_quality_flag(client, document_id, quality_flag)
             return extraction_no_project("already_extracted", needs_review=needs_review)
 
+        held = field_collapse_action(client, document_id, "tier2", canonical, resolution.canonical_year)
+        if held:
+            mark_extraction_status(client, document_id, "extracted")
+            return extraction_no_project(held, needs_review=needs_review)
+
         try:
             insert_canonical_artifact(client, document_id, canonical)
         except Exception as e:
@@ -3410,7 +3549,8 @@ def main() -> int:
         action="store_true",
         help=(
             f"Write a Tier 4 re-extraction even when it ends {MIN_REEXTRACT_FIELDS_LOST} or more fields below "
-            "the previous extraction of the same file. Use after checking that the lost values were wrong."
+            "the previous extraction of the same file, or any extraction that ends under half of the one "
+            "being served. Use after checking that the lost values were wrong."
         ),
     )
     parser.add_argument(
