@@ -423,7 +423,9 @@ def _split_letter_description_column(table_lines: list[str]) -> list[str]:
             first = False
         else:
             m = _LETTERED_ROW_RE.match(cells[0]) if cells else None
-            head = [m.group(1), m.group(2)] if m else ["", cells[0] if cells else ""]
+            # A row with no letter keeps its text as the label. An empty
+            # label would make it a continuation of the lettered row above.
+            head = [m.group(1), m.group(2)] if m else [cells[0] if cells else "", ""]
         out.append("| " + " | ".join(head + cells[1:]) + " |")
     return out
 
@@ -443,8 +445,9 @@ def _strip_group_label_column(table_lines: list[str]) -> tuple[list[str], bool]:
     Read as-is, the group name is the row label and the real label a value,
     so every row is skipped (Pitzer and Towson 2023-24 lost H1). The column
     is dropped only when the first two header cells are the same text, the
-    first column holds at most three different entries with no digits, and
-    the second column is text on most rows.
+    first column holds at most three different entries with no digits, the
+    second column is text on most rows, the header names the need-based
+    columns and at least three second-column cells are H1 row labels.
 
     Returns the lines and whether a column was dropped. The same converter
     output often merges or shifts rows in these tables, so the H1 resolver
@@ -465,6 +468,14 @@ def _strip_group_label_column(table_lines: list[str]) -> tuple[list[str], bool]:
         return table_lines, False
     with_text = sum(1 for cells in body if re.search(r"[A-Za-z]", cells[1]))
     if with_text * 5 < len(body) * 3:
+        return table_lines, False
+    # Only H1. Other tables have real row-group columns (B1's "Undergraduate
+    # Students", G5's "Residents" / "Commuters") that tell otherwise equal
+    # row labels apart.
+    if not any("need based" in _normalize_label(cell) for cell in header):
+        return table_lines, False
+    second = [_normalize_label(cells[1]) for cells in body]
+    if sum(1 for label in second if any(key in label for key, _, _ in _H1_ROWS)) < 3:
         return table_lines, False
     out = []
     for tl in table_lines:
@@ -6653,6 +6664,8 @@ _H2A_COL_BASES = [
 # the Total Scholarships row includes the word "scholarships" so it needs
 # the explicit "total scholarships" rule to win over the plain federal/
 # state/institutional fallbacks.
+_H1_MISSPELLED_ROW_KEY = "endowed scholarships"
+
 _H1_ROWS: list[tuple[str, str, str]] = [
     # Aggregate rows first
     ("total scholarships",                                    "H.109", "H.121"),
@@ -6667,7 +6680,7 @@ _H1_ROWS: list[tuple[str, str, str]] = [
     # scholarships, annual gifts and tuition funded grants ... excluding
     # athletic aid and tuition waivers"; without this it fell through to
     # the tuition-waivers rule.
-    ("endowed scholarships annual gifts",                     "H.107", "H.119"),
+    (_H1_MISSPELLED_ROW_KEY,                                  "H.107", "H.119"),
     ("institutional",                                         "H.107", "H.119"),
     ("scholarships grants from external",                     "H.108", "H.120"),
     ("merit not awarded by the college",                      "H.108", "H.120"),
@@ -6689,13 +6702,19 @@ _H1_SUMS = (
 )
 
 
+# Parent loans, tuition waivers, athletic awards: need-based, non-need-based.
+_H1_ROWS_WITH_NO_TOTAL = ("H.114", "H.115", "H.116", "H.125", "H.126", "H.127")
+
+
 def _h1_amounts_add_up(claims: dict[str, dict]) -> bool:
     """True when at least one H1 total can be checked against its rows and
-    every total that can be checked agrees with them.
+    every total present agrees with them.
 
     Used for tables whose rows the converter is known to merge and shift. A
-    total needs two of its rows present to be checked; a missing row counts
-    as zero, so a table with a row unread fails and contributes nothing.
+    total is checked whenever one of its rows is present; a missing row
+    counts as zero, so a table with a row unread fails and contributes
+    nothing. The check cannot see two rows swapped, and parent loans, tuition
+    waivers and athletic awards belong to no total.
     """
     def amount(qn: str) -> float | None:
         try:
@@ -6707,10 +6726,11 @@ def _h1_amounts_add_up(claims: dict[str, dict]) -> bool:
     for parts, total_qn in _H1_SUMS:
         total = amount(total_qn)
         amounts = [amount(qn) for qn in parts]
-        if total is None or sum(a is not None for a in amounts) < 2:
+        if total is None or not any(a is not None for a in amounts):
             continue
         checked += 1
-        if abs(sum(a or 0 for a in amounts) - total) > max(5.0, total * 0.001):
+        # Dollars of rounding only.
+        if abs(sum(a or 0 for a in amounts) - total) > 5.0:
             return False
     return checked > 0
 
@@ -6773,6 +6793,8 @@ def _h_layout_h1_rows(block: str) -> dict[str, dict]:
         ("Scholarships/grants from external", "H.108", "H.120"),
         ("Total Self-Help", "H.113", "H.124"),
         ("Institutional:", "H.107", "H.119"),
+        # One template spells the row "Instititutional - Endowed scholarships".
+        ("Endowed scholarships", "H.107", "H.119"),
         ("Parent Loans", "H.114", "H.125"),
         ("Tuition Waivers", "H.115", "H.126"),
         ("Athletic Awards", "H.116", "H.127"),
@@ -6784,6 +6806,11 @@ def _h_layout_h1_rows(block: str) -> dict[str, dict]:
         for label, need_qn, non_need_qn in row_defs:
             if _normalize_label(label) not in line_norm:
                 continue
+            # The Institutional row ends "... excluding athletic aid and
+            # tuition waivers (which are reported below)". Where that label
+            # wraps, its last line is not the Tuition Waivers row.
+            if label == "Tuition Waivers" and "excluding" in line_norm:
+                break
             window = "\n".join(lines[idx: idx + 6])
             amounts = [
                 amount.replace(",", "")
@@ -7135,17 +7162,24 @@ def _resolve_h_financial_aid_as_2025_26(
             continue
 
         gated = bool(table.get("group_column_stripped"))
+        # An amount inside a label means the converter shifted cells.
+        shifted = gated and any(re.search(r"\$\s*\d", row["label"]) for row in table["rows"])
         claimed: dict[str, dict] = {}
         for row in table["rows"]:
-            # An amount inside the label means the converter shifted the row.
             if gated and re.search(r"\$\s*\d", row["label"]):
                 continue
             label_norm = _normalize_label(row["label"])
             matched = None
             for substr, nb_qn, nn_qn in _H1_ROWS:
-                if substr in label_norm:
-                    matched = (nb_qn, nn_qn)
-                    break
+                at = label_norm.find(substr)
+                # The misspelled-row rule is for a label that starts with that
+                # row. A merged label that names it later ("State - all states
+                # ... Instititutional - Endowed scholarships") carries the
+                # first row's amounts.
+                if at < 0 or (substr == _H1_MISSPELLED_ROW_KEY and at > 20):
+                    continue
+                matched = (nb_qn, nn_qn)
+                break
             if not matched:
                 continue
             nb_qn, nn_qn = matched
@@ -7160,6 +7194,11 @@ def _resolve_h_financial_aid_as_2025_26(
                     claimed[qn] = {"value": amt, "source": "tier4_cleaner"}
         if gated and not _h1_amounts_add_up(claimed):
             continue
+        if shifted:
+            # No total covers these rows, so nothing vouches for them in a
+            # table with shifted cells.
+            for qn in _H1_ROWS_WITH_NO_TOTAL:
+                claimed.pop(qn, None)
         out.update(claimed)
 
     # --- H2 Students Awarded Aid (letter rows × 3 cohort columns) ---
