@@ -303,6 +303,11 @@ class RunTier4WithReclean(unittest.TestCase):
                      "table_regression_action"):
             guards[name].assert_called_once()
         self.assertIs(guards["field_collapse_action"].call_args.args[3], artifact)
+        # The count guard is handed the loader for the previous extraction,
+        # and the two later guards share its one read.
+        load_previous = guards["field_regression_action"].call_args.args[5]
+        self.assertIs(load_previous(), guards["previous_canonical"].return_value)
+        guards["previous_canonical"].assert_called_once()
         inserts = [w for w in client.writes if w[1] == "insert"]
         self.assertEqual(len(inserts), 1)
         self.assertEqual(inserts[0][0], "cds_artifacts")

@@ -147,7 +147,8 @@ python worker.py \
 python worker.py --requeue-document-ids <uuid> --force-reextract --limit 1
 
 # A re-extraction of the same file is held (the previous artifact stays) when
-# it ends 10 or more fields lower, loses headline admissions rows, or loses
+# it ends 10 or more fields lower (a month field and a day field that became
+# one date field count as two), loses headline admissions rows, or loses
 # most of one table (5 or more numbers and over half of what the table had,
 # counting only numbers found nowhere else in the same section). Any tier's
 # result that would become the served extraction with under half the fields of
