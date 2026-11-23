@@ -6,7 +6,30 @@ Three families of quality tooling for the extraction pipeline:
 2. **Per-tier regression scorers** — `score_tier2.py` + `score_tier4.py`. Join cleaner/extractor output against hand-verified ground truth via an id_map and report per-field match. Exits non-zero on critical failures. Use as the gate before landing any change to an extractor.
 3. **Corpus quality surveys** — `corpus_survey_tier4.py` + `inspect_tier4_doc.py`. Read-only tools that pull extraction artifacts from Supabase and report coverage distribution. Safe to run while the extraction worker is writing.
 
+4. **Corpus scoreboard** — `scoreboard.py`. The current corpus-level measure of what the site serves: federal match on admissions, coverage, internal consistency and fix reach, by CDS year and source format. See "Corpus scoreboard" below.
+
 Ground-truth YAMLs live in [`ground_truth/`](./ground_truth/), id_maps in [`id_maps/`](./id_maps/). Both are hand-built per school-year.
+
+## Corpus scoreboard
+
+```bash
+tools/extraction_worker/.venv/bin/python tools/extraction-validator/scoreboard.py
+tools/extraction_worker/.venv/bin/python tools/extraction-validator/scoreboard.py \
+  --compare scratch/extraction-scoreboard/scoreboard-<earlier>.json   # deltas
+```
+
+Read-only. For each live, extracted document of 2023-24, 2024-25 and 2025-26 it measures the extraction the browser projection serves, not the newest artifact:
+
+- Years the projection covers (2024-25 on) are read from `cds_fields` and `school_browser_rows`.
+- Earlier years are read from `cds_artifacts`, picking the artifact with the projection's own ordering (`sort_base_candidates`). These reads fetch only the keys needed, run one at a time a few seconds apart, wait when the database host is short of memory, and are cached by artifact id in `scratch/extraction-scoreboard/cache/`, so a later run reads only what changed. Run one copy at a time.
+
+Output: `scratch/extraction-scoreboard/scoreboard-<UTC>.json` (one record per document, for drill-down and deltas) and `.md`. Post the Markdown as a comment on [issue #431](https://github.com/bolewood/collegedata-fyi/issues/431) after every re-extraction batch or cleaner merge. `--from-json` re-renders a saved run; `--limit N` is a smoke test.
+
+Federal figures come from `ipeds_facts` (the unified view keeps only each school's latest year). 2023-24 is not projected, so its figures are computed here the way the projection computes 2024-25; a school's year page shows the newest extraction, which section 4 compares with the projection's pick.
+
+Guard holds are read from local worker `--summary-json` files (`scratch/extraction-drain/local/` by default), so that column is complete only on the machine that ran the re-extractions.
+
+Tests: `python -m unittest discover -s tools/extraction-validator -p "test_*.py"`.
 
 ## Regression scoring (the gate)
 
