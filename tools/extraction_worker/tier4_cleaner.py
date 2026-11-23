@@ -4710,6 +4710,41 @@ _C7_FACTOR_ROWS = [
 ]
 
 
+# Forms that fill C7 from dropdown menus print the chosen level beside each
+# factor, with no grid of marks:
+#
+#     Rigor of secondary school record            Very Important
+#     Extracurriculuar activities                 Important
+#
+# That form spells three labels its own way.
+_C7_DROPDOWN_LINE_RE = re.compile(
+    r"(?m)^[ \t]*(\S.*?)[ \t]{2,}(Very Important|Important|Considered|Not Considered)[ \t]*$"
+)
+_C7_DROPDOWN_FACTOR_ROWS = [
+    ("academic grade point average", "Academic GPA", "Academic Factors"),
+    ("extracurricul", "Extracurricular activities", "Nonacademic Factors"),
+    ("religious af", "Religious affiliation/commitment", "Nonacademic Factors"),
+    *_C7_FACTOR_ROWS,
+]
+
+
+def _resolve_c7_dropdown_text(text: str, by_cat_q: dict) -> dict[str, dict]:
+    """C7 from text lines of "factor   level". Needs five factors to count."""
+    out: dict[str, dict] = {}
+    block = _section_between(text, r"C7\.?\s+Basis for Selection", r"(?:\bC8\b|$)")
+    if not block:
+        return out
+    for label, level in _C7_DROPDOWN_LINE_RE.findall(block):
+        label_norm = _normalize_label(label.replace("\ufb00", "ff"))
+        for substr, question, category in _C7_DROPDOWN_FACTOR_ROWS:
+            if substr in label_norm:
+                qn = by_cat_q.get((category, _normalize_label(question)))
+                if qn:
+                    out.setdefault(qn, {"value": level, "source": "tier4_cleaner"})
+                break
+    return out if len(out) >= 5 else {}
+
+
 def resolve_c7_basis_for_selection(
     tables: list[dict], markdown: str, schema: SchemaIndex
 ) -> dict[str, dict]:
@@ -4717,13 +4752,13 @@ def resolve_c7_basis_for_selection(
     column containing 'X'. Rows are factors (Rigor, Class rank, etc.);
     columns are importance levels.
     """
-    out: dict[str, dict] = {}
-
     # Schema lookup: (category, question_norm) → qn
     bs_fields = schema.filter(subsection="Basis for Selection")
     by_cat_q = {}
     for f in bs_fields:
         by_cat_q[(f["category"], f["_q_norm"])] = f["question_number"]
+
+    out: dict[str, dict] = _resolve_c7_dropdown_text(markdown, by_cat_q)
 
     for table in tables:
         headers_norm = [_normalize_label(h) for h in table.get("headers", [])]
@@ -8598,6 +8633,7 @@ def clean(
             resolve_b5_graduation,
             resolve_c1_applications,
             resolve_c2_waitlist,
+            resolve_c7_basis_for_selection,
             resolve_c8_entrance_exams,
             resolve_c9_submission_rates,
             resolve_c9_percentile_anchors,
