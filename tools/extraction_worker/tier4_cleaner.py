@@ -381,6 +381,94 @@ _REPEATED_QUESTION_TAG_RE = re.compile(r"([A-J]\d{1,2}[A-Za-z]?)\.?(?:\s+\1\.?)*
 _TABLE_SEPARATOR_RE = re.compile(r"^\|[\s\-:|]+\|$")
 
 
+_LETTER_DESCRIPTION_HEADER_RE = re.compile(r"(?i)^letter\s+(\S.*)$")
+_LETTERED_ROW_RE = re.compile(r"^([A-N])\s+(\S.*)$")
+
+
+def _split_letter_description_column(table_lines: list[str]) -> list[str]:
+    """Split a first column the converter merged from "Letter" and its text.
+
+    I1 and H2 print a letter column and a description column. Some converter
+    output merges the two:
+
+        | Letter Description                        | Full- time | Part- time |
+        | A Total number of instructional faculty   | 1452       | 537        |
+
+    The lettered-row resolvers key on the letter being its own cell, so the
+    whole table was skipped (Clemson and Florida A&M 2023-24 lost all of I1).
+    Rebuild the lines with the letter in its own column. Only done when the
+    header says "Letter ..." and at least five rows start with a letter A-N.
+    """
+    parsed = [
+        None if _TABLE_SEPARATOR_RE.match(tl) else [c.strip() for c in tl.split("|")[1:-1]]
+        for tl in table_lines
+    ]
+    data = [cells for cells in parsed if cells]
+    if len(data) < 6 or not data[0]:
+        return table_lines
+    header_match = _LETTER_DESCRIPTION_HEADER_RE.match(data[0][0])
+    if not header_match:
+        return table_lines
+    lettered = sum(1 for cells in data[1:] if cells and _LETTERED_ROW_RE.match(cells[0]))
+    if lettered < 5:
+        return table_lines
+    out = []
+    first = True
+    for tl, cells in zip(table_lines, parsed):
+        if cells is None:
+            out.append("|---" + tl)
+            continue
+        if first:
+            head = ["Letter", header_match.group(1)]
+            first = False
+        else:
+            m = _LETTERED_ROW_RE.match(cells[0]) if cells else None
+            head = [m.group(1), m.group(2)] if m else ["", cells[0] if cells else ""]
+        out.append("| " + " | ".join(head + cells[1:]) + " |")
+    return out
+
+
+def _strip_group_label_column(table_lines: list[str]) -> list[str]:
+    """Drop a leading column that only names the group a row belongs to.
+
+    H1 prints "Scholarships / Grants" and "Self Help" down the left edge.
+    Some converter output makes that a column of its own and repeats the
+    table title over it and over the label column:
+
+        | H1. Aid Awarded ...   | H1. Aid Awarded ...   | Need-Based | Non-Need-Based |
+        |                       | Federal               | $938,221   |                |
+        | Scholarships / Grants | Institutional - ...   | $20,190,051| $206,716       |
+        | Self Help             | Federal Work-Study    | $701,362   |                |
+
+    Read as-is, the group name is the row label and the real label a value,
+    so every row is skipped (Pitzer and Towson 2023-24 lost H1). The column
+    is dropped only when the first two header cells are the same text, the
+    first column holds at most three different entries with no digits, and
+    the second column is text on most rows.
+    """
+    parsed = [
+        None if _TABLE_SEPARATOR_RE.match(tl) else [c.strip() for c in tl.split("|")[1:-1]]
+        for tl in table_lines
+    ]
+    data = [cells for cells in parsed if cells]
+    if len(data) < 5 or any(len(cells) < 3 for cells in data):
+        return table_lines
+    header, body = data[0], data[1:]
+    if not header[0] or header[0] != header[1] or not re.search(r"[A-Za-z]", header[0]):
+        return table_lines
+    groups = {cells[0] for cells in body if cells[0]}
+    if not groups or len(groups) > 3 or any(re.search(r"\d", g) for g in groups):
+        return table_lines
+    with_text = sum(1 for cells in body if re.search(r"[A-Za-z]", cells[1]))
+    if with_text * 5 < len(body) * 3:
+        return table_lines
+    out = []
+    for tl in table_lines:
+        cells = tl.split("|")[1:-1]
+        out.append("|" + "|".join(cells[1:]) + "|")
+    return out
+
+
 def _strip_question_tag_column(table_lines: list[str]) -> tuple[list[str], str | None]:
     """Drop a leading column that only repeats the margin question tag.
 
@@ -584,6 +672,8 @@ def _parse_markdown_tables(markdown: str) -> list[dict]:
             table_lines, question_tag = _strip_question_tag_column(table_lines)
             if question_tag is None:
                 table_lines, question_tag = _strip_fused_question_tag(table_lines)
+            table_lines = _split_letter_description_column(table_lines)
+            table_lines = _strip_group_label_column(table_lines)
 
             # Parse the nominal header row, then decide whether it's really
             # a header or a data row. Aims-style CDS tables often omit a
