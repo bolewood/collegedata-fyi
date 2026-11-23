@@ -108,7 +108,9 @@ export default function AboutPage() {
             GitHub
           </a>
           , and the full dataset is available through the{" "}
-          <Link href="/api">public API</Link>. {SOURCE_OWNERSHIP_SENTENCE} If
+          <Link href="/api">public API</Link>. The structured extracts we
+          derive are licensed CC BY 4.0, so you can reuse them with{" "}
+          <Link href="/api#credit">credit</Link>. {SOURCE_OWNERSHIP_SENTENCE} If
           you&apos;re curious how files
           are parsed or want to check known data quirks, GitHub is the best
           place to look.

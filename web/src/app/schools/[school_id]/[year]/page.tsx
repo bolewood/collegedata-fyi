@@ -1,3 +1,4 @@
+import { DATA_ATTRIBUTION, DATA_LICENSE_URL } from "@/lib/data-license";
 import { CommunityLink } from "@/components/CommunityInvitation";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -178,6 +179,28 @@ export default async function SchoolYearPage({ params }: {
         url: "https://www.collegedata.fyi",
       },
     },
+    ...(docs.some((doc) => doc.extraction_status === "extracted")
+      ? [
+          {
+            "@context": "https://schema.org",
+            "@type": "Dataset",
+            name: `${schoolName} Common Data Set ${year}: structured extract`,
+            description: `Values from ${schoolName}'s Common Data Set ${year}, extracted and keyed to canonical CDS field IDs by collegedata.fyi.`,
+            url: canonicalUrl,
+            creator: { "@type": "Organization", name: "collegedata.fyi", url: "https://www.collegedata.fyi" },
+            isBasedOn: docs[0]?.source_url ?? canonicalUrl,
+            temporalCoverage: year,
+            license: DATA_LICENSE_URL,
+            creditText: DATA_ATTRIBUTION,
+            isAccessibleForFree: true,
+            distribution: {
+              "@type": "DataDownload",
+              encodingFormat: "text/csv",
+              contentUrl: `${canonicalUrl}/cds.csv`,
+            },
+          },
+        ]
+      : []),
     {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",

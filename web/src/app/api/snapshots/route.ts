@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { dataLicenseFields } from "@/lib/data-license";
 import { SNAPSHOT_NOTE, snapshotBase, snapshotDate } from "@/lib/snapshot-data";
 
 export const revalidate = 3600;
@@ -12,6 +13,7 @@ export async function GET() {
       schema_version: "v1",
       snapshot_date: date,
       note: SNAPSHOT_NOTE,
+      ...dataLicenseFields(),
       current: `${base}/manifest.json`,
       latest: "https://www.collegedata.fyi/snapshots/latest/manifest.json",
       files: [

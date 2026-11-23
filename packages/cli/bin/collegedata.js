@@ -3,6 +3,22 @@
 const API_BASE = (process.env.COLLEGEDATA_API_BASE ?? "https://www.collegedata.fyi").replace(/\/$/, "");
 const CLIENT_NAME = "cli";
 const CLIENT_VERSION = "0.1.0";
+// Keep in step with DATA_ATTRIBUTION in web/src/lib/data-license.ts (a web test pins it).
+const DATA_ATTRIBUTION =
+  "Common Data Set extracts from collegedata.fyi (https://www.collegedata.fyi), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Figures as published in each school's Common Data Set.";
+
+// Table and CSV output drop the JSON envelope's attribution field, so print the
+// credit line once on stderr. Never on stdout: that would corrupt piped CSV.
+function printCredit() {
+  process.stderr.write(`\n${DATA_ATTRIBUTION}\n`);
+}
+
+let creditScheduled = false;
+function printCreditOnExit() {
+  if (creditScheduled) return;
+  creditScheduled = true;
+  process.once("beforeExit", printCredit);
+}
 
 function usage() {
   console.error(`Usage:
@@ -79,6 +95,7 @@ function printTable(rows, columns) {
       ),
     ),
   );
+  printCreditOnExit();
   process.stdout.write(`${columns.map((column, i) => column.padEnd(widths[i])).join("  ")}\n`);
   process.stdout.write(`${widths.map((width) => "-".repeat(width)).join("  ")}\n`);
   for (const row of rows) {
@@ -95,6 +112,7 @@ function printCsv(rows, columns) {
     const s = String(value ?? "");
     return /[",\n]/.test(s) ? `"${s.replaceAll('"', '""')}"` : s;
   };
+  printCreditOnExit();
   process.stdout.write(`${columns.map(esc).join(",")}\n`);
   for (const row of rows) {
     process.stdout.write(`${columns.map((column) => esc(row[column])).join(",")}\n`);

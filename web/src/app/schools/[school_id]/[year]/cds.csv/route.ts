@@ -1,3 +1,4 @@
+import { DATA_LICENSE_LINK_HEADER } from "@/lib/data-license";
 import { buildCdsCsv, spreadsheetFilename } from "@/lib/spreadsheet";
 import {
   fetchSpreadsheetInput,
@@ -34,6 +35,7 @@ export async function GET(
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="${spreadsheetFilename(school_id, year, "csv")}"`,
       "Cache-Control": SPREADSHEET_CACHE_CONTROL,
+      Link: DATA_LICENSE_LINK_HEADER,
     },
   });
 }

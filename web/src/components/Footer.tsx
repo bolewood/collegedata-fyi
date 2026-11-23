@@ -27,7 +27,7 @@ export function Footer() {
           <div style={{ marginTop: 10, maxWidth: 520, lineHeight: 1.55 }}>
             Open-source college data with source-linked school publications,
             NCES/IPEDS baselines, College Scorecard context, and public APIs.
-            Code: MIT License.
+            Code: MIT License. Data: <a href="/api#credit">CC BY 4.0</a>.
           </div>
         </div>
         <div className="cd-footer-links" style={{ display: "flex", gap: 24, alignSelf: "end", flexWrap: "wrap" }}>

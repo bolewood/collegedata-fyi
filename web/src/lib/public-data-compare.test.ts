@@ -30,6 +30,7 @@ vi.mock("./supabase", () => ({
   STORAGE_BASE_URL: "https://example.test/storage/v1/object/public/sources",
 }));
 
+import { dataLicenseFields } from "./data-license";
 import { compareSchools, getSchoolFacts } from "./public-data";
 
 const scorecards = {
@@ -71,5 +72,16 @@ describe("compareSchools scorecard batching", () => {
       alpha?.facts.find((fact) => fact.key === "avg_net_price"),
     );
     expect(compared.rows[1].values.avg_net_price.value).toBe(22222);
+  });
+
+  it("carries the data license and credit line on both envelopes", async () => {
+    const compared = await compareSchools(["alpha"], { fields: ["avg_net_price"] });
+    const facts = await getSchoolFacts("alpha", { fields: ["avg_net_price"] });
+    for (const payload of [compared, facts]) {
+      expect(payload).toMatchObject(dataLicenseFields());
+      expect(payload?.data_license.license).toBe("CC-BY-4.0");
+      // Never a bare top-level license: these payloads also carry federal facts.
+      expect(payload).not.toHaveProperty("license");
+    }
   });
 });
