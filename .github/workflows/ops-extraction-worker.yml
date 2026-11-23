@@ -29,6 +29,11 @@ on:
         type: boolean
         required: false
         default: false
+      accept_table_loss:
+        description: "Write a re-extraction even when one table loses 5 or more values and over half of what the previous extraction of the same file had. Needs document_ids or requeue_document_ids. Use only after checking the lost values against the PDF."
+        type: boolean
+        required: false
+        default: false
       include_failed:
         description: "Retry failed rows as well as pending rows."
         type: boolean
@@ -88,6 +93,7 @@ jobs:
       INPUT_INCLUDE_FAILED: ${{ github.event_name == 'workflow_dispatch' && inputs.include_failed || false }}
       INPUT_ACCEPT_HEADLINE_LOSS: ${{ github.event_name == 'workflow_dispatch' && inputs.accept_headline_loss || false }}
       INPUT_ACCEPT_FIELD_LOSS: ${{ github.event_name == 'workflow_dispatch' && inputs.accept_field_loss || false }}
+      INPUT_ACCEPT_TABLE_LOSS: ${{ github.event_name == 'workflow_dispatch' && inputs.accept_table_loss || false }}
       INPUT_SEED_PROJECTION_METADATA: ${{ github.event_name != 'workflow_dispatch' || inputs.seed_projection_metadata }}
       INPUT_LOW_FIELD_THRESHOLD: ${{ github.event_name == 'workflow_dispatch' && inputs.low_field_threshold || '25' }}
       INPUT_MIN_YEAR_START: ${{ github.event_name == 'workflow_dispatch' && inputs.min_year_start || '' }}
@@ -233,6 +239,9 @@ jobs:
           fi
           if [[ "${INPUT_ACCEPT_FIELD_LOSS}" == "true" ]]; then
             args+=(--accept-field-loss)
+          fi
+          if [[ "${INPUT_ACCEPT_TABLE_LOSS}" == "true" ]]; then
+            args+=(--accept-table-loss)
           fi
 
           python tools/extraction_worker/worker.py "${args[@]}" | tee ops-summary/worker.log
