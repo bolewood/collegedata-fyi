@@ -32,6 +32,7 @@ Architecture (PRD 005):
 from __future__ import annotations
 
 import html
+import itertools
 import json
 import re
 from pathlib import Path
@@ -383,6 +384,8 @@ _TABLE_SEPARATOR_RE = re.compile(r"^\|[\s\-:|]+\|$")
 
 _LETTER_DESCRIPTION_HEADER_RE = re.compile(r"(?i)^letter\s+(\S.*)$")
 _LETTERED_ROW_RE = re.compile(r"^([A-N])\s+(\S.*)$")
+# "A. Total number of ..." — the letter and its full stop open the label cell.
+_DOTTED_LETTER_ROW_RE = re.compile(r"^([A-Q])\.\s+(\S.*)$")
 
 
 def _split_letter_description_column(table_lines: list[str]) -> list[str]:
@@ -407,9 +410,10 @@ def _split_letter_description_column(table_lines: list[str]) -> list[str]:
     if len(data) < 6 or not data[0]:
         return table_lines
     header_match = _LETTER_DESCRIPTION_HEADER_RE.match(data[0][0])
+    row_re = _LETTERED_ROW_RE
     if not header_match:
-        return table_lines
-    lettered = sum(1 for cells in data[1:] if cells and _LETTERED_ROW_RE.match(cells[0]))
+        row_re = _DOTTED_LETTER_ROW_RE
+    lettered = sum(1 for cells in data[1:] if cells and row_re.match(cells[0]))
     if lettered < 5:
         return table_lines
     out = []
@@ -419,10 +423,10 @@ def _split_letter_description_column(table_lines: list[str]) -> list[str]:
             out.append("|---" + tl)
             continue
         if first:
-            head = ["Letter", header_match.group(1)]
+            head = ["Letter", header_match.group(1)] if header_match else ["", cells[0]]
             first = False
         else:
-            m = _LETTERED_ROW_RE.match(cells[0]) if cells else None
+            m = row_re.match(cells[0]) if cells else None
             # A row with no letter keeps its text as the label. An empty
             # label would make it a continuation of the lettered row above.
             head = [m.group(1), m.group(2)] if m else [cells[0] if cells else "", ""]
@@ -2215,6 +2219,117 @@ def _resolve_b5_layout(markdown: str) -> dict[str, dict]:
     return out
 
 
+# The cohort heads the value columns in some templates: "2017 COHORT (AY - 7)".
+_B5_COLUMN_COHORT_RE = re.compile(r"(?m)^(?!\s*\|).*\b(20\d\d)\s+COHORT\s*\(AY\W*(\d+)?.*$")
+_B5_COLUMN_COHORT_END_RE = re.compile(r"(?i)Two-Year Institutions|\bB22\b|Retention Rates")
+
+
+def _b5_rows_that_add_up(block: str) -> dict[str, list[tuple[int, str]]] | None:
+    """Rows A-H of one cohort, taken in printed order and checked by sum.
+
+    Where the cohort heads the columns, each row prints "A. Initial 2017
+    cohort ..." with its four values on any line of a wrapped label, and
+    schools mislabel rows (two rows lettered F, with G's values on the
+    second). The letters cannot be trusted, so rows are assigned by position
+    and accepted only when the Total column adds up: G = D + E + F and
+    H = G / C. A cohort with no exclusions may print no values for B, and a
+    B row short of a value is placed by ``_b5_exclusions_by_column``.
+    """
+    rows: list[list[str]] = []
+    for line in block.splitlines():
+        if line.lstrip().startswith("|"):
+            continue
+        nums = _h_spaced_numbers(line)
+        if len(nums) >= 3:
+            rows.append(nums[-4:])
+    if len(rows) == 8:
+        letters = "ABCDEFGH"
+    elif len(rows) == 7:
+        letters = "ACDEFGH"
+    else:
+        return None
+    by_letter = dict(zip(letters, rows))
+    if any(len(nums) != 4 for letter, nums in by_letter.items() if letter != "B"):
+        return None
+    try:
+        total = {letter: float(nums[-1]) for letter, nums in by_letter.items()}
+    except ValueError:
+        return None
+    if total["C"] <= 0 or total["C"] > total["A"]:
+        return None
+    if total["D"] + total["E"] + total["F"] != total["G"]:
+        return None
+    if abs(total["H"] - 100 * total["G"] / total["C"]) > 1.0:
+        return None
+    cells = {letter: list(enumerate(nums)) for letter, nums in by_letter.items() if letter != "B"}
+    if "B" in by_letter:
+        placed = _b5_exclusions_by_column(by_letter["B"], by_letter["A"], by_letter["C"])
+        if placed:
+            cells["B"] = placed
+    return cells
+
+
+def _b5_exclusions_by_column(printed: list[str], initial: list[str], final: list[str]) -> list[tuple[int, str]]:
+    """Columns for an exclusions row that prints fewer than four values.
+
+    Schools leave a zero cell blank, and which one is not known from the
+    numbers alone. Each column's exclusions are its initial cohort less its
+    final cohort, so the printed values are placed where they match that.
+    Returns nothing when no placement, or more than one, fits.
+    """
+    if len(printed) == 4:
+        return list(enumerate(printed))
+    try:
+        expected = [float(a) - float(c) for a, c in zip(initial, final)]
+        nums = [float(n) for n in printed]
+    except ValueError:
+        return []
+    fits = [
+        cols for cols in itertools.combinations(range(4), len(nums))
+        if all(nums[i] == expected[col] for i, col in enumerate(cols))
+        and all(expected[col] == 0 for col in range(4) if col not in cols)
+    ]
+    if len(fits) != 1:
+        return []
+    return list(zip(fits[0], printed))
+
+
+def _resolve_b5_column_cohort_layout(text: str) -> dict[str, dict]:
+    """B5 where each cohort is named over its columns, not in a heading."""
+    out: dict[str, dict] = {}
+    matches = list(_B5_COLUMN_COHORT_RE.finditer(text))
+    if not matches:
+        return out
+    blocks: dict[str, dict[str, list[tuple[int, str]]]] = {}
+    academic_years: dict[str, str] = {}
+    for idx, match in enumerate(matches):
+        year = match.group(1)
+        academic_years.setdefault(year, match.group(2) or "")
+        if blocks.get(year):
+            continue
+        end = matches[idx + 1].start() if idx + 1 < len(matches) else len(text)
+        block = text[match.end():end]
+        stop = _B5_COLUMN_COHORT_END_RE.search(block)
+        if stop:
+            block = block[:stop.start()]
+        blocks[year] = _b5_rows_that_add_up(block) or {}
+    # The later cohort is the current one (B.4xx), the earlier the previous.
+    # A cohort that failed the check still holds its slot, so the other one
+    # is never written into it.
+    slots = list(zip((401, 501), sorted(blocks, reverse=True)))
+    if len(blocks) == 1 and academic_years.get(slots[0][1]) == "8":
+        # The form heads the current cohort "(AY - 7)" and the previous one
+        # "(AY - 8)". A lone previous cohort keeps the previous slot.
+        slots = [(501, slots[0][1])]
+    for base, year in slots:
+        for letter, cells in blocks[year].items():
+            row_base = base + "ABCDEFGH".index(letter) * 4
+            for col_idx, value in cells:
+                if col_idx <= 3:
+                    out[f"B.{row_base + col_idx}"] = {"value": value, "source": "tier4_cleaner"}
+    return out
+
+
 def _is_b5_grad_table(table: dict) -> bool:
     """Detect a Fall YYYY Cohort grad-rate table by section header."""
     section_norm = _normalize_label(table.get("section", ""))
@@ -2237,7 +2352,7 @@ def resolve_b5_graduation(
       1. label = "A" (letter only), values[0] = description, values[1-4] = data
       2. label = "A Initial 2018 cohort ...", values[0-3] = data
     """
-    out: dict[str, dict] = _resolve_b5_layout(markdown)
+    out: dict[str, dict] = _resolve_b5_column_cohort_layout(markdown) or _resolve_b5_layout(markdown)
     if out:
         return out
 
@@ -6770,15 +6885,25 @@ def _h_cell_numbers(text: str) -> list[str]:
 def _h_row_window(block: str, letter: str) -> str:
     lines = block.splitlines()
     start = None
+    dotted = False
     for idx, line in enumerate(lines):
         if re.match(rf"\s*{letter}(?:\s+|$)", line):
             start = idx
             break
+        # "A. Any loan program" and "C.Institutional loan program": forms
+        # that print a full stop after the row letter.
+        if re.match(rf"\s*{letter}\.(?:\s+|$|(?=[A-Z][a-z]))", line):
+            start = idx
+            dotted = True
+            break
     if start is None:
         return ""
+    # A dotted row ends at the next dotted row. Elsewhere a wrapped label can
+    # begin "D. Exclude ...", which is not a row.
+    next_row = r"\s*[A-Z]\.(?:\s+|$|(?=[A-Z][a-z]))" if dotted else r"\s*[A-Z](?:\s+|$)"
     end = len(lines)
     for idx in range(start + 1, len(lines)):
-        if re.match(r"\s*[A-Z](?:\s+|$)", lines[idx]) and lines[idx].strip()[0] in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+        if re.match(next_row, lines[idx]) and lines[idx].strip()[0] in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
             end = idx
             break
     return "\n".join(lines[start:end])
@@ -6960,7 +7085,13 @@ def _resolve_h_financial_aid_as_2025_26(
         }
         for letter, qns in h5_rows.items():
             window = _h_row_window(h5, letter)
-            values = _h_spaced_numbers(window)
+            # The last row's window runs to the end of the section, footer
+            # and page number included, so prefer the one line that holds
+            # the row's three values.
+            values = next(
+                (nums for line in window.splitlines() if len(nums := _h_spaced_numbers(line)) >= 3),
+                None,
+            ) or _h_spaced_numbers(window)
             if len(values) >= 3:
                 count_qn, percent_qn, average_qn = qns
                 count, percent, average = values[-3:]
