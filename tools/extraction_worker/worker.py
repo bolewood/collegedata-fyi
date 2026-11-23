@@ -92,7 +92,7 @@ from decimal import Decimal
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 import pypdf
 from supabase import Client, create_client
@@ -405,9 +405,14 @@ def field_regression_action(
     canonical: dict[str, Any],
     schema_version: Optional[str],
     new_fields: int,
+    load_previous: Optional[Callable[[], Optional[tuple[Optional[str], dict[str, Any]]]]] = None,
 ) -> Optional[str]:
     """The failure action for a Tier 4 result with too few fields to replace
-    the previous extraction of the same file, or None when it may be written."""
+    the previous extraction of the same file, or None when it may be written.
+
+    ``load_previous`` returns what ``previous_canonical`` does. It is called
+    only for a result that is short by the count alone, to see how much of
+    the shortfall is a month field and a day field that became one date."""
     if ACCEPT_FIELD_LOSS:
         return None
     previous_fields = previous_canonical_field_count(
@@ -415,10 +420,21 @@ def field_regression_action(
     )
     if not is_field_regression(previous_fields, new_fields):
         return None
-    return (
-        f"tier4_field_regression ({new_fields} < {previous_fields} fields; "
-        "the previous extraction of this file is kept)"
-    )
+    merged = 0
+    if load_previous is not None:
+        previous = load_previous()
+        merged = dates_merged(previous[1] if previous else None, canonical.get("values") or {})
+        # The dates must explain at least half of the shortfall. Counted
+        # alone, a few merged dates would bring a document that also lost
+        # nine or ten real values under the limit.
+        if merged * 2 >= (previous_fields or 0) - new_fields and not is_field_regression(
+            previous_fields, new_fields + merged
+        ):
+            return None
+    detail = f"{new_fields} < {previous_fields} fields"
+    if merged:
+        detail += f", {merged} of them a month and a day now written as one date"
+    return f"tier4_field_regression ({detail}; the previous extraction of this file is kept)"
 
 
 def previous_canonical_field_count(
@@ -712,6 +728,60 @@ def _month_and_day(record: Any) -> list[str]:
     value = record.get("value") if isinstance(record, dict) else record
     match = _MONTH_DAY_RE.fullmatch(str(value if value is not None else "").strip())
     return [str(int(part)) for part in match.groups() if int(part)] if match else []
+
+
+# Tables with a month field and a day field on the 2025-26 form and one date
+# field on the forms before it.
+_DATE_TABLES = frozenset({"C14", "C16", "C17", "C21", "C22", "D9", "H9", "H10", "H11"})
+
+
+def dates_merged(
+    previous_values: Optional[dict[str, Any]],
+    new_values: dict[str, Any],
+) -> int:
+    """How many fields the new extraction is short only because a month field
+    and a day field of the previous one are now a single date field.
+
+    Cleaner 0.3.37 numbers date tables by the document's own form year, and
+    the 2023-24 and 2024-25 forms have one date field where the 2025-26 form
+    has two. A document last cleaned before that comes out 10 to 16 fields
+    shorter with nothing lost: 53 of 295 2024-25 documents were held for that
+    alone on 2026-11-23. A date counts when it is in a table that asks for
+    dates, the previous extraction did not have it, and that extraction held
+    its month and its day in the same table, in fields that are now empty or
+    now hold a date. Each such field accounts for one date."""
+    if not previous_values:
+        return 0
+    freed: dict[str, Counter[str]] = {}
+    for field_id, record in previous_values.items():
+        table = _table_of(field_id)
+        number = _comparable_number(record)
+        if table not in _DATE_TABLES or number is None:
+            continue
+        now = new_values.get(field_id)
+        if now is None or len(_month_and_day(now)) == 2:
+            freed.setdefault(table, Counter())[number] += 1
+    merged = 0
+    for field_id, record in sorted(new_values.items(), key=lambda item: str(item[0])):
+        table = _table_of(field_id)
+        parts = _month_and_day(record)
+        if table not in _DATE_TABLES or len(parts) != 2 or _month_and_day(previous_values.get(field_id)) == parts:
+            continue
+        if int(parts[0]) > 12 or int(parts[1]) > 31:
+            continue
+        available = freed.get(table)
+        if available is None:
+            continue
+        month, day = parts
+        if month == day:
+            if available[month] < 2:
+                continue
+        elif available[month] < 1 or available[day] < 1:
+            continue
+        available[month] -= 1
+        available[day] -= 1
+        merged += 1
+    return merged
 
 
 def tables_lost(
@@ -2728,22 +2798,26 @@ def _run_tier4(
                 clear_recoverable_quality_flag(client, document_id)
             return extraction_no_project("already_extracted")
 
+        # One read of the previous extraction serves the count guard, when it
+        # needs it, and both guards below.
+        previous_read: list[Optional[tuple[Optional[str], dict[str, Any]]]] = []
+
+        def load_previous() -> Optional[tuple[Optional[str], dict[str, Any]]]:
+            if not previous_read:
+                previous_read.append(previous_canonical(client, document_id, canonical.get("source_sha256")))
+            return previous_read[0]
+
         held = field_collapse_action(
             client, document_id, "tier4", canonical, resolution.canonical_year,
         ) or field_regression_action(
-            client, document_id, canonical, resolution.schema_version, fields,
+            client, document_id, canonical, resolution.schema_version, fields, load_previous,
         )
         if held:
             # Keep the existing artifact (and its flag) current; the
             # document is still extracted, just not by this run.
             mark_extraction_status(client, document_id, "extracted", source_format)
             return extraction_no_project(held)
-        # One read of the previous extraction serves both guards below.
-        previous = (
-            None
-            if ACCEPT_HEADLINE_LOSS and ACCEPT_TABLE_LOSS
-            else previous_canonical(client, document_id, canonical.get("source_sha256"))
-        )
+        previous = None if ACCEPT_HEADLINE_LOSS and ACCEPT_TABLE_LOSS else load_previous()
         held = headline_regression_action(
             client, document_id, canonical, resolution.schema_version, previous=previous,
         ) or table_regression_action(previous, canonical)

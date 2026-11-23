@@ -173,6 +173,81 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
         finally:
             worker.ACCEPT_FIELD_LOSS = False
 
+    def test_dates_merged_counts_a_month_and_a_day_that_became_one_date(self):
+        from worker import dates_merged
+
+        # 2024-25 transfer deadlines as 0.3.36 wrote them (2025-26 numbers,
+        # month and day apart) and as 0.3.37 writes them.
+        before = {"D.909": {"value": "5"}, "D.910": {"value": "1"}, "D.913": {"value": "11"}, "D.914": {"value": "15"},
+                  "C.1402": {"value": "1"}, "C.1403": {"value": "15"}, "B.101": {"value": "1200"}}
+        after = {"D.905": {"value": "5/1"}, "D.907": {"value": "11/15"}, "C.1402": {"value": "1/15"},
+                 "B.101": {"value": "1200"}}
+        self.assertEqual(dates_merged(before, after), 3)
+        # Month and day the same number need two fields that held it.
+        self.assertEqual(dates_merged({"D.909": {"value": "5"}, "D.910": {"value": "5"}}, {"D.905": {"value": "5/5"}}), 1)
+        self.assertEqual(dates_merged({"D.909": {"value": "5"}}, {"D.905": {"value": "5/5"}}), 0)
+        # A date the previous extraction already had is not a merge.
+        self.assertEqual(dates_merged({"D.905": {"value": "5/1"}, "D.909": {"value": "5"}, "D.910": {"value": "1"}},
+                                      {"D.905": {"value": "5/1"}}), 0)
+        # Its month and day must have been in the same table, in fields that no longer hold them.
+        self.assertEqual(dates_merged({"C.1402": {"value": "5"}, "C.1403": {"value": "1"}}, {"D.905": {"value": "5/1"}}), 0)
+        self.assertEqual(dates_merged({"D.909": {"value": "5"}, "D.910": {"value": "1"}},
+                                      {"D.905": {"value": "5/1"}, "D.909": {"value": "5"}, "D.910": {"value": "1"}}), 0)
+        # A field whose number changed but is still a number was not merged into anything.
+        self.assertEqual(dates_merged({"D.909": {"value": "5"}, "D.910": {"value": "1"}},
+                                      {"D.905": {"value": "5/1"}, "D.909": {"value": "6"}, "D.910": {"value": "2"}}), 0)
+        # A field that now holds a date itself counts as freed.
+        self.assertEqual(dates_merged({"D.909": {"value": "5"}, "D.910": {"value": "1"}},
+                                      {"D.909": {"value": "5/1"}}), 1)
+        # "12/15" in a table that asks for no dates is not one.
+        self.assertEqual(dates_merged({"H.201": {"value": "12"}, "H.202": {"value": "15"}}, {"H.203": {"value": "12/15"}}), 0)
+        # Each old field accounts for one date only.
+        self.assertEqual(dates_merged({"D.909": {"value": "5"}, "D.910": {"value": "1"}},
+                                      {"D.905": {"value": "5/1"}, "D.907": {"value": "5/1"}}), 1)
+        # Not a calendar date.
+        self.assertEqual(dates_merged({"D.909": {"value": "13"}, "D.910": {"value": "40"}}, {"D.905": {"value": "13/40"}}), 0)
+        # A new date with nothing behind it, and no previous extraction.
+        self.assertEqual(dates_merged({"B.101": {"value": "1200"}}, {"D.905": {"value": "5/1"}}), 0)
+        self.assertEqual(dates_merged(None, after), 0)
+
+    def test_field_regression_action_allows_for_merged_dates(self):
+        client = _FakeClient([{"schema_version": "2024-25", "schema_fields_populated": 632, "source_sha256": "file"}])
+        dates = {f"D.9{n + 20:02d}": {"value": f"{n}/{n + 1}"} for n in range(1, 12, 2)}
+        self.assertEqual(len(dates), 6)
+        previous = ("2024-25", {f"D.9{n:02d}": {"value": str(n)} for n in range(1, 13)})
+        loads = []
+
+        def load_previous():
+            loads.append(1)
+            return previous
+
+        new = {"source_sha256": "file", "values": dates}
+        # Twelve fields short, six of them merged dates: within ten.
+        self.assertIsNone(field_regression_action(client, "doc", new, "2024-25", 620, load_previous))
+        self.assertEqual(len(loads), 1)
+        # Sixteen short with the same six dates is still ten short.
+        action = field_regression_action(client, "doc", new, "2024-25", 616, load_previous)
+        self.assertEqual(
+            action,
+            "tier4_field_regression (616 < 632 fields, 6 of them a month and a day now written as one date; "
+            "the previous extraction of this file is kept)",
+        )
+        # Dates must explain at least half the shortfall: thirteen short with
+        # six dates leaves seven unexplained, which is more than the six.
+        self.assertIsNotNone(field_regression_action(client, "doc", new, "2024-25", 619, load_previous))
+        self.assertIsNone(field_regression_action(client, "doc", new, "2024-25", 621, load_previous))
+        # The previous extraction is read only for a result the count alone would hold.
+        loads.clear()
+        self.assertIsNone(field_regression_action(client, "doc", new, "2024-25", 625, load_previous))
+        self.assertEqual(loads, [])
+        # No dates, or a previous extraction of another file (nothing to compare): held as before.
+        plain = {"source_sha256": "file", "values": {}}
+        self.assertEqual(
+            field_regression_action(client, "doc", plain, "2024-25", 620, load_previous),
+            "tier4_field_regression (620 < 632 fields; the previous extraction of this file is kept)",
+        )
+        self.assertIsNotNone(field_regression_action(client, "doc", new, "2024-25", 620, lambda: None))
+
     def test_field_regression_action_holds_only_a_same_file_loss(self):
         import worker
 
