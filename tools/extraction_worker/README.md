@@ -150,7 +150,8 @@ python worker.py --requeue-document-ids <uuid> --force-reextract --limit 1
 # it ends 10 or more fields lower, loses headline admissions rows, or loses
 # most of one table (5 or more numbers and over half of what the table had,
 # counting only numbers found nowhere else in the same section). Any tier's
-# result under half of the extraction being served is held too. The worker
+# result that would become the served extraction with under half the fields of
+# the one served now (when that has 50 or more) is held too. The worker
 # then exits 1 and names the document. After checking the lost values against
 # the PDF, write the new result with the matching switch:
 python worker.py --requeue-document-ids <uuid> --document-ids <uuid> --force-reextract --accept-field-loss

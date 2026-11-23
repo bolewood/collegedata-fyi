@@ -149,6 +149,23 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
         fallback = dict(new("tier1_xlsx", 100), schema_fallback_used=True)
         self.assertIsNone(field_collapse_action(tier4_served, "doc", "tier1", fallback, "2024-25"))
 
+        # Ranking goes by the document's year, not the schema the result was
+        # read under. A 2026-27 workbook on the 2025-26 form is read as
+        # 2025-26; the projection keeps serving the PDF extraction under
+        # 2026-27, so the small workbook result is stored, not held.
+        own_year_served = _FakeClient([row("tier4_docling", 300, "2026-10-01T00:00:00+00:00", "2026-27")])
+        on_older_form = new("tier1_xlsx", 100, schema_version="2025-26")
+        self.assertIsNone(field_collapse_action(own_year_served, "doc", "tier1", on_older_form, "2026-27"))
+        # Under its own year the same result would be served, and is held.
+        self.assertIsNotNone(
+            field_collapse_action(own_year_served, "doc", "tier1", new("tier1_xlsx", 100, "2026-27"), "2026-27")
+        )
+        # An older row with no schema_version column is ranked by the year in its notes.
+        noted_year = _FakeClient([row("tier4_docling", 300, "2026-05-01T00:00:00+00:00", None,
+                                      notes_schema_version="2024-25"),
+                                  row("tier4_docling", 60, "2026-06-01T00:00:00+00:00", "2025-26")])
+        self.assertIsNotNone(field_collapse_action(noted_year, "doc", "tier4", new("tier4_docling", 100), "2024-25"))
+
         # The override.
         worker.ACCEPT_FIELD_LOSS = True
         try:

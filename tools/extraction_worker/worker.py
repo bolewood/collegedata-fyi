@@ -291,6 +291,9 @@ def _projection_candidate(row: dict[str, Any]) -> dict[str, Any]:
         "created_at": row.get("created_at"),
         "schema_version": row.get("schema_version"),
         "notes": {
+            # The column is empty on older rows; the projection then reads
+            # the year recorded in the notes.
+            "schema_version": row.get("notes_schema_version"),
             "schema_fallback_used": row.get("schema_fallback_used"),
             "stats": {
                 "schema_fields_populated": row.get("fields"),
@@ -306,11 +309,22 @@ def field_collapse_action(
     document_id: str,
     tier: str,
     canonical: dict[str, Any],
-    expected_schema_version: Optional[str],
+    canonical_year: Optional[str],
 ) -> Optional[str]:
     """The failure action for a result that would be served in place of an
     extraction with more than twice its fields, or None when it may be
-    written. ``--accept-field-loss`` writes it anyway."""
+    written. ``--accept-field-loss`` writes it anyway.
+
+    ``canonical_year`` is the document's own year, which is what the
+    projection ranks by. It is not always the schema the result was read
+    under: a 2026-27 workbook built on the 2025-26 form is read under
+    2025-26, and the projection ranks it below an extraction under 2026-27.
+
+    Two known limits. The count is the served artifact's own; values the
+    projection merges in from an LLM-fallback artifact are not added. And
+    Tier 2 counts every form field with a value, unticked boxes included,
+    so its counts run higher than the other tiers'.
+    """
     if ACCEPT_FIELD_LOSS:
         return None
     from browser_backend.project_browser_data import BASE_PRODUCER_RANK, sort_base_candidates
@@ -319,6 +333,7 @@ def field_collapse_action(
         client.table("cds_artifacts")
         .select(
             "id,producer,created_at,schema_version,"
+            "notes_schema_version:notes->>schema_version,"
             "fields:notes->stats->schema_fields_populated,"
             "schema_fallback_used:notes->schema_fallback_used,"
             "acroform_fields_total:notes->stats->acroform_fields_total,"
@@ -333,7 +348,7 @@ def field_collapse_action(
     candidates = [_projection_candidate(row) for row in rows if row.get("producer") in BASE_PRODUCER_RANK]
     if not candidates:
         return None
-    served = sort_base_candidates(candidates, expected_schema_version)[0]
+    served = sort_base_candidates(candidates, canonical_year)[0]
     served_fields = _populated_fields(served["notes"])
     new_fields = _populated_fields(canonical)
     if not is_field_collapse(served_fields, new_fields):
@@ -349,7 +364,7 @@ def field_collapse_action(
             "stats": canonical.get("stats") or {},
         },
     }
-    if sort_base_candidates(candidates + [incoming], expected_schema_version)[0] is not incoming:
+    if sort_base_candidates(candidates + [incoming], canonical_year)[0] is not incoming:
         # It would be stored but not served, so nothing visible is lost.
         return None
     return (
@@ -2366,10 +2381,11 @@ def _run_tier1(
             apply_extraction_quality_flag(client, document_id, quality_flag)
             return extraction_no_project("already_extracted")
 
-        held = field_collapse_action(client, document_id, "tier1", canonical, resolution.schema_version)
+        held = field_collapse_action(client, document_id, "tier1", canonical, resolution.canonical_year)
         if held:
-            # The extraction being served stays, with its quality flag.
-            mark_extraction_status(client, document_id, "extracted", source_format)
+            # The extraction being served stays, with its quality flag and
+            # the source format it was read from.
+            mark_extraction_status(client, document_id, "extracted")
             return extraction_no_project(held)
 
         try:
@@ -2470,9 +2486,9 @@ def _run_tier6(
                 clear_recoverable_quality_flag(client, document_id)
             return extraction_no_project("already_extracted")
 
-        held = field_collapse_action(client, document_id, "tier6", canonical, resolution.schema_version)
+        held = field_collapse_action(client, document_id, "tier6", canonical, resolution.canonical_year)
         if held:
-            mark_extraction_status(client, document_id, "extracted", source_format)
+            mark_extraction_status(client, document_id, "extracted")
             return extraction_no_project(held)
 
         try:
@@ -2555,7 +2571,7 @@ def _run_tier4(
             return extraction_no_project("already_extracted")
 
         held = field_collapse_action(
-            client, document_id, "tier4", canonical, resolution.schema_version,
+            client, document_id, "tier4", canonical, resolution.canonical_year,
         ) or field_regression_action(
             client, document_id, canonical, resolution.schema_version, fields,
         )
@@ -3195,9 +3211,9 @@ def extract_one(
             apply_extraction_quality_flag(client, document_id, quality_flag)
             return extraction_no_project("already_extracted", needs_review=needs_review)
 
-        held = field_collapse_action(client, document_id, "tier2", canonical, resolution.schema_version)
+        held = field_collapse_action(client, document_id, "tier2", canonical, resolution.canonical_year)
         if held:
-            mark_extraction_status(client, document_id, "extracted", source_format)
+            mark_extraction_status(client, document_id, "extracted")
             return extraction_no_project(held, needs_review=needs_review)
 
         try:
