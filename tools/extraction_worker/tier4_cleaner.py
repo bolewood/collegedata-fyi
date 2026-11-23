@@ -2493,6 +2493,13 @@ def _b1_grand_total_qn(schema: SchemaIndex) -> str:
     return "B.178"
 
 
+def _b1_scalar_total_qns(schema: SchemaIndex) -> tuple[str, ...]:
+    """Total all undergraduates, total all graduate, grand total."""
+    if schema.schema_version in _B1_INTERLEAVED_GENDER_YEARS:
+        return ("B.193", "B.194", "B.195")
+    return ("B.176", "B.177", "B.178")
+
+
 def _b1_line_values(line: str) -> tuple[str, list[str]] | None:
     """Split a B1 data line into (label, value cells).
 
@@ -3086,6 +3093,268 @@ def _resolve_b1_compact_full_part_time_grid(block: str, schema: SchemaIndex) -> 
     return out
 
 
+_B1_HEADER_LOAD_RE = re.compile(r"\b(full|part)\s+time\b")
+# Longest first: "another gender" and "other gender" before bare "another".
+_B1_HEADER_SEXES = (
+    ("another gender", "Another Gender"),
+    ("other gender", "Another Gender"),
+    ("another", "Another Gender"),
+    ("women", "Females"),
+    ("females", "Females"),
+    ("men", "Males"),
+    ("males", "Males"),
+    ("unknown", "Unknown"),
+)
+
+
+def _b1_sex_load_columns(headers: list[str]) -> list[tuple[str, str] | None]:
+    """(sex, unit load) of each value column of a B1 table whose headers name
+    both, as Docling converts the 2023-24 CDS workbook grid:
+
+        | | Men - Full Time Enrollment - UNDERGRADUATE STUDENTS | Men - Part Time ... |
+
+    A column that names no sex, two sexes or no single load is None. Returns
+    [] unless at least four columns are typed and no pair appears twice, so a
+    table headed only "Men | Women | Another Gender" is left to the readers
+    that take the load from divider rows.
+    """
+    columns: list[tuple[str, str] | None] = []
+    for header in headers[1:]:
+        norm = _normalize_label_without_gender_rewrite(header)
+        loads = set(_B1_HEADER_LOAD_RE.findall(norm))
+        sexes = []
+        rest = norm
+        for token, gender in _B1_HEADER_SEXES:
+            if re.search(rf"\b{token}\b", rest):
+                sexes.append(gender)
+                rest = re.sub(rf"\b{token}\b", " ", rest)
+        if len(sexes) == 1 and len(loads) == 1:
+            columns.append((sexes[0], "FT" if "full" in loads else "PT"))
+        else:
+            columns.append(None)
+    typed = [column for column in columns if column]
+    if len(typed) < 4 or len(set(typed)) != len(typed):
+        return []
+    return columns
+
+
+def _b1_header_student_group(headers: list[str]) -> str | None:
+    """Undergraduates or Graduates when the headers of a B1 grid say which
+    half of the grid the table is ("... - GRADUATE STUDENTS")."""
+    norm = " ".join(_normalize_label(header) for header in headers)
+    if re.search(r"\bundergraduates?\b", norm):
+        return "Undergraduates"
+    if re.search(r"\bgraduates?\b", norm):
+        return "Graduates"
+    return None
+
+
+# A banner word Docling pushed into the first cells under it.
+_B1_CELL_BANNER_RE = re.compile(r"^(?:UNDERGRADUATE|GRADUATE|STUDENTS)\s+(?=\d)")
+_B1_TYPED_COUNT_RE = re.compile(r"(\d[\d,]*)(?:\.0+)?")
+_B1_TYPED_BLANK_CELLS = frozenset({"", "-", "–", "—", "n/a", "na"})
+
+# (rows that add up, their total row), by student group. Cohort and category
+# as _match_b1_row names them.
+_B1_TYPED_CHECKS: tuple[tuple[str, tuple[tuple[str, str], ...], tuple[str, str]], ...] = (
+    (
+        "Undergraduates",
+        (
+            ("First-time, first-year", "Degree-seeking"),
+            ("Other first-year", "Degree-seeking"),
+            ("All other", "Degree-seeking"),
+        ),
+        ("Total", "Degree-seeking"),
+    ),
+    (
+        "Undergraduates",
+        (("Total", "Degree-seeking"), ("All other", "Enrolled in Credit Courses")),
+        ("Total", "All"),
+    ),
+    (
+        "Graduates",
+        (
+            ("First-time", "Degree-seeking"),
+            ("All other", "Degree-seeking"),
+            ("All other", "Enrolled in Credit Courses"),
+        ),
+        ("Total", "All"),
+    ),
+)
+
+
+def _b1_typed_rows_verified(
+    rows: dict[tuple[str, str, str], list[int | None]], width: int
+) -> set[tuple[tuple[str, str, str], int]] | None:
+    """Check the rows read from a typed B1 table against its own total rows,
+    column by column, a blank cell counting as 0.
+
+    Returns None when a column does not add up: Docling shuffled the table.
+    Otherwise the (row, column) cells that took part in a sum whose total is
+    printed. Only those are known to sit under the right header; a table cut
+    before its total rows, or a column blank from top to bottom, verifies
+    nothing.
+    """
+    verified: set[tuple[tuple[str, str, str], int]] = set()
+    for group, parts, total in _B1_TYPED_CHECKS:
+        keys = [(group, cohort, category) for cohort, category in parts]
+        total_key = (group, *total)
+        if total_key not in rows or any(key not in rows for key in keys):
+            continue
+        for column in range(width):
+            printed = rows[total_key][column]
+            if sum(rows[key][column] or 0 for key in keys) != (printed or 0):
+                return None
+            if printed is not None:
+                verified.update((key, column) for key in keys + [total_key])
+    return verified
+
+
+def _b1_typed_row(label_norm: str, student_group: str | None) -> tuple[str, str, str] | None:
+    """(student group, cohort, category) of a row of a typed B1 table.
+
+    The group comes from a word in the label when there is one, then from the
+    table (its headers, or a marker row above); only a row with neither is
+    placed by its cohort alone. Under an undergraduate heading a label cut
+    to "Degree-seeking, first-time" is the first-year row, not the graduate
+    row of the same name.
+    """
+    if label_norm in ("total undergraduates", "total undergraduate"):
+        return "Undergraduates", "Total", "All"
+    if label_norm in ("total graduates", "total graduate"):
+        return "Graduates", "Total", "All"
+    row_rule = _match_b1_row(label_norm)
+    if not row_rule or "total all students" in label_norm:
+        return None
+    cohort, category = row_rule
+    if re.search(r"\bundergraduates?\b", label_norm):
+        group = "Undergraduates"
+    elif re.search(r"\bgraduates?\b", label_norm):
+        group = "Graduates"
+    elif student_group:
+        group = student_group
+    elif cohort in ("First-time, first-year", "Other first-year"):
+        group = "Undergraduates"
+    elif cohort == "First-time":
+        group = "Graduates"
+    else:
+        return None
+    if group == "Undergraduates" and cohort == "First-time":
+        cohort = "First-time, first-year"
+    return group, cohort, category
+
+
+def _resolve_b1_sex_load_table(
+    table: dict,
+    columns: list[tuple[str, str] | None],
+    schema: SchemaIndex,
+    out: dict[str, dict],
+    prefer_table: bool,
+) -> None:
+    """Read one B1 table whose columns are typed by _b1_sex_load_columns.
+
+    Every cell is placed by its own column header, so a blank or missing
+    column cannot shift the cells after it. Docling sometimes folds two rows
+    into one or pushes a label into a value cell; the cells then no longer
+    sit under their own headers. Such a table repeats a row, has a typed cell
+    that is not a plain count, or stops adding up to its own totals, and
+    nothing is taken from it.
+
+    A cell fills an empty field. With ``prefer_table`` a cell that took part
+    in a sum with a printed total (see _b1_typed_rows_verified) also corrects
+    what the text reading put there: its count replaces another, and a blank
+    removes a count. A "Total Undergraduate Students" cell is removed too
+    when the table was cut before that row and the cell contradicts the two
+    rows above it.
+    """
+    student_group = _b1_header_student_group(table.get("headers", []))
+    typed = [index for index, column in enumerate(columns) if column]
+    scalars: dict[str, str] = {}
+    rows: dict[tuple[str, str, str], list[int | None]] = {}
+    for row in table["rows"]:
+        label_norm = _normalize_label(row["label"])
+        if not label_norm:
+            continue
+        cells = [_B1_CELL_BANNER_RE.sub("", value.strip()) for value in row["values"]]
+
+        rollup_qn = _b1_rollup_qn(label_norm, schema)
+        if rollup_qn:
+            numbers = {
+                num
+                for cell in cells
+                if (num := _b1_extract_cell_number(_WHOLE_DECIMAL_COUNT_RE.sub(r"\1", cell)))
+                is not None
+            }
+            # A scalar total sits in one cell or is repeated across the row.
+            if len(numbers) == 1:
+                scalars[rollup_qn] = numbers.pop()
+            continue
+
+        marker = re.fullmatch(r"(under)?graduates?(?: students)?", label_norm)
+        if marker:
+            # "Graduate Students" between the two halves of one table.
+            student_group = "Undergraduates" if marker.group(1) else "Graduates"
+            continue
+        row_key = _b1_typed_row(label_norm, student_group)
+        if row_key is None:
+            continue
+        student_group = row_key[0]
+        if row_key in rows or len(cells) <= typed[-1]:
+            return
+        counts: list[int | None] = []
+        for index in typed:
+            cell = cells[index]
+            if cell.lower() in _B1_TYPED_BLANK_CELLS:
+                counts.append(None)
+                continue
+            count = _B1_TYPED_COUNT_RE.fullmatch(cell)
+            if not count:
+                return
+            counts.append(int(count.group(1).replace(",", "")))
+        rows[row_key] = counts
+
+    verified = _b1_typed_rows_verified(rows, len(typed))
+    if verified is None:
+        return
+
+    def field(position: int, group: str, cohort: str, category: str) -> str | None:
+        gender, unit_load = columns[typed[position]]
+        return _b1_schema_lookup(
+            schema,
+            gender=gender,
+            unit_load=unit_load,
+            student_group=group,
+            cohort=cohort,
+            category=category,
+        )
+
+    for qn, num in scalars.items():
+        if prefer_table or qn not in out:
+            out[qn] = {"value": num, "source": "tier4_cleaner"}
+    for row_key, counts in rows.items():
+        for position, count in enumerate(counts):
+            qn = field(position, *row_key)
+            if not qn:
+                continue
+            correct = prefer_table and (row_key, position) in verified
+            if count is not None:
+                if correct or qn not in out:
+                    out[qn] = {"value": str(count), "source": "tier4_cleaner"}
+            elif correct and _b1_value_int(out.get(qn)):
+                del out[qn]
+
+    degree_key = ("Undergraduates", "Total", "Degree-seeking")
+    credit = rows.get(("Undergraduates", "All other", "Enrolled in Credit Courses"))
+    if prefer_table and credit and ("Undergraduates", "Total", "All") not in rows:
+        for position in range(len(typed)):
+            if (degree_key, position) not in verified or credit[position] is None:
+                continue
+            qn = field(position, "Undergraduates", "Total", "All")
+            have = _b1_value_int(out.get(qn)) if qn else None
+            if have is not None and have != rows[degree_key][position] + credit[position]:
+                del out[qn]
+
+
 def _resolve_b1_layout(markdown: str, schema: SchemaIndex) -> dict[str, dict]:
     """Layout-backed B1 parser.
 
@@ -3312,6 +3581,9 @@ def resolve_b1_enrollment(
             "another gender" in joined_hdr or "unknown" in joined_hdr
         ):
             b1_tables.append(t)
+            continue
+        if _b1_sex_load_columns(t.get("headers", [])):
+            b1_tables.append(t)
 
     if not b1_tables:
         for qn, entry in _resolve_b1_field_id_rows(markdown, schema).items():
@@ -3339,6 +3611,11 @@ def resolve_b1_enrollment(
         hdr_ctx = _match_b1_context(hdr_joined)
         if hdr_ctx:
             unit_load, student_group = hdr_ctx
+
+        sex_load_columns = _b1_sex_load_columns(table.get("headers", []))
+        if sex_load_columns:
+            _resolve_b1_sex_load_table(table, sex_load_columns, schema, out, prefer_table)
+            continue
 
         for row in table["rows"]:
             label_norm = _normalize_label(row["label"])
@@ -8674,6 +8951,12 @@ def clean(
         ) and supplemental_text:
             supplemental_new = resolver(tables, supplemental_text, idx)
             if resolver in (resolve_a_general, resolve_b1_enrollment) and supplemental_new:
+                if resolver is resolve_b1_enrollment:
+                    # The text-layer reading replaces the markdown one, but a
+                    # one-number total row only the markdown pass read is kept.
+                    for qn in _b1_scalar_total_qns(idx):
+                        if qn in new:
+                            supplemental_new.setdefault(qn, new[qn])
                 new = supplemental_new
                 supplemental_new = {}
             for qn, rec in supplemental_new.items():
