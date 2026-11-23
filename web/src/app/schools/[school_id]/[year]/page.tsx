@@ -171,7 +171,6 @@ export default async function SchoolYearPage({ params }: {
       url: canonicalUrl,
       creator: { "@type": "Organization", name: schoolName },
       temporalCoverage: year,
-      license: "https://opensource.org/licenses/MIT",
       isAccessibleForFree: true,
       provider: {
         "@type": "Organization",
