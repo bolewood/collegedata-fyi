@@ -6658,6 +6658,11 @@ _H1_ROWS: list[tuple[str, str, str]] = [
     ("student loans from all sources",                        "H.110", "H.122"),
     # Institutional/External scholarship rows (must beat "tuition waivers")
     ("institutional endowed scholarships",                    "H.107", "H.119"),
+    # One vendor template spells the row "Instititutional - Endowed
+    # scholarships, annual gifts and tuition funded grants ... excluding
+    # athletic aid and tuition waivers"; without this it fell through to
+    # the tuition-waivers rule.
+    ("endowed scholarships annual gifts",                     "H.107", "H.119"),
     ("institutional",                                         "H.107", "H.119"),
     ("scholarships grants from external",                     "H.108", "H.120"),
     ("merit not awarded by the college",                      "H.108", "H.120"),
