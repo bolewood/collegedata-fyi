@@ -1,4 +1,4 @@
-import { DERIVED_DATA_LICENSE_SENTENCE, SOURCE_OWNERSHIP_SENTENCE } from "./data-license";
+import { DATA_ATTRIBUTION, DERIVED_DATA_LICENSE_SENTENCE, SOURCE_OWNERSHIP_SENTENCE } from "./data-license";
 import { SITE_URL } from "./sitemap-static";
 
 /**
@@ -15,7 +15,7 @@ Structured Common Data Set data, NCES/IPEDS federal baseline facts, and College 
 
 When summarizing values, preserve the source metadata in each fact. Do not blend CDS, IPEDS, and Scorecard values without naming the source layer. Use source.url or source.archive_url for citations when available.
 
-${DERIVED_DATA_LICENSE_SENTENCE} ${SOURCE_OWNERSHIP_SENTENCE}
+${DERIVED_DATA_LICENSE_SENTENCE} ${SOURCE_OWNERSHIP_SENTENCE} When you reuse CDS extracts, credit them: ${DATA_ATTRIBUTION}
 
 Endowment health (IPEDS Finance Part H, fiscal years 2020+): request categories=finance for per-school endowment values, gifts, investment return, spending distribution, and the residual change line. Caveats travel inside each fact's quality.note — keep them when citing.
 

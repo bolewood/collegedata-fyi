@@ -5,7 +5,13 @@ import { formatCount, formatShortDate } from "@/lib/format";
 import { CommunityInvitation } from "@/components/CommunityInvitation";
 import { CopyButton } from "@/components/CopyButton";
 import { TrackedLink } from "@/components/TrackedLink";
-import { DERIVED_DATA_LICENSE_SENTENCE, SOURCE_OWNERSHIP_SENTENCE } from "@/lib/data-license";
+import {
+  DATA_ATTRIBUTION,
+  DATA_LICENSE_DOC_URL,
+  DATA_LICENSE_EFFECTIVE_DATE,
+  DERIVED_DATA_LICENSE_SENTENCE,
+  SOURCE_OWNERSHIP_SENTENCE,
+} from "@/lib/data-license";
 import { isUsageLaunched } from "@/lib/usage";
 
 export const metadata: Metadata = {
@@ -1736,6 +1742,34 @@ const { data } = await supabase
           schemas/
         </a>
         . {DERIVED_DATA_LICENSE_SENTENCE} {SOURCE_OWNERSHIP_SENTENCE}
+      </p>
+
+      <h2 id="credit" className="serif mt-10 text-2xl">
+        How to credit
+      </h2>
+      <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
+        Anyone can reuse the extracts, including commercially, as long as
+        they credit the source, link the license, and say if they changed the
+        data. The friendly API, MCP payloads and snapshot manifests carry this
+        line in a{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">data_license</code>{" "}
+        block, which covers the CDS extracts but not the federal facts beside
+        them:
+      </p>
+      <CodeBlock>{DATA_ATTRIBUTION}</CodeBlock>
+      <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
+        Where it&apos;s practical, please also link the school&apos;s page on
+        this site. Data published before {DATA_LICENSE_EFFECTIVE_DATE} stays
+        reusable under MIT. The full terms and what they don&apos;t cover are in{" "}
+        <a
+          className={API_LINK_CLASS}
+          href={DATA_LICENSE_DOC_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          DATA_LICENSE.md
+        </a>
+        .
       </p>
 
       <div className="mt-10 border-t border-[var(--rule)] pt-6 text-sm text-[var(--ink-3)]">

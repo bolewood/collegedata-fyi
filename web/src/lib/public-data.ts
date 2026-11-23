@@ -1,5 +1,6 @@
 import { STORAGE_BASE_URL } from "./supabase";
 import { friendlyApiSupabase as supabase } from "./supabase-friendly-api";
+import { dataLicenseFields } from "./data-license";
 import {
   fetchInstitutionCoverage,
   fetchInstitutionCoverageByIpedsId,
@@ -933,6 +934,7 @@ export async function getSchoolFacts(
     school_id: context.schoolId,
     school_name: context.schoolName,
     generated_at: new Date().toISOString(),
+    ...dataLicenseFields(),
     facts,
     sources: [
       {
@@ -1064,6 +1066,7 @@ export async function compareSchools(
 
   return {
     generated_at: new Date().toISOString(),
+    ...dataLicenseFields(),
     schools: rows.map((row) => ({ school_id: row.school_id, school_name: row.school_name })),
     columns,
     rows,

@@ -1,7 +1,10 @@
+import { DATA_ATTRIBUTION, DATA_LICENSE_NAME } from "../data-license";
+
 export const MCP_SERVER_NAME = "collegedata-fyi";
 export const MCP_SERVER_VERSION = "0.2.0";
 export const MCP_INSTRUCTIONS =
-  "Read-only CollegeData.FYI tools. Preserve source metadata when citing values. Do not blend CDS, IPEDS, and Scorecard numbers without naming the source layer.";
+  "Read-only CollegeData.FYI tools. Preserve source metadata when citing values. Do not blend CDS, IPEDS, and Scorecard numbers without naming the source layer. " +
+  `CDS extracts are ${DATA_LICENSE_NAME}; when you reuse them, give the attribution line from the payload: ${DATA_ATTRIBUTION}`;
 
 export const FACT_CATEGORIES =
   "identity, admissions, enrollment, cost, aid, finance, outcomes, sources";

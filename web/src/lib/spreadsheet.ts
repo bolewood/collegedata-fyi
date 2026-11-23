@@ -1,3 +1,4 @@
+import { DATA_ATTRIBUTION, DATA_LICENSE_NAME } from "./data-license";
 import type { FieldValue } from "./types";
 import { groupBySection } from "./sections";
 import { getFieldDisplayLabel, getFieldValueType } from "./schema-labels";
@@ -207,10 +208,11 @@ function readmeSheet(
     [],
     ["Data & attribution"],
     [
-      `Data originates from ${input.schoolName}'s published Common Data Set; the transcription is provided freely by collegedata.fyi (MIT).`,
+      `Data originates from ${input.schoolName}'s published Common Data Set, which belongs to the school. The structured transcription is licensed ${DATA_LICENSE_NAME} by collegedata.fyi.`,
     ],
+    [`Credit line: ${DATA_ATTRIBUTION}`],
     [
-      "Please attribute collegedata.fyi and link the school's source document when republishing.",
+      "If you change the data, say so. Please also link the school's source document when republishing.",
     ],
     [],
     ["Same data over the API"],

@@ -1,3 +1,4 @@
+import { dataLicenseFields } from "./data-license";
 import { fetchCoverageRows, fetchManifest } from "./queries";
 import { friendlyApiSupabase as supabase } from "./supabase-friendly-api";
 import { FRIENDLY_FACT_FIELDS, publicFieldDefinitions } from "./public-data";
@@ -51,6 +52,7 @@ export async function snapshotManifest() {
     generated_at: new Date().toISOString(),
     snapshot_date: SNAPSHOT_DATE,
     note: SNAPSHOT_NOTE,
+    ...dataLicenseFields(),
     files: [
       { name: "schools.jsonl", format: "jsonl", url: `${SNAPSHOT_BASE}/schools.jsonl` },
       { name: "school_facts.jsonl", format: "jsonl", url: `${SNAPSHOT_BASE}/school_facts.jsonl` },

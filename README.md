@@ -157,17 +157,26 @@ Created and maintained by Anthony S. at [Bolewood Group, LLC](https://bolewood.c
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE). Copyright © 2026 Anthony S. and Bolewood Group, LLC.
+- **Code:** MIT. See [`LICENSE`](LICENSE). Copyright © 2026 Anthony S. and Bolewood Group, LLC.
+- **Data we author:** the structured Common Data Set extracts, field documentation
+  and derived-metric definitions are licensed [CC BY 4.0](DATA_LICENSE.md) from
+  the effective date in that file. Earlier releases stay reusable under MIT. Credit line and scope are in
+  [`DATA_LICENSE.md`](DATA_LICENSE.md) ([ADR 0009](docs/decisions/0009-derived-dataset-cc-by.md)).
+- **Curated discovery content** under [`data/discovery/`](data/discovery/)
+  (experience-card library, interest ontology, explanation templates, discovery policy
+  definitions): [CC BY-SA 4.0](data/discovery/LICENSE). Attribution and share-alike
+  required. Contributions to that directory require a contribution agreement; see
+  [`data/discovery/README.md`](data/discovery/README.md).
+- **Named scholarship records** under [`data/scholarships/`](data/scholarships/):
+  [CC BY-SA 4.0](data/scholarships/LICENSE) on the same terms; see
+  [`data/scholarships/README.md`](data/scholarships/README.md) for the credit line.
+- **Community project write-ups** in [`web/src/data/community/`](web/src/data/community/README.md):
+  CC BY-SA 4.0.
+- **Usage statistics** (`/usage.json`): CC0 1.0.
 
-Two exceptions. The curated discovery content under [`data/discovery/`](data/discovery/)
-(experience-card library, interest ontology, explanation templates, discovery policy
-definitions) is licensed [CC BY-SA 4.0](data/discovery/LICENSE) — publicly inspectable,
-attribution and share-alike required. Contributions to that directory require a
-contribution agreement; see [`data/discovery/README.md`](data/discovery/README.md).
-
-The named scholarship records under [`data/scholarships/`](data/scholarships/) are
-licensed [CC BY-SA 4.0](data/scholarships/LICENSE) on the same terms; see
-[`data/scholarships/README.md`](data/scholarships/README.md) for the credit line.
+Not ours to license: the schools' Common Data Set documents (they belong to the
+schools), CDS Initiative template text in [`schemas/`](schemas/), and federal
+IPEDS, College Scorecard and FSA data.
 
 ## Using the data?
 
