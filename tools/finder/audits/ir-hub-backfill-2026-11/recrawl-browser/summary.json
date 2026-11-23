@@ -1,0 +1,28 @@
+{
+  "schools": 85,
+  "yes": 1,
+  "no": 71,
+  "unclear": 13,
+  "published": false,
+  "review_only": true,
+  "sequential": true,
+  "seconds_between_requests": 3,
+  "timeout_seconds": 25,
+  "browser": "headless Chromium (Playwright 1.60), desktop Chrome user agent",
+  "input": "the 85 rows of recrawl-mac/review.csv that were unclear with homepage_fail:http_403",
+  "finished": "2026-11-23",
+  "no_rows": {
+    "every_page_loaded": 37,
+    "an_ir_or_about_page_was_challenged_or_refused": 34
+  },
+  "unclear_reasons": {
+    "challenge": 11,
+    "robots_disallow": 1,
+    "http_403": 1
+  },
+  "yes_rows": {
+    "already_seeded": [
+      "236577"
+    ]
+  }
+}
