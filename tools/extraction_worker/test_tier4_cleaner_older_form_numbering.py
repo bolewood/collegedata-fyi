@@ -44,7 +44,7 @@ class OlderFormNumberingTests(unittest.TestCase):
         for source, target in {
             "C.1305": "C.1307", "C.1604": "C.1603", "C.1607": "C.1605", "C.1704": "C.1702",
             "C.1705": "C.1703", "C.1707": "C.1704", "C.1711": "C.1707", "C.2206": "C.2204",
-            "D.204": "D.205", "D.208": "D.210", "D.212": "D.215", "D.2201": "D.2202",
+            "D.2201": "D.2202",
             "G.602": "G.603", "G.603": "G.604", "G.604": "G.605", "G.605": "G.606",
             "H.701": "H.7101", "H.907": "H.903", "H.1103": "H.1102",
         }.items():
@@ -65,20 +65,57 @@ class OlderFormNumberingTests(unittest.TestCase):
             {"C.1402": "11/30", "C.1403": "1/15"},
         )
 
-    def test_transfer_counts_and_dates(self):
+    def test_transfer_dates(self):
         schema = _get_schema("2023-24")
         out = _values(_claims_in_older_form(
-            _claims(D_201="100", D_202="120", D_203="3", D_204="223", D_205="60", D_208="130", D_209="30",
-                    D_212="70", D_909="3", D_910="1", D_917="5", D_918="15", D_933="X", D_935="X"),
+            _claims(D_201="100", D_909="3", D_910="1", D_917="5", D_918="15", D_933="X", D_935="X",
+                    D_913="15", D_914="30"),
             schema,
         ))
         self.assertEqual(out, {
-            "D.201": "100", "D.202": "120", "D.203": "3", "D.205": "223",   # applied: men, women, another gender, total
-            "D.206": "60", "D.210": "130",                                   # admitted: men, total
-            "D.211": "30", "D.215": "70",                                    # enrolled: men, total
-            "D.905": "3/1", "D.909": "5/15",                                 # fall closing, fall notification
-            "D.917": "X", "D.919": "X",                                      # rolling: fall, spring
+            "D.201": "100",                     # D2 is numbered where it is read
+            "D.905": "3/1", "D.909": "5/15",    # fall closing, fall notification
+            "D.917": "X", "D.919": "X",         # rolling: fall, spring
+        })                                      # "15/30" is not a date and is dropped
+
+    def test_transfer_counts_are_numbered_by_the_documents_form(self):
+        text = (
+            "D. TRANSFER ADMISSION\n"
+            "D2 Provide the number of students who applied, were admitted, and enrolled as degree-seeking\n"
+            "                    Applicants   Admitted Applicants   Enrolled Applicants\n"
+            "Men                 100          60                    30\n"
+            "Women               120          70                    40\n"
+            "Another Gender      3            1                     1\n"
+            "Unknown             7            2                     0\n"
+            "Total               230          133                   71\n"
+            "D3-D11\n"
+        )
+        def d2(year):
+            return {k: v["value"] for k, v in clean(text, canonical_year=year).items() if k.startswith("D.2")}
+        self.assertEqual(d2("2024-25"), {
+            "D.201": "100", "D.206": "60", "D.211": "30", "D.202": "120", "D.207": "70", "D.212": "40",
+            "D.203": "3", "D.208": "1", "D.213": "1", "D.204": "7", "D.209": "2", "D.214": "0",
+            "D.205": "230", "D.210": "133", "D.215": "71",
         })
+        # 2023-24 has no "Unknown" row.
+        self.assertEqual(sorted(set(d2("2024-25")) - set(d2("2023-24"))), ["D.204", "D.209", "D.214"])
+        # 2025-26: four rows per column, numbered as before.
+        self.assertEqual(d2("2025-26")["D.204"], "230")
+        self.assertEqual(d2("2025-26")["D.212"], "71")
+
+        table = (
+            "## D2. Transfer applicants\n\n"
+            "| Transfer | Men | Women | Another Gender | Unknown | Total |\n"
+            "|---|---|---|---|---|---|\n"
+            "| Total applicants | 100 | 120 | 3 | 7 | 230 |\n"
+            "| Total admitted | 60 | 70 | 1 | 2 | 133 |\n"
+            "| Total enrolled | 30 | 40 | 1 | 0 | 71 |\n"
+        )
+        got = {k: v["value"] for k, v in clean(table, canonical_year="2024-25").items() if k.startswith("D.2")}
+        self.assertEqual(got.get("D.202"), "120")   # the Women column is its own column
+        self.assertEqual(got.get("D.203"), "3")
+        self.assertEqual(got.get("D.204"), "7")
+        self.assertEqual(got.get("D.215"), "71")
 
     def test_boxes_that_became_other_kinds_of_field(self):
         schema = _get_schema("2024-25")

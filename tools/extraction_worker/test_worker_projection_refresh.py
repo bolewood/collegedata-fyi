@@ -304,6 +304,12 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
                  "D.911": {"value": "12/20"}}
         self.assertEqual(tables_lost(month_day, dates), {})
         self.assertEqual(tables_lost(month_day, {"D.905": {"value": "3/1"}}), {"D9": (6, 8)})
+        # ... in the date's own table only. Dates in C14 to C22 do not stand
+        # in for C5's unit counts.
+        c5 = {f"C.5{n:02d}": {"value": v} for n, v in enumerate("44332112", start=1)}
+        c_dates = {"C.1402": {"value": "4/4"}, "C.1403": {"value": "3/3"}, "C.1602": {"value": "2/1"},
+                   "C.2104": {"value": "1/2"}}
+        self.assertEqual(tables_lost(c5, c_dates), {"C5": (8, 8)})
 
         # Section A is never compared, and nothing to compare means no loss.
         self.assertEqual(tables_lost({f"A.1{n:02d}": {"value": str(900 + n)} for n in range(1, 9)}, {}), {})

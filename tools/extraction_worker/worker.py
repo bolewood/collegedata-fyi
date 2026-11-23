@@ -505,14 +505,11 @@ def _comparable_number(record: Any) -> Optional[str]:
 _MONTH_DAY_RE = re.compile(r"(\d{1,2})/(\d{1,2})")
 
 
-def _numbers_held(record: Any) -> list[str]:
-    """The numbers a new field accounts for. A date written "3/15" holds the
-    month and the day: the 2023-24 and 2024-25 forms have one date field
-    where the 2025-26 form has two, and older extractions of those documents
-    carry the two numbers (issue #421)."""
-    number = _comparable_number(record)
-    if number is not None:
-        return [number]
+def _month_and_day(record: Any) -> list[str]:
+    """The month and the day of a value written "3/15", else nothing. The
+    2023-24 and 2024-25 forms have one date field where the 2025-26 form has
+    two, and older extractions of those documents carry the two numbers
+    (issue #421)."""
     value = record.get("value") if isinstance(record, dict) else record
     match = _MONTH_DAY_RE.fullmatch(str(value if value is not None else "").strip())
     return [str(int(part)) for part in match.groups() if int(part)] if match else []
@@ -533,9 +530,17 @@ def tables_lost(
     if not previous_values:
         return {}
     kept: dict[str, Counter[str]] = {}
+    # A date accounts for a month and a day in its own table only: across a
+    # section, a dozen dates would stand in for any table of small numbers.
+    dates: dict[str, Counter[str]] = {}
     for field_id, record in new_values.items():
-        for number in _numbers_held(record):
+        number = _comparable_number(record)
+        if number is not None:
             kept.setdefault(str(field_id)[:1], Counter())[number] += 1
+            continue
+        table = _table_of(field_id)
+        for part in _month_and_day(record) if table else ():
+            dates.setdefault(table, Counter())[part] += 1
     had: dict[str, int] = {}
     lost: dict[str, int] = {}
     for field_id, record in sorted(previous_values.items(), key=lambda item: str(item[0])):
@@ -546,9 +551,11 @@ def tables_lost(
         if number is None:
             continue
         had[table] = had.get(table, 0) + 1
-        available = kept.get(table[:1])
+        available, in_dates = kept.get(table[:1]), dates.get(table)
         if available is not None and available[number] > 0:
             available[number] -= 1
+        elif in_dates is not None and in_dates[number] > 0:
+            in_dates[number] -= 1
         else:
             lost[table] = lost.get(table, 0) + 1
     return {
