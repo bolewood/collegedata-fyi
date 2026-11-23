@@ -88,7 +88,7 @@ import uuid
 import zipfile
 from collections import Counter
 from dataclasses import dataclass
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from pathlib import Path
@@ -438,6 +438,7 @@ def previous_canonical(
         .select(
             "id,kind,sha256,created_at,schema_version,"
             "source_sha:notes->>source_sha256,"
+            "source_artifact_sha:notes->source_artifact->>sha256,"
             "selection_latest_sha:notes->source_selection->>latest_sha256"
         )
         .eq("document_id", document_id)
@@ -449,6 +450,10 @@ def previous_canonical(
     if not canonicals:
         return None
     newest = max(canonicals, key=lambda r: _artifact_time(r["created_at"]))
+    if not newest.get("source_sha") and newest.get("source_artifact_sha"):
+        # Some artifacts record their source only under notes.source_artifact,
+        # the second place previous_canonical_field_count looks.
+        newest = dict(newest, source_sha=newest["source_artifact_sha"])
     if _canonical_source_sha(newest, rows) != source_sha256:
         return None
     detail = (
@@ -475,17 +480,22 @@ def _table_of(field_id: str) -> Optional[str]:
     return match.group(1) + match.group(2) if match else None
 
 
+_PLAIN_NUMBER_RE = re.compile(r"-?(?:\d{1,15}(?:\.\d{0,10})?|\.\d{1,10})")
+
+
 def _comparable_number(record: Any) -> Optional[str]:
     """A value as a plain number string, or None when it is not a number or is
     zero. Zeros and ticks ("X", "Yes") are everywhere in a CDS, so their
     presence elsewhere in a section says nothing about one field."""
     value = record.get("value") if isinstance(record, dict) else record
     text = str(value if value is not None else "").replace(",", "").replace("$", "").replace("%", "").strip()
-    try:
-        number = Decimal(text)
-    except InvalidOperation:
+    # Plain digits only. Decimal also accepts "1E1000000", "nan" and
+    # "Infinity", and normalising a huge exponent raises or allocates a
+    # megabyte-long string.
+    if not _PLAIN_NUMBER_RE.fullmatch(text):
         return None
-    if not number.is_finite() or number == 0:
+    number = Decimal(text)
+    if number == 0:
         return None
     # One spelling per number: "25.70", "25.7" and 25.7 are the same value,
     # as are "1322.0" and "1322".
@@ -500,17 +510,20 @@ def tables_lost(
     least MIN_TABLE_VALUES_LOST numbers and more than half of its numbers.
 
     A number is lost when no field in the same section of ``new_values``
-    holds it. Section A (names, addresses, phone numbers) is not compared."""
+    still holds it. Each field of the new extraction accounts for one field
+    of the old one, so a table of small numbers (C5's units, I3's class
+    counts) is not hidden by one "4" elsewhere in the section. Section A
+    (names, addresses, phone numbers) is not compared."""
     if not previous_values:
         return {}
-    kept: dict[str, set[str]] = {}
+    kept: dict[str, Counter[str]] = {}
     for field_id, record in new_values.items():
         number = _comparable_number(record)
         if number is not None:
-            kept.setdefault(str(field_id)[:1], set()).add(number)
+            kept.setdefault(str(field_id)[:1], Counter())[number] += 1
     had: dict[str, int] = {}
     lost: dict[str, int] = {}
-    for field_id, record in previous_values.items():
+    for field_id, record in sorted(previous_values.items(), key=lambda item: str(item[0])):
         table = _table_of(field_id)
         if table is None or table.startswith("A"):
             continue
@@ -518,7 +531,10 @@ def tables_lost(
         if number is None:
             continue
         had[table] = had.get(table, 0) + 1
-        if number not in kept.get(table[:1], ()):
+        available = kept.get(table[:1])
+        if available is not None and available[number] > 0:
+            available[number] -= 1
+        else:
             lost[table] = lost.get(table, 0) + 1
     return {
         table: (count, had[table])

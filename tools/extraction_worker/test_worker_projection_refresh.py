@@ -273,8 +273,22 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
         five_of_twelve = dict(new, **{f"H.2{n:02d}": {"value": str(7000 + n)} for n in range(6, 13)})
         self.assertEqual(tables_lost(previous, five_of_twelve), {})
         # Six of twelve is not more than half either; seven is.
+        six = dict(new, **{f"H.2{n:02d}": {"value": str(7000 + n)} for n in range(7, 13)})
+        self.assertEqual(tables_lost(previous, six), {})
         seven = dict(new, **{f"H.2{n:02d}": {"value": str(7000 + n)} for n in range(8, 13)})
         self.assertEqual(tables_lost(previous, seven), {"H2": (7, 12)})
+
+        # One field of the new extraction accounts for one field of the old
+        # one: a single "4" elsewhere in section C does not stand in for a
+        # table of unit counts, and two lost tables are both named.
+        units = {f"C.5{n:02d}": {"value": v} for n, v in enumerate("443322114322", start=1)}
+        units.update({f"I.3{n:02d}": {"value": str(20 + n)} for n in range(1, 8)})
+        elsewhere = {"C.1101": {"value": "4"}, "C.1102": {"value": "3"}, "C.1103": {"value": "2"}, "C.1104": {"value": "1"}}
+        self.assertEqual(tables_lost(units, elsewhere), {"C5": (8, 12), "I3": (7, 7)})
+        # Text that only looks like a number to a lenient parser is not one.
+        odd = {f"H.2{n:02d}": {"value": v} for n, v in enumerate(
+            ["1E1000000", "2E20232024", "Infinity", "nan", "-0.0", "1e5", "(5)", ""], start=1)}
+        self.assertEqual(tables_lost(odd, {}), {})
 
         # The same number spelled another way is the same number.
         percents = {f"C.9{n:02d}": {"value": f"{n}.70"} for n in range(1, 9)}
@@ -327,6 +341,18 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
         # Another file was current when it was written: not comparable.
         self.assertIsNone(previous_canonical(client, "doc", "other"))
         self.assertIsNone(previous_canonical(client, "doc", None))
+
+        # A source recorded only under notes.source_artifact wins over the
+        # file that happened to be current when the artifact was written.
+        rows = [
+            {"id": "s1", "kind": "source", "sha256": "first", "created_at": "2026-04-01T00:00:00+00:00"},
+            {"id": "s2", "kind": "source", "sha256": "second", "created_at": "2026-04-10T00:00:00+00:00"},
+            {"id": "c1", "kind": "canonical", "created_at": "2026-04-12T00:00:00+00:00", "schema_version": "2025-26",
+             "source_artifact_sha": "first"},
+        ]
+        client = self._ArtifactClient(rows, {"c1": values})
+        self.assertEqual(previous_canonical(client, "doc", "first"), ("2025-26", values))
+        self.assertIsNone(previous_canonical(client, "doc", "second"))
 
     def test_previous_values_require_the_same_file_and_schema(self):
         def Client(rows, values):
