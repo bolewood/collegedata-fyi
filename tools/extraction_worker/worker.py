@@ -175,6 +175,19 @@ MIN_HEADLINE_FIELDS_LOST = 2
 # Set by --accept-headline-loss: write the new extraction even so. For the
 # case the guard cannot tell apart, a fix that removes wrong headline values.
 ACCEPT_HEADLINE_LOSS = False
+
+# Tier 4 only: run today's cleaner on the conversion an earlier artifact of
+# the same file stored, instead of converting the PDF again (--reclean).
+# Converting is nearly all of an extraction's time, and a second conversion
+# can lay a table out differently on another machine or Docling build, so a
+# cleaner fix reaches a document faster and with less noise this way. The
+# result goes through the same guards and is written the same way. A document
+# with no stored conversion of its current file is skipped, not converted.
+RECLEAN = False
+# A conversion paced a run at one document every half minute. A re-clean
+# takes about a second but still reads and writes the same large artifact
+# rows, so the run keeps documents at least this far apart.
+RECLEAN_INTERVAL_SECONDS = 8.0
 MIN_TIER2_LABEL_FALLBACK_ACROFORM_FIELDS = 50
 # Flattened reprint guard: when a school republishes its fillable CDS PDF as a
 # flattened copy with no form fields, compare the earlier fillable PDF's
@@ -587,6 +600,74 @@ def previous_canonical(
     if not isinstance(values, dict):
         return None
     return newest.get("schema_version"), values
+
+
+def stored_tier4_conversion(
+    client: Client,
+    document_id: str,
+    source_sha256: Optional[str],
+) -> Optional[dict[str, Any]]:
+    """The conversion kept by the newest Tier 4 artifact made from this source
+    file, in the shape ``tier4_extractor.reclean`` takes. None when there is
+    none to reuse.
+
+    Unlike the guards, this does not attribute an artifact that records no
+    source to the file that was current at the time: re-cleaning another
+    file's conversion would publish it as this file's extraction. Those
+    artifacts (cleaner 0.3.0 and 0.3.1) need a real conversion.
+    """
+    if not source_sha256:
+        return None
+    rows = (
+        client.table("cds_artifacts")
+        .select(
+            "id,kind,producer,producer_version,created_at,"
+            "source_sha:notes->>source_sha256,"
+            "source_artifact_sha:notes->source_artifact->>sha256"
+        )
+        .eq("document_id", document_id)
+        .eq("kind", "canonical")
+        .eq("producer", "tier4_docling")
+        .execute()
+        .data
+        or []
+    )
+    same_file = [
+        r for r in rows
+        if source_sha256 in (r.get("source_sha"), r.get("source_artifact_sha"))
+    ]
+    if not same_file:
+        return None
+    newest = max(same_file, key=lambda r: (_artifact_time(r["created_at"]), str(r["id"])))
+    detail = (
+        client.table("cds_artifacts")
+        .select(
+            "markdown:notes->>markdown,native_tables:notes->native_tables,"
+            "docling_config:notes->docling_config,page_count:notes->stats->page_count,"
+            "extracted_at:notes->>extracted_at,conversion:notes->conversion"
+        )
+        .eq("id", newest["id"])
+        .limit(1)
+        .execute()
+        .data
+        or []
+    )
+    if not detail or not str(detail[0].get("markdown") or "").strip():
+        return None
+    stored = detail[0]
+    earlier = stored.get("conversion") if isinstance(stored.get("conversion"), dict) else {}
+    # A re-cleaned artifact points at the artifact that converted the PDF,
+    # however many re-cleans lie between.
+    reused = bool(earlier.get("reused"))
+    return {
+        "artifact_id": earlier.get("from_artifact_id") if reused else newest["id"],
+        "producer_version": earlier.get("from_producer_version") if reused else newest.get("producer_version"),
+        "converted_at": earlier.get("converted_at") if reused else stored.get("extracted_at"),
+        "markdown": stored["markdown"],
+        "native_tables": stored.get("native_tables"),
+        "docling_config": stored.get("docling_config"),
+        "page_count": stored.get("page_count"),
+    }
 
 
 _TABLE_FIELD_RE = re.compile(r"^([A-Z])\.(\d+[A-Z]?)\d\d$")
@@ -1168,6 +1249,37 @@ def extraction_success(action: str, *, needs_review: bool = False) -> Extraction
 
 def extraction_no_project(action: str, *, needs_review: bool = False) -> ExtractionOutcome:
     return ExtractionOutcome(action, refresh_projection=False, needs_review=needs_review)
+
+
+def is_reclean_skip(action: str) -> bool:
+    """A --reclean run found nothing it could reuse for this document. No
+    artifact, status or flag was written, so the run neither extracted the
+    document nor failed on it: it is named in the summary and left out of
+    the run ledger and the extracted count."""
+    return "tier4_reclean_skipped" in action.split(" (", 1)[0]
+
+
+def reclean_blocker(conversion: dict[str, Any], force_ocr: bool) -> Optional[str]:
+    """Why a stored conversion cannot stand in for converting the PDF today,
+    or None. The stored markdown must come from the pipeline settings a
+    conversion would use now: a scanned PDF converted before it was routed to
+    full-page OCR left almost no text, and re-cleaning that would repeat it."""
+    from tier4_extractor import DOCLING_CONFIG_NAME
+
+    config = conversion.get("docling_config")
+    if not isinstance(config, dict) or config.get("name") != DOCLING_CONFIG_NAME:
+        return "the stored conversion used other Docling settings"
+    if bool(config.get("force_ocr")) != bool(force_ocr):
+        return "the stored conversion used a different OCR mode"
+    return None
+
+
+def reclean_pause(started: float, interval: float, sleep=time.sleep, now=time.monotonic) -> float:
+    """Wait out the rest of ``interval`` seconds since ``started``; returns the wait."""
+    wait = max(0.0, interval - (now() - started))
+    if wait:
+        sleep(wait)
+    return wait
 
 
 def load_env(env_path: Path) -> dict[str, str]:
@@ -2547,16 +2659,40 @@ def _run_tier4(
     heuristic doesn't reliably trigger on scanned documents.
     """
     from tier4_extractor import extract_from_bytes as tier4_extract
+    from tier4_extractor import reclean_from_bytes as tier4_reclean
 
     force_ocr = source_format == "pdf_scanned"
+    conversion = None
+    if RECLEAN:
+        try:
+            conversion = stored_tier4_conversion(client, document_id, source_artifact.get("sha256"))
+        except Exception as e:
+            return extraction_no_project(f"tier4_reclean_error: {e}")
+        # A skip writes no artifact and leaves the document's status alone;
+        # the run summary names it so it can be converted in a normal run.
+        if conversion is None:
+            return extraction_no_project("tier4_reclean_skipped (no stored conversion of the current file)")
+        blocker = reclean_blocker(conversion, force_ocr)
+        if blocker:
+            return extraction_no_project(f"tier4_reclean_skipped ({blocker})")
     try:
-        canonical = tier4_extract(
-            pdf_bytes,
-            force_ocr=force_ocr,
-            schema=schema_index,
-            schema_version=resolution.schema_version,
-            schema_fallback_used=resolution.fallback_used,
-        )
+        if conversion is not None:
+            canonical = tier4_reclean(
+                pdf_bytes,
+                conversion,
+                force_ocr=force_ocr,
+                schema=schema_index,
+                schema_version=resolution.schema_version,
+                schema_fallback_used=resolution.fallback_used,
+            )
+        else:
+            canonical = tier4_extract(
+                pdf_bytes,
+                force_ocr=force_ocr,
+                schema=schema_index,
+                schema_version=resolution.schema_version,
+                schema_fallback_used=resolution.fallback_used,
+            )
         if resolution.fallback_used:
             canonical["schema_fallback_reason"] = resolution.fallback_reason
             if resolution.canonical_year:
@@ -2631,7 +2767,8 @@ def _run_tier4(
 
     md_len = stats.get("markdown_length", 0)
     pages = stats.get("page_count", 0)
-    return extraction_success(f"tier4_extracted ({fields} fields, {md_len} chars, {pages} pages)")
+    done = "tier4_recleaned" if conversion is not None else "tier4_extracted"
+    return extraction_success(f"{done} ({fields} fields, {md_len} chars, {pages} pages)")
 
 
 def mark_extraction_status(
@@ -3591,6 +3728,30 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--reclean",
+        action="store_true",
+        help=(
+            "Flat and scanned PDFs only: run the current cleaner on the "
+            "conversion stored by the newest Tier 4 artifact of the same "
+            "source file, instead of converting the PDF again. The same "
+            "guards apply. A document with no stored conversion of its "
+            "current file, or whose stored conversion used other settings, "
+            "is skipped (tier4_reclean_skipped) and left as it is. Other "
+            "formats are extracted as usual. Needs --document-ids or "
+            "--requeue-document-ids; use with --force-reextract."
+        ),
+    )
+    parser.add_argument(
+        "--reclean-interval",
+        type=float,
+        default=RECLEAN_INTERVAL_SECONDS,
+        help=(
+            "With --reclean: least seconds from one document to the next "
+            f"(default {RECLEAN_INTERVAL_SECONDS:g}). Each document still reads "
+            "and writes a large artifact row."
+        ),
+    )
+    parser.add_argument(
         "--summary-json",
         type=Path,
         default=None,
@@ -3637,12 +3798,17 @@ def main() -> int:
         value.strip()
         for value in f"{args.document_ids or ''},{args.requeue_document_ids or ''}".split(",")
     )
-    for switch in ("accept_headline_loss", "accept_field_loss", "accept_table_loss"):
+    for switch in ("accept_headline_loss", "accept_field_loss", "accept_table_loss", "reclean"):
         if getattr(args, switch) and not named_documents:
-            # Each switch turns its guard off for every document in the run,
-            # so it is only taken for documents named one by one.
+            # Each accept switch turns its guard off for every document in
+            # the run, so it is only taken for documents named one by one.
+            # --reclean is for documents that already have an extraction; a
+            # pending document has nothing to re-clean.
             parser.error(f"--{switch.replace('_', '-')} needs --document-ids or --requeue-document-ids")
-    global ACCEPT_HEADLINE_LOSS, ACCEPT_FIELD_LOSS, ACCEPT_TABLE_LOSS
+    if args.reclean_interval < 0:
+        parser.error("--reclean-interval cannot be negative")
+    global ACCEPT_HEADLINE_LOSS, ACCEPT_FIELD_LOSS, ACCEPT_TABLE_LOSS, RECLEAN
+    RECLEAN = bool(args.reclean)
     ACCEPT_HEADLINE_LOSS = bool(args.accept_headline_loss)
     ACCEPT_FIELD_LOSS = bool(args.accept_field_loss)
     ACCEPT_TABLE_LOSS = bool(args.accept_table_loss)
@@ -3906,8 +4072,12 @@ def main() -> int:
     low_field_docs: list[dict[str, Any]] = []
     review_docs: list[dict[str, Any]] = []
     failure_count = 0
+    reclean_skip_count = 0
     stopped_early = False
     for i, doc in enumerate(docs, 1):
+        if RECLEAN and i > 1:
+            reclean_pause(document_started, args.reclean_interval)
+        document_started = time.monotonic()
         if deadline is not None and utc_now() >= deadline:
             remaining = len(docs) - (i - 1)
             print(
@@ -3966,6 +4136,8 @@ def main() -> int:
                 })
         failed = is_failure_action(outcome.action)
         failure_count += int(failed)
+        reclean_skipped = is_reclean_skip(outcome.action)
+        reclean_skip_count += int(reclean_skipped)
         if (
             not args.dry_run
             and not failed
@@ -4012,14 +4184,15 @@ def main() -> int:
                 message = str(e).splitlines()[0][:200]
                 projection_note = f"; projection_error={type(e).__name__}: {message}"
 
-        ledger_items.append(
-            extraction_ledger_item(
-                doc,
-                outcome.action,
-                ordinal=len(ledger_items) + 1,
-                force_reextract=args.force_reextract,
+        if not reclean_skipped:
+            ledger_items.append(
+                extraction_ledger_item(
+                    doc,
+                    outcome.action,
+                    ordinal=len(ledger_items) + 1,
+                    force_reextract=args.force_reextract,
+                )
             )
-        )
         summary_doc: dict[str, Any] = {
             "document_id": str(doc["id"]),
             "school_id": doc["school_id"],
@@ -4060,7 +4233,7 @@ def main() -> int:
         or reconcile_counts["projection_errors"]
     )
     pending_remaining = count_extraction_pending(client)
-    extracted = max(0, processed_count - failure_count)
+    extracted = max(0, processed_count - failure_count - reclean_skip_count)
     summary = with_heartbeat_fields({
         "started_at": started_at,
         "finished_at": utc_now_iso(),

@@ -158,6 +158,30 @@ python worker.py --requeue-document-ids <uuid> --document-ids <uuid> --force-ree
 python worker.py --requeue-document-ids <uuid> --document-ids <uuid> --force-reextract --accept-headline-loss
 python worker.py --requeue-document-ids <uuid> --document-ids <uuid> --force-reextract --accept-table-loss
 
+# Re-clean: run the current cleaner on the conversion a document's newest
+# Tier 4 artifact of the same file stored, without converting the PDF again.
+# The cleaning takes about a second instead of about thirty, and there is no
+# conversion drift, because nothing is converted. Use it after a cleaner
+# change, for named documents only.
+# - The PDF is still downloaded, for its text layer and for the bounded OCR
+#   pass on the documents that need it.
+# - The new artifact records which artifact converted the PDF in
+#   notes.conversion, and keeps that run's notes.docling_config.
+# - The field-count, table and collapse guards apply as usual. The headline
+#   guard only fires when the conversion lost the C1 numbers, which a re-clean
+#   cannot do, so a cleaner change that drops a C1 value is caught by the
+#   other guards or by the scoreboard, not by that one.
+# - Documents are kept at least 8 seconds apart (--reclean-interval): each one
+#   still reads and writes a large artifact row.
+# - A document with no stored conversion of its current file, or whose stored
+#   conversion used other settings (a different Docling config name or OCR
+#   mode), is skipped: action tier4_reclean_skipped in the summary, nothing
+#   written, not in the run ledger. Run those without --reclean.
+# - After a change to Docling, its models, the pipeline options or the
+#   installed fonts, run a full conversion, not a re-clean.
+python worker.py --requeue-document-ids <uuid>,<uuid> --force-reextract --reclean \
+    --summary-json ../../scratch/extraction-drain/local/reclean.summary.json
+
 # Fresh-year drain: process the newest archived CDS rows before old backlog
 python worker.py --min-year-start 2025 --include-failed --limit 25
 

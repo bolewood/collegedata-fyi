@@ -198,6 +198,53 @@ def _needs_visual_ocr_supplement(markdown: str, values: dict[str, dict]) -> bool
     return c1_missing or c9_missing or b1_missing
 
 
+def _clean_with_supplements(
+    markdown: str,
+    pdf_path: Path,
+    schema,
+    page_count: int,
+    force_ocr: bool,
+) -> dict:
+    """Run the cleaner on converted markdown with the PDF's text layer, and
+    with the bounded OCR pass when headline tables came out blank.
+
+    Everything the cleaner reads is either ``markdown`` or re-derived here
+    from the PDF, which is what lets ``reclean`` reproduce ``extract`` from a
+    stored conversion."""
+    from tier4_cleaner import clean
+
+    pdf_layout_text = _extract_pdf_layout_text(pdf_path)
+    supplemental_text = pdf_layout_text
+    values = clean(markdown, schema=schema, supplemental_text=supplemental_text)
+    visual_ocr_text = ""
+    visual_ocr_pages: list[int] = []
+    visual_ocr_missing_tools: list[str] = []
+    if _needs_visual_ocr_supplement(markdown, values):
+        visual_ocr_missing_tools = _missing_visual_ocr_tools()
+        # Scanned PDFs have no embedded text layer for pypdf to select pages
+        # from. If Docling's full-page OCR still left admissions values blank,
+        # use a bounded Tesseract pass over the front CDS sections instead of
+        # silently skipping the visual supplement.
+        fallback_page_count = page_count if force_ocr else None
+        visual_ocr_text, visual_ocr_pages = _extract_visual_ocr_text(
+            pdf_path,
+            fallback_page_count=fallback_page_count,
+        )
+        if visual_ocr_text:
+            # Put OCR first. Section slicers such as C9 stop at the first
+            # C10 boundary they see; if embedded layout text comes first and
+            # has blank cells, the later OCR repair block would be hidden.
+            supplemental_text = f"{visual_ocr_text}\n\n{pdf_layout_text}"
+            values = clean(markdown, schema=schema, supplemental_text=supplemental_text)
+    return {
+        "values": values,
+        "pdf_layout_text": pdf_layout_text,
+        "visual_ocr_text": visual_ocr_text,
+        "visual_ocr_pages": visual_ocr_pages,
+        "visual_ocr_missing_tools": visual_ocr_missing_tools,
+    }
+
+
 def extract(
     pdf_path: Path,
     force_ocr: bool = False,
@@ -243,31 +290,13 @@ def extract(
         pass
 
     # Run the schema-targeting cleaner to map markdown → canonical fields.
-    from tier4_cleaner import clean
     from tier4_native_tables import compact_tables
-    pdf_layout_text = _extract_pdf_layout_text(pdf_path)
-    supplemental_text = pdf_layout_text
-    values = clean(markdown, schema=schema, supplemental_text=supplemental_text)
-    visual_ocr_text = ""
-    visual_ocr_pages: list[int] = []
-    visual_ocr_missing_tools: list[str] = []
-    if _needs_visual_ocr_supplement(markdown, values):
-        visual_ocr_missing_tools = _missing_visual_ocr_tools()
-        # Scanned PDFs have no embedded text layer for pypdf to select pages
-        # from. If Docling's full-page OCR still left admissions values blank,
-        # use a bounded Tesseract pass over the front CDS sections instead of
-        # silently skipping the visual supplement.
-        fallback_page_count = page_count if force_ocr else None
-        visual_ocr_text, visual_ocr_pages = _extract_visual_ocr_text(
-            pdf_path,
-            fallback_page_count=fallback_page_count,
-        )
-        if visual_ocr_text:
-            # Put OCR first. Section slicers such as C9 stop at the first
-            # C10 boundary they see; if embedded layout text comes first and
-            # has blank cells, the later OCR repair block would be hidden.
-            supplemental_text = f"{visual_ocr_text}\n\n{pdf_layout_text}"
-            values = clean(markdown, schema=schema, supplemental_text=supplemental_text)
+    cleaned = _clean_with_supplements(markdown, pdf_path, schema, page_count, force_ocr)
+    values = cleaned["values"]
+    pdf_layout_text = cleaned["pdf_layout_text"]
+    visual_ocr_text = cleaned["visual_ocr_text"]
+    visual_ocr_pages = cleaned["visual_ocr_pages"]
+    visual_ocr_missing_tools = cleaned["visual_ocr_missing_tools"]
     native_tables = compact_tables(doc)
 
     artifact = {
@@ -304,6 +333,89 @@ def extract(
         "values": values,
     }
     return artifact
+
+
+def reclean(
+    pdf_path: Path,
+    conversion: dict,
+    force_ocr: bool = False,
+    schema=None,
+    schema_version: str | None = None,
+    schema_fallback_used: bool = False,
+) -> dict:
+    """A new artifact from a stored conversion of the same PDF: today's
+    cleaner, no Docling.
+
+    ``conversion`` is what an earlier artifact stored: its ``markdown``,
+    ``native_tables``, ``docling_config`` and ``page_count``, plus where it
+    came from (``artifact_id``, ``producer_version``, ``converted_at``). The
+    PDF is read again only for its text layer and, when the cleaner asks for
+    it, the bounded OCR pass, exactly as ``extract`` does after converting.
+    The artifact has the shape ``extract`` writes, and adds ``conversion`` to
+    say which artifact's conversion it reused.
+    """
+    markdown = conversion.get("markdown")
+    if not isinstance(markdown, str) or not markdown.strip():
+        raise ValueError("stored conversion has no markdown")
+    page_count = int(conversion.get("page_count") or 0)
+    native_tables = conversion.get("native_tables")
+    if not isinstance(native_tables, dict):
+        native_tables = {}
+
+    cleaned = _clean_with_supplements(markdown, pdf_path, schema, page_count, force_ocr)
+    values = cleaned["values"]
+
+    return {
+        "producer": PRODUCER_NAME,
+        "producer_version": PRODUCER_VERSION,
+        "schema_version": schema_version or getattr(schema, "schema_version", None) or "2025-26",
+        "schema_fallback_used": schema_fallback_used,
+        # The settings and package versions of the run that converted the PDF.
+        "docling_config": conversion.get("docling_config") or {},
+        "conversion": {
+            "reused": True,
+            "from_artifact_id": conversion.get("artifact_id"),
+            "from_producer_version": conversion.get("producer_version"),
+            "converted_at": conversion.get("converted_at"),
+        },
+        "source_pdf": pdf_path.name,
+        "extracted_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "stats": {
+            "markdown_length": len(markdown),
+            "page_count": page_count,
+            "schema_fields_populated": len(values),
+            "native_table_count": int(native_tables.get("table_count") or 0),
+            "native_table_cell_count": int(native_tables.get("cell_count") or 0),
+            "pdf_layout_text_length": len(cleaned["pdf_layout_text"]),
+            "visual_ocr_text_length": len(cleaned["visual_ocr_text"]),
+            "visual_ocr_pages": cleaned["visual_ocr_pages"],
+            "visual_ocr_missing_tools": cleaned["visual_ocr_missing_tools"],
+        },
+        "markdown": markdown,
+        "native_tables": native_tables,
+        "values": values,
+    }
+
+
+def reclean_from_bytes(
+    pdf_bytes: bytes,
+    conversion: dict,
+    force_ocr: bool = False,
+    schema=None,
+    schema_version: str | None = None,
+    schema_fallback_used: bool = False,
+) -> dict:
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=True) as tmp:
+        tmp.write(pdf_bytes)
+        tmp.flush()
+        return reclean(
+            Path(tmp.name),
+            conversion,
+            force_ocr=force_ocr,
+            schema=schema,
+            schema_version=schema_version,
+            schema_fallback_used=schema_fallback_used,
+        )
 
 
 def extract_from_bytes(
