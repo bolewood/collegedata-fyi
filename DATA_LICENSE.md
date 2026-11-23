@@ -6,7 +6,7 @@ The structured data that collegedata.fyi authors is licensed under the
 [Creative Commons Attribution 4.0 International License (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
 The code in this repository stays under the MIT license in [`LICENSE`](LICENSE).
 
-Copyright © 2026 Anthony S. and Bolewood Group, LLC.
+Copyright © 2026 S. Anthony Showalter and Bolewood Group, LLC.
 
 ## What this license covers
 
