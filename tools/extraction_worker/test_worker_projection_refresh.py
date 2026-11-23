@@ -16,6 +16,8 @@ from worker import (
     field_regression_action,
     headline_fields_lost,
     headline_regression_action,
+    table_regression_action,
+    tables_lost,
     is_field_regression,
     low_field_quality_flag,
     mean_or_none,
@@ -23,6 +25,7 @@ from worker import (
     pending_doc_priority_key,
     select_drain_docs,
     drain_extraction_statuses,
+    previous_canonical,
     previous_canonical_field_count,
     previous_canonical_values,
     should_fallback_tier2_to_tier4,
@@ -234,12 +237,96 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
         # A different file, or a different schema, is not comparable.
         self.assertIsNone(headline_regression_action(client, "doc", dict(new, source_sha256="other"), "2025-26"))
         self.assertIsNone(headline_regression_action(client, "doc", new, "2026-27"))
+        # The same holds when the caller hands in the previous extraction.
+        self.assertEqual(
+            headline_regression_action(client, "doc", new, "2025-26", previous=("2025-26", previous)), action,
+        )
+        self.assertIsNone(headline_regression_action(client, "doc", new, "2025-26", previous=("2023-24", previous)))
+        self.assertIsNone(headline_regression_action(client, "doc", new, "2025-26", previous=None))
         # The override.
         worker.ACCEPT_HEADLINE_LOSS = True
         try:
             self.assertIsNone(headline_regression_action(client, "doc", new, "2025-26"))
         finally:
             worker.ACCEPT_HEADLINE_LOSS = False
+
+    def test_tables_lost_counts_numbers_gone_from_the_section(self):
+        # Colorado 2023-24: every value of H2 gone while the document gained
+        # fields elsewhere. Zeros and ticks are not evidence either way.
+        previous = {f"H.2{n:02d}": {"value": str(7000 + n)} for n in range(1, 13)}
+        previous.update({
+            "H.213": {"value": "0"}, "H.214": {"value": "X"},
+            "B.101": {"value": "844"}, "B.102": {"value": "1,322.0"},
+            "A.106": {"value": "40475"},
+        })
+        new = {"B.101": {"value": "844"}, "B.102": {"value": "1322"}, "C.101": {"value": "7001"}}
+        self.assertEqual(tables_lost(previous, new), {"H2": (12, 12)})
+
+        # The same numbers under other field ids in the section are not lost:
+        # a row renumbered for the form year, or shifted by one.
+        moved = dict(new, **{f"H.3{n:02d}": {"value": f"{7000 + n:,}.0"} for n in range(1, 13)})
+        self.assertEqual(tables_lost(previous, moved), {})
+
+        # Four values gone is under the threshold; five of twelve is under half.
+        four = dict(new, **{f"H.2{n:02d}": {"value": str(7000 + n)} for n in range(5, 13)})
+        self.assertEqual(tables_lost(previous, four), {})
+        five_of_twelve = dict(new, **{f"H.2{n:02d}": {"value": str(7000 + n)} for n in range(6, 13)})
+        self.assertEqual(tables_lost(previous, five_of_twelve), {})
+        # Six of twelve is not more than half either; seven is.
+        seven = dict(new, **{f"H.2{n:02d}": {"value": str(7000 + n)} for n in range(8, 13)})
+        self.assertEqual(tables_lost(previous, seven), {"H2": (7, 12)})
+
+        # The same number spelled another way is the same number.
+        percents = {f"C.9{n:02d}": {"value": f"{n}.70"} for n in range(1, 9)}
+        respelled = {f"C.9{n:02d}": {"value": float(f"{n}.7")} for n in range(1, 9)}
+        self.assertEqual(tables_lost(percents, respelled), {})
+        self.assertEqual(tables_lost({"C.901": {"value": "nan"}, "C.902": {"value": "(5)"}}, {}), {})
+
+        # Section A is never compared, and nothing to compare means no loss.
+        self.assertEqual(tables_lost({f"A.1{n:02d}": {"value": str(900 + n)} for n in range(1, 9)}, {}), {})
+        self.assertEqual(tables_lost(None, new), {})
+        # Field ids with a letter in the table name group by that table.
+        h2a = {f"H.2A{n:02d}": {"value": str(300 + n)} for n in range(1, 9)}
+        self.assertEqual(tables_lost(h2a, {"H.201": {"value": "5"}}), {"H2A": (8, 8)})
+
+    def test_table_regression_action_ignores_the_schema_version(self):
+        import worker
+
+        previous_values = {f"I.1{n:02d}": {"value": str(500 + n)} for n in range(1, 25)}
+        new = {"source_sha256": "file", "values": {"B.101": {"value": "844"}}}
+
+        # The previous extraction was cleaned under another schema (April
+        # 2026 extractions carry none at all); it is still compared.
+        for schema_version in (None, "2025-26", "2023-24"):
+            action = table_regression_action((schema_version, previous_values), new)
+            self.assertEqual(
+                action,
+                "tier4_table_field_regression (I1 lost 24 of 24; the previous extraction of this file is kept)",
+            )
+            self.assertTrue(is_failure_action(action))
+        # Nothing to compare with: a first extraction, or another file.
+        self.assertIsNone(table_regression_action(None, new))
+        # The table is still there.
+        self.assertIsNone(table_regression_action((None, previous_values), {"values": previous_values}))
+        worker.ACCEPT_TABLE_LOSS = True
+        try:
+            self.assertIsNone(table_regression_action((None, previous_values), new))
+        finally:
+            worker.ACCEPT_TABLE_LOSS = False
+
+    def test_previous_canonical_returns_an_unrecorded_extraction_of_the_same_file(self):
+        values = {"I.101": {"value": "1452"}}
+        rows = [
+            {"id": "s1", "kind": "source", "sha256": "this", "created_at": "2026-04-01T00:00:00+00:00"},
+            {"id": "c1", "kind": "canonical", "created_at": "2026-04-27T00:00:00+00:00", "schema_version": None},
+        ]
+        client = self._ArtifactClient(rows, {"c1": values})
+        self.assertEqual(previous_canonical(client, "doc", "this"), (None, values))
+        # The field-by-field lookup still needs the same schema.
+        self.assertIsNone(previous_canonical_values(client, "doc", "this", "2023-24"))
+        # Another file was current when it was written: not comparable.
+        self.assertIsNone(previous_canonical(client, "doc", "other"))
+        self.assertIsNone(previous_canonical(client, "doc", None))
 
     def test_previous_values_require_the_same_file_and_schema(self):
         def Client(rows, values):

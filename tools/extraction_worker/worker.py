@@ -88,6 +88,7 @@ import uuid
 import zipfile
 from collections import Counter
 from dataclasses import dataclass
+from decimal import Decimal, InvalidOperation
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from pathlib import Path
@@ -135,6 +136,20 @@ MIN_REEXTRACT_FIELDS_LOST = 10
 # Set by --accept-field-loss: write the new extraction even so. For a fix
 # that removes ten or more wrong values from one document.
 ACCEPT_FIELD_LOSS = False
+# The same guard per table, because the net count hides a lost table. Of 191
+# 2023-24 documents re-extracted on 2026-11-22, 28 lost most of one table
+# while the document as a whole gained fields (Colorado: all 30 values of H2
+# gone, 505 -> 512 fields overall; Clemson and Florida A&M: all of I1). The
+# previous extractions of those files were converted by an earlier Docling,
+# and the pinned one lays some tables out in a way the cleaner does not read.
+#
+# A value counts as lost only when its number is nowhere in the same section
+# of the new extraction, so a row that was renumbered, or read under another
+# year's schema, is not a loss. A table is held when it loses this many
+# values and more than half of what it had.
+MIN_TABLE_VALUES_LOST = 5
+# Set by --accept-table-loss, after checking the lost values against the PDF.
+ACCEPT_TABLE_LOSS = False
 # The same guard for the headline admissions rows, whatever the total field
 # count does. A re-extraction of the same file can gain fields overall and
 # still lose C1: Docling 2.148.0 dropped the tables by sex from SMU and
@@ -349,11 +364,15 @@ def headline_fields_lost(
     return lost
 
 
+_NOT_FETCHED: Any = object()
+
+
 def headline_regression_action(
     client: Client,
     document_id: str,
     canonical: dict[str, Any],
     schema_version: Optional[str],
+    previous: Any = _NOT_FETCHED,
 ) -> Optional[str]:
     """The failure action for a Tier 4 result that must not replace the
     previous extraction of the same file, or None when it may be written.
@@ -370,8 +389,11 @@ def headline_regression_action(
     section B, so those numbers are usually still in the text."""
     if ACCEPT_HEADLINE_LOSS:
         return None
+    if previous is _NOT_FETCHED:
+        previous = previous_canonical(client, document_id, canonical.get("source_sha256"))
+    same_schema = previous is not None and str(previous[0] or "") == str(schema_version or "")
     lost = headline_fields_lost(
-        previous_canonical_values(client, document_id, canonical.get("source_sha256"), schema_version),
+        previous[1] if same_schema else None,
         canonical.get("values") or {},
         schema_version,
         str(canonical.get("markdown") or ""),
@@ -392,7 +414,20 @@ def previous_canonical_values(
 ) -> Optional[dict[str, Any]]:
     """Values of the newest canonical artifact, when it was made from the same
     source file under the same schema. None otherwise: a different file or a
-    different numbering is not comparable.
+    different numbering is not comparable field by field."""
+    previous = previous_canonical(client, document_id, source_sha256)
+    if previous is None or str(previous[0] or "") != str(schema_version or ""):
+        return None
+    return previous[1]
+
+
+def previous_canonical(
+    client: Client,
+    document_id: str,
+    source_sha256: Optional[str],
+) -> Optional[tuple[Optional[str], dict[str, Any]]]:
+    """(schema version, values) of the newest canonical artifact, when it was
+    made from the same source file. None when it read another file.
 
     An artifact that records no source is attributed to the file that was
     current when it was written, the rule the reconcile gate uses."""
@@ -414,8 +449,6 @@ def previous_canonical_values(
     if not canonicals:
         return None
     newest = max(canonicals, key=lambda r: _artifact_time(r["created_at"]))
-    if str(newest.get("schema_version") or "") != str(schema_version or ""):
-        return None
     if _canonical_source_sha(newest, rows) != source_sha256:
         return None
     detail = (
@@ -428,7 +461,91 @@ def previous_canonical_values(
         or []
     )
     values = detail[0].get("values") if detail else None
-    return values if isinstance(values, dict) else None
+    if not isinstance(values, dict):
+        return None
+    return newest.get("schema_version"), values
+
+
+_TABLE_FIELD_RE = re.compile(r"^([A-Z])\.(\d+[A-Z]?)\d\d$")
+
+
+def _table_of(field_id: str) -> Optional[str]:
+    """"H.2A07" -> "H2A", "C.1104" -> "C11", "B.126" -> "B1"."""
+    match = _TABLE_FIELD_RE.match(str(field_id))
+    return match.group(1) + match.group(2) if match else None
+
+
+def _comparable_number(record: Any) -> Optional[str]:
+    """A value as a plain number string, or None when it is not a number or is
+    zero. Zeros and ticks ("X", "Yes") are everywhere in a CDS, so their
+    presence elsewhere in a section says nothing about one field."""
+    value = record.get("value") if isinstance(record, dict) else record
+    text = str(value if value is not None else "").replace(",", "").replace("$", "").replace("%", "").strip()
+    try:
+        number = Decimal(text)
+    except InvalidOperation:
+        return None
+    if not number.is_finite() or number == 0:
+        return None
+    # One spelling per number: "25.70", "25.7" and 25.7 are the same value,
+    # as are "1322.0" and "1322".
+    return format(number.normalize(), "f")
+
+
+def tables_lost(
+    previous_values: Optional[dict[str, Any]],
+    new_values: dict[str, Any],
+) -> dict[str, tuple[int, int]]:
+    """{table: (values lost, values it had)} for every table that lost at
+    least MIN_TABLE_VALUES_LOST numbers and more than half of its numbers.
+
+    A number is lost when no field in the same section of ``new_values``
+    holds it. Section A (names, addresses, phone numbers) is not compared."""
+    if not previous_values:
+        return {}
+    kept: dict[str, set[str]] = {}
+    for field_id, record in new_values.items():
+        number = _comparable_number(record)
+        if number is not None:
+            kept.setdefault(str(field_id)[:1], set()).add(number)
+    had: dict[str, int] = {}
+    lost: dict[str, int] = {}
+    for field_id, record in previous_values.items():
+        table = _table_of(field_id)
+        if table is None or table.startswith("A"):
+            continue
+        number = _comparable_number(record)
+        if number is None:
+            continue
+        had[table] = had.get(table, 0) + 1
+        if number not in kept.get(table[:1], ()):
+            lost[table] = lost.get(table, 0) + 1
+    return {
+        table: (count, had[table])
+        for table, count in sorted(lost.items())
+        if count >= MIN_TABLE_VALUES_LOST and count * 2 > had[table]
+    }
+
+
+def table_regression_action(
+    previous: Optional[tuple[Optional[str], dict[str, Any]]],
+    canonical: dict[str, Any],
+) -> Optional[str]:
+    """The failure action for a Tier 4 result that drops most of a table the
+    previous extraction of the same file had, or None when it may be written.
+
+    ``previous`` is what ``previous_canonical`` returned. Its schema version
+    is not checked: the comparison is by value within a section, which holds
+    across the form years' numberings, and the extractions that most need it
+    (April and May 2026, cleaned under the 2025-26 schema whatever the year)
+    never share a schema with their re-extraction."""
+    if ACCEPT_TABLE_LOSS or previous is None:
+        return None
+    lost = tables_lost(previous[1], canonical.get("values") or {})
+    if not lost:
+        return None
+    detail = ", ".join(f"{table} lost {count} of {total}" for table, (count, total) in lost.items())
+    return f"tier4_table_field_regression ({detail}; the previous extraction of this file is kept)"
 
 
 def normalized_ledger_source_format(value: Any) -> str:
@@ -2313,7 +2430,15 @@ def _run_tier4(
             # document is still extracted, just not by this run.
             mark_extraction_status(client, document_id, "extracted", source_format)
             return extraction_no_project(held)
-        held = headline_regression_action(client, document_id, canonical, resolution.schema_version)
+        # One read of the previous extraction serves both guards below.
+        previous = (
+            None
+            if ACCEPT_HEADLINE_LOSS and ACCEPT_TABLE_LOSS
+            else previous_canonical(client, document_id, canonical.get("source_sha256"))
+        )
+        held = headline_regression_action(
+            client, document_id, canonical, resolution.schema_version, previous=previous,
+        ) or table_regression_action(previous, canonical)
         if held:
             # Keep serving the previous extraction; the failure action puts
             # the document in the run summary for a look.
@@ -3251,6 +3376,15 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--accept-table-loss",
+        action="store_true",
+        help=(
+            f"Write a Tier 4 re-extraction even when one table loses {MIN_TABLE_VALUES_LOST} or more values and "
+            "over half of what the previous extraction of the same file had. Use after checking the lost "
+            "values against the PDF."
+        ),
+    )
+    parser.add_argument(
         "--force-reextract",
         action="store_true",
         help=(
@@ -3325,14 +3459,15 @@ def main() -> int:
         value.strip()
         for value in f"{args.document_ids or ''},{args.requeue_document_ids or ''}".split(",")
     )
-    for switch in ("accept_headline_loss", "accept_field_loss"):
+    for switch in ("accept_headline_loss", "accept_field_loss", "accept_table_loss"):
         if getattr(args, switch) and not named_documents:
             # Each switch turns its guard off for every document in the run,
             # so it is only taken for documents named one by one.
             parser.error(f"--{switch.replace('_', '-')} needs --document-ids or --requeue-document-ids")
-    global ACCEPT_HEADLINE_LOSS, ACCEPT_FIELD_LOSS
+    global ACCEPT_HEADLINE_LOSS, ACCEPT_FIELD_LOSS, ACCEPT_TABLE_LOSS
     ACCEPT_HEADLINE_LOSS = bool(args.accept_headline_loss)
     ACCEPT_FIELD_LOSS = bool(args.accept_field_loss)
+    ACCEPT_TABLE_LOSS = bool(args.accept_table_loss)
 
     from dependency_check import check_environment
 

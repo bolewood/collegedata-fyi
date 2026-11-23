@@ -147,11 +147,14 @@ python worker.py \
 python worker.py --requeue-document-ids <uuid> --force-reextract --limit 1
 
 # A re-extraction of the same file is held (the previous artifact stays) when
-# it ends 10 or more fields lower, or loses headline admissions rows. The
-# worker then exits 1 and names the document. After checking that the lost
-# values were wrong, write the new result with the matching switch:
+# it ends 10 or more fields lower, loses headline admissions rows, or loses
+# most of one table (5 or more numbers and over half of what the table had,
+# counting only numbers found nowhere else in the same section). The worker
+# then exits 1 and names the document. After checking the lost values against
+# the PDF, write the new result with the matching switch:
 python worker.py --requeue-document-ids <uuid> --document-ids <uuid> --force-reextract --accept-field-loss
 python worker.py --requeue-document-ids <uuid> --document-ids <uuid> --force-reextract --accept-headline-loss
+python worker.py --requeue-document-ids <uuid> --document-ids <uuid> --force-reextract --accept-table-loss
 
 # Fresh-year drain: process the newest archived CDS rows before old backlog
 python worker.py --min-year-start 2025 --include-failed --limit 25
