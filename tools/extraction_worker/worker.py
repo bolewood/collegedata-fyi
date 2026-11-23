@@ -502,6 +502,22 @@ def _comparable_number(record: Any) -> Optional[str]:
     return format(number.normalize(), "f")
 
 
+_MONTH_DAY_RE = re.compile(r"(\d{1,2})/(\d{1,2})")
+
+
+def _numbers_held(record: Any) -> list[str]:
+    """The numbers a new field accounts for. A date written "3/15" holds the
+    month and the day: the 2023-24 and 2024-25 forms have one date field
+    where the 2025-26 form has two, and older extractions of those documents
+    carry the two numbers (issue #421)."""
+    number = _comparable_number(record)
+    if number is not None:
+        return [number]
+    value = record.get("value") if isinstance(record, dict) else record
+    match = _MONTH_DAY_RE.fullmatch(str(value if value is not None else "").strip())
+    return [str(int(part)) for part in match.groups() if int(part)] if match else []
+
+
 def tables_lost(
     previous_values: Optional[dict[str, Any]],
     new_values: dict[str, Any],
@@ -518,8 +534,7 @@ def tables_lost(
         return {}
     kept: dict[str, Counter[str]] = {}
     for field_id, record in new_values.items():
-        number = _comparable_number(record)
-        if number is not None:
+        for number in _numbers_held(record):
             kept.setdefault(str(field_id)[:1], Counter())[number] += 1
     had: dict[str, int] = {}
     lost: dict[str, int] = {}
