@@ -370,6 +370,21 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
         self.assertEqual(tables_lost(percents, respelled), {})
         self.assertEqual(tables_lost({"C.901": {"value": "nan"}, "C.902": {"value": "(5)"}}, {}), {})
 
+        # A month and a day that an older extraction kept in two fields are
+        # still there when the new one holds them as one date (issue #421).
+        month_day = {f"D.9{n:02d}": {"value": v} for n, v in zip(
+            (9, 10, 13, 14, 17, 18, 21, 22), ("3", "01", "11", "1", "5", "15", "12", "20"))}
+        dates = {"D.905": {"value": "3/1"}, "D.907": {"value": "11/1"}, "D.909": {"value": "5/15"},
+                 "D.911": {"value": "12/20"}}
+        self.assertEqual(tables_lost(month_day, dates), {})
+        self.assertEqual(tables_lost(month_day, {"D.905": {"value": "3/1"}}), {"D9": (6, 8)})
+        # ... in the date's own table only. Dates in C14 to C22 do not stand
+        # in for C5's unit counts.
+        c5 = {f"C.5{n:02d}": {"value": v} for n, v in enumerate("44332112", start=1)}
+        c_dates = {"C.1402": {"value": "4/4"}, "C.1403": {"value": "3/3"}, "C.1602": {"value": "2/1"},
+                   "C.2104": {"value": "1/2"}}
+        self.assertEqual(tables_lost(c5, c_dates), {"C5": (8, 8)})
+
         # Section A is never compared, and nothing to compare means no loss.
         self.assertEqual(tables_lost({f"A.1{n:02d}": {"value": str(900 + n)} for n in range(1, 9)}, {}), {})
         self.assertEqual(tables_lost(None, new), {})
