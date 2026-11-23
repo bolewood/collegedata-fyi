@@ -428,7 +428,7 @@ def _split_letter_description_column(table_lines: list[str]) -> list[str]:
     return out
 
 
-def _strip_group_label_column(table_lines: list[str]) -> list[str]:
+def _strip_group_label_column(table_lines: list[str]) -> tuple[list[str], bool]:
     """Drop a leading column that only names the group a row belongs to.
 
     H1 prints "Scholarships / Grants" and "Self Help" down the left edge.
@@ -445,6 +445,10 @@ def _strip_group_label_column(table_lines: list[str]) -> list[str]:
     is dropped only when the first two header cells are the same text, the
     first column holds at most three different entries with no digits, and
     the second column is text on most rows.
+
+    Returns the lines and whether a column was dropped. The same converter
+    output often merges or shifts rows in these tables, so the H1 resolver
+    takes amounts from such a table only when they add up.
     """
     parsed = [
         None if _TABLE_SEPARATOR_RE.match(tl) else [c.strip() for c in tl.split("|")[1:-1]]
@@ -452,21 +456,21 @@ def _strip_group_label_column(table_lines: list[str]) -> list[str]:
     ]
     data = [cells for cells in parsed if cells]
     if len(data) < 5 or any(len(cells) < 3 for cells in data):
-        return table_lines
+        return table_lines, False
     header, body = data[0], data[1:]
     if not header[0] or header[0] != header[1] or not re.search(r"[A-Za-z]", header[0]):
-        return table_lines
+        return table_lines, False
     groups = {cells[0] for cells in body if cells[0]}
     if not groups or len(groups) > 3 or any(re.search(r"\d", g) for g in groups):
-        return table_lines
+        return table_lines, False
     with_text = sum(1 for cells in body if re.search(r"[A-Za-z]", cells[1]))
     if with_text * 5 < len(body) * 3:
-        return table_lines
+        return table_lines, False
     out = []
     for tl in table_lines:
         cells = tl.split("|")[1:-1]
         out.append("|" + "|".join(cells[1:]) + "|")
-    return out
+    return out, True
 
 
 def _strip_question_tag_column(table_lines: list[str]) -> tuple[list[str], str | None]:
@@ -673,7 +677,7 @@ def _parse_markdown_tables(markdown: str) -> list[dict]:
             if question_tag is None:
                 table_lines, question_tag = _strip_fused_question_tag(table_lines)
             table_lines = _split_letter_description_column(table_lines)
-            table_lines = _strip_group_label_column(table_lines)
+            table_lines, group_column_stripped = _strip_group_label_column(table_lines)
 
             # Parse the nominal header row, then decide whether it's really
             # a header or a data row. Aims-style CDS tables often omit a
@@ -749,6 +753,7 @@ def _parse_markdown_tables(markdown: str) -> list[dict]:
                 "rows": rows,
                 "line": table_start_line,
                 "question_tag": question_tag,
+                "group_column_stripped": group_column_stripped,
             })
         else:
             i += 1
@@ -6675,6 +6680,41 @@ _H1_ROWS: list[tuple[str, str, str]] = [
 ]
 
 
+# H1 arithmetic, in the 2025-26 numbering the resolver writes: (parts, total).
+_H1_SUMS = (
+    (("H.105", "H.106", "H.107", "H.108"), "H.109"),   # need-based scholarships/grants
+    (("H.117", "H.118", "H.119", "H.120"), "H.121"),   # non-need-based scholarships/grants
+    (("H.110", "H.111", "H.112"), "H.113"),            # need-based self-help
+    (("H.122", "H.123"), "H.124"),                     # non-need-based self-help
+)
+
+
+def _h1_amounts_add_up(claims: dict[str, dict]) -> bool:
+    """True when at least one H1 total can be checked against its rows and
+    every total that can be checked agrees with them.
+
+    Used for tables whose rows the converter is known to merge and shift. A
+    total needs two of its rows present to be checked; a missing row counts
+    as zero, so a table with a row unread fails and contributes nothing.
+    """
+    def amount(qn: str) -> float | None:
+        try:
+            return float(str(claims[qn]["value"]).replace(",", ""))
+        except (KeyError, ValueError):
+            return None
+
+    checked = 0
+    for parts, total_qn in _H1_SUMS:
+        total = amount(total_qn)
+        amounts = [amount(qn) for qn in parts]
+        if total is None or sum(a is not None for a in amounts) < 2:
+            continue
+        checked += 1
+        if abs(sum(a or 0 for a in amounts) - total) > max(5.0, total * 0.001):
+            return False
+    return checked > 0
+
+
 def _h_checked_option(block: str, label_re: str) -> bool:
     return bool(
         re.search(
@@ -7094,7 +7134,12 @@ def _resolve_h_financial_aid_as_2025_26(
         if not col_to_kind:
             continue
 
+        gated = bool(table.get("group_column_stripped"))
+        claimed: dict[str, dict] = {}
         for row in table["rows"]:
+            # An amount inside the label means the converter shifted the row.
+            if gated and re.search(r"\$\s*\d", row["label"]):
+                continue
             label_norm = _normalize_label(row["label"])
             matched = None
             for substr, nb_qn, nn_qn in _H1_ROWS:
@@ -7111,8 +7156,11 @@ def _resolve_h_financial_aid_as_2025_26(
                 if amt is None:
                     continue
                 qn = nb_qn if kind == "nb" else nn_qn
-                if qn and qn not in out:
-                    out[qn] = {"value": amt, "source": "tier4_cleaner"}
+                if qn and qn not in out and qn not in claimed:
+                    claimed[qn] = {"value": amt, "source": "tier4_cleaner"}
+        if gated and not _h1_amounts_add_up(claimed):
+            continue
+        out.update(claimed)
 
     # --- H2 Students Awarded Aid (letter rows × 3 cohort columns) ---
     # --- H2A Non-need-based (rows N-Q × 3 cohort columns) ---
