@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SOURCE_OWNERSHIP_SENTENCE } from "@/lib/data-license";
 import { isUsageLaunched } from "@/lib/usage";
 
 export const metadata: Metadata = {
@@ -98,8 +99,7 @@ export default function AboutPage() {
 
         <h2>Open source</h2>
         <p>
-          Our code, schema, and archived files are open source under the MIT
-          license on{" "}
+          Our code is open source under the MIT license on{" "}
           <a
             href="https://github.com/bolewood/collegedata-fyi"
             target="_blank"
@@ -108,7 +108,8 @@ export default function AboutPage() {
             GitHub
           </a>
           , and the full dataset is available through the{" "}
-          <Link href="/api">public API</Link>. If you&apos;re curious how files
+          <Link href="/api">public API</Link>. {SOURCE_OWNERSHIP_SENTENCE} If
+          you&apos;re curious how files
           are parsed or want to check known data quirks, GitHub is the best
           place to look.
           {isUsageLaunched() ? (

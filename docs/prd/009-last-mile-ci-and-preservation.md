@@ -64,6 +64,8 @@ same reshape during /autoplan review:
 **New file:** `docs/decisions/0008-takedown-process.md` (~120 lines
 modeled on ADR 0007).
 
+> **Superseded (2026-11-23):** "MIT-licensed extracts" and "Open data, MIT license" describe our code and derived extracts only. The CDS documents belong to the schools; see `web/src/lib/data-license.ts` for the shipped wording.
+
 **Structure:**
 
 - **Context:** archive preserves publicly-published documents. Schools

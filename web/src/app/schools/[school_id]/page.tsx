@@ -368,7 +368,6 @@ export default async function SchoolDetailPage({ params }: {
       creator: { "@type": "Organization", name, url: schoolUrl },
       provider: { "@type": "Organization", name: "collegedata.fyi", url: "https://www.collegedata.fyi" },
       isAccessibleForFree: true,
-      license: "https://opensource.org/licenses/MIT",
       dataset: uniqueYears.map((year) => ({
         "@type": "Dataset",
         name: `${name} Common Data Set ${year}`,
@@ -377,7 +376,6 @@ export default async function SchoolDetailPage({ params }: {
         creator: { "@type": "Organization", name },
         provider: { "@type": "Organization", name: "collegedata.fyi", url: "https://www.collegedata.fyi" },
         temporalCoverage: year,
-        license: "https://opensource.org/licenses/MIT",
         isAccessibleForFree: true,
       })),
     },

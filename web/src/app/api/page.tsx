@@ -5,6 +5,7 @@ import { formatCount, formatShortDate } from "@/lib/format";
 import { CommunityInvitation } from "@/components/CommunityInvitation";
 import { CopyButton } from "@/components/CopyButton";
 import { TrackedLink } from "@/components/TrackedLink";
+import { DERIVED_DATA_LICENSE_SENTENCE, SOURCE_OWNERSHIP_SENTENCE } from "@/lib/data-license";
 import { isUsageLaunched } from "@/lib/usage";
 
 export const metadata: Metadata = {
@@ -1734,10 +1735,7 @@ const { data } = await supabase
         >
           schemas/
         </a>
-        . The code and the structured dataset we derive are MIT-licensed. The
-        CDS documents themselves belong to the schools that published them
-        and are reproduced here as public documents; the MIT licence does not
-        cover them.
+        . {DERIVED_DATA_LICENSE_SENTENCE} {SOURCE_OWNERSHIP_SENTENCE}
       </p>
 
       <div className="mt-10 border-t border-[var(--rule)] pt-6 text-sm text-[var(--ink-3)]">

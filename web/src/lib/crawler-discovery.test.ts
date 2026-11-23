@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { GET as getLlmsTxt } from "../app/llms.txt/route";
 import { GET as getRobotsTxt } from "../app/robots.txt/route";
+import { DERIVED_DATA_LICENSE_SENTENCE, SOURCE_OWNERSHIP_SENTENCE } from "./data-license";
 import { LLMS_TXT } from "./llms-txt";
 import { ROBOTS_RULES, ROBOTS_TXT } from "./robots-txt";
 import { SITE_URL } from "./sitemap-static";
@@ -73,8 +74,10 @@ describe("llms.txt", () => {
 
   it("asks agents to use the API and states the existing license", () => {
     expect(LLMS_TXT).toContain("Please use the API rather than scraping HTML school pages");
-    expect(LLMS_TXT).toContain("The dataset is MIT-licensed.");
-    expect(LLMS_TXT).toContain("owned by their respective institutions");
+    expect(LLMS_TXT).toContain(DERIVED_DATA_LICENSE_SENTENCE);
+    expect(LLMS_TXT).toContain(SOURCE_OWNERSHIP_SENTENCE);
+    expect(LLMS_TXT).not.toContain("public-document");
+    expect(LLMS_TXT).not.toContain("The dataset is MIT-licensed");
   });
 
   it("documents the school-page and friendly-API rate limits", () => {

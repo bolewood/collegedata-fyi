@@ -146,6 +146,8 @@ pay or log in.
   price.
 - [IPEDS](/about/ipeds) — the federal statistical baseline.
 
+> **Superseded (2026-11-23):** this copy said our archived files and schema are MIT-licensed. They are not ours to license: the CDS documents belong to the schools, and the schema text comes from the CDS Initiative template. The shipped wording lives in `web/src/lib/data-license.ts`.
+
 **Open source.** Code, schema, pipeline, and archived files are public
 (MIT). [GitHub](https://github.com/bolewood/collegedata-fyi). [API](/api).
 Developers who want extractors and known issues start there, not on this
