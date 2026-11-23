@@ -1787,6 +1787,16 @@ def resolve_b2_race(
         r"\bB2\b\s+Enrollment by Racial/Ethnic Category",
         r"\bB3\b\s+Number of degrees awarded",
     )
+    if not b2_block:
+        # Forms that print "B2. Enrollment ...". Read only between both
+        # headings: without the B3 heading the block would run to the end of
+        # the document, where any "Total" line with three numbers matches.
+        dotted = re.search(
+            r"\bB2\.\s+Enrollment by Racial/Ethnic Category(.*?)\bB3\.\s+(?:Persistence|Number of degrees awarded)",
+            markdown,
+            re.IGNORECASE | re.DOTALL,
+        )
+        b2_block = dotted.group(1) if dotted else ""
     if b2_block:
         b2_keys = [
             {"cohort": "First-time, first-year", "category": "Degree-seeking"},
@@ -1796,6 +1806,10 @@ def resolve_b2_race(
         wrapped_label = ""
         for raw_line in b2_block.splitlines():
             nums = re.findall(r"\b\d[\d,]*\b", raw_line)
+            if len(nums) == 3 and re.search(r"\d,\s*$", raw_line):
+                # "983    483 4," is 983 and 4,483 with the thousands broken
+                # off: two values, not three.
+                nums = []
             if len(nums) != 3:
                 # A long label can wrap in the text layer:
                 #   Native Hawaiian or other Pacific Islander, non-
@@ -1843,6 +1857,11 @@ def resolve_b2_race(
                 # not replace a row already read.
                 if qn and value is not None and qn not in out:
                     out[qn] = {"value": value, "source": "tier4_cleaner"}
+        # A form with a column left empty prints its total as 0. With no row
+        # read above it, that 0 is the blank, not a count.
+        for total, first_row in (("B.210", 201), ("B.220", 211), ("B.230", 221)):
+            if _field_float(out.get(total)) == 0 and not any(f"B.{first_row + i}" in out for i in range(9)):
+                del out[total]
         if out:
             return out
 
@@ -1918,6 +1937,9 @@ def _match_b2_label(
 ) -> str | None:
     """Find the schema field in b2_fields whose question matches the row
     label AND whose (cohort, category) matches the column key."""
+    if label_norm == "international nonresidents":
+        # One 2023-24 form prints the first row "International (nonresidents)".
+        label_norm = "nonresidents"
     # Exact match first
     for f in b2_fields:
         if (f["_q_norm"] == label_norm
@@ -4710,6 +4732,42 @@ _C7_FACTOR_ROWS = [
 ]
 
 
+# Forms that fill C7 from dropdown menus print the chosen level beside each
+# factor, with no grid of marks:
+#
+#     Rigor of secondary school record            Very Important
+#     Extracurriculuar activities                 Important
+#
+# That form spells three labels its own way.
+_C7_DROPDOWN_LINE_RE = re.compile(
+    r"(?m)^[ \t]*(\S.*?)[ \t]{2,}(Very[ \t]+Important|Not[ \t]+Considered|Important|Considered)[ \t]*$"
+)
+_C7_DROPDOWN_FACTOR_ROWS = [
+    ("academic grade point average", "Academic GPA", "Academic Factors"),
+    ("extracurricul", "Extracurricular activities", "Nonacademic Factors"),
+    ("religious af", "Religious affiliation/commitment", "Nonacademic Factors"),
+    *_C7_FACTOR_ROWS,
+]
+
+
+def _resolve_c7_dropdown_text(text: str, by_cat_q: dict) -> dict[str, dict]:
+    """C7 from text lines of "factor   level". Needs five factors to count."""
+    out: dict[str, dict] = {}
+    block = _section_between(text, r"C7\.?\s+Basis for Selection", r"(?:\bC8\b|$)")
+    if not block:
+        return out
+    for label, level in _C7_DROPDOWN_LINE_RE.findall(block):
+        level = " ".join(level.split())
+        label_norm = _normalize_label(label.replace("\ufb00", "ff"))
+        for substr, question, category in _C7_DROPDOWN_FACTOR_ROWS:
+            if substr in label_norm:
+                qn = by_cat_q.get((category, _normalize_label(question)))
+                if qn:
+                    out.setdefault(qn, {"value": level, "source": "tier4_cleaner"})
+                break
+    return out if len(out) >= 5 else {}
+
+
 def resolve_c7_basis_for_selection(
     tables: list[dict], markdown: str, schema: SchemaIndex
 ) -> dict[str, dict]:
@@ -4717,13 +4775,13 @@ def resolve_c7_basis_for_selection(
     column containing 'X'. Rows are factors (Rigor, Class rank, etc.);
     columns are importance levels.
     """
-    out: dict[str, dict] = {}
-
     # Schema lookup: (category, question_norm) → qn
     bs_fields = schema.filter(subsection="Basis for Selection")
     by_cat_q = {}
     for f in bs_fields:
         by_cat_q[(f["category"], f["_q_norm"])] = f["question_number"]
+
+    out: dict[str, dict] = {}
 
     for table in tables:
         headers_norm = [_normalize_label(h) for h in table.get("headers", [])]
@@ -4836,6 +4894,9 @@ def resolve_c7_basis_for_selection(
             if chosen and qn not in out:
                 out[qn] = {"value": chosen, "source": "tier4_cleaner"}
 
+    # A marked grid is the stronger reading; text lines fill what it left.
+    for qn, rec in _resolve_c7_dropdown_text(markdown, by_cat_q).items():
+        out.setdefault(qn, rec)
     return out
 
 
@@ -8598,6 +8659,7 @@ def clean(
             resolve_b5_graduation,
             resolve_c1_applications,
             resolve_c2_waitlist,
+            resolve_c7_basis_for_selection,
             resolve_c8_entrance_exams,
             resolve_c9_submission_rates,
             resolve_c9_percentile_anchors,
