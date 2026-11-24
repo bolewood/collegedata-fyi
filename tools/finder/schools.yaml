@@ -799,7 +799,7 @@ schools:
   domain: wfu.edu
   ipeds_id: '199847'
   scrape_policy: active
-  discovery_seed_url: https://prod.wp.cdn.aws.wfu.edu/sites/202/2025/07/CDS-2024-2025-fillable-WFU.pdf
+  discovery_seed_url: https://ir.wfu.edu/
   probe_state:
     last_probed_at: '2026-04-14T15:36:00Z'
     last_result: found
@@ -1276,7 +1276,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.alfred.edu/_docs/about/cds_2019-2020.pdf
+  discovery_seed_url: https://www.alfred.edu/about/institutional-research/common-data-sets.cfm
 - id: alice-lloyd-college
   name: Alice Lloyd College
   domain: alc.edu
@@ -7585,7 +7585,6 @@ schools:
     search_fallback_tried: true
   notes: Cleared identical seed also assigned to fairleigh-dickinson-university-metropolitan-campus; search is not campus-specific.
 
-  discovery_seed_url: https://www.fdu.edu/about/university-leadership-offices/office-of-institutional-research-and-assessment/
 - id: fairleigh-dickinson-university-metropolitan-campus
   name: Fairleigh Dickinson University-Metropolitan Campus
   domain: fdu.edu
@@ -7907,7 +7906,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://aim.fiu.edu/cds/CDS2024.pdf
+  discovery_seed_url: https://aim.fiu.edu/cds.htm
 - id: florida-memorial-university
   name: Florida Memorial University
   domain: fmuniv.edu
@@ -12489,7 +12488,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.mcla.edu/Assets/MCLA-Files/IR/MCLA%20Common%20Data%20Set%202018-2019.pdf
+  discovery_seed_url: https://mcla.edu/administration/administrative-offices/institutional-research/institutional-data.php
 - id: massachusetts-maritime-academy
   name: Massachusetts Maritime Academy
   domain: maritime.edu
@@ -12601,7 +12600,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.mcpherson.edu/wp-content/uploads/2025/06/CDS-2024-2025-MC.pdf
+  discovery_seed_url: https://www.mcpherson.edu/assessment/institutional-metrics-and-student-outcomes/
 - id: mcphs-university
   name: MCPHS University
   domain: mcphs.edu
@@ -16813,7 +16812,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.presby.edu/wp-content/uploads/2025/07/CDS_2023_2024_PresbyterianCollege_updated052324.pdf
+  discovery_seed_url: https://www.presby.edu/?p=2197
 - id: presbyterian-theological-seminary-in-america
   name: Presbyterian Theological Seminary in America
   domain: ch.ptsa.edu
@@ -17141,7 +17140,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.ramapo.edu/ir/wp-content/uploads/sites/52/2025/04/2024-2025-Common-Data-Set.pdf
+  discovery_seed_url: https://www.ramapo.edu/ir/data-reports/
 - id: rancho-santiago-community-college-district-office
   name: Rancho Santiago Community College District Office
   domain: rsccd.edu
@@ -20099,7 +20098,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.stetson.edu/administration/institutional-research/media/cds_ay2024.pdf
+  discovery_seed_url: https://www.stetson.edu/administration/institutional-research/common-data-set.php
 - id: stevens-institute-of-technology
   name: Stevens Institute of Technology
   domain: stevens.edu
@@ -21532,7 +21531,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.utrgv.edu/sair/_files/documents/data-and-reports/cds_2023-2024_utrgv-2.xlsx
+  discovery_seed_url: https://www.utrgv.edu/sair/data-reports/index.htm
 - id: the-university-of-texas-system-office
   name: The University of Texas System Office
   domain: utsystem.edu
@@ -22746,7 +22745,6 @@ schools:
   domain: uc.edu
   ipeds_id: '201885'
   scrape_policy: unknown
-  discovery_seed_url: https://www.uc.edu/about/provost/colleges-and-offices/offices/institutional-research/facts-dashboards.html
 - id: university-of-colorado-colorado-springs
   name: University of Colorado Colorado Springs
   domain: uccs.edu
@@ -23377,7 +23375,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://academics.umw.edu/iae/files/2025/02/CDS-2023-2024.pdf
+  discovery_seed_url: https://academics.umw.edu/iae/looking-for-data/common-data-sets-ms-excel-files/
 - id: university-of-maryland-eastern-shore
   name: University of Maryland Eastern Shore
   domain: wwwcp.umes.edu
@@ -23592,7 +23590,6 @@ schools:
   domain: umn.edu
   ipeds_id: '174066'
   scrape_policy: unknown
-  discovery_seed_url: https://idr.umn.edu/institutional-metrics-compliance-reporting/common-data-set
 - id: university-of-mississippi
   name: University of Mississippi
   domain: olemiss.edu
@@ -24312,7 +24309,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.usj.edu/wp-content/uploads/2025/05/USJ-CDS-2025.pdf
+  discovery_seed_url: https://www.usj.edu/about/administrative-offices/presidents-office/office-of-institutional-effectiveness/
 - id: university-of-saint-katherine
   name: University of Saint Katherine
   domain: usk.edu
@@ -24497,7 +24494,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.usf.edu/ods/documents/cds/cds-2024-2025-final.pdf
+  discovery_seed_url: https://www.usf.edu/ods/data-tools/cds.aspx
 - id: university-of-southern-indiana
   name: University of Southern Indiana
   domain: usi.edu
