@@ -164,7 +164,8 @@ CONFIG = {"name": tier4_extractor.DOCLING_CONFIG_NAME, "force_ocr": False}
 
 
 def _artifact(artifact_id, created_at, *, source_sha=SHA, producer="tier4_docling", version="0.3.36",
-              markdown="stored markdown", conversion=None, source_artifact_sha=None, config=CONFIG):
+              markdown="stored markdown", conversion=None, source_artifact_sha=None, config=CONFIG,
+              values=None, schema_version="2024-25", fallback_used=None):
     notes = {
         "markdown": markdown, "native_tables": {"table_count": 1, "cell_count": 4},
         "docling_config": config, "stats": {"page_count": 20},
@@ -176,8 +177,13 @@ def _artifact(artifact_id, created_at, *, source_sha=SHA, producer="tier4_doclin
         notes["source_artifact"] = {"sha256": source_artifact_sha}
     if conversion:
         notes["conversion"] = conversion
+    if values is not None:
+        notes["values"] = values
+    if fallback_used is not None:
+        notes["schema_fallback_used"] = fallback_used
     return {"id": artifact_id, "document_id": "doc", "kind": "canonical", "producer": producer,
-            "producer_version": version, "created_at": created_at, "notes": notes}
+            "producer_version": version, "schema_version": schema_version, "created_at": created_at,
+            "notes": notes}
 
 
 class StoredConversion(unittest.TestCase):
@@ -369,8 +375,160 @@ class RunTier4WithReclean(unittest.TestCase):
         self.assertTrue(outcome.action.startswith("tier4_extracted ("))
 
 
+class RecleanUnchanged(unittest.TestCase):
+    """A re-clean that reads what the stored extraction already holds writes nothing."""
+
+    RESOLUTION = RunTier4WithReclean.RESOLUTION
+    VALUES = {"C.117": {"value": "100", "source": "tier4_cleaner"},
+              "C.118": {"value": "40", "source": "tier4_cleaner"}}
+
+    def setUp(self) -> None:
+        patcher = mock.patch.object(worker, "RECLEAN", True)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def run_tier4(self, stored_values, new_values, *, dry_run=False, stored_schema="2024-25", guards=None,
+                  newer=()):
+        new = {"producer": "tier4_docling", "producer_version": "9.9.9", "schema_version": "2024-25",
+               "schema_fallback_used": False,
+               "stats": {"schema_fields_populated": len(new_values), "markdown_length": 15, "page_count": 20},
+               "values": new_values, "markdown": "stored markdown"}
+        client = _Client([_artifact("a", "2026-11-23T10:00:00+00:00", values=stored_values,
+                                    schema_version=stored_schema), *newer])
+        guards = guards or {name: mock.Mock(return_value=None) for name in (
+            "field_collapse_action", "field_regression_action", "headline_regression_action",
+            "table_regression_action")}
+        with mock.patch.multiple(worker, artifact_already_extracted=mock.Mock(return_value=False),
+                                 extraction_quality_flag=mock.Mock(return_value="low_coverage"), **guards), \
+                mock.patch.multiple(tier4_extractor, extract_from_bytes=mock.Mock(),
+                                    reclean_from_bytes=mock.Mock(return_value=new)):
+            outcome = worker._run_tier4(
+                client, "doc", "example", b"%PDF", "pdf_flat", self.RESOLUTION, None,
+                {"sha256": SHA, "storage_path": "example/2024-25/a.pdf"}, dry_run=dry_run,
+                force_reextract=True,
+            )
+        return outcome, client, guards
+
+    def test_the_same_values_write_no_artifact(self) -> None:
+        outcome, client, guards = self.run_tier4(self.VALUES, dict(self.VALUES))
+        self.assertEqual(
+            outcome.action,
+            "tier4_reclean_unchanged (2 fields; the stored extraction already holds these values)",
+        )
+        self.assertFalse(outcome.refresh_projection)
+        self.assertEqual([w for w in client.writes if w[1] == "insert"], [])
+        # The status is confirmed; the flag is left as it is, though the rule
+        # would set one on this artifact.
+        self.assertEqual([(w[0], sorted(w[2])) for w in client.writes], [
+            ("cds_documents", ["extraction_status", "source_format"]),
+            ("cds_documents", ["extracted_at"]),  # set only where it is still null
+        ])
+        self.assertEqual(client.writes[0][2]["extraction_status"], "extracted")
+        self.assertTrue(all("data_quality_flag" not in w[2] for w in client.writes))
+        for guard in guards.values():
+            guard.assert_not_called()
+
+    def test_any_difference_takes_the_guards_and_is_written(self) -> None:
+        cases = {
+            "a changed value": {**self.VALUES, "C.118": {"value": "41", "source": "tier4_cleaner"}},
+            "an added field": {**self.VALUES, "C.119": {"value": "9", "source": "tier4_cleaner"}},
+            "a removed field": {"C.117": self.VALUES["C.117"]},
+            "a changed record": {**self.VALUES, "C.118": {"value": "40", "source": "tier4_text"}},
+        }
+        for name, new_values in cases.items():
+            with self.subTest(name):
+                outcome, client, guards = self.run_tier4(self.VALUES, new_values)
+                self.assertTrue(outcome.action.startswith("tier4_recleaned ("), outcome.action)
+                self.assertEqual(len([w for w in client.writes if w[1] == "insert"]), 1)
+                guards["table_regression_action"].assert_called_once()
+
+    def test_the_same_values_under_another_schema_are_written(self) -> None:
+        outcome, client, _ = self.run_tier4(self.VALUES, dict(self.VALUES), stored_schema="2025-26")
+        self.assertTrue(outcome.action.startswith("tier4_recleaned ("), outcome.action)
+        self.assertEqual(len([w for w in client.writes if w[1] == "insert"]), 1)
+
+    def test_the_same_values_from_an_artifact_that_ranks_differently_are_written(self) -> None:
+        # The stored conversion is artifact "a"; the newest artifact of the
+        # file holds the same values but would not rank as a new one would.
+        cases = {
+            "another producer": _artifact("b", "2026-11-24T10:00:00+00:00", producer="tier2_acroform",
+                                          values=self.VALUES),
+            "a fallback schema": _artifact("b", "2026-11-24T10:00:00+00:00", values=self.VALUES,
+                                           fallback_used=True),
+        }
+        for name, newest in cases.items():
+            with self.subTest(name):
+                outcome, client, _ = self.run_tier4(self.VALUES, dict(self.VALUES), newer=[newest])
+                self.assertTrue(outcome.action.startswith("tier4_recleaned ("), outcome.action)
+                self.assertEqual(len([w for w in client.writes if w[1] == "insert"]), 1)
+        same = _artifact("b", "2026-11-24T10:00:00+00:00", values=self.VALUES, fallback_used=False)
+        outcome, client, _ = self.run_tier4(self.VALUES, dict(self.VALUES), newer=[same])
+        self.assertTrue(worker.is_reclean_unchanged(outcome.action), outcome.action)
+
+    def test_a_dry_run_reports_it_and_writes_nothing(self) -> None:
+        outcome, client, _ = self.run_tier4(self.VALUES, dict(self.VALUES), dry_run=True)
+        self.assertTrue(worker.is_reclean_unchanged(outcome.action))
+        self.assertEqual(client.writes, [])
+        outcome, client, _ = self.run_tier4(self.VALUES, {"C.117": self.VALUES["C.117"]}, dry_run=True)
+        self.assertTrue(outcome.action.startswith("tier4_recleaned ("), outcome.action)
+        self.assertEqual(client.writes, [])
+
+    def test_a_conversion_with_the_same_values_is_still_written(self) -> None:
+        # Only a re-clean is skipped: a fresh conversion carries new markdown.
+        with mock.patch.object(worker, "RECLEAN", False):
+            new = {"producer": "tier4_docling", "producer_version": "9.9.9", "schema_version": "2024-25",
+                   "stats": {"schema_fields_populated": 2}, "values": dict(self.VALUES), "markdown": "new"}
+            client = _Client([_artifact("a", "2026-11-23T10:00:00+00:00", values=self.VALUES)])
+            guards = {name: mock.Mock(return_value=None) for name in (
+                "field_collapse_action", "field_regression_action", "headline_regression_action",
+                "table_regression_action")}
+            with mock.patch.multiple(worker, artifact_already_extracted=mock.Mock(return_value=False),
+                                     extraction_quality_flag=mock.Mock(return_value=None), **guards), \
+                    mock.patch.multiple(tier4_extractor, extract_from_bytes=mock.Mock(return_value=new),
+                                        reclean_from_bytes=mock.Mock()):
+                outcome = worker._run_tier4(
+                    client, "doc", "example", b"%PDF", "pdf_flat", self.RESOLUTION, None,
+                    {"sha256": SHA, "storage_path": "example/2024-25/a.pdf"}, dry_run=False,
+                    force_reextract=True,
+                )
+        self.assertTrue(outcome.action.startswith("tier4_extracted ("), outcome.action)
+        self.assertEqual(len([w for w in client.writes if w[1] == "insert"]), 1)
+
+    def test_values_are_compared_as_they_would_be_stored(self) -> None:
+        stored = {"A.1": {"value": "ab", "source": "tier4_cleaner"}, "B.1": {"value": 3, "parts": [1, 2]}}
+        # A null byte is stripped on the way in; a tuple is stored as a list.
+        new = {"A.1": {"value": "a\x00b", "source": "tier4_cleaner"}, "B.1": {"value": 3, "parts": (1, 2)}}
+        previous = worker.PreviousCanonical(("2024-25", stored))
+        previous.producer = "tier4_docling"
+
+        def same(previous, schema_version="2024-25", values=new):
+            return worker.reclean_unchanged(
+                previous, {"producer": "tier4_docling", "schema_version": schema_version, "values": values})
+
+        self.assertTrue(same(previous))
+        self.assertFalse(same(None))
+        self.assertFalse(same(previous, schema_version="2023-24"))
+        self.assertFalse(same(previous, values=None))
+        self.assertFalse(same(previous, values={"A.1": {1, 2}}))
+        # A bare pair names no producer, so it cannot be called the same.
+        self.assertFalse(same(("2024-25", stored)))
+
 
 class RunAccounting(unittest.TestCase):
+    def test_an_unchanged_reclean_is_current_not_re_extracted(self) -> None:
+        wrap = "tier2_label_acroform_fallback_"
+        unchanged = "tier4_reclean_unchanged (412 fields; the stored extraction already holds these values)"
+        for prefix in ("", wrap):
+            action = prefix + unchanged
+            self.assertTrue(worker.is_reclean_unchanged(action))
+            self.assertFalse(worker.is_reclean_skip(action))
+            self.assertFalse(worker.is_failure_action(action))
+            self.assertEqual(worker.parsed_field_count(action), 412)
+            self.assertEqual(worker.extraction_ledger_outcome(action, force_reextract=True), "already_current")
+            self.assertEqual(worker.extraction_ledger_failure_code(action), "none")
+        self.assertFalse(worker.is_reclean_unchanged("tier4_recleaned (412 fields, 15 chars, 20 pages)"))
+        self.assertFalse(worker.is_reclean_unchanged("tier4_reclean_skipped (no stored conversion of the current file)"))
+
     def test_action_names_wrapped_by_the_fillable_pdf_fallback(self) -> None:
         wrap = "tier2_label_acroform_fallback_"
         skipped = "tier4_reclean_skipped (no stored conversion of the current file)"
