@@ -1247,3 +1247,103 @@ Deno.test("applyPinnedUrls: a pin replaces both the page's file and the hint for
   const pinned = applyPinnedUrls(merged, [{ url: "https://example.edu/up/pinned.pdf", year: "2024-25" }]);
   assertEquals(pinned.map((d) => d.url), ["https://example.edu/up/pinned.pdf"]);
 });
+
+// ── <base href> ───────────────────────────────────────────────────────────
+
+const BASE_TAG_PAGE = "https://example.edu/institutional-research/common-data-set/";
+
+Deno.test("extractCdsAnchors: relative links resolve against <base href>, not the page", () => {
+  const html = `
+    <html><head><base href="https://www.example.edu/" /></head><body>
+      <a href="documents/offices/ir/2026/CDS-2025-26-Example-College.pdf">Common Data Set 2025-26</a>
+      <a href="/documents/offices/ir/2025/CDS-2024-25-Example-College.pdf">Common Data Set 2024-25</a>
+      <a href="https://files.example.edu/CDS-2023-24.pdf">Common Data Set 2023-24</a>
+    </body></html>
+  `;
+  assertEquals(extractCdsAnchors(html, BASE_TAG_PAGE).map((a) => a.url), [
+    "https://www.example.edu/documents/offices/ir/2026/CDS-2025-26-Example-College.pdf",
+    "https://www.example.edu/documents/offices/ir/2025/CDS-2024-25-Example-College.pdf",
+    "https://files.example.edu/CDS-2023-24.pdf",
+  ]);
+});
+
+Deno.test("extractCdsAnchors: without a usable <base href> links resolve against the page", () => {
+  const link = `<a href="files/CDS-2025-26.pdf">Common Data Set 2025-26</a>`;
+  const onPage = [BASE_TAG_PAGE + "files/CDS-2025-26.pdf"];
+  for (const head of ["", `<base target="_blank">`, `<base href="">`, `<base href="javascript:void(0)">`]) {
+    const html = `<html><head>${head}</head><body>${link}</body></html>`;
+    assertEquals(extractCdsAnchors(html, BASE_TAG_PAGE).map((a) => a.url), onPage, head);
+  }
+});
+
+Deno.test("extractCdsAnchors: a relative <base href> is itself resolved against the page, and the first one wins", () => {
+  const html = `
+    <html><head><base href="/media/"><base href="https://other.example.org/"></head><body>
+      <a href="cds/CDS-2025-26.pdf">Common Data Set 2025-26</a>
+    </body></html>
+  `;
+  assertEquals(extractCdsAnchors(html, BASE_TAG_PAGE).map((a) => a.url), [
+    "https://example.edu/media/cds/CDS-2025-26.pdf",
+  ]);
+});
+
+Deno.test("findDownloadLinks and extractIrHubLinks: <base href> applies to them too", () => {
+  const item = `
+    <html><head><base href="https://www.example.edu/"></head><body>
+      <a href="cgi/viewcontent.cgi?article=1017&amp;context=cds">Download</a>
+    </body></html>
+  `;
+  assertEquals(findDownloadLinks(item, "https://example.edu/cds/17/").map((a) => a.url), [
+    "https://www.example.edu/cgi/viewcontent.cgi?article=1017&context=cds",
+  ]);
+  const home = `
+    <html><head><base href="https://www.example.edu/"></head><body>
+      <a href="about/institutional-research">Institutional Research</a>
+    </body></html>
+  `;
+  assertEquals(extractIrHubLinks(home, "https://www.example.edu/home/index.html"), [
+    "https://www.example.edu/about/institutional-research",
+  ]);
+});
+
+Deno.test("extractCdsAnchors: a <base href> in the body or after the first link still applies; one inside SVG does not", () => {
+  const late = `
+    <html><body>
+      <a href="files/CDS-2025-26.pdf">Common Data Set 2025-26</a>
+      <base href="https://www.example.edu/">
+    </body></html>
+  `;
+  assertEquals(extractCdsAnchors(late, BASE_TAG_PAGE).map((a) => a.url), [
+    "https://www.example.edu/files/CDS-2025-26.pdf",
+  ]);
+  const svg = `
+    <html><body>
+      <svg><base href="https://other.example.org/"></base></svg>
+      <a href="files/CDS-2025-26.pdf">Common Data Set 2025-26</a>
+    </body></html>
+  `;
+  assertEquals(extractCdsAnchors(svg, BASE_TAG_PAGE).map((a) => a.url), [
+    BASE_TAG_PAGE + "files/CDS-2025-26.pdf",
+  ]);
+});
+
+Deno.test("extractCdsAnchors: an in-page link with a leading space is still skipped under <base href>", () => {
+  const html = `
+    <html><head><base href="https://www.example.edu/"></head><body>
+      <a href=" #cds">Common Data Set 2024-25</a>
+      <a href=" files/CDS-2025-26.pdf ">Common Data Set 2025-26</a>
+    </body></html>
+  `;
+  assertEquals(extractCdsAnchors(html, BASE_TAG_PAGE).map((a) => a.url), [
+    "https://www.example.edu/files/CDS-2025-26.pdf",
+  ]);
+});
+
+Deno.test("extractIrHubLinks: links that a <base href> sends to another host are dropped", () => {
+  const home = `
+    <html><head><base href="https://other.example.org/"></head><body>
+      <a href="about/institutional-research">Institutional Research</a>
+    </body></html>
+  `;
+  assertEquals(extractIrHubLinks(home, "https://www.example.edu/home/index.html"), []);
+});
