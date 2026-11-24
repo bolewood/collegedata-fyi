@@ -241,3 +241,31 @@ schools:
       year: 2019-20
     - url: https://ie.usca.edu/facts/cds/reports/USCA_CDS_2018-19.pdf
       year: 2018-19
+  # 2026-11-24: these six returned 403 to archive-process (and to a plain
+  # client) while their listing pages show a 2025-26 CDS. No urls on
+  # purpose: the landing crawl finds the files, and the two bepress
+  # download links (Clemson, Illinois State) carry no year to check.
+  clemson:
+    school_name: Clemson University
+    landing_url: https://open.clemson.edu/cds/
+    urls: []
+  cuny-city-college:
+    school_name: CUNY City College
+    landing_url: https://www.ccny.cuny.edu/institutionalresearch/cds
+    urls: []
+  gonzaga-university:
+    school_name: Gonzaga University
+    landing_url: https://www.gonzaga.edu/academics/academic-resources/registrars-office/institutional-research/reports
+    urls: []
+  illinois-state-university:
+    school_name: Illinois State University
+    landing_url: https://ir.library.illinoisstate.edu/cds/
+    urls: []
+  new-mexico-highlands-university:
+    school_name: New Mexico Highlands University
+    landing_url: https://www.nmhu.edu/institutional-research/comon-data-set/
+    urls: []
+  suny-at-fredonia:
+    school_name: SUNY at Fredonia
+    landing_url: https://www.fredonia.edu/about/offices/institutional-research-assessment/common-data-set
+    urls: []
