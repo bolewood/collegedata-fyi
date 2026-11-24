@@ -182,7 +182,7 @@ class StaleTitleTest(unittest.TestCase):
         self.assertIsNone(detect_year_from_text(self.B1))
         self.assertIsNone(year_after_stale_title(None, {2025}))
         self.assertEqual(year_after_stale_title("2024-25", set()), "2024-25")
-        self.assertEqual(year_after_stale_title("2099-00", {2100}), "2100-01")
+        self.assertEqual(year_after_stale_title("2029-30", {2030}), "2030-31")
 
     def test_pdf_pages_are_read_together(self):
         pdf = FallbackYearFromPdfBytesTest._pdf(
