@@ -1766,6 +1766,9 @@ _B2_COLUMN_KEYS: list[tuple[str, dict[str, str]]] = [
 ]
 
 
+_B2_BROKEN_THOUSANDS_RE = re.compile(r"(?<![\d,])(\d{1,3}),[ \t]+(\d{3})(?![\d,])")
+
+
 def resolve_b2_race(
     tables: list[dict], markdown: str, schema: SchemaIndex
 ) -> dict[str, dict]:
@@ -1804,6 +1807,9 @@ def resolve_b2_race(
         ]
         wrapped_label = ""
         for raw_line in b2_block.splitlines():
+            # The text layer can print a gap inside a number: "12,    818" is
+            # 12,818, not the two cells 12 and 818.
+            raw_line = _B2_BROKEN_THOUSANDS_RE.sub(r"\1,\2", raw_line)
             nums = re.findall(r"\b\d[\d,]*\b", raw_line)
             if len(nums) == 3 and re.search(r"\d,\s*$", raw_line):
                 # "983    483 4," is 983 and 4,483 with the thousands broken
@@ -2407,6 +2413,9 @@ def resolve_b5_graduation(
         ckey = cohort_keys[cohort_idx]
 
         new_letters_in_table = 0
+        # Rows whose label is the bare letter: the description has a cell of
+        # its own in this table.
+        letter_split = any(row["label"].strip() in _B5_ROW_LETTERS for row in table["rows"])
         for row in table["rows"]:
             label = row["label"].strip()
             label_norm = _normalize_label(label)
@@ -2432,6 +2441,13 @@ def resolve_b5_graduation(
                             break
                     if letter is None:
                         continue
+                    # In a table whose "A. label" rows were split into a
+                    # letter and a description, a row with no letter of its
+                    # own keeps its text as the label and gets an empty
+                    # description cell, so its numbers start one cell later.
+                    values = row["values"]
+                    if letter_split and len(values) > len(_B5_COL_QUESTIONS) and not values[0].strip():
+                        value_offset = 1
 
             if letter in seen_letters:
                 # Already recorded this row in an earlier fragment — skip
@@ -3249,6 +3265,7 @@ def _resolve_b1_sex_load_table(
     schema: SchemaIndex,
     out: dict[str, dict],
     prefer_table: bool,
+    seen: dict[tuple, int | None] | None = None,
 ) -> None:
     """Read one B1 table whose columns are typed by _b1_sex_load_columns.
 
@@ -3265,6 +3282,14 @@ def _resolve_b1_sex_load_table(
     removes a count. A "Total Undergraduate Students" cell is removed too
     when the table was cut before that row and the cell contradicts the two
     rows above it.
+
+    ``seen`` holds the cells of the typed tables of this document that were
+    accepted before this one. A file can hold several campuses' forms one
+    after another (Indiana University: seven). A table that prints at least
+    half of its cells again with other numbers in them is a later form's:
+    nothing is taken from it, so the first form is the one read, as in other
+    sections. A table that repeats cells with the same numbers is the same
+    table printed again and is read as usual.
     """
     student_group = _b1_header_student_group(table.get("headers", []))
     typed = [index for index, column in enumerate(columns) if column]
@@ -3315,6 +3340,18 @@ def _resolve_b1_sex_load_table(
     verified = _b1_typed_rows_verified(rows, len(typed))
     if verified is None:
         return
+
+    if seen is not None:
+        printed = {
+            (row_key, columns[index]): counts[position]
+            for row_key, counts in rows.items()
+            for position, index in enumerate(typed)
+        }
+        again = [cell for cell in printed if cell in seen]
+        if 2 * len(again) >= len(printed) and any(printed[cell] != seen[cell] for cell in again):
+            return
+        for cell, count in printed.items():
+            seen.setdefault(cell, count)
 
     def field(position: int, group: str, cohort: str, category: str) -> str | None:
         gender, unit_load = columns[typed[position]]
@@ -3595,6 +3632,7 @@ def resolve_b1_enrollment(
     unit_load: str | None = None
     student_group: str | None = None
     prefer_table = schema.schema_version in _B1_INTERLEAVED_GENDER_YEARS
+    typed_cells_seen: dict[tuple, int | None] = {}
 
     for table in b1_tables:
         # Section header or column headers may advertise the (unit_load,
@@ -3613,7 +3651,9 @@ def resolve_b1_enrollment(
 
         sex_load_columns = _b1_sex_load_columns(table.get("headers", []))
         if sex_load_columns:
-            _resolve_b1_sex_load_table(table, sex_load_columns, schema, out, prefer_table)
+            _resolve_b1_sex_load_table(
+                table, sex_load_columns, schema, out, prefer_table, typed_cells_seen
+            )
             continue
 
         for row in table["rows"]:
@@ -7229,6 +7269,18 @@ def _h_cell_numbers(text: str) -> list[str]:
     return out
 
 
+# The title a page of the form carries at its top: "H. FINANCIAL AID",
+# "B. ENROLLMENT AND PERSISTENCE". Only the form's own section titles, in any
+# case, on a line with no number: a row label printed in capitals is a row.
+_SECTION_BANNER_RE = re.compile(
+    r"(?i)\s*(?:A\.\s+General Information|B\.\s+Enrollment and Persistence"
+    r"|C\.\s+First-Time,? First-Year|D\.\s+Transfer Admission"
+    r"|E\.\s+Academic Offerings|F\.\s+Student Life|G\.\s+Annual Expenses"
+    r"|H\.\s+Financial Aid|I\.\s+Instructional Faculty"
+    r"|J\.\s+(?:Degrees Conferred|Disciplinary Areas))\b\D*$"
+)
+
+
 def _h_row_window(block: str, letter: str) -> str:
     lines = block.splitlines()
     start = None
@@ -7238,8 +7290,11 @@ def _h_row_window(block: str, letter: str) -> str:
             start = idx
             break
         # "A. Any loan program" and "C.Institutional loan program": forms
-        # that print a full stop after the row letter.
-        if re.match(rf"\s*{letter}\.(?:\s+|$|(?=[A-Z][a-z]))", line):
+        # that print a full stop after the row letter. The section banner at
+        # the top of a page ("H. FINANCIAL AID") is not row H: a window that
+        # starts there runs over the whole table and ends on the last row's
+        # amounts.
+        if re.match(rf"\s*{letter}\.(?:\s+|$|(?=[A-Z][a-z]))", line) and not _SECTION_BANNER_RE.match(line):
             start = idx
             dotted = True
             break
@@ -8963,9 +9018,19 @@ def clean(
                 if resolver is resolve_b1_enrollment:
                     # The text-layer reading replaces the markdown one, but a
                     # one-number total row only the markdown pass read is kept.
-                    for qn in _b1_scalar_total_qns(idx):
-                        if qn in new:
-                            supplemental_new.setdefault(qn, new[qn])
+                    total_qns = _b1_scalar_total_qns(idx)
+                    kept = [qn for qn in total_qns if qn in new and qn not in supplemental_new]
+                    for qn in kept:
+                        supplemental_new[qn] = new[qn]
+                    # The markdown reading can put the undergraduate total
+                    # beside "GRAND TOTAL" (Utah State 2025-26). With graduate
+                    # students counted, the grand total cannot be the
+                    # undergraduate total.
+                    undergraduate, graduate, grand = (
+                        _b1_value_int(supplemental_new.get(qn)) for qn in total_qns
+                    )
+                    if total_qns[2] in kept and graduate and grand is not None and grand == undergraduate:
+                        del supplemental_new[total_qns[2]]
                 new = supplemental_new
                 supplemental_new = {}
             for qn, rec in supplemental_new.items():
