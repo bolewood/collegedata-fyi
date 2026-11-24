@@ -21,6 +21,7 @@ from worker import (  # noqa: E402
     school_has_document_for_year,
     detect_year_from_text,
     unique_detected_year,
+    year_after_stale_title,
     _normalize_year_span,
 )
 
@@ -131,6 +132,78 @@ class MissDontCorruptTest(unittest.TestCase):
         self.assertIsNone(unique_detected_year({"2024-25", "2025-26"}))
         self.assertEqual(unique_detected_year({"2024-25"}), "2024-25")
 
+
+
+class StaleTitleTest(unittest.TestCase):
+    """The 2025-2026 PDF form prints last year's title in its page header."""
+
+    HEADER = "Common Data Set 2024-2025\n"
+    B1 = (
+        "B1 Institutional Enrollment. Provide numbers of students for each of the "
+        "following categories as of the institution's official fall reporting date "
+        "or as of October 15, 2025.\n"
+    )
+
+    def test_reference_date_of_the_next_fall_moves_the_year_forward(self):
+        text = self.HEADER + "A0 Respondent Information\n" + self.HEADER + self.B1 + self.HEADER
+        self.assertEqual(collect_year_spans_from_text(text), {"2024-25"})
+        self.assertEqual(detect_year_from_text(text), "2025-26")
+
+    def test_title_and_reference_date_that_agree_are_left_alone(self):
+        text = "Common Data Set 2025-2026\n" + self.B1
+        self.assertEqual(detect_year_from_text(text), "2025-26")
+        earlier = self.HEADER + self.B1.replace("2025", "2024")
+        self.assertEqual(detect_year_from_text(earlier), "2024-25")
+
+    def test_a_file_with_no_reference_date_keeps_its_title(self):
+        # A file that holds section A alone: nothing to check the title against.
+        text = self.HEADER + "A0 Respondent Information\nA1 Address Information\n" + self.HEADER
+        self.assertEqual(detect_year_from_text(text), "2024-25")
+
+    def test_two_reference_years_keep_the_title(self):
+        text = self.HEADER + self.B1 + "B2 ... as of October 15, 2024.\n"
+        self.assertEqual(detect_year_from_text(text), "2024-25")
+
+    def test_only_one_year_forward(self):
+        # A reused form with last year's date in it, and a date two years on.
+        self.assertEqual(detect_year_from_text(self.HEADER + "as of October 15, 2023."), "2024-25")
+        self.assertEqual(detect_year_from_text(self.HEADER + "as of October 15, 2026."), "2024-25")
+
+    def test_an_october_15_deadline_is_not_the_reference_date(self):
+        text = self.HEADER + "Early action closing date: October 15, 2025\nPriority date: October 15, 2025\n"
+        self.assertEqual(detect_year_from_text(text), "2024-25")
+
+    def test_two_titles_stay_undetected(self):
+        # Ambiguous titles are not this rule's business, with or without a date.
+        text = "Common Data Set 2025-2026\n" + self.HEADER + self.B1
+        self.assertIsNone(detect_year_from_text(text))
+
+    def test_no_title_stays_undetected(self):
+        self.assertIsNone(detect_year_from_text(self.B1))
+        self.assertIsNone(year_after_stale_title(None, {2025}))
+        self.assertEqual(year_after_stale_title("2024-25", set()), "2024-25")
+        self.assertEqual(year_after_stale_title("2029-30", {2030}), "2030-31")
+
+    def test_pdf_pages_are_read_together(self):
+        pdf = FallbackYearFromPdfBytesTest._pdf(
+            None,
+            [
+                "Common Data Set 2024-2025 A0 Respondent Information",
+                "Common Data Set 2024-2025 A2",
+                "Common Data Set 2024-2025 B1 as of October 15, 2025.",
+            ],
+        )
+        self.assertEqual(worker.detect_year_from_pdf_bytes(pdf), "2025-26")
+        same_year = FallbackYearFromPdfBytesTest._pdf(
+            None,
+            ["Common Data Set 2024-2025 A0", "Common Data Set 2024-2025 B1 as of October 15, 2024."],
+        )
+        self.assertEqual(worker.detect_year_from_pdf_bytes(same_year), "2024-25")
+
+    def test_a_reference_date_past_the_pages_read_does_not_count(self):
+        pages = ["Common Data Set 2024-2025 A0"] + ["filler"] * 10 + ["as of October 15, 2025."]
+        pdf = FallbackYearFromPdfBytesTest._pdf(None, pages)
+        self.assertEqual(worker.detect_year_from_pdf_bytes(pdf), "2024-25")
 
 
 class FallbackYearFromTextTest(unittest.TestCase):
