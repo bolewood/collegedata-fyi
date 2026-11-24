@@ -7585,7 +7585,6 @@ schools:
     search_fallback_tried: true
   notes: Cleared identical seed also assigned to fairleigh-dickinson-university-metropolitan-campus; search is not campus-specific.
 
-  discovery_seed_url: https://www.fdu.edu/about/university-leadership-offices/office-of-institutional-research-and-assessment/
 - id: fairleigh-dickinson-university-metropolitan-campus
   name: Fairleigh Dickinson University-Metropolitan Campus
   domain: fdu.edu
@@ -22746,7 +22745,6 @@ schools:
   domain: uc.edu
   ipeds_id: '201885'
   scrape_policy: unknown
-  discovery_seed_url: https://www.uc.edu/about/provost/colleges-and-offices/offices/institutional-research/facts-dashboards.html
 - id: university-of-colorado-colorado-springs
   name: University of Colorado Colorado Springs
   domain: uccs.edu
@@ -23592,7 +23590,6 @@ schools:
   domain: umn.edu
   ipeds_id: '174066'
   scrape_policy: unknown
-  discovery_seed_url: https://idr.umn.edu/institutional-metrics-compliance-reporting/common-data-set
 - id: university-of-mississippi
   name: University of Mississippi
   domain: olemiss.edu
@@ -24930,7 +24927,6 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.uwsp.edu/office-of-institutional-research-and-effectiveness/compliance-and-external-reporting/
 - id: university-of-wisconsin-stout
   name: University of Wisconsin-Stout
   domain: uwstout.edu
