@@ -25,7 +25,7 @@ This directory turns that problem into a reproducible pipeline. You run one comm
 | `dedup_audit.py` | Compares duplicate-name `schools.yaml` entries against authoritative IPEDS HD data, recommends a canonical. Run when the build guard surfaces a duplicate. |
 | `dedup_migrate.py` | Moves Supabase rows (cds_documents, archive_queue, etc.) from a wrong slug to its canonical, then deletes the wrong yaml entry. Run after `dedup_audit.py` chooses the canonical. `--dry-run` / `--apply`; `--rename-lincoln` renames the two Lincoln University slugs to add state suffixes. |
 | `debug_brave.py` | Diagnostic for Brave Search API. Hits 5 hand-verified publishers × 4 query shapes, prints raw results. Used when a Brave run misbehaves. |
-| `stuck_pdf_seeds.py` | Flags schools whose discovery seed is a single PDF/xlsx/docx with few archived years and a stale latest year, so the probe can look for a listing page. Feeds `probe_urls.py --ids-file` in the monthly workflow. |
+| `stuck_pdf_seeds.py` | Flags schools whose discovery seed is a single PDF/xlsx/docx and whose newest archived year is stale (however many older years are archived), so the probe can look for a listing page. Feeds `probe_urls.py --ids-file` in the monthly workflow. |
 | `apply_probe_log.py` | Replays a finder probe log onto `schools.yaml` without a Brave re-run (recovery after a lost seed push). |
 | `merge_schools_yaml.py` | Three-way merge of `schools.yaml` at school-id grain, used by the probe workflow to publish from current `main`. |
 | `promote_landing_hints.py` | Proposes (or applies with a flag) landing-page rewrites for seeds that point at one direct PDF. |

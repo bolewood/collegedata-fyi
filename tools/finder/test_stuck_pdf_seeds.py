@@ -27,7 +27,7 @@ class ClassifyTests(unittest.TestCase):
     def test_listing_seed_is_not_stuck(self) -> None:
         school = {"id": "ou", "discovery_seed_url": "https://www.ou.edu/irr/other-reports"}
         self.assertIsNone(
-            classify_school(school, ["2023-24"], min_fresh_year="2024-25", max_years=2)
+            classify_school(school, ["2023-24"], min_fresh_year="2024-25")
         )
 
     def test_stale_single_pdf_is_stuck(self) -> None:
@@ -36,7 +36,7 @@ class ClassifyTests(unittest.TestCase):
             "discovery_seed_url": "https://example.edu/cds-2023-2024.pdf",
         }
         row = classify_school(
-            school, ["2023-24"], min_fresh_year="2024-25", max_years=2
+            school, ["2023-24"], min_fresh_year="2024-25"
         )
         self.assertIsNotNone(row)
         self.assertEqual(row["latest"], "2023-24")
@@ -47,7 +47,7 @@ class ClassifyTests(unittest.TestCase):
             "discovery_seed_url": "https://example.edu/cds-2024-2025.pdf",
         }
         self.assertIsNone(
-            classify_school(school, ["2024-25"], min_fresh_year="2024-25", max_years=2)
+            classify_school(school, ["2024-25"], min_fresh_year="2024-25")
         )
 
     def test_zero_years_pdf_is_stuck(self) -> None:
@@ -55,18 +55,31 @@ class ClassifyTests(unittest.TestCase):
             "id": "ohio-university-main-campus",
             "discovery_seed_url": "https://www.ohio.edu/instres/commondataset.pdf",
         }
-        row = classify_school(school, [], min_fresh_year="2024-25", max_years=2)
+        row = classify_school(school, [], min_fresh_year="2024-25")
         self.assertIsNotNone(row)
         self.assertEqual(row["n_years"], 0)
 
-    def test_many_years_not_stuck_even_if_pdf(self) -> None:
+    def test_many_stale_years_are_still_stuck(self) -> None:
+        # Richmond on 2026-11-24: six archived years from a mirror, a seed
+        # that is one 2021-22 file, and nothing newer than 2024-25.
+        school = {"id": "x", "discovery_seed_url": "https://example.edu/a.pdf"}
+        row = classify_school(
+            school,
+            ["2019-20", "2020-21", "2021-22", "2022-23", "2023-24", "2024-25"],
+            min_fresh_year="2025-26",
+        )
+        self.assertIsNotNone(row)
+        self.assertEqual(row["reason"], "stale_single_document")
+        self.assertEqual(row["latest"], "2024-25")
+        self.assertEqual(row["n_years"], 6)
+
+    def test_many_years_with_a_fresh_one_are_not_stuck(self) -> None:
         school = {"id": "x", "discovery_seed_url": "https://example.edu/a.pdf"}
         self.assertIsNone(
             classify_school(
                 school,
-                ["2020-21", "2021-22", "2022-23"],
-                min_fresh_year="2024-25",
-                max_years=2,
+                ["2022-23", "2023-24", "2024-25", "2025-26"],
+                min_fresh_year="2025-26",
             )
         )
 
@@ -82,7 +95,6 @@ class ClassifyTests(unittest.TestCase):
             school,
             ["2019-20", "2020-21", "2021-22", "2022-23", "2023-24", "2024-25", "2025-26"],
             min_fresh_year="2025-26",
-            max_years=2,
         )
         self.assertIsNotNone(row)
         self.assertEqual(row["reason"], "section_seed")
@@ -107,7 +119,7 @@ class ClassifyTests(unittest.TestCase):
 
     def test_stale_seed_reason(self) -> None:
         school = {"id": "x", "discovery_seed_url": "https://example.edu/cds-2023-2024.pdf"}
-        row = classify_school(school, ["2023-24"], min_fresh_year="2024-25", max_years=2)
+        row = classify_school(school, ["2023-24"], min_fresh_year="2024-25")
         self.assertEqual(row["reason"], "stale_single_document")
 
 
