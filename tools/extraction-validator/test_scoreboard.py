@@ -227,6 +227,63 @@ class RenderAndHolds(unittest.TestCase):
         self.assertEqual(set(holds), {"d1"})
         self.assertEqual(holds["d1"]["guard"], "tier4_field_regression")
 
+    def summaries(self, folder: str, runs: list[tuple]) -> str:
+        for name, finished, dry_run, documents in runs:
+            Path(folder, f"{name}.summary.json").write_text(json.dumps({
+                "finished_at": finished, "dry_run": dry_run,
+                "documents": [{"document_id": d, "action": a} for d, a in documents]}))
+        return str(Path(folder) / "*.summary.json")
+
+    def test_an_unchanged_reclean_is_known_by_its_cleaner_version(self) -> None:
+        import tempfile
+        unchanged = "tier4_reclean_unchanged (412 fields; cleaner 0.3.38 reads what is stored)"
+        wrapped = "tier2_label_acroform_fallback_" + unchanged.replace("0.3.38", "0.3.37")
+        with tempfile.TemporaryDirectory() as folder:
+            pattern = self.summaries(folder, [
+                ("a", "2026-11-22T10:00:00+00:00", False, [("d1", unchanged), ("d2", unchanged), ("d3", wrapped)]),
+                # A later run that wrote nothing for another reason leaves the check standing.
+                ("b", "2026-11-23T10:00:00+00:00", False, [("d1", "tier4_reclean_error: timeout"),
+                                                           ("d5", "tier4_recleaned (413 fields, 9 chars, 2 pages)")]),
+                # A dry run makes the same comparison, so its check counts, and the later one is kept.
+                ("c", "2026-11-24T10:00:00+00:00", True, [("d2", unchanged.replace("0.3.38", "0.3.39")),
+                                                          ("d4", unchanged)]),
+            ])
+            checked = scoreboard.load_unchanged(pattern)
+        self.assertEqual(checked, {
+            "d1": {"at": "2026-11-22T10:00:00+00:00", "version": "0.3.38"},
+            "d2": {"at": "2026-11-24T10:00:00+00:00", "version": "0.3.39"},
+            "d3": {"at": "2026-11-22T10:00:00+00:00", "version": "0.3.37"},
+            "d4": {"at": "2026-11-24T10:00:00+00:00", "version": "0.3.38"},
+        })
+
+    def test_a_dry_run_does_not_clear_a_hold(self) -> None:
+        import tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            pattern = self.summaries(folder, [
+                ("a", "2026-11-22T10:00:00+00:00", False, [("d1", "tier4_table_field_regression (B1; kept)")]),
+                ("b", "2026-11-23T10:00:00+00:00", True, [("d1", "tier4_recleaned (413 fields, 9 chars, 2 pages)")]),
+            ])
+            self.assertEqual(set(scoreboard.load_holds(pattern)), {"d1"})
+
+    def test_read_by_the_current_cleaner_counts_written_and_unchanged(self) -> None:
+        documents = [
+            self.document(document_id="written", version="0.3.38"),
+            self.document(document_id="unchanged", version="0.3.20", checked_version="0.3.38"),
+            self.document(document_id="checked-earlier", version="0.3.17", checked_version="0.3.37"),
+            self.document(document_id="never", version="0.3.36"),
+            self.document(document_id="other", producer="tier2_acroform", version="0.3.38"),
+        ]
+        metrics = scoreboard.aggregate(self.data(documents))
+        self.assertEqual(metrics["2024-25|all|tier4"], 4)
+        self.assertEqual(metrics["2024-25|all|tier4_checked"], 2)
+        self.assertEqual(metrics["2024-25|all|tier4_current"], 1)
+        text = scoreboard.render(self.data(documents))
+        self.assertIn("| Read by 0.3.38 | Of those, written by it | Tier 4, not yet read by it |", text)
+        self.assertIn("| 2024-25 | 5 | 4 | 2 | 1 | 0.3.36: 1, 0.3.17: 1 | tier2_acroform 0.3.38: 1 |", text)
+        # A scoreboard saved before this measure existed is counted by version alone.
+        old = self.data([self.document(document_id="written")])
+        self.assertIn("| 2024-25 | 5 | 4 (+3) | 2 (+2) | 1 (+1) |", scoreboard.render(self.data(documents), old))
+
 
 if __name__ == "__main__":
     unittest.main()

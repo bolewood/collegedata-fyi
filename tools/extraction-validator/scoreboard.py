@@ -12,7 +12,9 @@ reports, by CDS year and source format:
   3. Internal consistency. The sums the form defines (B1 totals, C1 by sex
      against the total, H1 grant and self-help totals): pass, fail, or not
      checkable.
-  4. Fix reach. Served extractions by producer and version, documents a
+  4. Fix reach. Served extractions by producer and version, how many the
+     current cleaner has read (a re-clean that reads the same values writes
+     nothing, so the artifact's version alone does not say), documents a
      worker guard is holding, and documents hidden behind a quality flag.
 
 Where the numbers come from:
@@ -463,25 +465,50 @@ def numbers_from_values(values: dict[str, Any], schema_defs: dict[str, Any],
     return numbers
 
 
-def load_holds(pattern: str) -> dict[str, dict[str, str]]:
-    """Latest worker outcome per document from local run summaries, kept only
-    when that outcome is a guard keeping the previous extraction."""
-    latest: dict[str, tuple[str, str]] = {}
+def run_outcomes(pattern: str) -> Iterable[tuple[str, bool, str, str]]:
+    """(run finished at, dry run, document id, action) for every document in
+    every local worker run summary."""
     for path in glob.glob(pattern):
         try:
             summary = json.loads(Path(path).read_text())
         except (OSError, ValueError):
             continue
-        finished = str(summary.get("finished_at") or "")
+        if not isinstance(summary, dict):
+            continue
+        finished, dry_run = str(summary.get("finished_at") or ""), bool(summary.get("dry_run"))
         for record in summary.get("documents") or []:
-            document_id, action = str(record.get("document_id")), str(record.get("action") or "")
-            if document_id not in latest or finished > latest[document_id][0]:
-                latest[document_id] = (finished, action)
+            yield finished, dry_run, str(record.get("document_id")), str(record.get("action") or "")
+
+
+def load_holds(pattern: str) -> dict[str, dict[str, str]]:
+    """Latest worker outcome per document, kept only when that outcome is a
+    guard keeping the previous extraction. Dry runs are left out: they apply
+    no guards and write nothing, so they neither hold a document nor release it."""
+    latest: dict[str, tuple[str, str]] = {}
+    for finished, dry_run, document_id, action in run_outcomes(pattern):
+        if not dry_run and (document_id not in latest or finished > latest[document_id][0]):
+            latest[document_id] = (finished, action)
     return {
         document_id: {"at": finished, "guard": action.split(" (")[0], "action": action}
         for document_id, (finished, action) in latest.items()
         if "_regression" in action.split(" (")[0]
     }
+
+
+_UNCHANGED_RE = re.compile(r"tier4_reclean_unchanged \(.*\bcleaner (\S+) ")
+
+
+def load_unchanged(pattern: str) -> dict[str, dict[str, str]]:
+    """Per document, the latest re-clean that read the stored values again and
+    so wrote nothing, with the cleaner version that did. A dry run counts: it
+    makes the same comparison. Whether the check still stands is the caller's
+    question: it does while no artifact has been written since."""
+    checked: dict[str, dict[str, str]] = {}
+    for finished, _, document_id, action in run_outcomes(pattern):
+        match = _UNCHANGED_RE.search(action)
+        if match and (document_id not in checked or finished > checked[document_id]["at"]):
+            checked[document_id] = {"at": finished, "version": match.group(1)}
+    return checked
 
 
 def current_tier4_version() -> str:
@@ -524,6 +551,7 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
         year: fetch_federal(api, projection.parse_year_start(year) or 0) for year in years
     }
     holds = load_holds(summaries)
+    unchanged = load_unchanged(summaries)
 
     cache_dir = out_dir / "cache"
     cache_dir.mkdir(parents=True, exist_ok=True)
@@ -625,6 +653,12 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
         hold = holds.get(document_id)
         if hold and (entry["newest_at"] or "") < hold["at"]:
             entry["hold"] = hold["guard"]
+        # The worker compared against the newest extraction, so the check
+        # speaks for the served one only when they are the same.
+        check = unchanged.get(document_id)
+        newest_is_served = (entry["producer"], entry["version"]) == (entry["newest_producer"], entry["newest_version"])
+        if check and newest_is_served and (entry["newest_at"] or "") < check["at"]:
+            entry["checked_version"] = check["version"]
         documents.append(entry)
         if position % 100 == 0:
             log(f"  {position}/{len(served)} documents ({artifact_reads} artifact reads, {api.requests} requests)")
@@ -692,6 +726,10 @@ def aggregate(data: dict[str, Any]) -> dict[str, Any]:
         tier4 = [d for d in docs if d["producer"] == TIER4]
         metrics[f"{key}|tier4"] = len(tier4)
         metrics[f"{key}|tier4_current"] = sum(1 for d in tier4 if d["version"] == current)
+        # Read by the current cleaner: it wrote the served extraction, or it
+        # re-cleaned the document and read the same values (nothing written).
+        metrics[f"{key}|tier4_checked"] = sum(
+            1 for d in tier4 if current in (d["version"], d.get("checked_version")))
         metrics[f"{key}|no_extraction"] = sum(1 for d in docs if not d["producer"])
         metrics[f"{key}|held"] = sum(1 for d in docs if d.get("hold"))
         metrics[f"{key}|other_schema"] = sum(1 for d in docs if d["producer"] and d["schema_version"] != year)
@@ -771,23 +809,29 @@ def render(data: dict[str, Any], previous: Optional[dict[str, Any]] = None) -> s
                          f"{triple(key, 'C1')} | {triple(key, 'H1')} |")
 
     lines += ["", "### 4. Fix reach",
-              "", f"| Year | Served | Tier 4 | On {current} | Tier 4, older | Other extractors | No extraction | "
+              "", f"| Year | Served | Tier 4 | Read by {current} | Of those, written by it | Tier 4, not yet read by it | "
+              "Other extractors | No extraction | "
               "Numbered by another year's form | Flagged | Held by a guard | Newest is not the served one |",
-              "|---|---:|---:|---:|---|---|---:|---:|---:|---:|---:|"]
+              "|---|---:|---:|---:|---:|---|---|---:|---:|---:|---:|---:|"]
     for year in data["years"]:
         key = f"{year}|all"
         if f"{key}|docs" not in metrics:
             continue
         year_docs = [d for d in docs if d["year"] == year]
-        older = Counter(d["version"] for d in year_docs if d["producer"] == TIER4 and d["version"] != current)
+        older = Counter(d["version"] for d in year_docs if d["producer"] == TIER4
+                        and current not in (d["version"], d.get("checked_version")))
         older_text = ", ".join(f"{v}: {n}" for v, n in sorted(older.items(), key=lambda i: _version_key(i[0]), reverse=True))
         others = Counter(f"{d['producer']} {d['version']}" for d in year_docs if d["producer"] and d["producer"] != TIER4)
         others_text = ", ".join(f"{name}: {n}" for name, n in sorted(others.items()))
         lines.append(
-            f"| {year} | {len(year_docs):,} | {cell(key + '|tier4')} | {cell(key + '|tier4_current')} | "
+            f"| {year} | {len(year_docs):,} | {cell(key + '|tier4')} | {cell(key + '|tier4_checked')} | "
+            f"{cell(key + '|tier4_current')} | "
             f"{older_text or '–'} | {others_text or '–'} | {cell(key + '|no_extraction')} | "
             f"{cell(key + '|other_schema')} | {cell(key + '|flagged')} | {cell(key + '|held')} | {cell(key + '|newest_not_served')} |")
 
+    lines.append(
+        f"\nRead by {current}: the current cleaner wrote the served extraction, or re-cleaned the document and "
+        "read the same values, which writes nothing. The second kind is known from local worker run summaries.")
     flags = Counter((d["year"], d["flag"]) for d in docs if d["flag"] in HIDDEN_FLAGS)
     if flags:
         lines.append("\nFlagged: " + "; ".join(
