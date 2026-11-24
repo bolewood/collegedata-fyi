@@ -6,7 +6,8 @@ one file and never looks for a listing. How many older years are archived
 does not matter: an earlier cap of two archived years kept 90 such schools
 out of the monthly re-probe (75 flagged with the cap, 165 without it, on
 2026-11-24). Many of them hold several years from the College Transitions
-mirror, which ends at 2024-25, behind a seed that is one old file.
+mirror, which ends at 2024-25, behind a seed that is one old file. Counting
+only dated documents as years (see classify_school) flags 25 more: 190.
 
 This is the coverage job for that class. It reads schools.yaml and public
 cds_documents year counts, then emits JSON / markdown / id lists the monthly
@@ -38,6 +39,7 @@ ROOT = Path(__file__).resolve().parent
 REPO_ROOT = ROOT.parents[1]
 DOCUMENT_EXT_RE = re.compile(r"\.(pdf|xlsx|docx)(\?|#|$)", re.I)
 DEFAULT_API = "https://api.collegedata.fyi"
+YEAR_RE = re.compile(r"^\d{4}-\d{2}$")
 
 
 def default_min_fresh_year(today: date | None = None) -> str:
@@ -128,7 +130,10 @@ def classify_school(
     seed = school.get("discovery_seed_url") or school.get("cds_url_hint") or ""
     if not is_direct_doc_seed(seed):
         return None
-    unique_years = sorted({y for y in years if y})
+    # Real years only: the archive files a document it cannot date under
+    # "unknown", and as a string that sorts above every year, which made a
+    # school holding one such document look fresh forever.
+    unique_years = sorted({y for y in years if y and YEAR_RE.match(y)})
     latest = unique_years[-1] if unique_years else None
     n_years = len(unique_years)
     if is_section_seed(seed):

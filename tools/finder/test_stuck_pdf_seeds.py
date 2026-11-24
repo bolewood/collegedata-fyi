@@ -73,6 +73,16 @@ class ClassifyTests(unittest.TestCase):
         self.assertEqual(row["latest"], "2024-25")
         self.assertEqual(row["n_years"], 6)
 
+    def test_an_undated_document_does_not_make_a_school_look_fresh(self) -> None:
+        # "unknown" sorts above every year as a string.
+        school = {"id": "x", "discovery_seed_url": "https://example.edu/a.pdf"}
+        row = classify_school(
+            school, ["2023-24", "2024-25", "unknown"], min_fresh_year="2025-26"
+        )
+        self.assertIsNotNone(row)
+        self.assertEqual(row["latest"], "2024-25")
+        self.assertEqual(row["years"], ["2023-24", "2024-25"])
+
     def test_many_years_with_a_fresh_one_are_not_stuck(self) -> None:
         school = {"id": "x", "discovery_seed_url": "https://example.edu/a.pdf"}
         self.assertIsNone(
