@@ -1962,9 +1962,60 @@ def unique_detected_year(spans: set[str]) -> Optional[str]:
     return None
 
 
+# ── The form's own reference date ─────────────────────────────────────────
+#
+# The CDS Initiative's 2025-2026 PDF form prints "Common Data Set 2024-2025"
+# in the running header of every page: the header was not updated when the
+# form was. A school that fills in that form publishes a 2025-26 document
+# whose only title names the year before, and the title patterns above read
+# it as 2024-25. On 2026-11-24 that had happened to 21 documents. Each was
+# published as its school's second 2024-25 document, the school showed no
+# 2025-26, and the fall 2025 admissions figures were compared with the
+# federal figures for fall 2024.
+#
+# The form states its year a second way. B1 and B2 ask for enrollment "as of
+# the institution's official fall reporting date or as of October 15, 2025",
+# and that date is question text, revised with the form each year. When the
+# one title year is X and every "October 15" date on the scanned pages names
+# the fall after X began, the document is the X+1 form under a stale header.
+#
+# Narrow on purpose: one year forward only, and only when the pages name a
+# single reference year. A title with no reference date (a file holding
+# section A alone), two reference years, or any other disagreement keeps the
+# title's answer. The date pattern is _REFERENCE_DATE_RE, defined with the
+# year fallback below; it requires "as of", so an October 15 deadline in
+# section C or H is not read as the reference date.
+
+
+def collect_reference_years_from_text(text: str) -> set[int]:
+    """The years of every "as of October 15, YYYY" in already-extracted text."""
+    return {int(y) for y in _REFERENCE_DATE_RE.findall(text or "")}
+
+
+def year_after_stale_title(
+    title_year: Optional[str], reference_years: set[int]
+) -> Optional[str]:
+    """The year a document carries once a stale title is allowed for.
+
+    `title_year` is the strict title detection (possibly None) and
+    `reference_years` the years of the form's "October 15" dates on the same
+    pages. Returns the following year when the single reference year is the
+    fall after the title year began; `title_year` unchanged otherwise."""
+    if not title_year or len(reference_years) != 1:
+        return title_year
+    start = int(title_year[:4])
+    reference = next(iter(reference_years))
+    if reference != start + 1:
+        return title_year
+    return _span_starting(reference)
+
+
 def detect_year_from_text(text: str) -> Optional[str]:
     """Detect a CDS year from plain text. Tests should use this, not PDFs."""
-    return unique_detected_year(collect_year_spans_from_text(text))
+    return year_after_stale_title(
+        unique_detected_year(collect_year_spans_from_text(text)),
+        collect_reference_years_from_text(text),
+    )
 
 
 def detect_year_from_pdf_bytes(data: bytes, max_pages: int = 10) -> Optional[str]:
@@ -2029,6 +2080,7 @@ def detect_year_from_pdf_bytes(data: bytes, max_pages: int = 10) -> Optional[str
         )
         return None
     spans: set[str] = set()
+    reference_years: set[int] = set()
     pages = PdfPageTexts(data)
     for page_idx in range(page_count):
         text = pages.text(page_idx)
@@ -2040,10 +2092,12 @@ def detect_year_from_pdf_bytes(data: bytes, max_pages: int = 10) -> Optional[str
             )
             continue
         spans |= collect_year_spans_from_text(text)
+        reference_years |= collect_reference_years_from_text(text)
     # Zero hits → undetected. Multiple distinct hits → ambiguous →
     # treat as undetected per the strict invariant. Both cases return
     # None; they're bucketed identically in the harness summary.
-    return unique_detected_year(spans)
+    # One hit is then checked against the form's own reference date.
+    return year_after_stale_title(unique_detected_year(spans), reference_years)
 
 
 # ── Year fallback for documents the archive filed without a year ──────────
@@ -2110,7 +2164,7 @@ def fallback_year_from_text(strict_text: str, text: str) -> Optional[str]:
     if not _CDS_NAME_RE.search(text):
         return None  # an enrollment report or self-study, not a CDS
     spans = collect_year_spans_from_text(strict_text)
-    reference_years = {int(y) for y in _REFERENCE_DATE_RE.findall(text)}
+    reference_years = collect_reference_years_from_text(text)
     dominant_fall = _dominant_fall_year(text)
     if len(reference_years) == 1:
         reference_year = next(iter(reference_years))
