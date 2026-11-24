@@ -348,7 +348,7 @@ class WorkerProjectionRefreshTests(unittest.TestCase):
             return self
 
         def execute(self):
-            if self.columns == "notes->values":
+            if self.columns.startswith("notes->values"):
                 values = self.values_by_id.get(self.filters.get("id"))
                 return SimpleNamespace(data=[{"values": values}] if values is not None else [])
             assert self.filters == {"document_id": "doc"}, self.filters

@@ -568,6 +568,14 @@ def previous_canonical_values(
     return previous[1]
 
 
+class PreviousCanonical(tuple):
+    """(schema version, values) of an artifact, as the guards read it, plus
+    two facts the unchanged check of a re-clean needs."""
+
+    producer: Optional[str] = None
+    schema_fallback_used: bool = False
+
+
 def previous_canonical(
     client: Client,
     document_id: str,
@@ -583,7 +591,7 @@ def previous_canonical(
     rows = (
         client.table("cds_artifacts")
         .select(
-            "id,kind,sha256,created_at,schema_version,"
+            "id,kind,producer,sha256,created_at,schema_version,"
             "source_sha:notes->>source_sha256,"
             "source_artifact_sha:notes->source_artifact->>sha256,"
             "selection_latest_sha:notes->source_selection->>latest_sha256"
@@ -605,7 +613,7 @@ def previous_canonical(
         return None
     detail = (
         client.table("cds_artifacts")
-        .select("notes->values")
+        .select("notes->values,schema_fallback_used:notes->schema_fallback_used")
         .eq("id", newest["id"])
         .limit(1)
         .execute()
@@ -615,7 +623,10 @@ def previous_canonical(
     values = detail[0].get("values") if detail else None
     if not isinstance(values, dict):
         return None
-    return newest.get("schema_version"), values
+    previous = PreviousCanonical((newest.get("schema_version"), values))
+    previous.producer = newest.get("producer")
+    previous.schema_fallback_used = bool(detail[0].get("schema_fallback_used"))
+    return previous
 
 
 def stored_tier4_conversion(
@@ -918,6 +929,8 @@ def extraction_ledger_outcome(action: str, *, force_reextract: bool) -> str:
     if is_failure_action(action):
         return "failed"
     if action == "already_extracted" or action.endswith("_already_extracted"):
+        return "already_current"
+    if is_reclean_unchanged(action):
         return "already_current"
     return "re_extracted" if force_reextract else "extracted"
 
@@ -1327,6 +1340,43 @@ def is_reclean_skip(action: str) -> bool:
     document nor failed on it: it is named in the summary and left out of
     the run ledger and the extracted count."""
     return "tier4_reclean_skipped" in action.split(" (", 1)[0]
+
+
+def is_reclean_unchanged(action: str) -> bool:
+    """A --reclean run read exactly the values the stored extraction already
+    holds, so it wrote no artifact. The document is current, not re-extracted."""
+    return "tier4_reclean_unchanged" in action.split(" (", 1)[0]
+
+
+def reclean_unchanged(
+    previous: Optional[tuple[Optional[str], dict[str, Any]]],
+    canonical: dict[str, Any],
+) -> bool:
+    """True when the newest extraction of the same file already holds every
+    value record this re-clean read and no other, and a new artifact would
+    rank the same when one is picked to serve: same producer, same schema,
+    same answer to whether the schema was a fallback.
+
+    ``previous`` is what ``previous_canonical`` returns. The new values are
+    compared as they would be stored: through JSON, without the null bytes
+    ``insert_canonical_artifact`` strips."""
+    if previous is None:
+        return False
+    schema_version, stored_values = previous[0], previous[1]
+    if str(schema_version or "") != str(canonical.get("schema_version") or ""):
+        return False
+    if getattr(previous, "producer", None) != canonical.get("producer"):
+        return False
+    if bool(getattr(previous, "schema_fallback_used", False)) != bool(canonical.get("schema_fallback_used")):
+        return False
+    values = canonical.get("values")
+    if not isinstance(values, dict) or not isinstance(stored_values, dict):
+        return False
+    try:
+        as_stored = json.loads(json.dumps(values).replace("\x00", "").replace("\\u0000", ""))
+    except (TypeError, ValueError):
+        return False
+    return as_stored == stored_values
 
 
 def reclean_blocker(conversion: dict[str, Any], force_ocr: bool) -> Optional[str]:
@@ -2780,6 +2830,15 @@ def _run_tier4(
     fields = int(stats.get("schema_fields_populated") or 0)
     quality_flag = extraction_quality_flag(canonical)
 
+    # One read of the previous extraction serves the unchanged check of a
+    # re-clean, the count guard when it needs it, and both guards after it.
+    previous_read: list[Optional[tuple[Optional[str], dict[str, Any]]]] = []
+
+    def load_previous() -> Optional[tuple[Optional[str], dict[str, Any]]]:
+        if not previous_read:
+            previous_read.append(previous_canonical(client, document_id, canonical.get("source_sha256")))
+        return previous_read[0]
+
     if not dry_run:
         latest_sha256 = (
             source_selection.get("latest_sha256")
@@ -2798,15 +2857,19 @@ def _run_tier4(
                 clear_recoverable_quality_flag(client, document_id)
             return extraction_no_project("already_extracted")
 
-        # One read of the previous extraction serves the count guard, when it
-        # needs it, and both guards below.
-        previous_read: list[Optional[tuple[Optional[str], dict[str, Any]]]] = []
+    if conversion is not None and reclean_unchanged(load_previous(), canonical):
+        # Nothing to publish: a second artifact with the same values would
+        # only add a large row. The stored artifact, its flag and the
+        # projection stay as they are; a dry run reports the same action.
+        # The action names the cleaner version because no artifact will: the
+        # scoreboard reads it from run summaries to know the document was checked.
+        if not dry_run:
+            mark_extraction_status(client, document_id, "extracted", source_format)
+        return extraction_no_project(
+            f"tier4_reclean_unchanged ({fields} fields; cleaner {producer_version} reads what is stored)"
+        )
 
-        def load_previous() -> Optional[tuple[Optional[str], dict[str, Any]]]:
-            if not previous_read:
-                previous_read.append(previous_canonical(client, document_id, canonical.get("source_sha256")))
-            return previous_read[0]
-
+    if not dry_run:
         held = field_collapse_action(
             client, document_id, "tier4", canonical, resolution.canonical_year,
         ) or field_regression_action(
@@ -2817,6 +2880,8 @@ def _run_tier4(
             # document is still extracted, just not by this run.
             mark_extraction_status(client, document_id, "extracted", source_format)
             return extraction_no_project(held)
+        # With both overrides a conversion needs no read; a re-clean has
+        # already made it for the unchanged check.
         previous = None if ACCEPT_HEADLINE_LOSS and ACCEPT_TABLE_LOSS else load_previous()
         held = headline_regression_action(
             client, document_id, canonical, resolution.schema_version, previous=previous,
@@ -3810,7 +3875,9 @@ def main() -> int:
             "source file, instead of converting the PDF again. The same "
             "guards apply. A document with no stored conversion of its "
             "current file, or whose stored conversion used other settings, "
-            "is skipped (tier4_reclean_skipped) and left as it is. Other "
+            "is skipped (tier4_reclean_skipped) and left as it is. A document "
+            "whose values come out the same as its stored extraction gets no "
+            "new artifact (tier4_reclean_unchanged). Other "
             "formats are extracted as usual. Needs --document-ids or "
             "--requeue-document-ids; use with --force-reextract."
         ),
