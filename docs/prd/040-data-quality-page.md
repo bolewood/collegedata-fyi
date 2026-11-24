@@ -1,11 +1,41 @@
 # PRD 040: Archive status — coverage and data quality
 
-**Status:** Draft rev 3 (2026-11-24). Not started.
+**Status:** Final draft rev 4 (2026-11-24). Not started.
 **Author:** Anthony Showalter (with Claude)
 **URLs (planned):** `https://www.collegedata.fyi/coverage` (existing, reworked) and `https://www.collegedata.fyi/data-quality` (new)
 **Related:** [scoreboard script](../../tools/extraction-validator/scoreboard.py) (#432, #447, the data source), extraction scoreboard issue #431, [PRD 015](015-institution-directory-and-cds-coverage.md) (institution directory and coverage), [PRD 033](033-public-usage-page.md) (public usage page: the launch-gate pattern), [PRD 030](030-pipeline-observation.md) (pipeline board, which stays), [design system](../../web/DESIGN_SYSTEM.md), [voice](../../web/VOICE.md)
 
 ---
+
+## What changed in rev 4
+
+Rev 3 was reviewed by Fable against `scoreboard.py`, a later run and the
+database. Changes:
+
+- **Near misses are split out in Table C.** About two thirds of failing
+  enrollment and admissions sums are off by under 2% (356 of 538 in the 12:25
+  UTC run). The typical case is a school leaving out a small cell. For
+  example, Vassar prints 2,462 against 2,456 for men plus women, with
+  "unknown" at 0. Enrollment and admissions now show *adds up*, *off by
+  under 2%*, *off by more* and *can't check*.
+- **Fields stored is two measures.** 2024-25 on counts rows in the published
+  projection, which includes template-overlay values. 2023-24 counts one base
+  extraction, because years before 2024-25 aren't projected
+  (`MIN_YEAR_START = 2024`). The page says so, and fields stored leaves the
+  all-years table.
+- **The held count is out of the public file.** It comes only from the Mac's
+  local worker summaries (`load_holds()`), which the public file must not
+  depend on.
+- **The figures are illustrative.**
+  - Three 2023-24 documents are both failed and flagged as blank forms, so
+    under the classifier 2023-24 reads 24 set aside and 46 couldn't read,
+    not 21 and 49.
+  - Today's re-clean pass also moved the published counts.
+  - Every figure in this PRD is from the 12:25 UTC run of 2026-11-24, and M0
+    regenerates them.
+- **Problem question 2 is reworded** to what the archive can answer: where
+  the gaps are. A count of schools known to publish but not on file is later
+  work.
 
 ## What changed in rev 3
 
@@ -44,15 +74,20 @@ Rev 2 was reviewed by Codex for repo-completeness, against the code and the
 
 ## Problem
 
-The archive publishes numbers read from 1,163 CDS reports across 2023-24 to
-2025-26 so far (404, 487 and 272). The newest year is still filling in. The
+The archive publishes numbers read from about 1,160 CDS reports across
+2023-24 to 2025-26 so far (404, 487 and 272 in the 12:25 UTC run of
+2026-11-24; every figure in this PRD is from that run and is illustrative). The newest year is still filling in. The
 reports come in six file formats and are read by several readers. A
 researcher who wants to use them has four questions and no single place to
 answer them:
 
 1. **What do you have?** Which schools, which years, which formats.
-2. **What are you probably missing?** Schools that publish a CDS we haven't
-   found, years missing for schools we have, files we found but couldn't read.
+2. **Where are the gaps?** These are the schools where:
+   - we found a source but couldn't reach it automatically;
+   - we checked and found no public CDS;
+   - we haven't checked yet;
+   - the latest CDS is old;
+   - the report couldn't be read.
 3. **What do you have trouble reading?** By format, by table, by year.
 4. **How far can I trust a number?** Checked against federal figures and
    against the report's own totals.
@@ -175,8 +210,16 @@ uses fields already selected into the client rows by both query paths in
    `20260612162500_relax_refresh_coverage_cron.sql`). The current page copy
    says "every 15 minutes" and is corrected.
 
-Later, needing new data: formats per school, and years on file per school
-with gap years. For example, a school with 2023-24 and 2025-26 on file but
+The status tiles and the latest-year breakdown answer the Problem's
+question 2: each kind of gap is one tile or one bucket. The page doesn't
+claim to count schools that publish a CDS we haven't found.
+
+Later, needing new data:
+
+- **Known to publish, not on file.** Join the discovery seed lists to
+  coverage.
+- **Formats per school.**
+- **Years on file per school,** with gap years. For example, a school with 2023-24 and 2025-26 on file but
 2024-25 missing.
 
 ## Tab 2: Data quality (`/data-quality`, new)
@@ -189,11 +232,11 @@ with gap years. For example, a school with 2023-24 and 2025-26 on file but
 2. **All years at a glance.** A compact table, one row per year, newest first:
    - published, set aside, couldn't read, not read yet;
    - the admissions match rate;
-   - median fields stored;
    - the three "adds up" rates.
 
-   The trend shows here. In the 2026-11-24 run, couldn't-read falls from 49 in
-   2023-24 to 4 in 2025-26. The financial-aid table adds up in 36% of 2023-24
+   Fields stored is left out here, because 2023-24 is counted differently
+   (see Table A). The trend shows here. In the 12:25 UTC run, couldn't-read
+   falls from 46 in 2023-24 to 4 in 2025-26, under the classifier. The financial-aid table adds up in 36% of 2023-24
    reports and 85% of 2025-26 reports.
 3. **Year picker** (2025-26 | 2024-25 | 2023-24), which controls everything
    below it.
@@ -234,16 +277,19 @@ taken in this order:
    with no usable extraction.
 6. **Published**: `extracted`, with a served extraction. This includes
    reports a guard is holding on an earlier extraction. The earlier reading is
-   still what the site serves, so it is published. The note gives the count
-   held.
+   still what the site serves, so it is published. The public page doesn't
+   count holds, because the count comes only from the Mac's local worker
+   summaries.
 
 Live = set aside + couldn't read + not read yet + published.
 
-Recomputed from the 2026-11-24 run (Codex, from the local JSON):
+Illustrative, from the 12:25 UTC run of 2026-11-24. The 2023-24 row includes
+the three failed documents that are also flagged as blank forms (Fable, from
+the database). M0 regenerates every figure.
 
 | Year | Published | Set aside | Couldn't read | Not read yet | Live | Removed | Manifest |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| 2023-24 | 404 | 21 | 49 | 0 | 474 | 18 | 492 |
+| 2023-24 | 404 | 24 | 46 | 0 | 474 | 18 | 492 |
 | 2024-25 | 487 | 13 | 3 | 0 | 503 | 17 | 520 |
 | 2025-26 | 272 | 3 | 4 | 1 | 280 | 19 | 299 |
 
@@ -259,8 +305,8 @@ path").
 
 - The four statuses follow the classifier. A year's rows sum to its live
   count.
-- Under the table, the year's set-aside reasons, the count held by a guard,
-  and the removed and no-file counts.
+- Under the table, the year's set-aside reasons and the removed and no-file
+  counts.
 - **Fields stored** is counted over published reports. It is the number of
   fields stored for the served extraction. That includes fields stored as a
   parse error or "not applicable", so it measures how much of the form we
@@ -269,6 +315,12 @@ path").
   1,083 on 2024-25 and 1,105 on 2025-26. The 71 reports numbered by a
   different year's form have field numbers from that form, whose size
   differs from this year's.
+- **2023-24 is counted differently.** For 2024-25 on, fields stored counts
+  rows in the published projection, which includes template-overlay values.
+  2023-24 isn't projected (`MIN_YEAR_START = 2024` in
+  `project_browser_data.py`). Its count is the values in one base extraction,
+  and it reads lower partly for that reason. The 2023-24 table carries that
+  note, and the all-years table leaves fields stored out.
 - Later work, needing new data: a count of usable answers (by `value_status`),
   and a breakdown by CDS section (A to J).
 
@@ -307,8 +359,9 @@ path").
 | Format | Reports | Enrollment (B1) | Admissions (C1) | Financial aid (H1) |
 |---|---:|---|---|---|
 
-- Each check cell shows *adds up / doesn't add up / can't check*. The three
-  are never averaged.
+- Enrollment and admissions cells show *adds up / off by under 2% / off by
+  more / can't check*. Financial aid shows *adds up / doesn't add up / can't
+  check*; it already allows $5. The three tables are never averaged.
 - Population: published reports.
 - What each checks:
   - **Enrollment:** undergraduates by sex sum to the total, and undergraduate
@@ -320,12 +373,20 @@ path").
 - How a table is scored, stated on the page:
   - **Adds up** means at least one of the table's sums could be checked and
     none failed. Some of its other sums may not have been checkable.
-  - **Doesn't add up** means at least one sum failed.
+  - **Off by under 2%** (enrollment, admissions) means at least one sum
+    missed, but every miss was under 2% of its printed total.
+  - **Off by more** (enrollment, admissions), or **doesn't add up**
+    (financial aid), means at least one sum missed by more.
   - **Can't check** means no sum could be checked: the rows or the total a
     sum needs weren't read, or the printed total is zero beside non-zero rows.
 - Copy next to the table:
-  - **Doesn't add up isn't always ours.** Some printed totals don't add up in
-    the school's own file.
+  - **Off by under 2%** is usually the school's file. It mostly means a small
+    cell left out of the rows, such as students of unknown sex, while the
+    total includes it. In the 12:25 UTC run, about two thirds of failing
+    enrollment and admissions sums were this kind.
+  - **Off by more isn't always ours** either. Some printed totals don't add up
+    in the school's own file. It is where our reading errors show, though, and
+    the M0 sample checks some.
   - **Can't check** can be a blank in the school's file, an unfilled
     automatic total, a miss on our side, or a different year's numbering.
     The 2023-24 financial-aid split comes from the M0 sample and is stated
@@ -371,7 +432,12 @@ The run JSON lacks what `--public` needs. The run writes a versioned
 - **`forms`:** per year, the expected form year, whether
   `schemas/cds_schema_<year>.json` exists, and its field count. These come
   from local schema files, read at run time.
-- **`held`:** the count per year (already computed; keep it).
+- **Near misses:** the table checks record a failing sum's gap as a share of
+  its printed total, so enrollment and admissions can be split at 2%.
+  - This changes the scoreboard's own Table C metric. The run records
+    `sum_check_version: 2`.
+  - `--compare` notes the switch instead of reporting it as a change in
+    quality.
 
 Format always comes from `source_format`, never from the reader. For
 example, two 2023-24 spreadsheets were read by Tier 4.
@@ -400,8 +466,7 @@ example, two 2023-24 spreadsheets were read by Tier 4.
       "other_form_numbering": 71,
       "removed": 18,
       "no_file": 0,
-      "held": 6,
-      "set_aside_reasons": {"blank_form": 5, "too_little_read": 16, "wrong_file": 0},
+      "set_aside_reasons": {"blank_form": 8, "too_little_read": 16, "wrong_file": 0},
       "federal_left_out": {"single_campus": 1, "no_federal_figures": 17},
       "rows": [{
         "format": "pdf_flat",
@@ -410,8 +475,8 @@ example, two 2023-24 spreadsheets were read by Tier 4.
         "fields_stored": {"median": 0, "p10": 0},
         "federal": {"reports": 0, "values": 0, "matches": 0, "no_value": 0, "differs": 0},
         "totals": {"reports": 0,
-                   "B1": {"adds_up": 0, "doesnt": 0, "cant_check": 0},
-                   "C1": {"adds_up": 0, "doesnt": 0, "cant_check": 0},
+                   "B1": {"adds_up": 0, "under_2pct": 0, "off_more": 0, "cant_check": 0},
+                   "C1": {"adds_up": 0, "under_2pct": 0, "off_more": 0, "cant_check": 0},
                    "H1": {"adds_up": 0, "doesnt": 0, "cant_check": 0}}
       }],
       "total": {"...": "same shape as a row"}
@@ -439,7 +504,7 @@ example, two 2023-24 spreadsheets were read by Tier 4.
   - live + removed + no file = the manifest count;
   - `federal.reports ≤ status.published`;
   - `matches + no_value + differs = values ≤ 3 × reports`;
-  - each table's three outcomes sum to `totals.reports`, which equals
+  - each table's outcomes sum to `totals.reports`, which equals
     `status.published`;
   - `total` equals the sum of the rows.
 - **Agreement:** fields stored, Table B and Table C equal the run's own
@@ -518,6 +583,10 @@ both states. M2's improvements to `/coverage` don't depend on the gate.
 ## Milestones
 
 - **M0, measure and script.**
+  - Measure the near-miss split for enrollment and admissions from the run's
+    `check_numbers`. No database reads are needed.
+  - Sample 10 admissions "off by more" reports against their source files, to
+    see how many are our reading errors.
   - Sample 20 of the 215 2023-24 financial-aid "can't check" reports against
     their source files. Record each cause (blank in the school's file,
     unfilled automatic total, our miss, different year's numbering) in this
@@ -583,6 +652,9 @@ UI tests across M1 and M2:
 - A new snapshot reaches the site within one PR of a scoreboard run.
 
 ## Decisions (owner, 2026-11-24)
+
+- **Rev 4 is the final edit** before building. It takes Fable's five
+  findings as recommended.
 
 - **Tab name: "Data quality".** It reflects the quality of what we publish.
 - **Floor of 5 reports** for showing a percentage.
