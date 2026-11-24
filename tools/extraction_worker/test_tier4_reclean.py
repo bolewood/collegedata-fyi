@@ -413,7 +413,7 @@ class RecleanUnchanged(unittest.TestCase):
         outcome, client, guards = self.run_tier4(self.VALUES, dict(self.VALUES))
         self.assertEqual(
             outcome.action,
-            "tier4_reclean_unchanged (2 fields; the stored extraction already holds these values)",
+            "tier4_reclean_unchanged (2 fields; cleaner 9.9.9 reads what is stored)",
         )
         self.assertFalse(outcome.refresh_projection)
         self.assertEqual([w for w in client.writes if w[1] == "insert"], [])
@@ -517,7 +517,7 @@ class RecleanUnchanged(unittest.TestCase):
 class RunAccounting(unittest.TestCase):
     def test_an_unchanged_reclean_is_current_not_re_extracted(self) -> None:
         wrap = "tier2_label_acroform_fallback_"
-        unchanged = "tier4_reclean_unchanged (412 fields; the stored extraction already holds these values)"
+        unchanged = "tier4_reclean_unchanged (412 fields; cleaner 0.3.42 reads what is stored)"
         for prefix in ("", wrap):
             action = prefix + unchanged
             self.assertTrue(worker.is_reclean_unchanged(action))

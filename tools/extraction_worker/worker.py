@@ -2861,10 +2861,12 @@ def _run_tier4(
         # Nothing to publish: a second artifact with the same values would
         # only add a large row. The stored artifact, its flag and the
         # projection stay as they are; a dry run reports the same action.
+        # The action names the cleaner version because no artifact will: the
+        # scoreboard reads it from run summaries to know the document was checked.
         if not dry_run:
             mark_extraction_status(client, document_id, "extracted", source_format)
         return extraction_no_project(
-            f"tier4_reclean_unchanged ({fields} fields; the stored extraction already holds these values)"
+            f"tier4_reclean_unchanged ({fields} fields; cleaner {producer_version} reads what is stored)"
         )
 
     if not dry_run:
