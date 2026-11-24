@@ -498,16 +498,57 @@ export async function fetchText(
   }
 }
 
+// A page can name the URL its relative links resolve against with
+// <base href>. Whitman, Lake Forest and Washington and Lee link their CDS
+// files as "documents/offices/.../CDS-2025-26.pdf" under
+// <base href="https://www.whitman.edu/">. Resolved against the page URL
+// instead, every one of those links is a 404, and the school's archive run
+// ends in dead_url with the listing page in plain sight.
+//
+// As in a browser: the first <base> that has an href wins, wherever it sits in
+// the page, and it may itself be relative to the page. A <base> inside inline
+// SVG or MathML is not an HTML base element and is skipped. Anything that is
+// not http(s) is ignored.
+function insideForeignContent(el: DomElement): boolean {
+  for (let p = el.parentElement; p; p = p.parentElement) {
+    const tag = (p.tagName ?? "").toLowerCase();
+    if (tag === "svg" || tag === "math") return true;
+  }
+  return false;
+}
+
+export function documentBaseUrl(
+  doc: { querySelectorAll(selectors: string): Iterable<unknown> },
+  pageUrl: string,
+): URL {
+  const page = new URL(pageUrl);
+  let href = "";
+  for (const node of doc.querySelectorAll("base[href]")) {
+    const el = node as DomElement;
+    if (insideForeignContent(el)) continue;
+    href = (el.getAttribute("href") ?? "").trim();
+    break;
+  }
+  if (!href) return page;
+  try {
+    const base = new URL(href, page);
+    if (base.protocol === "http:" || base.protocol === "https:") return base;
+  } catch {
+    // fall through to the page URL
+  }
+  return page;
+}
+
 export function extractCdsAnchors(html: string, baseUrl: string): CdsAnchor[] {
   const doc = new DOMParser().parseFromString(html, "text/html");
   if (!doc) return [];
 
-  const base = new URL(baseUrl);
+  const base = documentBaseUrl(doc, baseUrl);
   const all: CdsAnchor[] = [];
 
   for (const node of doc.querySelectorAll("a[href]")) {
     const el = node as unknown as DomElement;
-    const href = el.getAttribute("href") ?? "";
+    const href = (el.getAttribute("href") ?? "").trim();
     if (!href) continue;
     if (/^(#|mailto:|tel:|javascript:)/i.test(href)) continue;
 
@@ -649,13 +690,13 @@ export function findDownloadLinks(html: string, baseUrl: string): CdsAnchor[] {
   const doc = new DOMParser().parseFromString(html, "text/html");
   if (!doc) return [];
 
-  const base = new URL(baseUrl);
+  const base = documentBaseUrl(doc, baseUrl);
   const seen = new Set<string>();
   const out: CdsAnchor[] = [];
 
   for (const node of doc.querySelectorAll("a[href]")) {
     const el = node as unknown as DomElement;
-    const href = el.getAttribute("href") ?? "";
+    const href = (el.getAttribute("href") ?? "").trim();
     if (!href) continue;
     if (/^(#|mailto:|tel:|javascript:)/i.test(href)) continue;
 
@@ -1231,11 +1272,11 @@ function pathLooksLikeIr(path: string): boolean {
 function htmlAnchors(html: string, baseUrl: string): Array<{ url: string; text: string }> {
   const doc = new DOMParser().parseFromString(html, "text/html");
   if (!doc) return [];
-  const base = new URL(baseUrl);
+  const base = documentBaseUrl(doc, baseUrl);
   const out: Array<{ url: string; text: string }> = [];
   for (const node of doc.querySelectorAll("a[href]")) {
     const el = node as unknown as DomElement;
-    const href = el.getAttribute("href") ?? "";
+    const href = (el.getAttribute("href") ?? "").trim();
     if (!href || /^(#|mailto:|tel:|javascript:)/i.test(href)) continue;
     let absolute: string;
     try {
