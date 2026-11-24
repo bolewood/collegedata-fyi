@@ -1,8 +1,13 @@
 """Flag schools whose discovery seed is a one-file PDF (or xlsx/docx).
 
-A direct-document seed plus fewer than a few archived years, with the latest
-year older than the current CDS cycle, is the OU failure class: weekly
-archive refresh re-verifies that one file and never looks for a listing.
+A direct-document seed whose newest archived year is older than the current
+CDS cycle is the OU failure class: weekly archive refresh re-verifies that
+one file and never looks for a listing. How many older years are archived
+does not matter: an earlier cap of two archived years kept 90 such schools
+out of the monthly re-probe (75 flagged with the cap, 165 without it, on
+2026-11-24). Many of them hold several years from the College Transitions
+mirror, which ends at 2024-25, behind a seed that is one old file. Counting
+only dated documents as years (see classify_school) flags 25 more: 190.
 
 This is the coverage job for that class. It reads schools.yaml and public
 cds_documents year counts, then emits JSON / markdown / id lists the monthly
@@ -34,6 +39,7 @@ ROOT = Path(__file__).resolve().parent
 REPO_ROOT = ROOT.parents[1]
 DOCUMENT_EXT_RE = re.compile(r"\.(pdf|xlsx|docx)(\?|#|$)", re.I)
 DEFAULT_API = "https://api.collegedata.fyi"
+YEAR_RE = re.compile(r"^\d{4}-\d{2}$")
 
 
 def default_min_fresh_year(today: date | None = None) -> str:
@@ -120,19 +126,19 @@ def classify_school(
     years: list[str],
     *,
     min_fresh_year: str,
-    max_years: int,
 ) -> dict[str, Any] | None:
     seed = school.get("discovery_seed_url") or school.get("cds_url_hint") or ""
     if not is_direct_doc_seed(seed):
         return None
-    unique_years = sorted({y for y in years if y})
+    # Real years only: the archive files a document it cannot date under
+    # "unknown", and as a string that sorts above every year, which made a
+    # school holding one such document look fresh forever.
+    unique_years = sorted({y for y in years if y and YEAR_RE.match(y)})
     latest = unique_years[-1] if unique_years else None
     n_years = len(unique_years)
     if is_section_seed(seed):
         reason = "section_seed"
     else:
-        if n_years > max_years:
-            return None
         if latest and latest >= min_fresh_year:
             return None
         reason = "stale_single_document"
@@ -220,8 +226,8 @@ def render_markdown(stuck: list[dict], shared: list[dict], min_fresh_year: str) 
         f"# Stuck PDF discovery seeds",
         "",
         f"Freshness floor: `{min_fresh_year}`. `stale_single_document`: "
-        f"direct-document seed, ≤2 archived years, latest older than the floor "
-        f"(or none). `section_seed`: the seed is one CDS section file.",
+        f"direct-document seed, newest archived year older than the floor "
+        f"(or none archived). `section_seed`: the seed is one CDS section file.",
         "",
         f"Stuck schools: **{len(stuck)}**",
         "",
@@ -262,7 +268,6 @@ def main() -> int:
         default=os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY") or "",
     )
     ap.add_argument("--min-fresh-year", default=default_min_fresh_year())
-    ap.add_argument("--max-years", type=int, default=2)
     ap.add_argument("--ids-only", action="store_true")
     ap.add_argument("--out-json", type=Path)
     ap.add_argument("--out-md", type=Path)
@@ -282,7 +287,6 @@ def main() -> int:
             school,
             years_by_school.get(school.get("id") or "", []),
             min_fresh_year=args.min_fresh_year,
-            max_years=args.max_years,
         )
         if row:
             stuck.append(row)
@@ -301,7 +305,6 @@ def main() -> int:
 
     payload = {
         "min_fresh_year": args.min_fresh_year,
-        "max_years": args.max_years,
         "stuck": stuck,
         "shared_seed_groups": shared,
     }
