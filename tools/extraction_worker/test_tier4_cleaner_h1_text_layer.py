@@ -178,6 +178,20 @@ class H1TextLayerTest(unittest.TestCase):
         self.assertIn("elsewhere.", rows)
         self.assertEqual(_h_layout_h1_rows_by_column(HEADER + rows), {})
 
+    def test_rows_whose_total_was_not_read_are_refused(self) -> None:
+        # Lenoir-Rhyne prints "Total Self-Help" under the amounts that belong
+        # to it, so the amounts land on the State and other row.
+        rows = TRINITY_ROWS.replace(
+            line("Total Self-Help", "$3,044,296", "$7,214,427", at=70) + line("Parent Loans", "", "$3,104,361"),
+            line("Parent Loans", "", "$3,104,361"),
+        ).replace(
+            line("Federal Work-Study", "$735,526") + line("State and other (e.g., institutional) work-"),
+            line("Federal Work-Study", "$735,526") + line("State and other (e.g., institutional) work-", "$3,044,296", "$7,214,427"),
+        )
+        self.assertIn("Total Self-Help", TRINITY_ROWS)
+        self.assertNotIn("Total Self-Help", rows)
+        self.assertEqual(_h_layout_h1_rows_by_column(HEADER + rows), {})
+
     def test_text_layer_replaces_the_markdown_h1_block(self) -> None:
         # The markdown reading put the work-study amount in H.113 ("State and
         # other") where the text layer has it in H.112. Both would be summed

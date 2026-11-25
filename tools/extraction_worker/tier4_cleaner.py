@@ -7433,13 +7433,13 @@ def _h_layout_h1_rows_by_column(block: str) -> dict[str, dict]:
             end, val = amts[0]
             dl, dr = abs(end - left_med), abs(end - right_med)
             # Beyond either column's median there is only one column it can
-            # be in. Between them it goes to the nearer, unless it is near
-            # neither or about as near to both.
+            # be in. Between them it goes to the nearer, unless it is about as
+            # near to both.
             if end >= right_med:
                 pairs = [(nn_qn, val)]
             elif end <= left_med:
                 pairs = [(nb_qn, val)]
-            elif min(dl, dr) > 12 or abs(dl - dr) < 6:
+            elif abs(dl - dr) < 6:
                 continue
             else:
                 pairs = [(nb_qn, val)] if dl < dr else [(nn_qn, val)]
@@ -7456,11 +7456,15 @@ def _h_layout_h1_rows_by_column(block: str) -> dict[str, dict]:
                 claimed[qn] = {"value": val, "source": "tier4_cleaner"}
     if not _h1_amounts_add_up(claimed):
         return {}
-    # A total with none of its rows read is not checked by the sum, and a
-    # reading that lost a whole block of rows would replace the markdown's.
+    # The sum does not check a total whose rows were not read, nor rows whose
+    # total was not read. Either means the block was not placed (Lenoir-Rhyne
+    # prints "Total Self-Help" under its amounts), and a reading that lost a
+    # block of rows or put a total in a row would replace the markdown's.
     for parts, total_qn in _H1_SUMS:
         total = claimed.get(total_qn)
         if total and float(total["value"]) != 0 and not any(qn in claimed for qn in parts):
+            return {}
+        if not total and any(qn in claimed for qn in parts):
             return {}
     return claimed
 
