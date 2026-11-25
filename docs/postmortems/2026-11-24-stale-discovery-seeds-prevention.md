@@ -144,7 +144,7 @@ The alarm would have opened an issue at the end of April 2026, from the next-yea
   - Every PR was reviewed for "does the test fail when the bug returns".
   - The overnight reinsertion pass put back all seven original bugs, as 8 trials.
 - **Told:** CI.
-- **Evidence:** see [Bug reinsertion](#bug-reinsertion). All 8 trials fail on `origin/main` 054b2b7 and on the final b9895cc1.
+- **Evidence:** see [Bug reinsertion](#bug-reinsertion). All 8 trials fail on 054b2b7, b9895cc1 and the final b429c142.
 - **Not covered:** the snapshot fixtures go stale. They prove the mechanism, not today's corpus.
 
 ### 8. The pipeline page measures whether jobs run, not what they achieve
@@ -180,7 +180,7 @@ The alarm would have opened an issue at the end of April 2026, from the next-yea
 
 ## Bug reinsertion
 
-Each original bug was put back in a throwaway worktree at `origin/main` 054b2b7 and again on the final `main` b9895cc1 (after the red-team fixes), the guarding tests were run, and the worktree was discarded.
+Each original bug was put back in a throwaway worktree at `origin/main` 054b2b7 again on b9895cc1, and on the final `main` b429c142 (after all red-team fixes, including #505), the guarding tests were run, and the worktree was discarded.
 
 | # | Bug put back | Test that fails |
 |---|---|---|
