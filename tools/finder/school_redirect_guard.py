@@ -81,8 +81,37 @@ def audit_redirect_manifest(
     return errors
 
 
+EDGE_ALIASES = REPO_ROOT / "supabase" / "functions" / "_shared" / "retired_aliases.ts"
+_EDGE_ENTRY = re.compile(r'^\s*"([a-z0-9-]+)":\s*"([a-z0-9-]+)",?\s*$')
+
+
+def load_edge_aliases(path: Path = EDGE_ALIASES) -> dict[str, str]:
+    """Alias map copied into the Edge functions (they cannot import web/)."""
+    return {
+        match.group(1): match.group(2)
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if (match := _EDGE_ENTRY.match(line))
+    }
+
+
+def audit_edge_aliases(manifest: dict[str, str], edge: dict[str, str]) -> list[str]:
+    errors = [
+        f"edge retired_aliases.ts is missing {alias!r} -> {school_id!r}"
+        for alias, school_id in sorted(manifest.items())
+        if edge.get(alias) != school_id
+    ]
+    errors.extend(
+        f"edge retired_aliases.ts has unexpected {alias!r} -> {school_id!r}"
+        for alias, school_id in sorted(edge.items())
+        if manifest.get(alias) != school_id
+    )
+    return errors
+
+
 def main() -> int:
-    errors = audit_redirect_manifest(load_school_claims(), load_redirects())
+    manifest = load_redirects()
+    errors = audit_redirect_manifest(load_school_claims(), manifest)
+    errors.extend(audit_edge_aliases(manifest, load_edge_aliases()))
     if errors:
         for error in errors:
             print(f"ERROR: {error}")

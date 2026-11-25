@@ -29,6 +29,7 @@ import {
   PermanentError,
   TransientError,
 } from "../_shared/archive.ts";
+import { canonicalSchoolId } from "../_shared/retired_aliases.ts";
 import { ProbeOutcome } from "../_shared/probe_outcome.ts";
 import {
   fetchSchoolsYaml,
@@ -107,7 +108,7 @@ async function runForceUrls(
   supabase: Client,
   body: Record<string, unknown>,
 ): Promise<Response> {
-  const schoolId = typeof body.school_id === "string" ? body.school_id : null;
+  const schoolId = typeof body.school_id === "string" ? canonicalSchoolId(body.school_id) : null;
   // Accept either plain strings or {url, year} objects.
   const rawUrls = Array.isArray(body.urls) ? (body.urls as unknown[]) : [];
   const items = rawUrls
@@ -372,16 +373,18 @@ async function runQueueClaimInner(
   try {
     // archive_queue doesn't carry ipeds_id; look it up from schools.yaml
     // so new rows get populated at insert time without a follow-up backfill.
-    const ipedsId = await resolveSchoolIpedsId(row.school_id);
+    // A queued row may carry a retired slug; archive under the canonical id.
+    const queuedSchoolId = canonicalSchoolId(row.school_id);
+    const ipedsId = await resolveSchoolIpedsId(queuedSchoolId);
     outcome = await archiveOneSchool(supabase, {
-      school_id: row.school_id,
+      school_id: queuedSchoolId,
       school_name: row.school_name,
       ipeds_id: ipedsId ?? undefined,
       // archive_queue.cds_url_hint is the DB column name (denormalized
       // cache from schools.yaml); SchoolInput uses the post-PR-5
       // discovery_seed_url terminology. Map at the boundary.
       discovery_seed_url: row.cds_url_hint,
-      pinned_urls: await resolveSchoolPinnedUrls(row.school_id),
+      pinned_urls: await resolveSchoolPinnedUrls(queuedSchoolId),
     });
     finalStatus = "done";
   } catch (e) {

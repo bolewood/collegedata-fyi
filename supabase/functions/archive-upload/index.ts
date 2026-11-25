@@ -57,6 +57,7 @@ import {
   sniffBytesForExt,
   uploadSource,
 } from "../_shared/storage.ts";
+import { canonicalSchoolId } from "../_shared/retired_aliases.ts";
 import {
   fetchSchoolsYaml,
   resolveSchoolIpedsId,
@@ -99,16 +100,18 @@ Deno.serve(async (req: Request) => {
     return json({ error: `multipart parse failed: ${(e as Error).message}` }, 400);
   }
 
-  const schoolId = form.get("school_id");
+  const rawSchoolId = form.get("school_id");
   const cdsYear = form.get("cds_year");
   const file = form.get("file");
   const sourceUrlInput = form.get("source_url");
   const provenanceInput = form.get("source_provenance");
   const schoolNameInput = form.get("school_name");
 
-  if (typeof schoolId !== "string" || !schoolId) {
+  if (typeof rawSchoolId !== "string" || !rawSchoolId) {
     return json({ error: "school_id required" }, 400);
   }
+  // Retired legal-name slugs are hidden by the site; store the canonical id.
+  const schoolId = canonicalSchoolId(rawSchoolId);
   if (typeof cdsYear !== "string" || !cdsYear) {
     return json({ error: "cds_year required (e.g. 2024-25)" }, 400);
   }
