@@ -5,18 +5,19 @@ name: Ops discovery renewal
 # Current-year renewal: of the schools with a live document filed under the
 # previous CDS year, the share that also have one filed under the current CDS
 # year (cds_freshness_floor()). It is compared with a floor read off the
-# posting curve by months since that year's fall. Below the floor, it opens ONE
-# issue assigned to the owner and posts to Discord #alerts; it closes the issue
-# only when the number recovers and never comments on a standing one.
+# posting curve by months since that year's fall, scaled by mature renewal (the
+# share of a year's schools that renew once it is mature, measured from the same
+# manifest) and less a margin. Below the floor, it opens an issue assigned to the
+# owner and posts to Discord #alerts; it closes the issue only when the number
+# recovers and never comments on a standing one.
 # See tools/ops/discovery_renewal.py and docs/postmortems/2026-11-24-stale-discovery-seeds.md.
 #
 # Data errors (a short page of rows, an empty result, a small denominator, a
 # freshness floor that disagrees with the database) fail the job, which posts
 # to Discord through ops-discord-notify.yml. Being below the floor does not.
 #
-# The discovery_renewal heartbeat station is registered by a separate migration.
-# Until that migration is applied, record_heartbeat.py prints a warning and
-# exits 0; that is expected.
+# The discovery_renewal heartbeat station is registered (migration #469, applied),
+# so the heartbeat is accepted and its summary shows on the pipeline board.
 #
 # Manual runs default to a dry run against the test label, so nothing real is
 # opened or posted unless both inputs are turned off.

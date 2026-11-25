@@ -21,12 +21,13 @@ This ledger maps each of the postmortem's ten causes to five things: the control
 
 **Definition** (as in the postmortem): of schools with a live document filed under the previous CDS year, the share that also have one filed under the current year. `unknown` years don't count, and a school that has only the current year is not in the denominator. It is computed in one place, `tools/ops/discovery_renewal.py`. The PRD 040 snapshot imports it.
 
-**Floor:** the posting curve read by months since the CDS year's fall. The points are 3% at 4 months, 18% at 6, 46% at 8, 68% at 10, 81% at 12 and 88% at 15, flat after that.
-- **Current year:** curve − 5 points. That is 76% at the September switch and about 82.5% in late November.
-- **Two-year:** of schools with either of the two previous years, the share that have the current one. Floor = current-year floor − 8.
-- **Next year:** curve × 0.75, tracked once the curve reaches 18% (March 1).
+**Floor:** the posting curve read by months since the CDS year's fall, scaled by mature renewal (D1). The curve's points are 3% at 4 months, 18% at 6, 46% at 8, 68% at 10, 81% at 12 and 88% at 15, flat after that. It counts only schools that did post a new year's file; renewal also counts the schools that never post again, so a caught-up year tops out near mature renewal × the curve (about 77–80% at month 15), not at the curve. Mature renewal is measured on each run as the median of the last five mature year-pairs from the same manifest, clamped to a bound and with a fallback constant (88% one-year, 82% two-year) when fewer than three pairs are usable.
+- **Current year:** mature one-year renewal × curve − 5 points. With today's measured 87–89% that is about 67% at the September switch and 71–73% in late November (it was 76% and 82.5% under the raw curve).
+- **Two-year:** of schools with either of the two previous years, the share that have the current one. Floor = mature two-year renewal (about 83–84%) × curve − 5 points, not "current − 8".
+- **Next year:** mature one-year renewal × curve × 0.75, tracked once the raw curve reaches 18% (March 1).
+- **Arrivals:** the expected arrivals are scaled by the same ratio.
 
-The floor's calibration is an owner decision (D1). A healthy year likely sits near the raw curve each fall.
+D1 was decided by the owner on 2026-11-26: the scaled floor. The earlier raw-curve floor put a fully caught-up year under the floor (407 of 498 = 81.7% against 82.5% with all 34 found files archived) and Fable's healthy control opened 13 monthly issues on the two-year check, which is #136 again.
 
 **Backtest** (reproduced independently by Fable). It replays the daily check at each month end, using `discovered_at` and `removed_at` on today's filed years:
 
@@ -273,13 +274,13 @@ Four rounds. In round 1, Gemini 4 Neon (xhigh) and Fable each answered, independ
 
 ## Accepted risks (what is still not covered)
 
-1. **Partial losses.** The mature floors (83% one-year, 75% two-year) allow a steady loss of about 13% a year indefinitely (0.866² ≈ 0.75, and lapsed schools leave both denominators after two years). The arrivals check (ratio 0.4) catches most total stops within 25 days (#505), except stops starting November 20 – December 4, which take up to 46 (risk 8), and a stop removing 60% or more of a year's arrivals within about 38 days. A mechanism that removes less than that, mid-season, can stay under every floor for months. The control for it is the monthly hand check.
+1. **Partial losses.** Since D1 the floors are the curve scaled by mature renewal, so they sit lower: about 73% one-year and 69% two-year from December (they were 83% and 75%). A healthy year reaches 77–80% at month 15 and 87–89% at maturity, so a year can run well under its mature renewal, up to about 15 points by summer, before it crosses. On the 2026 replays (synthetic archive, a stop on the 1st of each month where a share of later arrivals is lost) the median days to a first notification are now 60 / 30 / 29 for 50 / 60 / 70% of arrivals lost, against 30 / 27 / 27 under the raw-curve floors, and the worst start date waits 122 / 120 / 76 days against 108 / 77 / 61. So more partial loss passes quietly than before; a total stop is unchanged (max 35 days; a stop starting November 20 – December 4 still waits up to 46, risk 8). The arrivals check (ratio 0.4) is what catches losses of 60% or more of a year's arrivals, and the control for the rest is the monthly hand check.
 2. **Rot inside listing pages.** 310 listing seeds are behind the cycle today. They are counted on the board and listed in the alarm report, but no job tries to fix them (D9). Only the renewal number pushes.
 3. **Hand-check discipline.** The monthly issue depends on a person filling it in. An unanswered issue is reported next month as "N unanswered", with no escalation.
 4. **Discord and GitHub as the only channels.** There is no outside channel until the D14 check-in is set up.
 5. **Until migration #469 is applied:** the Renewal lamp is slate, heartbeat history is not kept, and new summary keys are dropped from stored heartbeats. The alarm issue, Discord and the scheduled-run staleness check all work without it.
 6. **Renewal is not gated on extraction.** Renewal and arrivals count archived files, whether or not they have been read. A broken extractor leaves renewal green while school pages show nothing new; `unextracted_current_docs` and `unextracted_next_docs` are reported, not alarmed. Extraction is a separate lane (#477, #480).
-7. **Floor calibration (D1, D7).** The raw posting curve probably puts a healthy year near the floor each fall, and the two-year floor trips too (in a healthy simulated control, 68% against 68% on 2027-09-01). With re-notification (D16) that means monthly issues for a healthy year in autumn. The owner may prefer the scaled curve.
+7. **Floor calibration (D1, D7): decided, one residue.** The scaled floor (D1) removes the healthy-year noise: a synthetic healthy year (mature 87%, the next year at 0.9–1.0 × the curve) gives a mean of 0.2–0.4 issues a year, none in autumn, and a control built on the real manifest where 2025-26 is hand-caught-up to 88% gives 0 issues over two years (15 under the raw-curve floors). What it does not remove: with 2025-26 left at its real 76% and the schools that lapsed in it never returning, the two-year check still opens a monthly issue from September 2027 (13 in the year, against 14 before; and 0 issues from November 2026 to August 2027, against 10 for 2025-26). That is a real hole (about a quarter of schools gone for two years), not noise, but it re-notifies for as long as it lasts. The mature ratio is measured from the same manifest: if a long decline lowers the history, the floor lowers with it (bounded at 80% one-year, 70% two-year).
 8. **The December arrivals gap.** A total stop that starts between about November 20 and December 4 waits 32–46 days for its first notification (15 of 365 stop dates a year). The current year's curve has flattened and the next year's expected arrivals are too few to judge. In practice an open `renewal:<Y>` issue in that season is still re-notified every 30 days. **Why accept:** the fix would mean judging windows with fewer than 6 expected arrivals, where noise is high, and this run had used its review rounds. A pooled "anything arrived at all" check over both years would close it; that is the suggested follow-up (#506).
 
 ## Corrections to earlier drafts
@@ -298,7 +299,7 @@ The defaults taken, each reversible. The full text, with the alternatives, is in
 
 | ID | Decision |
 |---|---|
-| D1 | The alarm floor is the raw posting curve less 5 points, not a curve scaled by mature renewal. The scaled alternative is about 68% in September; the raw curve likely puts a healthy year near the floor each fall |
+| D1 | **Changed by the owner, 2026-11-26.** The alarm floor is the posting curve scaled by mature renewal, less 5 points, for all three checks (the overnight default was the raw curve less 5). Mature renewal is the median of the last five mature year-pairs, measured on each run, bounded, with a fallback; the next-year floor is the same times 0.75 and expected arrivals are scaled too (#508) |
 | D2 | The next-year floor is the curve × 0.75, tracked from March 1 |
 | D3 | The migration (#469) is left open for the owner to apply from `main` |
 | D4 | Real alarm issues are assigned to `santhonys`; test issues are not |
