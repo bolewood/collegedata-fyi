@@ -8,6 +8,8 @@
    widest content down to a 320px screen (checked: no cell's text overflows its cell). The hint's breakpoints
    are the minimum widths minus one; a test keeps them in step. */
 .dq-scroll { container-type: inline-size; }
+/* The width lives here, not inline, so the container rules below can override it. */
+.dq-table { width: 100%; }
 .dq-table { min-width: 640px; }
 .dq-table--c { min-width: 820px; }
 .dq-scroll-hint { display: none; }

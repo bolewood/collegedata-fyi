@@ -117,7 +117,6 @@ function Cols({ n: count }: { n: number }) {
 }
 
 const tableStyle: React.CSSProperties = {
-  width: "100%",
   borderCollapse: "collapse",
   fontSize: 14,
 };

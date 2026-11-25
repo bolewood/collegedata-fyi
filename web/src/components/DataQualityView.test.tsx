@@ -338,6 +338,31 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
   // columns are sized in cqw to add up to exactly one scroll box, and its trailing columns in px to add up to the
   // width the table adds on top, so the visible part is whole columns at any phone width.
   it.each([
+    ["dq-glance", "glance"],
+    ["dq-table-a", "a"],
+    ["dq-table-b", "b"],
+    ["dq-table-c", "c"],
+  ])("renders %s with its phone class and one sized column per header cell", (id, name) => {
+    const html = render("year=2024-25");
+    const whole = html.match(new RegExp(`<table class="([^"]*)"[^>]*id="${id}"[\\s\\S]*?</table>`))!;
+    expect(whole[1].split(" ")).toContain("dq-table");
+    expect(whole[1].split(" ")).toContain(`dq-table--${name}`);
+    const cols = whole[0].match(/<col\b/g) ?? [];
+    const headerCells = whole[0].match(/<thead>[\s\S]*?<\/tr>/)![0].match(/<th\b/g) ?? [];
+    expect(whole[0]).toContain("<colgroup>");
+    expect(cols.length).toBe(headerCells.length);
+    expect(cols.length).toBeGreaterThan(0);
+  });
+
+  it("keeps each table's width out of its inline style, so the container rules can set it", () => {
+    const html = render("year=2024-25");
+    for (const id of ["dq-glance", "dq-table-a", "dq-table-b", "dq-table-c"]) {
+      const open = html.match(new RegExp(`<table[^>]*id="${id}"[^>]*>`))![0];
+      expect(open).not.toMatch(/width/);
+    }
+  });
+
+  it.each([
     ["glance", 9, "\\.dq-table--glance"],
     ["a", 7, "\\.dq-table--a"],
     ["b", 7, "\\.dq-table--b"],

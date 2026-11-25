@@ -1,8 +1,13 @@
 // Drift check between the copy deck (docs/copy/data-quality.md) and the page. Every blockquote in the deck is a
-// sentence the page says; each must still appear in the rendered page. This pins wording only for those sentences,
-// which are the ones the owner read and approved. Deck text in {braces} is filled from the snapshot, so a sentence is
-// checked in the pieces between its braces. Conditional sentences (hand-check notes, the 2023-24 counting note)
-// are rendered by building a snapshot that satisfies their conditions.
+// sentence the page says; each must still appear in the rendered page. Limits, stated plainly:
+// - Text in {braces} is filled from the snapshot, so a sentence is checked only in the literal pieces between its
+//   braces; a braced conditional (e.g. "{For years with another form's numbering: ...}") is not checked at all.
+// - A piece under 15 characters is skipped, so a short sentence made only of such pieces isn't pinned.
+// - Only blockquotes are checked: the deck's notes, headings and prose around them are not.
+// - It proves every checked piece appears somewhere in the three years' pages together, not that it appears under
+//   the right heading, and nothing checks that the page has no sentence the deck lacks.
+// Conditional notes (hand checks, the 2023-24 counting note, the older-form notice) are rendered by building a
+// snapshot that satisfies their conditions. CI runs this on a deck-only change (see .github/workflows/ci.yml).
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";

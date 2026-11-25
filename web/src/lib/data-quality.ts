@@ -116,67 +116,94 @@ function isCount(v: unknown): v is number {
   return typeof v === "number" && Number.isInteger(v) && v >= 0;
 }
 
-/** Every named key of `obj` must be a non-negative integer. Returns a problem or null. */
-function allCounts(obj: unknown, keys: string[]): string | null {
+/**
+ * `obj` must have exactly the named keys (plus any `optional` ones), each a non-negative integer, like the Python
+ * `--public` allow-list. A misspelled or extra key is refused, so a count can't hide under a name nothing reads.
+ */
+function allCounts(obj: unknown, keys: string[], optional: string[] = []): string | null {
   if (!obj || typeof obj !== "object") return "missing counts";
+  const o = obj as Record<string, unknown>;
   for (const k of keys) {
-    if (!isCount((obj as Record<string, unknown>)[k])) return `${k} must be a non-negative integer`;
+    if (!isCount(o[k])) return `${k} must be a non-negative integer`;
+  }
+  for (const k of Object.keys(o)) {
+    if (!keys.includes(k) && !optional.includes(k)) return `unexpected key ${k}`;
+    if (optional.includes(k) && !isCount(o[k])) return `${k} must be a non-negative integer`;
   }
   return null;
 }
 
+const STATUS_KEYS = ["published", "set_aside", "couldnt_read", "not_read_yet"];
+const FEDERAL_KEYS = ["reports", "values", "matches", "no_value", "differs"];
 const SUM_KEYS = ["adds_up", "under_2pct", "off_more", "cant_check"];
+const AID_KEYS = ["adds_up", "doesnt", "cant_check"];
 
-/** A row or year total: status, fields_stored, federal and totals blocks, all counts. */
+/** A row or year total: status, fields_stored, federal and totals blocks, all counts, no other keys. */
 function rowCountsProblem(row: unknown): string | null {
   if (!row || typeof row !== "object") return "missing";
   const r = row as Record<string, unknown>;
   const totals = r.totals as Record<string, unknown> | undefined;
   return (
-    allCounts(r.status, ["published", "set_aside", "couldnt_read", "not_read_yet"]) ??
+    allCounts(r.status, STATUS_KEYS) ??
     allCounts(r.fields_stored, ["median", "p10"]) ??
-    allCounts(r.federal, ["reports", "values", "matches", "no_value", "differs"]) ??
+    allCounts(r.federal, FEDERAL_KEYS) ??
     (totals && isCount(totals.reports) ? null : "totals.reports must be a non-negative integer") ??
     allCounts(totals?.B1, SUM_KEYS) ??
     allCounts(totals?.C1, SUM_KEYS) ??
-    allCounts(totals?.H1, ["adds_up", "doesnt", "cant_check"])
+    allCounts(totals?.H1, AID_KEYS)
   );
 }
 
 type Counts = Record<string, number>;
 
-/** Every count in a row that is a plain sum across rows (fields_stored is a median, so it is not). */
-function summedCounts(row: QualityRow): Counts {
-  const out: Counts = {};
-  const add = (prefix: string, o: object) => {
-    for (const [k, v] of Object.entries(o)) out[`${prefix}.${k}`] = v as number;
+/** Every count in a row that is a plain sum across rows, named one by one (fields_stored is a median, so it is not). */
+function summedCounts(r: QualityRow): Counts {
+  const { status: s, federal: f, totals: t } = r;
+  return {
+    "status.published": s.published,
+    "status.set_aside": s.set_aside,
+    "status.couldnt_read": s.couldnt_read,
+    "status.not_read_yet": s.not_read_yet,
+    "federal.reports": f.reports,
+    "federal.values": f.values,
+    "federal.matches": f.matches,
+    "federal.no_value": f.no_value,
+    "federal.differs": f.differs,
+    "totals.reports": t.reports,
+    "totals.B1.adds_up": t.B1.adds_up,
+    "totals.B1.under_2pct": t.B1.under_2pct,
+    "totals.B1.off_more": t.B1.off_more,
+    "totals.B1.cant_check": t.B1.cant_check,
+    "totals.C1.adds_up": t.C1.adds_up,
+    "totals.C1.under_2pct": t.C1.under_2pct,
+    "totals.C1.off_more": t.C1.off_more,
+    "totals.C1.cant_check": t.C1.cant_check,
+    "totals.H1.adds_up": t.H1.adds_up,
+    "totals.H1.doesnt": t.H1.doesnt,
+    "totals.H1.cant_check": t.H1.cant_check,
   };
-  add("status", row.status);
-  add("federal", row.federal);
-  out["totals.reports"] = row.totals.reports;
-  add("totals.B1", row.totals.B1);
-  add("totals.C1", row.totals.C1);
-  add("totals.H1", row.totals.H1);
-  return out;
 }
 
-const sumOf = (o: object) => Object.values(o as Counts).reduce((a, b) => a + b, 0);
+const sumB = (o: SumOutcomes) => o.adds_up + o.under_2pct + o.off_more + o.cant_check;
+const sumH = (o: AidOutcomes) => o.adds_up + o.doesnt + o.cant_check;
 
 /**
- * The arithmetic the Python `--public` step already enforces (PRD 040, "Tests: Sums"), repeated here so a
- * hand-edited or mis-merged snapshot fails the build instead of rendering a rate over 100%. Counts are
- * already known to be non-negative integers. Returns the first problem or null.
+ * Part of the arithmetic the Python `--public` step enforces (PRD 040, "Tests: Sums"), repeated here so a
+ * hand-edited or mis-merged snapshot fails the build instead of rendering a rate over 100%. Checked: the total
+ * equals the sum of the rows in every summed count (so the rows' statuses give the live count), federal
+ * matches + no value + differs = values, values <= 3 per report, federal reports <= published, B1, C1 and H1
+ * outcomes = totals.reports = published, set-aside reasons = set aside, and, for a year with federal figures,
+ * checked + left out = published. Not checked here: live + removed + no file = manifest (the snapshot has no
+ * manifest count) and the run-level agreement with `aggregate()`. Counts are already known to be non-negative
+ * integers. Returns the first problem or null.
  */
 function arithmeticProblem(year: QualityYear): string | null {
   const rowSums: Counts = {};
   for (const r of year.rows) {
     for (const [k, v] of Object.entries(summedCounts(r))) rowSums[k] = (rowSums[k] ?? 0) + v;
   }
-  if (year.rows.reduce((n, r) => n + liveCount(r.status), 0) !== liveCount(year.total.status)) {
-    return "the rows' statuses don't add up to the year's live count";
-  }
   for (const [k, v] of Object.entries(summedCounts(year.total))) {
-    if (v !== (rowSums[k] ?? 0)) return `total ${k} is ${v}, but the rows add up to ${rowSums[k] ?? 0}`;
+    if (v !== rowSums[k]) return `total ${k} is ${v}, but the rows add up to ${rowSums[k] ?? 0}`;
   }
   const check = (name: string, r: QualityRow): string | null => {
     const f = r.federal;
@@ -184,16 +211,26 @@ function arithmeticProblem(year: QualityYear): string | null {
     if (f.values > 3 * f.reports) return `${name}: federal values exceed 3 per report`;
     if (f.reports > r.status.published) return `${name}: federal.reports exceeds published`;
     if (r.totals.reports !== r.status.published) return `${name}: totals.reports is not status.published`;
-    for (const t of ["B1", "C1", "H1"] as const) {
-      if (sumOf(r.totals[t]) !== r.totals.reports) return `${name}: ${t} outcomes don't add up to totals.reports`;
-    }
+    if (sumB(r.totals.B1) !== r.totals.reports) return `${name}: B1 outcomes don't add up to totals.reports`;
+    if (sumB(r.totals.C1) !== r.totals.reports) return `${name}: C1 outcomes don't add up to totals.reports`;
+    if (sumH(r.totals.H1) !== r.totals.reports) return `${name}: H1 outcomes don't add up to totals.reports`;
     return null;
   };
   for (const r of year.rows) {
     const p = check(`row ${r.format}`, r);
     if (p) return p;
   }
-  return check("total", year.total);
+  const total = check("total", year.total);
+  if (total) return total;
+  const why = year.set_aside_reasons;
+  if (why.blank_form + why.too_little_read + why.wrong_file !== year.total.status.set_aside) {
+    return "set_aside_reasons don't add up to the total's set_aside";
+  }
+  const left = year.federal_left_out;
+  if (year.federal_fall_loaded && year.total.federal.reports + left.single_campus + left.no_federal_figures !== year.total.status.published) {
+    return "federal reports checked + left out don't add up to the total's published";
+  }
+  return null;
 }
 
 export function validateSnapshot(raw: unknown, source: string): QualitySnapshot {
@@ -236,6 +273,13 @@ export function validateSnapshot(raw: unknown, source: string): QualitySnapshot 
     if (seen.has(label)) return fail(`duplicate cds_year ${label}`);
     seen.add(label);
     const where = `year ${label}`;
+    // Years the producer can write but the page can't show yet (#516): refuse them rather than render zeros.
+    if (y.sum_checks_unavailable !== undefined) {
+      return fail(`${where}: sum_checks_unavailable is not shown by the page yet (#516), so this snapshot can't be published`);
+    }
+    if (((y.federal_left_out as Record<string, unknown> | undefined)?.not_compared ?? 0) !== 0) {
+      return fail(`${where}: federal_left_out.not_compared is not shown by the page yet (#516), so this snapshot can't be published`);
+    }
     if (typeof y.federal_fall_loaded !== "boolean") return fail(`${where}: federal_fall_loaded must be a boolean`);
     const form = y.form as Record<string, unknown> | undefined;
     if (!form || typeof form !== "object") return fail(`${where}: form is missing`);
@@ -251,7 +295,7 @@ export function validateSnapshot(raw: unknown, source: string): QualitySnapshot 
     }
     const problem =
       allCounts(y.set_aside_reasons, ["blank_form", "too_little_read", "wrong_file"]) ??
-      allCounts(y.federal_left_out, ["single_campus", "no_federal_figures"]);
+      allCounts(y.federal_left_out, ["single_campus", "no_federal_figures"], ["not_compared"]);
     if (problem) return fail(`${where}: ${problem}`);
     if (!Array.isArray(y.rows)) return fail(`${where}: rows is missing`);
     const totalProblem = rowCountsProblem(y.total);

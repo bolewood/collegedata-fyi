@@ -17,10 +17,12 @@ import {
   yearGlance,
   yearsNewestFirst,
   type QualityRow,
+  type QualityYear,
   type QualitySnapshot,
 } from "./data-quality";
 import { formatLabel } from "./format-labels";
 
+const anyRec = (v: unknown) => v as Record<string, unknown>;
 const clone = (): QualitySnapshot => JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT));
 const withDate = (iso: string): QualitySnapshot => ({ ...clone(), snapshot_of: iso });
 
@@ -94,7 +96,6 @@ describe("snapshot validation", () => {
     mutate(snap);
     expect(() => selectSnapshot([{ name: "x.json", json: snap }], false)).toThrow(why);
   };
-  const anyRec = (v: unknown) => v as Record<string, unknown>;
 
   it("fails on a missing or non-boolean federal_fall_loaded", () => {
     bad((s) => delete anyRec(s.years[0]).federal_fall_loaded, /federal_fall_loaded/);
@@ -127,8 +128,21 @@ describe("snapshot validation", () => {
     bad((s) => (s.renewal.previous_year = "2025-26"), /year after/);
   });
 
-  it("fails when renewal.both exceeds previous, or a renewal count is negative or not an integer", () => {
-    bad((s) => (s.renewal.both = s.renewal.previous + 1), /exceeds/);
+  it("fails when renewal.both exceeds previous even though current could hold it", () => {
+    bad((s) => {
+      s.renewal.both = s.renewal.previous + 1;
+      s.renewal.current = s.renewal.both + 10;
+    }, /renewal\.both exceeds/);
+  });
+
+  it("fails when renewal.both exceeds current even though previous could hold it", () => {
+    bad((s) => {
+      s.renewal.previous = s.renewal.current + 10;
+      s.renewal.both = s.renewal.current + 1;
+    }, /renewal\.both exceeds/);
+  });
+
+  it("fails when a renewal count is negative or not an integer", () => {
     bad((s) => (s.renewal.both = -1), /renewal/);
     bad((s) => (s.renewal.current = 10.5), /renewal/);
     bad((s) => (s.renewal.previous = 479.2), /renewal/);
@@ -148,7 +162,9 @@ describe("snapshot arithmetic", () => {
   };
 
   it("fails when a format row's statuses don't add up to the year's live count", () => {
-    bad((s) => (s.years[0].rows[0].status.set_aside += 1), /live count/);
+    // The total's live count is the sum of the rows', so one row off alone makes the total's status wrong.
+    bad((s) => (s.years[0].rows[0].status.set_aside += 1), /total status\.set_aside/);
+    bad((s) => (s.years[0].total.status.published += 1), /total status\.published/);
   });
 
   it("fails when the total isn't the sum of the rows, in a status, federal or totals count", () => {
@@ -157,7 +173,6 @@ describe("snapshot arithmetic", () => {
       s.years[0].total.status.couldnt_read += 1;
       s.years[0].total.status.set_aside -= 1;
     }, /total status\.(set_aside|couldnt_read)/);
-    bad((s) => (s.years[0].total.status.published += 1), /live count/);
     bad((s) => (s.years[0].total.federal.reports += 1), /total federal\.reports/);
     bad((s) => (s.years[0].total.totals.C1.off_more += 1), /total totals\.C1\.off_more/);
     bad((s) => (s.years[0].total.totals.H1.doesnt += 1), /total totals\.H1\.doesnt/);
@@ -193,6 +208,79 @@ describe("snapshot arithmetic", () => {
 
   it("fails when renewal.both exceeds renewal.previous", () => {
     bad((s) => (s.renewal.both = s.renewal.previous + 1), /renewal\.both exceeds renewal\.previous/);
+  });
+
+  it("fails when the set-aside reasons don't add up to the set-aside count", () => {
+    bad((s) => (s.years[0].set_aside_reasons.wrong_file += 1), /set_aside_reasons/);
+  });
+
+  it("fails when, for a year with federal figures, checked + left out isn't the published count", () => {
+    bad((s) => (s.years[0].federal_left_out.single_campus += 1), /checked \+ left out/);
+  });
+
+  it("doesn't ask a year with no federal figures to add up checked + left out", () => {
+    const snap = clone();
+    const y = snap.years.find((x) => !x.federal_fall_loaded)!;
+    expect(y.federal_left_out.single_campus + y.federal_left_out.no_federal_figures + y.total.federal.reports).not.toBe(y.total.status.published);
+    expect(() => selectSnapshot([{ name: "x.json", json: snap }], false)).not.toThrow();
+  });
+
+  it("refuses a key nothing reads, even when the named sums still add up", () => {
+    // B1.typo = 1 with adds_up one lower: Object.values would still sum to the reports, so the key is refused by name.
+    const typo = (r: QualityRow) => {
+      r.totals.B1.adds_up -= 1;
+      (r.totals.B1 as unknown as Record<string, number>).typo = 1;
+    };
+    bad((s) => both(s, typo), /unexpected key typo/);
+    bad((s) => ((s.years[0].rows[0].status as unknown as Record<string, number>).extra = 0), /unexpected key extra/);
+    bad((s) => ((s.years[0].rows[0].federal as unknown as Record<string, number>).extra = 0), /unexpected key extra/);
+    bad((s) => ((s.years[0].rows[0].totals.H1 as unknown as Record<string, number>).extra = 0), /unexpected key extra/);
+  });
+
+  describe("years the page can't show yet (#516)", () => {
+    // The shape the producer writes for an earlier year (test_scoreboard.py test_public_for_a_year_with_no_checks):
+    // no checked field mapping, so the sum tables can't be read, and federal figures are loaded but not compared.
+    const earlierYear = (published: number) => {
+      const row = {
+        status: { published, set_aside: 0, couldnt_read: 0, not_read_yet: 0 },
+        fields_stored: { median: 8, p10: 8 },
+        federal: { reports: 0, values: 0, matches: 0, no_value: 0, differs: 0 },
+        totals: {
+          reports: published,
+          B1: { adds_up: 0, under_2pct: 0, off_more: 0, cant_check: published },
+          C1: { adds_up: 0, under_2pct: 0, off_more: 0, cant_check: published },
+          H1: { adds_up: 0, doesnt: 0, cant_check: published },
+        },
+      };
+      return {
+        cds_year: "2022-23",
+        form: { form_year: "2022-23", full_field_schema: false, questions: 0 },
+        federal_fall_loaded: true,
+        other_form_numbering: 0,
+        removed: 0,
+        no_file: 0,
+        sum_checks_unavailable: ["B1", "C1", "H1"],
+        set_aside_reasons: { blank_form: 0, too_little_read: 0, wrong_file: 0 },
+        federal_left_out: { single_campus: 0, no_federal_figures: 0, not_compared: published },
+        rows: [{ format: "pdf_flat", label: "standard PDF", ...row }],
+        total: row,
+      };
+    };
+
+    it("refuses a producer-shaped earlier year, naming #516", () => {
+      bad((s) => s.years.push(earlierYear(3) as unknown as QualityYear), /#516/);
+    });
+
+    it("refuses sum_checks_unavailable on its own, and not_compared on its own", () => {
+      bad((s) => ((anyRec(s.years[0]).sum_checks_unavailable = ["B1"])), /sum_checks_unavailable.*#516/);
+      bad((s) => ((anyRec(s.years[0].federal_left_out).not_compared = 1)), /not_compared.*#516/);
+    });
+
+    it("accepts not_compared of 0 (the producer omits it, but it is a count)", () => {
+      const snap = clone();
+      anyRec(snap.years[0].federal_left_out).not_compared = 0;
+      expect(() => selectSnapshot([{ name: "x.json", json: snap }], false)).not.toThrow();
+    });
   });
 
   it("accepts the unmodified fixture", () => {
