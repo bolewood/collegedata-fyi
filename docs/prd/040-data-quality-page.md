@@ -551,20 +551,34 @@ Rejected in session:
 
 ## CSV licensing
 
-Two browser-built CSVs: coverage rows (M2) and the Data quality tables
-(M2).
+Two CSVs: coverage rows (M2) and the Data quality tables (M2). Both are
+served by route handlers that send `Link: <license>; rel="license"`
+(`DATA_LICENSE_LINK_HEADER`), start with a UTF-8 BOM and have the real
+header on row 1, like `app/schools/[school_id]/[year]/cds.csv`.
 
-- **Notice.** A client download can't send the `Link` license header that the
-  existing CSV routes use (`DATA_LICENSE_LINK_HEADER`). Each file opens with a
-  short comment block instead, built from the constants in
-  `web/src/lib/data-license.ts`:
-  - **Coverage CSV:** credits federal fields (IPEDS ID, enrollment) to their
-    federal source, which the data license excludes from its scope.
-    Directory and status columns are licensed as the site's data.
-  - **Data quality CSV:** names the snapshot date, the CDS year and the
-    table, and is licensed as the site's data.
-- **If a `#` comment line breaks a common reader,** switch to a route handler
-  that sends the header. Decide this in M2 after trying Excel, pandas and R.
+- **Decision trail.** The first design put a `#` comment block at the top of
+  each browser-built file, because a client download can't send a header.
+  D11 tested that file in pandas, R `read.csv` and `readr`, Python
+  `csv.reader` and `DictReader`, and LibreOffice standing in for Excel
+  (Excel itself wasn't available). No reader handled it with default options:
+  three raised errors and three returned a table whose column names were
+  pieces of the comment. Only readers with a comment option recovered, and only
+  if the user knew to pass it. The block was dropped and the files moved to
+  routes.
+- **Data quality:** `/data-quality/csv/[table]/[year]` (`reports`, `federal`,
+  `totals`), built from the committed snapshot and static per table and
+  year. Unknown table or year, no snapshot, or the launch gate closed: 404.
+- **Coverage:** `/coverage.csv` takes the page's own query string plus `sort`
+  and `dir`, reads the same cached rows, applies `parseCoverageView`,
+  `filterCoverageRows` and the shared `sortCoverageRows`, so the file has the
+  rows and order of the table on screen. "Download all colleges" is the same
+  route with `all=1`. Gate closed: 404. The file has a `school_name` column
+  after `school_id`.
+- **Credit.** A saved file carries no license text (the header isn't stored
+  with it). The coverage page says next to its download links that IPEDS ID
+  and undergraduate enrollment are federal figures our license doesn't cover
+  and that the other columns are licensed CC BY 4.0; column names are
+  unchanged.
 
 ## Years
 

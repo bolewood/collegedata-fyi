@@ -32,23 +32,25 @@ import {
   HAS_CDS_STATUSES,
   RECENCY_OPTIONS,
   STATUS_ORDER,
-  buildCoverageCsv,
+  COVERAGE_CSV_FEDERAL_NOTE,
+  coverageCsvHref,
   currentCdsYear,
+  defaultSortDir,
   filterCoverageRows,
   latestYearBuckets,
   parseCoverageView,
   sameSet,
+  sortCoverageRows,
   weightedShare,
   type EnrollmentBandId,
   type RecencyId,
+  type SortDir,
+  type SortKey,
 } from "@/lib/coverage-model";
-import { compareYearsDesc, isDataQualityLaunched, formatSnapshotDate, renewalTile, type Renewal } from "@/lib/data-quality";
+import { isDataQualityLaunched, formatSnapshotDate, renewalTile, type Renewal } from "@/lib/data-quality";
 
 /** The committed Data quality snapshot's renewal block, passed in by the server page (null before the first snapshot). */
 export type RenewalProp = { renewal: Renewal; snapshotOf: string } | null;
-
-type SortKey = "name" | "state" | "enrollment" | "status" | "numbers" | "found" | "checked";
-type SortDir = "asc" | "desc";
 
 const ROW_HEIGHT = 64;
 
@@ -109,44 +111,7 @@ export function CoverageDashboard({
 
   const query = searchParams.toString();
   const filteredRows = useMemo(() => {
-    const filtered = filterCoverageRows(rows, parseCoverageView(new URLSearchParams(query)));
-
-    const dir = sortDir === "asc" ? 1 : -1;
-    filtered.sort((a, b) => {
-      switch (sortKey) {
-        case "name":
-          return a.school_name.localeCompare(b.school_name) * dir;
-        case "state":
-          return ((a.state ?? "").localeCompare(b.state ?? "")) * dir
-            || a.school_name.localeCompare(b.school_name);
-        case "enrollment": {
-          const ae = a.undergraduate_enrollment;
-          const be = b.undergraduate_enrollment;
-          if (ae == null && be == null) return a.school_name.localeCompare(b.school_name);
-          if (ae == null) return 1;
-          if (be == null) return -1;
-          return (ae - be) * dir;
-        }
-        case "status":
-          return (
-            (STATUS_ORDER.indexOf(a.coverage_status) - STATUS_ORDER.indexOf(b.coverage_status)) * dir
-            || a.school_name.localeCompare(b.school_name)
-          );
-        case "numbers":
-          // compareYearsDesc is newest-first, so flip it: ascending means oldest first.
-          return -compareYearsDesc(a.latest_available_cds_year ?? "none", b.latest_available_cds_year ?? "none") * dir
-            || a.school_name.localeCompare(b.school_name);
-        case "found":
-          return -compareYearsDesc(a.latest_found_cds_year ?? "none", b.latest_found_cds_year ?? "none") * dir
-            || a.school_name.localeCompare(b.school_name);
-        case "checked": {
-          const ac = a.last_checked_at ? new Date(a.last_checked_at).getTime() : 0;
-          const bc = b.last_checked_at ? new Date(b.last_checked_at).getTime() : 0;
-          return (ac - bc) * dir || a.school_name.localeCompare(b.school_name);
-        }
-      }
-    });
-    return filtered;
+    return sortCoverageRows(filterCoverageRows(rows, parseCoverageView(new URLSearchParams(query))), sortKey, sortDir);
   }, [rows, query, sortKey, sortDir]);
 
   // ── URL writers ──────────────────────────────────────────────────
@@ -214,19 +179,6 @@ export function CoverageDashboard({
     });
   }
 
-  function downloadRows(list: InstitutionCoverage[], scope: "view" | "all") {
-    const day = new Date().toISOString().slice(0, 10);
-    const blob = new Blob([buildCoverageCsv(list, day)], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `collegedata-coverage-${scope === "all" ? "all-colleges" : "view"}-${day}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
   function clearFilters() {
     startTransition(() => router.replace("/coverage", { scroll: false }));
   }
@@ -236,7 +188,7 @@ export function CoverageDashboard({
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     } else {
       setSortKey(key);
-      setSortDir(key === "enrollment" || key === "checked" ? "desc" : "asc");
+      setSortDir(defaultSortDir(key));
     }
   }
 
@@ -415,25 +367,25 @@ export function CoverageDashboard({
         SHOWING {filteredRows.length.toLocaleString()} OF {total.toLocaleString()} INSTITUTIONS
       </div>
 
-      {/* CSV downloads ship with the Data quality launch gate: the # comment block isn't verified in pandas, R and Excel yet. */}
+      {/* CSV downloads ship with the Data quality launch gate. */}
       {isDataQualityLaunched() && (
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-          <button
-            type="button"
-            className="cd-chip"
-            style={{ cursor: "pointer", background: "transparent" }}
-            onClick={() => downloadRows(filteredRows, "view")}
-          >
-            Download this view (CSV)
-          </button>
-          <button
-            type="button"
-            className="cd-chip"
-            style={{ cursor: "pointer", background: "transparent" }}
-            onClick={() => downloadRows(rows, "all")}
-          >
-            Download all colleges (CSV)
-          </button>
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <a
+              className="cd-chip"
+              style={{ background: "transparent" }}
+              href={coverageCsvHref(query, { key: sortKey, dir: sortDir })}
+              download
+            >
+              Download this view (CSV)
+            </a>
+            <a className="cd-chip" style={{ background: "transparent" }} href={coverageCsvHref("all=1")} download>
+              Download all colleges (CSV)
+            </a>
+          </div>
+          <p className="meta" style={{ marginTop: 8, marginBottom: 0 }}>
+            {COVERAGE_CSV_FEDERAL_NOTE}
+          </p>
         </div>
       )}
 

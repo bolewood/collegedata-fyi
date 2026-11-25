@@ -212,18 +212,17 @@ describe("data quality CSV", () => {
   const y2324 = FIXTURE_SNAPSHOT.years.find((y) => y.cds_year === "2023-24")!;
   const y2526 = FIXTURE_SNAPSHOT.years.find((y) => y.cds_year === "2025-26")!;
 
-  it("opens with a licence notice naming snapshot date, year and table", () => {
-    const csv = buildQualityCsv("totals", y2324, FIXTURE_SNAPSHOT);
-    const comments = csv.split("\r\n").filter((l) => l.startsWith("#"));
-    expect(comments[0]).toContain("2026-11-24");
-    expect(comments[0]).toContain("2023-24");
-    expect(comments[0]).toContain("Do the printed totals add up?");
-    expect(comments.join(" ")).toContain("CC BY 4.0");
+  it("opens with the real header on row 1: no comment block, no notice", () => {
+    for (const table of ["reports", "federal", "totals"] as const) {
+      const csv = buildQualityCsv(table, y2324, FIXTURE_SNAPSHOT);
+      expect(csv.startsWith("format,")).toBe(true);
+      expect(csv).not.toContain("#");
+    }
   });
 
   it("has one line per format plus the year total, with public labels", () => {
     const csv = buildQualityCsv("reports", y2324, FIXTURE_SNAPSHOT);
-    const lines = csv.split("\r\n").filter((l) => l && !l.startsWith("#"));
+    const lines = csv.split("\r\n").filter(Boolean);
     expect(lines[0]).toBe(
       "format,published,set_aside,couldnt_read,not_read_yet,fields_stored_median,fields_stored_lowest_10pct",
     );
@@ -237,7 +236,7 @@ describe("data quality CSV", () => {
     const year = JSON.parse(JSON.stringify(y2324));
     year.rows[0].status.published = 0;
     year.rows[0].fields_stored = { median: 0, p10: 0 };
-    const lines = buildQualityCsv("reports", year, FIXTURE_SNAPSHOT).split("\r\n").filter((l) => l && !l.startsWith("#"));
+    const lines = buildQualityCsv("reports", year, FIXTURE_SNAPSHOT).split("\r\n").filter(Boolean);
     expect(lines[1]).toBe("standard PDF,0,3,4,0,,");
   });
 
@@ -251,7 +250,7 @@ describe("data quality CSV", () => {
 
   it("leaves federal cells blank, not zero, for a year with no federal figures", () => {
     const csv = buildQualityCsv("federal", y2526, FIXTURE_SNAPSHOT);
-    const lines = csv.split("\r\n").filter((l) => l && !l.startsWith("#"));
+    const lines = csv.split("\r\n").filter(Boolean);
     expect(lines[1]).toBe("standard PDF,,,,,");
   });
 });

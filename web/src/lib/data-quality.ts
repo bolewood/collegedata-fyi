@@ -4,7 +4,6 @@
 
 import { isCanonicalCdsYear } from "./format";
 import { formatLabel } from "./format-labels";
-import { DATA_LICENSE_NAME, DATA_LICENSE_URL } from "./data-license";
 
 /**
  * Launch gate, on the isUsageLaunched pattern. It stays far in the future
@@ -357,10 +356,8 @@ export function csvLine(cells: (string | number | null | undefined)[]): string {
   return cells.map(csvCell).join(",");
 }
 
-/** A `#` comment block that opens a downloaded CSV. */
-export function csvNotice(lines: string[]): string {
-  return lines.map((l) => `# ${l}`).join("\r\n") + "\r\n";
-}
+/** UTF-8 byte order mark. Excel needs it to read non-ASCII text; CSV routes start the body with it. */
+export const CSV_BOM = "\uFEFF";
 
 export type QualityTableId = "reports" | "federal" | "totals";
 
@@ -376,17 +373,17 @@ const TABLE_SLUG: Record<QualityTableId, string> = {
   totals: "totals-add-up",
 };
 
+/** The route that serves one table for one year. */
+export function qualityCsvPath(table: QualityTableId, year: string): string {
+  return `/data-quality/csv/${table}/${year}`;
+}
+
 export function qualityCsvFilename(table: QualityTableId, year: string, snapshotOf: string): string {
   return `collegedata-data-quality-${TABLE_SLUG[table]}-${year}-${snapshotOf.slice(0, 10)}.csv`;
 }
 
-/** CSV of one table for one year: licence notice, header, one line per format, then the year total. */
+/** CSV of one table for one year: header, one line per format, then the year total. */
 export function buildQualityCsv(table: QualityTableId, year: QualityYear, snapshot: QualitySnapshot): string {
-  const notice = csvNotice([
-    `collegedata.fyi data quality, snapshot of ${snapshot.snapshot_of.slice(0, 10)}, CDS year ${year.cds_year}, table: ${TABLE_TITLES[table]}.`,
-    `Counts of reports in this archive, licensed ${DATA_LICENSE_NAME} (${DATA_LICENSE_URL}). Credit collegedata.fyi (https://www.collegedata.fyi).`,
-    `Counts only: a rate over fewer than ${MIN_REPORTS_FOR_RATE} reports isn't meaningful.`,
-  ]);
   const lines: string[] = [];
   const all: { name: string; row: QualityRow }[] = [
     ...year.rows.map((r) => ({ name: formatLabel(r.format), row: r as QualityRow })),
@@ -413,5 +410,5 @@ export function buildQualityCsv(table: QualityTableId, year: QualityYear, snapsh
       lines.push(csvLine([name, t.reports, t.B1.adds_up, t.B1.under_2pct, t.B1.off_more, t.B1.cant_check, t.C1.adds_up, t.C1.under_2pct, t.C1.off_more, t.C1.cant_check, t.H1.adds_up, t.H1.doesnt, t.H1.cant_check]));
     }
   }
-  return notice + lines.join("\r\n") + "\r\n";
+  return lines.join("\r\n") + "\r\n";
 }

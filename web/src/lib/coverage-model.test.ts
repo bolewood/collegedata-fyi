@@ -1,15 +1,21 @@
 import { describe, expect, it } from "vitest";
 import {
   COVERAGE_CSV_COLUMNS,
+  COVERAGE_CSV_FEDERAL_NOTE,
   COVERAGE_STATUS_LABELS,
   DEFAULT_MISSING,
   HAS_CDS_HREF,
   buildCoverageCsv,
+  coverageCsvHref,
   currentCdsYear,
   filterCoverageRows,
   latestYearBuckets,
   matchesSearch,
+  parseCoverageSort,
   parseCoverageView,
+  sortCoverageRows,
+  type SortDir,
+  type SortKey,
   weightedShare,
 } from "./coverage-model";
 import type { CoverageStatus, InstitutionCoverage } from "./types";
@@ -181,35 +187,76 @@ describe("status wording", () => {
 });
 
 describe("coverage CSV", () => {
-  const csv = buildCoverageCsv(ROWS, "2026-11-24");
-  const comments = csv.split("\r\n").filter((l) => l.startsWith("#"));
-  const body = csv.split("\r\n").filter((l) => l && !l.startsWith("#"));
+  const csv = buildCoverageCsv(ROWS);
+  const lines = csv.split("\r\n").filter(Boolean);
 
-  it("opens with a notice that licenses our columns and credits the federal ones to their source", () => {
-    expect(comments.join(" ")).toContain("CC BY 4.0");
-    const federal = comments.find((l) => l.includes("ipeds_id and undergraduate_enrollment"))!;
-    expect(federal).toContain("federal");
-    expect(federal).toContain("does not cover");
-    expect(comments.some((l) => l.includes("2026-11-24"))).toBe(true);
+  it("starts with the real header: no comment block", () => {
+    expect(csv.startsWith("#")).toBe(false);
+    expect(lines.some((l) => l.startsWith("#"))).toBe(false);
+    expect(lines[0]).toBe(COVERAGE_CSV_COLUMNS.join(","));
+    expect(lines[0]).toBe(
+      "ipeds_id,school_id,school_name,state,undergraduate_enrollment,status,latest_year_with_numbers,latest_year_found,last_checked",
+    );
   });
 
-  it("has the PRD's columns and one line per row", () => {
-    expect(body[0]).toBe(COVERAGE_CSV_COLUMNS.join(","));
-    expect(body[0]).toBe(
-      "ipeds_id,school_id,state,undergraduate_enrollment,status,latest_year_with_numbers,latest_year_found,last_checked",
-    );
-    expect(body).toHaveLength(1 + ROWS.length);
-    expect(body[2]).toBe("222222,beta,NY,3000,Older CDS,2023-24,2024-25,2026-11-20T00:00:00Z");
+  it("has one line per row", () => {
+    expect(lines).toHaveLength(1 + ROWS.length);
+    expect(lines[2]).toBe("222222,beta,Beta University,NY,3000,Older CDS,2023-24,2024-25,2026-11-20T00:00:00Z");
   });
 
   it("leaves unknown values blank, not zero", () => {
-    expect(body[4]).toBe("444444,delta,CA,,Not checked,,,2026-11-20T00:00:00Z");
+    expect(lines[4]).toBe("444444,delta,\u00c9cole Delta,CA,,Not checked,,,2026-11-20T00:00:00Z");
+  });
+
+  it("quotes a school name with a comma and a quote so it round-trips", () => {
+    const name = 'St. John\'s, "Great Books" College';
+    const out = buildCoverageCsv([row({ school_id: "sj", school_name: name })]);
+    expect(out.split("\r\n")[1]).toContain('"St. John\'s, ""Great Books"" College"');
   });
 
   it("covers just the rows it is given, so the view and all-rows downloads differ", () => {
-    const view = buildCoverageCsv(filterCoverageRows(ROWS, view0()), "2026-11-24");
-    expect(view.split("\r\n").filter((l) => l && !l.startsWith("#"))).toHaveLength(1 + 4);
-    expect(body).toHaveLength(1 + 5);
+    const view = buildCoverageCsv(filterCoverageRows(ROWS, view0()));
+    expect(view.split("\r\n").filter(Boolean)).toHaveLength(1 + 4);
+    expect(lines).toHaveLength(1 + 5);
+  });
+
+  it("says the federal columns aren't ours to license, in one sentence built from the license name", () => {
+    expect(COVERAGE_CSV_FEDERAL_NOTE).toContain("IPEDS ID and undergraduate enrollment");
+    expect(COVERAGE_CSV_FEDERAL_NOTE).toContain("CC BY 4.0");
+  });
+});
+
+describe("coverage sort", () => {
+  const order = (key: SortKey, dir: SortDir) => ids(sortCoverageRows(ROWS, key, dir));
+
+  it("sorts every column both ways, nulls last for enrollment", () => {
+    expect(order("name", "asc")).toEqual(["alpha", "beta", "delta", "gamma", "eps"].sort((a, b) => ROWS.find((r) => r.school_id === a)!.school_name.localeCompare(ROWS.find((r) => r.school_id === b)!.school_name)));
+    expect(order("name", "desc")[0]).toBe("gamma");
+    expect(order("enrollment", "desc")).toEqual(["eps", "alpha", "beta", "gamma", "delta"]);
+    expect(order("enrollment", "asc")).toEqual(["gamma", "beta", "alpha", "eps", "delta"]);
+    expect(order("state", "asc")[0]).toBe("delta");
+    // Rows with no year sort as oldest, as the table always has.
+    expect(order("numbers", "asc")).toEqual(["delta", "gamma", "eps", "beta", "alpha"]);
+    expect(order("found", "desc")[0]).toBe("alpha");
+  });
+
+  it("does not change the rows it is given", () => {
+    const before = ids(ROWS);
+    sortCoverageRows(ROWS, "enrollment", "desc");
+    expect(ids(ROWS)).toEqual(before);
+  });
+
+  it("reads sort and dir from a query string, with name as the fallback", () => {
+    const p = (qs: string) => parseCoverageSort(new URLSearchParams(qs));
+    expect(p("sort=enrollment&dir=asc")).toEqual({ key: "enrollment", dir: "asc" });
+    expect(p("sort=enrollment")).toEqual({ key: "enrollment", dir: "desc" });
+    expect(p("sort=bogus&dir=sideways")).toEqual({ key: "name", dir: "asc" });
+    expect(p("")).toEqual({ key: "name", dir: "asc" });
+  });
+
+  it("puts the current sort on the download link only", () => {
+    expect(coverageCsvHref("state=NY", { key: "checked", dir: "desc" })).toBe("/coverage.csv?state=NY&sort=checked&dir=desc");
+    expect(coverageCsvHref("all=1")).toBe("/coverage.csv?all=1");
   });
 });
 
