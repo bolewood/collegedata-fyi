@@ -156,15 +156,28 @@ class SiblingEntryPointTests(unittest.TestCase):
                 _Sb({"cds_documents": docs}, count_override=9), ["nyu"], ["2025-26"],
             )
 
-    def test_kids_worklist(self) -> None:
-        from tools.data_quality import kids_worklist
+    @staticmethod
+    def _import(name):
+        """Import a script module whose third-party imports (requests, dotenv)
+        are not in tools/ci-requirements.txt; stub only the ones that are missing."""
+        import importlib
+        import sys
+        from unittest import mock
 
-        self._check(kids_worklist)
+        stubs = {}
+        for dep in ("requests", "dotenv"):
+            try:
+                importlib.import_module(dep)
+            except ImportError:
+                stubs[dep] = mock.MagicMock()
+        with mock.patch.dict(sys.modules, stubs):
+            return importlib.import_module(name)
+
+    def test_kids_worklist(self) -> None:
+        self._check(self._import("tools.data_quality.kids_worklist"))
 
     def test_force_resolve_missing(self) -> None:
-        from tools.data_quality import force_resolve_missing
-
-        self._check(force_resolve_missing)
+        self._check(self._import("tools.data_quality.force_resolve_missing"))
 
 
 class ByteCoverageTests(unittest.TestCase):
