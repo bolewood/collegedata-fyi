@@ -35,11 +35,10 @@ export interface SelectionInputs {
   // directory-enqueue, while active-seed and verified_absent rows stay
   // under the curated/manual paths.
   schoolsYamlIpeds: Set<string>;
-  // school_ids that already have any cds_documents row. Per PRD: "Enqueue
-  // in-scope institutions that have no cds_documents row and no recent
-  // archive attempt." A row with participation_status='not_yet_found'
-  // counts as "we have already attempted this school" — directory-enqueue
-  // should not redundantly seed it.
+  // school_ids blocked from seeding (see schoolIdsBlockedFromSeeding): any
+  // operator-hidden row, or a live row with a real year. A row with
+  // participation_status='not_yet_found' still counts as "already attempted".
+  // Schools with only live `unknown`-year rows are NOT in this set.
   schoolsWithCds: Set<string>;
   // school_ids with an in-flight archive_queue row (status='ready' or
   // 'processing'). Without this guard, a re-run before any rows are
@@ -188,12 +187,22 @@ export function normalizeSeedUrl(raw: string | null | undefined): string | null 
   }
 }
 
-// Distinct school_ids with at least one row whose cds_year is a real
-// "YYYY-YY" year. `unknown` and other non-year values do not count.
-export function schoolIdsWithDatedCds(
-  rows: { school_id: string; cds_year: string }[],
+// School ids that must NOT be seeded by directory-enqueue. A school is blocked
+// when it has ANY operator-hidden row (removed_at not null) OR a live row with
+// a real "YYYY-YY" year.
+//
+// Hidden rows block because a takedown is deliberate (a wrong file, a
+// duplicate slug). If the school became seed-eligible, the archive refresh
+// path (fetchDocumentForSchoolYear -> archiveOneCandidate ->
+// refreshDocumentWithNewSha) writes removed_at = null and would quietly
+// un-hide the file. Live undated (`unknown`) rows do not block, so a school
+// with only those stays eligible for a dated find.
+export function schoolIdsBlockedFromSeeding(
+  rows: { school_id: string; cds_year: string; removed_at: string | null }[],
 ): Set<string> {
   return new Set(
-    rows.filter((r) => /^\d{4}-\d{2}$/.test(r.cds_year ?? "")).map((r) => r.school_id),
+    rows
+      .filter((r) => r.removed_at !== null || /^\d{4}-\d{2}$/.test(r.cds_year ?? ""))
+      .map((r) => r.school_id),
   );
 }

@@ -2,6 +2,7 @@ import { assertEquals, assertExists } from "jsr:@std/assert";
 import {
   applyPinnedUrls,
   capSubpages,
+  resolveCdsForSchool,
   mergeHintWithPageDocs,
   pickCandidates,
   type ResolvedCandidate,
@@ -1355,4 +1356,37 @@ Deno.test("capSubpages: reports how many subpages the cap dropped", () => {
   assertEquals(r.kept.length, 25);
   assertEquals(r.dropped, 5);
   assertEquals(capSubpages([1, 2], 25), { kept: [1, 2], dropped: 0 });
+});
+
+Deno.test("resolveCdsForSchool: 30 qualifying subpages follow 25 and report 5 dropped", async () => {
+  const links = Array.from(
+    { length: 30 },
+    (_, i) => `<a href="/cds/page${i}">Common Data Set page ${i}</a>`,
+  ).join("\n");
+  const html = (body: string, url: string) => {
+    const resp = new Response(`<html><body>${body}</body></html>`, {
+      status: 200,
+      headers: { "content-type": "text/html" },
+    });
+    // A constructed Response has an empty url; fetchText re-checks it.
+    Object.defineProperty(resp, "url", { value: url });
+    return resp;
+  };
+  const childFetches: string[] = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = ((input: Request | URL | string) => {
+    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+    if (url.includes("/cds/page")) {
+      childFetches.push(url);
+      return Promise.resolve(html("nothing here", url));
+    }
+    return Promise.resolve(html(links, url));
+  }) as typeof fetch;
+  try {
+    const r = await resolveCdsForSchool("https://example.edu/institutional-research/");
+    assertEquals(childFetches.length, 25);
+    assertEquals(r.kind === "blocked_url" ? undefined : r.probe?.subpagesDropped, 5);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });
