@@ -726,4 +726,26 @@ describe("pipeline observation freshness", () => {
     expect(snapshot.strip.text).toBe("Renewal: 2025-26 still below floor");
     expect(snapshot.stations[0].detail_line).toContain("still short: 2025-26");
   });
+
+  it("an arrivals-only breach names the shortfall and the detail line shows unextracted", () => {
+    const summary = {
+      below_floor: false,
+      renewed: 400,
+      prev_schools: 479,
+      arrivals_below_floor: true,
+      arrivals_30d: 3,
+      arrivals_expected_30d: 25,
+      arrivals_window_days: 30,
+      unextracted_current_docs: 7,
+    };
+    const snapshot = snapshotFromFacts(
+      healthyFacts().concat(renewalFact({ last_summary: summary, last_scheduled_summary: summary })),
+      NOW,
+    );
+    expect(snapshot.stations[0].lamp).toBe("down");
+    expect(snapshot.strip.text).toBe(
+      "Renewal: almost nothing new arrived · 3 schools in 30 days (expected 25)",
+    );
+    expect(snapshot.stations[0].detail_line).toContain("unextracted 7");
+  });
 });

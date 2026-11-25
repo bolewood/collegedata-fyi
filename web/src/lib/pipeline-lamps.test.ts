@@ -461,6 +461,38 @@ describe("stripLamp", () => {
       ).toBe("down");
     });
 
+    it("arrivals_below_floor alone is down; absent is unchanged", () => {
+      const a = { ...GOOD, arrivals_below_floor: true, arrivals_30d: 3, arrivals_expected_30d: 25 };
+      expect(stationLamp(renewal({ lastSummary: a, lastScheduledSummary: a }))).toBe("down");
+      const ok = { ...GOOD, arrivals_below_floor: false };
+      expect(stationLamp(renewal({ lastSummary: ok, lastScheduledSummary: ok }))).toBe("ok");
+      expect(stationLamp(renewal())).toBe("ok");
+    });
+
+    it("an overridden dispatch cannot turn an arrivals breach green, but can turn it red", () => {
+      const a = { ...GOOD, arrivals_below_floor: true };
+      expect(
+        stationLamp(
+          renewal({
+            lastScheduledSummary: a,
+            lastScheduledFinishedAt: hoursAgo(10),
+            lastSummary: { ...GOOD, floor_overridden: true },
+            lastFinishedAt: hoursAgo(2),
+          }),
+        ),
+      ).toBe("down");
+      expect(
+        stationLamp(
+          renewal({
+            lastScheduledSummary: GOOD,
+            lastScheduledFinishedAt: hoursAgo(10),
+            lastSummary: { ...a, floor_overridden: true },
+            lastFinishedAt: hoursAgo(2),
+          }),
+        ),
+      ).toBe("down");
+    });
+
     it("two_year_below_floor is down; absent is ignored", () => {
       const t = { ...GOOD, two_year_below_floor: true };
       expect(stationLamp(renewal({ lastSummary: t, lastScheduledSummary: t }))).toBe("down");
