@@ -1,6 +1,7 @@
 import { expect, test, type Page, type Request } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { TABLE_TITLES, hasFederalChecks, hasSections, type QualityTableId } from "../src/lib/data-quality";
 import { loadLatestSnapshot } from "../src/lib/data-quality-snapshots";
 
 function isSchoolPagePrefetch(req: Request): boolean {
@@ -106,9 +107,13 @@ function builtGate(): boolean {
   return value === "1";
 }
 
-// A year with federal figures, so the page shows all three tables and their CSV links (2025-26 has no federal table yet).
-const dqYear = loadLatestSnapshot().years.find((y) => y.federal_fall_loaded)!.cds_year;
-const CSV_TABLES = ["reports", "federal", "totals"];
+// A year with federal figures, so the page shows every table and its CSV link (2025-26 has no federal table yet).
+const dqYearRow = loadLatestSnapshot().years.find((y) => y.federal_fall_loaded)!;
+const dqYear = dqYearRow.cds_year;
+// The tables the page links for that year: the same rules the page and the CSV route use, not a hand-kept list.
+const CSV_TABLES = (Object.keys(TABLE_TITLES) as QualityTableId[]).filter((t) =>
+  t === "sections" ? hasSections(dqYearRow) : t === "enrollment" || t === "tuition" ? hasFederalChecks(dqYearRow) : true,
+);
 
 test.describe("Data quality gate (matches the build)", () => {
   let launched = false;
@@ -163,6 +168,13 @@ test.describe("Data quality gate (matches the build)", () => {
       expect(res.status(), table).toBe(launched ? 200 : 404);
       if (launched) expect(res.headers()["link"], table).toContain('rel="license"');
     }
+  });
+
+  test("reports route", async ({ request }) => {
+    const day = loadLatestSnapshot().snapshot_of.slice(0, 10);
+    const res = await request.get(`/data-quality/reports/${day}`);
+    expect(res.status()).toBe(launched ? 200 : 404);
+    if (launched) expect(res.headers()["link"]).toContain('rel="license"');
   });
 
   test("sitemap and methodology", async ({ request }) => {
