@@ -707,4 +707,23 @@ describe("pipeline observation freshness", () => {
     );
     expect(snapshot.stations[0].detail_line).toContain("two-year: 377 of 536 (70%) · floor 74.5%");
   });
+
+  it("an outstanding-only breach reads 'Renewal: 2025-26 still below floor' and shows the years", () => {
+    const summary = {
+      below_floor: false,
+      next_below_floor: false,
+      two_year_below_floor: false,
+      renewed: 400,
+      prev_schools: 479,
+      outstanding_below_floor: true,
+      outstanding_years: "2025-26",
+    };
+    const snapshot = snapshotFromFacts(
+      healthyFacts().concat(renewalFact({ last_summary: summary, last_scheduled_summary: summary })),
+      NOW,
+    );
+    expect(snapshot.stations[0].lamp).toBe("down");
+    expect(snapshot.strip.text).toBe("Renewal: 2025-26 still below floor");
+    expect(snapshot.stations[0].detail_line).toContain("still short: 2025-26");
+  });
 });

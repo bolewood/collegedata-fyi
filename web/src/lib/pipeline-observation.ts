@@ -539,6 +539,9 @@ function renewalDetailLine(summary: Record<string, unknown>): string {
   for (const part of [nextYearPart(summary), twoYearPart(summary)]) {
     if (part) parts.push(part);
   }
+  if (typeof summary.outstanding_years === "string" && summary.outstanding_years.trim()) {
+    parts.push(`still short: ${summary.outstanding_years.trim()}`);
+  }
   const counts: Array<[string, string]> = [
     ["same_year_duplicates", "same-year duplicates"],
     ["seeds_without_new_year", "seeds without the new year"],
@@ -588,6 +591,13 @@ function failureText(row: PipelineFactRow): string {
     }
     if (summary.two_year_below_floor === true) {
       return `Renewal below floor · ${twoYearPart(summary)}`;
+    }
+    if (summary.outstanding_below_floor === true) {
+      const years =
+        typeof summary.outstanding_years === "string" && summary.outstanding_years.trim()
+          ? summary.outstanding_years.trim()
+          : "An earlier year";
+      return `Renewal: ${years} still below floor`;
     }
     return "Renewal figures missing from the last run";
   }
