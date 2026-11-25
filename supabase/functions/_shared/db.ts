@@ -4,6 +4,7 @@
 // layer.
 
 import { SupabaseClient } from "jsr:@supabase/supabase-js@2";
+import { parseCdsStartYear } from "./year.ts";
 import {
   chooseDocumentIpedsId,
   fetchSlugEntries,
@@ -65,10 +66,39 @@ export async function fetchDocumentForSchoolYear(
   return (data as CdsDocumentRow | null) ?? null;
 }
 
-// Most recent row (by cds_year desc) for a school with no sub-institutional
-// variant. Used by the "hint resolution failed" path to mark only the
-// current-year row as removed, not every historical year the school has
-// ever published. Returns null if the school has never been archived.
+// Newest document by integer start year among rows with a real "YYYY-YY"
+// year. The `unknown` sentinel (and any other non-year value) sorts ABOVE
+// every real year as text, so a text sort picks the undated row as "most
+// recent". Falls back to an undated row only when the school has no dated
+// document at all, so the caller still gets something to act on.
+export function pickMostRecentDocument<T extends { cds_year: string }>(
+  rows: T[],
+): T | null {
+  let best: T | null = null;
+  let bestStart = -Infinity;
+  for (const row of rows) {
+    const start = parseCdsStartYear(row.cds_year);
+    if (start === null) continue;
+    if (start > bestStart) {
+      best = row;
+      bestStart = start;
+    }
+  }
+  if (best) return best;
+  return rows[0] ?? null;
+}
+
+// Most recent live row (removed_at is null; operator takedowns are skipped)
+// for a school with no sub-institutional variant, chosen by integer start
+// year in code, never by a text sort. Used by the "hint resolution failed"
+// path to mark only the current-year row as source-gone, not every
+// historical year the school has ever published. The failing URL is the
+// school's landing hint, which is not tied to one document, so "newest
+// dated year" is the right target. Returns null if nothing live exists.
+// Skipping removed_at rows is safe only because recordRemoval writes
+// source_gone_at and never removed_at: a doc marked gone here stays live and
+// is picked again on the next run (idempotent), instead of cascading to an
+// older year.
 export async function fetchMostRecentDocumentForSchool(
   client: SupabaseClient,
   schoolId: string,
@@ -78,11 +108,10 @@ export async function fetchMostRecentDocumentForSchool(
     .select("*")
     .eq("school_id", schoolId)
     .is("sub_institutional", null)
-    .order("cds_year", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .is("removed_at", null)
+    .order("id", { ascending: true }); // deterministic tie-break for same-year rows
   if (error) throw new Error(`fetchMostRecentDocumentForSchool: ${error.message}`);
-  return (data as CdsDocumentRow | null) ?? null;
+  return pickMostRecentDocument((data ?? []) as CdsDocumentRow[]);
 }
 
 export async function fetchLatestSourceArtifact(
@@ -346,6 +375,8 @@ export async function recordRepair(
 // because a single failed hint fetch is not the same as a school publicly
 // refusing to publish; operators can promote rows to 'withdrawn' via a
 // separate review process after observing sustained removal.
+// INVARIANT: this writes source_gone_at only, never removed_at.
+// fetchMostRecentDocumentForSchool skips removed_at rows and relies on this.
 export async function recordRemoval(
   client: SupabaseClient,
   documentId: string,

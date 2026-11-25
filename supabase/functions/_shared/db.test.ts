@@ -1,6 +1,11 @@
 import { assertEquals } from "jsr:@std/assert";
 import type { SupabaseClient } from "jsr:@supabase/supabase-js@2";
-import { fetchDirectoryIpedsId, resolveInsertIpedsId } from "./db.ts";
+import {
+  fetchDirectoryIpedsId,
+  fetchMostRecentDocumentForSchool,
+  pickMostRecentDocument,
+  resolveInsertIpedsId,
+} from "./db.ts";
 import type { SchoolEntry } from "./schools.ts";
 
 type Rows = Record<string, Array<Record<string, unknown>>>;
@@ -136,4 +141,54 @@ Deno.test("directory lookup returning an error falls back to the yaml id without
     },
   } as unknown as SupabaseClient;
   assertEquals(await resolveInsertIpedsId(failing, "caltech", "110404", null, []), "110404");
+});
+
+Deno.test("pickMostRecentDocument: dated year beats unknown (text sort puts unknown first)", () => {
+  const rows = [
+    { id: "u", cds_year: "unknown" },
+    { id: "a", cds_year: "2024-25" },
+    { id: "b", cds_year: "2025-26" },
+  ];
+  assertEquals(pickMostRecentDocument(rows)?.id, "b");
+});
+
+Deno.test("pickMostRecentDocument: falls back to undated only when no dated row exists", () => {
+  assertEquals(pickMostRecentDocument([{ id: "u", cds_year: "unknown" }])?.id, "u");
+  assertEquals(pickMostRecentDocument([]), null);
+});
+
+Deno.test("fetchMostRecentDocumentForSchool: skips removed rows and picks newest dated", async () => {
+  const rows = [
+    { id: "u", school_id: "s", cds_year: "unknown", removed_at: null, sub_institutional: null },
+    { id: "old", school_id: "s", cds_year: "2023-24", removed_at: null, sub_institutional: null },
+    { id: "taken", school_id: "s", cds_year: "2025-26", removed_at: "2026-01-01", sub_institutional: null },
+    { id: "other", school_id: "other-school", cds_year: "2026-27", removed_at: null, sub_institutional: null },
+    { id: "sub", school_id: "s", cds_year: "2026-27", removed_at: null, sub_institutional: "law" },
+    { id: "bad1", school_id: "s", cds_year: "5024-25", removed_at: null, sub_institutional: null },
+    { id: "bad2", school_id: "s", cds_year: "2025-27", removed_at: null, sub_institutional: null },
+  ];
+  const client = {
+    from() {
+      const filters: Array<(r: Record<string, unknown>) => boolean> = [];
+      const q: Record<string, unknown> = {
+        select: () => q,
+        eq: (c: string, v: unknown) => (filters.push((r) => r[c] === v), q),
+        is: (c: string, v: unknown) => (filters.push((r) => r[c] === v), q),
+        order: () => q,
+        then: (res: (v: unknown) => void) =>
+          res({ data: rows.filter((r) => filters.every((f) => f(r))), error: null }),
+      };
+      return q;
+    },
+  } as unknown as SupabaseClient;
+  assertEquals((await fetchMostRecentDocumentForSchool(client, "s"))?.id, "old");
+});
+
+Deno.test("pickMostRecentDocument: malformed years are ignored", () => {
+  const rows = [
+    { id: "a", cds_year: "5024-25" },
+    { id: "b", cds_year: "2025-27" },
+    { id: "c", cds_year: "2023-24" },
+  ];
+  assertEquals(pickMostRecentDocument(rows)?.id, "c");
 });

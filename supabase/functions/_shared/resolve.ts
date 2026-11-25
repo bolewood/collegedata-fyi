@@ -389,6 +389,21 @@ export interface ResolveProbeData {
   headers: Record<string, string>;
   bodyLength: number;
   anchorCount: number; // CDS-ish anchor count on the landing page
+  // Subpage links beyond MAX_SUBPAGES_PER_SCHOOL that the two-hop walk did
+  // not follow. Absent/0 means nothing was dropped.
+  subpagesDropped?: number;
+}
+
+// Splits subpage anchors into the ones the two-hop walk follows and a count
+// of the ones it skips, so the cap is visible instead of silent.
+export function capSubpages<T>(
+  subpages: T[],
+  max: number = MAX_SUBPAGES_PER_SCHOOL,
+): { kept: T[]; dropped: number } {
+  return {
+    kept: subpages.slice(0, max),
+    dropped: Math.max(0, subpages.length - max),
+  };
 }
 
 export type ResolveResult =
@@ -1501,6 +1516,7 @@ export function mergeHintWithPageDocs(
 
 export async function resolveCdsForSchool(
   hint: string,
+  schoolId?: string, // only used to label the subpages_capped log line
 ): Promise<ResolveResult> {
   if (!isSafeUrl(hint)) {
     return { kind: "blocked_url", reason: "hint URL failed safety check" };
@@ -1561,12 +1577,14 @@ export async function resolveCdsForSchool(
   // anchor extraction below; we initialize to 0 here and refine.
   // Failure paths still surface probe so auth-wall / dead-URL
   // observations are recorded.
+  let subpagesDropped = 0;
   const buildProbe = (anchorCount: number): ResolveProbeData => ({
     finalUrl: landing.finalUrl,
     contentType: landing.contentType,
     headers: landing.headers,
     bodyLength: landing.text.length,
     anchorCount,
+    ...(subpagesDropped > 0 ? { subpagesDropped } : {}),
   });
 
   if (!landing.ok) {
@@ -1646,9 +1664,18 @@ export async function resolveCdsForSchool(
 
   // Case D: two-hop fallback. Landing has subpage anchors; follow one
   // hop each and collect document candidates from the child pages.
-  const subpages = anchors
-    .filter((a) => a.kind === "subpage")
-    .slice(0, MAX_SUBPAGES_PER_SCHOOL);
+  const capped = capSubpages(anchors.filter((a) => a.kind === "subpage"));
+  const subpages = capped.kept;
+  subpagesDropped = capped.dropped;
+  if (subpagesDropped > 0) {
+    console.warn(JSON.stringify({
+      event: "subpages_capped",
+      school_id: schoolId ?? null,
+      url: landing.finalUrl,
+      followed: subpages.length,
+      dropped: subpagesDropped,
+    }));
+  }
 
   if (subpages.length === 0) {
     return await resolvedOrNoCds(

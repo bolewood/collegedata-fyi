@@ -88,3 +88,16 @@ export function normalizeYear(raw: string | null | undefined): string | null {
   }
   return null;
 }
+
+// Start year of a well-formed CDS year string, else null. Requires the form
+// `YYYY-YY` with the suffix equal to (start + 1) % 100, so `unknown`,
+// `5024-25` style typos and `2025-27` are all rejected. Use this instead of
+// sorting year strings as text, where `unknown` sorts above every real year.
+export function parseCdsStartYear(raw: string | null | undefined): number | null {
+  const m = /^(\d{4})-(\d{2})$/.exec(raw ?? "");
+  if (!m) return null;
+  const start = Number(m[1]);
+  if (Number(m[2]) !== (start + 1) % 100) return null;
+  if (start < 1990 || start > 2100) return null;
+  return start;
+}
