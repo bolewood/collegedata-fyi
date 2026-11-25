@@ -4,7 +4,6 @@
 // the CSVs without a browser.
 
 import { isCanonicalCdsYear } from "./format";
-import { DATA_LICENSE_NAME } from "./data-license";
 import { compareYearsDesc, csvLine } from "./data-quality";
 import { cdsFreshnessFloor } from "./freshness";
 import type { CoverageStatus, InstitutionCoverage } from "./types";
@@ -223,7 +222,7 @@ export function latestYearBuckets(rows: InstitutionCoverage[], currentYear: stri
   ];
 }
 
-// ── Sorting (the table on screen and the CSV route share it) ───────
+// ── Sorting (the table on screen and the CSV download share it) ───────
 
 export type SortKey = "name" | "state" | "enrollment" | "status" | "numbers" | "found" | "checked";
 export type SortDir = "asc" | "desc";
@@ -269,7 +268,7 @@ export function sortCoverageRows(rows: InstitutionCoverage[], key: SortKey, dir:
   });
 }
 
-/** The rows the table shows: filtered by the page's query string, then sorted. The download uses the same call. */
+/** The rows the table shows: filtered by the page's query string, then sorted. The browser download is built from the same rows. */
 export function coverageViewRows(rows: InstitutionCoverage[], query: string, key: SortKey, dir: SortDir): InstitutionCoverage[] {
   return sortCoverageRows(filterCoverageRows(rows, parseCoverageView(new URLSearchParams(query))), key, dir);
 }
@@ -299,6 +298,8 @@ export const COVERAGE_CSV_FEDERAL_COLUMNS = ["ipeds_id", "school_name", "state",
 export const COVERAGE_CSV_LICENSED_COLUMNS = ["school_id", "status", "latest_year_with_numbers", "latest_year_found", "last_checked"] as const;
 export const COVERAGE_CSV_FEDERAL_NOTE =
   "IPEDS ID, school name, state and undergraduate enrollment come from the federal College Scorecard and IPEDS, which our license doesn\u2019t cover.";
+/** The sentence that follows is completed by a link to the license, so only the lead is a constant. */
+export const COVERAGE_CSV_LICENSED_LEAD = "The school ID, status, year and last-checked columns are licensed";
 export const COVERAGE_CSV_DEFINITION_NOTE =
   "latest_year_with_numbers is the latest year whose numbers we read; latest_year_found is the latest year of any file we hold.";
 

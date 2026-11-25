@@ -3,6 +3,7 @@ import { DATA_LICENSE_NAME, DATA_LICENSE_URL } from "@/lib/data-license";
 import {
   COVERAGE_CSV_DEFINITION_NOTE,
   COVERAGE_CSV_FEDERAL_NOTE,
+  COVERAGE_CSV_LICENSED_LEAD,
   buildCoverageCsv,
   coverageCsvFilename,
 } from "@/lib/coverage-model";
@@ -48,7 +49,7 @@ export function CoverageDownloads({ viewRows, allRows }: { viewRows: Institution
         </button>
       </div>
       <p className="meta" style={{ marginTop: 8, marginBottom: 0, maxWidth: 720 }}>
-        {COVERAGE_CSV_FEDERAL_NOTE} The school ID, status, year and last-checked columns are licensed{" "}
+        {COVERAGE_CSV_FEDERAL_NOTE} {COVERAGE_CSV_LICENSED_LEAD}{" "}
         <a href={DATA_LICENSE_URL} style={{ textDecoration: "underline" }}>
           {DATA_LICENSE_NAME}
         </a>

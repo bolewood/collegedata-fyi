@@ -1,7 +1,7 @@
 import type { ReactElement, ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { buildCoverageCsv, coverageViewRows } from "@/lib/coverage-model";
+import { COVERAGE_CSV_LICENSED_LEAD, buildCoverageCsv, coverageViewRows } from "@/lib/coverage-model";
 import { DATA_LICENSE_URL } from "@/lib/data-license";
 import { CSV_BOM, DATA_QUALITY_LAUNCH_DATE } from "@/lib/data-quality";
 import type { InstitutionCoverage } from "@/lib/types";
@@ -15,6 +15,31 @@ vi.mock("next/navigation", () => ({
 
 import { CoverageDashboard } from "./CoverageDashboard";
 import { CoverageDownloads } from "./CoverageDownloads";
+
+// Records the props the dashboard hands to the buttons, then renders the real thing.
+const seen = vi.hoisted(() => ({ props: null as null | { viewRows: unknown[]; allRows: unknown[] } }));
+vi.mock("./CoverageDownloads", async (importOriginal) => {
+  const real = await importOriginal<typeof import("./CoverageDownloads")>();
+  return {
+    ...real,
+    CoverageDownloads: (props: { viewRows: unknown[]; allRows: unknown[] }) => {
+      seen.props = props;
+      return real.CoverageDownloads(props as never);
+    },
+  };
+});
+
+// The sort lives in dashboard state and can't be clicked in a static render, so start it on a
+// non-default sort: the dashboard's two sort useState calls start at "name" and "asc".
+const sortStart = vi.hoisted(() => ({ on: false }));
+vi.mock("react", async (importOriginal) => {
+  const real = await importOriginal<typeof import("react")>();
+  return {
+    ...real,
+    useState: ((init: unknown) =>
+      real.useState(sortStart.on && init === "name" ? "enrollment" : sortStart.on && init === "asc" ? "desc" : init)) as typeof real.useState,
+  };
+});
 
 function row(over: Partial<InstitutionCoverage> & { school_id: string; school_name: string }): InstitutionCoverage {
   return {
@@ -43,7 +68,10 @@ const ROWS = [
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  sortStart.on = false;
+  seen.props = null;
   currentParams = new URLSearchParams();
 });
 
@@ -69,7 +97,8 @@ function clickHandler(node: ReactNode, label: string): (() => void) | null {
 async function download(el: ReactElement, label: string) {
   let blob: Blob | null = null;
   const link = { href: "", download: "", click: vi.fn() };
-  vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: (b: Blob) => ((blob = b), "blob:x"), revokeObjectURL: vi.fn() }));
+  vi.spyOn(URL, "createObjectURL").mockImplementation((b) => ((blob = b as Blob), "blob:x"));
+  vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
   vi.stubGlobal("document", { createElement: () => link, body: { appendChild: vi.fn() } });
   (link as unknown as { remove: () => void }).remove = vi.fn();
   const handler = clickHandler(el, label);
@@ -81,7 +110,8 @@ async function download(el: ReactElement, label: string) {
 
 describe("coverage CSV buttons", () => {
   it("'this view' saves exactly the table's rows, in the table's order, with a BOM and the header on row 1", async () => {
-    const view = coverageViewRows(ROWS, "all=1&state=NM", "name", "asc");
+    const view = coverageViewRows(ROWS, "all=1&state=NY", "enrollment", "desc");
+    expect(view.map((r) => r.school_id)).toEqual(["d", "a"]);
     const { text, filename } = await download(CoverageDownloads({ viewRows: view, allRows: ROWS }) as ReactElement, "Download this view");
     expect(text).toBe(CSV_BOM + buildCoverageCsv(view));
     expect(text.slice(1).startsWith("ipeds_id,school_id,school_name,")).toBe(true);
@@ -107,16 +137,35 @@ describe("coverage CSV buttons", () => {
     expect(html).toContain("College Scorecard and IPEDS, which our license doesn");
     expect(html).toContain(`href="${DATA_LICENSE_URL}"`);
     expect(html).toContain("latest_year_found is the latest year of any file we hold");
+    // The licensed sentence names only our columns, and links the license.
+    const licensed = html.match(/The school ID[^<]*<a [^>]*>[^<]*<\/a>/)?.[0] ?? "";
+    expect(licensed).toContain(`${COVERAGE_CSV_LICENSED_LEAD} <a href="${DATA_LICENSE_URL}"`);
+    expect(licensed).toContain(">CC BY 4.0</a>");
+    expect(licensed).not.toMatch(/IPEDS|name|state|enrollment/i);
   });
 
-  it("is on the page only after launch, and takes the dashboard's own filtered, sorted rows", () => {
+  it("is on the page only after launch", () => {
     vi.useFakeTimers();
     vi.setSystemTime(Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`) - 1000);
     expect(renderToStaticMarkup(<CoverageDashboard rows={ROWS} />)).not.toContain("(CSV)");
     vi.setSystemTime(Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`));
-    currentParams = new URLSearchParams("all=1&state=NM");
-    const html = renderToStaticMarkup(<CoverageDashboard rows={ROWS} />);
-    expect(html).toContain("Download this view (CSV)");
-    expect(html).toContain("SHOWING 1 OF 4 INSTITUTIONS");
+    expect(renderToStaticMarkup(<CoverageDashboard rows={ROWS} />)).toContain("Download this view (CSV)");
   });
+
+  it("the dashboard hands its own filtered, sorted rows to 'this view' and every row to 'all colleges'", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`));
+    sortStart.on = true; // sorted by undergraduates, largest first
+    currentParams = new URLSearchParams("all=1&state=NY");
+    const html = renderToStaticMarkup(<CoverageDashboard rows={ROWS} />);
+    expect(html).toContain("SHOWING 2 OF 4 INSTITUTIONS");
+    const props = seen.props!;
+    const ids = (text: string) => text.slice(1).split("\r\n").filter(Boolean).slice(1).map((l) => l.split(",")[1]);
+
+    const view = await download(CoverageDownloads(props as never) as ReactElement, "Download this view");
+    expect(ids(view.text)).toEqual(["d", "a"]); // NY only, 2,000 before 500: not the row order, not name order
+    const all = await download(CoverageDownloads(props as never) as ReactElement, "Download all colleges");
+    expect(ids(all.text)).toEqual(["a", "b", "c", "d"]);
+  });
+
 });
