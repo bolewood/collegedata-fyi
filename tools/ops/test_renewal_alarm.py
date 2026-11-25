@@ -63,6 +63,23 @@ def issue(number: int, year: str = "2025-26", *, posted: bool = True, title: str
     }
 
 
+_SAVED_FALLBACK = None
+
+
+def setUpModule() -> None:
+    """Fixtures built from synthetic archives have no mature history: use the plain curve."""
+    global _SAVED_FALLBACK
+    from tools.ops import discovery_renewal as dr
+    _SAVED_FALLBACK = (dr.MATURE_ONE_FALLBACK, dr.MATURE_TWO_FALLBACK)
+    dr.MATURE_ONE_FALLBACK = dr.MATURE_TWO_FALLBACK = 1.0
+
+
+def tearDownModule() -> None:
+    from tools.ops import discovery_renewal as dr
+    if _SAVED_FALLBACK is not None:
+        dr.MATURE_ONE_FALLBACK, dr.MATURE_TWO_FALLBACK = _SAVED_FALLBACK
+
+
 class FakeGh:
     """Records gh calls; `open_issues` is what the REST issues list returns."""
 

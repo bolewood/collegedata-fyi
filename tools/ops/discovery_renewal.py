@@ -91,7 +91,30 @@ NEXT_YEAR_FLOOR_FACTOR = 0.75
 # as held today: 2021 84%, 2022 85%, 2023 82%, 2024 80%; 2025 now 70% (377 of
 # 536). The one-year number alone cannot see a permanent loss: a school that
 # misses a year leaves its denominator.
-TWO_YEAR_MARGIN_PTS = 8.0
+TWO_YEAR_MARGIN_PTS = 0.0  # since the scaled floor (D1) the two-year ratio is measured, not "one-year less 8"
+# Used only by the test floor override: the two-year floor is this many points
+# under the overridden one-year floor.
+OVERRIDE_TWO_YEAR_DELTA_PTS = 8.0
+
+# D1: the posting curve counts only schools that DID post a new year's file.
+# Renewal also counts the schools that never post again, so a fully caught-up
+# year tops out near mature renewal x the curve, not at the curve itself (mature
+# one-year renewal has been 86 to 91%, two-year 80 to 85%). The floor is the
+# curve scaled by that mature ratio, less the margin. The ratio is the MEDIAN of
+# the last MATURE_PAIRS mature year-pairs of the same manifest (a year before the
+# current one, so at least 12 months past its fall), measured at run time so it
+# follows the archive; with fewer than MATURE_MIN_PAIRS usable pairs, or a
+# nonsense value, the bounded fallback constants apply. Run time, not a bare
+# constant: the ratio drifts as schools stop posting, and a constant would turn
+# that drift into a permanent alarm or a blind one (#136); the bounds and the
+# fallback keep a broken manifest from moving the floor far.
+MATURE_PAIRS = 5
+MATURE_MIN_PAIRS = 3
+MATURE_MIN_DENOMINATOR = 100  # a year-pair with fewer previous-year schools is not used
+MATURE_ONE_BOUNDS = (0.80, 0.95)
+MATURE_TWO_BOUNDS = (0.70, 0.95)
+MATURE_ONE_FALLBACK = 0.88
+MATURE_TWO_FALLBACK = 0.82
 
 # Arrivals check: a total stop (no new documents at all) barely moves the
 # renewal percentages for weeks, so count the schools that gained a document
@@ -196,16 +219,17 @@ def expected_pct(months: float) -> float:
     raise AssertionError("unreachable")
 
 
-def current_year_floor_pct(months: float) -> float:
-    return max(0.0, expected_pct(months) - CURRENT_YEAR_MARGIN_PTS)
+def current_year_floor_pct(months: float, scale: float = 1.0) -> float:
+    """The posting curve x `scale` (mature renewal), less the margin."""
+    return max(0.0, expected_pct(months) * scale - CURRENT_YEAR_MARGIN_PTS)
 
 
 def next_year_is_active(months_next: float) -> bool:
     return expected_pct(months_next) >= NEXT_YEAR_ACTIVE_FROM_PCT
 
 
-def next_year_floor_pct(months_next: float) -> float:
-    return expected_pct(months_next) * NEXT_YEAR_FLOOR_FACTOR
+def next_year_floor_pct(months_next: float, scale: float = 1.0) -> float:
+    return expected_pct(months_next) * scale * NEXT_YEAR_FLOOR_FACTOR
 
 
 # ---------------------------------------------------------------- computing
@@ -304,6 +328,7 @@ class Result:
     flagged_docs: list[dict[str, str]]
     sub_institutional_excluded: int = 0
     arrivals: Arrivals | None = None
+    maturity: Maturity | None = None
     unextracted_current_docs: int = 0
     unextracted_next_docs: int = 0
 
@@ -469,29 +494,76 @@ class YearCheck:
 YEARS_BACK = 3  # years before the current one that still get evaluated
 
 
+@dataclass
+class Maturity:
+    """Mature renewal: the share of a year's previous-year schools that have the
+    year once it is mature, one-year and two-year (fractions, 0 to 1)."""
+
+    one: float
+    two: float
+    source: str  # "measured over N year-pairs" or "fallback"
+    pairs: tuple[tuple[str, float, float], ...] = ()
+
+
+def fallback_maturity() -> Maturity:
+    return Maturity(MATURE_ONE_FALLBACK, MATURE_TWO_FALLBACK, "fallback")
+
+
+def _median(values: list[float]) -> float:
+    ordered = sorted(values)
+    mid = len(ordered) // 2
+    return ordered[mid] if len(ordered) % 2 else (ordered[mid - 1] + ordered[mid]) / 2
+
+
+def estimate_maturity(
+    by_school: dict[str, set[int]], good: dict[str, set[int]], current: int
+) -> Maturity:
+    """The median one-year and two-year renewal of the last MATURE_PAIRS mature
+    years before `current`, from the same manifest, each clamped to its bounds;
+    the fallback when fewer than MATURE_MIN_PAIRS years have enough schools."""
+    pairs = []
+    for y in range(current - MATURE_PAIRS, current):
+        one = renewal(by_school, y, good)
+        two = two_year_renewal(by_school, y, good)
+        if len(one.prev_schools) < MATURE_MIN_DENOMINATOR or len(two.prev_schools) < MATURE_MIN_DENOMINATOR:
+            continue
+        pairs.append((format_year(y), len(one.renewed) / len(one.prev_schools),
+                      len(two.renewed) / len(two.prev_schools)))
+    if len(pairs) < MATURE_MIN_PAIRS:
+        return fallback_maturity()
+    one = min(max(_median([p[1] for p in pairs]), MATURE_ONE_BOUNDS[0]), MATURE_ONE_BOUNDS[1])
+    two = min(max(_median([p[2] for p in pairs]), MATURE_TWO_BOUNDS[0]), MATURE_TWO_BOUNDS[1])
+    return Maturity(one, two, f"measured over {len(pairs)} year-pairs", tuple(pairs))
+
+
 def year_checks(
     by_school: dict[str, set[int]],
     good: dict[str, set[int]],
     current: int,
     as_of: date,
     floor_override_pct: float | None = None,
+    maturity: "Maturity | None" = None,
 ) -> dict[int, YearCheck]:
     """Checks for every year an alarm issue could be about: from `current - 3`
     to the next year. A year past the September switch is judged by its own
-    months since fall, which is the curve's flat end (88% less the margin)."""
+    months since fall, which is the curve's flat end (88%) scaled by mature
+    renewal, less the margin."""
+    maturity = maturity or fallback_maturity()
     out: dict[int, YearCheck] = {}
     for y in range(current - YEARS_BACK, current + 2):
         months = months_since_fall(y, as_of)
         one = renewal(by_school, y, good)
         two = two_year_renewal(by_school, y, good)
         if y == current + 1:
-            floor = next_year_floor_pct(months) if next_year_is_active(months) else None
+            floor = next_year_floor_pct(months, maturity.one) if next_year_is_active(months) else None
             out[y] = YearCheck(y, one, floor, two, None, True)
             continue
-        floor = current_year_floor_pct(months)
+        floor = current_year_floor_pct(months, maturity.one)
+        two_floor = max(0.0, expected_pct(months) * maturity.two - CURRENT_YEAR_MARGIN_PTS - TWO_YEAR_MARGIN_PTS)
         if y == current and floor_override_pct is not None:
             floor = float(floor_override_pct)
-        out[y] = YearCheck(y, one, floor, two, max(0.0, floor - TWO_YEAR_MARGIN_PTS), False)
+            two_floor = max(0.0, floor - OVERRIDE_TWO_YEAR_DELTA_PTS)
+        out[y] = YearCheck(y, one, floor, two, two_floor, False)
     return out
 
 
@@ -578,6 +650,7 @@ def compute_arrivals(
     checks: dict[int, "YearCheck"],
     current: int,
     as_of: date,
+    scale: float = 1.0,
 ) -> Arrivals:
     """Distinct schools that gained a live, unflagged, valid-year document
     filed under the current or next year with `discovered_at` in the last
@@ -629,7 +702,7 @@ def compute_arrivals(
             gain = expected_pct(months) - expected_pct(months - span)
             per_year[year] = (
                 len(gained_by_year[year]),
-                len(checks[year].one.prev_schools) * gain / 100.0,
+                len(checks[year].one.prev_schools) * gain / 100.0 * scale,
             )
         return set().union(*gained_by_year.values()), per_year
 
@@ -685,12 +758,14 @@ def compute(
     *,
     floor_override_pct: float | None = None,
     enforce_min_prev: bool = True,
+    maturity: Maturity | None = None,
 ) -> Result:
     by_school = school_years(rows)
     good = school_years(rows, exclude_flagged=True)
     year = parse_year(cds_freshness_floor(as_of))
     assert year is not None
-    checks = year_checks(by_school, good, year, as_of, floor_override_pct)
+    maturity = maturity or estimate_maturity(by_school, good, year)
+    checks = year_checks(by_school, good, year, as_of, floor_override_pct, maturity)
     cur = checks[year].one
     two = checks[year].two
     if enforce_min_prev:
@@ -701,7 +776,7 @@ def compute(
                     f"(minimum {MIN_PREV_SCHOOLS}); the data does not look complete"
                 )
     months = months_since_fall(year, as_of)
-    floor = current_year_floor_pct(months)
+    floor = current_year_floor_pct(months, maturity.one)
     overridden = floor_override_pct is not None
     if overridden:
         floor = float(floor_override_pct)  # type: ignore[arg-type]
@@ -722,15 +797,16 @@ def compute(
         floor_overridden=overridden,
         next=nxt,
         next_active=active,
-        next_floor_pct=next_year_floor_pct(months_next) if active else None,
+        next_floor_pct=next_year_floor_pct(months_next, maturity.one) if active else None,
         two_year=two,
-        two_year_floor_pct=max(0.0, floor - TWO_YEAR_MARGIN_PTS),
+        two_year_floor_pct=checks[year].two_floor if checks[year].two_floor is not None else 0.0,
         lapsed=lapsed_schools(by_school, year),
         years_by_school=by_school,
         year_checks=checks,
         flagged_docs=flagged_current_docs(rows, year),
         sub_institutional_excluded=count_sub_institutional(rows),
-        arrivals=compute_arrivals(rows, checks, year, as_of),
+        arrivals=compute_arrivals(rows, checks, year, as_of, maturity.one),
+        maturity=maturity,
         unextracted_current_docs=unextracted_current_docs(rows, year),
         unextracted_next_docs=unextracted_current_docs(rows, year + 1),
     )
@@ -1037,6 +1113,29 @@ def render_arrivals_report(
     return _cap("\n".join(lines), max_chars)
 
 
+def maturity_state(result: Result) -> dict[str, Any] | None:
+    """The ratios behind this run's floors, for the state file and artifact. They
+    are not heartbeat summary keys: the migration's key registry would drop them."""
+    m = result.maturity
+    if m is None:
+        return None
+    return {
+        "one_year_pct": round(100.0 * m.one, 1),
+        "two_year_pct": round(100.0 * m.two, 1),
+        "source": m.source,
+        "pairs": [{"year": y, "one_year_pct": round(100 * o, 1), "two_year_pct": round(100 * w, 1)}
+                  for y, o, w in m.pairs],
+    }
+
+
+def _mature_text(result: Result, which: str) -> str:
+    m = result.maturity
+    if m is None:
+        return "not computed"
+    ratio = m.one if which == "one" else m.two
+    return f"{100 * ratio:.1f}%, {m.source}"
+
+
 def _arrivals_lines(arrivals: "Arrivals", cur: str, nxt: str) -> list[str]:
     """One line per year; both windows are judged, each from its own expectation.
     The verdicts are the exact decisions of YearArrivals, not a recomputation from
@@ -1140,7 +1239,7 @@ def render_year_report(
         context = (
             f"{ystr} is an earlier CDS year. Its floor is the flat end of the posting curve "
             f"({expected_pct(99):.0f}%) less {CURRENT_YEAR_MARGIN_PTS:.0f} points "
-            f"(two-year: less {TWO_YEAR_MARGIN_PTS:.0f} more)."
+            "(two-year: the same, with its own mature ratio)."
         )
     lines = [
         f"# Discovery renewal for {ystr}, {result.as_of.isoformat()}",
@@ -1237,9 +1336,11 @@ def render_report(
         + (f" (floor overridden for a test)" if result.floor_overridden else "")
         + f". It is {result.months_since_fall:.1f} months after the fall of {result.current_year}; "
         f"the floor is the share of a year's files that exist by now (the 2024-25 posting "
-        f"curve), less {CURRENT_YEAR_MARGIN_PTS:.0f} points.",
+        f"curve) scaled by mature renewal ({_mature_text(result, 'one')}), less "
+        f"{CURRENT_YEAR_MARGIN_PTS:.0f} points.",
         f"- Two-year: {_check_line(check_descriptor(s, 'two_year'), below['two_year'])} "
-        f"(the one-year floor less {TWO_YEAR_MARGIN_PTS:.0f} points).",
+        f"(the posting curve scaled by the mature two-year renewal, "
+        f"{_mature_text(result, 'two')}, less {CURRENT_YEAR_MARGIN_PTS:.0f} points).",
         f"- Next year: {_check_line(check_descriptor(s, 'next'), below['next'])}"
         + ("" if result.next_active else
            f" (the curve says under {NEXT_YEAR_ACTIVE_FROM_PCT:.0f}% of files exist this early)")
@@ -1637,6 +1738,7 @@ def run(args: argparse.Namespace) -> int:
             "two_year_below_floor": summary["two_year_below_floor"],
             "years": years,
             "arrivals": arrivals_by_year,
+            "maturity": maturity_state(result),
             "current_year": cur_str,
             "summary": summary,
         },

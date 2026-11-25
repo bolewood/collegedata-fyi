@@ -8,6 +8,23 @@ from pathlib import Path
 from tools.finder.stuck_pdf_seeds import default_min_fresh_year
 from tools.ops import discovery_renewal as dr
 
+_SAVED_FALLBACK: tuple[float, float] | None = None
+
+
+def setUpModule() -> None:
+    """The synthetic fixtures here have no mature history, so the fallback applies.
+    It is set to 1.0 (no scaling) so their floors are the plain curve less the
+    margin; the scaling itself is tested in ScaledFloorTests with measured ratios."""
+    global _SAVED_FALLBACK
+    _SAVED_FALLBACK = (dr.MATURE_ONE_FALLBACK, dr.MATURE_TWO_FALLBACK)
+    dr.MATURE_ONE_FALLBACK = dr.MATURE_TWO_FALLBACK = 1.0
+
+
+def tearDownModule() -> None:
+    if _SAVED_FALLBACK is not None:
+        dr.MATURE_ONE_FALLBACK, dr.MATURE_TWO_FALLBACK = _SAVED_FALLBACK
+
+
 SNAPSHOT = Path(
     "/Users/santhonys/orca/workspaces/collegedata-fyi/basslet/scratch/overnight-run/data/manifest-20261124.json"
 )
@@ -222,10 +239,12 @@ class TwoYearTests(unittest.TestCase):
         self.assertTrue(summary["two_year_below_floor"])  # 66.4% against 74.5%
         self.assertEqual(dr.lead_check(summary), "two_year")
 
-    def test_two_year_floor_is_the_one_year_floor_less_eight_points(self) -> None:
+    def test_two_year_floor_is_its_own_scaled_curve(self) -> None:
         result = dr.compute(self.erosion_rows(), date(2026, 11, 24))
-        self.assertAlmostEqual(result.two_year_floor_pct, result.floor_pct - dr.TWO_YEAR_MARGIN_PTS)
-        self.assertEqual(dr.TWO_YEAR_MARGIN_PTS, 8.0)
+        # No mature history in the fixture: the fallback (set to 1.0 here), so the
+        # two-year floor is the curve less the same margin as the one-year floor.
+        self.assertAlmostEqual(result.two_year_floor_pct, result.floor_pct)
+        self.assertEqual(dr.TWO_YEAR_MARGIN_PTS, 0.0)
 
     def test_two_year_denominator_keeps_schools_with_only_the_older_year(self) -> None:
         by_school = dr.school_years([row("a", "2023-24"), row("b", "2024-25"), row("c", "2025-26"),
@@ -456,12 +475,12 @@ class SnapshotTests(unittest.TestCase):
             (len(result.current.renewed), len(result.current.prev_schools)), (364, 479)
         )
         self.assertEqual(result.current.pct, 76.0)
-        self.assertTrue(result.below_floor)
+        self.assertFalse(result.below_floor)  # 76.0% against the scaled floor of about 73.1%
         self.assertEqual(
             (len(result.two_year.renewed), len(result.two_year.prev_schools)), (377, 536)
         )
         self.assertEqual(result.two_year.pct, 70.3)
-        self.assertTrue(result.two_year_below_floor)
+        self.assertFalse(result.two_year_below_floor)  # 70.3% against the scaled 68.8%
 
 
 ARCHIVE_YEARS = Path(__file__).resolve().parents[1] / "finder" / "testdata" / "archive_years_snapshot.json"
@@ -481,23 +500,32 @@ class CommittedSnapshotTests(unittest.TestCase):
         self.assertEqual(result.current.pct, 76.0)
         self.assertEqual((len(result.two_year.renewed), len(result.two_year.prev_schools)), (377, 536))
         self.assertEqual(result.two_year.pct, 70.3)
-        self.assertTrue(result.below_floor)
-        self.assertTrue(result.two_year_below_floor)
+        # D1: the floor is the posting curve scaled by MEASURED mature renewal. The
+        # history in the snapshot gives 89.4% one-year and 84.4% two-year, so the
+        # floors are 73.2% and 68.8%, and 76.0% and 70.3% are above them.
+        self.assertEqual(result.maturity.source, "measured over 5 year-pairs")
+        self.assertAlmostEqual(result.maturity.one, 0.894, places=3)
+        self.assertAlmostEqual(result.maturity.two, 0.8438, places=3)
+        self.assertAlmostEqual(result.floor_pct, 73.19, places=1)
+        self.assertAlmostEqual(result.two_year_floor_pct, 68.80, places=1)
+        self.assertFalse(result.below_floor)
+        self.assertFalse(result.two_year_below_floor)
 
     def test_the_same_snapshot_a_year_on_is_judged_by_the_flat_floor(self) -> None:
-        # 2027-06-30: 2025-26 is still the current year, 2026-27 is next, at
-        # 50.7% of the curve's 67.6 x 0.75.
+        # 2027-06-30: 2025-26 is still the current year, 2026-27 is next. The flat floor
+        # is 88% x mature renewal less 5; the next year's is the scaled curve x 0.75.
         result = dr.compute(self.rows(), date(2027, 6, 30))
         self.assertEqual(format_ys(result.current_year), "2025-26")
-        self.assertAlmostEqual(result.floor_pct, 83.0)
+        self.assertAlmostEqual(result.floor_pct, 0.894 * 88.0 - 5.0, places=1)
         nxt = result.year_checks[result.current_year + 1]
         self.assertTrue(nxt.is_next)
-        self.assertAlmostEqual(nxt.one_floor, 50.7, places=1)
+        self.assertAlmostEqual(nxt.one_floor, 0.894 * dr.expected_pct(
+            dr.months_since_fall(2026, date(2027, 6, 30))) * 0.75, places=1)
         self.assertTrue(nxt.one_below)  # 4 of 417
 
     def test_summary_carries_two_year_below_floor_and_the_web_reads_it(self) -> None:
         summary = dr.summary_dict(dr.compute(self.rows(), date(2026, 11, 24)))
-        self.assertIs(summary["two_year_below_floor"], True)
+        self.assertIs(type(summary["two_year_below_floor"]), bool)
         lamps = (ROOT / "web" / "src" / "lib" / "pipeline-lamps.ts").read_text(encoding="utf-8")
         self.assertIn("two_year_below_floor", lamps)
 
@@ -944,6 +972,130 @@ class ArrivalsTests(unittest.TestCase):
     def test_rows_without_an_extraction_status_column_count_as_zero(self) -> None:
         result = dr.compute(many_schools(400, with_current=400), date(2026, 11, 24))
         self.assertEqual(result.unextracted_current_docs, 0)
+
+
+class ScaledFloorTests(unittest.TestCase):
+    """D1: the floor is the posting curve scaled by MEASURED mature renewal."""
+
+    def history(self, ratios: dict[int, tuple[float, float]], schools: int = 400) -> list[dict]:
+        """`schools` schools with 2018-19; for each year y in `ratios` the fraction
+        (one-year, two-year-extra) of them that file y. Deterministic."""
+        rows = [row(f"s{i}", "2018-19") for i in range(schools)]
+        for y, (one, _) in ratios.items():
+            for i in range(schools):
+                if i < int(schools * one):
+                    rows.append(row(f"s{i}", dr.format_year(y)))
+        return rows
+
+    def test_maturity_is_the_median_of_the_last_five_mature_year_pairs(self) -> None:
+        # Each mature year is filed by the same prefix of schools, so the one-year
+        # ratio of year y over y-1 is (share_y / share_{y-1}).
+        shares = {2019: 1.0, 2020: 0.95, 2021: 0.9, 2022: 0.85, 2023: 0.8, 2024: 0.76}
+        rows = [row(f"s{i}", "2018-19") for i in range(400)]
+        for y, share in shares.items():
+            rows += [row(f"s{i}", dr.format_year(y)) for i in range(int(400 * share))]
+        by = dr.school_years(rows)
+        m = dr.estimate_maturity(by, by, 2025)
+        ratios = sorted(p[1] for p in m.pairs)
+        self.assertEqual(len(m.pairs), 5)  # 2020-21 to 2024-25 against their previous years
+        self.assertAlmostEqual(m.one, dr._median(ratios), places=6)
+        self.assertTrue(m.source.startswith("measured"))
+
+    def test_fewer_than_three_usable_pairs_fall_back(self) -> None:
+        rows = self.history({2024: (0.9, 0.9)})
+        by = dr.school_years(rows)
+        m = dr.estimate_maturity(by, by, 2025)
+        self.assertEqual(m.source, "fallback")
+        self.assertEqual((m.one, m.two), (dr.MATURE_ONE_FALLBACK, dr.MATURE_TWO_FALLBACK))
+        # Years with too few previous-year schools are not used either.
+        small = dr.school_years(self.history({2021: (0.9, 0.9), 2022: (0.9, 0.9), 2023: (0.9, 0.9),
+                                              2024: (0.9, 0.9)}, schools=dr.MATURE_MIN_DENOMINATOR - 1))
+        self.assertEqual(dr.estimate_maturity(small, small, 2025).source, "fallback")
+
+    def chain(self, ratio: float, years: range, size: int = 400) -> list[dict]:
+        """Each year `ratio` of the previous year's schools renew and brand-new
+        schools fill the rest, so every pair has `size` schools in its denominator."""
+        rows, prev, next_id = [], [f"a{i}" for i in range(size)], size
+        for sid in prev:
+            rows.append(row(sid, dr.format_year(years.start - 1)))
+        for y in years:
+            keep = prev[: int(size * ratio)]
+            fresh = [f"a{next_id + k}" for k in range(size - len(keep))]
+            next_id += len(fresh)
+            prev = keep + fresh
+            rows += [row(sid, dr.format_year(y)) for sid in prev]
+        return rows
+
+    def test_the_measured_ratio_is_clamped_to_its_bounds(self) -> None:
+        for ratio, bound in ((0.60, dr.MATURE_ONE_BOUNDS[0]), (0.99, dr.MATURE_ONE_BOUNDS[1])):
+            by = dr.school_years(self.chain(ratio, range(2019, 2025)))
+            m = dr.estimate_maturity(by, by, 2025)
+            self.assertTrue(m.source.startswith("measured"), m.source)
+            self.assertAlmostEqual(m.one, bound, msg=f"ratio {ratio}")
+        by = dr.school_years(self.chain(0.89, range(2019, 2025)))
+        self.assertAlmostEqual(dr.estimate_maturity(by, by, 2025).one, 0.89, places=2)  # inside: untouched
+
+    def test_floors_are_the_curve_times_the_ratio_less_the_margin(self) -> None:
+        m = dr.Maturity(0.89, 0.84, "test")
+        rows = many_schools(400, with_current=300)
+        res = dr.compute(rows, date(2026, 9, 1), maturity=m)  # month 12: curve 81
+        self.assertAlmostEqual(res.floor_pct, 0.89 * 81.0 - dr.CURRENT_YEAR_MARGIN_PTS)
+        self.assertAlmostEqual(res.two_year_floor_pct, 0.84 * 81.0 - dr.CURRENT_YEAR_MARGIN_PTS)
+        res = dr.compute(rows, date(2026, 11, 24), maturity=m)
+        curve = dr.expected_pct(dr.months_since_fall(2025, date(2026, 11, 24)))
+        self.assertAlmostEqual(res.floor_pct, 0.89 * curve - 5.0)
+        # Earlier years: the flat end, 88% scaled.
+        self.assertAlmostEqual(res.year_checks[2024].one_floor, 0.89 * 88.0 - 5.0)
+        self.assertAlmostEqual(res.year_checks[2024].two_floor, 0.84 * 88.0 - 5.0)
+
+    def test_the_next_year_floor_is_the_scaled_curve_times_three_quarters(self) -> None:
+        m = dr.Maturity(0.89, 0.84, "test")
+        rows = many_schools(400, with_current=400)
+        res = dr.compute(rows, date(2027, 6, 30), maturity=m)
+        curve = dr.expected_pct(dr.months_since_fall(2026, date(2027, 6, 30)))
+        nxt = res.year_checks[res.current_year + 1]
+        self.assertAlmostEqual(nxt.one_floor, 0.89 * curve * dr.NEXT_YEAR_FLOOR_FACTOR)
+        self.assertIsNone(nxt.two_floor)  # still untracked
+
+    def test_expected_arrivals_are_scaled_by_the_ratio_too(self) -> None:
+        rows = many_schools(400, with_current=400)
+        plain = dr.compute(rows, date(2026, 11, 24), maturity=dr.Maturity(1.0, 1.0, "t"))
+        scaled = dr.compute(rows, date(2026, 11, 24), maturity=dr.Maturity(0.8, 0.8, "t"))
+        self.assertAlmostEqual(scaled.arrivals.current.expected_60, 0.8 * plain.arrivals.current.expected_60)
+        self.assertAlmostEqual(scaled.arrivals.current.expected_30, 0.8 * plain.arrivals.current.expected_30)
+
+    def test_a_year_that_is_fully_caught_up_is_above_the_floor(self) -> None:
+        """The reason for D1: renewal tops out near mature x curve, which the raw
+        curve less 5 points would have called short."""
+        m = dr.Maturity(0.89, 0.84, "test")
+        rows = many_schools(500, with_current=int(500 * 0.80))  # 80% at month 14.8
+        res = dr.compute(rows, date(2026, 11, 24), maturity=m)
+        self.assertEqual(res.current.pct, 80.0)
+        self.assertFalse(res.below_floor)  # floor 72.9
+        raw = dr.compute(rows, date(2026, 11, 24), maturity=dr.Maturity(1.0, 1.0, "t"))
+        self.assertTrue(raw.below_floor)  # the unscaled floor was 82.5
+
+    def test_a_real_shortfall_still_fires_under_the_scaled_floor(self) -> None:
+        m = dr.Maturity(0.89, 0.84, "test")
+        rows = many_schools(500, with_current=int(500 * 0.65))
+        self.assertTrue(dr.compute(rows, date(2026, 11, 24), maturity=m).below_floor)
+
+    def test_the_override_still_replaces_the_floor(self) -> None:
+        rows = many_schools(400, with_current=300)
+        res = dr.compute(rows, date(2026, 11, 24), floor_override_pct=99.0, maturity=dr.Maturity(0.89, 0.84, "t"))
+        self.assertEqual(res.floor_pct, 99.0)
+        self.assertEqual(res.two_year_floor_pct, 99.0 - dr.OVERRIDE_TWO_YEAR_DELTA_PTS)
+
+    def test_the_summary_and_report_name_the_ratio_and_where_it_came_from(self) -> None:
+        res = dr.compute(many_schools(400, with_current=300), date(2026, 11, 24),
+                         maturity=dr.Maturity(0.8925, 0.8438, "measured over 5 year-pairs"))
+        state = dr.maturity_state(res)
+        self.assertEqual((state["one_year_pct"], state["two_year_pct"]), (89.2, 84.4))
+        self.assertEqual(state["source"], "measured over 5 year-pairs")
+        # Not heartbeat keys: the migration's key registry would drop them.
+        self.assertNotIn("mature_renewal_pct", dr.summary_dict(res))
+        text = dr.render_report(res, [])
+        self.assertIn("scaled by mature renewal (89.2%, measured over 5 year-pairs)", text)
 
 
 class YearReportTests(unittest.TestCase):
