@@ -31,6 +31,8 @@ insert into public.pipeline_stations (
     'floor_overridden', 'alarm_issue', 'same_year_duplicates', 'seeds_without_new_year',
     'seeds_with_seed', 'seeds_without_new_year_one_file',
     'seeds_without_new_year_listing_page',
+    'flagged_current_docs', 'sub_institutional_excluded',
+    'outstanding_below_floor', 'outstanding_years',
     'fetch_failures', 'fetch_failures_blocked', 'fetch_failures_viewer',
     'fetch_failures_section_files', 'fetch_failures_dead_link', 'fetch_failures_other',
     'run_url'
@@ -236,7 +238,8 @@ begin
   if not (keys @> array[
     'current_year', 'below_floor', 'run_url', 'seeds_without_new_year',
     'seeds_with_seed', 'seeds_without_new_year_one_file',
-    'seeds_without_new_year_listing_page'
+    'seeds_without_new_year_listing_page', 'flagged_current_docs',
+    'sub_institutional_excluded', 'outstanding_below_floor', 'outstanding_years'
   ]) then
     raise exception 'discovery_renewal allowed_keys missing seed keys: %', keys;
   end if;
