@@ -3,6 +3,10 @@
 // scoreboard run. These numbers are invented for tests.
 
 import type {
+  CheckCounts,
+  CheckInfo,
+  CheckName,
+  ChecksBlock,
   QualityFormatRow,
   QualityRow,
   QualitySections,
@@ -25,6 +29,21 @@ type RowSpec = {
   h1: [number, number, number];
 };
 
+const ZERO_CHECK: CheckCounts = { reports: 0, matches: 0, no_value: 0, differs: 0, differs_2_to_10pct: 0, differs_over_10pct: 0 };
+
+/**
+ * Invented counts for one extra check, one value per report, over the reports Table B checked (`compared`): of `reports` checked, a fifth (rounded down) have no
+ * value and a tenth differ (rounded down), 60% of those differing 2% to 10% off (rounded down), the rest over 10%.
+ * Tuition is checked on 9 of 10 reports (rounded down), with 30% no value and 20% differing.
+ */
+function checkCounts(check: CheckName, compared: number): CheckCounts {
+  const reports = check === "enrollment" ? compared : Math.floor(compared * 0.9);
+  const noValue = Math.floor(reports * (check === "enrollment" ? 0.2 : 0.3));
+  const differs = Math.floor(reports * (check === "enrollment" ? 0.1 : 0.2));
+  const small = Math.floor(differs * 0.6);
+  return { reports, matches: reports - noValue - differs, no_value: noValue, differs, differs_2_to_10pct: small, differs_over_10pct: differs - small };
+}
+
 function row(s: RowSpec): QualityFormatRow {
   return {
     format: s.format,
@@ -46,6 +65,7 @@ function row(s: RowSpec): QualityFormatRow {
       differs_2_to_10pct: Math.floor(s.federal[3] * 0.6),
       differs_over_10pct: s.federal[3] - Math.floor(s.federal[3] * 0.6),
     },
+    checks: { enrollment: checkCounts("enrollment", s.federal[0]), tuition: checkCounts("tuition", s.federal[0]) },
     totals: {
       reports: s.published,
       B1: { adds_up: s.b1[0], under_2pct: s.b1[1], off_more: s.b1[2], cant_check: s.b1[3] },
@@ -60,6 +80,7 @@ function sumRows(rows: QualityFormatRow[]): QualityRow {
     status: { published: 0, set_aside: 0, couldnt_read: 0, not_read_yet: 0 },
     fields_stored: { median: 0, p10: 0 },
     federal: { reports: 0, values: 0, matches: 0, no_value: 0, differs: 0, differs_2_to_10pct: 0, differs_over_10pct: 0 },
+    checks: { enrollment: { ...ZERO_CHECK }, tuition: { ...ZERO_CHECK } },
     totals: {
       reports: 0,
       B1: { adds_up: 0, under_2pct: 0, off_more: 0, cant_check: 0 },
@@ -68,6 +89,9 @@ function sumRows(rows: QualityFormatRow[]): QualityRow {
     },
   };
   for (const r of rows) {
+    for (const name of ["enrollment", "tuition"] as const) {
+      for (const k of Object.keys(ZERO_CHECK) as (keyof CheckCounts)[]) total.checks![name][k] += r.checks![name][k];
+    }
     for (const k of Object.keys(total.status) as (keyof typeof total.status)[]) total.status[k] += r.status[k];
     for (const k of Object.keys(total.federal) as (keyof typeof total.federal)[]) total.federal[k] = (total.federal[k] ?? 0) + (r.federal[k] ?? 0);
     total.totals.reports += r.totals.reports;
@@ -104,11 +128,25 @@ function sections(cds_year: string, reports: number): QualitySections {
   };
 }
 
+/** Which extra checks have IPEDS figures loaded, by CDS year (as in the 2026-11-25 run): enrollment for the first two years, tuition for the first only. */
+const CHECKS_LOADED: Record<string, Record<CheckName, boolean>> = {
+  "2023-24": { enrollment: true, tuition: true },
+  "2024-25": { enrollment: true, tuition: false },
+  "2025-26": { enrollment: false, tuition: false },
+};
+
 function year(
   cds_year: string,
   rows: QualityFormatRow[],
   extra: Partial<QualityYear> & { form: QualityYear["form"] },
 ): QualityYear {
+  const loadedChecks = CHECKS_LOADED[cds_year];
+  // A check with no IPEDS figures has zero counts everywhere.
+  const zeroed = (c: ChecksBlock): ChecksBlock => ({
+    enrollment: loadedChecks.enrollment ? c.enrollment : { ...ZERO_CHECK },
+    tuition: loadedChecks.tuition ? c.tuition : { ...ZERO_CHECK },
+  });
+  rows = rows.map((r) => ({ ...r, checks: zeroed(r.checks!) }));
   const total = sumRows(rows);
   const federal = extra.federal_fall_loaded ?? true;
   return {
@@ -128,6 +166,15 @@ function year(
     },
     federal_left_out: { single_campus: federal ? total.status.published - total.federal.reports : 0, no_federal_figures: 0 },
     ...extra,
+    // One campus or unit is left out of both checks, as of Table B; the rest of the published reports are checked or have no figure.
+    federal_checks: Object.fromEntries(
+      (["enrollment", "tuition"] as const).map((name): [CheckName, CheckInfo] => {
+        // As Table B: one campus or unit is left out when IPEDS admissions figures are loaded, and nothing is when they are not.
+        const single = federal ? total.status.published - total.federal.reports : 0;
+        const loaded = loadedChecks[name];
+        return [name, { loaded, data_year: Number(cds_year.slice(0, 4)) + (name === "tuition" ? 1 : 0), single_campus: single, no_federal_figures: loaded ? total.status.published - total.checks![name].reports - single : 0 }];
+      }),
+    ) as Record<CheckName, CheckInfo>,
     // The reports numbered by the year's own form: published minus those numbered by another form.
     sections: sections(cds_year, total.status.published - (extra.other_form_numbering ?? 0)),
   };
@@ -157,7 +204,7 @@ const sheets = () =>
   });
 
 export const FIXTURE_SNAPSHOT: QualitySnapshot = {
-  public_format: 3,
+  public_format: 4,
   snapshot_of: "2026-11-24T12:25:03Z",
   scoreboard_run: "scoreboard-20261124T122503Z.json",
   renewal: {
@@ -199,19 +246,35 @@ export const emptyYear = (cds_year: string): QualityYear => {
     set_aside_reasons: { blank_form: 0, too_little_read: 0, wrong_file: 0 },
     federal_left_out: { single_campus: 0, no_federal_figures: 0 },
     rows: [],
+    federal_checks: {
+      enrollment: { loaded: false, data_year: Number(cds_year.slice(0, 4)), single_campus: 0, no_federal_figures: 0 },
+      tuition: { loaded: false, data_year: Number(cds_year.slice(0, 4)) + 1, single_campus: 0, no_federal_figures: 0 },
+    },
     sections: { reports: 0, rows: SECTION_QUESTIONS["2023-24"].map((questions, i) => ({ section: "ABCDEFGHIJ"[i], questions, stored_median: 0, usable_median: 0 })) },
     total: {
       status: { published: 0, set_aside: 0, couldnt_read: 0, not_read_yet: 0 },
       fields_stored: { median: 0, p10: 0 },
       federal: { reports: 0, values: 0, matches: 0, no_value: 0, differs: 0, differs_2_to_10pct: 0, differs_over_10pct: 0 },
+      checks: { enrollment: { ...ZERO_CHECK }, tuition: { ...ZERO_CHECK } },
       totals: { reports: 0, B1: { ...sums }, C1: { ...sums }, H1: { adds_up: 0, doesnt: 0, cant_check: 0 } },
     },
   };
 };
 
+/** The same snapshot as public_format 3 wrote it: sections, no enrollment and tuition checks. */
+export const FIXTURE_SNAPSHOT_V3: QualitySnapshot = (() => {
+  const v3: QualitySnapshot = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT));
+  v3.public_format = 3;
+  for (const y of v3.years) {
+    delete y.federal_checks;
+    for (const r of [...y.rows, y.total]) delete r.checks;
+  }
+  return v3;
+})();
+
 /** The same snapshot as public_format 2 wrote it: the size split, no sections. */
 export const FIXTURE_SNAPSHOT_V2: QualitySnapshot = (() => {
-  const v2: QualitySnapshot = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT));
+  const v2: QualitySnapshot = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT_V3));
   v2.public_format = 2;
   for (const y of v2.years) delete y.sections;
   return v2;

@@ -304,6 +304,27 @@ def values_for(outcomes: dict) -> dict:
     return {m: {"ours": cases[o][0], "federal": cases[o][1], "federal_data_year": 2023} for m, o in outcomes.items()}
 
 
+TUITION_NAMES = {"g1_private_undergraduates": ("G.102", "tuition_in_state"), "g1_in_state_undergraduates": ("G.108", "tuition_in_state"),
+                 "g1_out_of_state_undergraduates": ("G.109", "tuition_out_of_state"), "g1_private_first_year": ("G.101", "tuition_in_state"),
+                 "g1_in_state_first_year": ("G.104", "tuition_in_state"), "g1_out_of_state_first_year": ("G.105", "tuition_out_of_state")}
+
+
+def extra_for(year: str, enrollment: tuple = ("1000", "1000"), tuition: tuple = ("30000", "30000")) -> dict:
+    """`federal_extra` as the run writes it: B1 and the six G1 candidates, each with (ours, IPEDS) strings or None.
+    `tuition` is our G.102 figure and IPEDS' in-state tuition; the other candidates are empty. As in the 2026-11-25
+    run, fall 2025 enrollment and the tuition of academic years 2025-26 and later (CDS 2024-25 and 2025-26) have no
+    IPEDS figure loaded."""
+    start = int(year[:4])
+    loaded = start < 2025
+    extra = {"b1_undergraduates": {"cds_field": "B.176" if start >= 2025 else "B.193", "ours": enrollment[0], "federal_key": "undergraduate_enrollment",
+                                   "federal": enrollment[1] if loaded else None, "federal_data_year": start}}
+    for name, (field, key) in TUITION_NAMES.items():
+        mine = name == "g1_private_undergraduates"
+        extra[name] = {"cds_field": field, "ours": tuition[0] if mine else None, "federal_key": key,
+                       "federal": tuition[1] if (start < 2024 and key == "tuition_in_state") else None, "federal_data_year": start + 1}
+    return extra
+
+
 def doc(document_id: str, year: str, **overrides) -> dict:
     """A served document of a run, with the keys the public builder reads."""
     base = {
@@ -316,6 +337,7 @@ def doc(document_id: str, year: str, **overrides) -> dict:
     }
     base.update(overrides)
     base.setdefault("federal_values", values_for(base["federal"]))
+    base.setdefault("federal_extra", extra_for(year))
     base.setdefault("sections", {"A": {"reported": 10, "not_applicable": 2}, "C": {"reported": 100, "parse_error": 3}})
     return base
 
@@ -493,6 +515,7 @@ def synthetic_run() -> dict:
     documents[0]["hold"] = "tier4_field_regression"
     other_year = "2023-24" if documents[1]["year"] != "2023-24" else "2025-26"
     documents[1]["schema_version"] = other_year     # numbered by another year's form
+    documents[1]["federal_extra"]["b1_undergraduates"]["cds_field"] = "B.176" if other_year == "2025-26" else "B.193"
     return {
         "run_format": 3, "sum_check_version": 2, "limit": None, "generated_at": "2026-11-25T01:15:08Z",
         "years": YEARS, "current_tier4_version": "0.3.43", "projected_years": ["2024-25", "2025-26"],
@@ -526,7 +549,7 @@ class PublicSnapshot(unittest.TestCase):
         return next(y for y in self.public["years"] if y["cds_year"] == name)
 
     def test_top_level_and_renewal(self) -> None:
-        self.assertEqual(self.public["public_format"], 3)
+        self.assertEqual(self.public["public_format"], 4)
         self.assertEqual(self.public["snapshot_of"], "2026-11-25T01:15:08Z")
         self.assertEqual(self.public["scoreboard_run"], "scoreboard-20261125T011508Z.json")
         self.assertEqual(self.public["renewal"], self.run["renewal"])
@@ -946,6 +969,238 @@ class SectionsPublic(unittest.TestCase):
                        lambda y: y["sections"]["rows"][0].pop("usable_median"),
                        lambda y: y["sections"]["rows"][0].update(extra=1),
                        lambda y: y["sections"]["rows"][0].update(usable_median=-1)):
+            broken = json.loads(json.dumps(pub))
+            mutate(broken["years"][0])
+            with self.assertRaises(ValueError):
+                scoreboard.check_public_shape(broken)
+
+
+
+class FederalExtraChecks(unittest.TestCase):
+    """B1 enrollment and G1 tuition against IPEDS (public format 4)."""
+
+    def d(self, number: int, year: str = "2023-24", **kw) -> dict:
+        return doc(f"x{number}", year, **kw)
+
+    def counts(self, docs: list[dict], check: str, loaded: bool = True) -> dict:
+        return scoreboard.federal_check_counts(docs, check, loaded)
+
+    def test_the_pair_is_b1_total_and_the_one_all_undergraduates_tuition_figure(self) -> None:
+        pair = scoreboard.federal_check_pair
+        d = self.d(1)
+        self.assertEqual(pair(d, "enrollment"), (Decimal("1000"), Decimal("1000")))
+        self.assertEqual(pair(d, "tuition"), (Decimal("30000"), Decimal("30000")))
+        # G.108 (in-state) first; else G.102 (private); first-year and out-of-state rows are never used.
+        only108 = extra_for("2023-24")
+        only108["g1_private_undergraduates"]["ours"] = None
+        only108["g1_in_state_undergraduates"]["ours"] = "9500"
+        only108["g1_out_of_state_undergraduates"]["ours"] = "20000"
+        only108["g1_private_first_year"]["ours"] = "1"
+        self.assertEqual(pair(self.d(2, federal_extra=only108), "tuition")[0], Decimal("9500"))
+        # A public school that also fills G.102 (west-chester 2023-24: G.102 19,290 = IPEDS out-of-state, G.108 7,716 = in-state):
+        # the in-state figure is the one held against IPEDS in-state tuition.
+        both = extra_for("2023-24", tuition=("19290", "7716"))
+        both["g1_in_state_undergraduates"]["ours"] = "7716"
+        self.assertEqual(pair(self.d(3, federal_extra=both), "tuition"), (Decimal("7716"), Decimal("7716")))
+        only102 = extra_for("2023-24")
+        self.assertEqual(pair(self.d(5, federal_extra=only102), "tuition")[0], Decimal("30000"))
+        neither = extra_for("2023-24")
+        neither["g1_private_undergraduates"]["ours"] = None
+        self.assertIsNone(pair(self.d(4, federal_extra=neither), "tuition")[0])
+
+    def test_classes_and_the_two_percent_and_ten_percent_boundaries(self) -> None:
+        def row(i, ours, fed="1000"):
+            return self.d(i, federal_extra=extra_for("2023-24", enrollment=(ours, fed)))
+        docs = [row(1, "1020"), row(2, "1021"), row(3, "1100"), row(4, "1101"), row(5, None), row(6, "980"), row(7, "899")]
+        self.assertEqual(self.counts(docs, "enrollment"), {
+            "reports": 7, "matches": 2, "no_value": 1, "differs": 4, "differs_2_to_10pct": 2, "differs_over_10pct": 2})
+
+    def test_tuition_dollars_with_cents_are_compared_exactly(self) -> None:
+        def row(i, ours):
+            return self.d(i, federal_extra=extra_for("2023-24", tuition=(ours, "30000")))
+        got = self.counts([row(1, "30600.00"), row(2, "30600.01"), row(3, "33000.00"), row(4, "33000.01")], "tuition")
+        self.assertEqual((got["matches"], got["differs_2_to_10pct"], got["differs_over_10pct"]), (1, 2, 1))
+
+    def test_a_report_without_a_positive_federal_figure_is_not_counted(self) -> None:
+        docs = [self.d(1, federal_extra=extra_for("2023-24", enrollment=("1000", None))),
+                self.d(2, federal_extra=extra_for("2023-24", enrollment=("1000", "0"))), self.d(3)]
+        self.assertEqual(self.counts(docs, "enrollment")["reports"], 1)
+
+    def test_single_campus_reports_are_left_out_and_counted(self) -> None:
+        docs = [self.d(1), self.d(2, sub_institutional=True), self.d(3, federal_extra=extra_for("2023-24", enrollment=("1000", None)))]
+        year = scoreboard.federal_check_year("2023-24", docs, "enrollment", True)
+        self.assertEqual(year, {"loaded": True, "data_year": 2023, "single_campus": 1, "no_federal_figures": 1})
+        self.assertEqual(self.counts(docs, "enrollment")["reports"], 1)
+
+    def test_a_year_with_no_figures_or_no_schema_is_not_loaded_and_counts_zero(self) -> None:
+        docs = [self.d(1, "2024-25"), self.d(2, "2024-25")]
+        tuition = scoreboard.federal_check_year("2024-25", docs, "tuition", True)
+        self.assertEqual(tuition, {"loaded": False, "data_year": 2025, "single_campus": 0, "no_federal_figures": 0})
+        self.assertTrue(scoreboard.federal_check_year("2024-25", docs, "enrollment", True)["loaded"])
+        self.assertFalse(scoreboard.federal_check_year("2023-24", [self.d(3)], "enrollment", False)["loaded"])
+        self.assertEqual(self.counts(docs, "tuition", loaded=False)["reports"], 0)
+
+    def real_record(self, g102, g108, g109, federal: str, year: str = "2023-24") -> dict:
+        """The tuition fields of a real 2023-24 report as the run records them."""
+        extra = extra_for(year, tuition=(None, federal))
+        for name, ours in (("g1_private_undergraduates", g102), ("g1_in_state_undergraduates", g108), ("g1_out_of_state_undergraduates", g109)):
+            extra[name]["ours"] = ours
+        return self.d(9, federal_extra=extra)
+
+    def test_real_2023_24_records_where_the_private_row_is_not_the_in_state_price(self) -> None:
+        pair = scoreboard.federal_check_pair
+        cases = [
+            # Oregon Tech: G.102 34,899 is the out-of-state rate (= G.109); G.108 10,964 is IPEDS' in-state tuition.
+            ("oregon-institute-of-technology", ("34899", "10964", "34899", "10964"), (Decimal("10964"), Decimal("10964")), "m"),
+            # West Chester: G.102 19,290 = G.109; G.108 7,716 = IPEDS in-state.
+            ("west-chester-university-of-pennsylvania", ("19290", "7716", "19290", "7716"), (Decimal("7716"), Decimal("7716")), "m"),
+            # Mississippi and Chico leave G.102 at 0 beside the real in-state figure.
+            ("university-of-mississippi", ("0.00", "9612.00", "28440.00", "9612"), (Decimal("9612.00"), Decimal("9612")), "m"),
+            ("california-state-university-chico", ("0", "6084", "18552", "6084"), (Decimal("6084"), Decimal("6084")), "m"),
+            # Rollins: the reverse, G.108 at 0.00 beside the real private figure G.102 60,580 (= IPEDS): the private row is used.
+            ("rollins-college", ("60580.00", "0.00", None, "60580"), (Decimal("60580.00"), Decimal("60580")), "m"),
+            # Southern Mississippi has no G.102 and a G.108 3.9% under IPEDS: a real difference, by the in-state row.
+            ("university-of-southern-mississippi", (None, "9508", "11904", "9888"), (Decimal("9508"), Decimal("9888")), "s"),
+        ]
+        for school, (g102, g108, g109, fed), expected, code in cases:
+            with self.subTest(school):
+                record = self.real_record(g102, g108, g109, fed)
+                self.assertEqual(pair(record, "tuition"), expected)
+                ours, fed = pair(record, "tuition")
+                got = {"match": "m", "different": scoreboard.federal_difference_band(ours, fed)}[scoreboard.classify_federal(ours, fed)]
+                self.assertEqual(got, {"m": "m", "s": "2_to_10"}[code])
+
+    def test_the_selected_candidate_must_be_the_field_and_key_the_check_is_defined_on(self) -> None:
+        wrong_key = extra_for("2023-24")
+        wrong_key["g1_in_state_undergraduates"]["federal_key"] = "tuition_out_of_state"
+        with self.assertRaisesRegex(SystemExit, "g1_in_state_undergraduates is field 'G.108' against 'tuition_out_of_state'"):
+            scoreboard.federal_check_pair(self.d(1, federal_extra=wrong_key), "tuition")
+        wrong_field = extra_for("2023-24")
+        wrong_field["g1_private_undergraduates"]["cds_field"] = "G.109"
+        with self.assertRaisesRegex(SystemExit, "g1_private_undergraduates is field 'G.109'"):
+            scoreboard.federal_check_pair(self.d(2, federal_extra=wrong_field), "tuition")
+        # The year guard follows the candidate in use: G.102 empty, G.108 looked up in the wrong IPEDS year.
+        wrong_year = extra_for("2023-24")
+        wrong_year["g1_private_undergraduates"]["ours"] = None
+        wrong_year["g1_in_state_undergraduates"]["ours"] = "9500"
+        wrong_year["g1_in_state_undergraduates"]["federal_data_year"] = 2023
+        with self.assertRaisesRegex(SystemExit, "tuition for IPEDS year"):
+            scoreboard.federal_check_year("2023-24", [self.d(3, federal_extra=wrong_year)], "tuition", True)
+
+    def test_a_b1_total_of_zero_is_no_value(self) -> None:
+        # 2024-25 had one in practice: a school with a 0 in B1 has no undergraduate total, not a total of nobody.
+        zero = self.d(1, federal_extra=extra_for("2023-24", enrollment=("0", "1000")))
+        self.assertEqual(scoreboard.federal_check_pair(zero, "enrollment"), (None, Decimal("1000")))
+        self.assertEqual(self.counts([zero], "enrollment"), {
+            "reports": 1, "matches": 0, "no_value": 1, "differs": 0, "differs_2_to_10pct": 0, "differs_over_10pct": 0})
+        self.assertEqual(scoreboard.federal_check_pair(self.d(2, federal_extra=extra_for("2023-24", enrollment=("0.00", "1000"))), "enrollment")[0], None)
+
+    def test_b1_must_be_the_field_of_the_documents_own_numbering_and_a_compared_year_must_have_its_fields(self) -> None:
+        pair = scoreboard.federal_check_pair
+        # B.193 on the 2023-24 and 2024-25 forms, B.176 on 2025-26: never either one.
+        wrong = extra_for("2023-24")
+        wrong["b1_undergraduates"]["cds_field"] = "B.176"
+        with self.assertRaisesRegex(SystemExit, "b1_undergraduates is field 'B.176' against 'undergraduate_enrollment', not 'B.193'"):
+            pair(self.d(1, schema_version="2023-24", federal_extra=wrong), "enrollment")
+        other_numbered = extra_for("2023-24")
+        other_numbered["b1_undergraduates"]["cds_field"] = "B.176"   # a 2023-24 report numbered by the 2025-26 form
+        self.assertEqual(pair(self.d(2, schema_version="2025-26", federal_extra=other_numbered), "enrollment")[1], Decimal("1000"))
+        with self.assertRaisesRegex(SystemExit, "not 'B.176'"):
+            pair(self.d(3, schema_version="2025-26", federal_extra=extra_for("2023-24")), "enrollment")
+        # A missing field in a compared year fails loudly; in a year with no comparison it is expected.
+        missing = extra_for("2023-24")
+        missing["g1_in_state_undergraduates"]["cds_field"] = None
+        with self.assertRaisesRegex(SystemExit, "g1_in_state_undergraduates is field None"):
+            pair(self.d(4, federal_extra=missing), "tuition")
+        for name in ("b1_undergraduates", "g1_in_state_undergraduates", "g1_private_undergraduates"):
+            missing[name]["cds_field"] = None
+        self.assertEqual(pair(self.d(5, federal_extra=missing, federal_compared=False), "tuition")[0], Decimal("30000"))
+        # ...and a field present where nothing was compared is as wrong.
+        with self.assertRaisesRegex(SystemExit, "is field 'G.108'"):
+            pair(self.d(6, federal_extra=extra_for("2023-24"), federal_compared=False), "tuition")
+
+    def test_federal_check_year_refuses_a_null_federal_extra(self) -> None:
+        broken = self.d(1, federal_extra=None)
+        with self.assertRaisesRegex(SystemExit, "x1 has no federal_extra"):
+            scoreboard.federal_check_year("2023-24", [broken], "enrollment", True)
+
+    def test_a_tuition_of_zero_is_no_value_and_the_next_candidate_is_used(self) -> None:
+        # A school's in-state row left at 0 beside its real private figure (and the other way round): never compare $0
+        # with the federal tuition.
+        extra = extra_for("2023-24")
+        extra["g1_private_undergraduates"]["ours"] = "12000"
+        extra["g1_in_state_undergraduates"]["ours"] = "0"
+        self.assertEqual(scoreboard.federal_check_pair(self.d(1, federal_extra=extra), "tuition")[0], Decimal("12000"))
+        extra["g1_private_undergraduates"]["ours"] = "0"
+        extra["g1_in_state_undergraduates"]["ours"] = "9500"
+        self.assertEqual(scoreboard.federal_check_pair(self.d(6, federal_extra=extra), "tuition")[0], Decimal("9500"))
+        zero_only = extra_for("2023-24")
+        zero_only["g1_private_undergraduates"]["ours"] = "0.00"
+        self.assertIsNone(scoreboard.federal_check_pair(self.d(2, federal_extra=zero_only), "tuition")[0])
+        self.assertEqual(self.counts([self.d(3, federal_extra=zero_only)], "tuition")["no_value"], 1)
+
+    def test_the_run_must_have_looked_up_the_year_the_check_is_defined_for(self) -> None:
+        wrong = extra_for("2023-24")
+        wrong["b1_undergraduates"]["federal_data_year"] = 2024
+        with self.assertRaisesRegex(SystemExit, "enrollment for IPEDS year"):
+            scoreboard.federal_check_year("2023-24", [self.d(1, federal_extra=wrong)], "enrollment", True)
+
+    def test_federal_check_year_and_build_public_refuse_a_missing_federal_extra_or_a_wrong_candidate_year(self) -> None:
+        missing = self.d(1)
+        del missing["federal_extra"]
+        with self.assertRaisesRegex(SystemExit, "x1 has no federal_extra"):
+            scoreboard.federal_check_year("2023-24", [missing], "tuition", True)
+        run = synthetic_run()
+        del next(d for d in run["documents"] if d["year"] == "2023-24" and d["producer"] and not d["flag"])["federal_extra"]
+        with self.assertRaisesRegex(SystemExit, "has no federal_extra"):
+            scoreboard.build_public(run, "x.json")
+        # Either tuition candidate looked up in the wrong IPEDS year is refused (the private one and the in-state one).
+        for name in ("g1_private_undergraduates", "g1_in_state_undergraduates"):
+            wrong = extra_for("2023-24")
+            wrong[name]["federal_data_year"] = 2023
+            with self.subTest(name), self.assertRaisesRegex(SystemExit, "tuition for IPEDS year"):
+                scoreboard.federal_check_year("2023-24", [self.d(2, federal_extra=wrong)], "tuition", True)
+
+    def test_refuses_a_document_without_federal_extra_or_with_split_tuition_figures(self) -> None:
+        broken = self.d(1)
+        del broken["federal_extra"]
+        with self.assertRaisesRegex(SystemExit, "x1 has no federal_extra"):
+            self.counts([broken], "enrollment")
+        split = extra_for("2023-24")
+        split["g1_in_state_undergraduates"]["federal"] = "1"
+        with self.assertRaisesRegex(SystemExit, "different IPEDS figures"):
+            self.counts([self.d(2, federal_extra=split)], "tuition")
+
+    def test_the_snapshot_blocks_add_up_for_every_row_and_year(self) -> None:
+        pub = scoreboard.build_public(synthetic_run(), "x.json")
+        for year in pub["years"]:
+            info = year["federal_checks"]
+            for name in ("enrollment", "tuition"):
+                for row in [*year["rows"], year["total"]]:
+                    c = row["checks"][name]
+                    self.assertEqual(c["matches"] + c["no_value"] + c["differs"], c["reports"])
+                    self.assertEqual(c["differs_2_to_10pct"] + c["differs_over_10pct"], c["differs"])
+                    self.assertLessEqual(c["reports"], row["status"]["published"])
+                    if not info[name]["loaded"]:
+                        self.assertEqual(c["reports"], 0)
+                t = year["total"]["checks"][name]
+                for key in t:
+                    self.assertEqual(sum(r["checks"][name][key] for r in year["rows"]), t[key])
+                if info[name]["loaded"]:
+                    self.assertEqual(t["reports"] + info[name]["single_campus"] + info[name]["no_federal_figures"],
+                                     year["total"]["status"]["published"])
+        by_year = {y["cds_year"]: y["federal_checks"] for y in pub["years"]}
+        self.assertEqual((by_year["2023-24"]["enrollment"]["loaded"], by_year["2023-24"]["tuition"]["loaded"]), (True, True))
+        self.assertEqual((by_year["2024-25"]["enrollment"]["loaded"], by_year["2024-25"]["tuition"]["loaded"]), (True, False))
+        self.assertEqual((by_year["2025-26"]["enrollment"]["loaded"], by_year["2025-26"]["tuition"]["loaded"]), (False, False))
+
+    def test_the_public_shape_requires_and_limits_the_check_keys(self) -> None:
+        pub = scoreboard.build_public(synthetic_run(), "x.json")
+        for mutate in (lambda y: y["total"].pop("checks"), lambda y: y["total"]["checks"].pop("tuition"),
+                       lambda y: y["rows"][0]["checks"]["enrollment"].pop("differs_over_10pct"),
+                       lambda y: y["rows"][0]["checks"]["enrollment"].update(values=1),
+                       lambda y: y.pop("federal_checks"), lambda y: y["federal_checks"]["tuition"].pop("data_year"),
+                       lambda y: y["federal_checks"].update(other={})):
             broken = json.loads(json.dumps(pub))
             mutate(broken["years"][0])
             with self.assertRaises(ValueError):

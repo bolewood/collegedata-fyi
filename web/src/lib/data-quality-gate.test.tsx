@@ -258,7 +258,7 @@ describe("gate: the real snapshot loader", () => {
       at(when);
       const snap = loadLatestSnapshot();
       expect(snap.snapshot_of).toBe(newest);
-      expect(snap.public_format).toBe(3);
+      expect(snap.public_format).toBe(4);
       expect(snap.scoreboard_run).toMatch(/^scoreboard-\d{8}T\d{6}Z\.json$/);
     }
   });
@@ -310,6 +310,22 @@ describe("gate: the real snapshot loader", () => {
       }
       expect(Object.fromEntries(y.sections.rows.map((r) => [r.section, r.questions])), y.cds_year).toEqual(counts);
     }
+  });
+
+  it("pins the committed snapshot's enrollment and tuition checks per year", () => {
+    const first = JSON.parse(fs.readFileSync(path.join(SNAPSHOT_DIR, "2026-11-25.json"), "utf8"));
+    const got = Object.fromEntries(
+      first.years.map((y: { cds_year: string; total: { checks: Record<string, Record<string, number>> }; federal_checks: Record<string, Record<string, unknown>> }) => [
+        y.cds_year,
+        Object.fromEntries(["enrollment", "tuition"].map((n) => [n, [y.federal_checks[n].loaded, y.federal_checks[n].data_year, ...Object.values(y.total.checks[n])]])),
+      ]),
+    );
+    // [loaded, IPEDS year, reports, matches, no value, differs, over 2% to 10%, over 10%], from scoreboard-20261125T140926Z.json.
+    expect(got).toEqual({
+      "2023-24": { enrollment: [true, 2023, 431, 317, 82, 32, 21, 11], tuition: [true, 2024, 430, 212, 117, 101, 63, 38] },
+      "2024-25": { enrollment: [true, 2024, 490, 378, 70, 42, 24, 18], tuition: [false, 2025, 0, 0, 0, 0, 0, 0] },
+      "2025-26": { enrollment: [false, 2025, 0, 0, 0, 0, 0, 0], tuition: [false, 2026, 0, 0, 0, 0, 0, 0] },
+    });
   });
 
   it("reads real files, picks the newest, and fails on same-date files in both states", () => {

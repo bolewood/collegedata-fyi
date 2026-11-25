@@ -16,6 +16,8 @@ import {
   aidCantCheckNote,
   federalDiffersNote,
   hasDifferenceSplit,
+  hasFederalChecks,
+  ipedsTuitionTable,
   hasSections,
   isDataQualityLaunched,
   isProjectedYear,
@@ -27,6 +29,7 @@ import {
   sectionUsableShare,
   yearGlance,
   yearsNewestFirst,
+  type CheckName,
   type QualityRow,
   type QualitySnapshot,
   type QualityTableId,
@@ -66,6 +69,7 @@ export function DataQualityBody({ snapshot, year }: { snapshot: QualitySnapshot;
       <ReportsTable year={year} snapshot={snapshot} />
       <SectionsTable year={year} />
       <FederalTable year={year} snapshot={snapshot} />
+      <FederalChecks year={year} />
       <TotalsTable year={year} snapshot={snapshot} />
       <HowToRead />
     </>
@@ -543,6 +547,143 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
       )}
       {loaded && <CsvButton table="federal" year={year} />}
     </section>
+  );
+}
+
+// ── Table B, more checks ─────────────────────────────────────────
+
+const academicYear = (start: number) => `${start}-${String((start + 1) % 100).padStart(2, "0")}`;
+
+/** The release facts the snapshot does not record, and the rule the scoreboard applies (`fetch_federal`: final beats provisional). */
+const RELEASE_NOTE = "This snapshot doesn’t record which IPEDS release (final or provisional), release date or imputation flag each figure came from. Where a final and a provisional release both have a figure, the final one is used. A school’s page shows the release and imputation for its latest federal figures, which can be a later year than the one compared here.";
+
+/** What each extra check compares, in the page's words. The IPEDS table and variable follow the data year. */
+function checkCopy(check: CheckName, dataYear: number, otherNumbered: number, otherNoValue: number) {
+  if (check === "enrollment") {
+    return {
+      heading: "Undergraduate enrollment (CDS B1)",
+      missing: `No federal fall ${dataYear} undergraduate enrollment figures yet.`,
+      noFigure: "federal undergraduate enrollment figure",
+      note: (
+        <>
+          <strong>Undergraduate enrollment</strong> compares the total of all undergraduates in the report (CDS B1:
+          degree-seeking and not, full-time and part-time) with the federal fall undergraduate enrollment (IPEDS table
+          DRVEF{dataYear}, variable EFUG, fall {dataYear}). Both count undergraduates on a fall census date, and the
+          dates can differ. A school may also count a different group of students in each.{" "}
+          {otherNoValue > 0 &&
+            `${n(otherNumbered)} published ${otherNumbered === 1 ? "report is" : "reports are"} numbered by a different year’s form, where the B1 total can be harder for us to find.`}
+        </>
+      ),
+    };
+  }
+  return {
+    heading: "Tuition (CDS G1)",
+    missing: `No federal tuition figures for the ${academicYear(dataYear)} academic year yet.`,
+    noFigure: "federal tuition figure",
+    note: (
+      <>
+        <strong>Tuition</strong> compares the report’s tuition for all undergraduates (CDS G1: the in-state figure when
+        the school gives one, else the single private figure) with the federal in-state average tuition for full-time
+        undergraduates (IPEDS table {ipedsTuitionTable(dataYear)},
+        variable TUITION2, academic year {academicYear(dataYear)}). The CDS form for {academicYear(dataYear - 1)} asks
+        for that following year’s tuition. Neither includes required fees,
+        which each lists separately. A report can differ for reasons that aren’t errors: per-credit or program-specific
+        pricing, a figure for a different year or group of students, or a school with several rates reporting one of them.
+        Out-of-state and first-year tuition aren’t compared.
+      </>
+    ),
+  };
+}
+
+/** Table B's two further checks, from public_format 4: enrollment (B1) and tuition (G1) against the federal figures. */
+function FederalChecks({ year }: { year: QualityYear }) {
+  if (!hasFederalChecks(year)) return null;
+  return (
+    <section aria-labelledby="dq-b2-heading" style={sectionStyle}>
+      <SectionHead
+        id="dq-b2-heading"
+        label="§ Table B, more checks"
+        title="Enrollment and tuition against federal figures"
+        sentence="Two more checks of what a published report says: its total undergraduates (CDS B1) and its tuition (CDS G1), each compared with the federal figure."
+      />
+      <CheckTable year={year} check="enrollment" />
+      <CheckTable year={year} check="tuition" />
+      {(year.federal_checks!.enrollment.loaded || year.federal_checks!.tuition.loaded) && (
+        <Note id="dq-note-b2-shared">
+          A value is compared only when the federal data has a positive figure for it. Matches means within 2%; differs by
+          over 2% to 10% and differs by over 10% split the rest, and exactly 10% counts in the first. {RELEASE_NOTE}
+        </Note>
+      )}
+    </section>
+  );
+}
+
+function CheckTable({ year, check }: { year: QualityYear; check: CheckName }) {
+  const info = year.federal_checks![check];
+  const loaded = info.loaded;
+  const copy = checkCopy(check, info.data_year, year.other_form_numbering, year.other_form_numbering > 0 ? year.total.checks![check].no_value : 0);
+  const id = `dq-table-${check}`;
+  return (
+    <div style={{ marginTop: 28 }}>
+      <h3 className="serif" style={{ fontSize: 20, margin: "0 0 10px", fontWeight: 400 }} id={`dq-${check}-heading`}>
+        {copy.heading}
+      </h3>
+      {!loaded && (
+        <p id={`dq-no-${check}`} style={{ margin: "0 0 14px", maxWidth: 720, fontSize: 15, lineHeight: 1.6, color: "var(--ink-2)" }}>
+          {copy.missing}
+        </p>
+      )}
+      <Scroll label={`${copy.heading}, ${year.cds_year}`} hint={loaded}>
+        <table className="dq-table dq-table--x" style={tableStyle} id={id} aria-labelledby={`dq-${check}-heading`}>
+          <Cols n={8} />
+          <thead>
+            <tr>
+              <th scope="col" style={thLeft}>Format</th>
+              <th scope="col" style={thStyle}>Reports checked</th>
+              <th scope="col" style={thStyle}>Matches</th>
+              <th scope="col" style={thStyle}>No value</th>
+              <th scope="col" style={thStyle}>Differs</th>
+              <th scope="col" style={thStyle}>Differs by over 2% to 10%</th>
+              <th scope="col" style={thStyle}>Differs by over 10%</th>
+              <th scope="col" style={thStyle}>Match rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allRows(year).map(({ key, name, row, total }) => {
+              const c = row.checks![check];
+              const rate = loaded ? rowPercent(c.matches, c.reports, c.reports) : null;
+              const small = loaded && c.reports < MIN_REPORTS_FOR_RATE;
+              return (
+                <tr key={key} style={total ? totalRow : undefined}>
+                  <th scope="row" style={{ ...tdLeft, fontWeight: total ? 600 : 400 }}>{name}</th>
+                  <td style={tdStyle}>{loaded ? n(c.reports) : DASH}</td>
+                  <td style={tdStyle}>{loaded ? n(c.matches) : DASH}</td>
+                  <td style={tdStyle}>{loaded ? n(c.no_value) : DASH}</td>
+                  <td style={tdStyle}>{loaded ? n(c.differs) : DASH}</td>
+                  <td style={tdStyle}>{loaded ? n(c.differs_2_to_10pct) : DASH}</td>
+                  <td style={tdStyle}>{loaded ? n(c.differs_over_10pct) : DASH}</td>
+                  <td style={tdStyle} title={small ? `Under ${MIN_REPORTS_FOR_RATE} reports: no rate` : undefined}>
+                    {pc(rate)}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </Scroll>
+      {loaded && (
+        <>
+          <Note id={`dq-note-${check}`}>{copy.note}</Note>
+          <Note id={`dq-note-${check}-left-out`}>
+            Left out: {n(info.single_campus)} {info.single_campus === 1 ? "report" : "reports"} we’ve marked as filed for
+            one campus or unit and {n(info.no_federal_figures)} whose school has no {copy.noFigure}. <strong>No value</strong>{" "}
+            means no usable CDS number was available to compare: the school may have left it blank, or we may have missed
+            it or set it aside. <strong>Differs</strong> isn’t always ours.
+          </Note>
+          <CsvButton table={check} year={year} />
+        </>
+      )}
+    </div>
   );
 }
 

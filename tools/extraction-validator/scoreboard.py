@@ -104,7 +104,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Callable, Iterable, NoReturn, Optional
+from typing import Any, Callable, Iterable, NoReturn, Optional, Union
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "tools" / "browser_backend"))
@@ -171,7 +171,9 @@ PUBLIC_RUN_FORMATS = (3,)
 SUM_CHECK_VERSION = 2
 # Public format 2 adds `federal.differs_2_to_10pct` and `federal.differs_over_10pct`.
 # Public format 3 adds `sections` per year (fields stored and usable answers by CDS section A to J).
-PUBLIC_FORMAT = 3
+# Public format 4 adds the B1 enrollment and G1 tuition checks against IPEDS: `checks` per row and total,
+# `federal_checks` per year.
+PUBLIC_FORMAT = 4
 # `value_status` values the projection writes (project_browser_data.parse_field_value). A usable
 # answer is a `reported` one: a value a reader can use. `parse_error` is a cell we could not read
 # as the kind of value its question takes, `not_applicable` is a school's "N/A" (a real answer,
@@ -352,7 +354,7 @@ def printed_admissions(schema_version: Optional[str], numbers: dict[str, Decimal
     return out
 
 
-def classify_federal(cds: Optional[int], federal: Optional[Decimal]) -> Optional[str]:
+def classify_federal(cds: Optional[Union[int, Decimal]], federal: Optional[Decimal]) -> Optional[str]:
     """'match', 'blank', 'different', or None when there is no federal figure."""
     if federal is None or federal <= 0:
         return None
@@ -1393,7 +1395,7 @@ AID_OUTCOME_KEY = {"pass": "adds_up", "fail": "doesnt", "nc": "cant_check"}
 FEDERAL_LARGE_SHARE = Decimal("0.10")
 
 
-def federal_difference_band(cds: Optional[int], federal: Optional[Decimal]) -> Optional[str]:
+def federal_difference_band(cds: Optional[Union[int, Decimal]], federal: Optional[Decimal]) -> Optional[str]:
     """'2_to_10' or 'over_10' for a value `classify_federal` calls 'different'
     (gap over 2% of the federal figure; exactly 10% is still '2_to_10'), else None."""
     if classify_federal(cds, federal) != "different":
@@ -1411,8 +1413,11 @@ class _Optional:
 
 
 _STATUS_SPEC = {k: _COUNT for k in STATUSES}
+# One value per report, so `reports` is also the number of values: matches + no_value + differs = reports.
+_CHECK_SPEC = {k: _COUNT for k in ("reports", "matches", "no_value", "differs", "differs_2_to_10pct", "differs_over_10pct")}
 _ROW_SPEC = {
     "status": _STATUS_SPEC,
+    "checks": {"enrollment": _CHECK_SPEC, "tuition": _CHECK_SPEC},
     "fields_stored": {"median": _COUNT, "p10": _COUNT},
     "federal": {k: _COUNT for k in ("reports", "values", "matches", "no_value", "differs",
                                     "differs_2_to_10pct", "differs_over_10pct")},
@@ -1439,6 +1444,8 @@ PUBLIC_SPEC = {
         "federal_left_out": {"single_campus": _COUNT, "no_federal_figures": _COUNT, "not_compared": _Optional(_COUNT)},
         "rows": [{"format": _TEXT, "label": _TEXT, **_ROW_SPEC}],
         "total": _ROW_SPEC,
+        "federal_checks": {name: {"loaded": _FLAG, "data_year": _COUNT, "single_campus": _COUNT, "no_federal_figures": _COUNT}
+                           for name in ("enrollment", "tuition")},
         # Empty `rows` for a year whose form has no full field schema.
         "sections": {"reports": _COUNT,
                      "rows": [{"section": _TEXT, "questions": _COUNT, "stored_median": _COUNT, "usable_median": _COUNT}]},
@@ -1552,7 +1559,86 @@ def check_public_sections(public: dict[str, Any]) -> None:
                 raise SystemExit(f"{where}: section {r['section']} has a median but no reports")
 
 
-def _row_counts(classes: Counter, published: list[dict[str, Any]], federal_loaded: bool) -> dict[str, Any]:
+def federal_check_pair(d: dict[str, Any], check: str) -> tuple[Optional[Decimal], Optional[Decimal]]:
+    """(our number, IPEDS figure) for one report and one of the two extra checks.
+    enrollment: our B1 total of all undergraduates against IPEDS fall undergraduate enrollment.
+    tuition: our all-undergraduates in-state tuition (G.108) when it is filled, else the private single figure
+    (G.102), against IPEDS in-state tuition (TUITION2). G.108 comes first because a public school that fills G.102
+    too has put its out-of-state or another rate there (west-chester: G.102 = IPEDS out-of-state, G.108 = in-state). Out-of-state and first-year tuition are not compared:
+    one figure per report keeps a school that fills several rows from counting several times."""
+    extra = d.get("federal_extra")
+    if extra is None:
+        raise SystemExit(f"--public: {d['document_id']} has no federal_extra; run the scoreboard again")
+    if check == "enrollment":
+        names = ["b1_undergraduates"]
+    else:
+        names = ["g1_in_state_undergraduates", "g1_private_undergraduates"]
+    # A tuition of 0 is a form's blank (a public school's G.102 beside its real G.108), not a price: no value.
+    chosen = next((extra[n] for n in names if extra[n]["ours"] is not None and Decimal(extra[n]["ours"]) > 0), extra[names[0]])
+    if chosen["ours"] is not None and Decimal(chosen["ours"]) <= 0:
+        chosen = {**chosen, "ours": None}
+    # The selected candidate must be the field and IPEDS key this check is defined on (a renamed or swapped field is a bug here).
+    # B1's total is B.176 on the 2025-26 form and B.193 on the 2023-24 and 2024-25 forms: by the document's own numbering.
+    b1 = "B.176" if d.get("schema_version") == "2025-26" else "B.193"
+    fields = {"b1_undergraduates": (b1, "undergraduate_enrollment"), "g1_in_state_undergraduates": ("G.108", "tuition_in_state"),
+              "g1_private_undergraduates": ("G.102", "tuition_in_state")}
+    # Only a document with no comparison (a year with no full field schema) may have no field: in a compared year a missing
+    # field means a broken schema lookup, which must not quietly turn a loaded year into "no value".
+    compared = d.get("federal_compared", True)
+    for n in names:
+        field, key = fields[n]
+        if extra[n]["federal_key"] != key or extra[n]["cds_field"] != (field if compared else None):
+            raise SystemExit(f"--public: {d['document_id']}: {n} is field {extra[n]['cds_field']!r} against {extra[n]['federal_key']!r}, "
+                             f"not {(field if compared else None)!r} against {key!r}")
+    federal = {extra[n]["federal"] for n in names}
+    if len(federal) != 1:
+        raise SystemExit(f"--public: {d['document_id']}: the {check} candidates carry different IPEDS figures")
+    ours = Decimal(chosen["ours"]) if chosen["ours"] is not None else None
+    fed = Decimal(chosen["federal"]) if chosen["federal"] is not None else None
+    return ours, fed
+
+
+def federal_check_counts(published: list[dict[str, Any]], check: str, loaded: bool) -> dict[str, int]:
+    """Matches, no value and differs for one extra check over the reports with a positive IPEDS figure
+    (single-campus reports are left out, as in Table B), with the differs split by size."""
+    counts = Counter()
+    if loaded:
+        for d in published:
+            if d["sub_institutional"]:
+                continue
+            ours, fed = federal_check_pair(d, check)
+            outcome = classify_federal(ours, fed)
+            if outcome:
+                counts[outcome] += 1
+                counts[federal_difference_band(ours, fed)] += 1
+    if counts["2_to_10"] + counts["over_10"] != counts["different"]:
+        raise SystemExit(f"--public: the {check} size bands do not add up to the differing values")
+    return {"reports": counts["match"] + counts["blank"] + counts["different"], "matches": counts["match"],
+            "no_value": counts["blank"], "differs": counts["different"],
+            "differs_2_to_10pct": counts["2_to_10"], "differs_over_10pct": counts["over_10"]}
+
+
+def federal_check_year(year: str, published: list[dict[str, Any]], check: str, compared: bool) -> dict[str, Any]:
+    """The per-year facts of one extra check: whether IPEDS figures are loaded for it, the IPEDS data year
+    (the fall for enrollment; the academic year starting the fall after for tuition, as the CDS G1 asks for
+    the following year), and the reports left out."""
+    start = int(year[:4]) + (1 if check == "tuition" else 0)
+    for d in published:
+        if d.get("federal_extra") is None:
+            raise SystemExit(f"--public: {d['document_id']} has no federal_extra; run the scoreboard again")
+    candidates = ["b1_undergraduates"] if check == "enrollment" else ["g1_private_undergraduates", "g1_in_state_undergraduates"]
+    recorded = {d["federal_extra"][n]["federal_data_year"] for d in published for n in candidates}
+    if recorded - {start}:
+        raise SystemExit(f"--public: {year}: the run looked up {check} for IPEDS year {sorted(recorded)}, not {start}")
+    rest = [d for d in published if not d["sub_institutional"]]
+    with_figure = [d for d in rest if (federal_check_pair(d, check)[1] or 0) > 0]
+    loaded = compared and bool(with_figure)
+    return {"loaded": loaded, "data_year": start, "single_campus": len(published) - len(rest),
+            "no_federal_figures": len(rest) - len(with_figure) if loaded else 0}
+
+
+def _row_counts(classes: Counter, published: list[dict[str, Any]], federal_loaded: bool,
+                check_loaded: Optional[dict[str, bool]] = None) -> dict[str, Any]:
     counts = [d["fields"] for d in published]
     # Reports filed for one campus or unit are left out of the federal comparison
     # (they are counted in federal_left_out.single_campus instead).
@@ -1596,6 +1682,8 @@ def _row_counts(classes: Counter, published: list[dict[str, Any]], federal_loade
             "differs_2_to_10pct": bands["2_to_10"], "differs_over_10pct": bands["over_10"],
         },
         "totals": totals,
+        "checks": {name: federal_check_counts(published, name, (check_loaded or {}).get(name, False))
+                   for name in ("enrollment", "tuition")},
     }
 
 
@@ -1705,6 +1793,10 @@ def build_public(run: dict[str, Any], run_name: str) -> dict[str, Any]:
         if not left_out["not_compared"]:
             del left_out["not_compared"]
         form = run["forms"][year]
+        # Compared only for a year with a full field schema (else the B1 and G1 ids are not known).
+        federal_checks = {name: federal_check_year(year, published_docs, name, form["schema_exists"])
+                          for name in ("enrollment", "tuition")}
+        check_loaded = {name: info["loaded"] for name, info in federal_checks.items()}
         unavailable = [t for t in SUM_TABLES if t not in sum_tables_of(year, form)]
         rows = []
         for fmt in FORMAT_ORDER:
@@ -1714,7 +1806,7 @@ def build_public(run: dict[str, Any], run_name: str) -> dict[str, Any]:
             if not any(classes[s] for s in STATUSES):
                 continue
             docs = [d for d in published_docs if public_format_key(d["format"]) == fmt]
-            rows.append({"format": fmt, "label": FORMAT_LABELS[fmt], **_row_counts(classes, docs, loaded)})
+            rows.append({"format": fmt, "label": FORMAT_LABELS[fmt], **_row_counts(classes, docs, loaded, check_loaded)})
         classes = Counter({cls: len(members) for cls, members in by_class.items()})
         reasons = Counter(SET_ASIDE_REASON[m["data_quality_flag"]] for m in by_class["set_aside"])
         years_out.append({
@@ -1728,8 +1820,9 @@ def build_public(run: dict[str, Any], run_name: str) -> dict[str, Any]:
             "set_aside_reasons": {name: reasons[name] for name in SET_ASIDE_REASON.values()},
             "federal_left_out": left_out,
             "rows": rows,
-            "total": _row_counts(classes, published_docs, loaded),
+            "total": _row_counts(classes, published_docs, loaded, check_loaded),
             "sections": section_block(year, published_docs, section_questions(year)),
+            "federal_checks": federal_checks,
         })
     renewal = run["renewal"]
     public = {

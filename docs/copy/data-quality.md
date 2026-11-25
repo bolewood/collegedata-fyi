@@ -183,6 +183,80 @@ Why it says no more: the federal side wasn't checked in the sample, only
 whether the number we compared is the number in the school's file. The 8 are
 unexplained, not cleared.
 
+## Table B, more checks: Enrollment and tuition against federal figures
+
+Under Table B, only for a snapshot in public format 4. A section head, then two
+small tables with the same columns as Table B except "Values" (one value per
+report): format, reports checked, matches, no value, differs, differs by over 2%
+to 10%, differs by over 10%, match rate. The rate is a dash under 5 reports, in
+the All formats row too.
+
+> Two more checks of what a published report says: its total undergraduates
+> (CDS B1) and its tuition (CDS G1), each compared with the federal figure.
+
+**Undergraduate enrollment (CDS B1)**
+
+- When the year has no federal figures for it: *No federal fall {year}
+  undergraduate enrollment figures yet.* The table shows dashes and its notes
+  and CSV button are hidden.
+- > **Undergraduate enrollment** compares the total of all undergraduates in the
+  > report (CDS B1: degree-seeking and not, full-time and part-time) with the
+  > federal fall undergraduate enrollment (IPEDS table DRVEF{year}, variable
+  > EFUG, fall {year}). Both count undergraduates on a fall census date, and the
+  > dates can differ. A school may also count a different group of students in
+  > each. {Only when some reports are numbered by another year's form and some
+  > have no value:} {n} published {report is or reports are} numbered by a
+  > different year's form, where the B1 total can be harder for us to find.
+- > Left out: {n} {report or reports} we've marked as filed for one campus or
+  > unit and {n} whose school has no federal undergraduate enrollment figure.
+  > **No value** means no usable CDS number was available to compare: the
+  > school may have left it blank, or we may have missed it or set it aside.
+  > **Differs** isn't always ours.
+
+**Tuition (CDS G1)**
+
+- When the year has none: *No federal tuition figures for the {academic year}
+  academic year yet.* (2024-25 and 2025-26 today: the federal tuition for
+  academic years 2025-26 and 2026-27 is not loaded.)
+- > **Tuition** compares the report's tuition for all undergraduates (CDS G1:
+  > the in-state figure when the school gives one, else the single private
+  > figure) with the federal in-state average tuition for full-time
+  > undergraduates (IPEDS table {table}, variable TUITION2, academic year {academic
+  > year}). The CDS form for {cds year} asks for that following year's tuition.
+  > Neither includes required fees, which each lists separately. A report can
+  > differ for reasons that aren't errors: per-credit or program-specific
+  > pricing, a figure for a different year or group of students, or a school
+  > with several rates reporting one of them. Out-of-state and first-year
+  > tuition aren't compared.
+- The left-out note is the same as for enrollment, ending "…no federal tuition
+  figure."
+
+A tuition of 0 is treated as no value and the other row is used (Rollins
+College 2023-24: in-state 0, private 60,580, which matches). The in-state row is
+preferred because a public school that fills both has put another rate in the
+private row (West Chester 2023-24: private 19,290 is the out-of-state figure,
+in-state 7,716). Likewise a B1 total of 0 is no value.
+
+**Once, under both tables** (when either table has figures):
+
+> A value is compared only when the federal data has a positive figure for it.
+> Matches means within 2%; differs by over 2% to 10% and differs by over 10%
+> split the rest, and exactly 10% counts in the first. This snapshot doesn't
+> record which IPEDS release (final or provisional), release date or imputation
+> flag each figure came from. Where a final and a provisional release both have
+> a figure, the final one is used. A school's page shows the release and
+> imputation for its latest federal figures, which can be a later year than the
+> one compared here.
+
+Why these two pairings: enrollment lines up well. Of the reports with both a B1
+total and a federal figure (so leaving out "no value"), 91% in 2023-24 (317 of 349) and 90% in 2024-25 (378 of 420) are
+within 2%, with a median ratio of 1.00; the table's own match rate is lower
+(74% in 2023-24, 77% in 2024-25) because it counts "no value" reports too.
+Tuition is noisier: 68% of the reports with both numbers match in 2023-24
+(212 of 313), with differences on both sides, and the table's match rate is 49%
+with "no value" counted. So the page says what can differ and does not call a
+difference an error.
+
 ## Table C: Do the printed totals add up?
 
 > Whether the totals printed in each published report equal the sum of their
