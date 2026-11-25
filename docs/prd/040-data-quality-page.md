@@ -559,11 +559,10 @@ the real header on row 1 and start with a UTF-8 BOM, like
   each browser-built file, because a client download can't send a header.
   D11 tested that file in pandas, R `read.csv` and `readr`, Python
   `csv.reader` and `DictReader`, and LibreOffice standing in for Excel
-  (Excel itself wasn't available). No reader handled it with default
-  options. pandas and `read.csv` raised errors. `readr` raised on the
-  coverage file and returned a wrong table (the comment text as column
-  names) on the Data quality files. `DictReader` and LibreOffice returned
-  wrong tables. `csv.reader` returned ragged rows. Only readers with a comment
+  (Excel was not run). No reader handled it with default options. pandas and
+  `read.csv` raised errors. `readr`, `DictReader` and LibreOffice returned
+  wrong tables (for `readr` and `DictReader`, the comment text as column
+  names). `csv.reader` returned ragged rows. Only readers with a comment
   option recovered, and only if the user knew to pass it. The block was
   dropped.
 - **Data quality** is served by a static route,
