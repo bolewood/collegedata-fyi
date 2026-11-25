@@ -29,25 +29,28 @@ Federal figures come from `ipeds_facts` (the unified view keeps only each school
 
 ### Earlier years (staged; not run yet)
 
-`--years` takes any canonical CDS year, oldest or newest first (the run lists them oldest first). Years before 2023-24 are read from `cds_artifacts` the same way 2023-24 is. Their forms have no full field schema, only a structural schema and a core-table overlay (C1, C7, C9), so:
+`--years` takes any canonical CDS year, in any order (the run lists them oldest first); a repeated or non-CDS year such as `unknown` is refused before any read. Years before 2023-24 are read from `cds_artifacts` the way 2023-24 is. Their forms have no full field schema, only a structural schema and a core-table overlay, so:
 
-- `forms[year].field_count` is 0 and `schema_exists` false (public: `full_field_schema: false`, `questions: 0`). The structural row and answer-cell counts do not equal the full schemas' field counts, so no number is shown for them.
-- The worker reads an older document into the 2025-26 field ids by row label (`schema_fallback_used`). The core-table overlay is the only place those label matches were checked: C1 by rule, at high confidence. B1 and H1 have no checked mapping, and the cross-year diffs show them changing (2022-23 to 2023-24: B1 15 rows added, 9 renamed; H1 10 removed, 10 added). So sums are judged only for **C1** on an older form (`forms[year].sum_tables`); B1 and H1 stay "can't check". `--public` lists the tables with no sums in `sum_checks_unavailable` (omitted when none), so the page can show a dash and a notice instead of a "can't check" count read as a result.
-- B1 enrollment and G1 tuition candidates (`federal_extra`) have no field on an older form (`cds_field` null).
-- Federal admissions (Table B) are compared when `ipeds_facts` holds the fall figures for that year (`federal_schools[year]` and `federal_fall_loaded`, decided at run time) **and** C1 is a table with sums for the year's form. A year before 2019-20 has no overlay, so its admissions are "not compared" (null), not "blank". The same applies to a document whose artifact is numbered by a form with no sum checks.
+- Status counts, formats and **fields stored** are recorded and published as for any year.
+- **No sum checks and no federal comparison.** `forms[year].sum_tables` is empty and `--public` lists `["B1","C1","H1"]` in `sum_checks_unavailable` (omitted for a year with checks), so the page can show a dash and a notice rather than a "can't check" count read as a result. The worker reads an older document into the 2025-26 ids by row label, and the overlays are not a mapping to trust for sums: 2019-20 and 2020-21 map only the men and women C1 rows (those forms have no C1 total row), 2021-22 maps one total and maps "total men who applied/admitted" onto the men rows, and 2022-23 leaves the another-gender rows unmapped (a school reporting that row would read "off by more" falsely). A verified per-year C1 mapping, with totals and another-gender rows, is what would turn the checks on.
+- Admissions are "not compared" (`federal_compared` false, null outcomes). Public: `federal_left_out.not_compared` (omitted when 0), separate from `no_federal_figures`, which keeps meaning "IPEDS has no positive figure". For a year whose federal fall is loaded, `federal.reports + single_campus + no_federal_figures + not_compared` equals the published reports.
+- `federal_fall_loaded` is decided at run time from `federal_schools[year]`: true when `ipeds_facts` holds any C1 figure for that fall (`tools/ipeds/README.md` lists releases 2004-05 to 2024-25; the oldest falls' keys are not assumed).
+- `forms[year].field_count` is 0 and `schema_exists` false (public: `full_field_schema: false`, `questions: 0`): "no question list", not "no questions". The structural row and answer-cell counts do not reliably equal the full schemas' field counts (2023-24: 1,081 vs 1,053; 2025-26: 1,061 vs 1,105), so no number is shown.
+- B1 enrollment and G1 tuition candidates (`federal_extra`) have no field there (`cds_field` null).
+- A year with a full field schema, including one with no `SUM_CHECKS` of its own such as 2026-27, behaves as before: sums follow the numbering each document carries.
 - `renewal` is computed from the live manifest and does not depend on `--years`.
 
-Run from the main checkout. Precondition: it is on an up-to-date `main` that contains this change, and no extraction job is running there (this README does not switch branches for you). One copy at a time. First slice: 2022-23 alone, about 445 to 980 artifact reads, **30 to 70 minutes** (a sizing run; it is not publishable because `--public` needs 2023-24 to 2025-26 too):
+Run from the main checkout (`cd <main checkout>`). Precondition: it is on an up-to-date `main` that contains this change, and no extraction job is running there (this README does not switch branches for you). One copy at a time. First slice: 2022-23 alone, about 445 to 980 artifact reads, **30 to 70 minutes** (a sizing run; it is not publishable because `--public` needs 2023-24 to 2025-26 too):
 
 ```bash
-cd /Users/santhonys/Projects/Owen/colleges/collegedata-fyi
+cd <main checkout>
 caffeinate -i tools/extraction_worker/.venv/bin/python tools/extraction-validator/scoreboard.py \
   --years 2022-23 \
   --artifact-interval 4.0 --field-interval 0.25 --min-free-mb 300 \
   --out-dir scratch/extraction-scoreboard 2>&1 | tee scratch/extraction-scoreboard/run-2022-23.log
 ```
 
-All the years the overlays cover, together with the three current years (this run can go to `--public`). Documents before 2023-24: 2019-20 to 2022-23 hold 1,876 live documents (495, 472, 456, 453), about 1,690 extracted; at 1.0 to 2.2 reads each and about 4.3 s a read that is about **2 to 4.5 hours**. All earlier years (4,407 live, about 3,970 extracted): 4,000 to 8,700 reads, **5 to 10 hours**. The cache is about 27 KB per read, 110 to 235 MB for everything. The three current years add about 1,300 per-document `cds_fields` reads at 0.25 s plus the 2023-24 artifacts already cached, about 10 minutes.
+Several earlier years together with the three current years (this run can go to `--public`). Live documents: 2019-20 453, 2020-21 456, 2021-22 472, 2022-23 495, 1,876 in all; about 1,690 are extracted, **an assumption** (90% of live, carried from #492; 2023-24 is 438 of 484). At 1.0 to 2.2 reads each and about 4.3 s a read that is about **2 to 4.5 hours**. All earlier years (4,407 live, about 3,970 extracted on the same assumption): 4,000 to 8,700 reads, **5 to 10 hours**. The cache is about 27 KB per read, 110 to 235 MB for everything. The projected current years add about 900 per-document `cds_fields` reads at 0.25 s (487 + 417 in the newest run); 2023-24 comes from artifacts, cached after the first run. About 10 minutes in all.
 
 ```bash
 caffeinate -i tools/extraction_worker/.venv/bin/python tools/extraction-validator/scoreboard.py \
@@ -56,11 +59,11 @@ caffeinate -i tools/extraction_worker/.venv/bin/python tools/extraction-validato
   --out-dir scratch/extraction-scoreboard 2>&1 | tee scratch/extraction-scoreboard/run-earlier-years.log
 ```
 
-Add years before 2019-20 the same way; they have no overlay, so `sum_tables` is empty: every sum reads "can't check" and admissions are not compared. Never pass `--limit` for a run you mean to publish: `--public` refuses it.
+Add earlier years the same way. Never pass `--limit` for a run you mean to publish: `--public` refuses it.
 
 If a run is interrupted (Ctrl-C, a stop for low memory, a dropped connection), run the same command again. Each artifact read is cached by id in `scratch/extraction-scoreboard/cache/`, so the second run re-reads only what was missing, plus the cheap index and `cds_fields` reads (a few minutes). No JSON is written until a run finishes. The run waits whenever the host has under `--min-free-mb` free; do not lower it.
 
-`--public` on a run with earlier years writes `sum_checks_unavailable` and `questions: 0` for them. The page must show a dash and a notice for those tables, and hide "The form has 0 questions", before such a snapshot is committed (follow-up in `web/`, not done here).
+`--public` on a run with earlier years writes `sum_checks_unavailable`, `federal_left_out.not_compared` and `questions: 0` for them. The page must show a dash and a notice for those tables, say admissions were not compared, and hide "The form has 0 questions", before such a snapshot is committed (follow-up in `web/`, not done here).
 
 Guard holds are read from local worker `--summary-json` files (`scratch/extraction-drain/local/` by default), so that column is complete only on the machine that ran the re-extractions.
 
