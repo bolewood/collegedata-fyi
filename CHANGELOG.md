@@ -13,9 +13,9 @@ History before 0.1.0.0 (2026-08-03), including the June and July 2026 work, is n
 - **Daily renewal alarm** (`Ops discovery renewal`, 13:41 UTC; #460).
   - **What it checks:** of the schools with last year's Common Data Set on file, how many also have this year's. A two-year check also keeps in view schools that already missed a year, and a next-year check runs from March.
   - **Floor:** each number is compared with a floor read off how fast schools usually post.
-  - **Below the floor:** it opens one issue per CDS year, assigned to the owner, and posts to Discord #alerts. It updates the issue without commenting, and closes it only when that year recovers.
+  - **Below the floor:** it opens one issue per CDS year, assigned to the owner, and posts to Discord #alerts. It updates the issue without commenting, replaces it with a new issue every 30 days (or at once on a 5-point worsening) while still below, closes it when that year recovers, and retires years that are two cycles old.
   - **A standing alarm doesn't go quiet:** while a year stays below its floor, it is superseded by a new assigned issue every 30 days, and at once when the gap widens by 5 points.
-  - **Arrivals check:** a separate per-year check opens its own issue when almost nothing new arrived for a CDS year in 30 days (60 in winter) compared with how fast schools usually post. That catches a total stop within about a month.
+  - **Arrivals check:** a separate per-year check opens its own issue when almost nothing new arrived for a CDS year, judged every day over both 30 and 60 days, against how fast schools usually post. That catches a total stop within about a month.
   - **Fails loudly:** a short or empty read, too few schools in the denominator, or a floor that disagrees with the database fails the job; it never reports zero.
   - **First run:** on 2026-11-25 renewal was 373 of 498 (75%) against a floor of 82.5%, so the first scheduled run opens an issue.
 - **Watching the alarm:**
@@ -31,7 +31,7 @@ History before 0.1.0.0 (2026-08-03), including the June and July 2026 work, is n
   - schools whose listing is known but whose current-year file couldn't be fetched, by cause (#468).
 - **A monthly hand check:** on the 3rd, an issue lists 20 random schools with links, to record whether each has posted a newer CDS than ours, or whether our newest file isn't a full CDS. The next month's issue reports the miss rate (#461).
 - **`/data-quality`**, behind a launch gate (PRD 040 M1). The scoreboard's run files are now `run_format: 2`, and `--public` writes the page's snapshot (M0).
-- **`/coverage`** gains a renewal tile (from the snapshot), the share of undergraduates with CDS numbers, search, a "Has a CDS" preset and the latest-year columns (M2). CSV downloads wait for the launch gate.
+- **`/coverage`** gains a renewal tile (shown once the first snapshot is committed; #496 is held), the share of undergraduates with CDS numbers, search, a "Has a CDS" preset and the latest-year columns (M2). CSV downloads wait for the launch gate.
 
 ### Fixed
 
@@ -41,7 +41,7 @@ History before 0.1.0.0 (2026-08-03), including the June and July 2026 work, is n
   25-page cap.
 - **The monthly stuck-seed sweep:**
   - It now accounts for every school (flagged + fresh + skipped = total, with a reason per skip), and stops with an error if the numbers don't add up (#464).
-  - It counts a school as fixed only when the new seed reaches a newer CDS year at or past the current one (#463).
+  - It counts a school as fixed only when the new seed reaches a newer CDS year at or past the current one, or is a listing page whose newest year matches ours (#463).
   - It no longer posts to a standing issue each month.
 - **The monthly finder probe:**
   - It no longer marks a school "not found" when its search never ran. A budget, 402 or 429 response, unreadable reply or timeout now means "not searched", with no 30-day cooldown.
@@ -52,11 +52,11 @@ History before 0.1.0.0 (2026-08-03), including the June and July 2026 work, is n
   - It fails when nothing was attempted or nothing was committed.
   - It reads known years by canonical year.
 - **Years:** the directory repair tool, the top-100 coverage check and the published-years readers take the year from the freshness floor or the canonical year, never a hardcoded or text-sorted value.
-- **Renewal counting:** documents flagged as the wrong file, a blank template or low coverage don't count as a school having filed the current year, and sub-program files no longer hide a missing main-campus file.
+- **Renewal counting:** documents with any data-quality flag (today: the wrong file, a blank template or low coverage) don't count as a school having filed the current year, and sub-program files no longer hide a missing main-campus file.
 
 ### Docs
 
-- A prevention ledger for the stale-seeds postmortem, and the postmortem's action table marked done or open.
+- A prevention ledger for the stale-seeds postmortem, and the postmortem's action table with each action's status.
 - PRD 040 records the M0 hand samples.
 - The finder now points 38 more schools whose newest archived CDS was 2022-23 or older at their CDS listing page (#465).
 

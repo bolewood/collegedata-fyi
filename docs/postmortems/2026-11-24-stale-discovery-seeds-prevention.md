@@ -15,7 +15,7 @@ This ledger maps each of the postmortem's ten causes to five things: the control
 | **Discord #alerts, `workflow_run`** | The renewal workflow fails (short read, too few schools in the denominator, a floor mismatch, the alarm step failing) | Channel | Yes |
 | **Discord #alerts, hourly scheduled-run check** | The renewal workflow has no scheduled run newer than 36 h (the hand check: 35 days) | Channel | From the first scheduled run; with no scheduled run ever seen it records nothing |
 | **Discord #alerts, hourly board poll** | A board lamp turns `down`: Renewal (below a floor, no scheduled heartbeat in 36 h, an error, a hung run) or Stuck PDFs (90% or more still stuck) | Channel | Stuck PDFs: yes. Renewal: only after migration #469 is applied (slate until then) |
-| **Monthly hand-check issue** | The 3rd of each month | Assigned to the owner | Yes, from 2026-12-03 |
+| **Monthly hand-check issue** | The 3rd of each month | Assigned to the owner | From the first scheduled run on 2026-12-03; shown once by dispatch (`[test]` #498) |
 
 ## The headline number and its floor
 
@@ -199,7 +199,7 @@ Each original bug was put back in a throwaway worktree at `origin/main` 054b2b7 
 |---|---|---|
 | fails (short read, too few schools, a floor mismatch, the alarm step) | the `workflow_run` post to #alerts. From #493, day after day too: every 7th consecutive failure posts | `test_scheduled_failure_on_default_branch_alerts`, `test_consecutive_failures` |
 | stops running (disabled, deleted, schedule broken) | the hourly poll: no scheduled run in 36 h posts to #alerts | `test_discovery_renewal_staleness_alerts_once_then_recovers`, `test_first_poll_alerts_on_a_stale_run_and_baselines_a_fresh_one` |
-| runs but heartbeats nothing, errors, or hangs | the station's SLA lamp (36 h), then the board poll. **Once #469 is applied.** The poll posts only on a change to down, so while the lamp is already down for a below-floor result this adds nothing; the paths above still fire | pipeline-lamps "scheduled heartbeat older than 36h is down", "last scheduled error is down", "a hung run is a clock failure" |
+| runs but heartbeats nothing, errors, or hangs | the station's SLA lamp (36 h), then the board poll. **Once #469 is applied.** The poll posts only on a change to down, so while the lamp is already down for a below-floor result a silent heartbeat failure (rejected write, warning, exit 0) is not alarmed by itself. The alarm issue and its monthly re-notify don't depend on the heartbeat, so a below-floor year is still pushed | pipeline-lamps "scheduled heartbeat older than 36h is down", "last scheduled error is down", "a hung run is a clock failure" |
 | goes quiet because GitHub disabled schedules (60 days) | the optional outside check-in (D14), **once set up** | workflow test: the step is schedule-only and the URL is never printed |
 
 ## End-to-end test (2026-11-25)
@@ -302,9 +302,9 @@ The defaults taken, each reversible. The full text, with the alternatives, is in
 | D9 | Listing-page seeds behind the cycle are counted and listed, not re-probed |
 | D10 | Changelog entries land in one docs PR |
 | D11 | The PRD 040 CSV downloads wait for the launch gate (an untested `#` comment block) |
-| D12 | Flagged documents (`wrong_file`, `blank_template`, `low_coverage`) don't count as renewing |
+| D12 | Flagged documents don't count as renewing: any non-null `data_quality_flag`, failing closed (#499); today's values are `wrong_file`, `blank_template` and `low_coverage` |
 | D13 | One alarm issue per breaching CDS year |
 | D14 | Optional outside check-in (`RENEWAL_DEADMAN_URL`) against GitHub's 60-day schedule disable. It needs an account, which is the owner's call |
 | D16 | A standing alarm re-notifies: a new assigned issue every 30 days while still below, and at once on a 5-point worsening |
-| D17 | Arrivals check: per year, its own issue scope (`arrivals:<Y>`), ratio 0.4, a 60-day window in winter, with hysteresis on close |
+| D17 | Arrivals check: per year, its own issue scope (`arrivals:<Y>`), ratio 0.4. The 30-day and 60-day windows are both judged every day (from 6 and 10 expected), and a year is short if either is; there is hysteresis on close (#505) |
 | D15 | The first data-quality snapshot PR (#496) is held, because it would publish the ungated `/coverage` tile under the old renewal definition |
