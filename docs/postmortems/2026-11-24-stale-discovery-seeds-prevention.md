@@ -236,7 +236,7 @@ Three rounds. In round 1, Gemini 4 Neon (xhigh) and Fable each answered, indepen
 | # | Scenario | Found by | Outcome |
 |---|---|---|---|
 | R13 | **The alarm latches per year.** Once a year's issue is open, nothing more is pushed for that year. Replaying 2026, the issue opens on 2026-04-19, then seven silent months follow while the gap grows from 8 to 28 points | both | **Fixed** in #499 (D16): an open issue below the floor is superseded by a new assigned issue and a Discord post every 30 days, and at once on a 5-point worsening. The 2026 replay now gives 8 notifications for 2025-26 between April and November |
-| R14 | **A total stop takes 35–135 days to cross a floor**: the next-year check is off from September to February, and its margin widens in summer | both | **Fixed** in #499 (D17): an arrivals check. It fires when schools gaining a current- or next-year document in 30 days fall below a quarter of what the curve predicts, over 60 days in winter. Replayed, it would have fired 2026-08-15; a frozen archive fires within about 30 days (by about January 19 from December 1). An open arrivals breach is held until 30-day arrivals really recover |
+| R14 | **A total stop takes 35–135 days to cross a floor**: the next-year check is off from September to February, and its margin widens in summer | both | **Fixed** in #499 (D17): an arrivals check. It fires when schools gaining a current- or next-year document in 30 days fall below a quarter of what the curve predicts, over 60 days in winter. The arrivals measure itself would have gone below on 2026-08-14 to 08-22. Under #499 that was only a body edit on an already-open issue, and a frozen archive took 38–49 days. An open arrivals breach is held until 30-day arrivals really recover. Round 3 found the gaps; see R21–R23 |
 | R15 | An old year's issue that never reaches the mature floor keeps the lamp red forever and mutes later board alerts | Gemini | **Fixed** in #499: years two or more cycles old are retired with one post and never count as outstanding |
 | R16 | A real-mode test dispatch reads `outstanding` from the test label and can turn the lamp green | Gemini | **Fixed** in #499: it always reads the real label |
 | R17 | A crash in a `continue-on-error` step leaves the job green | Gemini | **Fixed** in #499: a final step fails the job |
@@ -246,7 +246,7 @@ Three rounds. In round 1, Gemini 4 Neon (xhigh) and Fable each answered, indepen
 
 ## Accepted risks (what is still not covered)
 
-1. **Small losses.** A mechanism that costs fewer than about 5 points of current-year renewal, or about 25% of the expected next-year share, does not cross a floor.
+1. **Partial losses.** The mature floors (83% one-year, 75% two-year) allow a steady loss of about 13% a year indefinitely (0.866² ≈ 0.75, and lapsed schools leave both denominators after two years). Before #501 (round 3), losing half or more of new arrivals mid-season was silent for 2–4 months; the measured delay after #501 is in that PR.
    - **Why accept:** tighter margins would make a healthy year alarm (D1), and a noisy alarm is the #136 failure again.
    - **Control:** the monthly hand check (20 schools; at a 6% miss rate a draw shows no miss 29% of the time, so it detects slowly).
    - **Next step:** re-derive the floor from a year of daily summaries (heartbeat history, #469) and alarm on year-on-year change at the same month.
@@ -254,7 +254,7 @@ Three rounds. In round 1, Gemini 4 Neon (xhigh) and Fable each answered, indepen
 3. **Hand-check discipline.** The monthly issue depends on a person filling it in. An unanswered issue is reported next month as "N unanswered", with no escalation.
 4. **Discord and GitHub as the only channels.** There is no outside channel until the D14 check-in is set up.
 5. **Until migration #469 is applied:** the Renewal lamp is slate, heartbeat history is not kept, and new summary keys are dropped from stored heartbeats. The alarm issue, Discord and the scheduled-run staleness check all work without it.
-6. **Floor calibration (D1).** The raw posting curve probably puts a healthy year near the floor each fall. The owner may prefer the scaled curve.
+6. **Floor calibration (D1, D7).** The raw posting curve probably puts a healthy year near the floor each fall, and the two-year floor trips too (in a healthy simulated control, 68% against 68% on 2027-09-01). With re-notification (D16) that means monthly issues for a healthy year in autumn. The owner may prefer the scaled curve.
 
 ## Corrections to earlier drafts
 
