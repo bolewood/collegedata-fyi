@@ -227,7 +227,7 @@ describe("data quality CSV", () => {
       "format,published,set_aside,couldnt_read,not_read_yet,fields_stored_median,fields_stored_lowest_10pct",
     );
     expect(lines).toHaveLength(1 + y2324.rows.length + 1);
-    expect(lines[1].startsWith("standard PDF,60,3,4,0,")).toBe(true);
+    expect(lines[1].startsWith("standard PDF,300,3,4,0,")).toBe(true);
     expect(lines.at(-1)!.startsWith("All formats,")).toBe(true);
     expect(csv).not.toContain("pdf_flat");
   });

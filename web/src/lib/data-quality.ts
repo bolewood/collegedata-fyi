@@ -303,26 +303,44 @@ export function isProjectedYear(year: string): boolean {
 // ── Hand checks (PRD 040 "M0 samples", 2026-11-25) ────────────────
 // Each note is tied to the CDS years its sample covered and shows only there.
 
-export const HAND_CHECK_DATE = "November 25, 2026";
+export const HAND_CHECK_ISO = "2026-11-25";
+export const HAND_CHECK_DATE = formatSnapshotDate(`${HAND_CHECK_ISO}T00:00:00Z`);
 
-/** 20 of the 2023-24 financial aid "can't check" reports, read against the schools' files: 19 were our misses. */
-export const AID_CANT_CHECK_SAMPLE = { years: ["2023-24"], checked: 20, ours: 19 } as const;
+/**
+ * 20 of the 217 published 2023-24 reports whose financial aid result was "can't check" in the 2026-11-25 run, read
+ * against the schools' files: 19 had the table filled in and we hadn't stored it in full.
+ *
+ * The note describes that pool of 217. Once the fix lands the pool shrinks and the note would be false, so it shows
+ * only while the snapshot's 2023-24 count is at least `keepShare` of 217 (the pool the sample described is still
+ * mostly there). Below that it hides, and a new sample is needed to say anything about what is left.
+ */
+export const AID_CANT_CHECK_SAMPLE = {
+  years: ["2023-24"],
+  checked: 20,
+  ours: 19,
+  population: 217,
+  keepShare: 0.9,
+} as const;
 
-/** 10 admissions "differs" reports from 2023-24 and 2024-25: 8 had our number in the school's file, 2 were ours. */
+/**
+ * 10 admissions "differs" reports from 2023-24 and 2024-25. In 8 the file had the number we compared. 2 were on our
+ * side: one misread and one report filed for a different scope than the federal record.
+ */
 export const FEDERAL_DIFFERS_SAMPLE = { years: ["2023-24", "2024-25"], checked: 10, sameInFile: 8, ours: 2 } as const;
 
-/** The 2023-24 financial aid sample. Null for a year it didn't cover, or when that year has no financial aid "can't check" reports left to describe. */
+/** The 2023-24 financial aid sample. Null for a year it didn't cover, or once the pool it described has mostly gone (see above). */
 export function aidCantCheckNote(year: QualityYear): string | null {
   const s = AID_CANT_CHECK_SAMPLE;
-  if (!(s.years as readonly string[]).includes(year.cds_year) || year.total.totals.H1.cant_check === 0) return null;
-  return `For financial aid in ${year.cds_year}, most of the can’t-check reports are ours. In a hand check of ${s.checked} of them against the schools’ files, sampled on ${HAND_CHECK_DATE}, ${s.ours} had the financial aid table filled in and we hadn’t stored it in full. A fix is in progress.`;
+  const stillThere = year.total.totals.H1.cant_check >= Math.ceil(s.population * s.keepShare);
+  if (!(s.years as readonly string[]).includes(year.cds_year) || !stillThere) return null;
+  return `For financial aid in ${year.cds_year}: in a hand check of ${s.checked} of the reports we couldn’t check, sampled on ${HAND_CHECK_DATE}, ${s.ours} had the financial aid table filled in and we hadn’t stored it in full.`;
 }
 
-/** The admissions "differs" sample. Null for a year it didn't cover, or with no differing values to describe. */
+/** The admissions "differs" sample. Null for a year it didn't cover, one with no federal figures, or one with no differing values. */
 export function federalDiffersNote(year: QualityYear): string | null {
   const s = FEDERAL_DIFFERS_SAMPLE;
   if (!(s.years as readonly string[]).includes(year.cds_year) || !year.federal_fall_loaded || year.total.federal.differs === 0) return null;
-  return `In a hand check of ${s.checked} differing reports (${s.years.join(" and ")}, sampled on ${HAND_CHECK_DATE}), ${s.sameInFile} had the same number in the school’s file that we compared, so for those the difference lies on the federal side or in how the two filings line up. The other ${s.ours} were ours.`;
+  return `In a hand check of ${s.checked} differing reports (${s.years.join(" and ")}, sampled on ${HAND_CHECK_DATE}), ${s.sameInFile} had the number we compared in the school’s file, so the difference came from the federal side or from how the two filings were matched, which can include our matching. ${s.ours} were on our side: one misread and one report filed for a different scope than the federal record.`;
 }
 
 const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
@@ -358,6 +376,11 @@ export function renewalTile(renewal: Renewal): RenewalTile {
     percent: Math.round(share * 100),
     sentence: `Of the ${renewal.previous.toLocaleString("en-US")} schools with a ${renewal.previous_year} report on file, ${renewal.both.toLocaleString("en-US")} also have a ${renewal.current_year} report on file.`,
   };
+}
+
+/** "12:25 UTC" for a snapshot timestamp. */
+export function formatSnapshotTime(iso: string): string {
+  return `${new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC" })} UTC`;
 }
 
 export function formatSnapshotDate(iso: string): string {

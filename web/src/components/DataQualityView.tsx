@@ -7,7 +7,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   MIN_REPORTS_FOR_RATE,
   TABLE_TITLES,
@@ -85,10 +85,47 @@ function SectionHead({ id, label, title, sentence }: { id: string; label: string
   );
 }
 
+/** Horizontal scroller for a wide table. Shows a right-edge fade and a hint while there is more to the right. */
 function Scroll({ children, label }: { children: ReactNode; label: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [more, setMore] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => setMore(el.scrollWidth - el.clientWidth - el.scrollLeft > 2);
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", update);
+      ro.disconnect();
+    };
+  }, []);
   return (
-    <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }} role="region" aria-label={label} tabIndex={0}>
-      {children}
+    <div style={{ position: "relative" }}>
+      {more && (
+        <div className="meta" aria-hidden="true" style={{ textAlign: "right", marginBottom: 6 }}>
+          Scroll sideways
+        </div>
+      )}
+      <div ref={ref} style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }} role="region" aria-label={label} tabIndex={0}>
+        {children}
+      </div>
+      {more && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            bottom: 0,
+            width: 36,
+            pointerEvents: "none",
+            background: "linear-gradient(to left, var(--paper) 10%, transparent)",
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -120,7 +157,9 @@ const tdStyle: React.CSSProperties = {
   fontFamily: "var(--mono)",
   verticalAlign: "top",
 };
-const tdLeft: React.CSSProperties = { ...tdStyle, textAlign: "left", fontFamily: "var(--sans)" };
+const tdLeft: React.CSSProperties = { ...tdStyle, textAlign: "left", fontFamily: "var(--sans)", whiteSpace: "nowrap" };
+/** Sentences under a download or at the top of the page: small, normal case. `.meta` is for labels. */
+const smallPrint: React.CSSProperties = { margin: "8px 0 0", maxWidth: 720, fontSize: 13, lineHeight: 1.5, color: "var(--ink-3)" };
 const totalRow: React.CSSProperties = { fontWeight: 600, background: "var(--paper-2)" };
 
 function Note({ children, id }: { children: ReactNode; id?: string }) {
@@ -140,7 +179,7 @@ function GlanceTable({ years }: { years: QualityYear[] }) {
         id="dq-glance-heading"
         label="§ All years at a glance"
         title="All years at a glance"
-        sentence="One row per year, newest first. Rates are shares of that year's published reports, except the admissions match rate, which is a share of values compared."
+        sentence="One row per year, newest first. Rates are shares of that year’s published reports, except the admissions match rate, which is a share of values compared."
       />
       <Scroll label="All years at a glance">
         <table style={tableStyle} id="dq-glance">
@@ -259,7 +298,7 @@ function CsvButton({ table, year }: { table: QualityTableId; year: QualityYear }
       <a href={qualityCsvPath(table, year.cds_year)} download className="cd-btn cd-btn--ghost" style={{ display: "inline-block" }}>
         Download {year.cds_year} table as CSV
       </a>
-      <p className="meta" style={{ margin: "8px 0 0" }}>
+      <p style={smallPrint}>
         This table is licensed{" "}
         <a href={DATA_LICENSE_URL} style={{ textDecoration: "underline" }}>
           {DATA_LICENSE_NAME}
@@ -318,9 +357,9 @@ function ReportsTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
         </table>
       </Scroll>
       <Note>
-        {n(liveCount(year.total.status))} reports in all. Set aside:{" "}
+        {n(liveCount(year.total.status))} reports counted. Set aside:{" "}
         {n(reasons.blank_form)} blank form, {n(reasons.too_little_read)} too little read, {n(reasons.wrong_file)} wrong
-        file. Left out of that count: {n(year.removed)} removed
+        file. Not counted: {n(year.removed)} removed
         {year.no_file > 0 ? `, ${n(year.no_file)} with no file` : ""}.
       </Note>
       <Note>
@@ -355,6 +394,11 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
         title="Admissions against federal figures"
         sentence="Applicants, admits and enrolled first-year students in each published report (CDS C1), compared with the federal figures for the same fall."
       />
+      {!loaded && (
+        <p id="dq-no-federal" style={{ margin: "0 0 14px", maxWidth: 720, fontSize: 15, lineHeight: 1.6, color: "var(--ink-2)" }}>
+          No federal admissions figures for fall {fallOf(year.cds_year)} yet.
+        </p>
+      )}
       <Scroll label={`Table B, ${year.cds_year}`}>
         <table style={tableStyle} id="dq-table-b">
           <thead>
@@ -402,18 +446,22 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
           federal admissions figures.
         </Note>
       )}
-      <Note>
-        <strong>No value</strong> means no usable CDS number was available to compare. The school may have left it
-        blank. We may have missed it, read it under a different year’s numbering, or set it aside because it
-        failed a sanity check. On its own, this table can’t say which.
-      </Note>
-      <Note id="dq-note-differs">
-        <strong>Differs</strong> isn’t always ours. Schools sometimes report different figures to the federal
-        government than in their CDS, for example from a different count date. A differing value may be our
-        misreading or a real difference between the two filings.
-        {federalDiffersNote(year) && <span id="dq-differs-sample"> {federalDiffersNote(year)}</span>}
-      </Note>
-      <CsvButton table="federal" year={year} />
+      {loaded && (
+        <>
+        <Note>
+          <strong>No value</strong> means no usable CDS number was available to compare. The school may have left it
+          blank. We may have missed it, read it under a different year’s numbering, or set it aside because it
+          failed a sanity check. On its own, this table can’t say which.
+        </Note>
+        <Note id="dq-note-differs">
+          <strong>Differs</strong> isn’t always ours. Schools sometimes report different figures to the federal
+          government than in their CDS, for example from a different count date. A differing value may be our
+          misreading or a real difference between the two filings.
+          {federalDiffersNote(year) && <span id="dq-differs-sample"> {federalDiffersNote(year)}</span>}
+        </Note>
+        </>
+      )}
+      {loaded && <CsvButton table="federal" year={year} />}
     </section>
   );
 }
@@ -547,7 +595,7 @@ function HowToRead() {
         </p>
         <p style={{ margin: 0 }}>
           Some school files disagree with themselves, for example a residency table whose totals differ from the
-          table by sex. We use the table by sex.
+          table by sex. For admissions counts we use the rows by sex when both men and women were read, and the printed total otherwise.
         </p>
         <p style={{ margin: 0 }}>
           A format with fewer than {MIN_REPORTS_FOR_RATE} reports in a table shows its counts but no percentage,

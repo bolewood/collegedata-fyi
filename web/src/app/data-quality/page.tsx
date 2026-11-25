@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ArchiveStatusHeader } from "@/components/ArchiveStatusHeader";
 import { DataQualityView } from "@/components/DataQualityView";
-import { isDataQualityLaunched, qualityLede, type QualitySnapshot } from "@/lib/data-quality";
+import { formatSnapshotDate, formatSnapshotTime, isDataQualityLaunched, qualityLede, type QualitySnapshot } from "@/lib/data-quality";
 import { loadLatestSnapshot } from "@/lib/data-quality-snapshots";
 
 // The snapshot is committed to the repo and read at build, so the page is
@@ -55,8 +55,9 @@ export default function DataQualityPage() {
         >
           {lede.populations} {lede.meaning}
         </p>
-        <p className="meta" style={{ marginTop: 12 }}>
-          Source: {snapshot.scoreboard_run}
+        <p id="dq-source" style={{ marginTop: 12, fontSize: 13, lineHeight: 1.5, color: "var(--ink-3)", maxWidth: 720 }}>
+          Numbers from the archive’s scoreboard run of {formatSnapshotDate(snapshot.snapshot_of)}, {formatSnapshotTime(snapshot.snapshot_of)} (file{" "}
+          {snapshot.scoreboard_run}).
         </p>
       </header>
 

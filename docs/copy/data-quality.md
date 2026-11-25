@@ -21,7 +21,9 @@ Awaiting Anthony's read.
 > printed totals. Data quality here means the quality of what this archive
 > publishes, not the quality of any school's own data.
 
-Small line under it: *Source: {scoreboard-…json}*
+Small normal-case line under it (the PRD wants the run named on the page, so the file name stays):
+
+> Numbers from the archive's scoreboard run of {November 24, 2026}, {12:25 UTC} (file {scoreboard-20261124T122503Z.json}).
 
 ## All years at a glance
 
@@ -50,8 +52,11 @@ because 2023-24 is counted differently; see Table A.*
 > How many {year} reports are published with numbers, set aside, couldn't be
 > read or not read yet, and how much of each form we stored.
 
-- > {n} reports in all. Set aside: {n} blank form, {n} too little read, {n}
-  > wrong file. Left out of that count: {n} removed.
+- > {n} reports counted. Set aside: {n} blank form, {n} too little read, {n}
+  > wrong file. Not counted: {n} removed{, {n} with no file}.
+
+  The ", {n} with no file" clause shows only when the year has reports with no
+  file to read.
 - > Fields stored counts the fields stored for the report as we publish it,
   > including fields recorded as unreadable or "not applicable". It measures
   > how much of the form we reached, not how many usable answers we have. The
@@ -63,14 +68,25 @@ because 2023-24 is counted differently; see Table A.*
   > includes values from a second reading of the same file. This year counts one
   > reading, so it reads lower partly for that reason.
 
-Shown under each table's download button (after launch): *Download {year} table as CSV.* Then:
-*This table is licensed CC BY 4.0. Credit collegedata.fyi.* (CC BY 4.0 is a
-link.)
+Shown under each table's download button (after launch): *Download {year} table as CSV.* Then, in
+small normal-case text (not the uppercase label style): *This table is licensed
+CC BY 4.0. Credit collegedata.fyi.* (CC BY 4.0 is a link.)
+
+Wide tables scroll sideways on a phone. While there is more to the right, a
+right-edge fade and a small "Scroll sideways" label show above the table.
 
 ## Table B: Admissions against federal figures
 
 > Applicants, admits and enrolled first-year students in each published report
 > (CDS C1), compared with the federal figures for the same fall.
+
+**When the year has no federal figures** (2025-26 today): right under the
+heading, *No federal admissions figures for fall 2025 yet.* The table shows
+dashes, and the two notes about "No value" and "Differs", the left-out note and
+the CSV button are hidden.
+
+The three notes below show only when the year has federal figures. The
+hand-check sentence also needs a covered year and at least one differing value.
 
 - > A value is compared only when the federal data has a positive figure for
   > it, and matches means within 2%. Left out: {n} reports we've marked as
@@ -86,12 +102,14 @@ link.)
   > between the two filings.
 - **2023-24 and 2024-25 only (hand check of 10):**
   > In a hand check of 10 differing reports (2023-24 and 2024-25, sampled on
-  > November 25, 2026), 8 had the same number in the school's file that we
-  > compared, so for those the difference lies on the federal side or in how
-  > the two filings line up. The other 2 were ours.
+  > November 25, 2026), 8 had the number we compared in the school's file, so
+  > the difference came from the federal side or from how the two filings were
+  > matched, which can include our matching. 2 were on our side: one misread and
+  > one report filed for a different scope than the federal record.
 
 Why it says no more: the federal side wasn't checked in the sample, only
-whether the number we compared is the number in the school's file.
+whether the number we compared is the number in the school's file. The 8 are
+unexplained, not cleared.
 
 ## Table C: Do the printed totals add up?
 
@@ -118,10 +136,14 @@ whether the number we compared is the number in the school's file.
   > errors show. Can't check can be a blank in the school's file, an unfilled
   > automatic total, a miss on our side, or a different year's numbering.
 - **2023-24 only (hand check of 20):**
-  > For financial aid in 2023-24, most of the can't-check reports are ours. In a hand check of 20
-  > of them against the schools' files, sampled on November 25, 2026, 19 had the
-  > financial aid table filled in and we hadn't stored it in full. A fix is in
-  > progress.
+  > For financial aid in 2023-24: in a hand check of 20 of the reports we
+  > couldn't check, sampled on November 25, 2026, 19 had the financial aid table
+  > filled in and we hadn't stored it in full.
+
+  The sample was drawn from the 217 can't-check reports in the 2026-11-25 run.
+  The sentence shows only while the snapshot's 2023-24 count is at least 90% of
+  217 (196), so it disappears once a fix shrinks the pool instead of going false.
+  There is no sentence about a fix: none is merged.
 
 ## How to read this
 
@@ -132,7 +154,9 @@ whether the number we compared is the number in the school's file.
 > says what its weak spots are.
 
 > Some school files disagree with themselves, for example a residency table
-> whose totals differ from the table by sex. We use the table by sex.
+> whose totals differ from the table by sex. For admissions counts we use the
+> rows by sex when both men and women were read, and the printed total
+> otherwise.
 
 > A format with fewer than 5 reports in a table shows its counts but no
 > percentage, because a rate over so few reports isn't meaningful. Year totals

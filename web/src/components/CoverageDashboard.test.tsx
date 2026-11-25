@@ -135,12 +135,12 @@ describe("copy invariants (VOICE.md)", () => {
     );
     const text = html.replace(/<[^>]*>/g, " ");
     expect(text).not.toMatch(/\b(extract(ed|or|ion|s)?|docling|tier ?\d?|drain(ed)?|manifest|projection|pipeline)\b/i);
-    expect((html.match(/\u2014|&mdash;|&#8212;/g) ?? []).length).toBeLessThanOrEqual(1);
+    expect((html.match(/\u2014|&mdash;|&#8212;|&#x2014;/gi) ?? []).length).toBeLessThanOrEqual(1);
   });
 
   // Table rows are virtualized, so a static render doesn't reach their empty-cell glyphs. Read the source:
   // an em dash there would repeat in every row and break the one-per-page rule.
   it("writes no em dash in the dashboard source (empty cells use an en dash)", () => {
-    expect(readFileSync(resolve(__dirname, "CoverageDashboard.tsx"), "utf8")).not.toContain("\u2014");
+    expect(readFileSync(resolve(__dirname, "CoverageDashboard.tsx"), "utf8")).not.toMatch(/\u2014|&mdash;|&#8212;|&#x2014;/i);
   });
 });

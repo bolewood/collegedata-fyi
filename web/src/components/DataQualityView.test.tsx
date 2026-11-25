@@ -13,9 +13,9 @@ vi.mock("next/navigation", () => ({
 import { FIXTURE_SNAPSHOT } from "@/lib/__fixtures__/data-quality-snapshot";
 import { DATA_LICENSE_NAME, DATA_LICENSE_URL } from "@/lib/data-license";
 import {
+  type QualityYear,
   AID_CANT_CHECK_SAMPLE,
   DATA_QUALITY_LAUNCH_DATE,
-  FEDERAL_DIFFERS_SAMPLE,
   aidCantCheckNote,
   federalDiffersNote,
 } from "@/lib/data-quality";
@@ -155,75 +155,135 @@ describe("launch gate: header, nav and methodology link", () => {
   });
 });
 
+
+const LAUNCH_MS = Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`);
+/** Every spelling of an em dash: the character, and the three entity forms. */
+const EM_DASH = /\u2014|&mdash;|&#8212;|&#x2014;/gi;
+const BANNED =
+  /\b(extract(ed|or|ion|s)?|docling|tier ?\d?|drain(ed)?|manifest|projection|pipeline|overlay|acroform|served|scoreboard|base reading|parse error|live (report|reports|count))\b/i;
+
+/** A copy of the fixture year with the 2023-24 financial aid "can't check" total set to n. */
+const withCantCheck = (y: QualityYear, n: number): QualityYear => ({
+  ...y,
+  total: { ...y.total, totals: { ...y.total.totals, H1: { ...y.total.totals.H1, cant_check: n } } },
+});
+const withDiffers = (y: QualityYear, n: number): QualityYear => ({
+  ...y,
+  total: { ...y.total, federal: { ...y.total.federal, differs: n } },
+});
 const Y = (y: string) => FIXTURE_SNAPSHOT.years.find((x) => x.cds_year === y)!;
 
 describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
   const years = ["2025-26", "2024-25", "2023-24"];
-  /** Visible text of one rendered year, tags dropped. */
-  const text = (y: string) => render(`year=${y}`).replace(/<[^>]*>/g, " ");
-  const BANNED = /\b(extract(ed|or|ion|s)?|docling|tier ?\d?|drain(ed)?|manifest|projection|pipeline|overlay|acroform)\b/i;
+  /** Rendered with the gate open, so the download buttons and licence lines are in the text too. */
+  const openHtml = (y: string) => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(LAUNCH_MS);
+      return render(`year=${y}`);
+    } finally {
+      vi.useRealTimers();
+    }
+  };
+  const textOf = (html: string) => html.replace(/<[^>]*>/g, " ");
 
-  it("uses no operator words on any year", () => {
-    for (const y of years) expect(text(y)).not.toMatch(BANNED);
+  it("uses no operator words on any year, gate closed or open", () => {
+    for (const y of years) {
+      expect(textOf(render(`year=${y}`))).not.toMatch(BANNED);
+      expect(textOf(openHtml(y))).not.toMatch(BANNED);
+    }
   });
 
-  it("has at most one em dash on any year", () => {
-    for (const y of years) expect((render(`year=${y}`).match(/\u2014|&mdash;|&#8212;/g) ?? []).length).toBeLessThanOrEqual(1);
+  it("catches each banned phrase (so the list above is live)", () => {
+    for (const w of ["parse error", "live reports", "live count", "served", "scoreboard", "overlay", "base reading", "manifest"]) {
+      expect(`the ${w} here`).toMatch(BANNED);
+    }
   });
 
-  it("shows the 2023-24 financial aid sample only for the year it covered, with its sample size", () => {
-    const sample = AID_CANT_CHECK_SAMPLE;
+  it("has at most one em dash on any year, in any spelling", () => {
+    for (const y of years) expect((openHtml(y).match(EM_DASH) ?? []).length).toBeLessThanOrEqual(1);
+    for (const f of ["\u2014", "&mdash;", "&#8212;", "&#x2014;", "&MDASH;"]) expect(f.match(EM_DASH)).not.toBeNull();
+  });
+
+  it("shows the 2023-24 financial aid sample only for the year it covered, and only while its pool is still there", () => {
+    const pool = AID_CANT_CHECK_SAMPLE.population;
+    expect(Y("2023-24").total.totals.H1.cant_check).toBe(pool);
     expect(render("year=2023-24")).toContain('id="dq-note-aid-sample"');
-    const note = aidCantCheckNote(Y("2023-24"))!;
-    expect(note).toContain(String(sample.checked));
-    expect(note).toContain(String(sample.ours));
-    expect(note).not.toContain("217");
     expect(render("year=2024-25")).not.toContain('id="dq-note-aid-sample"');
     expect(render("year=2025-26")).not.toContain('id="dq-note-aid-sample"');
     expect(aidCantCheckNote(Y("2024-25"))).toBeNull();
-    // no can't-check reports left (after the fix lands): nothing to describe
-    const fixed = Y("2023-24");
-    expect(aidCantCheckNote({ ...fixed, total: { ...fixed.total, totals: { ...fixed.total.totals, H1: { ...fixed.total.totals.H1, cant_check: 0 } } } })).toBeNull();
+
+    // The pool the sample described (217) shows it; after a fix (~67) it hides; the edge is 90% of the pool.
+    const keep = Math.ceil(pool * AID_CANT_CHECK_SAMPLE.keepShare);
+    expect(aidCantCheckNote(withCantCheck(Y("2023-24"), pool))).not.toBeNull();
+    expect(aidCantCheckNote(withCantCheck(Y("2023-24"), keep))).not.toBeNull();
+    expect(aidCantCheckNote(withCantCheck(Y("2023-24"), keep - 1))).toBeNull();
+    expect(aidCantCheckNote(withCantCheck(Y("2023-24"), 67))).toBeNull();
+    expect(aidCantCheckNote(withCantCheck(Y("2023-24"), 0))).toBeNull();
+    // The year guard on its own: a year the sample didn't cover stays hidden even with 217 can't-check reports.
+    expect(aidCantCheckNote(withCantCheck(Y("2024-25"), pool))).toBeNull();
   });
 
-  it("shows the admissions 'differs' sample only for the years it covered, never for the empty-federal year", () => {
+  it("shows the admissions 'differs' sample only for the years it covered, with federal figures and differing values", () => {
     expect(render("year=2023-24")).toContain('id="dq-differs-sample"');
     expect(render("year=2024-25")).toContain('id="dq-differs-sample"');
     expect(render("year=2025-26")).not.toContain('id="dq-differs-sample"');
-    const note = federalDiffersNote(Y("2024-25"))!;
-    expect(note).toContain(String(FEDERAL_DIFFERS_SAMPLE.checked));
-    expect(note).toContain(String(FEDERAL_DIFFERS_SAMPLE.sameInFile));
-    expect(federalDiffersNote(Y("2025-26"))).toBeNull();
-    const y = Y("2024-25");
-    expect(federalDiffersNote({ ...y, total: { ...y.total, federal: { ...y.total.federal, differs: 0 } } })).toBeNull();
+    expect(federalDiffersNote(Y("2024-25"))).not.toBeNull();
+    // No differing values left: nothing to describe.
+    expect(federalDiffersNote(withDiffers(Y("2024-25"), 0))).toBeNull();
+    // Year guard on its own: an uncovered year with federal figures and differing values stays hidden.
+    const uncovered = { ...withDiffers(Y("2025-26"), 5), federal_fall_loaded: true };
+    expect(federalDiffersNote(uncovered)).toBeNull();
+    // Loaded guard on its own: a covered year with no federal figures but differing values stays hidden.
+    const unloaded = { ...withDiffers(Y("2024-25"), 5), federal_fall_loaded: false };
+    expect(federalDiffersNote(unloaded)).toBeNull();
   });
 
-  it("the sample counts add up", () => {
-    expect(AID_CANT_CHECK_SAMPLE.ours).toBeLessThanOrEqual(AID_CANT_CHECK_SAMPLE.checked);
-    expect(FEDERAL_DIFFERS_SAMPLE.sameInFile + FEDERAL_DIFFERS_SAMPLE.ours).toBe(FEDERAL_DIFFERS_SAMPLE.checked);
+  it("with no federal figures, Table B says so under its heading and has no 'No value' or 'Differs' notes or download", () => {
+    const html = openHtml("2025-26");
+    expect(html).toContain('id="dq-no-federal"');
+    expect(html.indexOf('id="dq-no-federal"')).toBeLessThan(html.indexOf('id="dq-table-b"'));
+    expect(html).not.toContain('id="dq-note-differs"');
+    expect(html).not.toContain("/data-quality/csv/federal/");
+    const loaded = openHtml("2024-25");
+    expect(loaded).not.toContain('id="dq-no-federal"');
+    expect(loaded).toContain('id="dq-note-differs"');
+    expect(loaded).toContain("/data-quality/csv/federal/2024-25");
   });
 
   it("renders the licence note beside the downloads only when launched, built from the license constants", () => {
     vi.useFakeTimers();
     try {
-      vi.setSystemTime(Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`) - 1000);
+      vi.setSystemTime(LAUNCH_MS - 1000);
       const before = render("year=2024-25");
       expect(before).not.toContain(DATA_LICENSE_URL);
       expect(before).not.toContain("Download 2024-25 table as CSV");
-      vi.setSystemTime(Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`));
+      vi.setSystemTime(LAUNCH_MS);
       const after = render("year=2024-25");
       expect(after).toContain(`href="${DATA_LICENSE_URL}"`);
       expect(after).toContain(`>${DATA_LICENSE_NAME}</a>`);
       expect(after).toContain("Download 2024-25 table as CSV");
+      // A sentence, not a label: not set in the uppercase `.meta` style.
+      expect(after).not.toMatch(/class="meta"[^>]*>\s*This table is licensed/);
     } finally {
       vi.useRealTimers();
     }
   });
 
-  // Seen under `next dev` (Turbopack): the space before a text run containing an HTML entity was dropped
-  // after an inline element or a {expression} ("No value</strong>means"). A production build wasn't checked.
-  // Vitest compiles differently and can't see it, so keep entities out of this file; write the characters.
-  it("writes curly quotes as characters, not entities, so no space is lost in the real build", () => {
-    expect(readFileSync(resolve(__dirname, "DataQualityView.tsx"), "utf8")).not.toMatch(/&(r|l)(s|d)quo;/);
+  it("states the rule for files that disagree with themselves as the condition it is (rows by sex when both read, else the printed total)", () => {
+    const text = textOf(render()).replace(/\s+/g, " ");
+    expect(text).toMatch(/rows by sex when both men and women were read/);
+    expect(text).toMatch(/printed total otherwise/);
+    expect(text).not.toMatch(/We use the table by sex\./);
+  });
+
+  // Seen under `next dev` and in the production build: the space before a text run containing an HTML entity is
+  // dropped after an inline element or a {expression} ("No value</strong>means"). Vitest compiles differently and
+  // can't see it, so keep every entity out of this file and write the character (curly quotes, en dashes, &).
+  it("uses no HTML entity of any kind in the view's source", () => {
+    const hits = readFileSync(resolve(__dirname, "DataQualityView.tsx"), "utf8")
+      .split("\n")
+      .filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l) && /&(?:[a-zA-Z]+|#x?[0-9a-fA-F]+);/.test(l));
+    expect(hits).toEqual([]);
   });
 });
