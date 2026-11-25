@@ -753,7 +753,7 @@ the sample does not say why (count date, cohort or something else).
 | Virginia Commonwealth University | 2024-25 | 21,201 / 19,572 / 4,275 | The rows by sex sum to ours. The residency table in the same file prints 24,804 / 20,769 / 4,449 for the same cohort. | File matches our reading; the file disagrees with itself | p. 11 (by sex), p. 12 (residency totals) |
 | Louisiana Tech University | 2024-25 | 8,242 / 7,478 / 2,453 | Same printed totals (workbook, sheet CDS-C, rows C117 to C119). The residency rows beside them do not add to them (in-state 7,062, out-of-state blank, nonresident 1,464). | File matches our reading | Sheet CDS-C, rows C101 to C131 |
 | Arkansas State University | 2024-25 | 11,568 / 9,207 / 1,977 | Same. Rows by sex sum to ours. | File matches our reading | p. 13 |
-| Albion College | 2023-24 | 5,438 / 4,522 / 353 | Applied and admitted the same. Enrolled is 363: men 173, women 180, another gender 10. We stored the first two rows only. | Our reading error (enrolled; the 10 enrolled of another gender missed) | p. 13 |
+| Albion College | 2023-24 | 5,438 / 4,522 / 353 | Applied and admitted the same. Enrolled is 363: men 173, women 180, another gender 10. The run stored the total (363) but not the third row (10); `printed_admissions` prefers the rows by sex over the total, so it gave 353. | Our error (enrolled; the by-sex rows are preferred over the stored total, and the another-gender row was not read) | p. 13 |
 | University of Northern Colorado | 2023-24 | 9,479 / 8,880 / 1,229 | Same. Rows by sex sum to ours. | File matches our reading | p. 11 |
 | Fairleigh Dickinson University, Metropolitan Campus | 2024-25 | 11,478 / 10,665 / 1,188 | Same. The file carries a residency total that is also the same. | File matches our reading. The file is one campus; IPEDS reports the institution (see questions). | p. 8 |
 | Texas A&M University-Commerce | 2023-24 | 8,856 / 6,865 / 1,294 | Rows by sex sum to ours. The residency table's printed "Total" column reads 1,282 / 992 / 48, which is the total with the in-state column left out. | File matches our reading; the school's printed totals are wrong | p. 7 |
@@ -794,11 +794,11 @@ I rendered the page and read it as an image.
 | College of Coastal Georgia | 2023-24 | Nothing for H1 | Filled; total grants $6,576,435 / $2,161,845; total self-help $5,617,884 / $635,520 | Our miss | p. 24 |
 | Xavier University | 2023-24 | Nothing for H1 | Filled; total grants $39,860,858 / $75,031,663; total self-help $18,983,977 / $16,155,600 | Our miss | p. 24 |
 | Samford University | 2023-24 | Nothing for H1 | Filled; total grants $27,105,079 / $39,112,091; total self-help $7,633,487 / $9,547,203 | Our miss | p. 47 |
-| University of Texas at Tyler | 2023-24 | Nothing for H1 | Filled in form fields (e.g. total grants $31,178,810 / $2,275,443). The values are not in the page's text layer, so a text read sees an empty table. Read from the rendered page. | Our miss (values not in the text layer) | p. 32 |
+| University of Texas at Tyler | 2023-24 | Nothing for H1 | Filled (e.g. total grants $31,178,810 / $2,275,443). The PDF has no form fields (0 widgets); the values are flattened drawings missing from the page's text layer, so a text read sees an empty table. Read from the rendered page. | Our miss (values not in the text layer; needs the page-image path) | p. 32 |
 | Beloit College | 2023-24 | Nothing for H1 | Filled; total grants $27,579,901 / $12,181,462; total self-help $4,671,771 / $3,160,616 | Our miss | p. 24 |
 | Illinois Wesleyan University | 2023-24 | Nothing for H1 | Filled; total grants $43,035,172 / $15,977,251; total self-help $5,431,748 / $7,099,457 | Our miss | p. 45 |
 | Gettysburg College | 2023-24 | Nothing for H1 | Filled; total grants $96,243,345 / $6,540,297; total self-help $9,102,792 / $4,728,131 | Our miss | p. 24 |
-| California Polytechnic State University, San Luis Obispo | 2023-24 | Nothing for H1 | Filled in form fields (e.g. total grants $94,032,998 / $15,113,702). Same text-layer problem as UT Tyler. | Our miss (values not in the text layer) | p. 32 |
+| California Polytechnic State University, San Luis Obispo | 2023-24 | Nothing for H1 | Filled (e.g. total grants $94,032,998 / $15,113,702). 0 widgets; same flattened-drawing text-layer problem as UT Tyler. | Our miss (values not in the text layer; needs the page-image path) | p. 32 |
 | Macalester College | 2023-24 | Nothing for H1 | Filled; total grants $69,834,505 / $11,145,250; total self-help $10,313,347 / $809,152 | Our miss | p. 45 |
 | Oakland University | 2023-24 | Nothing for H1 | Filled; total grants $35,666,720 / $28,281,145; total self-help $15,745,449 / $17,822,383 | Our miss | p. 20 |
 | Northern Kentucky University | 2023-24 | Nothing for H1 | Filled; total grants $23,806,065 / $40,639,987; total self-help $16,589,935 / $29,055,105 | Our miss | p. 20 |
@@ -817,7 +817,9 @@ So 19 of 20 (95%) are our misses; the plausible range for the 217 is roughly
 unfilled automatic total turned up. Stanford is stored under the 2025-26
 schema label and might count as a numbering case; it would not change the
 conclusion, because its H1 values were filled and unread either way. Of the
-217, 201 (93%) have no H1 dollar value stored.
+217, 201 (93%) have no H1 dollar value stored. Of the 217, 34 are served
+from tier4_docling 0.3.0 (125 from 0.3.40), so part of "our miss" may be stale
+extractions; the fix should split by producer version. The fix issue is #486.
 
 ### Copy questions for the owner
 
@@ -828,8 +830,8 @@ These depend on the results. None is decided here.
    our side, or a different year's numbering. The sample says 19 of 20 are our
    misses, and the three other causes together are 1 of 20. Does 2023-24
    financial aid keep the neutral four-cause sentence, say that most are our
-   misses, or stay off the page for 2023-24 until the fix lands (see the fix
-   issue drafted in the PR)?
+   misses, or stay off the page for 2023-24 until the fix lands (see fix
+   issue #486)?
 2. **Table B, "Differs" copy.** In 9 of 10 the file matched our reading, and
    the difference was between the two filings (and in three, between the
    school's own rows and totals). Should the note under Table B say that most
