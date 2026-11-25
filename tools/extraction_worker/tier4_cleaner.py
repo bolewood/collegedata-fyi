@@ -7425,7 +7425,7 @@ def _h_layout_h1_reading(block: str) -> tuple[dict[str, dict], list[tuple[str, s
             # A trailing phrase belongs to the row name right before it
             # ("Federal Work/Study captured above)"), not to a primary label
             # that merely ends with one ("State and other ... (Note: Excludes
-            # Federal Work-Study captured above.)", 2 of 974 layouts).
+            # Federal Work-Study captured above.)", 8 of 974 layouts).
             if not substr.startswith("total") and (
                 (leading and at >= leading.start())
                 or (trailing and at < trailing.start() and trailing.start() - (at + len(substr)) <= 25)

@@ -392,7 +392,7 @@ class H1TextLayerTest(unittest.TestCase):
         self.assertEqual(h1(read(INSTRUCTIONS + HEADER + rows + AFTER))["H.109"], "1396004")
 
     def test_a_primary_label_that_ends_with_a_trailing_phrase_is_still_a_row(self) -> None:
-        # Seen in two layouts: "State and other ... (Note: Excludes Federal
+        # Seen in 8 of 974 layouts: "State and other ... (Note: Excludes Federal
         # Work-Study captured above.)" on one line, with its amounts.
         label = "State and other work-study (Excludes Federal Work-Study captured above.)"
         rows = TRINITY_ROWS.replace(
@@ -476,6 +476,17 @@ class H1TextLayerTest(unittest.TestCase):
         ).replace("$5,221,708", "$4,955,985")
         values = h1(read(INSTRUCTIONS + HEADER + rows + AFTER))
         self.assertEqual(values["H.106"], "1973493")
+
+    def test_fewer_than_three_two_amount_rows_is_not_a_table_to_read(self) -> None:
+        # Only Federal and the grants total print two amounts: there are no
+        # column medians to place anything against.
+        rows = (
+            line("Federal", "$1,973,493", "$265,723")
+            + line("Total Scholarships/Grants", "$1,973,493", "$265,723", at=60)
+            + line("Student loans from all sources", "$2,308,770")
+            + line("Total Self-Help", "$2,308,770", at=70)
+        )
+        self.assertEqual(_h_layout_h1_rows_by_column(HEADER + rows), {})
 
     def test_text_layer_replaces_the_markdown_h1_block(self) -> None:
         # The markdown reading put the work-study amount in H.113 ("State and
