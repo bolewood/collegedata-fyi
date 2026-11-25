@@ -58,7 +58,7 @@ describe("year selection", () => {
   it("defaults to the newest year and shows the year picker newest first", () => {
     const html = render();
     expect(html).toContain("Table A, 2025-26");
-    const order = ["2025-26", "2024-25", "2023-24"].map((y) => html.indexOf(`/data-quality?year=${y}`));
+    const order = ["2025-26", "2024-25", "2023-24"].map((y) => html.indexOf(`href="?year=${y}"`));
     expect(order.every((i) => i > 0)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
   });

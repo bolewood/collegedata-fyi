@@ -388,16 +388,31 @@ function TrendLine({ row, points }: { row: TrendRow; points: TrendPoint[] }) {
 
 // ── Year picker ──────────────────────────────────────────────────
 
+/**
+ * The year lives only in the query string and the page is static, so choosing one needs no server round trip. A router
+ * navigation (next/link) here fetches the page again, and a tap that lands while that is starting can be dropped (seen on
+ * phones: the chip did nothing), so the chip is a plain link, not a next/link. pushState keeps useSearchParams in step (Next syncs it), changes the URL at once, and leaves the
+ * link a real link for open-in-new-tab, copy-link and no-JS.
+ */
+function chooseYear(event: React.MouseEvent<HTMLAnchorElement>, alreadyShown: boolean) {
+  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  event.preventDefault();
+  // Tapping the year already shown changes nothing, and must not add a history entry (the next Back would do nothing).
+  if (alreadyShown) return;
+  // The link's own href (a query only, so it stays on this page): one place builds the URL.
+  window.history.pushState(null, "", event.currentTarget.getAttribute("href"));
+}
+
 export function YearPicker({ years, selected }: { years: QualityYear[]; selected: string }) {
   return (
     <div role="group" aria-label="Choose a year" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
       {years.map((y) => {
         const on = y.cds_year === selected;
         return (
-          <Link
+          <a
             key={y.cds_year}
-            href={`/data-quality?year=${y.cds_year}`}
-            scroll={false}
+            href={`?year=${encodeURIComponent(y.cds_year)}`}
+            onClick={(event) => chooseYear(event, on)}
             aria-current={on ? "true" : undefined}
             className="cd-chip"
             style={{
@@ -408,7 +423,7 @@ export function YearPicker({ years, selected }: { years: QualityYear[]; selected
             }}
           >
             {y.cds_year}
-          </Link>
+          </a>
         );
       })}
     </div>
