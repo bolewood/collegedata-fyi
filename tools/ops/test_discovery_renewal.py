@@ -165,6 +165,8 @@ class ComputeTests(unittest.TestCase):
                 "two_year_renewal_pct", "two_year_floor_pct", "two_year_below_floor",
                 "lapsed_schools", "same_year_duplicates", "floor_overridden", "alarm_issue",
                 "run_url",
+                "seeds_with_seed", "seeds_without_new_year",
+                "seeds_without_new_year_one_file", "seeds_without_new_year_listing_page",
             },
         )
         summary = dr.summary_dict(result, run_url="https://x/y")

@@ -34,6 +34,12 @@ class FreshYearTests(unittest.TestCase):
 
 
 class ClassifyTests(unittest.TestCase):
+    def test_listing_skip_reason_points_to_seed_age(self) -> None:
+        # D9: listing seeds are not fed to the re-probe; the reason says where they are counted.
+        text = SKIP_REASONS["listing_seed"]
+        self.assertIn("seed_age", text)
+        self.assertIn("renewal report", text)
+
     def test_listing_seed_is_skipped_with_a_reason(self) -> None:
         school = {"id": "ou", "discovery_seed_url": "https://www.ou.edu/irr/other-reports"}
         row = classify_school(school, ["2023-24"], min_fresh_year="2024-25")

@@ -29,7 +29,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable
@@ -50,7 +50,7 @@ SCHOOL_PAGE_URL = "https://www.collegedata.fyi/schools/{school_id}"
 PAGE_SIZE = 1000
 HTTP_TIMEOUT_SEC = 60
 MANIFEST_QUERY = (
-    "select=school_id,canonical_year,removed_at,participation_status"
+    "select=school_id,canonical_year,discovered_at,removed_at,participation_status"
     "&removed_at=is.null&order=document_id.asc"
 )
 
@@ -323,12 +323,18 @@ def compute(
 
 
 def summary_dict(
-    result: Result, *, run_url: str | None = None, same_year_duplicates: int | None = None
+    result: Result,
+    *,
+    run_url: str | None = None,
+    same_year_duplicates: int | None = None,
+    seed_summary: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """The heartbeat summary. Flat keys, shared with the web and migration work.
     The `below_floor` and `two_year_below_floor` values are always real
     booleans; `next_below_floor` is null while the next year is untracked."""
+    seed_keys = seed_summary_keys(seed_summary)
     return {
+        **seed_keys,
         "current_year": format_year(result.current_year),
         "renewed": len(result.current.renewed),
         "prev_schools": len(result.current.prev_schools),
@@ -360,6 +366,24 @@ def summary_dict(
 
 
 CHECKS = ("current", "two_year", "next")
+
+
+def seed_summary_keys(seed_summary: dict[str, Any] | None) -> dict[str, Any]:
+    """Flat heartbeat keys from `seed_age.summarize()` (#462); null when not computed."""
+    if seed_summary is None:
+        return {
+            "seeds_with_seed": None,
+            "seeds_without_new_year": None,
+            "seeds_without_new_year_one_file": None,
+            "seeds_without_new_year_listing_page": None,
+        }
+    kinds = seed_summary["by_kind"]
+    return {
+        "seeds_with_seed": seed_summary["seeds"],
+        "seeds_without_new_year": seed_summary["seeds_without_new_year"],
+        "seeds_without_new_year_one_file": kinds["one_file"]["behind"],
+        "seeds_without_new_year_listing_page": kinds["listing_page"]["behind"],
+    }
 
 
 def lead_check(summary: dict[str, Any]) -> str | None:
@@ -470,6 +494,7 @@ def render_report(
     max_chars: int = 60000,
     lead: str | None = None,
     duplicates: Any = None,
+    seeds_section: str | None = None,
 ) -> str:
     """`duplicates` is a `same_year_duplicates.Report` or None (not computed)."""
     s = summary_dict(result)
@@ -545,14 +570,20 @@ def render_report(
             seed = f" · seed: {w['seed_url']}" if w["seed_url"] else ""
             lines.append(f"- {link} · newest {w['newest_year']}{seed}")
         lines.append("")
+    # The seed section is capped by its renderer and comes after the worklist;
+    # the worklist is what gets cut when the report is too long, never this.
+    tail_lines = [seeds_section.rstrip("\n"), ""] if seeds_section else []
     if run_url:
-        lines += [f"Run: {run_url}", ""]
+        tail_lines += [f"Run: {run_url}", ""]
+    tail = "\n".join(tail_lines)
     text = "\n".join(lines)
-    if len(text) > max_chars:
-        text = text[: max_chars - 200].rsplit("\n", 1)[0] + (
+    budget = max_chars - len(tail) - 1
+    if len(text) > budget:
+        text = text[: budget - 200].rsplit("\n", 1)[0] + (
             "\n\n(List cut to fit the issue size limit. The full list is in the "
             "workflow artifact.)\n"
         )
+    text = text + "\n" + tail if tail else text
     return text
 
 
@@ -780,6 +811,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--out-summary", type=Path)
     parser.add_argument("--out-report", type=Path)
     parser.add_argument("--out-state", type=Path)
+    parser.add_argument("--out-seed-ages", type=Path, help="every seed's age as JSON (artifact)")
     parser.add_argument("--out-worklist", type=Path, help="full worklist as JSON (artifact)")
     return parser
 
@@ -828,19 +860,26 @@ def run(args: argparse.Namespace) -> int:
 
         duplicates = find_same_year_duplicates(args.api_url, args.anon_key)
         print(f"same-year duplicates: {duplicates.count} ({duplicates.documents_read} live documents)")
+    # Imported here: seed_age imports this module for the shared mechanism.
+    from tools.finder import seed_age
+
+    ages, seed_summary = seed_age.run_seed_age(schools, rows, as_of)
     summary = summary_dict(
         result,
         run_url=args.run_url or None,
         same_year_duplicates=duplicates.count if duplicates is not None else None,
+        seed_summary=seed_summary,
     )
     lead = lead_check(summary)
     worklist = missing_worklist(result, schools, lead or "current")
     report = render_report(
-        result, worklist, run_url=args.run_url or None, lead=lead, duplicates=duplicates
+        result, worklist, run_url=args.run_url or None, lead=lead, duplicates=duplicates,
+        seeds_section=seed_age.render_section(ages, cds_freshness_floor(as_of)),
     )
 
     write_json(args.out_summary, summary)
     write_json(args.out_worklist, worklist)
+    write_json(args.out_seed_ages, [asdict(a) for a in ages])
     if args.out_report:
         args.out_report.parent.mkdir(parents=True, exist_ok=True)
         args.out_report.write_text(report, encoding="utf-8")
@@ -866,4 +905,7 @@ def run(args: argparse.Namespace) -> int:
 
 
 if __name__ == "__main__":
+    # Run as a script this module is `__main__`; seed_age imports it by its
+    # package name. Alias it so both see one RenewalError (main() catches it).
+    sys.modules.setdefault("tools.ops.discovery_renewal", sys.modules[__name__])
     raise SystemExit(main())
