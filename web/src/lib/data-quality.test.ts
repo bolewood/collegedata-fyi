@@ -711,7 +711,7 @@ describe("lede: the report-vs-school gap is real in the committed data", () => {
     const dir = path.join(process.cwd(), "src", "data", "data-quality", "reports");
     const file = fs.readdirSync(dir).filter((n) => n.endsWith(".json")).sort().at(-1)!;
     const reports = JSON.parse(fs.readFileSync(path.join(dir, file), "utf8")) as { years: Record<string, { school: string | null; status: string }[]> };
-    const published = Object.entries(reports.years).flatMap(([year, rows]) => rows.filter((r) => r.status === "published").map((r) => `${r.school}|${year}`));
+    const published = Object.entries(reports.years).flatMap(([year, rows]) => rows.filter((r) => r.status === "published" && r.school !== null).map((r) => `${r.school}|${year}`));
     expect(new Set(published).size).toBeLessThan(published.length);
   });
 });

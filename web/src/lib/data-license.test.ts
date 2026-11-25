@@ -13,7 +13,7 @@ import {
   dataLicenseFields,
 } from "./data-license";
 import { setLaunchGate } from "./__fixtures__/data-quality-gate";
-import { loadLatestSnapshot } from "./data-quality-snapshots";
+import { TABLE_TITLES } from "./data-quality";
 
 const repo = (path: string) => readFileSync(resolve(__dirname, "../../..", path), "utf8");
 
@@ -59,15 +59,31 @@ describe("machine-readable license surfaces", () => {
     expect(MCP_INSTRUCTIONS).toContain(DATA_ATTRIBUTION);
   });
 
-  // PRD 040: the Data quality CSV route is a licensed surface once launched.
-  it("carries the license Link header on all three Data quality CSV tables once launched", async () => {
+  // PRD 040: the Data quality CSV and reports routes are licensed surfaces once launched.
+  it("carries the license Link header on every Data quality CSV table the build serves, once launched", async () => {
     setLaunchGate(true);
-    const { GET } = await import("../app/data-quality/csv/[table]/[year]/route");
-    const year = loadLatestSnapshot().years[0].cds_year;
-    for (const table of ["reports", "federal", "totals"]) {
-      const res = await GET(new Request("https://collegedata.fyi/x"), { params: Promise.resolve({ table, year }) });
-      expect(res.status, table).toBe(200);
-      expect(res.headers.get("Link"), table).toBe(DATA_LICENSE_LINK_HEADER);
+    const route = await import("../app/data-quality/csv/[table]/[year]/route");
+    const params = route.generateStaticParams();
+    expect(params.length).toBeGreaterThan(0);
+    // Every table the route can serve appears, so a seventh table (or a dropped one) is noticed here.
+    expect([...new Set(params.map((p) => p.table))].sort()).toEqual(Object.keys(TABLE_TITLES).sort());
+    for (const { table, year } of params) {
+      const res = await route.GET(new Request("https://collegedata.fyi/x"), { params: Promise.resolve({ table, year }) });
+      expect(res.status, `${table} ${year}`).toBe(200);
+      expect(res.headers.get("Link"), `${table} ${year}`).toBe(DATA_LICENSE_LINK_HEADER);
     }
+  });
+
+  it("carries it on the Data quality reports file once launched, and serves nothing before", async () => {
+    const route = await import("../app/data-quality/reports/[date]/route");
+    setLaunchGate(true);
+    const params = route.generateStaticParams();
+    expect(params).toHaveLength(1);
+    const res = await route.GET(new Request("https://collegedata.fyi/x"), { params: Promise.resolve(params[0]) });
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Link")).toBe(DATA_LICENSE_LINK_HEADER);
+    setLaunchGate(false);
+    expect(route.generateStaticParams()).toEqual([]);
+    expect((await route.GET(new Request("https://collegedata.fyi/x"), { params: Promise.resolve(params[0]) })).status).toBe(404);
   });
 });

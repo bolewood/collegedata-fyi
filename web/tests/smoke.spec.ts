@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Request } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { TABLE_TITLES, hasSections, type QualityTableId } from "../src/lib/data-quality";
+import { TABLE_TITLES, snapshotDay, hasSections, type QualityTableId } from "../src/lib/data-quality";
 import { loadLatestSnapshot } from "../src/lib/data-quality-snapshots";
 
 function isSchoolPagePrefetch(req: Request): boolean {
@@ -178,7 +178,7 @@ test.describe("Data quality gate (matches the build)", () => {
   });
 
   test("reports route", async ({ request }) => {
-    const day = loadLatestSnapshot().snapshot_of.slice(0, 10);
+    const day = snapshotDay(loadLatestSnapshot());
     const res = await request.get(`/data-quality/reports/${day}`);
     expect(res.status()).toBe(launched ? 200 : 404);
     if (launched) expect(res.headers()["link"]).toContain('rel="license"');
