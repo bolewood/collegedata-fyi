@@ -6,12 +6,16 @@ import { isCanonicalCdsYear } from "./format";
 import { formatLabel } from "./format-labels";
 
 /**
- * Launch gate, on the isUsageLaunched pattern. It stays far in the future
- * until the owner decides to launch; flipping it is a one-line change that
- * turns on the header tab, nav and footer labels, sitemap entry and indexing
- * in one build. Do not set a date that has already passed without the owner.
+ * Launch gate, on the isUsageLaunched pattern. Flipping it is a one-line
+ * change that turns on the header tab, nav and footer labels, sitemap entry,
+ * indexing, methodology link and CSV downloads in one build.
+ *
+ * PLACEHOLDER: the owner picks the real date. A deploy must run on or after
+ * that date: `/data-quality` and its CSV route are force-static, so a build
+ * made before the date bakes in the closed gate and stays closed until the
+ * next deploy. Nothing flips on its own at midnight.
  */
-export const DATA_QUALITY_LAUNCH_DATE = "2099-01-01";
+export const DATA_QUALITY_LAUNCH_DATE = "2026-12-01";
 
 export function isDataQualityLaunched(now: Date = new Date()): boolean {
   return now.getTime() >= Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`);

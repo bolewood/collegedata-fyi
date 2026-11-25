@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Request } from "@playwright/test";
+import { isDataQualityLaunched } from "../src/lib/data-quality";
 
 function isSchoolPagePrefetch(req: Request): boolean {
   let url: URL;
@@ -82,6 +83,33 @@ test("coverage page renders filterable accountability data", async ({ page }) =>
   ).toBeVisible();
   await expect(page.getByText("No public CDS found").first()).toBeVisible();
   await expect(page.getByText("Methodology")).toBeVisible();
+});
+
+// PRD 040 launch gate. The server renders the gate from its own clock, and
+// Playwright can't fake that, so this reads the same clock and the same
+// constant: it passes on both sides of DATA_QUALITY_LAUNCH_DATE. (The vitest
+// gate tests in src/lib/data-quality-gate.test.tsx fake the clock and pin both
+// states.) The /coverage heading is "Archive coverage" in both states.
+test("Data quality tab and page follow the launch gate", async ({ page, request }) => {
+  const launched = isDataQualityLaunched();
+  await page.goto("/coverage");
+  const tab = page.getByRole("navigation", { name: "Archive status" }).getByRole("link", { name: "Data quality" });
+  await expect(tab).toHaveCount(launched ? 1 : 0);
+
+  await page.goto("/data-quality");
+  await expect(page.getByRole("heading", { name: "Data quality", level: 1 })).toBeVisible();
+  const robots = await page.evaluate(() => document.querySelector('meta[name="robots"]')?.getAttribute("content") ?? null);
+  if (launched) {
+    expect(robots).toBeNull();
+    await expect(page.getByText("as CSV").first()).toBeVisible();
+    const csv = page.locator('a[href^="/data-quality/csv/"]').first();
+    const res = await request.get((await csv.getAttribute("href"))!);
+    expect(res.status()).toBe(200);
+    expect(res.headers()["link"]).toContain('rel="license"');
+  } else {
+    expect(robots).toMatch(/noindex/);
+    expect((await request.get("/data-quality/csv/reports/2025-26")).status()).toBe(404);
+  }
 });
 
 test("browser loads live rows and source links resolve", async ({ page, request }) => {
