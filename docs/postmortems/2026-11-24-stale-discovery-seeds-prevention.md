@@ -246,7 +246,7 @@ Three rounds. In round 1, Gemini 4 Neon (xhigh) and Fable each answered, indepen
 
 ## Accepted risks (what is still not covered)
 
-1. **Partial losses.** The mature floors (83% one-year, 75% two-year) allow a steady loss of about 13% a year indefinitely (0.866² ≈ 0.75, and lapsed schools leave both denominators after two years). Before #501 (round 3), losing half or more of new arrivals mid-season was silent for 2–4 months; the measured delay after #501 is in that PR.
+1. **Partial losses.** The mature floors (83% one-year, 75% two-year) allow a steady loss of about 13% a year indefinitely (0.866² ≈ 0.75, and lapsed schools leave both denominators after two years). Before #502 (round 3), losing half or more of new arrivals mid-season was silent for 2–4 months; the measured delay after #502 is in that PR.
    - **Why accept:** tighter margins would make a healthy year alarm (D1), and a noisy alarm is the #136 failure again.
    - **Control:** the monthly hand check (20 schools; at a 6% miss rate a draw shows no miss 29% of the time, so it detects slowly).
    - **Next step:** re-derive the floor from a year of daily summaries (heartbeat history, #469) and alarm on year-on-year change at the same month.
