@@ -41,6 +41,9 @@ function row(s: RowSpec): QualityFormatRow {
       matches: s.federal[1],
       no_value: s.federal[2],
       differs: s.federal[3],
+      // About 60% of the differences are 2% to 10% off, the rest over 10%.
+      differs_2_to_10pct: Math.floor(s.federal[3] * 0.6),
+      differs_over_10pct: s.federal[3] - Math.floor(s.federal[3] * 0.6),
     },
     totals: {
       reports: s.published,
@@ -55,7 +58,7 @@ function sumRows(rows: QualityFormatRow[]): QualityRow {
   const total: QualityRow = {
     status: { published: 0, set_aside: 0, couldnt_read: 0, not_read_yet: 0 },
     fields_stored: { median: 0, p10: 0 },
-    federal: { reports: 0, values: 0, matches: 0, no_value: 0, differs: 0 },
+    federal: { reports: 0, values: 0, matches: 0, no_value: 0, differs: 0, differs_2_to_10pct: 0, differs_over_10pct: 0 },
     totals: {
       reports: 0,
       B1: { adds_up: 0, under_2pct: 0, off_more: 0, cant_check: 0 },
@@ -65,7 +68,7 @@ function sumRows(rows: QualityFormatRow[]): QualityRow {
   };
   for (const r of rows) {
     for (const k of Object.keys(total.status) as (keyof typeof total.status)[]) total.status[k] += r.status[k];
-    for (const k of Object.keys(total.federal) as (keyof typeof total.federal)[]) total.federal[k] += r.federal[k];
+    for (const k of Object.keys(total.federal) as (keyof typeof total.federal)[]) total.federal[k] = (total.federal[k] ?? 0) + (r.federal[k] ?? 0);
     total.totals.reports += r.totals.reports;
     for (const t of ["B1", "C1"] as const) {
       for (const k of Object.keys(total.totals[t]) as (keyof typeof total.totals.B1)[]) total.totals[t][k] += r.totals[t][k];
@@ -130,7 +133,7 @@ const sheets = () =>
   });
 
 export const FIXTURE_SNAPSHOT: QualitySnapshot = {
-  public_format: 1,
+  public_format: 2,
   snapshot_of: "2026-11-24T12:25:03Z",
   scoreboard_run: "scoreboard-20261124T122503Z.json",
   renewal: {
@@ -175,8 +178,21 @@ export const emptyYear = (cds_year: string): QualityYear => {
     total: {
       status: { published: 0, set_aside: 0, couldnt_read: 0, not_read_yet: 0 },
       fields_stored: { median: 0, p10: 0 },
-      federal: { reports: 0, values: 0, matches: 0, no_value: 0, differs: 0 },
+      federal: { reports: 0, values: 0, matches: 0, no_value: 0, differs: 0, differs_2_to_10pct: 0, differs_over_10pct: 0 },
       totals: { reports: 0, B1: { ...sums }, C1: { ...sums }, H1: { adds_up: 0, doesnt: 0, cant_check: 0 } },
     },
   };
 };
+
+/** The same snapshot as public_format 1 wrote it: no size split. */
+export const FIXTURE_SNAPSHOT_V1: QualitySnapshot = (() => {
+  const v1: QualitySnapshot = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT));
+  v1.public_format = 1;
+  for (const y of v1.years) {
+    for (const r of [...y.rows, y.total]) {
+      delete r.federal.differs_2_to_10pct;
+      delete r.federal.differs_over_10pct;
+    }
+  }
+  return v1;
+})();

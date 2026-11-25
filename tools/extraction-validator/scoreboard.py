@@ -163,11 +163,14 @@ PAGE_SIZE = 1000
 # what it needs. Format 2 adds `manifest`, `federal_left_out`, `forms`,
 # `renewal`, and near-miss sum outcomes (`sum_check_version` 2). Format 3 adds,
 # per document, `ipeds_id`, `source_sha256`, `federal_values`, `sections` and
-# `federal_extra` (raw inputs; nothing public reads them yet). `--public` reads 2 and 3 alike.
+# `federal_extra`. `--public` needs 3: public format 2 splits Table B's "differs"
+# by size, which needs `federal_values`. A format 2 run is refused, not written as
+# public format 1: a snapshot quietly missing the split would look like one that has it.
 RUN_FORMAT = 3
-PUBLIC_RUN_FORMATS = (2, 3)
+PUBLIC_RUN_FORMATS = (3,)
 SUM_CHECK_VERSION = 2
-PUBLIC_FORMAT = 1
+# Public format 2 adds `federal.differs_2_to_10pct` and `federal.differs_over_10pct`.
+PUBLIC_FORMAT = 2
 DEFAULT_PUBLIC_DIR = REPO_ROOT / "web" / "src" / "data" / "data-quality"
 SCHEMA_DIR = REPO_ROOT / "schemas"
 # A failing enrollment or admissions sum is a near miss when its gap is under
@@ -1358,6 +1361,19 @@ FORMAT_ORDER = tuple(FORMAT_LABELS)
 SUM_OUTCOME_KEY = {"pass": "adds_up", "near": "under_2pct", "fail": "off_more", "nc": "cant_check"}
 AID_OUTCOME_KEY = {"pass": "adds_up", "fail": "doesnt", "nc": "cant_check"}
 
+# A "different" value is split by its gap as a share of the federal figure:
+# above 2% (the match tolerance) up to and including 10%, or over 10%.
+FEDERAL_LARGE_SHARE = Decimal("0.10")
+
+
+def federal_difference_band(cds: Optional[int], federal: Optional[Decimal]) -> Optional[str]:
+    """'2_to_10' or 'over_10' for a value `classify_federal` calls 'different'
+    (gap over 2% of the federal figure; exactly 10% is still '2_to_10'), else None."""
+    if classify_federal(cds, federal) != "different":
+        return None
+    return "2_to_10" if abs(Decimal(cds) - federal) <= FEDERAL_LARGE_SHARE * federal else "over_10"
+
+
 _COUNT, _TEXT, _FLAG = "count", "text", "flag"
 
 
@@ -1371,7 +1387,8 @@ _STATUS_SPEC = {k: _COUNT for k in STATUSES}
 _ROW_SPEC = {
     "status": _STATUS_SPEC,
     "fields_stored": {"median": _COUNT, "p10": _COUNT},
-    "federal": {k: _COUNT for k in ("reports", "values", "matches", "no_value", "differs")},
+    "federal": {k: _COUNT for k in ("reports", "values", "matches", "no_value", "differs",
+                                    "differs_2_to_10pct", "differs_over_10pct")},
     "totals": {
         "reports": _COUNT,
         "B1": {k: _COUNT for k in SUM_OUTCOME_KEY.values()},
@@ -1443,6 +1460,22 @@ def _row_counts(classes: Counter, published: list[dict[str, Any]], federal_loade
     outcomes = [[o for o in d["federal"].values() if o]
                 for d in published if not d["sub_institutional"]] if federal_loaded else []
     federal_values = Counter(o for each in outcomes for o in each)
+    bands = Counter()
+    if federal_loaded:
+        for d in published:
+            if d["sub_institutional"]:
+                continue
+            for metric, outcome in d["federal"].items():
+                if not outcome:
+                    continue
+                v = d["federal_values"][metric]
+                federal = Decimal(v["federal"]) if v["federal"] is not None else None
+                if classify_federal(v["ours"], federal) != outcome:
+                    raise SystemExit(f"--public: {d['document_id']} {metric}: federal_values say "
+                                     f"{classify_federal(v['ours'], federal)!r}, the run's outcome is {outcome!r}")
+                bands[federal_difference_band(v["ours"], federal)] += 1
+    if bands["2_to_10"] + bands["over_10"] != federal_values["different"]:
+        raise SystemExit("--public: the two size bands do not add up to the differing values")
     totals: dict[str, Any] = {"reports": len(published)}
     for table in SUM_TABLES:
         keys = SUM_OUTCOME_KEY if table in NEAR_MISS_TABLES else AID_OUTCOME_KEY
@@ -1458,6 +1491,7 @@ def _row_counts(classes: Counter, published: list[dict[str, Any]], federal_loade
             "values": sum(federal_values.values()),
             "matches": federal_values["match"], "no_value": federal_values["blank"],
             "differs": federal_values["different"],
+            "differs_2_to_10pct": bands["2_to_10"], "differs_over_10pct": bands["over_10"],
         },
         "totals": totals,
     }
@@ -1467,7 +1501,7 @@ def require_public_run(run: Any) -> None:
     """Refuse a run that lacks what `--public` needs, instead of inventing zeros."""
     if not isinstance(run, dict) or run.get("run_format") not in PUBLIC_RUN_FORMATS:
         found = run.get("run_format") if isinstance(run, dict) else None
-        raise SystemExit(f"--public needs a run with run_format 2 or 3 (this one has {found!r}); "
+        raise SystemExit(f"--public needs a run with run_format 3 (this one has {found!r}); "
                          "run the scoreboard again.")
     missing = [k for k in ("generated_at", "years", "manifest", "documents", "federal_left_out", "forms",
                            "renewal", "federal_schools", "sum_check_version") if k not in run]
@@ -1651,7 +1685,7 @@ def main() -> int:
     parser.add_argument("--from-json", type=Path, help="Render a saved scoreboard JSON instead of reading the database.")
     parser.add_argument("--public", type=Path, metavar="RUN_JSON",
                         help="Write the public aggregates (PRD 040) from one saved run JSON. Reads nothing else: "
-                             "no database, no network. Needs a run_format 2 or 3 run.")
+                             "no database, no network. Needs a run_format 3 run.")
     parser.add_argument("--public-out-dir", type=Path, default=DEFAULT_PUBLIC_DIR,
                         help="Where --public writes <YYYY-MM-DD>.json (default web/src/data/data-quality).")
     parser.add_argument("--report-near-miss", action="store_true",

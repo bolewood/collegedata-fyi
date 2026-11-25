@@ -297,6 +297,13 @@ class RenderAndHolds(unittest.TestCase):
 # PRD 040 M0: near misses, the classifier, run_format 2, --public, renewal
 # ---------------------------------------------------------------------------
 
+def values_for(outcomes: dict) -> dict:
+    """`federal_values` that agree with `outcomes`: a match is 100 against 100, a blank has no number of ours, a
+    different value is 150 against 100 (50% over, the large band), and no outcome means IPEDS has no figure."""
+    cases = {"match": (100, "100"), "blank": (None, "100"), "different": (150, "100"), None: (100, None)}
+    return {m: {"ours": cases[o][0], "federal": cases[o][1], "federal_data_year": 2023} for m, o in outcomes.items()}
+
+
 def doc(document_id: str, year: str, **overrides) -> dict:
     """A served document of a run, with the keys the public builder reads."""
     base = {
@@ -308,6 +315,7 @@ def doc(document_id: str, year: str, **overrides) -> dict:
         "sums": {"B1": "pass", "C1": "pass", "H1": "pass"}, "check_numbers": {},
     }
     base.update(overrides)
+    base.setdefault("federal_values", values_for(base["federal"]))
     return base
 
 
@@ -446,7 +454,7 @@ YEARS = ["2023-24", "2024-25", "2025-26"]
 
 
 def synthetic_run() -> dict:
-    """A run_format 2 run with every status, several formats, flags, a held
+    """A run_format 3 run with every status, several formats, flags, a held
     document, a single-campus report, and a year with no federal figures."""
     manifest: list[dict] = []
     documents: list[dict] = []
@@ -485,7 +493,7 @@ def synthetic_run() -> dict:
     other_year = "2023-24" if documents[1]["year"] != "2023-24" else "2025-26"
     documents[1]["schema_version"] = other_year     # numbered by another year's form
     return {
-        "run_format": 2, "sum_check_version": 2, "limit": None, "generated_at": "2026-11-25T01:15:08Z",
+        "run_format": 3, "sum_check_version": 2, "limit": None, "generated_at": "2026-11-25T01:15:08Z",
         "years": YEARS, "current_tier4_version": "0.3.43", "projected_years": ["2024-25", "2025-26"],
         "federal_schools": {"2023-24": 1900, "2024-25": 1900, "2025-26": 0},
         "hold_summaries_read": 1, "not_served": {}, "manifest": manifest, "documents": documents,
@@ -517,7 +525,7 @@ class PublicSnapshot(unittest.TestCase):
         return next(y for y in self.public["years"] if y["cds_year"] == name)
 
     def test_top_level_and_renewal(self) -> None:
-        self.assertEqual(self.public["public_format"], 1)
+        self.assertEqual(self.public["public_format"], 2)
         self.assertEqual(self.public["snapshot_of"], "2026-11-25T01:15:08Z")
         self.assertEqual(self.public["scoreboard_run"], "scoreboard-20261125T011508Z.json")
         self.assertEqual(self.public["renewal"], self.run["renewal"])
@@ -554,6 +562,7 @@ class PublicSnapshot(unittest.TestCase):
                     f = row["federal"]
                     self.assertLessEqual(f["reports"], row["status"]["published"])
                     self.assertEqual(f["matches"] + f["no_value"] + f["differs"], f["values"])
+                    self.assertEqual(f["differs_2_to_10pct"] + f["differs_over_10pct"], f["differs"])
                     self.assertLessEqual(f["values"], 3 * f["reports"])
                     t = row["totals"]
                     self.assertEqual(t["reports"], row["status"]["published"])
@@ -577,7 +586,8 @@ class PublicSnapshot(unittest.TestCase):
     def test_a_year_without_federal_figures_has_zero_federal_counts(self) -> None:
         year = self.year("2025-26")
         self.assertFalse(year["federal_fall_loaded"])
-        self.assertEqual(year["total"]["federal"], {"reports": 0, "values": 0, "matches": 0, "no_value": 0, "differs": 0})
+        self.assertEqual(year["total"]["federal"], {"reports": 0, "values": 0, "matches": 0, "no_value": 0, "differs": 0,
+                                                            "differs_2_to_10pct": 0, "differs_over_10pct": 0})
         self.assertEqual(year["federal_left_out"]["no_federal_figures"], 0)
         self.assertTrue(self.year("2024-25")["federal_fall_loaded"])
         self.assertEqual(self.year("2024-25")["federal_left_out"], {"single_campus": 1, "no_federal_figures": 1})
@@ -679,13 +689,90 @@ class PublicSnapshot(unittest.TestCase):
             scoreboard.build_public(run, "x.json")
 
 
+
+class FederalDifferenceSize(unittest.TestCase):
+    """Table B's "differs", split by the gap as a share of the federal figure:
+    over 2% up to and including 10%, and over 10%."""
+
+    band = staticmethod(scoreboard.federal_difference_band)
+
+    def test_the_boundaries(self) -> None:
+        D = Decimal
+        self.assertIsNone(self.band(102, D(100)))          # exactly 2%: a match, not a difference
+        self.assertEqual(self.band(103, D(100)), "2_to_10")
+        self.assertEqual(self.band(98, D(100)), None)      # exactly 2% below: a match
+        self.assertEqual(self.band(97, D(100)), "2_to_10")
+        self.assertEqual(self.band(110, D(100)), "2_to_10")   # exactly 10% is the lower band
+        self.assertEqual(self.band(90, D(100)), "2_to_10")
+        self.assertEqual(self.band(111, D(100)), "over_10")
+        self.assertEqual(self.band(89, D(100)), "over_10")
+        self.assertEqual(self.band(1101, D(1000)), "over_10")
+        self.assertEqual(self.band(1100, D(1000)), "2_to_10")
+
+    def test_no_federal_figure_or_no_number_of_ours_is_not_a_difference(self) -> None:
+        self.assertIsNone(self.band(100, None))
+        self.assertIsNone(self.band(100, Decimal(0)))
+        self.assertIsNone(self.band(None, Decimal(100)))   # blank, not different
+
+    def test_the_band_agrees_with_classify_federal_everywhere(self) -> None:
+        for ours in range(0, 400):
+            outcome = scoreboard.classify_federal(ours, Decimal(100))
+            self.assertEqual(self.band(ours, Decimal(100)) is not None, outcome == "different", ours)
+
+    def snapshot_with(self, applied: tuple) -> dict:
+        run = synthetic_run()
+        target = next(d for d in run["documents"] if d["year"] == "2024-25" and not d["sub_institutional"]
+                      and d["federal"]["applied"] == "match")
+        target["federal"] = {**target["federal"], "applied": "different"}
+        target["federal_values"]["applied"] = {"ours": applied[0], "federal": applied[1], "federal_data_year": 2024}
+        return scoreboard.build_public(run, "x.json")
+
+    def test_a_value_lands_in_exactly_one_band_in_its_row_and_the_total(self) -> None:
+        base = scoreboard.build_public(synthetic_run(), "x.json")
+        year = lambda pub: next(y for y in pub["years"] if y["cds_year"] == "2024-25")  # noqa: E731
+        for ours, key in ((110, "differs_2_to_10pct"), (111, "differs_over_10pct")):
+            pub = self.snapshot_with((ours, "100"))
+            before, after = year(base)["total"]["federal"], year(pub)["total"]["federal"]
+            # The edited report's applied value was a match; it is now one more difference, in `key` only.
+            self.assertEqual(after[key] - before[key], 1)
+            self.assertEqual(after["matches"] - before["matches"], -1)
+            other = "differs_over_10pct" if key == "differs_2_to_10pct" else "differs_2_to_10pct"
+            self.assertEqual(after[other], before[other])
+            self.assertEqual(after["differs"] - before["differs"], 1)
+
+    def test_refuses_when_federal_values_disagree_with_the_run_outcome(self) -> None:
+        run = synthetic_run()
+        target = next(d for d in run["documents"] if d["federal"]["enrolled"] == "different")
+        target["federal_values"]["enrolled"]["ours"] = 100   # now a match against 100
+        with self.assertRaises(SystemExit):
+            scoreboard.build_public(run, "x.json")
+
+    def test_refuses_a_run_without_federal_values(self) -> None:
+        run = synthetic_run()
+        del next(d for d in run["documents"] if d["federal"]["enrolled"] == "different")["federal_values"]
+        with self.assertRaises((SystemExit, KeyError)):
+            scoreboard.build_public(run, "x.json")
+
+    def test_the_public_shape_requires_both_new_keys_and_allows_no_others(self) -> None:
+        pub = scoreboard.build_public(synthetic_run(), "x.json")
+        for key in ("differs_2_to_10pct", "differs_over_10pct"):
+            broken = json.loads(json.dumps(pub))
+            del broken["years"][0]["total"]["federal"][key]
+            with self.assertRaises(ValueError):
+                scoreboard.check_public_shape(broken)
+        broken = json.loads(json.dumps(pub))
+        broken["years"][0]["total"]["federal"]["differs_over_20pct"] = 1
+        with self.assertRaises(ValueError):
+            scoreboard.check_public_shape(broken)
+
+
 class PublicInputs(unittest.TestCase):
     def refuses(self, run: dict) -> None:
         with blocked_network(), self.assertRaises(SystemExit):
             scoreboard.build_public(run, "x.json")
 
-    def test_refuses_a_run_that_is_not_format_2_or_3(self) -> None:
-        for change in ({"run_format": 1}, {"run_format": 4}, {"run_format": None}, {"sum_check_version": 1}, {"limit": 20},
+    def test_refuses_a_run_that_is_not_format_3(self) -> None:
+        for change in ({"run_format": 1}, {"run_format": 2}, {"run_format": 4}, {"run_format": None}, {"sum_check_version": 1}, {"limit": 20},
                        {"manifest": []}, {"years": []}):
             with self.subTest(change=change):
                 self.refuses({**synthetic_run(), **change})
@@ -1335,7 +1422,8 @@ class GatherAnEarlierYear(unittest.TestCase):
                 self.assertEqual(old["federal_left_out"],
                                  {"single_campus": 0, "no_federal_figures": 0, "not_compared": published})
                 self.assertEqual(old["total"]["federal"],
-                                 {"reports": 0, "values": 0, "matches": 0, "no_value": 0, "differs": 0})
+                                 {"reports": 0, "values": 0, "matches": 0, "no_value": 0, "differs": 0,
+                                                            "differs_2_to_10pct": 0, "differs_over_10pct": 0})
                 self.assertEqual(old["total"]["status"]["published"], published)
                 self.assertEqual(old["total"]["fields_stored"]["median"], 8)
                 self.assertEqual(old["form"], {"form_year": year, "full_field_schema": False, "questions": 0})
@@ -1468,12 +1556,13 @@ class SumChecksUnavailable(unittest.TestCase):
 
 
 class RunFormats(unittest.TestCase):
-    def test_public_output_is_the_same_for_format_2_and_3(self) -> None:
-        two = synthetic_run()
-        three = {**synthetic_run(), "run_format": 3}
-        for document in three["documents"]:
-            document.update(ipeds_id=None, source_sha256=None, sections={}, federal_values={}, federal_extra={})
-        self.assertEqual(scoreboard.build_public(two, "x.json"), scoreboard.build_public(three, "x.json"))
+    def test_a_format_2_run_cannot_make_a_public_snapshot(self) -> None:
+        # It has no federal_values, so the size split cannot be worked out. Refused, not written as public format 1.
+        two = {**synthetic_run(), "run_format": 2}
+        for document in two["documents"]:
+            del document["federal_values"]
+        with self.assertRaises(SystemExit):
+            scoreboard.build_public(two, "x.json")
 
     def test_aggregate_and_render_read_a_format_3_run(self) -> None:
         run = {**synthetic_run(), "run_format": 3}

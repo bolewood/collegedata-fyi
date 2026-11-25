@@ -1,5 +1,5 @@
 {
- "public_format": 1,
+ "public_format": 2,
  "snapshot_of": "2026-11-25T14:09:26Z",
  "scoreboard_run": "scoreboard-20261125T140926Z.json",
  "renewal": {
@@ -52,7 +52,9 @@
       "values": 1161,
       "matches": 994,
       "no_value": 66,
-      "differs": 101
+      "differs": 101,
+      "differs_2_to_10pct": 59,
+      "differs_over_10pct": 42
      },
      "totals": {
       "reports": 405,
@@ -93,7 +95,9 @@
       "values": 57,
       "matches": 45,
       "no_value": 0,
-      "differs": 12
+      "differs": 12,
+      "differs_2_to_10pct": 10,
+      "differs_over_10pct": 2
      },
      "totals": {
       "reports": 20,
@@ -134,7 +138,9 @@
       "values": 3,
       "matches": 3,
       "no_value": 0,
-      "differs": 0
+      "differs": 0,
+      "differs_2_to_10pct": 0,
+      "differs_over_10pct": 0
      },
      "totals": {
       "reports": 1,
@@ -175,7 +181,9 @@
       "values": 15,
       "matches": 11,
       "no_value": 2,
-      "differs": 2
+      "differs": 2,
+      "differs_2_to_10pct": 0,
+      "differs_over_10pct": 2
      },
      "totals": {
       "reports": 5,
@@ -216,7 +224,9 @@
       "values": 0,
       "matches": 0,
       "no_value": 0,
-      "differs": 0
+      "differs": 0,
+      "differs_2_to_10pct": 0,
+      "differs_over_10pct": 0
      },
      "totals": {
       "reports": 0,
@@ -257,7 +267,9 @@
       "values": 3,
       "matches": 2,
       "no_value": 0,
-      "differs": 1
+      "differs": 1,
+      "differs_2_to_10pct": 1,
+      "differs_over_10pct": 0
      },
      "totals": {
       "reports": 1,
@@ -297,7 +309,9 @@
      "values": 1239,
      "matches": 1055,
      "no_value": 68,
-     "differs": 116
+     "differs": 116,
+     "differs_2_to_10pct": 70,
+     "differs_over_10pct": 46
     },
     "totals": {
      "reports": 432,
@@ -360,7 +374,9 @@
       "values": 1002,
       "matches": 898,
       "no_value": 19,
-      "differs": 85
+      "differs": 85,
+      "differs_2_to_10pct": 39,
+      "differs_over_10pct": 46
      },
      "totals": {
       "reports": 348,
@@ -401,7 +417,9 @@
       "values": 243,
       "matches": 219,
       "no_value": 3,
-      "differs": 21
+      "differs": 21,
+      "differs_2_to_10pct": 14,
+      "differs_over_10pct": 7
      },
      "totals": {
       "reports": 84,
@@ -442,7 +460,9 @@
       "values": 12,
       "matches": 11,
       "no_value": 0,
-      "differs": 1
+      "differs": 1,
+      "differs_2_to_10pct": 1,
+      "differs_over_10pct": 0
      },
      "totals": {
       "reports": 4,
@@ -483,7 +503,9 @@
       "values": 153,
       "matches": 134,
       "no_value": 6,
-      "differs": 13
+      "differs": 13,
+      "differs_2_to_10pct": 7,
+      "differs_over_10pct": 6
      },
      "totals": {
       "reports": 53,
@@ -524,7 +546,9 @@
       "values": 6,
       "matches": 6,
       "no_value": 0,
-      "differs": 0
+      "differs": 0,
+      "differs_2_to_10pct": 0,
+      "differs_over_10pct": 0
      },
      "totals": {
       "reports": 2,
@@ -564,7 +588,9 @@
      "values": 1416,
      "matches": 1268,
      "no_value": 28,
-     "differs": 120
+     "differs": 120,
+     "differs_2_to_10pct": 61,
+     "differs_over_10pct": 59
     },
     "totals": {
      "reports": 491,
@@ -627,7 +653,9 @@
       "values": 0,
       "matches": 0,
       "no_value": 0,
-      "differs": 0
+      "differs": 0,
+      "differs_2_to_10pct": 0,
+      "differs_over_10pct": 0
      },
      "totals": {
       "reports": 270,
@@ -668,7 +696,9 @@
       "values": 0,
       "matches": 0,
       "no_value": 0,
-      "differs": 0
+      "differs": 0,
+      "differs_2_to_10pct": 0,
+      "differs_over_10pct": 0
      },
      "totals": {
       "reports": 101,
@@ -709,7 +739,9 @@
       "values": 0,
       "matches": 0,
       "no_value": 0,
-      "differs": 0
+      "differs": 0,
+      "differs_2_to_10pct": 0,
+      "differs_over_10pct": 0
      },
      "totals": {
       "reports": 50,
@@ -750,7 +782,9 @@
       "values": 0,
       "matches": 0,
       "no_value": 0,
-      "differs": 0
+      "differs": 0,
+      "differs_2_to_10pct": 0,
+      "differs_over_10pct": 0
      },
      "totals": {
       "reports": 1,
@@ -791,7 +825,9 @@
       "values": 0,
       "matches": 0,
       "no_value": 0,
-      "differs": 0
+      "differs": 0,
+      "differs_2_to_10pct": 0,
+      "differs_over_10pct": 0
      },
      "totals": {
       "reports": 1,
@@ -831,7 +867,9 @@
      "values": 0,
      "matches": 0,
      "no_value": 0,
-     "differs": 0
+     "differs": 0,
+     "differs_2_to_10pct": 0,
+     "differs_over_10pct": 0
     },
     "totals": {
      "reports": 423,

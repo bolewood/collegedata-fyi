@@ -258,7 +258,7 @@ describe("gate: the real snapshot loader", () => {
       at(when);
       const snap = loadLatestSnapshot();
       expect(snap.snapshot_of).toBe(newest);
-      expect(snap.public_format).toBe(1);
+      expect(snap.public_format).toBe(2);
       expect(snap.scoreboard_run).toMatch(/^scoreboard-\d{8}T\d{6}Z\.json$/);
     }
   });

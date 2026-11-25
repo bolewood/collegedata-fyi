@@ -346,6 +346,16 @@ path").
   - Every report in the 2026-11-24 run contributes 0 or 3 values. The test
     allows fewer.
 - **Matches** means within 2%.
+- **Differs by size** (`public_format` 2): two more columns after "Differs",
+  "Differs by over 2% to 10%" and "Differs by over 10%", counted by value.
+  - The gap is the absolute difference as a share of the IPEDS figure, worked
+    out from the run's `federal_values` with the same rule that decides
+    "differs". Exactly 2% is a match. Exactly 10% is in the 2% to 10% column.
+  - Counts only, no percentages, so the under-5 rule has nothing to hide.
+  - The note says a 2% to 10% gap may fit a different count date, and that
+    over 10% is where a misread column or a scope mismatch may be more likely.
+    It says the size can't tell which, and that a large gap isn't necessarily
+    ours (8 of 10 differing reports in the M0 sample matched the school's file).
 - Population: published reports with at least one IPEDS figure to compare.
   - Left out, with counts in the note: reports filed for one campus or unit
     (IPEDS reports the whole institution), and reports whose school has no
@@ -454,7 +464,8 @@ example, two 2023-24 spreadsheets were read by Tier 4.
 ### `--public`
 
 - **Reads one run JSON and nothing else.** It doesn't query the database.
-  It rejects a run without `run_format: 2` rather than inventing per-format
+  It rejects a run without `run_format: 3` (2 before the size of federal
+  differences) rather than inventing per-format
   zeros. The test runs it with network access blocked.
 - **Writes only aggregates and labels.** It never writes per-document rows,
   reader versions, or anything from the local worker summaries. This is to
@@ -465,7 +476,7 @@ example, two 2023-24 spreadsheets were read by Tier 4.
 
   ```json
   {
-    "public_format": 1,
+    "public_format": 2,
     "snapshot_of": "2026-11-24T12:25:03Z",
     "scoreboard_run": "scoreboard-20261124T122503Z.json",
     "years": [{
@@ -482,7 +493,8 @@ example, two 2023-24 spreadsheets were read by Tier 4.
         "label": "standard PDF",
         "status": {"published": 0, "set_aside": 0, "couldnt_read": 0, "not_read_yet": 0},
         "fields_stored": {"median": 0, "p10": 0},
-        "federal": {"reports": 0, "values": 0, "matches": 0, "no_value": 0, "differs": 0},
+        "federal": {"reports": 0, "values": 0, "matches": 0, "no_value": 0, "differs": 0,
+                     "differs_2_to_10pct": 0, "differs_over_10pct": 0},
         "totals": {"reports": 0,
                    "B1": {"adds_up": 0, "under_2pct": 0, "off_more": 0, "cant_check": 0},
                    "C1": {"adds_up": 0, "under_2pct": 0, "off_more": 0, "cant_check": 0},
@@ -492,6 +504,15 @@ example, two 2023-24 spreadsheets were read by Tier 4.
     }]
   }
   ```
+
+  `public_format` 2 adds `differs_2_to_10pct` and `differs_over_10pct` under
+  `federal`: each differing value's gap as a share of the federal figure,
+  over 2% up to and including 10%, and over 10%. They add up to `differs` in
+  every row and total, and `--public` refuses otherwise. Format 1 files have
+  neither key, stay readable, and the page refuses either key on a format 1
+  file. A run without `federal_values` (`run_format` 2) cannot make format 2,
+  and `--public` refuses it instead of writing format 1: a snapshot quietly
+  missing the split would look like one that has it.
 
   The row values are placeholders. The year-level values are from the
   2026-11-24 run.
@@ -668,9 +689,11 @@ UI tests across M1 and M2:
 
 - **Usable answers,** and **fields by CDS section (A to J),** so a researcher
   can see that admissions are read far more completely than, say, faculty.
-- **Size of federal differences:** 2 to 10% against over 10%. This separates
-  a different count date from a misread column. The run has to keep the
-  difference, not only the outcome.
+- **Size of federal differences:** built (`public_format` 2). Table B splits
+  "Differs" into over 2% up to 10% and over 10%, as counts. It may separate
+  a different count date from a misread column or a scope mismatch, but size
+  alone does not say which, and the hand check found most differing reports
+  matching the school's file, so a large gap is not read as ours.
 - **More federal checks:** undergraduate enrollment (B1) against IPEDS fall
   enrollment, and tuition (G1) against IPEDS. Each needs a
   definition-alignment note.

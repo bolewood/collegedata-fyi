@@ -14,6 +14,7 @@ import {
   fallOf,
   aidCantCheckNote,
   federalDiffersNote,
+  hasDifferenceSplit,
   isDataQualityLaunched,
   isProjectedYear,
   liveCount,
@@ -372,6 +373,8 @@ function ReportsTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
 function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: QualitySnapshot }) {
   const loaded = year.federal_fall_loaded;
   const left = year.federal_left_out;
+  // public_format 2 snapshots split "Differs" by size; format 1 snapshots have no split to show.
+  const split = hasDifferenceSplit(year);
   return (
     <section aria-labelledby="dq-b-heading" style={sectionStyle}>
       <SectionHead
@@ -386,8 +389,8 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
         </p>
       )}
       <Scroll label={`Table B, ${year.cds_year}`} hint={loaded}>
-        <table className="dq-table dq-table--b" style={tableStyle} id="dq-table-b">
-          <Cols n={7} />
+        <table className={`dq-table dq-table--b${split ? " dq-table--b-split" : ""}`} style={tableStyle} id="dq-table-b">
+          <Cols n={split ? 9 : 7} />
           <thead>
             <tr>
               <th scope="col" style={thLeft}>Format</th>
@@ -396,6 +399,8 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
               <th scope="col" style={thStyle}>Matches</th>
               <th scope="col" style={thStyle}>No value</th>
               <th scope="col" style={thStyle}>Differs</th>
+              {split && <th scope="col" style={thStyle}>Differs by over 2% to 10%</th>}
+              {split && <th scope="col" style={thStyle}>Differs by over 10%</th>}
               <th scope="col" style={thStyle}>Match rate</th>
             </tr>
           </thead>
@@ -416,6 +421,8 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
                   <td style={tdStyle}>{loaded ? n(f.matches) : DASH}</td>
                   <td style={tdStyle}>{loaded ? n(f.no_value) : DASH}</td>
                   <td style={tdStyle}>{loaded ? n(f.differs) : DASH}</td>
+                  {split && <td style={tdStyle}>{loaded ? n(f.differs_2_to_10pct ?? 0) : DASH}</td>}
+                  {split && <td style={tdStyle}>{loaded ? n(f.differs_over_10pct ?? 0) : DASH}</td>}
                   <td style={tdStyle} title={small ? `Under ${MIN_REPORTS_FOR_RATE} reports: no rate` : undefined}>
                     {pc(rate)}
                   </td>
@@ -446,6 +453,16 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
           misreading or a real difference between the two filings.{" "}
           {federalDiffersNote(year, snapshot) && <span id="dq-differs-sample"> {federalDiffersNote(year, snapshot)}</span>}
         </Note>
+        {split && (
+          <Note id="dq-note-differs-size">
+            <strong>Size of the gap</strong> is the difference as a share of the federal figure, counted by value. A gap
+            of 2% or less is a match, 2% to 10% is the first column, and over 10% is the second (exactly 10% counts
+            as 2% to 10%). A gap of 2% to 10% may come from a different count date. Over 10%, a misread column or a
+            mismatch in scope, such as one campus against the whole institution, may be more likely. The size can’t
+            say which it is, and a large gap isn’t necessarily our error: some are real differences between the
+            two filings.
+          </Note>
+        )}
         </>
       )}
       {loaded && <CsvButton table="federal" year={year} />}

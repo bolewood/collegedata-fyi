@@ -88,7 +88,11 @@ heading, *No federal admissions figures for fall 2025 yet.* The table shows
 dashes, and the two notes about "No value" and "Differs", the left-out note and
 the CSV button are hidden.
 
-The three notes below show only when the year has federal figures. The
+Table B's two size columns, "Differs by over 2% to 10%" and "Differs by over 10%",
+sit after "Differs" and show only for a snapshot in public format 2 (older
+snapshots have no size). They are counts, not percentages, so the under-5 rule
+has nothing to hide; the size note below shows only with them. The four notes
+below show only when the year has federal figures. The
 hand-check sentence also needs a covered year, at least one differing value, and
 the two covered years together holding 198 to 240 differing values (90% to 110%
 of the 219 in the run the sample was drawn from; the snapshot counts values,
@@ -106,12 +110,24 @@ not reports).
   > to the federal government than in their CDS, for example from a different
   > count date. A differing value may be our misreading or a real difference
   > between the two filings.
+- > **Size of the gap** is the difference as a share of the federal figure,
+  > counted by value. A gap of 2% or less is a match, 2% to 10% is the first
+  > column, and over 10% is the second (exactly 10% counts as 2% to 10%). A gap
+  > of 2% to 10% may come from a different count date. Over 10%, a misread
+  > column or a mismatch in scope, such as one campus against the whole
+  > institution, may be more likely. The size can't say which it is, and a
+  > large gap isn't necessarily our error: some are real differences between
+  > the two filings.
 - **2023-24 and 2024-25 only (hand check of 10):**
   > In a hand check of 10 differing reports (2023-24 and 2024-25, sampled on
   > November 25, 2026), 8 had the number we compared in the school's file, so
   > the difference came from the federal side or from how the two filings were
   > matched, which can include our matching. 2 were on our side: one misread and
   > one report filed for a different scope than the federal record.
+
+Why the size note says no more: the hand check of 10 found 8 differing reports
+where the file matched our reading, so a large gap is not read as ours. Nobody
+has checked yet how many large gaps are which.
 
 Why it says no more: the federal side wasn't checked in the sample, only
 whether the number we compared is the number in the school's file. The 8 are
