@@ -299,7 +299,7 @@ The defaults taken, each reversible. The full text, with the alternatives, is in
 
 | ID | Decision |
 |---|---|
-| D1 | **Changed by the owner, 2026-11-26.** The alarm floor is the posting curve scaled by mature renewal, less 5 points, for all three checks (the overnight default was the raw curve less 5). Mature renewal is the median of the last five mature year-pairs, measured on each run, bounded, with a fallback; the next-year floor is the same times 0.75 and expected arrivals are scaled too (#TBD) |
+| D1 | **Changed by the owner, 2026-11-26.** The alarm floor is the posting curve scaled by mature renewal, less 5 points, for all three checks (the overnight default was the raw curve less 5). Mature renewal is the median of the last five mature year-pairs, measured on each run, bounded, with a fallback; the next-year floor is the same times 0.75 and expected arrivals are scaled too (#508) |
 | D2 | The next-year floor is the curve × 0.75, tracked from March 1 |
 | D3 | The migration (#469) is left open for the owner to apply from `main` |
 | D4 | Real alarm issues are assigned to `santhonys`; test issues are not |
