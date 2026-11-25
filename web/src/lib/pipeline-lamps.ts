@@ -200,7 +200,8 @@ export function renewalOutcomeSummary(
       dispatch.below_floor === true ||
       dispatch.next_below_floor === true ||
       dispatch.two_year_below_floor === true ||
-      dispatch.outstanding_below_floor === true
+      dispatch.outstanding_below_floor === true ||
+      dispatch.arrivals_below_floor === true
     ) {
       return dispatch;
     }
@@ -216,7 +217,8 @@ export function renewalOutcomeHealthy(outcome: Record<string, unknown>): boolean
     (strictCount(outcome.prev_schools) ?? 0) > 0 &&
     outcome.next_below_floor !== true &&
     outcome.two_year_below_floor !== true &&
-    outcome.outstanding_below_floor !== true
+    outcome.outstanding_below_floor !== true &&
+    outcome.arrivals_below_floor !== true
   );
 }
 

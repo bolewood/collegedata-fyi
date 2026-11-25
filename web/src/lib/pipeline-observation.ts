@@ -534,6 +534,16 @@ function twoYearPart(summary: Record<string, unknown>): string {
   return `two-year: ${num(summary.two_year_renewed)} of ${num(summary.two_year_prev_schools)}${share ? ` (${share}%)` : ""}${floor ? ` · floor ${floor}%` : ""}`;
 }
 
+/** [arrivals, expected, window days] for the window the producer used (30 or 60). */
+function arrivalsFigures(summary: Record<string, unknown>): [number, number, number] {
+  const days = num(summary.arrivals_window_days) === 60 ? 60 : 30;
+  const n = num(days === 60 ? summary.arrivals_60d : summary.arrivals_30d);
+  const expected = Math.round(
+    num(days === 60 ? summary.arrivals_expected_60d : summary.arrivals_expected_30d),
+  );
+  return [n, expected, days];
+}
+
 function renewalDetailLine(summary: Record<string, unknown>): string {
   const parts: string[] = [];
   for (const part of [nextYearPart(summary), twoYearPart(summary)]) {
@@ -541,6 +551,16 @@ function renewalDetailLine(summary: Record<string, unknown>): string {
   }
   if (typeof summary.outstanding_years === "string" && summary.outstanding_years.trim()) {
     parts.push(`still short: ${summary.outstanding_years.trim()}`);
+  }
+  if (
+    summary.arrivals_below_floor === true &&
+    (summary.arrivals_30d != null || summary.arrivals_60d != null)
+  ) {
+    const [n, expected, days] = arrivalsFigures(summary);
+    parts.push(`arrivals: ${n} in ${days} days (expected ${expected})`);
+  }
+  if (summary.unextracted_current_docs != null) {
+    parts.push(`unextracted ${num(summary.unextracted_current_docs)}`);
   }
   const counts: Array<[string, string]> = [
     ["same_year_duplicates", "same-year duplicates"],
@@ -592,12 +612,23 @@ function failureText(row: PipelineFactRow): string {
     if (summary.two_year_below_floor === true) {
       return `Renewal below floor · ${twoYearPart(summary)}`;
     }
+    const outstandingYears =
+      typeof summary.outstanding_years === "string" ? summary.outstanding_years.trim() : "";
+    const currentYear =
+      typeof summary.current_year === "string" ? summary.current_year.trim() : "";
+    // #499 marks every arrivals breach as outstanding. When the outstanding
+    // year is the current one (or unnamed), the specific arrivals text wins.
+    const outstandingIsCurrent = !outstandingYears || outstandingYears === currentYear;
+    if (summary.arrivals_below_floor === true && outstandingIsCurrent) {
+      const [n, expected, days] = arrivalsFigures(summary);
+      return `Renewal: almost nothing new arrived · ${n} school${n === 1 ? "" : "s"} in ${days} days (expected ${expected})`;
+    }
     if (summary.outstanding_below_floor === true) {
-      const years =
-        typeof summary.outstanding_years === "string" && summary.outstanding_years.trim()
-          ? summary.outstanding_years.trim()
-          : "An earlier year";
-      return `Renewal: ${years} still below floor`;
+      return `Renewal: ${outstandingYears || "An earlier year"} still below floor`;
+    }
+    if (summary.arrivals_below_floor === true) {
+      const [n, expected, days] = arrivalsFigures(summary);
+      return `Renewal: almost nothing new arrived · ${n} school${n === 1 ? "" : "s"} in ${days} days (expected ${expected})`;
     }
     return "Renewal figures missing from the last run";
   }
