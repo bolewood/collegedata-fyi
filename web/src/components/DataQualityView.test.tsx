@@ -402,7 +402,12 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
       const enr = text("dq-note-enrollment");
       expect(enr).toContain("DRVEF2023, variable EFUG, fall 2023");
       expect(enr).toMatch(/census date.*can differ/);
-      expect(enr).toMatch(/provisional or final.*imputed/);
+      for (const note of [enr, text("dq-note-tuition")]) {
+        expect(note).toContain("This snapshot doesn’t record which IPEDS release (final or provisional), release date or imputation flag each figure came from.");
+        expect(note).toContain("Where a final and a provisional release both have a figure, the final one is used.");
+        expect(note).toContain("A school’s page shows the release and imputation for its latest federal figures, which can be a later year than the one compared here.");
+        expect(note).not.toMatch(/each school’s page shows which/);
+      }
       const tui = text("dq-note-tuition");
       expect(tui).toContain("COST1_2024");
       expect(tui).toContain("TUITION2");

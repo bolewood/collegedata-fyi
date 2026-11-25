@@ -553,6 +553,9 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
 
 const academicYear = (start: number) => `${start}-${String((start + 1) % 100).padStart(2, "0")}`;
 
+/** The release facts the snapshot does not record, and the rule the scoreboard applies (`fetch_federal`: final beats provisional). */
+const RELEASE_NOTE = "This snapshot doesn’t record which IPEDS release (final or provisional), release date or imputation flag each figure came from. Where a final and a provisional release both have a figure, the final one is used. A school’s page shows the release and imputation for its latest federal figures, which can be a later year than the one compared here.";
+
 /** What each extra check compares, in the page's words. The IPEDS table and variable follow the data year. */
 function checkCopy(check: CheckName, dataYear: number) {
   if (check === "enrollment") {
@@ -565,9 +568,7 @@ function checkCopy(check: CheckName, dataYear: number) {
           <strong>Undergraduate enrollment</strong> compares the total of all undergraduates in the report (CDS B1:
           degree-seeking and not, full-time and part-time) with the federal fall undergraduate enrollment (IPEDS table
           DRVEF{dataYear}, variable EFUG, fall {dataYear}). Both count undergraduates on a fall census date, and the
-          dates can differ. A school may also count a different group of students in each. The federal release is
-          provisional or final and its figures may be imputed; we use the newest release we have loaded, a final one
-          when there is one, and each school’s page shows which.
+          dates can differ. A school may also count a different group of students in each. {RELEASE_NOTE}
         </>
       ),
     };
@@ -584,8 +585,7 @@ function checkCopy(check: CheckName, dataYear: number) {
         for that following year’s tuition. Neither includes required fees,
         which each lists separately. A report can differ for reasons that aren’t errors: per-credit or program-specific
         pricing, a figure for a different year or group of students, or a school with several rates reporting one of them.
-        Out-of-state and first-year tuition aren’t compared. The federal release is provisional or final; we use the
-        newest release we have loaded, a final one when there is one, and each school’s page shows which.
+        Out-of-state and first-year tuition aren’t compared. {RELEASE_NOTE}
       </>
     ),
   };

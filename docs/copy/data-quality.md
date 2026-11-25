@@ -203,9 +203,7 @@ to 10%, differs by over 10%, match rate. The rate is a dash under 5 reports.
   > federal fall undergraduate enrollment (IPEDS table DRVEF{year}, variable
   > EFUG, fall {year}). Both count undergraduates on a fall census date, and the
   > dates can differ. A school may also count a different group of students in
-  > each. The federal release is provisional or final and its figures may be
-  > imputed; we use the newest release we have loaded, a final one when there is
-  > one, and each school's page shows which.
+  > each. {The release note, below.}
 - > A value is compared only when the federal data has a positive figure for it,
   > and matches means within 2%. Differs by over 2% to 10% and by over 10% split
   > the rest, and exactly 10% counts in the first. Left out: {n} {report or
@@ -226,9 +224,15 @@ to 10%, differs by over 10%, match rate. The rate is a dash under 5 reports.
   > separately. A report can differ for reasons that aren't errors: per-credit
   > or program-specific pricing, a figure for a different year or group of
   > students, or a school with several rates reporting one of them.
-  > Out-of-state and first-year tuition aren't compared. The federal release is
-  > provisional or final; we use the newest release we have loaded, a final one
-  > when there is one, and each school's page shows which.
+  > Out-of-state and first-year tuition aren't compared. {The release note.}
+- > This snapshot doesn't record which IPEDS release (final or provisional),
+  > release date or imputation flag each figure came from. Where a final and a
+  > provisional release both have a figure, the final one is used. A school's
+  > page shows the release and imputation for its latest federal figures, which
+  > can be a later year than the one compared here.
+
+  (The release note is the closing sentences of both notes above, not a separate
+  note.)
 - The left-out note is the same as for enrollment, ending "…no federal tuition
   figure."
 
