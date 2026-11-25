@@ -1128,6 +1128,62 @@ class NotSearchedTests(unittest.TestCase):
         self.assertEqual(result["not_searched_cause"], "school_budget")
         self.assertFalse(should_skip(school, 30))
 
+    def _run_main(self, results, extra_args=()):
+        import tempfile
+        from pathlib import Path
+
+        from tools.finder import probe_urls
+
+        with tempfile.TemporaryDirectory() as tmp:
+            yml = Path(tmp) / "schools.yaml"
+            yml.write_text(yaml.safe_dump({"schools": [
+                {"id": f"s{i}", "name": f"School {i}", "domain": f"s{i}.edu",
+                 "scrape_policy": "unknown"} for i in range(len(results))
+            ]}))
+            out = Path(tmp) / "sum.json"
+            it = iter(results)
+
+            def fake_process(school, args, env):
+                cause = next(it)
+                return {"name": school["name"], "domain": school["domain"],
+                        "url": None, "method": "brave", "patterns_tried": 0,
+                        "search_tried": True, "replaced": False,
+                        "not_searched_cause": cause}
+
+            argv = ["probe_urls.py", "--dry-run", "--workers", "1",
+                    "--summary-json", str(out), *extra_args]
+            code = 0
+            with mock.patch.object(probe_urls, "SCHOOLS_YAML", yml), \
+                    mock.patch.object(probe_urls, "process_school", fake_process), \
+                    mock.patch.object(sys, "argv", argv):
+                try:
+                    probe_urls.main()
+                except SystemExit as exc:
+                    code = exc.code
+            return code, json.loads(out.read_text())
+
+    def test_all_not_searched_exits_nonzero_and_probed_excludes_them(self) -> None:
+        code, payload = self._run_main(["brave_http_402", "brave_http_402"])
+        self.assertEqual(code, 1)
+        self.assertEqual(payload["probed"], 0)
+        self.assertEqual(payload["attempted"], 2)
+        self.assertEqual(payload["not_searched"], 2)
+
+    def test_partial_budget_exhaustion_still_exits_zero(self) -> None:
+        code, payload = self._run_main([None, "brave_budget_exhausted"])
+        self.assertEqual(code, 0)
+        self.assertEqual(payload["probed"], 1)
+        self.assertEqual(payload["attempted"], 2)
+
+    def test_record_probe_helpers_tolerate_null_probe_state(self) -> None:
+        from tools.finder.probe_urls import record_not_searched, record_probe
+
+        school = {"probe_state": None}
+        record_not_searched(school, "x")
+        school = {"probe_state": None}
+        record_probe(school, "not_found", "pattern")
+        self.assertEqual(school["probe_state"]["last_result"], "not_found")
+
     def test_summary_carries_not_searched_and_capped_out(self) -> None:
         import tempfile
         from pathlib import Path

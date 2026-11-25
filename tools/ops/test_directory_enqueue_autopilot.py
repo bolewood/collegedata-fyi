@@ -69,6 +69,25 @@ class DirectoryEnqueueAutopilotTests(unittest.TestCase):
         self.assertEqual(candidates[0].url, f"https://example.edu/files/cds_{floor}.pdf")
         self.assertEqual(candidates[0].year, floor)
 
+    def test_equal_scores_prefer_the_newer_year(self):
+        html = b"""
+        <a href="/files/cds_2019-20.pdf">2019-20 Common Data Set</a>
+        <a href="/files/cds_2021-22.pdf">2021-22 Common Data Set</a>
+        """
+
+        def fake_fetch(url, *, read_bytes=0, timeout=20):
+            return 200, {"content-type": "text/html"}, html
+
+        old_fetch = autopilot.fetch_bytes
+        try:
+            autopilot.fetch_bytes = fake_fetch
+            kept = autopilot.extract_document_candidates(
+                "https://example.edu/cds", "example.edu",
+            )
+        finally:
+            autopilot.fetch_bytes = old_fetch
+        self.assertEqual(kept[0].year, "2021-22")
+
     def test_current_year_re_follows_the_freshness_floor(self):
         nov_2026 = autopilot.current_year_re(date(2026, 11, 24))
         for text in ("CDS 2025-26", "cds_2025-2026.pdf", "2025_26", "20252026", "2026-27"):

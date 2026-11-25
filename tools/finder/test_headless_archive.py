@@ -623,28 +623,37 @@ class PhaseSplitTests(unittest.TestCase):
 
 
 class _FakeQuery:
-    """Chainable stand-in for a supabase-py query over a list of rows."""
+    """Chainable stand-in for a supabase-py query that records its contract."""
 
-    def __init__(self, rows, count_override=None, drop_count=False):
+    def __init__(self, rows, log, count_override=None, drop_count=False):
         self.rows = rows
+        self.log = log
         self.count_override = count_override
         self.drop_count = drop_count
         self.lo, self.hi = 0, 10**9
-        self.ids = None
-        self.ordered = False
+        self.filters = []
 
-    def select(self, *_a, **_k):
+    def select(self, cols, **kw):
+        self.log["select"] = cols
+        self.log["count"] = kw.get("count")
         return self
 
-    def in_(self, _col, ids):
-        self.ids = set(ids)
+    def in_(self, col, ids):
+        self.filters.append(lambda r: r.get(col) in set(ids))
         return self
 
-    def is_(self, *_a):
+    def is_(self, col, val):
+        self.log.setdefault("is_", []).append((col, val))
+        self.filters.append(lambda r: r.get(col) is None)
         return self
 
-    def order(self, *_a):
-        self.ordered = True
+    def eq(self, col, val):
+        self.log.setdefault("eq", []).append((col, val))
+        self.filters.append(lambda r: r.get(col) == val)
+        return self
+
+    def order(self, col):
+        self.log["order"] = col
         return self
 
     def range(self, lo, hi):
@@ -652,46 +661,73 @@ class _FakeQuery:
         return self
 
     def execute(self):
-        matched = [r for r in self.rows if self.ids is None or r["school_id"] in self.ids]
+        matched = [r for r in self.rows if all(f(r) for f in self.filters)]
         total = len(matched) if self.count_override is None else self.count_override
-        page = matched[self.lo:self.hi + 1]
-        return SimpleNamespace(data=page, count=None if self.drop_count else total)
+        return SimpleNamespace(
+            data=matched[self.lo:self.hi + 1],
+            count=None if self.drop_count else total,
+        )
 
 
 class _FakeSb:
     def __init__(self, rows, **kw):
-        self.rows, self.kw = rows, kw
+        self.rows, self.kw, self.log = rows, kw, {}
 
-    def table(self, _name):
-        return _FakeQuery(self.rows, **self.kw)
+    def table(self, name):
+        self.log["table"] = name
+        return _FakeQuery(self.rows, self.log, **self.kw)
+
+
+def _doc(i, school="nyu", cds="2023-24", detected=None, status="published",
+         removed=None):
+    return {"id": f"{i:05d}", "school_id": school, "cds_year": cds,
+            "detected_year": detected, "participation_status": status,
+            "removed_at": removed}
 
 
 class KnownYearsTests(unittest.TestCase):
-    def test_pages_past_one_thousand_rows_and_reads_detected_year(self) -> None:
-        rows = [
-            {"id": f"{i:05d}", "school_id": "nyu", "cds_year": "2023-24",
-             "detected_year": None}
-            for i in range(1500)
-        ]
-        rows.append({"id": "z", "school_id": "nyu", "cds_year": "unknown",
-                     "detected_year": "2025-26"})
+    def test_query_contract_and_paging_past_one_thousand_rows(self) -> None:
+        rows = [_doc(i) for i in range(1500)]
+        rows.append(_doc(9000, cds="unknown", detected="2025-26"))
+        rows.append(_doc(9001, cds="unknown"))
+        sb = _FakeSb(rows)
         report: dict[str, int] = {}
-        known = fetch_known_years(_FakeSb(rows), ["nyu", "mit"], report=report)
+        known = fetch_known_years(sb, ["nyu", "mit"], report=report)
         self.assertEqual(known["nyu"], {"2023-24", "2025-26"})
         self.assertEqual(known["mit"], set())
         self.assertEqual(report["years_unparseable_known"], 1)
+        self.assertEqual(sb.log["table"], "cds_documents")
+        self.assertIn("participation_status", sb.log["select"])
+        self.assertIn("detected_year", sb.log["select"])
+        self.assertEqual(sb.log["count"], "exact")
+        self.assertEqual(sb.log["order"], "id")
+        self.assertIn(("removed_at", "null"), sb.log["is_"])
+        self.assertIn(("participation_status", "published"), sb.log["eq"])
+
+    def test_canonical_year_is_detected_year_not_both(self) -> None:
+        sb = _FakeSb([_doc(1, cds="2025-26", detected="2023-24")])
+        known = fetch_known_years(sb, ["nyu"])
+        self.assertEqual(known["nyu"], {"2023-24"})
+
+    def test_removed_and_unpublished_documents_do_not_hide_a_year(self) -> None:
+        rows = [
+            _doc(1, cds="2025-26", removed="2026-11-01T00:00:00Z"),
+            _doc(2, cds="2024-25", status="verified_absent"),
+        ]
+        self.assertEqual(fetch_known_years(_FakeSb(rows), ["nyu"])["nyu"], set())
 
     def test_short_read_raises_instead_of_returning_fewer_years(self) -> None:
-        rows = [{"id": "a", "school_id": "nyu", "cds_year": "2024-25",
-                 "detected_year": None}]
         with self.assertRaises(RuntimeError):
-            fetch_known_years(_FakeSb(rows, count_override=5), ["nyu"])
+            fetch_known_years(_FakeSb([_doc(1)], count_override=5), ["nyu"])
 
     def test_missing_count_raises(self) -> None:
-        rows = [{"id": "a", "school_id": "nyu", "cds_year": "2024-25",
-                 "detected_year": None}]
         with self.assertRaises(RuntimeError):
-            fetch_known_years(_FakeSb(rows, drop_count=True), ["nyu"])
+            fetch_known_years(_FakeSb([_doc(1)], drop_count=True), ["nyu"])
+
+    def test_run_summary_carries_unparseable_known(self) -> None:
+        s = RunSummary()
+        s.years_unparseable_known = 4
+        self.assertEqual(s.as_heartbeat()["years_unparseable_known"], 4)
 
 
 class DroppedWorkCountTests(unittest.TestCase):
@@ -710,8 +746,19 @@ class DroppedWorkCountTests(unittest.TestCase):
         )
         self.assertEqual([c.year for c in selected], ["2025-26"])
         self.assertEqual(counts["years_capped"], 1)
-        self.assertEqual(counts["years_below_min"], 3)
+        # The two counts partition: the malformed year is not also "below min".
+        self.assertEqual(counts["years_below_min"], 2)
         self.assertEqual(counts["years_unparseable"], 1)
+
+    def test_candidate_with_no_year_is_counted_unparseable_and_kept(self) -> None:
+        counts: dict[str, int] = {}
+        selected, _ = select_candidates(
+            [ArchiveCandidate("https://e.edu/x.pdf", None, "yaml")],
+            set(), skip_known=True, max_new=5, min_year="2024-25", counts=counts,
+        )
+        self.assertEqual(len(selected), 1)
+        self.assertEqual(counts["years_unparseable"], 1)
+        self.assertNotIn("years_below_min", counts)
 
     def test_build_targets_counts_schools_over_the_cap(self) -> None:
         entries = {
@@ -752,6 +799,26 @@ class ExitCodeTests(unittest.TestCase):
     def test_all_known_years_is_not_a_failure(self) -> None:
         rows = [{"failed": 0, "crawl_status": "ok", "selected": 0}]
         self.assertEqual(exit_code_for(self._summary(rows)), 0)
+
+    def test_dead_landing_with_known_years_is_not_a_failure(self) -> None:
+        rows = [{"failed": 0, "crawl_status": "nav_error", "selected": 0,
+                 "skipped_known": 1}]
+        self.assertEqual(exit_code_for(self._summary(rows)), 0)
+
+    def test_commit_with_work_but_nothing_committed_is_nonzero(self) -> None:
+        s = RunSummary(phase="commit")
+        s.files = [{"relpath": "a.pdf"}]
+        self.assertEqual(exit_code_for(s), 1)
+        s = RunSummary(phase="commit")
+        s.failed = 2
+        self.assertEqual(exit_code_for(s), 1)
+
+    def test_commit_that_committed_something_or_had_no_work_is_zero(self) -> None:
+        s = RunSummary(phase="commit")
+        s.files = [{"relpath": "a.pdf"}, {"relpath": "b.pdf"}]
+        s.inserted, s.failed = 1, 1
+        self.assertEqual(exit_code_for(s), 0)
+        self.assertEqual(exit_code_for(RunSummary(phase="commit")), 0)
 
     def test_main_returns_the_nonzero_code(self) -> None:
         from tools.finder import headless_archive

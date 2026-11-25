@@ -61,7 +61,7 @@ def fetch_all_rows(
             raise RuntimeError(
                 f"paged read stopped at {len(rows)} of {total} rows"
             )
-        offset += page_size
+        offset += len(batch)
 
 
 def fetch_published_years(

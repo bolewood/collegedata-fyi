@@ -215,6 +215,11 @@ def classify_url(url: str) -> str:
     return "other"
 
 
+def _year_start(year: str | None) -> int:
+    match = re.match(r"^(\d{4})-\d{2}$", year or "")
+    return int(match.group(1)) if match else 0
+
+
 def extract_document_candidates(
     landing_url: str,
     root_domain: str,
@@ -264,7 +269,8 @@ def extract_document_candidates(
             score += 10
         scored.append((score, RepairCandidate(url=url, year=infer_year(evidence), evidence=text or url)))
 
-    scored.sort(key=lambda item: item[0], reverse=True)
+    # Score first; among equals the newer year wins (page order is not a rule).
+    scored.sort(key=lambda item: (item[0], _year_start(item[1].year)), reverse=True)
     if dropped is not None:
         dropped["docs_capped"] = dropped.get("docs_capped", 0) + max(0, len(scored) - max_docs)
     return [candidate for _, candidate in scored[:max_docs]]

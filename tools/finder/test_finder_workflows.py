@@ -126,9 +126,9 @@ class IrHubBackfillWorkflowTests(unittest.TestCase):
 class HeadlessArchiveWorkflowTests(unittest.TestCase):
     def test_missing_summary_is_an_error_not_fabricated_zeros(self) -> None:
         text = (ROOT / ".github/workflows/ops-headless-archive.yml").read_text()
-        self.assertNotIn(
-            '{"schools_attempted":0,"inserted":0,"unchanged":0,"failed":0}', text,
-        )
+        # Required keys stay (so the registry does not relabel it
+        # heartbeat_summary_malformed) but the status is an explicit error.
+        self.assertIn('"failed":0,"summary_missing":true}', text)
         self.assertIn("summary_missing=true", text)
         self.assertIn('"$summary_missing" == "true"', text)
 

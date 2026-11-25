@@ -356,10 +356,15 @@ def select_candidates(
     skipped = 0
     eligible: list[ArchiveCandidate] = []
     for cand in candidates:
-        if cand.year and not YEAR_RE.fullmatch(cand.year.strip()):
+        # Partition: a candidate is unparseable (no year, or not YYYY-YY) or,
+        # if parseable, possibly below the minimum; never both.
+        parseable = bool(cand.year) and bool(YEAR_RE.fullmatch(cand.year.strip()))
+        if not parseable:
             if counts is not None:
                 counts["years_unparseable"] = counts.get("years_unparseable", 0) + 1
-        if not year_at_least(cand.year, min_year):
+            if cand.year:
+                continue  # a malformed year string cannot pass --min-year
+        elif not year_at_least(cand.year, min_year):
             if counts is not None:
                 counts["years_below_min"] = counts.get("years_below_min", 0) + 1
             continue
@@ -488,8 +493,10 @@ def fetch_known_years(
 ) -> dict[str, set[str]]:
     """Years we already archive per school, from live (not removed) documents.
 
-    Counts both `cds_year` and `detected_year` (as the mirror ingest does) so a
-    file filed under one label is not re-archived under the other. Pages with a
+    Keys each document on its canonical year, `coalesce(detected_year,
+    cds_year)` (the same value `cds_manifest` serves), so a file filed under
+    one label is not re-archived under the other, and a stale filed year
+    cannot hide a missing one. Pages with a
     stable order and checks the rows read against the exact count the server
     reports, so a short page is an error, not a smaller "known" set. Year
     values that are not YYYY-YY (`unknown` is the common one) cannot match a
@@ -508,9 +515,13 @@ def fetch_known_years(
         while True:
             result = (
                 sb.table("cds_documents")
-                .select("id,school_id,cds_year,detected_year", count="exact")
+                .select(
+                    "id,school_id,cds_year,detected_year,participation_status",
+                    count="exact",
+                )
                 .in_("school_id", chunk)
                 .is_("removed_at", "null")
+                .eq("participation_status", "published")
                 .order("id")
                 .range(offset, offset + KNOWN_YEARS_PAGE - 1)
                 .execute()
@@ -526,16 +537,20 @@ def fetch_known_years(
                 sid = row.get("school_id")
                 if sid not in known:
                     continue
-                for key in ("cds_year", "detected_year"):
+                # canonical = coalesce(detected_year, cds_year), as cds_manifest
+                # serves it; an unparseable detected_year falls through to cds_year.
+                canonical = None
+                for key in ("detected_year", "cds_year"):
                     year = row.get(key)
-                    if not year:
-                        continue
-                    if YEAR_RE.fullmatch(str(year).strip()):
-                        known[sid].add(str(year).strip())
-                    else:
-                        unparseable += 1
+                    if year and YEAR_RE.fullmatch(str(year).strip()):
+                        canonical = str(year).strip()
+                        break
+                if canonical:
+                    known[sid].add(canonical)
+                else:
+                    unparseable += 1
             seen += len(rows)
-            offset += KNOWN_YEARS_PAGE
+            offset += len(rows)
             if seen >= total:
                 break
             if not rows:
@@ -566,6 +581,7 @@ class RunSummary:
     skipped_known: int = 0
     schools_targeted: int = 0
     schools_capped: int = 0
+    years_unparseable_known: int = 0
     years_capped: int = 0
     years_below_min: int = 0
     years_unparseable: int = 0
@@ -586,6 +602,7 @@ class RunSummary:
             "skipped_known": self.skipped_known,
             "schools_targeted": self.schools_targeted,
             "schools_capped": self.schools_capped,
+            "years_unparseable_known": self.years_unparseable_known,
             "years_capped": self.years_capped,
             "years_below_min": self.years_below_min,
             "years_unparseable": self.years_unparseable,
@@ -866,10 +883,12 @@ def commit_fetched_files(
     summary.skipped_known = int(manifest.get("skipped_known") or 0)
     summary.schools_targeted = int(manifest.get("schools_targeted") or 0)
     summary.schools_capped = int(manifest.get("schools_capped") or 0)
+    summary.years_unparseable_known = int(manifest.get("years_unparseable_known") or 0)
     summary.years_capped = int(manifest.get("years_capped") or 0)
     summary.years_below_min = int(manifest.get("years_below_min") or 0)
     summary.years_unparseable = int(manifest.get("years_unparseable") or 0)
     summary.failed = int(manifest.get("failed") or 0)
+    summary.files = list(manifest.get("files") or [])
 
     for rec in manifest.get("files") or []:
         rel = rec.get("relpath") or ""
@@ -971,6 +990,7 @@ def run(
     seed_by_id = load_seed_urls(schools_yaml) if schools_yaml.exists() else {}
 
     sb = None
+    years_unparseable_known = 0
     extra: list[str] = []
     known: dict[str, set[str]] = {}
     plan_path = plan_json
@@ -1005,7 +1025,11 @@ def run(
         raise SystemExit(f"no target for {','.join(only_ids)}")
 
     if phase in {"all", "plan"} and sb is not None:
-        known = fetch_known_years(sb, [t.school_id for t in targets])
+        known_report: dict[str, int] = {}
+        known = fetch_known_years(
+            sb, [t.school_id for t in targets], report=known_report,
+        )
+        years_unparseable_known = known_report.get("years_unparseable_known", 0)
 
     if phase == "plan":
         if plan_path is None:
@@ -1015,6 +1039,7 @@ def run(
         summary.schools_attempted = len(targets)
         summary.schools_targeted = len(targets)
         summary.schools_capped = target_counts.get("schools_capped", 0)
+        summary.years_unparseable_known = years_unparseable_known
         summary.skipped_known = sum(len(years) for years in known.values())
         if json_out:
             json_out.parent.mkdir(parents=True, exist_ok=True)
@@ -1028,6 +1053,7 @@ def run(
     summary = RunSummary(dry_run=dry_run, phase=phase)
     summary.schools_targeted = len(targets)
     summary.schools_capped = target_counts.get("schools_capped", 0)
+    summary.years_unparseable_known = years_unparseable_known
     if summary.schools_capped:
         print(
             f"note: {summary.schools_capped} school(s) over --max-schools "
@@ -1168,6 +1194,10 @@ def school_row_failed(row: dict[str, Any]) -> bool:
         return False
     if row.get("failed", 0):
         return True
+    if row.get("skipped_known", 0):
+        # Nothing new to fetch because we already hold those years; a dead
+        # landing page does not make that a failed school.
+        return False
     return row.get("crawl_status") in {"nav_error", "waf_captcha"} and not row.get(
         "selected", 0
     )
@@ -1178,6 +1208,14 @@ def exit_code_for(summary: RunSummary) -> int:
     hide the schools that did ingest), but a run that did nothing, or in which
     every school failed, must not look green."""
     if summary.phase == "commit":
+        committed = summary.inserted + summary.unchanged
+        if committed == 0 and (summary.failed > 0 or len(summary.files) > 0):
+            print(
+                f"error: commit had work (files={len(summary.files)}, "
+                f"failed={summary.failed}) but committed nothing",
+                file=sys.stderr,
+            )
+            return 1
         return 0
     if summary.schools_targeted > 0 and summary.schools_attempted == 0:
         print(

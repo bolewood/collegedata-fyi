@@ -540,7 +540,7 @@ def dedupe_identical_seeds(schools: list[dict]) -> list[tuple[str, str]]:
 def record_probe(school: dict, result: str, method: str,
                  patterns_tried: int = 0, search_tried: bool = False):
     """Write probe_state into the school dict."""
-    ps = school.get("probe_state", {})
+    ps = school.get("probe_state") or {}
     ps["last_probed_at"] = _now_iso()
     ps["last_result"] = result         # "found" or "not_found"
     ps["last_method"] = method         # "pattern", "bing_html", "brave", "google"
@@ -559,7 +559,7 @@ def record_not_searched(school: dict, cause: str) -> None:
     with nothing to show it. `last_probed_at` and `last_result` are left as they
     were; the cause is kept beside them for whoever reads schools.yaml.
     """
-    ps = school.get("probe_state", {})
+    ps = school.get("probe_state") or {}
     ps["last_not_searched_at"] = _now_iso()
     ps["last_not_searched_cause"] = cause
     school["probe_state"] = ps
@@ -1497,6 +1497,7 @@ def write_probe_summary(
     still_stuck: int | None = None,
     audited: int = 0,
     demoted: int = 0,
+    attempted: int | None = None,
     not_searched: int = 0,
     not_searched_causes: dict[str, int] | None = None,
     capped_out: int = 0,
@@ -1505,6 +1506,7 @@ def write_probe_summary(
     if path is None:
         return
     payload = {
+        "attempted": attempted if attempted is not None else probed + not_searched,
         "not_searched": not_searched,
         "not_searched_causes": dict(not_searched_causes or {}),
         "capped_out": capped_out,
@@ -1867,7 +1869,8 @@ def main():
             print(f"\nProbed: {completed}, Found: {found}, Not found: {failed}")
             write_probe_summary(
                 args.summary_json,
-                probed=completed,
+                probed=completed - not_searched,
+                attempted=completed,
                 found=found,
                 replaced=replaced,
                 budget_remaining=budget_remaining(),
@@ -1897,7 +1900,8 @@ def main():
         print(f"Updated {SCHOOLS_YAML}")
     write_probe_summary(
         args.summary_json,
-        probed=completed,
+        probed=completed - not_searched,
+        attempted=completed,
         found=found,
         replaced=replaced,
         budget_remaining=budget_remaining(),
@@ -1908,6 +1912,13 @@ def main():
         capped_out=capped_out,
         capped_out_detail=capped_out_detail,
     )
+    if completed > 0 and not_searched == completed:
+        print(
+            f"error: all {completed} attempted school(s) were not searched "
+            f"{not_searched_causes}; nothing was actually checked",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
 
 if __name__ == "__main__":
