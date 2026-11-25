@@ -210,7 +210,10 @@ Each original bug was put back in a throwaway worktree at `origin/main` 054b2b7 
 | 45551257009 | test mode, floor override 99 | It opened `[test]` #489, unassigned, and posted to #alerts. The heartbeat was rejected with a warning (the station is unregistered until #469) |
 | 45551423155 | test mode, floor override 10 | It closed #489 with one comment ("Recovered: … 365 of 479 (76.2%) … Closing.") and posted the recovery to #alerts |
 
-The lamp part could not be shown in production: the Renewal tile is slate until #469 is applied. It is covered by the web tests above. These runs used the alarm as it was in #474. The per-year model (#493) is covered by `test_renewal_alarm`, and a dry run against production after #493 is recorded in that PR.
+| 45580532234 | final code (after #502), test mode, override 99 | `alarm renewal:2025-26: create`. It opened `[test]` #504, unassigned, and posted to #alerts |
+| 45580731560 | final code, test mode, override 10 | `alarm renewal:2025-26: close`. It closed #504 and posted "[test] Discovery renewal recovered: one-year 74.9%…" |
+
+The lamp part could not be shown in production: the Renewal tile is slate until #469 is applied. It is covered by the web tests above. The first three runs used the alarm as merged in #474. The last two ran the final per-year, separate-scope model (#493, #499, #502) on `main`.
 
 ## Red team
 
