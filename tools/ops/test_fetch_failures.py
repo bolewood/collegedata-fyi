@@ -232,6 +232,34 @@ class SummaryTests(unittest.TestCase):
         self.assertIn("odd \\| thing", text)
 
 
+class ReportCapTests(unittest.TestCase):
+    def many(self, n, cause):
+        out = []
+        for i in range(n):
+            c = ff.Case(f"s{i:03d}", f"School {i:03d}", LISTING, "listing_page", None, False, None)
+            c.cause = cause
+            c.raw_error = "landing HTTP 403"
+            out.append(c)
+        return out
+
+    def test_row_cap_limits_each_cause_and_points_to_the_artifact(self):
+        cases = self.many(40, ff.BLOCKED) + self.many(40, ff.NO_FAILURE)
+        text = ff.render_report(cases, current_year=2025, as_of=AS_OF, max_rows_per_cause=5)
+        self.assertEqual(text.count("| [School"), 5)
+        self.assertIn("35 more not shown (full list in the run artifact).", text)
+        self.assertIn("and 35 more (full list in the run artifact).", text)
+        full = ff.render_report(cases, current_year=2025, as_of=AS_OF)
+        self.assertEqual(full.count("| [School"), 40)
+
+    def test_summary_keys_are_the_contract(self):
+        self.assertEqual(
+            ff.SUMMARY_KEYS,
+            ("fetch_failures", "fetch_failures_blocked", "fetch_failures_viewer",
+             "fetch_failures_section_files", "fetch_failures_dead_link", "fetch_failures_other"),
+        )
+        self.assertEqual(tuple(ff.summary_dict([])), ff.SUMMARY_KEYS)
+
+
 class FetchQueueTests(unittest.TestCase):
     SINCE = datetime(2026, 10, 10, tzinfo=timezone.utc)
 

@@ -88,6 +88,9 @@ NO_FAILURE = "no_failure_recorded"
 
 FAILURE_CAUSES = (BLOCKED, VIEWER, SECTION_FILES, DEAD_LINK, OTHER)
 CAUSE_ORDER = FAILURE_CAUSES + (NO_FAILURE,)
+# The flat summary keys this module writes: the contract with the heartbeat
+# station summary and the registry test.
+SUMMARY_KEYS = ("fetch_failures",) + tuple(f"fetch_failures_{c}" for c in FAILURE_CAUSES)
 CAUSE_HEADINGS = {
     BLOCKED: "Blocked (WAF, bot challenge, 403/405/429): needs the headless job or a manual file",
     VIEWER: "Behind a viewer or login (SharePoint, Box, Dropbox, Google, SSO)",
@@ -324,6 +327,7 @@ def summary_dict(cases: list[Case]) -> dict[str, Any]:
     }
     for cause in FAILURE_CAUSES:
         out[f"fetch_failures_{cause}"] = counts[cause]
+    assert tuple(out) == SUMMARY_KEYS
     return out
 
 
@@ -366,7 +370,10 @@ def render_report(
     window_days: int = WINDOW_DAYS,
     heading_level: int = 2,
     max_chars: int = 60000,
+    max_rows_per_cause: int | None = None,
 ) -> str:
+    """`max_rows_per_cause` caps each cause's rows (and the no-failure name
+    list); the full list is in the worklist artifact."""
     h = "#" * heading_level
     h2 = "#" * (heading_level + 1)
     summary = summary_dict(cases)
@@ -403,12 +410,17 @@ def render_report(
         if not group:
             lines += ["None.", ""]
             continue
+        cap = max_rows_per_cause if max_rows_per_cause is not None else len(group)
         if cause == NO_FAILURE:
+            shown = group[:cap]
             lines.append(
-                ", ".join(f"[{_cell(c.name, 60)}]({SCHOOL_PAGE_URL.format(school_id=c.school_id)})" for c in group)
+                ", ".join(f"[{_cell(c.name, 60)}]({SCHOOL_PAGE_URL.format(school_id=c.school_id)})" for c in shown)
             )
+            if len(group) > len(shown):
+                lines.append(f"and {len(group) - len(shown)} more (full list in the run artifact).")
             lines.append("")
             continue
+        budget = cap
         subgroups: list[tuple[str | None, list[Case]]]
         if cause == OTHER:
             by_reason: dict[str, list[Case]] = defaultdict(list)
@@ -420,8 +432,15 @@ def render_report(
         for reason, members in subgroups:
             if reason:
                 lines += [f"**{reason} ({len(members)})**", ""]
+            if budget <= 0:
+                lines += [f"{len(members)} more not shown (full list in the run artifact).", ""]
+                continue
+            shown = members[:budget]
+            budget -= len(shown)
             lines += ["| School | Newest year | Evidence | Archive error | Seed |", "|---|---|---|---|---|"]
-            lines += [_row(c) for c in members]
+            lines += [_row(c) for c in shown]
+            if len(members) > len(shown):
+                lines += ["", f"{len(members) - len(shown)} more not shown (full list in the run artifact)."]
             lines.append("")
     text = "\n".join(lines).rstrip() + "\n"
     if len(text) > max_chars:
@@ -496,6 +515,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--waf-yaml", type=Path, default=DEFAULT_WAF_YAML)
     parser.add_argument("--window-days", type=int, default=WINDOW_DAYS)
     parser.add_argument("--heading-level", type=int, default=2)
+    parser.add_argument("--max-rows-per-cause", type=int, help="cap the report rows per cause (the worklist JSON is never capped)")
+    parser.add_argument("--max-chars", type=int, default=60000, help="hard cap on the report length")
     parser.add_argument("--out-summary", type=Path)
     parser.add_argument(
         "--merge-summary",
@@ -563,6 +584,8 @@ def run(args: argparse.Namespace) -> int:
         as_of=as_of,
         window_days=args.window_days,
         heading_level=args.heading_level,
+        max_rows_per_cause=args.max_rows_per_cause,
+        max_chars=args.max_chars,
     )
     write_json(args.out_summary, summary)
     if args.merge_summary:
