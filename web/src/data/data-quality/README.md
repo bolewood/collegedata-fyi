@@ -6,7 +6,9 @@ plus the `renewal` block). They are written by `scoreboard.py --public` and
 committed in a PR with the `--compare` deltas.
 
 `/data-quality` and the "This year's reports on file" tile on `/coverage` read
-the file with the newest `snapshot_of`. The build fails when:
+the file with the newest `snapshot_of`, and the "Over time" section of
+`/data-quality` reads every file here, each against its own `public_format`.
+Never commit a snapshot that is not from a real run. The build fails when:
 
 - two files have the same `snapshot_of` date;
 - a file's `public_format` is one the page doesn't know;

@@ -511,10 +511,10 @@ export function validateSnapshot(raw: unknown, source: string): QualitySnapshot 
 }
 
 /**
- * Pick the snapshot with the newest `snapshot_of`. Throws on: no files, two
- * files with the same date, or a file the page can't read.
+ * Every snapshot, each validated against its own `public_format`, oldest first. Throws on: no files, two files with
+ * the same date, or a file the page can't read. The trend reads all of them; the page's tables read the newest.
  */
-export function selectSnapshot(files: { name: string; json: unknown }[]): QualitySnapshot {
+export function selectAllSnapshots(files: { name: string; json: unknown }[]): QualitySnapshot[] {
   if (files.length === 0) {
     throw new SnapshotError("web/src/data/data-quality has no snapshot (.json) files");
   }
@@ -528,7 +528,12 @@ export function selectSnapshot(files: { name: string; json: unknown }[]): Qualit
     }
     days.set(day, files[i].name);
   });
-  return parsed.reduce((a, b) => (Date.parse(b.snapshot_of) > Date.parse(a.snapshot_of) ? b : a));
+  return [...parsed].sort((a, b) => Date.parse(a.snapshot_of) - Date.parse(b.snapshot_of));
+}
+
+/** The snapshot with the newest `snapshot_of` (see `selectAllSnapshots` for what throws). */
+export function selectSnapshot(files: { name: string; json: unknown }[]): QualitySnapshot {
+  return selectAllSnapshots(files).at(-1)!;
 }
 
 // ── Rates ─────────────────────────────────────────────────────────

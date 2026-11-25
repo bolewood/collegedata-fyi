@@ -4,7 +4,8 @@ import "./data-quality.css";
 import { ArchiveStatusHeader } from "@/components/ArchiveStatusHeader";
 import { DataQualityView } from "@/components/DataQualityView";
 import { formatSnapshotDate, formatSnapshotTime, isDataQualityLaunched, qualityLede, snapshotDay, type QualitySnapshot } from "@/lib/data-quality";
-import { loadLatestSnapshot, loadReportsFor } from "@/lib/data-quality-snapshots";
+import { buildTrend } from "@/lib/data-quality-trend";
+import { loadAllSnapshots, loadReportsFor } from "@/lib/data-quality-snapshots";
 
 // The snapshot is committed to the repo and read at build, so the page is
 // static. A new snapshot reaches the site with the next deploy.
@@ -22,7 +23,9 @@ export function generateMetadata(): Metadata {
 
 export default function DataQualityPage() {
   // The loader throws when no snapshot is committed, so there is always one here.
-  const snapshot: QualitySnapshot = loadLatestSnapshot();
+  const snapshots = loadAllSnapshots();
+  const snapshot: QualitySnapshot = snapshots[snapshots.length - 1];
+  const trend = buildTrend(snapshots);
   const lede = qualityLede(snapshot);
   // The reports behind each count (written with the snapshot). Loaded here so the build checks them against the snapshot
   // even before launch; the page only links to them once launched, and the client fetches the file on the first click.
@@ -66,7 +69,7 @@ export default function DataQualityPage() {
 
       {/* useSearchParams (the year picker) needs a Suspense boundary to keep the page static. */}
       <Suspense fallback={<div className="mono" style={{ padding: "32px 0", color: "var(--ink-3)" }}>LOADING…</div>}>
-        <DataQualityView snapshot={snapshot} reportsUrl={reportsUrl} />
+        <DataQualityView snapshot={snapshot} reportsUrl={reportsUrl} trend={trend} />
       </Suspense>
     </div>
   );

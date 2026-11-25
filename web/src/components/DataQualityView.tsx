@@ -40,6 +40,7 @@ import { DATA_LICENSE_NAME, DATA_LICENSE_URL } from "@/lib/data-license";
 import { HAS_CDS_HREF } from "@/lib/coverage-model";
 import { formatLabel } from "@/lib/format-labels";
 import { Count, DrillPanel, DrillProvider } from "./DataQualityDrill";
+import { cohortChanges, lineRuns, pointLabel, renewalRow, seriesStarts, trendRows, type TrendPoint, type TrendRow } from "@/lib/data-quality-trend";
 import type { CellTable } from "@/lib/data-quality-reports";
 
 const DASH = "–";
@@ -47,14 +48,15 @@ const DASH = "–";
 const n = (v: number) => v.toLocaleString("en-US");
 const pc = (v: number | null) => (v === null ? DASH : `${v}%`);
 
-export function DataQualityView({ snapshot, reportsUrl = null }: { snapshot: QualitySnapshot; reportsUrl?: string | null }) {
+export function DataQualityView({ snapshot, reportsUrl = null, trend }: { snapshot: QualitySnapshot; reportsUrl?: string | null; trend: TrendPoint[] }) {
   const searchParams = useSearchParams();
   const year = resolveYear(snapshot, searchParams.get("year"));
-  return <DataQualityBody snapshot={snapshot} year={year} reportsUrl={reportsUrl} />;
+  return <DataQualityBody snapshot={snapshot} year={year} reportsUrl={reportsUrl} trend={trend} />;
 }
 
 /** Split out so tests can render a chosen year without a router. */
-export function DataQualityBody({ snapshot, year, reportsUrl = null }: { snapshot: QualitySnapshot; year: QualityYear; reportsUrl?: string | null }) {
+export function DataQualityBody({ snapshot, year, reportsUrl = null, trend }: { snapshot: QualitySnapshot; year: QualityYear; reportsUrl?: string | null; trend: TrendPoint[] }) {
+  assertTrendMatches(trend, snapshot);
   const years = yearsNewestFirst(snapshot);
   return (
     <DrillProvider reportsUrl={reportsUrl} year={year.cds_year}>
@@ -68,6 +70,7 @@ export function DataQualityBody({ snapshot, year, reportsUrl = null }: { snapsho
       </section>
 
       <Notices year={year} />
+      <TrendSection points={trend} year={year.cds_year} />
       <ReportsTable year={year} snapshot={snapshot} />
       <SectionsTable year={year} />
       <FederalTable year={year} snapshot={snapshot} />
@@ -216,6 +219,159 @@ function GlanceTable({ years }: { years: QualityYear[] }) {
         Fields stored is left out here because 2023-24 is counted differently; see Table A.
       </Note>
     </section>
+  );
+}
+
+// ── Over time ────────────────────────────────────────────────────
+
+/** The trend is oldest first and ends at the snapshot the tables show; anything else is a bug in the caller, so fail loudly. */
+export function assertTrendMatches(trend: TrendPoint[], snapshot: QualitySnapshot): void {
+  if (trend.length === 0) return;
+  for (let i = 1; i < trend.length; i++) {
+    if (Date.parse(trend[i].snapshot_of) <= Date.parse(trend[i - 1].snapshot_of)) {
+      throw new Error(`The trend is not oldest first: ${trend[i - 1].snapshot_of} is followed by ${trend[i].snapshot_of}`);
+    }
+  }
+  if (trend[trend.length - 1].snapshot_of !== snapshot.snapshot_of) {
+    throw new Error(`The trend ends at ${trend[trend.length - 1].snapshot_of}, not at the snapshot shown, ${snapshot.snapshot_of}`);
+  }
+}
+
+/**
+ * The page's main numbers by snapshot. With one snapshot there is nothing to compare, so the page shows that snapshot's numbers
+ * and says a trend appears with the second; no line or axis is drawn for a single point. From two on, each row gets a small
+ * line, spaced by snapshot date, beside its table values, which are the accessible form of every point (the lines are hidden
+ * from assistive technology). A line breaks at a missing value and starts again where the school years that renewal compares
+ * change. Renewal is archive-wide, not per CDS year, so it has its own small table.
+ */
+function TrendSection({ points, year }: { points: TrendPoint[]; year: string }) {
+  if (points.length === 0) return null;
+  const rows = trendRows(points, year);
+  const renewal = renewalRow(points);
+  const many = points.length > 1;
+  const first = pointLabel(points[0]);
+  const starts = seriesStarts(rows);
+  const changes = cohortChanges(renewal);
+  return (
+    <section aria-labelledby="dq-trend-heading" style={sectionStyle}>
+      <SectionHead
+        id="dq-trend-heading"
+        label="§ Over time"
+        title="Over time"
+        sentence={
+          many
+            ? `The numbers for ${year} in each of ${points.length} snapshots, from ${first} to ${pointLabel(points[points.length - 1])}.`
+            : `The numbers for ${year} in the first snapshot, ${first}. A trend appears here once there are two snapshots.`
+        }
+      />
+      <TrendTable id="dq-trend" caption={many ? `${year} by snapshot, oldest first` : `${year}, first snapshot`} rows={rows} points={points} />
+      {starts.length > 0 && (
+        <Note id="dq-trend-starts">
+          {starts
+            .map((g) => `${g.labels.join(", ")} ${g.labels.length === 1 ? "starts" : "start"} at the ${pointLabel(points[g.index])} snapshot; earlier snapshots don’t have ${g.labels.length === 1 ? "it" : "them"}.`)
+            .join(" ")}
+        </Note>
+      )}
+      <Note id="dq-trend-note">
+        {many
+          ? "A change between snapshots can come from reports added to the archive, from fixes to how we read them, or both. Each value is that snapshot’s own number, and each line is spaced by snapshot date."
+          : `Each value is the first snapshot’s own number. These six rows come from the ${year} row of “All years at a glance”, above.`}
+      </Note>
+      <h3 className="serif" id="dq-renewal-heading" style={{ fontSize: 20, margin: "28px 0 10px", fontWeight: 400 }}>
+        Current-year renewal
+      </h3>
+      <TrendTable id="dq-trend-renewal" caption={many ? "All schools, by snapshot, oldest first" : "All schools, first snapshot"} rows={[renewal]} points={points} cohortLabel />
+      {changes.length > 0 && (
+        <Note id="dq-renewal-cohorts">
+          {changes
+            .map((c) => `At the ${pointLabel(points[c.index])} snapshot the comparison moved from ${c.from} to ${c.to}, so a new series starts there.`)
+            .join(" ")}
+        </Note>
+      )}
+      <Note id="dq-renewal-note">
+        Renewal is for the whole archive, not one year: of the schools with a report for the year before the current one, the share that also has one for the current year. It is the headline figure on the Coverage page.
+      </Note>
+    </section>
+  );
+}
+
+/** One trend table: a row per measure, a column per snapshot (dated, with its run), and from two snapshots a line column. */
+function TrendTable({ id, caption, rows, points, cohortLabel = false }: { id: string; caption: string; rows: TrendRow[]; points: TrendPoint[]; cohortLabel?: boolean }) {
+  const many = points.length > 1;
+  return (
+    <Scroll label={caption} hint={many}>
+      <table className="dq-table dq-table--trend" style={{ ...tableStyle, ["--dq-snapshots" as string]: points.length, ["--dq-line" as string]: many ? 1 : 0 }} id={id}>
+        <Cols n={points.length + 1 + (many ? 1 : 0)} />
+        <caption className="meta" style={{ textAlign: "left", paddingBottom: 8 }}>{caption}</caption>
+        <thead>
+          <tr>
+            <th scope="col" style={thLeft}>Measure</th>
+            {points.map((p) => (
+              <th key={p.snapshot_of} scope="col" style={thStyle}>
+                {many ? "" : "First snapshot, "}
+                {pointLabel(p)}
+                <br />
+                <span className="dq-trend-run" style={{ textTransform: "none", letterSpacing: 0, fontWeight: 400 }}>{p.run}</span>
+              </th>
+            ))}
+            {/* The lines repeat what the table says, so the column is hidden from assistive technology, header included. */}
+            {many && <th scope="col" aria-hidden="true" style={thLeft}>Shape</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.key}>
+              {/* Row labels wrap (tdLeft is nowrap, which ran a long label over its own value on a phone). */}
+              <th scope="row" style={{ ...tdLeft, whiteSpace: "normal" }}>{r.label}</th>
+              {r.values.map((v, i) => (
+                <td key={points[i].snapshot_of} style={tdStyle}>
+                  {v === null ? DASH : r.unit === "percent" ? `${v}%` : n(v)}
+                  {cohortLabel && r.cohorts?.[i] && (
+                    <>
+                      <br />
+                      <span style={{ fontFamily: "var(--sans)", fontSize: 12, color: "var(--ink-3)" }}>{r.cohorts[i]}</span>
+                    </>
+                  )}
+                </td>
+              ))}
+              {many && (
+                <td aria-hidden="true" style={{ ...tdStyle, textAlign: "left" }}>
+                  <TrendLine row={r} points={points} />
+                </td>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Scroll>
+  );
+}
+
+/** The line for a row (see `lineRuns` for how it breaks and is scaled); a dash when no run has two points. */
+function TrendLine({ row, points }: { row: TrendRow; points: TrendPoint[] }) {
+  const w = 72;
+  const h = 22;
+  const runs = lineRuns(row, points, w, h);
+  if (!runs.some((run) => run.length >= 2)) return <>{DASH}</>;
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden="true" style={{ verticalAlign: "middle" }}>
+      {runs.map((run) =>
+        run.length >= 2 ? (
+          <path
+            key={run[0].index}
+            d={run.map((p, k) => `${k === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ")}
+            stroke="var(--chart-ink, var(--ink))"
+            strokeWidth="1.25"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        ) : null,
+      )}
+      {runs.flat().map((p) => (
+        <circle key={p.index} cx={p.x} cy={p.y} r="1.8" fill="var(--forest)" />
+      ))}
+    </svg>
   );
 }
 

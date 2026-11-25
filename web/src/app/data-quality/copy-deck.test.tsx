@@ -17,8 +17,8 @@ import { FIXTURE_SNAPSHOT } from "@/lib/__fixtures__/data-quality-snapshot";
 import { AID_CANT_CHECK_SAMPLE, FEDERAL_DIFFERS_SAMPLE, type QualitySnapshot } from "@/lib/data-quality";
 
 let currentParams = new URLSearchParams();
-const mocks = vi.hoisted(() => ({ loadLatestSnapshot: vi.fn() }));
-vi.mock("@/lib/data-quality-snapshots", () => ({ loadLatestSnapshot: mocks.loadLatestSnapshot, loadReportsFor: () => null }));
+const mocks = vi.hoisted(() => ({ loadLatestSnapshot: vi.fn(), earlier: [] as unknown[] }));
+vi.mock("@/lib/data-quality-snapshots", () => ({ loadLatestSnapshot: mocks.loadLatestSnapshot, loadAllSnapshots: () => [...mocks.earlier, mocks.loadLatestSnapshot()], loadReportsFor: () => null }));
 vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
@@ -31,6 +31,7 @@ vi.mock("next/navigation", () => ({
 import DataQualityPage from "./page";
 
 afterEach(() => {
+  mocks.earlier = [];   // a failure in the middle of a render must not leak snapshots into later tests
   currentParams = new URLSearchParams();
   mocks.loadLatestSnapshot.mockReset();
 });
@@ -92,11 +93,24 @@ function snapshotWithNotes(): QualitySnapshot {
 function renderedCorpus(): string {
   const snap = snapshotWithNotes();
   mocks.loadLatestSnapshot.mockReturnValue(snap);
-  const texts = snap.years.map((y) => {
-    currentParams = new URLSearchParams(`year=${y.cds_year}`);
-    return plain(renderToStaticMarkup(<DataQualityPage />));
-  });
-  return texts.join(" ");
+  const render = () =>
+    snap.years.map((y) => {
+      currentParams = new URLSearchParams(`year=${y.cds_year}`);
+      return plain(renderToStaticMarkup(<DataQualityPage />));
+    });
+  // One snapshot (the first-snapshot sentences), then two (the trend's several-snapshot sentences).
+  mocks.earlier = [];
+  const one = render();
+  const older = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT)) as QualitySnapshot;
+  older.snapshot_of = "2026-11-10T12:00:00Z";
+  older.scoreboard_run = "scoreboard-20261110T120000Z.json";
+  // The renewal compared a school year earlier then, so the cohort-change sentence is on the page too.
+  older.renewal.current_year = "2024-25";
+  older.renewal.previous_year = "2023-24";
+  mocks.earlier = [older];
+  const two = render();
+  mocks.earlier = [];
+  return [...one, ...two].join(" ");
 }
 
 describe("copy deck and page", () => {
