@@ -2,6 +2,7 @@
 
 **Date:** 2026-11-25
 **For:** [the stale-seeds postmortem](2026-11-24-stale-discovery-seeds.md)
+**Status (2026-11-25):** migration #469 is applied to production (the Renewal station is registered and heartbeat history is kept), and the floors are the scaled floors of #508 (D1). Rows below that describe the state before then say so. The run logs and replays in this ledger are evidence from before those two changes and are left as they were. Open follow-ups: #506 (the December arrivals gap), #475, #477 to #484, #486, and #496 (the first data-quality snapshot). The end-to-end test table below is evidence from before #469 and #508 and keeps its original wording.
 **Question:** can the archive fall behind on what schools publish, with every check looking fine, and no person told within a month?
 
 This ledger maps each of the postmortem's ten causes to five things: the control that now catches it, how a person is told, the test that proves it, the evidence, and what is still not covered. Run logs and raw outputs from the overnight run are summarized where they are used.
@@ -10,11 +11,11 @@ This ledger maps each of the postmortem's ten causes to five things: the control
 
 | Channel | Fires when | Reaches | Live today? |
 |---|---|---|---|
-| **Alarm issue** (label `alarm:discovery-renewal`; one per scope: `renewal:<Y>` and `arrivals:<Y>`, so up to two per CDS year) | Checked daily. It opens when current-year, two-year or next-year renewal is below its floor, or (its own `arrivals:<Y>` issue) when a year's arrivals fall below 0.4 of what the curve predicts (D17). While still below, it is superseded by a new assigned issue every 30 days and at once on a 5-point worsening (D16). It closes only when that year recovers; years two or more cycles old are retired | Assigned to the owner | From the first scheduled run, 2026-11-25 13:41 UTC (the assigned path has not run for real yet). It will open one, because renewal is 74.9% against a floor of 82.5% |
+| **Alarm issue** (label `alarm:discovery-renewal`; one per scope: `renewal:<Y>` and `arrivals:<Y>`, so up to two per CDS year) | Checked daily. It opens when current-year, two-year or next-year renewal is below its floor, or (its own `arrivals:<Y>` issue) when a year's arrivals fall below 0.4 of what the curve predicts (D17). While still below, it is superseded by a new assigned issue every 30 days and at once on a 5-point worsening (D16). It closes only when that year recovers; years two or more cycles old are retired | Assigned to the owner | Shown for real on 2026-11-25: #507 was opened at 11:33 UTC by a manual run under the raw-curve floor (75% against 82%), before #508 merged (11:40 UTC). The first scheduled run, and what it does to #507 under the scaled floor, is still ahead |
 | **Discord #alerts, direct** | An alarm issue opens, is superseded (every 30 days or on a 5-point worsening), recovers, or is retired | Channel | Yes. The end-to-end test posted both kinds |
 | **Discord #alerts, `workflow_run`** | The renewal workflow fails (short read, too few schools in the denominator, a floor mismatch, the alarm step failing) | Channel | Yes |
 | **Discord #alerts, hourly scheduled-run check** | The renewal workflow has no scheduled run newer than 36 h (the hand check: 35 days) | Channel | From the first scheduled run; with no scheduled run ever seen it records nothing |
-| **Discord #alerts, hourly board poll** | A board lamp turns `down`: Renewal (below a floor, no scheduled heartbeat in 36 h, an error, a hung run) or Stuck PDFs (90% or more still stuck) | Channel | Stuck PDFs: yes. Renewal: only after migration #469 is applied (slate until then) |
+| **Discord #alerts, hourly board poll** | A board lamp turns `down`: Renewal (below a floor, no scheduled heartbeat in 36 h, an error, a hung run) or Stuck PDFs (90% or more still stuck) | Channel | Stuck PDFs: yes. Renewal: yes, since migration #469 was applied (2026-11-25; the tile was slate until then) |
 | **Monthly hand-check issue** | The 3rd of each month | Assigned to the owner | From the first scheduled run on 2026-12-03; shown once by dispatch (`[test]` #498) |
 
 ## The headline number and its floor
@@ -27,7 +28,7 @@ This ledger maps each of the postmortem's ten causes to five things: the control
 - **Next year:** mature one-year renewal × curve × 0.75, tracked once the raw curve reaches 18% (March 1).
 - **Arrivals:** the expected arrivals are scaled by the same ratio.
 
-D1 was decided by the owner on 2026-11-26: the scaled floor. The earlier raw-curve floor put a fully caught-up year under the floor (407 of 498 = 81.7% against 82.5% with all 34 found files archived) and Fable's healthy control opened 13 monthly issues on the two-year check, which is #136 again.
+D1 was decided by the owner on 2026-11-25 and merged as #508: the scaled floor. The earlier raw-curve floor put a fully caught-up year under the floor (407 of 498 = 81.7% against 82.5% with all 34 found files archived) and Fable's healthy control opened 13 monthly issues on the two-year check, which is #136 again.
 
 **Backtest** (reproduced independently by Fable). It replays the daily check at each month end, using `discovered_at` and `removed_at` on today's filed years:
 
@@ -92,13 +93,13 @@ The alarm would have opened an issue at the end of April 2026, from the next-yea
 - **Control:**
   - `reprobe_outcome.py` (#472) counts a school as fixed only when its new seed reaches a CDS year newer than the archive's and at or past the floor (no section files, CDS evidence in the URL), or when it is a listing page that matches. Otherwise it is still stuck.
   - The Stuck PDFs lamp (#470) is `late` above 50% still stuck and `down` at 90% or more.
-  - A heartbeat history table keeps each finished run (migration #469, open).
+  - A heartbeat history table keeps each finished run (migration #469, applied 2026-11-25).
 - **Told:** the lamp, then Discord at 90% or more. On deploy it went down on November's 71/78.
 - **Test:** pipeline-lamps "71 of 78 still stuck is down", plus `test_old_file_is_not_a_fix_even_when_the_archive_has_nothing`, `test_section_file_is_never_a_fix` and `test_a_year_on_a_non_cds_link_is_ignored`.
 - **Evidence:** reinsertion 3 (lamp ignores its result) fails 6 tests.
 - **Not covered:**
   - Between 50% and 90% the lamp is only `late`, which Discord does not post. The renewal alarm is the push for that range.
-  - History is kept only once #469 is applied.
+  - History starts from #469's backfill on 2026-11-25; earlier runs are not recovered.
 
 ### 4. An alarm existed, and no one acted on it
 
@@ -158,7 +159,7 @@ The alarm would have opened an issue at the end of April 2026, from the next-yea
 - **Told:** the board, then Discord.
 - **Test:** pipeline-lamps (20+ renewal and stuck cases) and `test_discovery_renewal_staleness_alerts_once_then_recovers`.
 - **Not covered:**
-  - The Renewal lamp is slate until #469 is applied.
+  - The Renewal lamp was slate until #469 was applied (2026-11-25); it reads the latest accepted heartbeat from then on.
   - Other stations still report `ok` from completion, filed as #480 (refresh jobs ok on empty or partial counts).
 
 ### 9. The coverage page showed the symptom one school at a time
@@ -200,7 +201,7 @@ Each original bug was put back in a throwaway worktree at `origin/main` 054b2b7 
 |---|---|---|
 | fails (short read, too few schools, a floor mismatch, the alarm step) | the `workflow_run` post to #alerts. From #493, day after day too: every 7th consecutive failure posts | `test_scheduled_failure_on_default_branch_alerts`, `test_consecutive_failures` |
 | stops running (disabled, deleted, schedule broken) | the hourly poll: no scheduled run in 36 h posts to #alerts | `test_discovery_renewal_staleness_alerts_once_then_recovers`, `test_first_poll_alerts_on_a_stale_run_and_baselines_a_fresh_one` |
-| runs but heartbeats nothing, errors, or hangs | the station's SLA lamp (36 h), then the board poll. **Once #469 is applied.** The poll posts only on a change to down, so while the lamp is already down for a below-floor result a silent heartbeat failure (rejected write, warning, exit 0) is not alarmed by itself. The alarm issue and its monthly re-notify don't depend on the heartbeat, so a below-floor year is still pushed | pipeline-lamps "scheduled heartbeat older than 36h is down", "last scheduled error is down", "a hung run is a clock failure" |
+| runs but heartbeats nothing, errors, or hangs | the station's SLA lamp (36 h), then the board poll. **Since #469 was applied (2026-11-25).** The poll posts only on a change to down, so while the lamp is already down for a below-floor result a silent heartbeat failure (rejected write, warning, exit 0) is not alarmed by itself. The alarm issue and its monthly re-notify don't depend on the heartbeat, so a below-floor year is still pushed | pipeline-lamps "scheduled heartbeat older than 36h is down", "last scheduled error is down", "a hung run is a clock failure" |
 | goes quiet because GitHub disabled schedules (60 days) | the optional outside check-in (D14), **once set up** | workflow test: the step is schedule-only and the URL is never printed |
 
 ## End-to-end test (2026-11-25)
@@ -213,7 +214,7 @@ Each original bug was put back in a throwaway worktree at `origin/main` 054b2b7 
 | 45580532234 | final code (after #502), test mode, override 99 | `alarm renewal:2025-26: create`. It opened `[test]` #504, unassigned, and posted to #alerts |
 | 45580731560 | final code, test mode, override 10 | `alarm renewal:2025-26: close`. It closed #504 and posted "[test] Discovery renewal recovered: one-year 74.9%…" |
 
-The lamp part could not be shown in production: the Renewal tile is slate until #469 is applied. It is covered by the web tests above. The first three runs used the alarm as merged in #474. The last two ran the final per-year, separate-scope model (#493, #499, #502) on `main`.
+The lamp part could not be shown in production during the run: the Renewal tile was slate until #469 was applied (2026-11-25). It is covered by the web tests above. The first three runs used the alarm as merged in #474. The last two ran the final per-year, separate-scope model (#493, #499, #502) on `main`.
 
 ## Red team
 
@@ -278,7 +279,7 @@ Four rounds. In round 1, Gemini 4 Neon (xhigh) and Fable each answered, independ
 2. **Rot inside listing pages.** 310 listing seeds are behind the cycle today. They are counted on the board and listed in the alarm report, but no job tries to fix them (D9). Only the renewal number pushes.
 3. **Hand-check discipline.** The monthly issue depends on a person filling it in. An unanswered issue is reported next month as "N unanswered", with no escalation.
 4. **Discord and GitHub as the only channels.** There is no outside channel until the D14 check-in is set up.
-5. **Until migration #469 is applied:** the Renewal lamp is slate, heartbeat history is not kept, and new summary keys are dropped from stored heartbeats. The alarm issue, Discord and the scheduled-run staleness check all work without it.
+5. **Migration #469 (applied 2026-11-25):** before it, the Renewal lamp was slate, heartbeat history was not kept, and new summary keys were dropped from stored heartbeats. The alarm issue, Discord and the scheduled-run staleness check never depended on it. A summary key added later must also be added to the station's allowed keys (`test_heartbeat_key_registry.py` checks it).
 6. **Renewal is not gated on extraction.** Renewal and arrivals count archived files, whether or not they have been read. A broken extractor leaves renewal green while school pages show nothing new; `unextracted_current_docs` and `unextracted_next_docs` are reported, not alarmed. Extraction is a separate lane (#477, #480).
 7. **Floor calibration (D1, D7): decided, one residue.** The scaled floor (D1) removes the healthy-year noise: a synthetic healthy year (mature 87%, the next year at 0.9–1.0 × the curve) gives a mean of 0.2–0.4 issues a year, none in autumn, and a control built on the real manifest where 2025-26 is hand-caught-up to 88% gives 0 issues over two years (15 under the raw-curve floors). What it does not remove: with 2025-26 left at its real 76% and the schools that lapsed in it never returning, the two-year check still opens a monthly issue from September 2027 (13 in the year, against 14 before; and 0 issues from November 2026 to August 2027, against 10 for 2025-26). That is a real hole (about a quarter of schools gone for two years), not noise, but it re-notifies for as long as it lasts. The mature ratio is measured from the same manifest: if a long decline lowers the history, the floor lowers with it (bounded at 80% one-year, 70% two-year).
 8. **The December arrivals gap.** A total stop that starts between about November 20 and December 4 waits 32–46 days for its first notification (15 of 365 stop dates a year). The current year's curve has flattened and the next year's expected arrivals are too few to judge. In practice an open `renewal:<Y>` issue in that season is still re-notified every 30 days. **Why accept:** the fix would mean judging windows with fewer than 6 expected arrivals, where noise is high, and this run had used its review rounds. A pooled "anything arrived at all" check over both years would close it; that is the suggested follow-up (#506).
@@ -299,13 +300,13 @@ The defaults taken, each reversible. The full text, with the alternatives, is in
 
 | ID | Decision |
 |---|---|
-| D1 | **Changed by the owner, 2026-11-26.** The alarm floor is the posting curve scaled by mature renewal, less 5 points, for all three checks (the overnight default was the raw curve less 5). Mature renewal is the median of the last five mature year-pairs, measured on each run, bounded, with a fallback; the next-year floor is the same times 0.75 and expected arrivals are scaled too (#508) |
+| D1 | **Changed by the owner, 2026-11-25 (#508, merged).** The alarm floor is the posting curve scaled by mature renewal, for all three checks, less 5 points for the one-year and two-year checks (the next-year floor is the scaled curve × 0.75; the overnight default was the raw curve less 5). Mature renewal is the median of the last five mature year-pairs, measured on each run, bounded, with a fallback; the next-year floor is the same times 0.75 and expected arrivals are scaled too (#508) |
 | D2 | The next-year floor is the curve × 0.75, tracked from March 1 |
-| D3 | The migration (#469) is left open for the owner to apply from `main` |
+| D3 | The migration (#469) is left for the owner's review. Merged and applied to production from `main` on 2026-11-25 |
 | D4 | Real alarm issues are assigned to `santhonys`; test issues are not |
 | D5 | The Stuck PDFs lamp is down at 90% or more still stuck and late above 50%, once 10 or more are flagged |
 | D6 | No version bump; the changelog entries are collected in this PR |
-| D7 | A two-year cohort check guards against denominator erosion. Its floor is the current-year floor − 8. `MIN_PREV_SCHOOLS` = 350 |
+| D7 | A two-year cohort check guards against denominator erosion. Its floor was the current-year floor − 8; superseded by #508, which gives the two-year check its own mature ratio (`TWO_YEAR_MARGIN_PTS` is 0). `MIN_PREV_SCHOOLS` = 350 |
 | D8 | Test runs can turn the Renewal lamp red, never green. Dry runs send no heartbeat |
 | D9 | Listing-page seeds behind the cycle are counted and listed, not re-probed |
 | D10 | Changelog entries land in one docs PR |
