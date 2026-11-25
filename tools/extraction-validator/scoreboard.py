@@ -54,13 +54,20 @@ Usage:
 Writes `scoreboard-<UTC timestamp>.json` and `.md` to `--out-dir`
 (default `scratch/extraction-scoreboard/`) and prints the Markdown.
 
-PRD 040 (the public Data quality page). The run JSON is `run_format: 2`: it
-adds the manifest of every document (year, format, status, flag, removed),
+PRD 040 (the public Data quality page). The run JSON is `run_format: 3`.
+Format 2 added the manifest of every document (year, format, status, flag, removed),
 `federal_left_out`, `forms`, the current-year `renewal` block (computed by
 `tools/ops/discovery_renewal.py`) and `sum_check_version: 2`, which splits a
 failing enrollment or admissions sum into off by under 2% of its printed total
 and off by more. `--compare` against an earlier version notes the switch and
-shows no deltas for those columns.
+shows no deltas for those columns. Format 3 keeps the raw inputs of PRD 040's
+"Later" items on every document and changes no table: `ipeds_id` and
+`source_sha256` (so a file filed under two federal records can be found),
+`federal_values` (our number and the exact IPEDS figure for applied, admitted, enrolled),
+`sections` (stored fields per CDS section letter by `value_status`; the counts
+add up to `fields`) and `federal_extra` (our B1 total undergraduates and G1
+tuition beside IPEDS fall undergraduate enrollment and tuition, unjudged).
+`--public` reads format 2 and 3 runs alike.
 
     # public aggregates from one saved run: reads that file only, no database
     tools/extraction_worker/.venv/bin/python \\
@@ -110,6 +117,36 @@ FEDERAL_KEYS = {
     "admitted": "admissions_total",
     "enrolled": "enrolled_total",
 }
+# Raw federal inputs kept for PRD 040's "Later" items (never classified in the
+# run). Every IPEDS figure is stored with the `data_year` it came from.
+# Fall enrollment: IPEDS DRVEF EFUG, total undergraduates for the fall that
+# opens the CDS year Y-(Y+1), so data_year Y, the same as C1. CDS B1's "Total
+# all undergraduates" is B.193 on the 2023-24 and 2024-25 forms, B.176 on 2025-26.
+# Tuition: IPEDS COST1_<y> (IC<y>_AY) TUITION2 / TUITION3 are full-time
+# undergraduate charges for academic year y-(y+1). CDS G1 asks for the
+# FOLLOWING year's costs: the 2023-24 template's G1 says "FULL 2024-2025
+# academic year", 2024-25 says 2025-2026, 2025-26 says 2026-2027 (its G.002
+# names 2026-2027). So tuition on the CDS year Y-(Y+1) form is held against
+# data_year Y+1. For 2025-26 that is 2026, which may not be loaded: `federal`
+# is then null. 2024 and 2025 are fetched anyway for the fall figures, so only
+# the boundary data year is a new request (tuition keys only).
+# Uncertain, stored not decided: whether IPEDS tuition matches the first-year
+# or the all-undergraduates column (both kept), and that CDS tuition excludes
+# required fees as TUITION2/3 do (fees are separate rows, G.111, on the form).
+ENROLLMENT_KEY = "undergraduate_enrollment"
+TUITION_KEYS = ("tuition_in_state", "tuition_out_of_state")
+# Form years whose G1 ids (G.101 to G.110) were checked against the schema files.
+TUITION_FORM_YEARS = ("2023-24", "2024-25", "2025-26")
+# name -> (CDS field, IPEDS field_key). A private institution's single tuition
+# row is held against in-state tuition (IPEDS reports one figure for both).
+TUITION_CANDIDATES = {
+    "g1_private_undergraduates": ("G.102", "tuition_in_state"),
+    "g1_in_state_undergraduates": ("G.108", "tuition_in_state"),
+    "g1_out_of_state_undergraduates": ("G.109", "tuition_out_of_state"),
+    "g1_private_first_year": ("G.101", "tuition_in_state"),
+    "g1_in_state_first_year": ("G.104", "tuition_in_state"),
+    "g1_out_of_state_first_year": ("G.105", "tuition_out_of_state"),
+}
 # Quality flags. Flagged documents are left out of sections 1 to 3 and counted
 # in section 4. `blank_template` hides a document everywhere; the other two
 # keep it out of the school browser's figures and the acceptance history.
@@ -119,8 +156,11 @@ PAGE_SIZE = 1000
 
 # PRD 040. The run JSON is versioned so `--public` can refuse a run that lacks
 # what it needs. Format 2 adds `manifest`, `federal_left_out`, `forms`,
-# `renewal`, and near-miss sum outcomes (`sum_check_version` 2).
-RUN_FORMAT = 2
+# `renewal`, and near-miss sum outcomes (`sum_check_version` 2). Format 3 adds,
+# per document, `ipeds_id`, `source_sha256`, `federal_values`, `sections` and
+# `federal_extra` (raw inputs; nothing public reads them yet). `--public` reads 2 and 3 alike.
+RUN_FORMAT = 3
+PUBLIC_RUN_FORMATS = (2, 3)
 SUM_CHECK_VERSION = 2
 PUBLIC_FORMAT = 1
 DEFAULT_PUBLIC_DIR = REPO_ROOT / "web" / "src" / "data" / "data-quality"
@@ -467,6 +507,18 @@ def fetch_documents(api: Api, years: tuple[str, ...]) -> list[dict[str, Any]]:
     })
 
 
+def fetch_source_hashes(api: Api) -> dict[str, Optional[str]]:
+    """`source_sha256` per live document. `cds_manifest` does not expose it,
+    so this reads two columns (`id`, `source_sha256`) of every live
+    `cds_documents` row (about six pages)."""
+    return {
+        row["id"]: row.get("source_sha256")
+        for row in api.get("cds_documents", {
+            "select": "id,source_sha256", "removed_at": "is.null", "order": "id",
+        }, pause=0.2)
+    }
+
+
 def fetch_artifact_index(api: Api, document_ids: list[str]) -> dict[str, list[dict[str, Any]]]:
     """Top-level columns of every canonical artifact and LLM gap-fill
     artifact (`notes` is not touched)."""
@@ -482,15 +534,16 @@ def fetch_artifact_index(api: Api, document_ids: list[str]) -> dict[str, list[di
     return by_document
 
 
-def fetch_federal(api: Api, year_start: int) -> dict[str, dict[str, Decimal]]:
-    """IPEDS applicants, admissions and enrolled for the class entering in
-    fall `year_start`. `ipeds_facts` keeps every year (the unified view keeps
-    only each school's latest); a final release beats a provisional one."""
+def fetch_federal(api: Api, data_year: int, keys: tuple[str, ...]) -> dict[str, dict[str, Decimal]]:
+    """The IPEDS facts named by `keys` for one `data_year`. For C1 that is the
+    class entering in fall `data_year`. `ipeds_facts` keeps every year (the
+    unified view keeps only each school's latest); a final release beats a
+    provisional one."""
     best: dict[tuple[str, str], tuple[tuple, Decimal]] = {}
     for row in api.get("ipeds_facts", {
         "select": "ipeds_id,field_key,value_numeric,release_type,created_at",
-        "field_key": f"in.({','.join(FEDERAL_KEYS.values())})",
-        "data_year": f"eq.{year_start}",
+        "field_key": f"in.({','.join(keys)})",
+        "data_year": f"eq.{data_year}",
         "public_visible": "is.true",
         "order": "ipeds_id,field_key,release_type,created_at,release_id",
     }, pause=0.2):
@@ -524,6 +577,41 @@ def numbers_from_values(values: dict[str, Any], schema_defs: dict[str, Any],
     for field_id in projection._sanity.implausible_fields(schema_version or "", numbers):
         numbers.pop(field_id, None)
     return numbers
+
+
+def section_counts(statuses: Iterable[tuple[str, str]]) -> dict[str, dict[str, int]]:
+    """(field id, value_status) pairs -> {section letter: {status: count}}.
+    The section is the id's prefix before the first `.` (`C.116` -> `C`)."""
+    counts: dict[str, Counter] = defaultdict(Counter)
+    for field_id, status in statuses:
+        counts[field_id.split(".", 1)[0]][status] += 1
+    return {section: dict(sorted(counts[section].items())) for section in sorted(counts)}
+
+
+def federal_extra(schema_version: Optional[str], numbers: dict[str, Decimal],
+                  fall_facts: dict[str, Decimal], fall_year: int,
+                  tuition_facts: dict[str, Decimal], tuition_year: int) -> dict[str, dict[str, Any]]:
+    """Our number beside the IPEDS figure for the B1 and G1 checks, unjudged.
+    `cds_field` is the field read (null on a form we have no ids for);
+    `ours` is a string Decimal (dollars and head counts both), null when that
+    field was not reported; `federal_data_year` is the IPEDS year looked up,
+    whether or not it had a figure."""
+    total = next((c.total for c in SUM_CHECKS.get(schema_version or "", [])
+                  if c.table == "B1" and c.name == "undergraduates by sex"), None)
+    candidates = {"b1_undergraduates": (total, ENROLLMENT_KEY, fall_facts, fall_year)}
+    for name, (field_id, key) in TUITION_CANDIDATES.items():
+        candidates[name] = (field_id if schema_version in TUITION_FORM_YEARS else None,
+                            key, tuition_facts, tuition_year)
+    return {
+        name: {
+            "cds_field": field_id,
+            "ours": str(numbers[field_id]) if field_id in numbers else None,
+            "federal_key": key,
+            "federal": str(facts[key]) if key in facts else None,
+            "federal_data_year": data_year,
+        }
+        for name, (field_id, key, facts, data_year) in candidates.items()
+    }
 
 
 def run_outcomes(pattern: str) -> Iterable[tuple[str, bool, str, str]]:
@@ -715,6 +803,7 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
         served = kept
         log(f"--limit {limit}: keeping {len(served)} documents; the numbers are a smoke test, not a scoreboard")
 
+    source_hashes = fetch_source_hashes(api)
     artifact_index = fetch_artifact_index(api, [d["document_id"] for d in served])
     log(f"artifact index read ({sum(len(v) for v in artifact_index.values())} artifacts)")
 
@@ -727,9 +816,18 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
             "order": "document_id",
         }) if projected_years else [])
     }
-    federal = {
-        year: fetch_federal(api, projection.parse_year_start(year) or 0) for year in years
+    # One read per IPEDS data year. Fall figures (C1, enrollment) come from the
+    # CDS year's start year, tuition from the year after (see TUITION_KEYS).
+    fall_year = {year: projection.parse_year_start(year) or 0 for year in years}
+    wanted: dict[int, set[str]] = defaultdict(set)
+    for start in fall_year.values():
+        wanted[start].update((*FEDERAL_KEYS.values(), ENROLLMENT_KEY))
+        wanted[start + 1].update(TUITION_KEYS)
+    facts_by_year = {
+        data_year: fetch_federal(api, data_year, tuple(sorted(keys)))
+        for data_year, keys in sorted(wanted.items())
     }
+    federal = {year: facts_by_year[start] for year, start in fall_year.items()}
     holds = load_holds(summaries)
     unchanged = load_unchanged(summaries)
 
@@ -771,12 +869,13 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
         newest = max(candidates, key=lambda r: (str(r.get("created_at") or ""), str(r["id"])), default=None)
         entry: dict[str, Any] = {
             "document_id": document_id, "school_id": doc["school_id"], "year": year,
+            "ipeds_id": doc.get("ipeds_id"), "source_sha256": source_hashes.get(document_id),
             "format": doc.get("source_format") or "unknown", "flag": doc.get("data_quality_flag"),
             "sub_institutional": bool(doc.get("sub_institutional")),
             "sub_institutional_label": doc.get("sub_institutional"),
             "source_url": doc.get("source_url"), "cds_year": doc.get("cds_year"),
             "detected_year": doc.get("detected_year"),
-            "producer": None, "version": None, "schema_version": None, "fields": 0,
+            "producer": None, "version": None, "schema_version": None, "fields": 0, "sections": {},
             "newest_producer": newest.get("producer") if newest else None,
             "newest_version": newest.get("producer_version") if newest else None,
             "newest_at": newest.get("created_at") if newest else None,
@@ -791,6 +890,7 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
                 "order": "field_id",
             }, pause=field_interval)
             entry["fields"] = len(rows)
+            entry["sections"] = section_counts((r["field_id"], r["value_status"]) for r in rows)
             for row in rows:
                 if row["value_status"] == "reported" and row.get("value_num") is not None:
                     numbers[row["field_id"]] = Decimal(str(row["value_num"]))
@@ -814,9 +914,13 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
                 values = projection._values_dict(picked.get("notes") or {})
                 # An artifact that records no schema is read as the default one, as in the projection.
                 schema_version = projection.artifact_schema_version(picked) or projection.DEFAULT_SCHEMA_VERSION
-                numbers = numbers_from_values(values, definitions.get(schema_version or "") or {}, schema_version)
+                schema_defs = definitions.get(schema_version or "") or {}
+                numbers = numbers_from_values(values, schema_defs, schema_version)
                 entry.update(producer=picked.get("producer"), version=picked.get("producer_version"),
                              schema_version=schema_version, fields=len(values))
+                entry["sections"] = section_counts(
+                    (field_id, projection.parse_field_value(record, schema_defs.get(field_id)).value_status)
+                    for field_id, record in values.items())
                 entry["gap_fill_not_read"] = picked.get("producer") == TIER4 and any(
                     a["producer"] == projection.FALLBACK_PRODUCER for a in artifacts)
             entry["admissions"] = printed_admissions(entry["schema_version"], numbers)
@@ -826,6 +930,18 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
             metric: classify_federal(entry["admissions"][metric], facts.get(key))
             for metric, key in FEDERAL_KEYS.items()
         }
+        # `ours` is an int here (the admissions counts compared) and a string
+        # Decimal in `federal_extra` (dollars may carry cents).
+        entry["federal_values"] = {
+            metric: {"ours": entry["admissions"][metric],
+                     "federal": str(facts[key]) if key in facts else None,
+                     "federal_data_year": fall_year[year]}
+            for metric, key in FEDERAL_KEYS.items()
+        }
+        tuition_facts = {} if entry["sub_institutional"] else facts_by_year[fall_year[year] + 1].get(
+            str(doc.get("ipeds_id") or ""), {})
+        entry["federal_extra"] = federal_extra(entry["schema_version"], numbers, facts, fall_year[year],
+                                               tuition_facts, fall_year[year] + 1)
         entry["sums"] = table_outcomes(entry["schema_version"], numbers)
         entry["check_numbers"] = {
             field_id: str(numbers[field_id])
@@ -862,7 +978,11 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
         "renewal": renewal,
         "current_tier4_version": current_tier4_version(),
         "projected_years": list(projected_years),
-        "federal_schools": {year: len(facts) for year, facts in federal.items()},
+        # Schools with a C1 figure; the extra keys do not widen this count.
+        "federal_schools": {
+            year: sum(1 for school in facts.values() if any(key in school for key in FEDERAL_KEYS.values()))
+            for year, facts in federal.items()
+        },
         "hold_summaries_read": len(glob.glob(summaries)),
         "not_served": {f"{year} {status}": count for (year, status), count in sorted(not_served.items())},
         "documents": documents,
@@ -875,8 +995,9 @@ def same_year_duplicates_block(documents: list[dict[str, Any]]) -> dict[str, Any
     the discovery renewal job uses (tools/ops/same_year_duplicates.py).
 
     Only the served, extracted documents of the scoreboard's years are here,
-    so this is a subset of what the pipeline page counts. The scoreboard does
-    not read `source_sha256`, so a same-file pair shows as a duplicate.
+    so this is a subset of what the pipeline page counts. The run records
+    `source_sha256` per document (format 3), but this block does not pass it
+    on yet, so a same-file pair still shows as a duplicate.
     """
     if str(REPO_ROOT) not in sys.path:
         sys.path.insert(0, str(REPO_ROOT))
@@ -1265,9 +1386,9 @@ def _row_counts(classes: Counter, published: list[dict[str, Any]], federal_loade
 
 def require_public_run(run: Any) -> None:
     """Refuse a run that lacks what `--public` needs, instead of inventing zeros."""
-    if not isinstance(run, dict) or run.get("run_format") != RUN_FORMAT:
+    if not isinstance(run, dict) or run.get("run_format") not in PUBLIC_RUN_FORMATS:
         found = run.get("run_format") if isinstance(run, dict) else None
-        raise SystemExit(f"--public needs a run with run_format {RUN_FORMAT} (this one has {found!r}); "
+        raise SystemExit(f"--public needs a run with run_format 2 or 3 (this one has {found!r}); "
                          "run the scoreboard again.")
     missing = [k for k in ("generated_at", "years", "manifest", "documents", "federal_left_out", "forms",
                            "renewal", "federal_schools", "sum_check_version") if k not in run]
@@ -1436,7 +1557,7 @@ def main() -> int:
     parser.add_argument("--from-json", type=Path, help="Render a saved scoreboard JSON instead of reading the database.")
     parser.add_argument("--public", type=Path, metavar="RUN_JSON",
                         help="Write the public aggregates (PRD 040) from one saved run JSON. Reads nothing else: "
-                             "no database, no network. Needs a run_format 2 run.")
+                             "no database, no network. Needs a run_format 2 or 3 run.")
     parser.add_argument("--public-out-dir", type=Path, default=DEFAULT_PUBLIC_DIR,
                         help="Where --public writes <YYYY-MM-DD>.json (default web/src/data/data-quality).")
     parser.add_argument("--report-near-miss", action="store_true",

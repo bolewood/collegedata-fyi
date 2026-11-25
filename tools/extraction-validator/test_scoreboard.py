@@ -12,6 +12,7 @@ import sys
 import tempfile
 import unittest
 import urllib.request
+from collections import Counter
 from decimal import Decimal
 from pathlib import Path
 from unittest import mock
@@ -683,8 +684,8 @@ class PublicInputs(unittest.TestCase):
         with blocked_network(), self.assertRaises(SystemExit):
             scoreboard.build_public(run, "x.json")
 
-    def test_refuses_a_run_that_is_not_format_2(self) -> None:
-        for change in ({"run_format": 1}, {"run_format": None}, {"sum_check_version": 1}, {"limit": 20},
+    def test_refuses_a_run_that_is_not_format_2_or_3(self) -> None:
+        for change in ({"run_format": 1}, {"run_format": 4}, {"run_format": None}, {"sum_check_version": 1}, {"limit": 20},
                        {"manifest": []}, {"years": []}):
             with self.subTest(change=change):
                 self.refuses({**synthetic_run(), **change})
@@ -938,6 +939,342 @@ class SameYearDuplicatesTests(unittest.TestCase):
         scoreboard.fetch_documents(Api(), ("2024-25",))
         for column in ("source_url", "cds_year", "detected_year"):
             self.assertIn(column, seen["select"])
+
+
+# ---------------------------------------------------------------------------
+# gather() end to end on a fake Api (run_format 3)
+# ---------------------------------------------------------------------------
+
+class FakeApi:
+    """Answers the PostgREST reads gather() makes from small in-memory tables
+    and records every request. Like PostgREST it returns only the selected
+    columns (except the artifact reads, whose selects are JSON paths) and
+    honours `removed_at=is.null` and the id filters."""
+
+    url = "https://fake.invalid"
+    key = "k"
+
+    def __init__(self, tables: dict[str, list[dict]]):
+        self.tables = tables
+        self.calls: list[tuple[str, dict]] = []
+        self.requests = 0
+
+    def check_page_size(self) -> None:
+        pass
+
+    def wait_for_memory(self) -> None:
+        pass
+
+    def get(self, table: str, params: dict, pause: float = 0.0) -> list[dict]:
+        self.calls.append((table, dict(params)))
+        self.requests += 1
+        rows = self.tables[table]
+        if params.get("removed_at") == "is.null":
+            rows = [r for r in rows if r.get("removed_at") is None]
+        if table != "cds_manifest":
+            for column in ("document_id", "id", "data_year"):
+                if column in params:
+                    wanted = params[column]
+                    if wanted.startswith("in."):
+                        rows = [r for r in rows if str(r.get(column)) in wanted[3:].strip("()").split(",")]
+                    else:
+                        rows = [r for r in rows if str(r.get(column)) == wanted[3:]]
+        if table == "cds_artifacts" and "id" in params:   # the notes read
+            return [{"id": r["id"], "notes_schema_version": r["notes"]["schema_version"],
+                     "schema_fallback_used": None, "stats": None, "values": r["notes"]["values"]} for r in rows]
+        if table == "ipeds_facts":
+            keys = params["field_key"][3:].strip("()").split(",")
+            rows = [r for r in rows if r["field_key"] in keys]
+        if table != "cds_artifacts":
+            columns = params["select"].split(",")
+            rows = [{c: r[c] for c in columns} for r in rows]
+        return rows
+
+    def tables_called(self) -> Counter:
+        return Counter(table for table, _ in self.calls)
+
+
+def fake_manifest_row(document_id: str, year: str, ipeds_id: str, **kw) -> dict:
+    return {"document_id": document_id, "school_id": f"s-{document_id}", "school_name": document_id,
+            "ipeds_id": ipeds_id, "sub_institutional": None, "canonical_year": year,
+            "source_format": "pdf_flat", "extraction_status": "extracted", "data_quality_flag": None,
+            "removed_at": None, "source_url": "https://x.invalid/f.pdf", "cds_year": year,
+            "detected_year": year, **kw}
+
+
+def field_row(document_id: str, year: str, field_id: str, value, status: str = "reported") -> dict:
+    return {"document_id": document_id, "field_id": field_id, "value_num": value, "value_status": status,
+            "schema_version": year, "producer": "tier4_docling", "producer_version": "0.3.43"}
+
+
+def fact(ipeds_id: str, key: str, value, year: int, release: str = "final") -> dict:
+    return {"ipeds_id": ipeds_id, "field_key": key, "value_numeric": value, "data_year": year,
+            "release_type": release, "release_id": "r", "created_at": "2026-03-01T00:00:00Z"}
+
+
+def candidate(field, ours, key, federal, year) -> dict:
+    return {"cds_field": field, "ours": ours, "federal_key": key, "federal": federal, "federal_data_year": year}
+
+
+class GatherOnAFakeApi(unittest.TestCase):
+    """Documents (CDS year, school):
+    P   2024-25, public; first-year and all-undergraduate in-state and out-of-state tuition.
+    E   2024-25, private; a school whose only IPEDS facts are enrollment and tuition (no C1).
+    S   2024-25, a single campus of the same file as P.
+    O   2023-24, served from an artifact.
+    N   2025-26, whose tuition year (2026) is not loaded.
+    R removed, F failed. IPEDS tuition decoys sit in the CDS year (Y) to catch a pairing with Y."""
+
+    YEARS = ("2023-24", "2024-25", "2025-26")
+
+    def run_gather(self) -> tuple[dict, FakeApi]:
+        floor = scoreboard.discovery_renewal.cds_freshness_floor(dt.datetime.now(dt.timezone.utc).date())
+        previous = scoreboard.discovery_renewal.format_year(scoreboard.discovery_renewal.parse_year(floor) - 1)
+        renewal_rows = [{"school_id": f"r{i}", "canonical_year": y, "removed_at": None,
+                         "participation_status": "published"} for i in range(400) for y in (previous, floor)]
+        manifest = [
+            fake_manifest_row("P", "2024-25", "111"),
+            fake_manifest_row("E", "2024-25", "888"),
+            fake_manifest_row("O", "2023-24", "222"),
+            fake_manifest_row("S", "2024-25", "333", sub_institutional="Campus X"),
+            fake_manifest_row("N", "2025-26", "777"),
+            fake_manifest_row("R", "2024-25", "444", removed_at="2026-01-01T00:00:00Z"),
+            fake_manifest_row("F", "2024-25", "555", extraction_status="failed"),
+        ]
+        old_values = {
+            "A.001": {"value": "Old University"},
+            "B.193": {"value": "4,000"}, "G.108": {"value": "$12,000"}, "G.109": {"value": "35000"},
+            "G.104": {"value": "11,500"}, "G.105": {"value": "34000"},
+            "C.101": {"value": "100"}, "C.102": {"value": "150"}, "C.105": {"value": "80"},
+            "C.106": {"value": "90"}, "C.109": {"value": "30"}, "C.111": {"value": "40"},
+            "C.201": {"value": "N/A"}, "G.102": {"value": ""},
+        }
+        p, e, s, n = "2024-25", "2024-25", "2024-25", "2025-26"
+        tables = {
+            "cds_manifest": manifest,
+            # P and S are one university-wide file filed under two schools.
+            "cds_documents": [
+                {"id": "P", "source_sha256": "aa", "removed_at": None, "unselected": 1},
+                {"id": "S", "source_sha256": "aa", "removed_at": None}, {"id": "O", "source_sha256": "bb", "removed_at": None},
+                {"id": "E", "source_sha256": "dd", "removed_at": None}, {"id": "N", "source_sha256": None, "removed_at": None},
+                {"id": "R", "source_sha256": "cc", "removed_at": "2026-01-01T00:00:00Z"}],
+            "cds_artifacts": [
+                {"id": "art-O", "document_id": "O", "kind": "canonical", "producer": "tier4_docling",
+                 "producer_version": "0.3.43", "schema_version": "2023-24", "created_at": "2026-05-01T00:00:00Z",
+                 "notes": {"schema_version": "2023-24", "values": old_values}},
+            ],
+            "school_browser_rows": [
+                {"document_id": "P", "producer": "tier4_docling", "producer_version": "0.3.43",
+                 "applied": 300, "admitted": 150, "enrolled_first_year": 70},
+                {"document_id": "N", "producer": "tier4_docling", "producer_version": "0.3.43",
+                 "applied": 50, "admitted": 20, "enrolled_first_year": 10}],
+            "cds_fields": [
+                field_row("P", p, "B.193", 5000), field_row("P", p, "G.108", 11000), field_row("P", p, "G.109", 30000),
+                field_row("P", p, "G.104", 10500), field_row("P", p, "G.105", 29500),
+                field_row("P", p, "G.102", None, "not_applicable"), field_row("P", p, "C.101", 100),
+                field_row("P", p, "C.201", None, "not_reported"), field_row("P", p, "A.001", None, "reported"),
+                field_row("E", e, "B.193", 2000), field_row("E", e, "G.101", 40000), field_row("E", e, "G.102", 41000),
+                field_row("S", s, "B.193", 800), field_row("S", s, "C.201", None, "not_applicable"),
+                field_row("N", n, "B.176", 900), field_row("N", n, "G.108", 9000),
+            ],
+            "ipeds_facts": [
+                # P: fall 2024; tuition for the 2024-25 form is academic year 2025-26, data_year 2025.
+                fact("111", "applicants_total", 305, 2024), fact("111", "admissions_total", 150, 2024),
+                fact("111", "enrolled_total", 60, 2024), fact("111", "undergraduate_enrollment", 5100, 2024),
+                fact("111", "tuition_in_state", 10000, 2024), fact("111", "tuition_out_of_state", 28000, 2024),  # decoys
+                fact("111", "tuition_in_state", 11050.5, 2025), fact("111", "tuition_out_of_state", 29900, 2025),
+                # O: fall 2023, tuition data_year 2024.
+                fact("222", "applicants_total", 1000, 2023), fact("222", "undergraduate_enrollment", 4100, 2023),
+                fact("222", "tuition_in_state", 9999, 2023), fact("222", "tuition_in_state", 12000, 2024),
+                fact("333", "applicants_total", 9999, 2024), fact("333", "undergraduate_enrollment", 9000, 2024),
+                fact("333", "tuition_in_state", 8000, 2025),
+                # E: only enrollment and tuition, no C1 figure.
+                fact("888", "undergraduate_enrollment", 2100, 2024), fact("888", "tuition_in_state", 41500.25, 2025),
+                # N: fall 2025 only; nothing for 2026.
+                fact("777", "applicants_total", 50, 2025), fact("777", "undergraduate_enrollment", 950, 2025),
+                fact("777", "tuition_in_state", 7, 2025),   # the CDS year's own tuition year: a decoy
+            ],
+        }
+        api = FakeApi(tables)
+        with blocked_network(), tempfile.TemporaryDirectory() as folder, \
+                mock.patch.object(scoreboard.time, "sleep"), \
+                mock.patch.object(scoreboard.discovery_renewal, "fetch_live_manifest", return_value=renewal_rows), \
+                mock.patch.object(scoreboard.discovery_renewal, "fetch_sql_floor", return_value=floor):
+            run = scoreboard.gather(api, self.YEARS, Path(folder), 0, 0, str(Path(folder, "none-*.json")), lambda _: None)
+        return run, api
+
+    def setUp(self) -> None:
+        self.run, self.api = self.run_gather()
+        self.by_id = {d["document_id"]: d for d in self.run["documents"]}
+
+    def test_only_the_served_documents_are_in_the_run(self) -> None:
+        self.assertEqual(set(self.by_id), {"P", "E", "O", "S", "N"})
+        self.assertEqual(len(self.run["manifest"]), 7)
+        self.assertEqual(self.run["run_format"], 3)
+
+    def test_requests_are_the_same_tables_as_before_plus_the_hash_read_and_the_boundary_year(self) -> None:
+        # One manifest page, one `cds_documents` read for the file hashes, one
+        # artifact index chunk plus the one notes read of the 2023-24 document,
+        # one browser read, one field read per served projected document (P, E,
+        # S, N), and one ipeds_facts read per IPEDS data year.
+        self.assertEqual(self.api.tables_called(), Counter(
+            {"cds_manifest": 1, "cds_documents": 1, "cds_artifacts": 2, "school_browser_rows": 1,
+             "cds_fields": 4, "ipeds_facts": 4}))
+        facts = {p["data_year"]: p["field_key"] for t, p in self.api.calls if t == "ipeds_facts"}
+        both = "admissions_total,applicants_total,enrolled_total,tuition_in_state,tuition_out_of_state,undergraduate_enrollment"
+        self.assertEqual(facts, {
+            "eq.2023": "in.(admissions_total,applicants_total,enrolled_total,undergraduate_enrollment)",
+            "eq.2024": f"in.({both})", "eq.2025": f"in.({both})",
+            "eq.2026": "in.(tuition_in_state,tuition_out_of_state)"})
+
+    def test_the_document_and_manifest_reads_ask_for_what_the_run_keeps(self) -> None:
+        by_table = {t: p for t, p in self.api.calls if t in ("cds_documents", "cds_manifest")}
+        self.assertEqual({k: v for k, v in by_table["cds_documents"].items()},
+                         {"select": "id,source_sha256", "removed_at": "is.null", "order": "id"})
+        self.assertIn("ipeds_id", by_table["cds_manifest"]["select"].split(","))
+
+    def test_each_document_keeps_its_ipeds_id_and_file_hash(self) -> None:
+        self.assertEqual({k: (d["ipeds_id"], d["source_sha256"]) for k, d in self.by_id.items()},
+                         {"P": ("111", "aa"), "S": ("333", "aa"), "O": ("222", "bb"), "E": ("888", "dd"),
+                          "N": ("777", None)})
+
+    def test_federal_values_hold_the_numbers_the_classification_used(self) -> None:
+        self.assertEqual(self.by_id["P"]["federal_values"], {
+            "applied": {"ours": 300, "federal": "305", "federal_data_year": 2024},
+            "admitted": {"ours": 150, "federal": "150", "federal_data_year": 2024},
+            "enrolled": {"ours": 70, "federal": "60", "federal_data_year": 2024}})
+        self.assertEqual(self.by_id["P"]["federal"], {"applied": "match", "admitted": "match", "enrolled": "different"})
+        self.assertEqual(self.by_id["O"]["federal_values"], {
+            "applied": {"ours": 250, "federal": "1000", "federal_data_year": 2023},
+            "admitted": {"ours": 170, "federal": None, "federal_data_year": 2023},
+            "enrolled": {"ours": 70, "federal": None, "federal_data_year": 2023}})
+        self.assertEqual(self.by_id["O"]["federal"]["applied"], "different")
+
+    def test_a_single_campus_report_keeps_ours_and_has_no_federal_figure(self) -> None:
+        self.assertEqual(self.by_id["S"]["federal_values"]["applied"],
+                         {"ours": None, "federal": None, "federal_data_year": 2024})
+        self.assertTrue(all(v["federal"] is None for v in self.by_id["S"]["federal_extra"].values()))
+        self.assertEqual(self.by_id["S"]["federal_extra"]["b1_undergraduates"]["ours"], "800")
+
+    def test_every_candidate_of_a_public_report(self) -> None:
+        inn, out = "tuition_in_state", "tuition_out_of_state"
+        self.assertEqual(self.by_id["P"]["federal_extra"], {
+            "b1_undergraduates": candidate("B.193", "5000", "undergraduate_enrollment", "5100", 2024),
+            "g1_private_undergraduates": candidate("G.102", None, inn, "11050.5", 2025),
+            "g1_in_state_undergraduates": candidate("G.108", "11000", inn, "11050.5", 2025),
+            "g1_out_of_state_undergraduates": candidate("G.109", "30000", out, "29900", 2025),
+            "g1_private_first_year": candidate("G.101", None, inn, "11050.5", 2025),
+            "g1_in_state_first_year": candidate("G.104", "10500", inn, "11050.5", 2025),
+            "g1_out_of_state_first_year": candidate("G.105", "29500", out, "29900", 2025)})
+
+    def test_every_candidate_of_a_private_report(self) -> None:
+        inn, out = "tuition_in_state", "tuition_out_of_state"
+        self.assertEqual(self.by_id["E"]["federal_extra"], {
+            "b1_undergraduates": candidate("B.193", "2000", "undergraduate_enrollment", "2100", 2024),
+            "g1_private_undergraduates": candidate("G.102", "41000", inn, "41500.25", 2025),
+            "g1_in_state_undergraduates": candidate("G.108", None, inn, "41500.25", 2025),
+            "g1_out_of_state_undergraduates": candidate("G.109", None, out, None, 2025),
+            "g1_private_first_year": candidate("G.101", "40000", inn, "41500.25", 2025),
+            "g1_in_state_first_year": candidate("G.104", None, inn, "41500.25", 2025),
+            "g1_out_of_state_first_year": candidate("G.105", None, out, None, 2025)})
+
+    def test_every_candidate_of_a_2023_24_report_read_from_its_artifact(self) -> None:
+        inn, out = "tuition_in_state", "tuition_out_of_state"
+        self.assertEqual(self.by_id["O"]["federal_extra"], {
+            "b1_undergraduates": candidate("B.193", "4000", "undergraduate_enrollment", "4100", 2023),
+            "g1_private_undergraduates": candidate("G.102", None, inn, "12000", 2024),
+            "g1_in_state_undergraduates": candidate("G.108", "12000", inn, "12000", 2024),
+            "g1_out_of_state_undergraduates": candidate("G.109", "35000", out, None, 2024),
+            "g1_private_first_year": candidate("G.101", None, inn, "12000", 2024),
+            "g1_in_state_first_year": candidate("G.104", "11500", inn, "12000", 2024),
+            "g1_out_of_state_first_year": candidate("G.105", "34000", out, None, 2024)})
+
+    def test_tuition_is_held_against_the_following_ipeds_year_not_the_cds_year(self) -> None:
+        # The 2025 decoy for school 777 is its CDS year's; the figure for 2026 is not loaded.
+        extra = self.by_id["N"]["federal_extra"]
+        self.assertEqual(extra["b1_undergraduates"], candidate("B.176", "900", "undergraduate_enrollment", "950", 2025))
+        self.assertEqual(extra["g1_in_state_undergraduates"],
+                         candidate("G.108", "9000", "tuition_in_state", None, 2026))
+        # P's CDS-year decoys (10000 / 28000) are never the figure.
+        self.assertEqual(self.by_id["P"]["federal_extra"]["g1_in_state_undergraduates"]["federal"], "11050.5")
+        for document in self.by_id.values():
+            year = scoreboard.projection.parse_year_start(document["year"])
+            for name, c in document["federal_extra"].items():
+                self.assertEqual(c["federal_data_year"], year if name.startswith("b1") else year + 1, name)
+
+    def test_the_2023_24_artifact_sections_pin_every_status(self) -> None:
+        # "N/A" is not applicable; an empty value is "missing".
+        self.assertEqual(self.by_id["O"]["sections"], {
+            "A": {"reported": 1}, "B": {"reported": 1},
+            "C": {"not_applicable": 1, "reported": 6},
+            "G": {"missing": 1, "reported": 4}})
+
+    def test_sections_of_a_projected_document_and_the_sum_rule(self) -> None:
+        self.assertEqual(self.by_id["P"]["sections"], {
+            "A": {"reported": 1}, "B": {"reported": 1}, "C": {"not_reported": 1, "reported": 1},
+            "G": {"not_applicable": 1, "reported": 4}})
+        for document in self.by_id.values():
+            with self.subTest(document=document["document_id"]):
+                self.assertEqual(sum(n for counts in document["sections"].values() for n in counts.values()),
+                                 document["fields"])
+                self.assertGreater(document["fields"], 0)
+
+    def test_a_school_with_only_extra_facts_is_not_a_federal_school_and_the_run_is_usable(self) -> None:
+        self.assertEqual(self.run["federal_schools"], {"2023-24": 1, "2024-25": 2, "2025-26": 1})
+        # Published 2024-25: P, E, S. S is a single campus; E has no C1 figure.
+        self.assertEqual(self.run["federal_left_out"]["2024-25"], {"single_campus": 1, "no_federal_figures": 1})
+        json.dumps(self.run)
+        public = scoreboard.build_public(self.run, "scoreboard-x.json")
+        scoreboard.check_public_shape(public)
+
+
+class RunFormats(unittest.TestCase):
+    def test_public_output_is_the_same_for_format_2_and_3(self) -> None:
+        two = synthetic_run()
+        three = {**synthetic_run(), "run_format": 3}
+        for document in three["documents"]:
+            document.update(ipeds_id=None, source_sha256=None, sections={}, federal_values={}, federal_extra={})
+        self.assertEqual(scoreboard.build_public(two, "x.json"), scoreboard.build_public(three, "x.json"))
+
+    def test_aggregate_and_render_read_a_format_3_run(self) -> None:
+        run = {**synthetic_run(), "run_format": 3}
+        self.assertEqual(scoreboard.aggregate(run), scoreboard.aggregate(synthetic_run()))
+        self.assertEqual(scoreboard.render(run), scoreboard.render(synthetic_run()))
+
+    def test_compare_across_formats(self) -> None:
+        # The earlier run differs from the current one, so the report has real deltas.
+        current = synthetic_run()
+        earlier = synthetic_run()
+        earlier["documents"] = earlier["documents"][:-5]
+        earlier["manifest"] = earlier["manifest"][:-5]
+        earlier["documents"][2]["federal"] = {"applied": "different", "admitted": "different", "enrolled": "blank"}
+        as_3 = lambda run: {**run, "run_format": 3}  # noqa: E731
+        same_format = scoreboard.render(current, earlier)
+        self.assertNotEqual(same_format, scoreboard.render(current, current))
+        self.assertEqual(scoreboard.render(as_3(current), earlier), same_format)
+        self.assertEqual(scoreboard.render(current, as_3(earlier)), same_format)
+        self.assertEqual(scoreboard.render(as_3(current), as_3(earlier)), same_format)
+
+    def test_the_form_ids_the_extra_candidates_name_are_the_rows_they_say(self) -> None:
+        for year in scoreboard.TUITION_FORM_YEARS:
+            labels = {f["question_number"]: f for f in json.loads(
+                (SCHEMA_DIR / f"cds_schema_{year.replace('-', '_')}.json").read_text())["fields"]}
+            extra = scoreboard.federal_extra(year, {}, {}, 2000, {}, 2001)
+            self.assertEqual(labels[extra["b1_undergraduates"]["cds_field"]]["question"], "Total all undergraduates")
+            for name, (field_id, _) in scoreboard.TUITION_CANDIDATES.items():
+                with self.subTest(year=year, name=name):
+                    self.assertEqual(extra[name]["cds_field"], field_id)
+                    row = labels[field_id]
+                    self.assertTrue(row["question"].startswith("Tuition"))
+                    self.assertEqual(row["cohort"], "First-year" if "first_year" in name else "Undergraduates")
+                    self.assertEqual(row["subsection"].startswith("Private"), "private" in name)
+                    if "in_state" in name:
+                        self.assertIn("In-state", row["question"])
+                    if "out_of_state" in name:
+                        self.assertIn("Out-of-state", row["question"])
+        for year in ("2019-20", "2022-23"):
+            extra = scoreboard.federal_extra(year, {}, {}, 2000, {}, 2001)
+            self.assertTrue(all(c["cds_field"] is None for n, c in extra.items() if n.startswith("g1")))
 
 
 if __name__ == "__main__":
