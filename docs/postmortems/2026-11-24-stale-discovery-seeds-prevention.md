@@ -246,6 +246,18 @@ Three rounds. In round 1, Gemini 4 Neon (xhigh) and Fable each answered, indepen
 | R19 | Unextracted current-year documents count as renewing (21 today; a broken extractor would stay green) | both | **Reported**, not fixed: `unextracted_current_docs` is in the summary and on the board. Extraction is downstream (#477, #480) |
 | R20 | The hand-check workflow has no staleness watch | Fable | **Fixed** in #499: 35 days |
 
+### Round 3 (on the controls after #499)
+
+| # | Scenario | Found by | Outcome |
+|---|---|---|---|
+| R21 | An arrivals breach is silent behind an already-open renewal issue: only body edits, 96 days for a total stop from today | both | **Fixed** in #502: arrivals has its own issue per year (`arrivals:<Y>`), so it is never hidden behind a renewal issue. A frozen archive from today opens a distinct `arrivals:2026-27` issue on 2027-01-06, the day that year's check becomes active. Notifications are never more than 31 days apart |
+| R22 | Pooled arrivals let hand catch-up of last year mask a dead pipeline for the new year | both | **Fixed** in #502: arrivals are judged per year, against each year's own cohort, on first documents |
+| R23 | Losing 50–70% of arrivals is silent for 2–4 months at a 0.25 ratio | both | **Improved** in #502: the ratio is 0.4, the highest value that wouldn't have false-alarmed September–November 2026 per year. Stops on the 1st of each month are notified in 7–35 days (median 20). Losses under about 60% of arrivals remain an accepted risk (below) |
+| R24 | #502's first design, a "join" state machine, had 4 bugs: self-feeding debounce, reverting titles, the wrong year blamed, a swallowed alert | Gemini | **Removed**: the separate-scope design makes them impossible, and each scenario is a test |
+| R25 | An `arrivals:<current>` issue could never close once the year's curve flattens, and the 60-day window had no hysteresis | Gemini | **Fixed** in #502: retire once uncheckable; the 60-day close needs `count_60 ≥ 0.5 × expected` |
+
+**Healthy-year noise** (a simulation of a full year, 5 seeds, the current year maturing at 87%, the next year at 0.9× the curve): a mean of 0.4 issues and 0.8 Discord posts a year. All of it is in one seed (a January arrivals dip and a March next-year check on its floor). This sits beside D1's warning that the raw curve runs close to a healthy year. Fable's earlier control, with different assumptions, tripped the two-year floor on 2027-09-01, so treat the 0.4 as a lower estimate.
+
 ## Accepted risks (what is still not covered)
 
 1. **Partial losses.** The mature floors (83% one-year, 75% two-year) allow a steady loss of about 13% a year indefinitely (0.866² ≈ 0.75, and lapsed schools leave both denominators after two years). Before #502 (round 3), losing half or more of new arrivals mid-season was silent for 2–4 months; the measured delay after #502 is in that PR.
