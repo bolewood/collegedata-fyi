@@ -24,9 +24,10 @@ import {
   aidCantCheckNote,
   federalDiffersNote,
 } from "@/lib/data-quality";
+import { HAS_CDS_HREF } from "@/lib/coverage-model";
 import { secondaryNavLinks, isActive } from "@/lib/nav-links";
 import { ArchiveStatusHeader, visibleArchiveTabs } from "./ArchiveStatusHeader";
-import { DataQualityView, TABLE_MIN_WIDTH, WIDE_TABLE_MIN_WIDTH, yearNotices } from "./DataQualityView";
+import { DataQualityView, yearNotices } from "./DataQualityView";
 
 function render(search = "") {
   currentParams = new URLSearchParams(search);
@@ -148,6 +149,12 @@ describe("launch gate: header, nav and methodology link", () => {
     const after = renderToStaticMarkup(<ArchiveStatusHeader active="quality" launched />);
     expect(after).toContain('href="/coverage"');
     expect(after).toMatch(/aria-current="page"[^>]*>Data quality</);
+  });
+
+  it("links the list of colleges we have a CDS for, one click from the page, to the same preset the Coverage tab offers", () => {
+    const html = render();
+    expect(html).toContain(`href="${HAS_CDS_HREF}"`);
+    expect(html).toMatch(/<a href="[^"]*">colleges we have a CDS for<\/a>/);
   });
 
   it("keeps 'Coverage' in the nav before launch, and 'Archive status' lit on both routes after", () => {
@@ -299,9 +306,9 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
     expect(text).not.toMatch(/We use the table by sex\./);
   });
 
-  it("puts a static hint above each wide table (CSS decides when it shows) and no script-driven cue", () => {
+  it("puts a static, aria-hidden hint above each wide table (CSS decides when it shows) and no script-driven cue", () => {
     const html = render("year=2024-25");
-    expect(html.match(/class="dq-scroll-hint"/g)).toHaveLength(4);
+    expect(html.match(/class="dq-scroll-hint acc-table-hint" aria-hidden="true"/g)).toHaveLength(4);
     expect(html.match(/dq-scroll--wide/g)).toHaveLength(1);
     expect(html).not.toContain("linear-gradient");
     // Every table's scroll region is still focusable and labelled.
@@ -310,11 +317,49 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
     expect(src).not.toMatch(/useState|useEffect|ResizeObserver|scrollWidth/);
   });
 
+  it("leaves out the hint for Table B when the year has no federal figures (a table of dashes)", () => {
+    const html = render("year=2025-26");
+    expect(html.match(/dq-scroll-hint/g)).toHaveLength(3);
+    const b = html.slice(html.indexOf('aria-label="Table B, 2025-26"') - 400, html.indexOf('aria-label="Table B, 2025-26"'));
+    expect(b).not.toContain("dq-scroll-hint");
+  });
+
+  const css = () => readFileSync(resolve(__dirname, "../app/data-quality/data-quality.css"), "utf8");
+
   it("keeps the CSS hint's breakpoints one pixel under the tables' minimum widths", () => {
-    const css = readFileSync(resolve(__dirname, "../app/data-quality/data-quality.css"), "utf8");
-    expect(css).toContain("container-type: inline-size");
-    expect(css).toContain(`@container (max-width: ${TABLE_MIN_WIDTH - 1}px)`);
-    expect(css).toContain(`@container (max-width: ${WIDE_TABLE_MIN_WIDTH - 1}px)`);
+    const text = css();
+    expect(text).toContain("container-type: inline-size");
+    const min = (sel: string) => Number(new RegExp(`${sel} \\{ min-width: (\\d+)px`).exec(text)![1]);
+    expect(text).toContain(`@container (max-width: ${min("\\.dq-table")  - 1}px) { .dq-scroll .dq-scroll-hint`);
+    expect(text).toContain(`@container (max-width: ${min("\\.dq-table--c") - 1}px) { .dq-scroll--wide .dq-scroll-hint`);
+  });
+
+  // The scroll cut must land on a column edge (a half-shown "30" reads as "3"). On a phone each table's leading
+  // columns are sized in cqw to add up to exactly one scroll box, and its trailing columns in px to add up to the
+  // width the table adds on top, so the visible part is whole columns at any phone width.
+  it.each([
+    ["glance", 9, "\\.dq-table--glance"],
+    ["a", 7, "\\.dq-table--a"],
+    ["b", 7, "\\.dq-table--b"],
+    ["c", 5, "\\.dq-table--c"],
+  ])("sizes Table %s's phone columns to end the first screen on a column edge", (_, cols, sel) => {
+    const text = css();
+    const width = new RegExp(`${sel} \\{[^}]*width: calc\\(100cqw \\+ (\\d+)px\\)`).exec(text);
+    expect(width).not.toBeNull();
+    const rules = [...text.matchAll(new RegExp(`${sel} col:nth-child\\((n \\+ )?(\\d+)\\) \\{ width: (\\d+)(cqw|px)`, "g"))];
+    let cqw = 0;
+    let px = 0;
+    let covered = 0;
+    for (const m of rules) {
+      const from = Number(m[2]);
+      const count = m[1] ? cols - from + 1 : 1;
+      covered += count;
+      if (m[4] === "cqw") cqw += count * Number(m[3]);
+      else px += count * Number(m[3]);
+    }
+    expect(covered).toBe(cols);
+    expect(cqw).toBe(100);
+    expect(px).toBe(Number(width![1]));
   });
 
   // Seen under `next dev` and in the production build: the space before a text run containing an HTML entity is

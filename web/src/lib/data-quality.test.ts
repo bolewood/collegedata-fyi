@@ -16,6 +16,7 @@ import {
   selectSnapshot,
   yearGlance,
   yearsNewestFirst,
+  type QualityRow,
   type QualitySnapshot,
 } from "./data-quality";
 import { formatLabel } from "./format-labels";
@@ -131,6 +132,71 @@ describe("snapshot validation", () => {
     bad((s) => (s.renewal.both = -1), /renewal/);
     bad((s) => (s.renewal.current = 10.5), /renewal/);
     bad((s) => (s.renewal.previous = 479.2), /renewal/);
+  });
+});
+
+describe("snapshot arithmetic", () => {
+  const bad = (mutate: (s: QualitySnapshot) => void, why: RegExp) => {
+    const snap = clone();
+    mutate(snap);
+    expect(() => selectSnapshot([{ name: "x.json", json: snap }], false)).toThrow(why);
+  };
+  /** Apply the same change to a format row and to the year total, so only the rule under test is broken. */
+  const both = (s: QualitySnapshot, change: (r: QualityRow) => void) => {
+    change(s.years[0].rows[0]);
+    change(s.years[0].total);
+  };
+
+  it("fails when a format row's statuses don't add up to the year's live count", () => {
+    bad((s) => (s.years[0].rows[0].status.set_aside += 1), /live count/);
+  });
+
+  it("fails when the total isn't the sum of the rows, in a status, federal or totals count", () => {
+    bad((s) => {
+      // Moves one report between two statuses, so the live count is right and only the split is wrong.
+      s.years[0].total.status.couldnt_read += 1;
+      s.years[0].total.status.set_aside -= 1;
+    }, /total status\.(set_aside|couldnt_read)/);
+    bad((s) => (s.years[0].total.status.published += 1), /live count/);
+    bad((s) => (s.years[0].total.federal.reports += 1), /total federal\.reports/);
+    bad((s) => (s.years[0].total.totals.C1.off_more += 1), /total totals\.C1\.off_more/);
+    bad((s) => (s.years[0].total.totals.H1.doesnt += 1), /total totals\.H1\.doesnt/);
+  });
+
+  it("fails when federal matches + no value + differs isn't values", () => {
+    bad((s) => both(s, (r) => (r.federal.values += 1)), /matches \+ no_value \+ differs/);
+  });
+
+  it("fails when federal values exceed 3 per report", () => {
+    bad((s) => {
+      // Fewer reports checked, same values: moved in the row and the total by the same amount.
+      const row = s.years[0].rows[0];
+      const drop = row.federal.reports - 1;
+      row.federal.reports -= drop;
+      s.years[0].total.federal.reports -= drop;
+    }, /3 per report/);
+  });
+
+  it("fails when more reports were checked against federal figures than are published", () => {
+    bad((s) => both(s, (r) => (r.federal.reports = r.status.published + 1)), /federal\.reports exceeds published/);
+  });
+
+  it("fails when B1, C1 or H1 outcomes don't add up to the reports", () => {
+    bad((s) => both(s, (r) => (r.totals.B1.adds_up += 1)), /B1 outcomes/);
+    bad((s) => both(s, (r) => (r.totals.C1.cant_check += 1)), /C1 outcomes/);
+    bad((s) => both(s, (r) => (r.totals.H1.cant_check += 1)), /H1 outcomes/);
+  });
+
+  it("fails when totals.reports isn't the published count (a glance rate could pass 100%)", () => {
+    bad((s) => both(s, (r) => (r.totals.reports += 1)), /totals\.reports is not status\.published/);
+  });
+
+  it("fails when renewal.both exceeds renewal.previous", () => {
+    bad((s) => (s.renewal.both = s.renewal.previous + 1), /renewal\.both exceeds renewal\.previous/);
+  });
+
+  it("accepts the unmodified fixture", () => {
+    expect(selectSnapshot([{ name: "x.json", json: clone() }], false)).not.toBeNull();
   });
 });
 

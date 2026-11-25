@@ -45,7 +45,9 @@ because 2023-24 is counted differently; see Table A.*
   > year's form. Some question numbers in them point at a different question
   > than the 2023-24 form's.
 - > No federal admissions figures for fall 2025 yet.
-- > Older form: tables mapped, not every question. (No year today.)
+- > Older form: tables mapped, not every question.
+
+  (No year has this notice today.)
 
 ## Table A: Reports and fields stored
 

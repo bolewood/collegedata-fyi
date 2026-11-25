@@ -143,6 +143,59 @@ function rowCountsProblem(row: unknown): string | null {
   );
 }
 
+type Counts = Record<string, number>;
+
+/** Every count in a row that is a plain sum across rows (fields_stored is a median, so it is not). */
+function summedCounts(row: QualityRow): Counts {
+  const out: Counts = {};
+  const add = (prefix: string, o: object) => {
+    for (const [k, v] of Object.entries(o)) out[`${prefix}.${k}`] = v as number;
+  };
+  add("status", row.status);
+  add("federal", row.federal);
+  out["totals.reports"] = row.totals.reports;
+  add("totals.B1", row.totals.B1);
+  add("totals.C1", row.totals.C1);
+  add("totals.H1", row.totals.H1);
+  return out;
+}
+
+const sumOf = (o: object) => Object.values(o as Counts).reduce((a, b) => a + b, 0);
+
+/**
+ * The arithmetic the Python `--public` step already enforces (PRD 040, "Tests: Sums"), repeated here so a
+ * hand-edited or mis-merged snapshot fails the build instead of rendering a rate over 100%. Counts are
+ * already known to be non-negative integers. Returns the first problem or null.
+ */
+function arithmeticProblem(year: QualityYear): string | null {
+  const rowSums: Counts = {};
+  for (const r of year.rows) {
+    for (const [k, v] of Object.entries(summedCounts(r))) rowSums[k] = (rowSums[k] ?? 0) + v;
+  }
+  if (year.rows.reduce((n, r) => n + liveCount(r.status), 0) !== liveCount(year.total.status)) {
+    return "the rows' statuses don't add up to the year's live count";
+  }
+  for (const [k, v] of Object.entries(summedCounts(year.total))) {
+    if (v !== (rowSums[k] ?? 0)) return `total ${k} is ${v}, but the rows add up to ${rowSums[k] ?? 0}`;
+  }
+  const check = (name: string, r: QualityRow): string | null => {
+    const f = r.federal;
+    if (f.matches + f.no_value + f.differs !== f.values) return `${name}: federal matches + no_value + differs is not values`;
+    if (f.values > 3 * f.reports) return `${name}: federal values exceed 3 per report`;
+    if (f.reports > r.status.published) return `${name}: federal.reports exceeds published`;
+    if (r.totals.reports !== r.status.published) return `${name}: totals.reports is not status.published`;
+    for (const t of ["B1", "C1", "H1"] as const) {
+      if (sumOf(r.totals[t]) !== r.totals.reports) return `${name}: ${t} outcomes don't add up to totals.reports`;
+    }
+    return null;
+  };
+  for (const r of year.rows) {
+    const p = check(`row ${r.format}`, r);
+    if (p) return p;
+  }
+  return check("total", year.total);
+}
+
 export function validateSnapshot(raw: unknown, source: string): QualitySnapshot {
   const fail = (why: string): never => {
     throw new SnapshotError(`data-quality snapshot ${source}: ${why}`);
@@ -210,6 +263,8 @@ export function validateSnapshot(raw: unknown, source: string): QualitySnapshot 
       const rowProblem = rowCountsProblem(row);
       if (rowProblem) return fail(`${where}: row ${row.format}: ${rowProblem}`);
     }
+    const arithmetic = arithmeticProblem(y as unknown as QualityYear);
+    if (arithmetic) return fail(`${where}: ${arithmetic}`);
   }
   return raw as QualitySnapshot;
 }

@@ -30,10 +30,10 @@ import {
   type SumOutcomes,
 } from "@/lib/data-quality";
 import { DATA_LICENSE_NAME, DATA_LICENSE_URL } from "@/lib/data-license";
+import { HAS_CDS_HREF } from "@/lib/coverage-model";
 import { formatLabel } from "@/lib/format-labels";
 
 const DASH = "–";
-const HAS_CDS_PRESET = "/coverage?status=cds_available_current,cds_available_stale";
 
 const n = (v: number) => v.toLocaleString("en-US");
 const pc = (v: number | null) => (v === null ? DASH : `${v}%`);
@@ -86,17 +86,18 @@ function SectionHead({ id, label, title, sentence }: { id: string; label: string
 }
 
 /**
- * Narrowest widths the tables can shrink to before they scroll sideways. The hint above each table is CSS only
- * (data-quality.css, a container query on these numbers minus one), so it needs no script and no measuring.
+ * Horizontal scroller for a wide table: a labelled, focusable region. The table's minimum widths, the column
+ * sizes that put the scroll cut on a column edge, and the hint's breakpoints are all in data-quality.css, so
+ * nothing here needs a script or a measurement. `hint` is false for a table with nothing to read (all dashes).
  */
-export const TABLE_MIN_WIDTH = 640;
-export const WIDE_TABLE_MIN_WIDTH = 820;
-
-/** Horizontal scroller for a wide table: a labelled, focusable region with a hint that shows only when the table is narrower than it needs. */
-function Scroll({ children, label, wide = false }: { children: ReactNode; label: string; wide?: boolean }) {
+function Scroll({ children, label, wide = false, hint = true }: { children: ReactNode; label: string; wide?: boolean; hint?: boolean }) {
   return (
     <div className={wide ? "dq-scroll dq-scroll--wide" : "dq-scroll"}>
-      <p className="dq-scroll-hint">Scroll sideways to see every column.</p>
+      {hint && (
+        <p className="dq-scroll-hint acc-table-hint" aria-hidden="true">
+          Scroll sideways to see every column.
+        </p>
+      )}
       <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }} role="region" aria-label={label} tabIndex={0}>
         {children}
       </div>
@@ -104,11 +105,21 @@ function Scroll({ children, label, wide = false }: { children: ReactNode; label:
   );
 }
 
+/** One sized column per table column (data-quality.css sizes them by position on a phone). */
+function Cols({ n: count }: { n: number }) {
+  return (
+    <colgroup>
+      {Array.from({ length: count }, (_, i) => (
+        <col key={i} />
+      ))}
+    </colgroup>
+  );
+}
+
 const tableStyle: React.CSSProperties = {
   width: "100%",
   borderCollapse: "collapse",
   fontSize: 14,
-  minWidth: TABLE_MIN_WIDTH,
 };
 const thStyle: React.CSSProperties = {
   textAlign: "right",
@@ -156,7 +167,8 @@ function GlanceTable({ years }: { years: QualityYear[] }) {
         sentence="One row per year, newest first. Rates are shares of that year’s published reports, except the admissions match rate, which is a share of values compared."
       />
       <Scroll label="All years at a glance">
-        <table style={tableStyle} id="dq-glance">
+        <table className="dq-table dq-table--glance" style={tableStyle} id="dq-glance">
+          <Cols n={9} />
           <thead>
             <tr>
               <th scope="col" style={thLeft}>Year</th>
@@ -303,7 +315,8 @@ function ReportsTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
         sentence={`How many ${year.cds_year} reports are published with numbers, set aside, couldn’t be read or not read yet, and how much of each form we stored.`}
       />
       <Scroll label={`Table A, ${year.cds_year}`}>
-        <table style={tableStyle} id="dq-table-a">
+        <table className="dq-table dq-table--a" style={tableStyle} id="dq-table-a">
+          <Cols n={7} />
           <thead>
             <tr>
               <th scope="col" style={thLeft}>Format</th>
@@ -373,8 +386,9 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
           No federal admissions figures for fall {fallOf(year.cds_year)} yet.
         </p>
       )}
-      <Scroll label={`Table B, ${year.cds_year}`}>
-        <table style={tableStyle} id="dq-table-b">
+      <Scroll label={`Table B, ${year.cds_year}`} hint={loaded}>
+        <table className="dq-table dq-table--b" style={tableStyle} id="dq-table-b">
+          <Cols n={7} />
           <thead>
             <tr>
               <th scope="col" style={thLeft}>Format</th>
@@ -484,7 +498,8 @@ function TotalsTable({ year, snapshot }: { year: QualityYear; snapshot: QualityS
         sentence="Whether the totals printed in each published report equal the sum of their own rows. The three tables are never averaged together."
       />
       <Scroll label={`Table C, ${year.cds_year}`} wide>
-        <table style={{ ...tableStyle, minWidth: WIDE_TABLE_MIN_WIDTH }} id="dq-table-c">
+        <table className="dq-table dq-table--c" style={tableStyle} id="dq-table-c">
+          <Cols n={5} />
           <thead>
             <tr>
               <th scope="col" style={thLeft}>Format</th>
@@ -581,7 +596,7 @@ function HowToRead() {
         </p>
         <p style={{ margin: 0 }}>
           Related: <Link href="/methodology">methodology</Link>, <Link href="/api">the API</Link>, and the{" "}
-          <Link href={HAS_CDS_PRESET}>colleges we have a CDS for</Link>.
+          <Link href={HAS_CDS_HREF}>colleges we have a CDS for</Link>.
         </p>
       </div>
     </section>
