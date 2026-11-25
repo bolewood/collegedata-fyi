@@ -7361,7 +7361,10 @@ _H1_AMOUNT_RE = re.compile(
     r"(?:\$\s*(\d[\d,]*(?:\.\d+)?)"
     r"|(?<![\w,.$/-])(\d{1,3}(?:,\d{3})+(?:\.\d+)?|0(?:\.0+)?)(?![\w,/-]|\.\d))"
 )
-_H1_CONTINUATION_RE = re.compile(r"excludes|captured above|reported below|not awarded by|excluding|\(which|which are", re.IGNORECASE)
+# Words of the wrapped end of a row label ("... excluding athletic aid and tuition
+# waivers (which are reported below)"). A row name after one of them is part of
+# that label, not a row.
+_H1_CONTINUATION_RE = re.compile(r"excludes|captured above|reported below|not awarded by|excluding|which", re.IGNORECASE)
 
 
 def _h_layout_h1_rows_by_column(block: str) -> dict[str, dict]:
@@ -7387,17 +7390,20 @@ def _h_layout_h1_rows_by_column(block: str) -> dict[str, dict]:
     markers = []  # (line idx, nb_qn, nn_qn)
     for li, line in enumerate(lines):
         norm = _normalize_label(line)
-        if not norm or _H1_CONTINUATION_RE.search(line) and not re.search(r"(?i)total|student loans", line):
+        if not norm:
             continue
         # "State (i.e., all states, not only ...)" is the State row too.
         if re.match(r"state\b", norm) and "all states" in norm and "state and other" not in norm:
             norm = "state all states"
+        wrapped = _H1_CONTINUATION_RE.search(norm)
         for substr, nb_qn, nn_qn in _H1_ROWS:
-            if substr in norm:
-                if substr == "tuition waivers" and "excluding" in line.lower():
-                    break
-                markers.append((li, nb_qn, nn_qn))
+            at = norm.find(substr)
+            if at < 0:
+                continue
+            if wrapped and at >= wrapped.start() and not substr.startswith("total"):
                 break
+            markers.append((li, nb_qn, nn_qn))
+            break
         else:
             # A grand "TOTAL" under the last row (Colorado) is a row of its
             # own with no field; its amounts are not Athletic Awards'.
@@ -7437,6 +7443,12 @@ def _h_layout_h1_rows_by_column(block: str) -> dict[str, dict]:
                 continue
             else:
                 pairs = [(nb_qn, val)] if dl < dr else [(nn_qn, val)]
+        elif by_marker[li][1]:
+            # Three or more amounts under one label: two rows printed as one
+            # (Boston College 2024-25 prints Athletic Awards' amounts above
+            # its label). Which belongs where is not known, and a reading
+            # that skipped them would replace the markdown's.
+            return {}
         else:
             continue
         for qn, val in pairs:

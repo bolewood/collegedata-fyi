@@ -155,6 +155,29 @@ class H1TextLayerTest(unittest.TestCase):
         self.assertEqual(values["H.126"], "3104361")
         self.assertNotIn("H.115", values)
 
+    def test_a_row_label_that_wraps_past_the_word_excludes_is_still_the_row(self) -> None:
+        # Baruch: "State and other (e.g., institutional) work-study/employment
+        # (Note: Excludes" is the row's first line and holds its amount.
+        rows = TRINITY_ROWS.replace(
+            line("State and other (e.g., institutional) work-") + line("study/employment (Note: excludes Federal") + line("Work/Study captured above)"),
+            line("State and other (e.g., institutional) work-study (Excludes", "$2,309,770")
+            + line("Work/Study captured above.)"),
+        ).replace(line("Federal Work-Study", "$735,526"), line("Federal Work-Study", "Not Applicable"))
+        text = INSTRUCTIONS + HEADER + rows.replace("$3,044,296", "$2,309,770").replace("$2,308,770", "$0") + AFTER
+        values = h1(read(text))
+        self.assertEqual(values["H.113"], "2309770")  # State and other, need-based
+        self.assertNotIn("H.112", values)  # not Federal Work-Study
+
+    def test_three_amounts_under_one_label_are_refused(self) -> None:
+        # Boston College: Athletic Awards' amounts print above its label,
+        # under Tuition Waivers.
+        rows = TRINITY_ROWS.replace(
+            line("Tuition Waivers", "$320,758", "$426,282") + line("Athletic Awards", "$0", "$0"),
+            line("Tuition Waivers") + line("report them.", "$320,758", "$426,282") + line("elsewhere.", "$11,000", "$12,000") + line("Athletic Awards"),
+        )
+        self.assertIn("elsewhere.", rows)
+        self.assertEqual(_h_layout_h1_rows_by_column(HEADER + rows), {})
+
     def test_text_layer_replaces_the_markdown_h1_block(self) -> None:
         # The markdown reading put the work-study amount in H.113 ("State and
         # other") where the text layer has it in H.112. Both would be summed
