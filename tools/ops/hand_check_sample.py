@@ -107,6 +107,7 @@ def fetch_live_rows(base_url: str, anon_key: str) -> list[dict[str, Any]]:
             f"{base_url.rstrip('/')}/rest/v1/cds_manifest?{query}",
             headers={
                 "apikey": anon_key,
+                "User-Agent": "collegedata-pipeline/hand-check",
                 "Authorization": f"Bearer {anon_key}",
                 "Prefer": "count=exact",
                 "Range-Unit": "items",
