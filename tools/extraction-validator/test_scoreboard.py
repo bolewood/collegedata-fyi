@@ -351,6 +351,35 @@ class NearMisses(unittest.TestCase):
         grants = scoreboard.table_outcomes("2024-25", numbers(H_110=1000000, H_106=500000, H_108=499000))
         self.assertEqual(grants["H1"], "fail")
 
+    def test_other_forms_split_on_their_own_field_ids(self) -> None:
+        # (year, table, printed total, two rows that should add to it)
+        cases = [
+            ("2023-24", "C1", "C.117", ("C.101", "C.102")),
+            ("2023-24", "B1", "B.193", ("B.149", "B.150")),
+            ("2025-26", "C1", "C.116", ("C.101", "C.102")),
+            ("2025-26", "C1", "C.117", ("C.104", "C.105")),
+            ("2025-26", "B1", "B.176", ("B.113", "B.138")),
+        ]
+        for year, table, total, rows in cases:
+            first, second = rows
+            for second_value, expected in ((481, "near"), (480, "fail"), (500, "pass"), (400, "fail")):
+                nums = {total: Decimal(1000), first: Decimal(500), second: Decimal(second_value)}
+                with self.subTest(year=year, total=total, second=second_value):
+                    self.assertEqual(scoreboard.table_outcomes(year, nums)[table], expected)
+        # 2025-26 enrolled uses its second group of rows when the first was not read.
+        nums = {"C.118": Decimal(1000), "C.110": Decimal(500), "C.112": Decimal(481)}
+        self.assertEqual(scoreboard.table_outcomes("2025-26", nums)["C1"], "near")
+        nums["C.112"] = Decimal(400)
+        self.assertEqual(scoreboard.table_outcomes("2025-26", nums)["C1"], "fail")
+        # 2025-26 undergraduate + graduate total.
+        nums = {"B.178": Decimal(1000), "B.176": Decimal(990)}
+        self.assertEqual(scoreboard.table_outcomes("2025-26", nums)["B1"], "near")
+        # Financial aid on the 2025-26 and 2023-24 ids is never a near miss.
+        self.assertEqual(scoreboard.table_outcomes("2025-26", {
+            "H.109": Decimal(1000000), "H.105": Decimal(500000), "H.106": Decimal(499000)})["H1"], "fail")
+        self.assertEqual(scoreboard.table_outcomes("2023-24", {
+            "H.110": Decimal(1000000), "H.106": Decimal(500000), "H.108": Decimal(499000)})["H1"], "fail")
+
     def test_enrollment_splits_too(self) -> None:
         got = scoreboard.table_outcomes("2024-25", numbers(B_193=1000, B_149=500, B_150=490))
         self.assertEqual(got["B1"], "near")
@@ -441,7 +470,7 @@ def synthetic_run() -> dict:
                       "H1": ["pass", "fail", "nc", "pass"][i % 4]})
         for i in range(3):
             add(year, fmt="pdf_fillable", fields=900 + i, federal=federal)
-        add(year, fmt="xlsx", fields=1000, federal=federal, sub_institutional=True)
+        add(year, fmt="xlsx", fields=1000, federal=no_federal, sub_institutional=True)
         add(year, fmt="unknown", fields=300, federal=no_federal)
         add(year, flag="blank_template")
         add(year, flag="low_coverage", fmt="pdf_fillable")
@@ -544,6 +573,24 @@ class PublicSnapshot(unittest.TestCase):
         self.assertEqual(year["federal_left_out"]["no_federal_figures"], 0)
         self.assertTrue(self.year("2024-25")["federal_fall_loaded"])
         self.assertEqual(self.year("2024-25")["federal_left_out"], {"single_campus": 1, "no_federal_figures": 1})
+
+    def test_federal_reports_and_what_is_left_out_make_up_the_published_reports(self) -> None:
+        for year in self.public["years"]:
+            if year["federal_fall_loaded"]:
+                left = year["federal_left_out"]
+                self.assertEqual(year["total"]["federal"]["reports"] + left["single_campus"]
+                                 + left["no_federal_figures"], year["total"]["status"]["published"],
+                                 year["cds_year"])
+
+    def test_a_single_campus_report_with_a_federal_outcome_is_not_counted_twice(self) -> None:
+        run = synthetic_run()
+        single = next(d for d in run["documents"] if d["sub_institutional"] and d["year"] == "2024-25")
+        single["federal"] = {"applied": "match", "admitted": "match", "enrolled": "match"}
+        year = next(y for y in scoreboard.build_public(run, "x.json")["years"] if y["cds_year"] == "2024-25")
+        left = year["federal_left_out"]
+        self.assertEqual(year["total"]["federal"]["reports"] + left["single_campus"] + left["no_federal_figures"],
+                         year["total"]["status"]["published"])
+        self.assertEqual(left["single_campus"], 1)
 
     def test_form_and_other_numbering(self) -> None:
         self.assertEqual(self.year("2023-24")["form"],
@@ -648,6 +695,41 @@ class PublicInputs(unittest.TestCase):
         del run["renewal"]["both"]
         self.refuses(run)
 
+    def test_the_renewal_block_is_checked_offline_against_the_run_date(self) -> None:
+        changes = {
+            "as_of the wrong day": {"as_of": "2026-11-24"},
+            "as_of not a date": {"as_of": "yesterday"},
+            "current year is not the floor": {"current_year": "2024-25", "previous_year": "2023-24"},
+            "previous year is not current - 1": {"previous_year": "2022-23"},
+            "previous under the minimum": {"previous": 349, "both": 300, "two_year_previous": 536},
+            "two-year previous under the minimum": {"two_year_previous": 349, "two_year_both": 349},
+            "both over previous": {"both": 480},
+            "both over current": {"current": 360},
+            "two-year both over two-year previous": {"two_year_both": 537},
+            "two-year both over current": {"two_year_both": 381, "two_year_previous": 600, "current": 380},
+            "two-year previous under one-year previous": {"two_year_previous": 478},
+            "two-year both under one-year both": {"two_year_both": 363},
+            "a count that is text": {"both": "364"},
+            "a negative count": {"current": -1},
+        }
+        for name, change in changes.items():
+            run = synthetic_run()
+            run["renewal"] = {**run["renewal"], **change}
+            with self.subTest(name):
+                self.refuses(run)
+
+    def test_refuses_a_partial_run(self) -> None:
+        run = synthetic_run()
+        del run["limit"]
+        self.refuses(run)
+        for limit in (0, 20):
+            self.refuses({**synthetic_run(), "limit": limit})
+        self.refuses({**synthetic_run(), "years": YEARS + ["2024-25"]})                 # a year twice
+        self.refuses({**synthetic_run(), "years": ["2024-25", "2025-26"]})              # a default year missing
+        run = synthetic_run()
+        run["years"] = ["2025-26"]
+        self.refuses(run)
+
     def test_refuses_an_outcome_the_version_does_not_have(self) -> None:
         run = synthetic_run()
         run["documents"][0]["sums"]["H1"] = "near"       # H1 has no near-miss class
@@ -706,6 +788,19 @@ class Renewal(unittest.TestCase):
         self.assertEqual((block["previous"], block["both"], block["current"]), (400, 300, 320))
         self.assertEqual((block["two_year_previous"], block["two_year_both"]), (400, 300))
         self.assertEqual(block["as_of"], "2026-11-25")
+
+    def test_two_year_figures_count_schools_that_only_have_the_older_year(self) -> None:
+        rows = self.rows(300, 100, 20)
+        for i in range(60):       # schools with 2023-24 only: in the two-year denominator, not the one-year
+            rows.append({"school_id": f"o{i}", "canonical_year": "2023-24", "removed_at": None,
+                         "participation_status": "published"})
+        for i in range(15):       # 2023-24 and 2025-26 but no 2024-25: renewed on the two-year check only
+            rows += [{"school_id": f"g{i}", "canonical_year": y, "removed_at": None, "participation_status": "published"}
+                     for y in ("2023-24", "2025-26")]
+        block = scoreboard.renewal_block(rows, dt.date(2026, 11, 25))
+        self.assertEqual((block["previous"], block["both"]), (400, 300))
+        self.assertEqual((block["two_year_previous"], block["two_year_both"]), (475, 315))
+        self.assertEqual(block["current"], 335)
 
     def test_the_year_follows_the_run_date(self) -> None:
         # Before September the current year is two years back, where these rows have no schools.

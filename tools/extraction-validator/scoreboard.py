@@ -92,7 +92,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Callable, Iterable, Optional
+from typing import Any, Callable, Iterable, NoReturn, Optional
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "tools" / "browser_backend"))
@@ -689,6 +689,13 @@ def federal_left_out(documents: list[dict[str, Any]], year: str) -> dict[str, in
 def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: float,
            field_interval: float, summaries: str, log: Callable[[str], None],
            limit: Optional[int] = None) -> dict[str, Any]:
+    # Renewal first: a short read or a floor that disagrees with the database
+    # fails before the heavy per-document reads. One timestamp serves both
+    # `generated_at` and the renewal date, so a run that crosses midnight UTC
+    # still agrees with itself.
+    now = dt.datetime.now(dt.timezone.utc)
+    renewal = gather_renewal(api, now.date())
+    log(f"renewal {renewal['current_year']}: {renewal['both']} of {renewal['previous']} schools also have the year")
     definitions = projection.load_schema_definitions()
     api.check_page_size()
     all_documents = fetch_documents(api, years)
@@ -836,9 +843,6 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
         (d["canonical_year"], "removed" if d.get("removed_at") else d["extraction_status"])
         for d in all_documents if d.get("removed_at") or d["extraction_status"] != "extracted"
     )
-    now = dt.datetime.now(dt.timezone.utc)
-    renewal = gather_renewal(api, now.date())
-    log(f"renewal {renewal['current_year']}: {renewal['both']} of {renewal['previous']} schools also have the year")
     return {
         "run_format": RUN_FORMAT,
         "sum_check_version": SUM_CHECK_VERSION,
@@ -1195,7 +1199,10 @@ def public_format_key(source_format: Optional[str]) -> str:
 
 def _row_counts(classes: Counter, published: list[dict[str, Any]], federal_loaded: bool) -> dict[str, Any]:
     counts = [d["fields"] for d in published]
-    outcomes = [[o for o in d["federal"].values() if o] for d in published] if federal_loaded else []
+    # Reports filed for one campus or unit are left out of the federal comparison
+    # (they are counted in federal_left_out.single_campus instead).
+    outcomes = [[o for o in d["federal"].values() if o]
+                for d in published if not d["sub_institutional"]] if federal_loaded else []
     federal_values = Counter(o for each in outcomes for o in each)
     totals: dict[str, Any] = {"reports": len(published)}
     for table in SUM_TABLES:
@@ -1229,20 +1236,58 @@ def require_public_run(run: Any) -> None:
         raise SystemExit(f"--public: the run is missing {', '.join(missing)}")
     if run["sum_check_version"] != SUM_CHECK_VERSION:
         raise SystemExit(f"--public needs sum_check_version {SUM_CHECK_VERSION}, got {run['sum_check_version']!r}")
-    if run.get("limit"):
-        raise SystemExit("--public: this run used --limit and covers only part of each year")
-    if not run["years"] or not run["manifest"]:
+    if "limit" not in run or run["limit"] is not None:
+        raise SystemExit("--public: the run must record limit: null; a --limit run covers only part of each year")
+    years = run["years"]
+    if not years or not run["manifest"]:
         raise SystemExit("--public: the run has no years or an empty manifest")
-    for year in run["years"]:
+    if len(set(years)) != len(years):
+        raise SystemExit(f"--public: the run lists a year twice: {years}")
+    if not set(DEFAULT_YEARS) <= set(years):
+        raise SystemExit(f"--public: the run must cover {', '.join(DEFAULT_YEARS)}; it has {', '.join(years)}")
+    for year in years:
         if year not in run["forms"] or year not in run["federal_left_out"]:
             raise SystemExit(f"--public: the run has no forms or federal_left_out entry for {year}")
-    renewal = run["renewal"]
-    for key in ("as_of", "current_year", "previous_year", "current", "previous", "both",
-                "two_year_previous", "two_year_both"):
+    require_public_renewal(run["renewal"], run["generated_at"])
+
+
+def require_public_renewal(renewal: Any, generated_at: str) -> None:
+    """The renewal block must be internally consistent and match the run date, offline."""
+    def bad(why: str) -> NoReturn:
+        raise SystemExit(f"--public: renewal block: {why}")
+
+    keys = ("as_of", "current_year", "previous_year", "current", "previous", "both",
+            "two_year_previous", "two_year_both")
+    if not isinstance(renewal, dict):
+        bad("not an object")
+    for key in keys:
         if key not in renewal:
-            raise SystemExit(f"--public: renewal.{key} is missing")
-    if not renewal["previous"] or renewal["both"] > renewal["previous"]:
-        raise SystemExit("--public: the renewal block has no denominator, or both exceeds previous")
+            bad(f"{key} is missing")
+    for key in keys[3:]:
+        if not isinstance(renewal[key], int) or isinstance(renewal[key], bool) or renewal[key] < 0:
+            bad(f"{key} is not a non-negative integer")
+    try:
+        snapshot_day = dt.date.fromisoformat(str(generated_at)[:10])
+        as_of = dt.date.fromisoformat(str(renewal["as_of"]))
+    except ValueError:
+        bad("as_of or the run's generated_at is not an ISO date")
+    if as_of != snapshot_day:
+        bad(f"as_of {as_of} is not the snapshot date {snapshot_day}")
+    floor = discovery_renewal.cds_freshness_floor(snapshot_day)
+    if renewal["current_year"] != floor:
+        bad(f"current_year {renewal['current_year']!r} is not the freshness floor {floor} for {snapshot_day}")
+    start = discovery_renewal.parse_year(floor)
+    if renewal["previous_year"] != discovery_renewal.format_year(start - 1):
+        bad(f"previous_year {renewal['previous_year']!r} is not the year before {floor}")
+    minimum = discovery_renewal.MIN_PREV_SCHOOLS
+    if renewal["previous"] < minimum or renewal["two_year_previous"] < minimum:
+        bad(f"a denominator is under {minimum} schools")
+    if renewal["both"] > renewal["previous"] or renewal["both"] > renewal["current"]:
+        bad("both exceeds previous or current")
+    if renewal["two_year_both"] > renewal["two_year_previous"] or renewal["two_year_both"] > renewal["current"]:
+        bad("two_year_both exceeds two_year_previous or current")
+    if renewal["two_year_previous"] < renewal["previous"] or renewal["two_year_both"] < renewal["both"]:
+        bad("the two-year figures are smaller than the one-year figures")
 
 
 def build_public(run: dict[str, Any], run_name: str) -> dict[str, Any]:
