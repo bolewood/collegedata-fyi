@@ -309,11 +309,16 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
     it("explains the size without overclaiming, and states the boundary rule", () => {
       const note = sizeNote(openHtml("2024-25"))!;
       expect(note).not.toBeNull();
-      expect(note).toMatch(/exactly 10% counts\s+as 2% to 10%/);
+      // The columns are named as in the header, not "first" and "second".
+      expect(note).toContain("Differs by over 2% to 10%");
+      expect(note).toContain("Differs by over 10%");
+      expect(note).not.toMatch(/first column|second column/);
+      expect(note).toMatch(/exactly\s+10% counts in “over 2% to 10%”/);
       expect(note).toMatch(/2% or less is a match/);
-      expect(note).toMatch(/may come from a different count date/);
-      expect(note).toMatch(/may be more likely/);
-      expect(note).toMatch(/isn’t necessarily our error/);
+      expect(note).toMatch(/over 2% to 10% may come from a different count date/);
+      expect(note).toMatch(/may be a real difference between the two filings, a scope mismatch/);
+      expect(note).toMatch(/misreading; the size alone can’t say which/);
+      expect(note).not.toMatch(/isn’t necessarily our error|some are real/);
       // No claim about how many large gaps are ours or the school's.
       expect(note).not.toMatch(/\b(most|usually|always|mostly|typically)\b/i);
       expect(note).not.toMatch(/\d+(\.\d+)?%\s+of/);

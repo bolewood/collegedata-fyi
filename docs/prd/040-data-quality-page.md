@@ -350,12 +350,15 @@ path").
   "Differs by over 2% to 10%" and "Differs by over 10%", counted by value.
   - The gap is the absolute difference as a share of the IPEDS figure, worked
     out from the run's `federal_values` with the same rule that decides
-    "differs". Exactly 2% is a match. Exactly 10% is in the 2% to 10% column.
+    "differs". Exactly 2% is a match. Exactly 10% is in the "over 2% to 10%" column.
   - Counts only, no percentages, so the under-5 rule has nothing to hide.
-  - The note says a 2% to 10% gap may fit a different count date, and that
-    over 10% is where a misread column or a scope mismatch may be more likely.
-    It says the size can't tell which, and that a large gap isn't necessarily
-    ours (8 of 10 differing reports in the M0 sample matched the school's file).
+  - The note says a gap of over 2% to 10% may come from a different count
+    date, and that a gap over 10% may be a real difference between the two
+    filings, a scope mismatch, a misread column or our misreading; the size
+    alone can't say which. It does not lean on the M0 sample: of that sample's
+    15 differing values, 5 (in 3 reports) are over 10%, and of those 3
+    reports 2 had the number we compared in the school's file and 1
+    (Fairleigh Dickinson) was our scope error.
 - Population: published reports with at least one IPEDS figure to compare.
   - Left out, with counts in the note: reports filed for one campus or unit
     (IPEDS reports the whole institution), and reports whose school has no
@@ -692,8 +695,8 @@ UI tests across M1 and M2:
 - **Size of federal differences:** built (`public_format` 2). Table B splits
   "Differs" into over 2% up to 10% and over 10%, as counts. It may separate
   a different count date from a misread column or a scope mismatch, but size
-  alone does not say which, and the hand check found most differing reports
-  matching the school's file, so a large gap is not read as ours.
+  alone does not say which. The hand check holds only 3 reports with a gap
+  over 10%, too few to say how many large gaps are ours.
 - **More federal checks:** undergraduate enrollment (B1) against IPEDS fall
   enrollment, and tuition (G1) against IPEDS. Each needs a
   definition-alignment note.

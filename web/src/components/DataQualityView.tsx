@@ -421,8 +421,8 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
                   <td style={tdStyle}>{loaded ? n(f.matches) : DASH}</td>
                   <td style={tdStyle}>{loaded ? n(f.no_value) : DASH}</td>
                   <td style={tdStyle}>{loaded ? n(f.differs) : DASH}</td>
-                  {split && <td style={tdStyle}>{loaded ? n(f.differs_2_to_10pct ?? 0) : DASH}</td>}
-                  {split && <td style={tdStyle}>{loaded ? n(f.differs_over_10pct ?? 0) : DASH}</td>}
+                  {split && <td style={tdStyle}>{loaded ? n(f.differs_2_to_10pct!) : DASH}</td>}
+                  {split && <td style={tdStyle}>{loaded ? n(f.differs_over_10pct!) : DASH}</td>}
                   <td style={tdStyle} title={small ? `Under ${MIN_REPORTS_FOR_RATE} reports: no rate` : undefined}>
                     {pc(rate)}
                   </td>
@@ -456,11 +456,10 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
         {split && (
           <Note id="dq-note-differs-size">
             <strong>Size of the gap</strong> is the difference as a share of the federal figure, counted by value. A gap
-            of 2% or less is a match, 2% to 10% is the first column, and over 10% is the second (exactly 10% counts
-            as 2% to 10%). A gap of 2% to 10% may come from a different count date. Over 10%, a misread column or a
-            mismatch in scope, such as one campus against the whole institution, may be more likely. The size can’t
-            say which it is, and a large gap isn’t necessarily our error: some are real differences between the
-            two filings.
+            of 2% or less is a match. “Differs by over 2% to 10%” and “Differs by over 10%” split the rest, and exactly
+            10% counts in “over 2% to 10%”. A gap of over 2% to 10% may come from a different count date. A gap over
+            10% may be a real difference between the two filings, a scope mismatch such as one campus against the whole
+            institution, a misread column, or our misreading; the size alone can’t say which.
           </Note>
         )}
         </>

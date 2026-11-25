@@ -725,6 +725,7 @@ class FederalDifferenceSize(unittest.TestCase):
                       and d["federal"]["applied"] == "match")
         target["federal"] = {**target["federal"], "applied": "different"}
         target["federal_values"]["applied"] = {"ours": applied[0], "federal": applied[1], "federal_data_year": 2024}
+        self.edited_format = target["format"]
         return scoreboard.build_public(run, "x.json")
 
     def test_a_value_lands_in_exactly_one_band_in_its_row_and_the_total(self) -> None:
@@ -739,6 +740,13 @@ class FederalDifferenceSize(unittest.TestCase):
             other = "differs_over_10pct" if key == "differs_2_to_10pct" else "differs_2_to_10pct"
             self.assertEqual(after[other], before[other])
             self.assertEqual(after["differs"] - before["differs"], 1)
+            # The same in the edited report's own format row, and no other row moves.
+            fmt = lambda pub: {r["format"]: r["federal"] for r in year(pub)["rows"]}  # noqa: E731
+            rows_before, rows_after = fmt(base), fmt(pub)
+            for name, row in rows_after.items():
+                for k in ("differs", "differs_2_to_10pct", "differs_over_10pct", "matches"):
+                    expected = {"differs": 1, "matches": -1, key: 1}.get(k, 0) if name == self.edited_format else 0
+                    self.assertEqual(row[k] - rows_before[name][k], expected, (name, k))
 
     def test_refuses_when_federal_values_disagree_with_the_run_outcome(self) -> None:
         run = synthetic_run()
@@ -749,8 +757,14 @@ class FederalDifferenceSize(unittest.TestCase):
 
     def test_refuses_a_run_without_federal_values(self) -> None:
         run = synthetic_run()
-        del next(d for d in run["documents"] if d["federal"]["enrolled"] == "different")["federal_values"]
-        with self.assertRaises((SystemExit, KeyError)):
+        target = next(d for d in run["documents"] if d["federal"]["enrolled"] == "different")
+        del target["federal_values"]
+        with self.assertRaisesRegex(SystemExit, f"{target['document_id']}.*no federal_values"):
+            scoreboard.build_public(run, "x.json")
+        run = synthetic_run()
+        target = next(d for d in run["documents"] if d["federal"]["enrolled"] == "different")
+        del target["federal_values"]["enrolled"]
+        with self.assertRaisesRegex(SystemExit, f"{target['document_id']}.*enrolled"):
             scoreboard.build_public(run, "x.json")
 
     def test_the_public_shape_requires_both_new_keys_and_allows_no_others(self) -> None:

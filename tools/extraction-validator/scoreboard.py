@@ -1468,7 +1468,10 @@ def _row_counts(classes: Counter, published: list[dict[str, Any]], federal_loade
             for metric, outcome in d["federal"].items():
                 if not outcome:
                     continue
-                v = d["federal_values"][metric]
+                v = d.get("federal_values", {}).get(metric)
+                if v is None:
+                    raise SystemExit(f"--public: {d['document_id']} has a {metric} outcome but no federal_values for it; "
+                                     "run the scoreboard again")
                 federal = Decimal(v["federal"]) if v["federal"] is not None else None
                 if classify_federal(v["ours"], federal) != outcome:
                     raise SystemExit(f"--public: {d['document_id']} {metric}: federal_values say "
