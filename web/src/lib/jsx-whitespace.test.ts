@@ -34,11 +34,11 @@ function tsxFiles(dir: string): string[] {
 }
 
 type Kind = "entity" | "entity in string" | "newline-boundary";
-type Problem = { where: string; file: string; kind: Kind; left: string; right: string; insertAt?: number };
+type Problem = { where: string; file: string; kind: Kind; left: string; right: string };
 
 /** One exact boundary where the author meant no space, or CSS supplies it. `left` and `right` are the full, whitespace-normalised source on each side. Never an entity. */
 type Allowed = { file: string; kind: "newline-boundary"; left: string; right: string; reason: string };
-export const ALLOWED: Allowed[] = [
+export const ALLOWED: readonly Allowed[] = [
   {
     file: "app/recipes/page.tsx",
     kind: "newline-boundary",
@@ -120,7 +120,8 @@ const isSpaceLiteral = (n: ts.Node, edge: "start" | "end"): boolean => {
 const isComment = (n: ts.Node) => ts.isJsxExpression(n) && !n.expression;
 const ENTITY = /&(?:[a-zA-Z][a-zA-Z0-9]*|#[0-9]+|#x[0-9a-fA-F]+);/;
 
-export function findProblems(file: string, source: string): Problem[] {
+/** `allowed` is a parameter so tests can try their own lists without touching the shared one. */
+export function findProblems(file: string, source: string, allowed: readonly Allowed[] = ALLOWED): Problem[] {
   const sf = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const rel = relative(SRC, file);
   const out: Problem[] = [];
@@ -133,8 +134,6 @@ export function findProblems(file: string, source: string): Problem[] {
       kind: "newline-boundary",
       left: textOf(left),
       right: textOf(right),
-      // Where {" "} goes to fix it: the end of the left piece's content.
-      insertAt: ts.isJsxText(left) ? left.pos + source.slice(left.pos, left.end).trimEnd().length : left.end,
     });
 
   const visit = (node: ts.Node) => {
@@ -147,6 +146,11 @@ export function findProblems(file: string, source: string): Problem[] {
       kids.forEach((kid, i) => {
         const prev = kids[i - 1];
         const next = kids[i + 1];
+        // For a text run with words, look past whitespace-only runs that a removed comment left behind.
+        const skip = (j: number, step: number) => {
+          while (kids[j] && ts.isJsxText(kids[j]) && (kids[j] as ts.JsxText).containsOnlyTriviaWhiteSpaces) j += step;
+          return kids[j];
+        };
         if (ts.isJsxText(kid)) {
           const raw = source.slice(kid.pos, kid.end);
           if (ENTITY.test(raw)) out.push({ where: at(kid), file: rel, kind: "entity", left: "", right: norm(raw).slice(0, 80) });
@@ -168,8 +172,10 @@ export function findProblems(file: string, source: string): Problem[] {
           // Prose punctuation attaches to the word before it, or after it.
           const closing = /^[.,;:!?)\]}’”%]/.test(trimmed);
           const opening = /[(\[{“‘]$/.test(trimmed);
-          if (/^\s*\n/.test(raw) && prev && !ts.isJsxText(prev) && !isLineBreak(prev) && !isSpaceLiteral(prev, "end") && !closing) boundary(kid, prev, kid);
-          if (/\n\s*$/.test(raw) && next && !ts.isJsxText(next) && !isLineBreak(next) && !isSpaceLiteral(next, "start") && !opening) boundary(kid, kid, next);
+          const before = skip(i - 1, -1);
+          const after = skip(i + 1, 1);
+          if (/^\s*\n/.test(raw) && before && !ts.isJsxText(before) && !isLineBreak(before) && !isSpaceLiteral(before, "end") && !closing) boundary(kid, before, kid);
+          if (/\n\s*$/.test(raw) && after && !ts.isJsxText(after) && !isLineBreak(after) && !isSpaceLiteral(after, "start") && !opening) boundary(kid, kid, after);
         }
       });
     }
@@ -177,20 +183,11 @@ export function findProblems(file: string, source: string): Problem[] {
   };
   visit(sf);
   return out.filter(
-    (p) => p.kind !== "newline-boundary" || !ALLOWED.some((a) => a.file === p.file && a.kind === p.kind && a.left === p.left && a.right === p.right),
+    (p) => p.kind !== "newline-boundary" || !allowed.some((a) => a.file === p.file && a.kind === p.kind && a.left === p.left && a.right === p.right),
   );
 }
 
 export const describeProblems = (ps: Problem[]) => ps.map((p) => `${p.where} ${p.kind}: [${p.left}] || [${p.right}]`);
-
-if (process.env.JSX_WS_DUMP) {
-  // Scratch aid: dump every problem as JSON to the named file (used to build the allow-list).
-  const fs = require("node:fs");
-  fs.writeFileSync(
-    process.env.JSX_WS_DUMP,
-    JSON.stringify(tsxFiles(SRC).flatMap((f) => findProblems(f, readFileSync(f, "utf8"))), null, 1),
-  );
-}
 
 describe("JSX copy keeps the spaces between words", () => {
   const FILES = tsxFiles(SRC);
@@ -215,14 +212,7 @@ describe("JSX copy keeps the spaces between words", () => {
       seen.add(key);
     }
     // Every entry must still match a real boundary, so a stale entry can't hide a future one.
-    const all = FILES.flatMap((f) => {
-      const saved = ALLOWED.splice(0, ALLOWED.length);
-      try {
-        return findProblems(f, readFileSync(f, "utf8"));
-      } finally {
-        ALLOWED.push(...saved);
-      }
-    });
+    const all = FILES.flatMap((f) => findProblems(f, readFileSync(f, "utf8"), []));
     for (const a of ALLOWED) expect(all.some((p) => p.file === a.file && p.left === a.left && p.right === a.right), `${a.file}: ${a.left} || ${a.right}`).toBe(true);
   });
 
@@ -299,24 +289,22 @@ describe("JSX copy keeps the spaces between words", () => {
       const jsx = `<p>\n  Use <code>a</code>\n  to fetch.\n</p>`;
       const file = join(SRC, "app/t.tsx");
       const entry = { file: "app/t.tsx", kind: "newline-boundary" as const, left: "<code>a</code>", right: "to fetch.", reason: "Test only: this exact boundary is intended." };
-      const run = () => describeProblems(findProblems(file, `export const T = () => (\n${jsx}\n);`));
-      expect(run()).toHaveLength(1);
-      ALLOWED.push(entry);
-      try {
-        expect(run()).toEqual([]);
-        // A substring or a different boundary in the same file is not covered.
-        ALLOWED.splice(0, ALLOWED.length, { ...entry, right: "to fetch" });
-        expect(run()).toHaveLength(1);
-        ALLOWED.splice(0, ALLOWED.length, { ...entry, left: "code" });
-        expect(run()).toHaveLength(1);
-        ALLOWED.splice(0, ALLOWED.length, { ...entry, file: "app/other.tsx" });
-        expect(run()).toHaveLength(1);
-        // An entity can't be allow-listed.
-        ALLOWED.splice(0, ALLOWED.length, { ...entry, kind: "newline-boundary", left: "", right: "It&rsquo;s here" });
-        expect(describeProblems(findProblems(file, `export const T = () => (\n<p>It&rsquo;s here</p>\n);`))).toHaveLength(1);
-      } finally {
-        ALLOWED.splice(0, ALLOWED.length);
-      }
+      const run = (allowed: Allowed[]) => describeProblems(findProblems(file, `export const T = () => (\n${jsx}\n);`, allowed));
+      expect(run([])).toHaveLength(1);
+      expect(run([entry])).toEqual([]);
+      // A substring or a different boundary in the same file is not covered.
+      expect(run([{ ...entry, right: "to fetch" }])).toHaveLength(1);
+      expect(run([{ ...entry, left: "code" }])).toHaveLength(1);
+      expect(run([{ ...entry, file: "app/other.tsx" }])).toHaveLength(1);
+      // An entity can't be allow-listed.
+      const withEntity = describeProblems(findProblems(file, `export const T = () => (\n<p>It&rsquo;s here</p>\n);`, [{ ...entry, left: "", right: "It&rsquo;s here" }]));
+      expect(withEntity).toHaveLength(1);
+    });
+
+    it("sees a line break next to a JSX comment (a comment doesn't hide the boundary)", () => {
+      expect(check(`<p>\n  <code>a</code>\n  {/* note */}\n  to fetch.\n</p>`)).toHaveLength(1);
+      expect(check(`<p>\n  Use\n  {/* note */}\n  <code>a</code>\n</p>`)).toHaveLength(1);
+      expect(check(`<p>\n  <code>a</code>{" "}\n  {/* note */}\n  to fetch.\n</p>`)).toEqual([]);
     });
   });
 });
