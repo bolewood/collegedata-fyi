@@ -146,7 +146,7 @@ export function RoundsStep({
     return (
       <StepShell>
         <p style={{ color: "var(--ink-2)" }}>
-          The school evidence file couldn&apos;t load — check your connection
+          The school evidence file couldn't load — check your connection
           and try again. Your profile is untouched.
         </p>
         <button type="button" className="cd-btn" style={{ minHeight: 44 }}
@@ -174,7 +174,7 @@ export function RoundsStep({
       {round.zip_unresolved && (
         <div className="cd-card" style={{ padding: "12px 16px", margin: "0 0 16px", maxWidth: "64ch" }}>
           <p style={{ margin: 0, fontSize: 14, color: "var(--ink-2)" }}>
-            We couldn&apos;t place ZIP {session.geography?.zip} — all distance
+            We couldn't place ZIP {session.geography?.zip} — all distance
             settings are off for this round rather than guessing.
           </p>
           <button type="button" className="cd-btn cd-btn--ghost" style={{ minHeight: 44, marginTop: 8 }}
@@ -189,7 +189,7 @@ export function RoundsStep({
       {round.schools.length === 0 ? (
         <div className="cd-card" style={{ padding: "16px 20px", margin: "0 0 16px", maxWidth: "64ch" }}>
           <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--ink-2)" }}>
-            You&apos;ve seen every school your current boundaries and interests
+            You've seen every school your current boundaries and interests
             allow. Two reversible ways to keep going: widen your distance
             limit, or add another interest angle. Your shelf and profile are
             untouched.
@@ -429,7 +429,7 @@ function RoundCard({
                 className="meta"
                 style={{ cursor: "pointer", fontSize: 11, padding: "8px 0", display: "inline-block" }}
               >
-                source &amp; limits
+                source & limits
               </summary>
               <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--ink-3)" }}>
                 {r.evidence_class} data, {r.data_year}. {r.limitation}
@@ -499,7 +499,7 @@ function RoundCard({
         tunable.length === 0 ? (
           <div style={{ marginTop: 12 }}>
             <p style={{ fontSize: 14, color: "var(--ink-2)", margin: 0 }}>
-              This school matched on your academic interest alone — there&apos;s
+              This school matched on your academic interest alone — there's
               no preference to turn up yet.
             </p>
             <button type="button" className="cd-btn cd-btn--ghost" style={{ minHeight: 44, marginTop: 8 }}

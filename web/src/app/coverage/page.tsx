@@ -110,7 +110,7 @@ export default async function CoveragePage() {
             usable public source turning up. That is different from saying the
             school never publishes one: CDS files are voluntary, and some are
             posted in places automated discovery cannot reliably reach.
-            <em> Not checked yet</em> means we haven&rsquo;t checked this
+            <em> Not checked yet</em> means we haven’t checked this
             school yet.
           </p>
           <p style={{ margin: 0 }}>
@@ -121,7 +121,7 @@ export default async function CoveragePage() {
             Federal numbers stay labeled as federal.
           </p>
           <p style={{ margin: 0 }}>
-            Know where a missing report is posted? Open the school&rsquo;s page
+            Know where a missing report is posted? Open the school’s page
             and <Link href="/feedback">send us the link</Link> so we can archive
             it and update this table.
           </p>

@@ -21,7 +21,7 @@ describe("Wave 2 product copy", () => {
 
     const browser = src("components/SchoolBrowser.tsx");
     expect(browser).toContain("Building a list? Use Match.");
-    expect(browser).toContain("Couldn&apos;t load");
+    expect(browser).toContain("Couldn't load");
     expect(browser).toContain("Try again in a moment.");
     expect(browser).not.toMatch(/Browser query failed/);
     expect(browser).not.toMatch(/Looking for fit ranking/);
@@ -75,7 +75,7 @@ describe("Wave 2 product copy", () => {
     const coverage = src("app/coverage/page.tsx");
     expect(coverage).toContain('title: "Coverage"');
     expect(coverage).toMatch(/federal student aid/i);
-    expect(coverage).toContain("haven&rsquo;t checked this");
+    expect(coverage).toContain("haven’t checked this");
     expect(coverage).toContain("Federal numbers stay labeled as federal");
     expect(coverage).not.toMatch(/Title-IV/);
     expect(coverage).not.toMatch(/resolver has not scanned/);

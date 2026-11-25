@@ -138,7 +138,7 @@ export function SchoolTable({ schools }: { schools: SchoolSummary[] }) {
       </div>
       {filtered.length === 0 && (
         <p style={{ marginTop: 28, maxWidth: 520, color: "var(--ink-2)", lineHeight: 1.55 }}>
-          No reports on file match &ldquo;{search}.&rdquo; Try the site search —
+          No reports on file match “{search}.” Try the site search —
           schools without a report still have a page with the federal numbers.
         </p>
       )}

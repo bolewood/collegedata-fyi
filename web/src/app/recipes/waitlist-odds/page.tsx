@@ -72,7 +72,7 @@ export default function WaitlistOddsPage() {
             row in the corpus, bucketed by C1 selectivity and by federal
             control, size, and Carnegie class. High-volume near-total admit
             rows are flagged as data-quality caveats, not dropped silently.
-            Inspired by Roshan Fernandez&apos;s{" "}
+            Inspired by Roshan Fernandez's{" "}
             <TrackedLink
               external
               href={WSJ_URL}

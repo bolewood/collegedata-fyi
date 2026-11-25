@@ -155,7 +155,7 @@ export default function AdmissionStrategyMethodologyPage() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            D&apos;Amico et al v. Consortium on Financing Higher Education et al
+            D'Amico et al v. Consortium on Financing Higher Education et al
           </a>
           , filed August 8, 2025 in the District of Massachusetts.
         </p>

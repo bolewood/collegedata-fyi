@@ -51,7 +51,7 @@ export default function AboutPage() {
         <ul>
           <li>
             Look up any college and read its latest published report, or its
-            federal data when the school hasn&apos;t published a Common Data
+            federal data when the school hasn't published a Common Data
             Set.
           </li>
           <li>Download the original PDF or spreadsheet the college posted.</li>
@@ -73,7 +73,7 @@ export default function AboutPage() {
         <p>
           Commercial college-search sites can be helpful, though many require an
           account, hide where a figure came from, or build a student profile
-          along the way. Here, each school&apos;s own report sits next to
+          along the way. Here, each school's own report sits next to
           federal data, every figure links back to its source, and nothing sits
           behind a login or paywall.
         </p>
@@ -111,7 +111,7 @@ export default function AboutPage() {
           <Link href="/api">public API</Link>. The structured extracts we
           derive are licensed CC BY 4.0, so you can reuse them with{" "}
           <Link href="/api#credit">credit</Link>. {SOURCE_OWNERSHIP_SENTENCE} If
-          you&apos;re curious how files
+          you're curious how files
           are parsed or want to check known data quirks, GitHub is the best
           place to look.
           {isUsageLaunched() ? (
