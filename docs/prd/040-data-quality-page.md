@@ -171,7 +171,7 @@ uses fields already selected into the client rows by both query paths in
 `web/src/lib/queries.ts`.
 
 1. **Summary strip.**
-   - **This year's reports on file** (added by the amendment), first in the
+   - **{year} reports on file** (added by the amendment), first in the
      strip: current-year renewal, as defined in the
      [amendment](#amendment-2026-11-24-current-year-renewal). For example,
      "Of the 479 schools with a 2024-25 report on file, 364 also have a
@@ -378,7 +378,7 @@ path").
     alone can't say which. It does not lean on the M0 sample: of that sample's
     15 differing values, 5 (in 3 reports) are over 10%, and of those 3
     reports 2 had the number we compared in the school's file and 1
-    (Fairleigh Dickinson) was our scope error.
+    (Fairleigh Dickinson) was a university-wide file filed under two campus records, which the page now leaves out (`shared_file`).
 - **Table B, more checks** (`public_format` 4): under Table B, two tables with
   Table B's columns minus "Values" (one value per report). Same classes (match
   within 2%, no value, differs split over 2% to 10% and over 10%), same
@@ -497,7 +497,10 @@ The run JSON lacks what `--public` needs. The run writes a versioned
 - **`federal_left_out`:** the year's counts of single-campus reports and of
   reports with no IPEDS figures, among published reports. These can already
   be rebuilt from `documents[].sub_institutional` and the federal outcomes,
-  but should be emitted.
+  but should be emitted. The run JSON does not carry `shared_file` (reports
+  whose file is filed under more than one federal record, public format 5): it
+  needs every school's hashes at once, so `prepare_run` computes it for the
+  public snapshot.
 - **`forms`:** per year, the expected form year, whether
   `schemas/cds_schema_<year>.json` exists, and its field count. These come
   from local schema files, read at run time.
@@ -529,7 +532,7 @@ example, two 2023-24 spreadsheets were read by Tier 4.
 
   ```json
   {
-    "public_format": 4,
+    "public_format": 5,
     "snapshot_of": "2026-11-24T12:25:03Z",
     "scoreboard_run": "scoreboard-20261124T122503Z.json",
     "years": [{
@@ -539,8 +542,9 @@ example, two 2023-24 spreadsheets were read by Tier 4.
       "other_form_numbering": 71,
       "removed": 18,
       "no_file": 0,
+      "duplicate_file": 0,
       "set_aside_reasons": {"blank_form": 8, "too_little_read": 16, "wrong_file": 0},
-      "federal_left_out": {"single_campus": 1, "no_federal_figures": 17},
+      "federal_left_out": {"single_campus": 1, "shared_file": 0, "no_federal_figures": 17},
       "sections": {"reports": 0,
                    "rows": [{"section": "A", "questions": 0, "stored_median": 0, "usable_median": 0}]},
       "rows": [{
@@ -581,6 +585,21 @@ example, two 2023-24 spreadsheets were read by Tier 4.
   every year (`{"enrollment": I, "tuition": I}`, where `I` is `{loaded,
   data_year, single_campus, no_federal_figures}`). Required on 4, refused on 1
   to 3.
+
+  `public_format` 5 (the launch review) changes what is counted and adds three
+  keys: `duplicate_file` per year, `federal_left_out.shared_file` and, in each
+  `federal_checks` entry, `shared_file`. Required on 5, refused on 1 to 4, and
+  read as 0 there. Two rules apply to every consumer (`prepare_run`):
+  **(1) a file held twice by one school in one year counts once:** documents of
+  one school and year with the same `source_sha256` are one report; the kept
+  one is the published one, then the one read most recently (`newest_at`), then
+  the lowest document id; the others and their manifest entries are dropped and
+  counted in `duplicate_file`. A document with no hash is never grouped.
+  **(2) one file under more than one federal record is left out of every
+  federal comparison** (Table B, enrollment and tuition): a report whose
+  `source_sha256` another school's report of the same year also holds, with a
+  different IPEDS id on each, is `shared_file`. The left-out groups are
+  disjoint, in the order single campus, shared file, no federal figures.
 
   The row values are placeholders. The year-level values are from the
   2026-11-24 run.
@@ -667,7 +686,8 @@ the real header on row 1 and start with a UTF-8 BOM, like
   option recovered, and only if the user knew to pass it. The block was
   dropped.
 - **Data quality** is served by a static route,
-  `/data-quality/csv/[table]/[year]` (`reports`, `federal`, `totals`), built
+  `/data-quality/csv/[table]/[year]` (`reports`, `sections`, `federal`,
+  `enrollment`, `tuition`, `totals`), built
   from the committed snapshot with the `Link: <license>; rel="license"`
   header (`DATA_LICENSE_LINK_HEADER`). The route sets
   `dynamicParams = false`, so an unknown table or year is a 404, and the gate
@@ -736,7 +756,7 @@ both states. M2's improvements to `/coverage` don't depend on the gate.
   shared format-label map, and `ArchiveStatusHeader`, all behind the gate.
 - **M2, Coverage tab.** In order:
   - the header (gated tab);
-  - the "This year's reports on file" tile from the snapshot's `renewal`
+  - the "{year} reports on file" tile from the snapshot's `renewal`
     block;
   - the summary strip with the weighted share;
   - status wording;
@@ -839,7 +859,7 @@ postmortem's headline number. "Freshness" already means refresh timing here
 On 2026-11-24 it was 236 of 476 (50%) in the morning and 364 of 479 (76%)
 after the fixes.
 
-- **Coverage tab:** the "This year's reports on file" tile, first in the
+- **Coverage tab:** the "{year} reports on file" tile, first in the
   summary strip, read from the snapshot.
 - **M0:** a `renewal` block in the run and the public snapshot.
 - **M2:** the tile and its test.
@@ -897,7 +917,7 @@ checked.
 | Arkansas State University | 2024-25 | 11,568 / 9,207 / 1,977 | Same. Rows by sex sum to ours. | File matches our reading | p. 13 | applied, admitted | `7c31617c-ef1b-4c4a-bc3b-d8c3458b0212` |
 | Albion College | 2023-24 | 5,438 / 4,522 / 353 | Applied and admitted the same. Enrolled is 363: men 173, women 180, another gender 10. The run stored the total (363) but not the third row (10); `printed_admissions` prefers the rows by sex over the total, so it gave 353. | Our error (enrolled; the by-sex rows are preferred over the stored total, and the another-gender row was not read; related to #435, which covers another-gender cells not read from 2024-25 fillable PDFs) | p. 13 | enrolled | `564d6790-a3b8-4e3b-90c1-662d9eaa0278` |
 | University of Northern Colorado | 2023-24 | 9,479 / 8,880 / 1,229 | Same. Rows by sex sum to ours. | File matches our reading | p. 11 | applied | `2ecd118f-d64d-43af-bb26-973e6c19b6fc` |
-| Fairleigh Dickinson University, Metropolitan Campus | 2024-25 | 11,478 / 10,665 / 1,188 | Same. The file carries a residency total that is also the same. | File matches our reading. Scope gap on our side: the file is one campus, IPEDS reports the whole institution, and the report is not marked as a single unit (see questions). | p. 8 | applied, admitted, enrolled | `9ece97f5-8807-4579-8f33-234648ee1c95` |
+| Fairleigh Dickinson University, Metropolitan Campus | 2024-25 | 11,478 / 10,665 / 1,188 | Same. The file carries a residency total that is also the same. | File matches our reading. The file is university-wide, filed under two campus records (Florham and Metropolitan carry the same file; IPEDS reports the two campuses on their own at 5,652 and 5,826 applicants respectively), so neither record can be compared to it alone. We did not know this at the time of the sample; since the launch review the page leaves such files out (`shared_file`). The 2023-24 Metropolitan filing is the same kind of file but stays in Table B: Florham has no 2023-24 document, so the rule has no second record to see (#543). | p. 8 | applied, admitted, enrolled | `9ece97f5-8807-4579-8f33-234648ee1c95` |
 | Texas A&M University-Commerce | 2023-24 | 8,856 / 6,865 / 1,294 | Rows by sex sum to ours. The residency table's printed "Total" column reads 1,282 / 992 / 48, which is the total with the in-state column left out. | File matches our reading; the school's printed totals are wrong | p. 7 | applied, admitted, enrolled | `7b54793e-2ad7-4fee-a95a-86371a65cad2` |
 | University of Scranton | 2023-24 | 9,866 / 8,011 / 1,037 | Same. Rows by sex sum to ours. | File matches our reading | p. 19 | applied | `d1661d03-dc18-4cef-9249-7c84303f71bd` |
 
@@ -907,7 +927,7 @@ Totals, 10 reports:
 |---|---:|
 | File matches our reading (CDS extraction error ruled out) | 8 |
 | Our reading error (Albion) | 1 |
-| Our scope or metadata gap (Fairleigh Dickinson, Metropolitan Campus; file matches our reading) | 1 |
+| Our scope or metadata gap (Fairleigh Dickinson, Metropolitan Campus: one university-wide file filed under two campus records; file matches our reading) | 1 |
 
 So 2 of 10 are on our side (Albion's reading, Fairleigh Dickinson's scope), and
 for the other 8 the sample rules out a CDS extraction error but does not
@@ -1002,9 +1022,12 @@ These depend on the results. None is decided here.
      do not add to those totals.
    Should the page say anything about files like these, and should they be
    counted separately from "differs"?
-4. **One-unit filings not marked as such.** Fairleigh Dickinson, Metropolitan
-   Campus is one campus filed on its own; IPEDS reports the whole institution.
-   It is not in the sub-institutional list, so it sits in Table B. Is that a
+4. **One-unit filings not marked as such.** (Answered by the launch review:
+   Fairleigh Dickinson's file is university-wide and filed under two campus
+   records, which is now the `shared_file` rule. The question below was asked
+   before that was known.) Fairleigh Dickinson, Metropolitan Campus was read
+   as one campus filed on its own; it is not in the sub-institutional list, so
+   it sat in Table B. Is that a
    data question to fix before launch, and does Table B's note about left-out
    one-unit reports need to say the list may be incomplete?
 5. **2023-24 financial aid count.** The text says 215; the run has 217. Use

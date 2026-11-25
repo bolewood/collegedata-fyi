@@ -175,7 +175,7 @@ SUM_CHECK_VERSION = 2
 # Public format 3 adds `sections` per year (fields stored and usable answers by CDS section A to J).
 # Public format 4 adds the B1 enrollment and G1 tuition checks against IPEDS: `checks` per row and total,
 # `federal_checks` per year.
-PUBLIC_FORMAT = 4
+PUBLIC_FORMAT = 5
 # `value_status` values the projection writes (project_browser_data.parse_field_value). A usable
 # answer is a `reported` one: a value a reader can use. `parse_error` is a cell we could not read
 # as the kind of value its question takes, `not_applicable` is a school's "N/A" (a real answer,
@@ -836,20 +836,87 @@ def is_published(doc: dict[str, Any]) -> bool:
     return bool(doc["producer"]) and doc["flag"] not in HIDDEN_FLAGS
 
 
+def federal_excluded(d: dict[str, Any]) -> bool:
+    """A published report is left out of every federal comparison when it is filed for one campus or unit
+    (IPEDS reports the whole institution) or when its file is shared with another school's record
+    (`shared_file`, set by `prepare_run`). One predicate, so no table can forget one of the two."""
+    return bool(d["sub_institutional"]) or bool(d.get("shared_file"))
+
+
 def federal_left_out(documents: list[dict[str, Any]], year: str) -> dict[str, int]:
-    """Among a year's published reports: those filed for one campus or unit
-    (IPEDS reports the whole institution) and those whose school has no IPEDS
-    admissions figure to compare, and those we could not compare because we
-    have no checked C1 mapping for the form they are numbered by
-    (`federal_compared` false; a run without the key compared every report).
-    The three, with the reports that have an outcome, add up to the published
-    reports (`no_federal_figures` is only "IPEDS has no positive figure")."""
+    """Among a year's published reports: those filed for one campus or unit (IPEDS reports the whole
+    institution), those whose one file is filed under more than one federal record (`shared_file`), those whose
+    school has no IPEDS admissions figure to compare, and those we could not compare because we have no checked
+    C1 mapping for the form they are numbered by (`federal_compared` false; a run without the key compared every
+    report). The groups are disjoint, taken in that order, and with the reports that have an outcome they add up
+    to the published reports (`no_federal_figures` is only "IPEDS has no positive figure")."""
     published = [d for d in documents if d["year"] == year and is_published(d)]
-    rest = [d for d in published if not d["sub_institutional"]]
+    single = [d for d in published if d["sub_institutional"]]
+    shared = [d for d in published if not d["sub_institutional"] and d.get("shared_file")]
+    rest = [d for d in published if not federal_excluded(d)]
     comparable = [d for d in rest if d.get("federal_compared", True)]
-    return {"single_campus": len(published) - len(rest),
+    return {"single_campus": len(single), "shared_file": len(shared),
             "no_federal_figures": sum(1 for d in comparable if not any(d["federal"].values())),
             "not_compared": len(rest) - len(comparable)}
+
+
+_TIMESTAMP = re.compile(r"(\d{4}-\d\d-\d\d)(?:T(\d\d:\d\d:\d\d)(?:\.(\d+))?(Z|[+-]\d\d:\d\d)?)?")
+
+
+def _newest_at(d: dict[str, Any]) -> float:
+    """`newest_at` as a UTC timestamp. The database writes 5 and 6 fractional digits and Python 3.9's `fromisoformat`
+    accepts only 3 or 6, so it is parsed by hand: a wrong parse here would silently keep the older copy. A value
+    that does not parse stops the run; none at all sorts first."""
+    text = d.get("newest_at")
+    if not text:
+        return 0.0
+    m = _TIMESTAMP.fullmatch(str(text))
+    if not m:
+        raise SystemExit(f"--public: document {d['document_id']} has newest_at {text!r}, which is not a timestamp")
+    day, clock, fraction, zone = m.groups()
+    zone = "+00:00" if zone in (None, "Z") else zone
+    return dt.datetime.fromisoformat(f"{day}T{clock or '00:00:00'}.{(fraction or '0')[:6].ljust(6, '0')}{zone}").timestamp()
+
+
+def prepare_run(run: dict[str, Any]) -> dict[str, Any]:
+    """The run as the public page counts it (a copy; the run is not changed): the same file held twice by one
+    school in one year counts once, and a file filed under more than one federal record is marked `shared_file`.
+    Used by `build_public` and `build_reports` alike, so the page and its lists can never disagree.
+
+    1. Duplicate file: documents of one school and year with the same `source_sha256` are one report. The kept one
+       is the published one, then the one read most recently (`newest_at`), then the lowest document id; the
+       others, and their manifest entries, are dropped and counted in `duplicates[year]`. A document with no hash
+       is never grouped.
+    2. Shared file: among the remaining documents of a year, one whose `source_sha256` is also held by another
+       school with a different IPEDS id (both ids present) is a `shared_file` report (both of them are)."""
+    documents = [dict(d) for d in run["documents"]]
+    groups: dict[tuple[str, str, str], list[dict[str, Any]]] = defaultdict(list)
+    for d in documents:
+        if d.get("source_sha256"):
+            groups[(d["school_id"], d["year"], d["source_sha256"])].append(d)
+    dropped: set[str] = set()
+    duplicates: Counter = Counter()
+    for group in groups.values():
+        if len(group) < 2:
+            continue
+        keep = min(group, key=lambda d: (not is_published(d), -_newest_at(d), d["document_id"]))
+        for d in group:
+            if d is not keep:
+                dropped.add(d["document_id"])
+                duplicates[d["year"]] += 1
+    kept = [d for d in documents if d["document_id"] not in dropped]
+    holders: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
+    for d in kept:
+        # Only published reports can share a file: a set-aside copy (a wrong file, a blank form) is not a second federal record.
+        if d.get("source_sha256") and is_published(d):
+            holders[(d["year"], d["source_sha256"])].append(d)
+    for group in holders.values():
+        for d in group:
+            if any(o["school_id"] != d["school_id"] and o.get("ipeds_id") and d.get("ipeds_id")
+                   and o["ipeds_id"] != d["ipeds_id"] for o in group):
+                d["shared_file"] = True
+    return {**run, "documents": kept, "duplicates": dict(duplicates),
+            "manifest": [m for m in run["manifest"] if m["document_id"] not in dropped]}
 
 
 def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: float,
@@ -1058,7 +1125,9 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
         "generated_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "years": list(years),
         "manifest": [manifest_entry(d) for d in sorted(all_documents, key=lambda d: d["document_id"])],
-        "federal_left_out": {year: federal_left_out(documents, year) for year in years},
+        # The run stores what it can know alone; shared files are found later, across schools, by `prepare_run`.
+        "federal_left_out": {year: {k: v for k, v in federal_left_out(documents, year).items() if k != "shared_file"}
+                             for year in years},
         "forms": forms,
         "renewal": renewal,
         "current_tier4_version": current_tier4_version(),
@@ -1442,13 +1511,13 @@ PUBLIC_SPEC = {
         # Present only for a year whose form has no sums to check for some table
         # (an older form): those tables' "can't check" counts are not a result.
         "sum_checks_unavailable": _Optional([_TEXT]),
-        "federal_fall_loaded": _FLAG, "other_form_numbering": _COUNT, "removed": _COUNT, "no_file": _COUNT,
+        "federal_fall_loaded": _FLAG, "other_form_numbering": _COUNT, "removed": _COUNT, "no_file": _COUNT, "duplicate_file": _COUNT,
         "set_aside_reasons": {k: _COUNT for k in SET_ASIDE_REASON.values()},
         # not_compared is omitted when 0, so years without it are unchanged
-        "federal_left_out": {"single_campus": _COUNT, "no_federal_figures": _COUNT, "not_compared": _Optional(_COUNT)},
+        "federal_left_out": {"single_campus": _COUNT, "shared_file": _COUNT, "no_federal_figures": _COUNT, "not_compared": _Optional(_COUNT)},
         "rows": [{"format": _TEXT, "label": _TEXT, **_ROW_SPEC}],
         "total": _ROW_SPEC,
-        "federal_checks": {name: {"loaded": _FLAG, "data_year": _COUNT, "single_campus": _COUNT, "no_federal_figures": _COUNT}
+        "federal_checks": {name: {"loaded": _FLAG, "data_year": _COUNT, "single_campus": _COUNT, "shared_file": _COUNT, "no_federal_figures": _COUNT}
                            for name in ("enrollment", "tuition")},
         # Empty `rows` for a year whose form has no full field schema.
         "sections": {"reports": _COUNT,
@@ -1608,7 +1677,7 @@ def federal_check_counts(published: list[dict[str, Any]], check: str, loaded: bo
     counts = Counter()
     if loaded:
         for d in published:
-            if d["sub_institutional"]:
+            if federal_excluded(d):
                 continue
             ours, fed = federal_check_pair(d, check)
             outcome = classify_federal(ours, fed)
@@ -1634,10 +1703,12 @@ def federal_check_year(year: str, published: list[dict[str, Any]], check: str, c
     recorded = {d["federal_extra"][n]["federal_data_year"] for d in published for n in candidates}
     if recorded - {start}:
         raise SystemExit(f"--public: {year}: the run looked up {check} for IPEDS year {sorted(recorded)}, not {start}")
-    rest = [d for d in published if not d["sub_institutional"]]
+    rest = [d for d in published if not federal_excluded(d)]
     with_figure = [d for d in rest if (federal_check_pair(d, check)[1] or 0) > 0]
     loaded = compared and bool(with_figure)
-    return {"loaded": loaded, "data_year": start, "single_campus": len(published) - len(rest),
+    single = sum(1 for d in published if d["sub_institutional"])
+    return {"loaded": loaded, "data_year": start, "single_campus": single,
+            "shared_file": len(published) - len(rest) - single,
             "no_federal_figures": len(rest) - len(with_figure) if loaded else 0}
 
 
@@ -1647,12 +1718,12 @@ def _row_counts(classes: Counter, published: list[dict[str, Any]], federal_loade
     # Reports filed for one campus or unit are left out of the federal comparison
     # (they are counted in federal_left_out.single_campus instead).
     outcomes = [[o for o in d["federal"].values() if o]
-                for d in published if not d["sub_institutional"]] if federal_loaded else []
+                for d in published if not federal_excluded(d)] if federal_loaded else []
     federal_values = Counter(o for each in outcomes for o in each)
     bands = Counter()
     if federal_loaded:
         for d in published:
-            if d["sub_institutional"]:
+            if federal_excluded(d):
                 continue
             for metric, outcome in d["federal"].items():
                 if not outcome:
@@ -1772,6 +1843,8 @@ def build_public(run: dict[str, Any], run_name: str) -> dict[str, Any]:
     """The public snapshot (PRD 040 "Public JSON shape"): aggregates and
     labels only, from one run. No database, no per-document rows."""
     require_public_run(run)
+    raw_run = run
+    run = prepare_run(raw_run)
     served = {d["document_id"]: d for d in run["documents"]}
     manifest_ids = {m["document_id"] for m in run["manifest"]}
     if len(manifest_ids) != len(run["manifest"]):
@@ -1788,9 +1861,10 @@ def build_public(run: dict[str, Any], run_name: str) -> dict[str, Any]:
         if len(by_class["published"]) != len(published_docs):
             raise SystemExit(f"--public: {year}: the manifest classifies {len(by_class['published'])} reports as "
                              f"published, the run's documents say {len(published_docs)}")
-        left_out = federal_left_out(run["documents"], year)
-        if left_out != {"not_compared": 0, **run["federal_left_out"][year]}:
+        raw = federal_left_out(raw_run["documents"], year)
+        if {k: v for k, v in raw.items() if k != "shared_file"} != {"not_compared": 0, **run["federal_left_out"][year]}:
             raise SystemExit(f"--public: {year}: federal_left_out in the run disagrees with its documents")
+        left_out = federal_left_out(run["documents"], year)
         loaded = run["federal_schools"].get(year, 0) > 0
         if not loaded:
             left_out = {**left_out, "no_federal_figures": 0}
@@ -1821,6 +1895,7 @@ def build_public(run: dict[str, Any], run_name: str) -> dict[str, Any]:
             "federal_fall_loaded": loaded,
             "other_form_numbering": sum(1 for d in published_docs if d["schema_version"] != year),
             "removed": classes["removed"], "no_file": classes["no_file"],
+            "duplicate_file": run["duplicates"].get(year, 0),
             "set_aside_reasons": {name: reasons[name] for name in SET_ASIDE_REASON.values()},
             "federal_left_out": left_out,
             "rows": rows,
@@ -1877,6 +1952,7 @@ def build_reports(run: dict[str, Any], public: dict[str, Any], names: dict[str, 
     """One row per report a count in the public snapshot counts, and only what a count needs: ids, school, format,
     status, and for a published report the outcome in each table. No values. `public` (from `build_public`) says
     which checks are loaded for a year, so a row carries an outcome exactly when the snapshot counts it."""
+    run = prepare_run(run)
     served = {d["document_id"]: d for d in run["documents"]}
     years_out: dict[str, list[dict[str, Any]]] = {}
     used: set[str] = set()
@@ -1905,13 +1981,13 @@ def build_reports(run: dict[str, Any], public: dict[str, Any], names: dict[str, 
             if status == "published":
                 if public_format_key(doc["format"]) != fmt:
                     raise SystemExit(f"--public: {entry['document_id']} has format {doc['format']!r} but the manifest says {entry['source_format']!r}")
-                counted = loaded and not doc["sub_institutional"]
+                counted = loaded and not federal_excluded(doc)
                 row["fed"] = [federal_code(doc["federal_values"][m]["ours"], Decimal(doc["federal_values"][m]["federal"])
                                            if doc["federal_values"][m]["federal"] is not None else None)
                               if counted and doc["federal"][m] else None for m in FEDERAL_KEYS]
                 row["sums"] = [(SUM_OUTCOME_KEY if t in NEAR_MISS_TABLES else AID_OUTCOME_KEY)[doc["sums"][t]] for t in SUM_TABLES]
                 row["checks"] = [federal_code(*federal_check_pair(doc, name))
-                                 if year_block["federal_checks"][name]["loaded"] and not doc["sub_institutional"] else None
+                                 if year_block["federal_checks"][name]["loaded"] and not federal_excluded(doc) else None
                                  for name in CHECK_NAMES]
             if school is not None:
                 used.add(school)

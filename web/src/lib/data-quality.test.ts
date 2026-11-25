@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V1, FIXTURE_SNAPSHOT_V2, FIXTURE_SNAPSHOT_V3, emptyYear } from "./__fixtures__/data-quality-snapshot";
+import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V1, FIXTURE_SNAPSHOT_V2, FIXTURE_SNAPSHOT_V3,
+  FIXTURE_SNAPSHOT_V4, emptyYear } from "./__fixtures__/data-quality-snapshot";
 import {
   DATA_QUALITY_LAUNCH_DATE,
   MIN_REPORTS_FOR_RATE,
@@ -279,6 +280,25 @@ describe("enrollment and tuition against federal figures (public_format 4)", () 
     bad((s) => (y(s).federal_checks!.tuition.single_campus += 1), /reports checked \+ left out don't add up/);
   });
 
+  it("counts a shared file among the reports left out, and requires the format 5 keys (and refuses them before 5)", () => {
+    bad((s) => (y(s).federal_checks!.enrollment.shared_file = 1), /reports checked \+ left out don't add up/);
+    bad((s) => (y(s).federal_left_out.shared_file = 1), /federal reports checked \+ left out don't add up/);
+    bad((s) => delete (y(s).federal_left_out as { shared_file?: number }).shared_file, /shared_file must be a non-negative integer/);
+    bad((s) => delete y(s).federal_checks!.tuition.shared_file, /shared_file must be a non-negative integer/);
+    bad((s) => delete y(s).duplicate_file, /duplicate_file must be a non-negative integer/);
+    const v4 = () => JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT_V4)) as QualitySnapshot;
+    expect(() => select(v4())).not.toThrow();
+    for (const mutate of [
+      (s: QualitySnapshot) => (y(s).duplicate_file = 0),
+      (s: QualitySnapshot) => (y(s).federal_left_out.shared_file = 0),
+      (s: QualitySnapshot) => (y(s).federal_checks!.enrollment.shared_file = 0),
+    ]) {
+      const snap = v4();
+      mutate(snap);
+      expect(() => select(snap)).toThrow(/unexpected key/);
+    }
+  });
+
   it("requires zero counts in a year with no IPEDS figures for a check, and the right IPEDS year", () => {
     bad((s) => {
       for (const r of [y(s, "2024-25").rows[0], y(s, "2024-25").total]) { r.checks!.tuition.reports = 1; r.checks!.tuition.matches = 1; }
@@ -289,19 +309,26 @@ describe("enrollment and tuition against federal figures (public_format 4)", () 
 
   it("still checks who was left out where IPEDS figures aren't loaded, and that one campus can't exceed the published", () => {
     bad((s) => (y(s, "2024-25").federal_checks!.tuition.no_federal_figures = 1), /no_federal_figures must be 0 for a year with no IPEDS figures/);
-    bad((s) => (y(s, "2025-26").federal_checks!.enrollment.single_campus = y(s, "2025-26").total.status.published + 1), /single_campus exceeds the total's published/);
+    bad((s) => (y(s, "2025-26").federal_checks!.enrollment.single_campus = y(s, "2025-26").total.status.published + 1), /single_campus \+ shared_file exceeds the total's published/);
+    // A shared file counts toward the bound too, in a year where nothing is loaded.
+    bad((s) => (y(s, "2025-26").federal_checks!.enrollment.shared_file = y(s, "2025-26").total.status.published + 1), /single_campus \+ shared_file exceeds the total's published/);
+    bad((s) => {
+      const info = y(s, "2025-26").federal_checks!.enrollment;
+      info.single_campus = y(s, "2025-26").total.status.published;
+      info.shared_file = 1;
+    }, /single_campus \+ shared_file exceeds the total's published/);
     // The fixture itself: a year with no IPEDS admissions figures leaves nobody out as one campus (as Table B).
     expect(y(FIXTURE_SNAPSHOT, "2025-26").federal_checks).toEqual({
-      enrollment: { loaded: false, data_year: 2025, single_campus: 0, no_federal_figures: 0 },
-      tuition: { loaded: false, data_year: 2026, single_campus: 0, no_federal_figures: 0 },
+      enrollment: { loaded: false, data_year: 2025, single_campus: 0, shared_file: 0, no_federal_figures: 0 },
+      tuition: { loaded: false, data_year: 2026, single_campus: 0, shared_file: 0, no_federal_figures: 0 },
     });
   });
 
   it("reports which years have the checks", () => {
     expect(FIXTURE_SNAPSHOT.years.every(hasFederalChecks)).toBe(true);
     expect(y(FIXTURE_SNAPSHOT, "2024-25").federal_checks).toEqual({
-      enrollment: { loaded: true, data_year: 2024, single_campus: 1, no_federal_figures: 0 },
-      tuition: { loaded: false, data_year: 2025, single_campus: 1, no_federal_figures: 0 },
+      enrollment: { loaded: true, data_year: 2024, single_campus: 1, shared_file: 0, no_federal_figures: 0 },
+      tuition: { loaded: false, data_year: 2025, single_campus: 1, shared_file: 0, no_federal_figures: 0 },
     });
   });
 
@@ -373,15 +400,16 @@ describe("snapshot selection", () => {
   });
 
   it("fails on a public_format the page doesn't know, even before launch", () => {
-    const bad = { ...clone(), public_format: 5 };
+    const bad = { ...clone(), public_format: 6 };
     expect(() => selectSnapshot([{ name: "x.json", json: bad }])).toThrow(/public_format/);
   });
 
-  it("reads public_format 1 to 4", () => {
+  it("reads public_format 1 to 5", () => {
     expect(selectSnapshot([{ name: "one.json", json: FIXTURE_SNAPSHOT_V1 }]).public_format).toBe(1);
     expect(selectSnapshot([{ name: "two.json", json: FIXTURE_SNAPSHOT_V2 }]).public_format).toBe(2);
     expect(selectSnapshot([{ name: "three.json", json: FIXTURE_SNAPSHOT_V3 }]).public_format).toBe(3);
-    expect(selectSnapshot([{ name: "four.json", json: FIXTURE_SNAPSHOT }]).public_format).toBe(4);
+    expect(selectSnapshot([{ name: "four.json", json: FIXTURE_SNAPSHOT_V4 }]).public_format).toBe(4);
+    expect(selectSnapshot([{ name: "five.json", json: FIXTURE_SNAPSHOT }]).public_format).toBe(5);
   });
 
   it("fails on a snapshot with no renewal block or an empty renewal denominator", () => {

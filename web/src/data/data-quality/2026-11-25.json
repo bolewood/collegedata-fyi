@@ -1,5 +1,5 @@
 {
- "public_format": 4,
+ "public_format": 5,
  "snapshot_of": "2026-11-25T14:09:26Z",
  "scoreboard_run": "scoreboard-20261125T140926Z.json",
  "renewal": {
@@ -21,9 +21,10 @@
     "questions": 1053
    },
    "federal_fall_loaded": true,
-   "other_form_numbering": 66,
+   "other_form_numbering": 65,
    "removed": 18,
    "no_file": 0,
+   "duplicate_file": 2,
    "set_aside_reasons": {
     "blank_form": 8,
     "too_little_read": 20,
@@ -31,6 +32,7 @@
    },
    "federal_left_out": {
     "single_campus": 1,
+    "shared_file": 0,
     "no_federal_figures": 18
    },
    "rows": [
@@ -38,56 +40,56 @@
      "format": "pdf_flat",
      "label": "standard PDF",
      "status": {
-      "published": 405,
+      "published": 403,
       "set_aside": 14,
       "couldnt_read": 5,
       "not_read_yet": 0
      },
      "fields_stored": {
-      "median": 411,
+      "median": 410,
       "p10": 217
      },
      "federal": {
-      "reports": 387,
-      "values": 1161,
-      "matches": 994,
+      "reports": 385,
+      "values": 1155,
+      "matches": 988,
       "no_value": 66,
       "differs": 101,
       "differs_2_to_10pct": 59,
       "differs_over_10pct": 42
      },
      "totals": {
-      "reports": 405,
+      "reports": 403,
       "B1": {
-       "adds_up": 323,
+       "adds_up": 321,
        "under_2pct": 3,
        "off_more": 7,
        "cant_check": 72
       },
       "C1": {
-       "adds_up": 234,
+       "adds_up": 233,
        "under_2pct": 52,
-       "off_more": 37,
+       "off_more": 36,
        "cant_check": 82
       },
       "H1": {
        "adds_up": 143,
-       "doesnt": 47,
-       "cant_check": 215
+       "doesnt": 46,
+       "cant_check": 214
       }
      },
      "checks": {
       "enrollment": {
-       "reports": 404,
-       "matches": 310,
+       "reports": 402,
+       "matches": 308,
        "no_value": 62,
        "differs": 32,
        "differs_2_to_10pct": 21,
        "differs_over_10pct": 11
       },
       "tuition": {
-       "reports": 404,
-       "matches": 202,
+       "reports": 402,
+       "matches": 200,
        "no_value": 106,
        "differs": 96,
        "differs_2_to_10pct": 60,
@@ -403,56 +405,56 @@
    ],
    "total": {
     "status": {
-     "published": 432,
+     "published": 430,
      "set_aside": 28,
      "couldnt_read": 44,
      "not_read_yet": 0
     },
     "fields_stored": {
-     "median": 415,
-     "p10": 215
+     "median": 412,
+     "p10": 213
     },
     "federal": {
-     "reports": 413,
-     "values": 1239,
-     "matches": 1055,
+     "reports": 411,
+     "values": 1233,
+     "matches": 1049,
      "no_value": 68,
      "differs": 116,
      "differs_2_to_10pct": 70,
      "differs_over_10pct": 46
     },
     "totals": {
-     "reports": 432,
+     "reports": 430,
      "B1": {
-      "adds_up": 329,
+      "adds_up": 327,
       "under_2pct": 3,
       "off_more": 7,
       "cant_check": 93
      },
      "C1": {
-      "adds_up": 246,
+      "adds_up": 245,
       "under_2pct": 55,
-      "off_more": 43,
+      "off_more": 42,
       "cant_check": 88
      },
      "H1": {
       "adds_up": 159,
-      "doesnt": 49,
-      "cant_check": 224
+      "doesnt": 48,
+      "cant_check": 223
      }
     },
     "checks": {
      "enrollment": {
-      "reports": 431,
-      "matches": 317,
+      "reports": 429,
+      "matches": 315,
       "no_value": 82,
       "differs": 32,
       "differs_2_to_10pct": 21,
       "differs_over_10pct": 11
      },
      "tuition": {
-      "reports": 430,
-      "matches": 212,
+      "reports": 428,
+      "matches": 210,
       "no_value": 117,
       "differs": 101,
       "differs_2_to_10pct": 63,
@@ -461,7 +463,7 @@
     }
    },
    "sections": {
-    "reports": 366,
+    "reports": 365,
     "rows": [
      {
       "section": "A",
@@ -530,12 +532,14 @@
      "loaded": true,
      "data_year": 2023,
      "single_campus": 1,
+     "shared_file": 0,
      "no_federal_figures": 0
     },
     "tuition": {
      "loaded": true,
      "data_year": 2024,
      "single_campus": 1,
+     "shared_file": 0,
      "no_federal_figures": 1
     }
    }
@@ -551,6 +555,7 @@
    "other_form_numbering": 0,
    "removed": 17,
    "no_file": 0,
+   "duplicate_file": 4,
    "set_aside_reasons": {
     "blank_form": 4,
     "too_little_read": 10,
@@ -558,6 +563,7 @@
    },
    "federal_left_out": {
     "single_campus": 1,
+    "shared_file": 2,
     "no_federal_figures": 18
    },
    "rows": [
@@ -565,7 +571,7 @@
      "format": "pdf_flat",
      "label": "standard PDF",
      "status": {
-      "published": 348,
+      "published": 344,
       "set_aside": 9,
       "couldnt_read": 0,
       "not_read_yet": 1
@@ -575,42 +581,42 @@
       "p10": 365
      },
      "federal": {
-      "reports": 334,
-      "values": 1002,
-      "matches": 898,
+      "reports": 328,
+      "values": 984,
+      "matches": 888,
       "no_value": 19,
-      "differs": 85,
-      "differs_2_to_10pct": 39,
-      "differs_over_10pct": 46
+      "differs": 77,
+      "differs_2_to_10pct": 38,
+      "differs_over_10pct": 39
      },
      "totals": {
-      "reports": 348,
+      "reports": 344,
       "B1": {
-       "adds_up": 257,
+       "adds_up": 254,
        "under_2pct": 29,
-       "off_more": 29,
+       "off_more": 28,
        "cant_check": 33
       },
       "C1": {
-       "adds_up": 294,
+       "adds_up": 291,
        "under_2pct": 20,
-       "off_more": 22,
+       "off_more": 21,
        "cant_check": 12
       },
       "H1": {
-       "adds_up": 250,
+       "adds_up": 246,
        "doesnt": 49,
        "cant_check": 49
       }
      },
      "checks": {
       "enrollment": {
-       "reports": 347,
-       "matches": 281,
+       "reports": 341,
+       "matches": 278,
        "no_value": 32,
-       "differs": 34,
+       "differs": 31,
        "differs_2_to_10pct": 16,
-       "differs_over_10pct": 18
+       "differs_over_10pct": 15
       },
       "tuition": {
        "reports": 0,
@@ -869,52 +875,52 @@
    ],
    "total": {
     "status": {
-     "published": 491,
+     "published": 487,
      "set_aside": 14,
      "couldnt_read": 3,
      "not_read_yet": 1
     },
     "fields_stored": {
      "median": 547,
-     "p10": 213
+     "p10": 198
     },
     "federal": {
-     "reports": 472,
-     "values": 1416,
-     "matches": 1268,
+     "reports": 466,
+     "values": 1398,
+     "matches": 1258,
      "no_value": 28,
-     "differs": 120,
-     "differs_2_to_10pct": 61,
-     "differs_over_10pct": 59
+     "differs": 112,
+     "differs_2_to_10pct": 60,
+     "differs_over_10pct": 52
     },
     "totals": {
-     "reports": 491,
+     "reports": 487,
      "B1": {
-      "adds_up": 336,
+      "adds_up": 333,
       "under_2pct": 51,
-      "off_more": 31,
+      "off_more": 30,
       "cant_check": 73
      },
      "C1": {
-      "adds_up": 377,
+      "adds_up": 374,
       "under_2pct": 58,
-      "off_more": 30,
+      "off_more": 29,
       "cant_check": 26
      },
      "H1": {
-      "adds_up": 345,
+      "adds_up": 341,
       "doesnt": 60,
       "cant_check": 86
      }
     },
     "checks": {
      "enrollment": {
-      "reports": 490,
-      "matches": 378,
+      "reports": 484,
+      "matches": 375,
       "no_value": 70,
-      "differs": 42,
+      "differs": 39,
       "differs_2_to_10pct": 24,
-      "differs_over_10pct": 18
+      "differs_over_10pct": 15
      },
      "tuition": {
       "reports": 0,
@@ -927,7 +933,7 @@
     }
    },
    "sections": {
-    "reports": 491,
+    "reports": 487,
     "rows": [
      {
       "section": "A",
@@ -938,14 +944,14 @@
      {
       "section": "B",
       "questions": 219,
-      "stored_median": 158,
+      "stored_median": 157,
       "usable_median": 156
      },
      {
       "section": "C",
       "questions": 278,
-      "stored_median": 123,
-      "usable_median": 122
+      "stored_median": 122,
+      "usable_median": 121
      },
      {
       "section": "D",
@@ -996,12 +1002,14 @@
      "loaded": true,
      "data_year": 2024,
      "single_campus": 1,
+     "shared_file": 2,
      "no_federal_figures": 0
     },
     "tuition": {
      "loaded": false,
      "data_year": 2025,
      "single_campus": 1,
+     "shared_file": 2,
      "no_federal_figures": 0
     }
    }
@@ -1017,6 +1025,7 @@
    "other_form_numbering": 0,
    "removed": 19,
    "no_file": 0,
+   "duplicate_file": 2,
    "set_aside_reasons": {
     "blank_form": 4,
     "too_little_read": 4,
@@ -1024,6 +1033,7 @@
    },
    "federal_left_out": {
     "single_campus": 0,
+    "shared_file": 0,
     "no_federal_figures": 0
    },
    "rows": [
@@ -1031,7 +1041,7 @@
      "format": "pdf_flat",
      "label": "standard PDF",
      "status": {
-      "published": 270,
+      "published": 269,
       "set_aside": 8,
       "couldnt_read": 0,
       "not_read_yet": 0
@@ -1050,9 +1060,9 @@
       "differs_over_10pct": 0
      },
      "totals": {
-      "reports": 270,
+      "reports": 269,
       "B1": {
-       "adds_up": 231,
+       "adds_up": 230,
        "under_2pct": 4,
        "off_more": 7,
        "cant_check": 28
@@ -1060,11 +1070,11 @@
       "C1": {
        "adds_up": 182,
        "under_2pct": 38,
-       "off_more": 15,
+       "off_more": 14,
        "cant_check": 35
       },
       "H1": {
-       "adds_up": 222,
+       "adds_up": 221,
        "doesnt": 27,
        "cant_check": 21
       }
@@ -1092,14 +1102,14 @@
      "format": "pdf_fillable",
      "label": "fillable PDF",
      "status": {
-      "published": 101,
+      "published": 100,
       "set_aside": 1,
       "couldnt_read": 0,
       "not_read_yet": 0
      },
      "fields_stored": {
       "median": 678,
-      "p10": 558
+      "p10": 557
      },
      "federal": {
       "reports": 0,
@@ -1111,9 +1121,9 @@
       "differs_over_10pct": 0
      },
      "totals": {
-      "reports": 101,
+      "reports": 100,
       "B1": {
-       "adds_up": 98,
+       "adds_up": 97,
        "under_2pct": 0,
        "off_more": 0,
        "cant_check": 3
@@ -1122,10 +1132,10 @@
        "adds_up": 73,
        "under_2pct": 9,
        "off_more": 3,
-       "cant_check": 16
+       "cant_check": 15
       },
       "H1": {
-       "adds_up": 95,
+       "adds_up": 94,
        "doesnt": 1,
        "cant_check": 5
       }
@@ -1335,7 +1345,7 @@
    ],
    "total": {
     "status": {
-     "published": 423,
+     "published": 421,
      "set_aside": 9,
      "couldnt_read": 6,
      "not_read_yet": 0
@@ -1354,9 +1364,9 @@
      "differs_over_10pct": 0
     },
     "totals": {
-     "reports": 423,
+     "reports": 421,
      "B1": {
-      "adds_up": 374,
+      "adds_up": 372,
       "under_2pct": 5,
       "off_more": 7,
       "cant_check": 37
@@ -1364,11 +1374,11 @@
      "C1": {
       "adds_up": 303,
       "under_2pct": 50,
-      "off_more": 18,
-      "cant_check": 52
+      "off_more": 17,
+      "cant_check": 51
      },
      "H1": {
-      "adds_up": 359,
+      "adds_up": 357,
       "doesnt": 32,
       "cant_check": 32
      }
@@ -1393,7 +1403,7 @@
     }
    },
    "sections": {
-    "reports": 423,
+    "reports": 421,
     "rows": [
      {
       "section": "A",
@@ -1462,12 +1472,14 @@
      "loaded": false,
      "data_year": 2025,
      "single_campus": 0,
+     "shared_file": 0,
      "no_federal_figures": 0
     },
     "tuition": {
      "loaded": false,
      "data_year": 2026,
      "single_campus": 0,
+     "shared_file": 0,
      "no_federal_figures": 0
     }
    }

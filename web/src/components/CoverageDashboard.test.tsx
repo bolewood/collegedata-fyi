@@ -65,6 +65,10 @@ describe("renewal tile", () => {
     expect(body).toContain(`${tile.percent}%`);
     expect(body).toContain("Of the 479 schools with a 2024-25 report on file, 364 also have a 2025-26 report on file.");
     expect(body).toContain("Snapshot of November 24, 2026");
+    // The label names the year the tile counts (this tile is public), and the note says what "on file" counts.
+    expect(body).toContain("2025-26 reports on file");
+    expect(body).not.toContain("This year");
+    expect(body).toContain("The earlier-year count includes any report we hold for that year, including ones we set aside or couldn’t read. A school counts as renewed only if its current-year report is one we have not set aside; a report we couldn’t read still counts.");
   });
 
   it("is left out, not shown as zero, when the dashboard is given no renewal block", () => {

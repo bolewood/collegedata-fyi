@@ -45,7 +45,7 @@ import {
   type SortDir,
   type SortKey,
 } from "@/lib/coverage-model";
-import { isDataQualityLaunched, formatSnapshotDate, renewalTile, type Renewal } from "@/lib/data-quality";
+import { isDataQualityLaunched, formatSnapshotDate, renewalTile, ON_FILE_NOTE, type Renewal } from "@/lib/data-quality";
 
 /** The committed Data quality snapshot's renewal block, passed in by the server page, which always has one (the loader throws without a snapshot). Without it the dashboard leaves the tile out. */
 export type RenewalProp = { renewal: Renewal; snapshotOf: string } | null;
@@ -215,9 +215,9 @@ export function CoverageDashboard({
       >
         {tile && renewal && (
           <StatCell
-            label={"This year\u2019s reports on file"}
+            label={`${renewal.renewal.current_year} reports on file`}
             value={`${tile.percent}%`}
-            note={`${tile.sentence} Snapshot of ${formatSnapshotDate(renewal.snapshotOf)}.`}
+            note={`${tile.sentence} ${ON_FILE_NOTE} Snapshot of ${formatSnapshotDate(renewal.snapshotOf)}.`}
             emphasis
             testId="renewal-tile"
           />

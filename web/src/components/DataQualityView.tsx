@@ -21,6 +21,7 @@ import {
   hasSections,
   isDataQualityLaunched,
   isProjectedYear,
+  ON_FILE_NOTE,
   liveCount,
   percent,
   qualityCsvPath,
@@ -177,7 +178,7 @@ function GlanceTable({ years }: { years: QualityYear[] }) {
         id="dq-glance-heading"
         label="§ All years at a glance"
         title="All years at a glance"
-        sentence="One row per year, newest first. Rates are shares of that year’s published reports, except the admissions match rate, which is a share of values compared."
+        sentence="One row per year, newest first. Rates are shares of that year’s published reports, except the admissions match rate, which is a share of all the values that have a federal figure, including those with no usable CDS number."
       />
       <Scroll label="All years at a glance">
         <table className="dq-table dq-table--glance" style={tableStyle} id="dq-glance">
@@ -216,7 +217,7 @@ function GlanceTable({ years }: { years: QualityYear[] }) {
         </table>
       </Scroll>
       <Note>
-        Fields stored is left out here because 2023-24 is counted differently; see Table A.
+        Fields stored is left out here because 2023-24 is published from one reading; see Table A.
       </Note>
     </section>
   );
@@ -274,7 +275,7 @@ function TrendSection({ points, year }: { points: TrendPoint[]; year: string }) 
       )}
       <Note id="dq-trend-note">
         {many
-          ? "A change between snapshots can come from reports added to the archive, from fixes to how we read them, or both. Each value is that snapshot’s own number, and each line is spaced by snapshot date."
+          ? "A change between snapshots can come from reports added to the archive, from fixes to how we read them, or both. Counts can also fall when we remove duplicates or wrong files. Each value is that snapshot’s own number, and each line is spaced by snapshot date."
           : `Each value is the first snapshot’s own number. These six rows come from the ${year} row of “All years at a glance”, above.`}
       </Note>
       <h3 className="serif" id="dq-renewal-heading" style={{ fontSize: 20, margin: "28px 0 10px", fontWeight: 400 }}>
@@ -289,7 +290,7 @@ function TrendSection({ points, year }: { points: TrendPoint[]; year: string }) 
         </Note>
       )}
       <Note id="dq-renewal-note">
-        Renewal is for the whole archive, not one year: of the schools with a report for the year before the current one, the share that also has one for the current year. It is the headline figure on the Coverage page.
+        Renewal is for the whole archive, not one year: of the schools with a report for the year before the current one, the share that also has one for the current year. It is the headline figure on the Coverage page. {ON_FILE_NOTE}
       </Note>
     </section>
   );
@@ -410,11 +411,16 @@ export function yearNotices(year: QualityYear): string[] {
   const out: string[] = [];
   if (year.other_form_numbering > 0) {
     out.push(
-      `${n(year.other_form_numbering)} of the ${n(year.total.status.published)} published ${year.cds_year} reports are numbered by a different year’s form. Some question numbers in them point at a different question than the ${year.form.form_year} form’s.`,
+      `${n(year.other_form_numbering)} of the ${n(year.total.status.published)} published ${year.cds_year} reports are numbered by a different year’s form. These are our older readings, stored under another year’s numbering, not the school’s choice. Some question numbers in them point at a different question than the ${year.form.form_year} form’s.`,
     );
   }
   if (!year.federal_fall_loaded) {
-    out.push(`No federal admissions figures for fall ${fallOf(year.cds_year)} yet.`);
+    const fall = fallOf(year.cds_year);
+    // IPEDS releases admissions, enrollment and tuition on different schedules: name only what is missing.
+    const checks = year.federal_checks;
+    const figures = checks && !checks.enrollment.loaded ? "admissions and enrollment" : "admissions";
+    const tuition = checks && !checks.tuition.loaded ? `, and tuition figures for the ${academicYear(checks.tuition.data_year)} academic year,` : "";
+    out.push(`Federal ${figures} figures for fall ${fall}${tuition} are not loaded in this archive yet.`);
   }
   if (!year.form.full_field_schema) {
     out.push("Older form: tables mapped, not every question.");
@@ -519,7 +525,10 @@ function ReportsTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
         {n(liveCount(year.total.status))} reports counted. Set aside:{" "}
         {n(reasons.blank_form)} blank form, {n(reasons.too_little_read)} too little read, {n(reasons.wrong_file)} wrong
         file. Not counted: {n(year.removed)} removed
-        {year.no_file > 0 ? `, ${n(year.no_file)} with no file` : ""}.
+        {year.no_file > 0 ? `, ${n(year.no_file)} with no file` : ""}
+        {(year.duplicate_file ?? 0) > 0
+          ? `, ${n(year.duplicate_file!)} that ${year.duplicate_file === 1 ? "is" : "are"} the same file as another report from the same school`
+          : ""}.
       </Note>
       <Note>
         Fields stored counts the fields stored for the report as we publish it, including fields recorded as
@@ -538,11 +547,19 @@ function ReportsTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
 function CountingNote({ id, year }: { id: string; year: QualityYear }) {
   return (
     <Note id={id}>
-      {year.cds_year} is counted differently. From 2024-25 on, fields stored also includes values from a second
-      reading of the same file. This year counts one reading, so it reads lower partly for that reason.
+      {year.cds_year} is published from one reading of each file, with no second reading. From 2024-25 on, fields
+      stored also includes values from a second reading of the same file, so this year reads lower partly for that
+      reason.
     </Note>
   );
 }
+
+/** Section E's row of the by-section table, if the year has one. */
+const sectionE = (year: QualityYear) => year.sections?.rows.find((r) => r.section === "E");
+
+/** A year with one reading per file (not the second-reading years) whose section E median is zero: we know the cause is ours. */
+export const sectionELargelyUnread = (year: QualityYear): boolean =>
+  !isProjectedYear(year.cds_year) && (year.sections?.reports ?? 0) > 0 && sectionE(year)?.stored_median === 0;
 
 // ── Table A, by section ──────────────────────────────────────────
 
@@ -592,9 +609,10 @@ function SectionsTable({ year }: { year: QualityYear }) {
       <Note id="dq-note-usable">
         A usable answer is a value a reader can use. Fields recorded as unreadable or as “not applicable” are stored
         but not counted as usable; counting “not applicable” would raise some sections, transfer admission especially. The medians are per report and per section, so they don’t add up to a
-        report’s total, and not every question applies to every school, so a share of 100% isn’t the goal. A low
-        number can mean the school left a section blank, that we didn’t reach it, or both; this table can’t say
-        which.
+        report’s total, and not every question applies to every school, so a share of 100% isn’t the goal.{" "}
+        {sectionELargelyUnread(year)
+          ? `Section E is largely unread for ${year.cds_year} in this archive: the median report stores none of its ${n(sectionE(year)!.questions)} fields there, so a low number there is ours, not the schools’. For the other sections, a low number can mean the school left a section blank, that we didn’t reach it, or both; this table can’t say which.`
+          : "A low number can mean the school left a section blank, that we didn’t reach it, or both; this table can’t say which."}
       </Note>
       {block.reports > 0 && block.reports < MIN_REPORTS_FOR_RATE && (
         <Note id="dq-note-sections-small">
@@ -626,11 +644,11 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
         id="dq-b-heading"
         label="§ Table B"
         title="Admissions against federal figures"
-        sentence="Applicants, admits and enrolled first-year students in each published report (CDS C1), compared with the federal figures for the same fall."
+        sentence={`Applicants, admits and enrolled first-year students in each published report (CDS C1), compared with the federal figures for the same fall${year.federal_fall_loaded ? ` (IPEDS table ADM${fallOf(year.cds_year)}, variables APPLCN, ADMSSN and ENRLT, fall ${fallOf(year.cds_year)})` : ""}.`}
       />
       {!loaded && (
         <p id="dq-no-federal" style={{ margin: "0 0 14px", maxWidth: 720, fontSize: 15, lineHeight: 1.6, color: "var(--ink-2)" }}>
-          No federal admissions figures for fall {fallOf(year.cds_year)} yet.
+          Federal admissions figures for fall {fallOf(year.cds_year)} are not loaded in this archive yet.
         </p>
       )}
       <Scroll label={`Table B, ${year.cds_year}`} hint={loaded}>
@@ -680,18 +698,18 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
       <DrillPanel table="federal" year={year.cds_year} />
       {loaded && (
         <Note id="dq-note-left-out">
-          A value is compared only when the federal data has a positive figure for it, and matches means within 2%.
-          Left out: {n(left.single_campus)} {left.single_campus === 1 ? "report" : "reports"} we’ve marked as
-          filed for one campus or unit (federal data reports the whole institution) and {n(left.no_federal_figures)} whose school has no
-          federal admissions figures.
+          A value is compared only when the federal data has a positive figure for it, and matches means within 2%.{" "}
+          {`Left out: ${n(left.single_campus)} ${left.single_campus === 1 ? "report" : "reports"} we’ve marked as filed for one campus or unit (federal data reports the whole institution)${sharedFileClause(left.shared_file ?? 0)} and ${n(left.no_federal_figures)} whose school has no federal admissions figures.`}
         </Note>
       )}
+      {loaded && <Note id="dq-note-b-release">{RELEASE_NOTE}</Note>}
       {loaded && (
         <>
         <Note id="dq-note-no-value">
           <strong>No value</strong> means no usable CDS number was available to compare. The school may have left it
           blank. We may have missed it, read it under a different year’s numbering, or set it aside because it
-          failed a sanity check. On its own, this table can’t say which.
+          failed a sanity check. On its own, this table can’t say which. The match rate is matches over all the values that
+          have a federal figure, including those with no usable CDS number, so a value we couldn’t read counts against it.
         </Note>
         <Note id="dq-note-differs">
           <strong>Differs</strong> isn’t always ours. Schools sometimes report different figures to the federal
@@ -715,6 +733,13 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
   );
 }
 
+/** ", N reports from one file filed under ...,": the shared-file rule, named plainly; empty when nothing was left out for it. */
+function sharedFileClause(count: number): string {
+  return count > 0
+    ? `, ${n(count)} ${count === 1 ? "report" : "reports"} with a file filed under more than one federal record, which we can’t compare to either record alone,`
+    : "";
+}
+
 // ── Table B, more checks ─────────────────────────────────────────
 
 const academicYear = (start: number) => `${start}-${String((start + 1) % 100).padStart(2, "0")}`;
@@ -727,7 +752,7 @@ function checkCopy(check: CheckName, dataYear: number, otherNumbered: number, ot
   if (check === "enrollment") {
     return {
       heading: "Undergraduate enrollment (CDS B1)",
-      missing: `No federal fall ${dataYear} undergraduate enrollment figures yet.`,
+      missing: `Federal fall ${dataYear} undergraduate enrollment figures are not loaded in this archive yet.`,
       noFigure: "federal undergraduate enrollment figure",
       note: (
         <>
@@ -743,15 +768,15 @@ function checkCopy(check: CheckName, dataYear: number, otherNumbered: number, ot
   }
   return {
     heading: "Tuition (CDS G1)",
-    missing: `No federal tuition figures for the ${academicYear(dataYear)} academic year yet.`,
+    missing: `Federal tuition figures for the ${academicYear(dataYear)} academic year are not loaded in this archive yet.`,
     noFigure: "federal tuition figure",
     note: (
       <>
         <strong>Tuition</strong> compares the report’s tuition for all undergraduates (CDS G1: the in-state figure when
         the school gives one, else the single private figure) with the federal in-state average tuition for full-time
         undergraduates (IPEDS table {ipedsTuitionTable(dataYear)},
-        variable TUITION2, academic year {academicYear(dataYear)}). The CDS form for {academicYear(dataYear - 1)} asks
-        for that following year’s tuition. Neither includes required fees,
+        variable TUITION2, academic year {academicYear(dataYear)}). The CDS form for {academicYear(dataYear - 1)} names
+        both years, and its G1 asks for the following year’s tuition; schools differ in which of the two they report. Neither includes required fees,
         which each lists separately. A report can differ for reasons that aren’t errors: per-credit or program-specific
         pricing, a figure for a different year or group of students, or a school with several rates reporting one of them.
         Out-of-state and first-year tuition aren’t compared.
@@ -841,10 +866,11 @@ function CheckTable({ year, check }: { year: QualityYear; check: CheckName }) {
         <>
           <Note id={`dq-note-${check}`}>{copy.note}</Note>
           <Note id={`dq-note-${check}-left-out`}>
-            Left out: {n(info.single_campus)} {info.single_campus === 1 ? "report" : "reports"} we’ve marked as filed for
-            one campus or unit and {n(info.no_federal_figures)} whose school has no {copy.noFigure}. <strong>No value</strong>{" "}
+            {`Left out: ${n(info.single_campus)} ${info.single_campus === 1 ? "report" : "reports"} we’ve marked as filed for one campus or unit${sharedFileClause(info.shared_file ?? 0)} and ${n(info.no_federal_figures)} whose school has no ${copy.noFigure}.`}{" "}
+            <strong>No value</strong>{" "}
             means no usable CDS number was available to compare: the school may have left it blank, or we may have missed
-            it or set it aside. <strong>Differs</strong> isn’t always ours.
+            it or set it aside. <strong>Differs</strong> isn’t always ours. The match rate is matches over all the reports
+            checked, including those with no usable CDS number.
           </Note>
           <CsvButton table={check} year={year} />
         </>
@@ -959,12 +985,12 @@ function TotalsTable({ year, snapshot }: { year: QualityYear; snapshot: QualityS
         checked: the rows or the total a sum needs weren’t read, or the printed total is zero beside non-zero
         rows.
       </Note>
-      <Note>
-        Off by under 2% is usually the school’s file: it mostly means a small cell, such as students of unknown
-        sex, left out of the rows while the total includes it. Off by more isn’t always ours either, because
-        some printed totals don’t add up in the school’s own file, but it is where our reading errors show.
-        Can’t check can be a blank in the school’s file, an unfilled automatic total, a miss on our side,
-        or a different year’s numbering.
+      <Note id="dq-note-aid-adds-up">
+        For financial aid, adds up partly reflects how we read the table: for some layouts the reader keeps a financial aid table
+        only when its totals add up, so for those a reading that fails the check shows as can’t check, not as doesn’t add up.
+      </Note>
+      <Note id="dq-note-near-miss">
+        {`Off by under 2% is often a small cell, such as students of another or unknown gender: the school may have left it out of the rows while the total includes it, or we may not have read it.${year.cds_year === "2024-25" ? " We know of one gap on our side: in 2024-25 we don’t yet read the another-gender cells in fillable PDFs, so those reports can miss by a few students." : ""} Off by more isn’t always ours either, because some printed totals don’t add up in the school’s own file, but it is where our reading errors show. Can’t check can be a blank in the school’s file, an unfilled automatic total, a miss on our side, or a different year’s numbering.`}
       </Note>
       {aidCantCheckNote(year) && <Note id="dq-note-aid-sample">{aidCantCheckNote(year)}</Note>}
       <CsvButton table="totals" year={year} />
@@ -991,6 +1017,7 @@ function HowToRead() {
         <p style={{ margin: 0 }}>
           Some school files disagree with themselves, for example a residency table whose totals differ from the
           table by sex. For admissions counts we use the rows by sex when both men and women were read, and the printed total otherwise.
+          Another-gender rows aren’t always read, so for some reports the rows by sex add up to less than the printed total.
         </p>
         <p style={{ margin: 0 }}>
           A format with fewer than {MIN_REPORTS_FOR_RATE} reports in a table shows its counts but no percentage,
