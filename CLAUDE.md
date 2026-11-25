@@ -61,7 +61,10 @@ whole corpus, not a one-off.
   current-year renewal: of schools with a live document filed under the
   previous CDS year, the share that also have one for the current year
   (`cds_freshness_floor()`; `unknown` years don't count). Check it a month after
-  any discovery fix. See `docs/postmortems/2026-11-24-stale-discovery-seeds.md`.
+  any discovery fix. See `docs/postmortems/2026-11-24-stale-discovery-seeds.md`. A daily
+  alarm (`ops-discovery-renewal.yml`, issues labelled `alarm:discovery-renewal`)
+  now watches it; its controls are in
+  `docs/postmortems/2026-11-24-stale-discovery-seeds-prevention.md`.
 
 ## Migrations
 

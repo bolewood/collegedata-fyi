@@ -12,18 +12,18 @@ History before 0.1.0.0 (2026-08-03), including the June and July 2026 work, is n
 
 - **Daily renewal alarm** (`Ops discovery renewal`, 13:41 UTC; #460).
   - **What it checks:** of the schools with last year's Common Data Set on file, how many also have this year's. A two-year check also keeps in view schools that already missed a year, and a next-year check runs from March.
-  - **Floor:** each number is compared with a floor read off how fast schools usually post.
+  - **Floor:** each number is compared with a floor read off how fast schools usually post, scaled by how much of a year's schools mature renewal reaches (the median of the last five mature year-pairs, measured on every run). The unscaled curve counts only schools that post, so a fully caught-up year sat under it and a healthy year would have opened an issue every month (#508).
   - **Below the floor:** it opens one issue per CDS year, assigned to the owner, and posts to Discord #alerts. It updates the issue without commenting, replaces it with a new issue every 30 days (or at once on a 5-point worsening) while still below, closes it when that year recovers, and retires years that are two cycles old.
   - **A standing alarm doesn't go quiet:** while a year stays below its floor, it is superseded by a new assigned issue every 30 days, and at once when the gap widens by 5 points.
   - **Arrivals check:** a separate per-year check opens its own issue when almost nothing new arrived for a CDS year, judged every day over both 30 and 60 days, against how fast schools usually post. That catches most total stops within about a month; a stop starting in late November can take up to about six weeks (#506).
   - **Fails loudly:** a short or empty read, too few schools in the denominator, or a floor that disagrees with the database fails the job; it never reports zero.
-  - **First run:** on 2026-11-25 renewal was 373 of 498 (75%) against a floor of 82.5%, so the first scheduled run opens an issue.
+  - **First run:** on 2026-11-25 renewal was 373 of 498 (75%). Against the unscaled floor of 82.5% a manual run opened #507, before the scaled floor (about 73%) merged; the first scheduled run is on 2026-11-25 at 13:41 UTC.
 - **Watching the alarm:**
   - The hourly Discord poll alerts when the renewal workflow hasn't run on schedule for 36 hours.
   - A run that fails day after day says so, and posts every seventh day.
   - An optional outside check-in (`RENEWAL_DEADMAN_URL`) catches GitHub pausing scheduled workflows.
 - **Pipeline board:**
-  - A new first tile, Renewal. It goes red below a floor, on a missed daily run, while an earlier year's alarm is still open, or when almost nothing new arrived, naming the year. Until its registry row is applied it shows gray.
+  - A new first tile, Renewal. It goes red below a floor, on a missed daily run, while an earlier year's alarm is still open, or when almost nothing new arrived, naming the year. Its registry row and a 400-day history of finished runs (`pipeline_heartbeat_history`) came with migration #469, applied to production on 2026-11-25.
   - The Stuck PDFs tile reflects its result: red at 90% or more still stuck, amber above 50%.
 - **The renewal report and the board now also count:**
   - schools with two live documents in one filed year, classified (#467);
@@ -58,6 +58,7 @@ History before 0.1.0.0 (2026-08-03), including the June and July 2026 work, is n
 
 - A prevention ledger for the stale-seeds postmortem, and the postmortem's action table with each action's status.
 - PRD 040 records the M0 hand samples.
+- `tools/ops/README.md` and `tools/finder/README.md` describe the renewal alarm, the monthly hand check and the seed-sweep tools; `docs/ARCHITECTURE.md` and `docs/ops-discord.md` describe the scaled floor.
 - The finder now points 38 more schools whose newest archived CDS was 2022-23 or older at their CDS listing page (#465).
 
 ## [0.6.24.0] - 2026-11-18
