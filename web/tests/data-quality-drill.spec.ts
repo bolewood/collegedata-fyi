@@ -109,33 +109,47 @@ test.describe("Data quality: list the reports behind a count", () => {
     const button = counts.first();
     await button.click();
     await expect(page.getByRole("button", { name: "Close", exact: true })).toBeVisible();
-    await page.getByRole("link", { name: "2024-25", exact: true }).first().click();
+    await page.getByRole("group", { name: "Choose a year" }).getByRole("link", { name: "2024-25", exact: true }).click();
     await expect(page).toHaveURL(/year=2024-25/);
     await expect(page.getByRole("button", { name: "Close", exact: true })).toHaveCount(0);
     // Back to the year it was opened for (the page keeps its state across the year picker): the list must not reappear.
-    await page.getByRole("link", { name: "2023-24", exact: true }).first().click();
+    await page.getByRole("group", { name: "Choose a year" }).getByRole("link", { name: "2023-24", exact: true }).click();
     await expect(page).toHaveURL(/year=2023-24/);
     await expect(page.getByRole("button", { name: "Close", exact: true })).toHaveCount(0);
     await expect(page.locator("button.dq-count").first()).toHaveAttribute("aria-expanded", "false");
   });
 
-  test("other controls still work while a list is open: every year chip, a CSV download and Close", async ({ page }) => {
+  test("other controls still work while a list is open: every year chip, Back, a CSV download and Close", async ({ page }) => {
     const counts = await openPage(page, "2023-24");
+    const chip = (year: string) => page.getByRole("group", { name: "Choose a year" }).getByRole("link", { name: year, exact: true });
     await counts.first().click();
     await expect(list(page)).toBeVisible();
     // The other year chips (tapped one after another, each with a list open for the year just left).
     for (const year of ["2024-25", "2025-26", "2023-24"]) {
-      await page.getByRole("link", { name: year, exact: true }).first().click();
-      await expect(page).toHaveURL(new RegExp(`year=${year}`));
-      await expect(page.getByRole("link", { name: year, exact: true }).first()).toHaveAttribute("aria-current", "true");
+      await chip(year).click();
+      await expect(page).toHaveURL(new RegExp(`year=${year}$`));
+      await expect(chip(year)).toHaveAttribute("aria-current", "true");
       await expect(page.getByRole("button", { name: "Close", exact: true })).toHaveCount(0);
       await page.locator("button.dq-count").first().click();
       await expect(list(page)).toBeVisible();
     }
-    // A CSV download from the page while the list is open.
+    // Tapping the year already shown adds no history entry: one Back goes to the year before it.
+    await chip("2023-24").click();
+    await page.goBack();
+    await expect(page).toHaveURL(/year=2025-26$/);
+    // Back and Forward restore the year, and the open list closes with the year change.
+    await expect(chip("2025-26")).toHaveAttribute("aria-current", "true");
+    await expect(page.getByRole("button", { name: "Close", exact: true })).toHaveCount(0);
+    await page.goForward();
+    await expect(page).toHaveURL(/year=2023-24$/);
+    await expect(chip("2023-24")).toHaveAttribute("aria-current", "true");
+    await expect(page.getByRole("region", { name: "Table A, 2023-24" })).toBeVisible();
+    // A CSV download from the page while a list is open: the file is the selected year's.
+    await page.locator("button.dq-count").first().click();
+    await expect(list(page)).toBeVisible();
     const download = page.waitForEvent("download");
     await page.locator('a[href^="/data-quality/csv/reports/"]').first().click();
-    expect((await download).suggestedFilename()).toMatch(/\.csv$/);
+    expect((await download).suggestedFilename()).toMatch(/2023-24.*\.csv$/);
     // Close.
     await page.getByRole("button", { name: "Close", exact: true }).click();
     await expect(page.getByRole("button", { name: "Close", exact: true })).toHaveCount(0);
