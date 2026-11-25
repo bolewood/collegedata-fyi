@@ -1115,7 +1115,7 @@ describe("launch fixes from the final review", () => {
 
   it("says what 'on file' counts, in the renewal note", () => {
     // The renewal count: the earlier year counts any report we hold; the current year counts only a report we did not set aside.
-    expect(ON_FILE_NOTE).toContain("The earlier-year count includes any report we hold for that year, including ones we set aside or couldn’t read.");
+    expect(ON_FILE_NOTE).toContain("The earlier-year count includes any report we hold for that year except ones filed for a single campus or unit, including ones we set aside or couldn’t read.");
     expect(ON_FILE_NOTE).toContain("A school counts as renewed only if its current-year report is one we have not set aside; a report we couldn’t read still counts.");
     expect(ON_FILE_NOTE).not.toContain("any report we currently hold");
     expect(page("year=2024-25")).toContain(ON_FILE_NOTE);

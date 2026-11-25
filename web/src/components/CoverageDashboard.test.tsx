@@ -75,7 +75,7 @@ describe("renewal tile", () => {
     const note = html.indexOf('data-testid="renewal-definition"');
     expect(note).toBeGreaterThan(html.indexOf('</section>', strip));
     expect(html.slice(note, note + 700).replace(/<[^>]*>/g, "")).toContain(
-      "2025-26 reports on file: The earlier-year count includes any report we hold for that year, including ones we set aside or couldn’t read. A school counts as renewed only if its current-year report is one we have not set aside; a report we couldn’t read still counts.",
+      "2025-26 reports on file: The earlier-year count includes any report we hold for that year except ones filed for a single campus or unit, including ones we set aside or couldn’t read. A school counts as renewed only if its current-year report is one we have not set aside; a report we couldn’t read still counts.",
     );
     // The opening tag of the note itself: normal-case small text, never the `.meta` label style.
     const tag = html.slice(html.lastIndexOf("<p", note), html.indexOf(">", note) + 1);

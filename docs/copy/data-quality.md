@@ -47,7 +47,7 @@ With one snapshot:
 
 > Each value is the first snapshot's own number. These six rows come from the {year} row of "All years at a glance", above.
 
-> Renewal is for the whole archive, not one year: of the schools with a report for the year before the current one, the share that also has one for the current year. It is the headline figure on the Coverage page. The earlier-year count includes any report we hold for that year, including ones we set aside or couldn't read. A school counts as renewed only if its current-year report is one we have not set aside; a report we couldn't read still counts.
+> Renewal is for the whole archive, not one year: of the schools with a report for the year before the current one, the share that also has one for the current year. It is the headline figure on the Coverage page. The earlier-year count includes any report we hold for that year except ones filed for a single campus or unit, including ones we set aside or couldn't read. A school counts as renewed only if its current-year report is one we have not set aside; a report we couldn't read still counts.
 
 With several:
 
@@ -351,7 +351,7 @@ difference an error.
 ## /coverage strings added by PRD 040
 
 - Tile: **{current year} reports on file** (it read "This year's reports on file" until the launch review; this tile is public), "Of the {n} schools with a {previous}
-  report on file, {n} also have a {current} report on file. Snapshot of {date}." Kept short: the definition is a small normal-case note directly under the strip: "{current year} reports on file: The earlier-year count includes any report we hold for that year, including ones we set aside or couldn't read. A school counts as renewed only if its current-year report is one we have not set aside; a report we couldn't read still counts."
+  report on file, {n} also have a {current} report on file. Snapshot of {date}." Kept short: the definition is a small normal-case note directly under the strip: "{current year} reports on file: The earlier-year count includes any report we hold for that year except ones filed for a single campus or unit, including ones we set aside or couldn't read. A school counts as renewed only if its current-year report is one we have not set aside; a report we couldn't read still counts."
 - Tile: **Colleges tracked**: "Accept federal aid and enroll undergraduates".
 - Tile: **Undergrads with CDS numbers**: "Share of undergraduates at tracked
   colleges with CDS numbers on file. {When n is 0 the sentence is left out:} {n} colleges have no enrollment figure and
