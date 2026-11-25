@@ -260,7 +260,9 @@ function federalChecksProblem(year: Record<string, unknown>): string | null {
     const expected = Number(String(year.cds_year).slice(0, 4)) + (name === "tuition" ? 1 : 0);
     if (info.data_year !== expected) return `federal_checks.${name}: data_year is ${String(info.data_year)}, not ${expected}`;
     const reports = total.checks![name].reports;
+    if ((info.single_campus as number) > total.status.published) return `federal_checks.${name}: single_campus exceeds the total's published`;
     if (!loaded) {
+      if (info.no_federal_figures !== 0) return `federal_checks.${name}: no_federal_figures must be 0 for a year with no IPEDS figures`;
       for (const r of [...(year.rows as QualityRow[]), total]) {
         if (Object.values(r.checks![name]).some((n) => n !== 0)) return `federal_checks.${name}: counts are not zero for a year with no IPEDS figures`;
       }

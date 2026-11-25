@@ -287,6 +287,16 @@ describe("enrollment and tuition against federal figures (public_format 4)", () 
     bad((s) => (y(s).federal_checks!.enrollment.data_year = 2024), /data_year is 2024, not 2023/);
   });
 
+  it("still checks who was left out where IPEDS figures aren't loaded, and that one campus can't exceed the published", () => {
+    bad((s) => (y(s, "2024-25").federal_checks!.tuition.no_federal_figures = 1), /no_federal_figures must be 0 for a year with no IPEDS figures/);
+    bad((s) => (y(s, "2025-26").federal_checks!.enrollment.single_campus = y(s, "2025-26").total.status.published + 1), /single_campus exceeds the total's published/);
+    // The fixture itself: a year with no IPEDS admissions figures leaves nobody out as one campus (as Table B).
+    expect(y(FIXTURE_SNAPSHOT, "2025-26").federal_checks).toEqual({
+      enrollment: { loaded: false, data_year: 2025, single_campus: 0, no_federal_figures: 0 },
+      tuition: { loaded: false, data_year: 2026, single_campus: 0, no_federal_figures: 0 },
+    });
+  });
+
   it("reports which years have the checks", () => {
     expect(FIXTURE_SNAPSHOT.years.every(hasFederalChecks)).toBe(true);
     expect(y(FIXTURE_SNAPSHOT, "2024-25").federal_checks).toEqual({

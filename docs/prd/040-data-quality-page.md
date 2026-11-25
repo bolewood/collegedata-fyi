@@ -385,10 +385,11 @@ path").
     (DRVEF, fall of the CDS year). Both count degree-seeking and
     non-degree-seeking, full-time and part-time undergraduates on a fall census
     date. Expected differences: the census date, and a school counting a
-    different group. In the 2026-11-25 run 90% of compared totals are within
-    2%.
+    different group. In the 2026-11-25 run 90% of the reports that have both a B1
+    total and a federal figure are within 2% (the table's match rate, 74% and
+    77%, also counts the reports with no usable B1 total).
   - **Tuition:** one figure per report, the all-undergraduates private figure
-    (G.102) else the in-state figure (G.108), against IPEDS `TUITION2`
+    (G.102) else the in-state figure (G.108), a 0 counting as no value, against IPEDS `TUITION2`
     (COST1, in-state, academic year starting the fall after the CDS year,
     because the form asks for the following year's price). Neither includes
     required fees (IPEDS FEE2, CDS G.111). Out-of-state (G.109/TUITION3) and

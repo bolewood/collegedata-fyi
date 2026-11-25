@@ -169,7 +169,8 @@ function year(
     // One campus or unit is left out of both checks, as of Table B; the rest of the published reports are checked or have no figure.
     federal_checks: Object.fromEntries(
       (["enrollment", "tuition"] as const).map((name): [CheckName, CheckInfo] => {
-        const single = total.status.published - total.federal.reports;
+        // As Table B: one campus or unit is left out when IPEDS admissions figures are loaded, and nothing is when they are not.
+        const single = federal ? total.status.published - total.federal.reports : 0;
         const loaded = loadedChecks[name];
         return [name, { loaded, data_year: Number(cds_year.slice(0, 4)) + (name === "tuition" ? 1 : 0), single_campus: single, no_federal_figures: loaded ? total.status.published - total.checks![name].reports - single : 0 }];
       }),
@@ -245,7 +246,10 @@ export const emptyYear = (cds_year: string): QualityYear => {
     set_aside_reasons: { blank_form: 0, too_little_read: 0, wrong_file: 0 },
     federal_left_out: { single_campus: 0, no_federal_figures: 0 },
     rows: [],
-    federal_checks: { enrollment: { loaded: false, data_year: 2026, single_campus: 0, no_federal_figures: 0 }, tuition: { loaded: false, data_year: 2027, single_campus: 0, no_federal_figures: 0 } },
+    federal_checks: {
+      enrollment: { loaded: false, data_year: Number(cds_year.slice(0, 4)), single_campus: 0, no_federal_figures: 0 },
+      tuition: { loaded: false, data_year: Number(cds_year.slice(0, 4)) + 1, single_campus: 0, no_federal_figures: 0 },
+    },
     sections: { reports: 0, rows: SECTION_QUESTIONS["2023-24"].map((questions, i) => ({ section: "ABCDEFGHIJ"[i], questions, stored_median: 0, usable_median: 0 })) },
     total: {
       status: { published: 0, set_aside: 0, couldnt_read: 0, not_read_yet: 0 },

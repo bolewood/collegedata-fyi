@@ -1035,11 +1035,38 @@ class FederalExtraChecks(unittest.TestCase):
         self.assertFalse(scoreboard.federal_check_year("2023-24", [self.d(3)], "enrollment", False)["loaded"])
         self.assertEqual(self.counts(docs, "tuition", loaded=False)["reports"], 0)
 
+    def test_a_tuition_of_zero_is_no_value_and_the_next_candidate_is_used(self) -> None:
+        # A public school's G.102 left at 0 beside its real G.108: never compare $0 with the federal tuition.
+        extra = extra_for("2023-24")
+        extra["g1_private_undergraduates"]["ours"] = "0"
+        extra["g1_in_state_undergraduates"]["ours"] = "9500"
+        self.assertEqual(scoreboard.federal_check_pair(self.d(1, federal_extra=extra), "tuition")[0], Decimal("9500"))
+        zero_only = extra_for("2023-24")
+        zero_only["g1_private_undergraduates"]["ours"] = "0.00"
+        self.assertIsNone(scoreboard.federal_check_pair(self.d(2, federal_extra=zero_only), "tuition")[0])
+        self.assertEqual(self.counts([self.d(3, federal_extra=zero_only)], "tuition")["no_value"], 1)
+
     def test_the_run_must_have_looked_up_the_year_the_check_is_defined_for(self) -> None:
         wrong = extra_for("2023-24")
         wrong["b1_undergraduates"]["federal_data_year"] = 2024
         with self.assertRaisesRegex(SystemExit, "enrollment for IPEDS year"):
             scoreboard.federal_check_year("2023-24", [self.d(1, federal_extra=wrong)], "enrollment", True)
+
+    def test_federal_check_year_and_build_public_refuse_a_missing_federal_extra_or_a_wrong_candidate_year(self) -> None:
+        missing = self.d(1)
+        del missing["federal_extra"]
+        with self.assertRaisesRegex(SystemExit, "x1 has no federal_extra"):
+            scoreboard.federal_check_year("2023-24", [missing], "tuition", True)
+        run = synthetic_run()
+        del next(d for d in run["documents"] if d["year"] == "2023-24" and d["producer"] and not d["flag"])["federal_extra"]
+        with self.assertRaisesRegex(SystemExit, "has no federal_extra"):
+            scoreboard.build_public(run, "x.json")
+        # Either tuition candidate looked up in the wrong IPEDS year is refused (the private one and the in-state one).
+        for name in ("g1_private_undergraduates", "g1_in_state_undergraduates"):
+            wrong = extra_for("2023-24")
+            wrong[name]["federal_data_year"] = 2023
+            with self.subTest(name), self.assertRaisesRegex(SystemExit, "tuition for IPEDS year"):
+                scoreboard.federal_check_year("2023-24", [self.d(2, federal_extra=wrong)], "tuition", True)
 
     def test_refuses_a_document_without_federal_extra_or_with_split_tuition_figures(self) -> None:
         broken = self.d(1)

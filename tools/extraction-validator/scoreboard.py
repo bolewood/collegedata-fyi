@@ -1572,7 +1572,10 @@ def federal_check_pair(d: dict[str, Any], check: str) -> tuple[Optional[Decimal]
         names = ["b1_undergraduates"]
     else:
         names = ["g1_private_undergraduates", "g1_in_state_undergraduates"]
-    chosen = next((extra[n] for n in names if extra[n]["ours"] is not None), extra[names[0]])
+    # A tuition of 0 is a form's blank (a public school's G.102 beside its real G.108), not a price: no value.
+    chosen = next((extra[n] for n in names if extra[n]["ours"] is not None and Decimal(extra[n]["ours"]) > 0), extra[names[0]])
+    if chosen["ours"] is not None and Decimal(chosen["ours"]) <= 0:
+        chosen = {**chosen, "ours": None}
     federal = {extra[n]["federal"] for n in names}
     if len(federal) != 1:
         raise SystemExit(f"--public: {d['document_id']}: the {check} candidates carry different IPEDS figures")
@@ -1606,8 +1609,11 @@ def federal_check_year(year: str, published: list[dict[str, Any]], check: str, c
     (the fall for enrollment; the academic year starting the fall after for tuition, as the CDS G1 asks for
     the following year), and the reports left out."""
     start = int(year[:4]) + (1 if check == "tuition" else 0)
-    recorded = {d["federal_extra"][n]["federal_data_year"] for d in published
-                for n in (["b1_undergraduates"] if check == "enrollment" else ["g1_private_undergraduates"])}
+    for d in published:
+        if "federal_extra" not in d:
+            raise SystemExit(f"--public: {d['document_id']} has no federal_extra; run the scoreboard again")
+    candidates = ["b1_undergraduates"] if check == "enrollment" else ["g1_private_undergraduates", "g1_in_state_undergraduates"]
+    recorded = {d["federal_extra"][n]["federal_data_year"] for d in published for n in candidates}
     if recorded - {start}:
         raise SystemExit(f"--public: {year}: the run looked up {check} for IPEDS year {sorted(recorded)}, not {start}")
     rest = [d for d in published if not d["sub_institutional"]]

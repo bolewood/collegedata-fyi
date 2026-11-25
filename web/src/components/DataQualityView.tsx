@@ -568,7 +568,7 @@ function checkCopy(check: CheckName, dataYear: number) {
           <strong>Undergraduate enrollment</strong> compares the total of all undergraduates in the report (CDS B1:
           degree-seeking and not, full-time and part-time) with the federal fall undergraduate enrollment (IPEDS table
           DRVEF{dataYear}, variable EFUG, fall {dataYear}). Both count undergraduates on a fall census date, and the
-          dates can differ. A school may also count a different group of students in each. {RELEASE_NOTE}
+          dates can differ. A school may also count a different group of students in each.
         </>
       ),
     };
@@ -580,12 +580,12 @@ function checkCopy(check: CheckName, dataYear: number) {
     note: (
       <>
         <strong>Tuition</strong> compares the report’s tuition for all undergraduates (CDS G1: the single private
-        figure, else the in-state figure) with the federal published in-state tuition (IPEDS table COST1_{dataYear},
-        variable TUITION2, academic year {academicYear(dataYear)}). The CDS form for {academicYear(dataYear - 1)} asks
+        figure, else the in-state figure) with the federal published in-state tuition (IPEDS table IC{dataYear}_AY, which
+        our federal facts label COST1_{dataYear}, variable TUITION2, academic year {academicYear(dataYear)}). The CDS form for {academicYear(dataYear - 1)} asks
         for that following year’s tuition. Neither includes required fees,
         which each lists separately. A report can differ for reasons that aren’t errors: per-credit or program-specific
         pricing, a figure for a different year or group of students, or a school with several rates reporting one of them.
-        Out-of-state and first-year tuition aren’t compared. {RELEASE_NOTE}
+        Out-of-state and first-year tuition aren’t compared.
       </>
     ),
   };
@@ -604,6 +604,12 @@ function FederalChecks({ year }: { year: QualityYear }) {
       />
       <CheckTable year={year} check="enrollment" />
       <CheckTable year={year} check="tuition" />
+      {(year.federal_checks!.enrollment.loaded || year.federal_checks!.tuition.loaded) && (
+        <Note id="dq-note-b2-shared">
+          A value is compared only when the federal data has a positive figure for it. Matches means within 2%; differs by
+          over 2% to 10% and differs by over 10% split the rest, and exactly 10% counts in the first. {RELEASE_NOTE}
+        </Note>
+      )}
     </section>
   );
 }
@@ -641,8 +647,8 @@ function CheckTable({ year, check }: { year: QualityYear; check: CheckName }) {
           <tbody>
             {allRows(year).map(({ key, name, row, total }) => {
               const c = row.checks![check];
-              const rate = loaded ? (total ? percent(c.matches, c.reports) : rowPercent(c.matches, c.reports, c.reports)) : null;
-              const small = loaded && !total && c.reports < MIN_REPORTS_FOR_RATE;
+              const rate = loaded ? rowPercent(c.matches, c.reports, c.reports) : null;
+              const small = loaded && c.reports < MIN_REPORTS_FOR_RATE;
               return (
                 <tr key={key} style={total ? totalRow : undefined}>
                   <th scope="row" style={{ ...tdLeft, fontWeight: total ? 600 : 400 }}>{name}</th>
@@ -665,11 +671,10 @@ function CheckTable({ year, check }: { year: QualityYear; check: CheckName }) {
         <>
           <Note id={`dq-note-${check}`}>{copy.note}</Note>
           <Note id={`dq-note-${check}-left-out`}>
-            A value is compared only when the federal data has a positive figure for it, and matches means within 2%.
-            Differs by over 2% to 10% and by over 10% split the rest, and exactly 10% counts in the first. Left out:{" "}
-            {n(info.single_campus)} {info.single_campus === 1 ? "report" : "reports"} we’ve marked as filed for one
-            campus or unit and {n(info.no_federal_figures)} whose school has no {copy.noFigure}. <strong>No value</strong>{" "}
-            means the report has no usable number to compare, and <strong>differs</strong> isn’t always ours.
+            Left out: {n(info.single_campus)} {info.single_campus === 1 ? "report" : "reports"} we’ve marked as filed for
+            one campus or unit and {n(info.no_federal_figures)} whose school has no {copy.noFigure}. <strong>No value</strong>{" "}
+            means no usable CDS number was available to compare: the school may have left it blank, or we may have missed
+            it or set it aside. <strong>Differs</strong> isn’t always ours.
           </Note>
           <CsvButton table={check} year={year} />
         </>

@@ -87,11 +87,11 @@
       },
       "tuition": {
        "reports": 404,
-       "matches": 191,
+       "matches": 193,
        "no_value": 106,
-       "differs": 107,
+       "differs": 105,
        "differs_2_to_10pct": 54,
-       "differs_over_10pct": 53
+       "differs_over_10pct": 51
       }
      }
     },
@@ -452,11 +452,11 @@
      },
      "tuition": {
       "reports": 430,
-      "matches": 201,
+      "matches": 203,
       "no_value": 117,
-      "differs": 112,
+      "differs": 110,
       "differs_2_to_10pct": 57,
-      "differs_over_10pct": 55
+      "differs_over_10pct": 53
      }
     }
    },
@@ -607,10 +607,10 @@
       "enrollment": {
        "reports": 347,
        "matches": 281,
-       "no_value": 31,
-       "differs": 35,
+       "no_value": 32,
+       "differs": 34,
        "differs_2_to_10pct": 16,
-       "differs_over_10pct": 19
+       "differs_over_10pct": 18
       },
       "tuition": {
        "reports": 0,
@@ -911,10 +911,10 @@
      "enrollment": {
       "reports": 490,
       "matches": 378,
-      "no_value": 69,
-      "differs": 43,
+      "no_value": 70,
+      "differs": 42,
       "differs_2_to_10pct": 24,
-      "differs_over_10pct": 19
+      "differs_over_10pct": 18
      },
      "tuition": {
       "reports": 0,

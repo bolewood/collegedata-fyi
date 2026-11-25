@@ -322,8 +322,8 @@ describe("gate: the real snapshot loader", () => {
     );
     // [loaded, IPEDS year, reports, matches, no value, differs, over 2% to 10%, over 10%], from scoreboard-20261125T140926Z.json.
     expect(got).toEqual({
-      "2023-24": { enrollment: [true, 2023, 431, 317, 82, 32, 21, 11], tuition: [true, 2024, 430, 201, 117, 112, 57, 55] },
-      "2024-25": { enrollment: [true, 2024, 490, 378, 69, 43, 24, 19], tuition: [false, 2025, 0, 0, 0, 0, 0, 0] },
+      "2023-24": { enrollment: [true, 2023, 431, 317, 82, 32, 21, 11], tuition: [true, 2024, 430, 203, 117, 110, 57, 53] },
+      "2024-25": { enrollment: [true, 2024, 490, 378, 70, 42, 24, 18], tuition: [false, 2025, 0, 0, 0, 0, 0, 0] },
       "2025-26": { enrollment: [false, 2025, 0, 0, 0, 0, 0, 0], tuition: [false, 2026, 0, 0, 0, 0, 0, 0] },
     });
   });

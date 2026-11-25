@@ -402,15 +402,20 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
       const enr = text("dq-note-enrollment");
       expect(enr).toContain("DRVEF2023, variable EFUG, fall 2023");
       expect(enr).toMatch(/census date.*can differ/);
-      for (const note of [enr, text("dq-note-tuition")]) {
-        expect(note).toContain("This snapshot doesn’t record which IPEDS release (final or provisional), release date or imputation flag each figure came from.");
-        expect(note).toContain("Where a final and a provisional release both have a figure, the final one is used.");
-        expect(note).toContain("A school’s page shows the release and imputation for its latest federal figures, which can be a later year than the one compared here.");
-        expect(note).not.toMatch(/each school’s page shows which/);
+      // The release facts and the band rule are said once, for the section, not in each check's note.
+      const shared = text("dq-note-b2-shared");
+      expect(shared).toContain("This snapshot doesn’t record which IPEDS release (final or provisional), release date or imputation flag each figure came from.");
+      expect(shared).toContain("Where a final and a provisional release both have a figure, the final one is used.");
+      expect(shared).toContain("A school’s page shows the release and imputation for its latest federal figures, which can be a later year than the one compared here.");
+      expect(shared).toContain("exactly 10% counts in the first");
+      expect(shared).toContain("Matches means within 2%");
+      for (const note of [enr, text("dq-note-tuition"), text("dq-note-enrollment-left-out"), text("dq-note-tuition-left-out")]) {
+        expect(note).not.toContain("final or provisional");
+        expect(note).not.toContain("exactly 10%");
       }
+      expect(html.match(/final or provisional/g)).toHaveLength(1);
       const tui = text("dq-note-tuition");
-      expect(tui).toContain("COST1_2024");
-      expect(tui).toContain("TUITION2");
+      expect(tui).toContain("IC2024_AY, which our federal facts label COST1_2024, variable TUITION2");
       expect(tui).toContain("academic year 2024-25");
       expect(tui).toContain("CDS form for 2023-24 asks for that following year’s tuition");
       expect(tui).toMatch(/Neither includes required fees/);
@@ -419,6 +424,33 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
       for (const note of [enr, tui]) expect(note).not.toMatch(/\b(most|usually|always|typically)\b/i);
       expect(text("dq-note-enrollment-left-out")).toContain("Left out: 1 report we’ve marked as filed for one campus or unit and 0 whose school has no federal undergraduate enrollment figure");
       expect(text("dq-note-tuition-left-out")).toContain("whose school has no federal tuition figure");
+    });
+
+    it("renders the tuition table's own counts, not the enrollment table's, with hand-worked cells (2023-24)", () => {
+      const s = b2(render("year=2023-24"))!;
+      // Fixture, 2023-24 standard PDF (300 published, 299 checked by Table B): tuition on 90% of them, 30% no value, 20% differing.
+      expect(cells(s, "dq-table-tuition", "standard PDF")).toEqual(["269", "136", "80", "53", "31", "22", "51%"]);
+      expect(cells(s, "dq-table-enrollment", "standard PDF")).toEqual(["299", "211", "59", "29", "17", "12", "71%"]);
+      expect(cells(s, "dq-table-tuition", "All formats")).not.toEqual(cells(s, "dq-table-enrollment", "All formats"));
+      expect(cells(s, "dq-table-tuition", "spreadsheet")).toEqual(["2", "2", "0", "0", "0", "0", "–"]);   // 2 reports: no rate
+    });
+
+    it("says 'report' for one left out and 'reports' for more, and ends the left-out note with the open-cause No value", () => {
+      const text = (html: string, id: string) => html.match(new RegExp(`<p id="${id}"[^>]*>[\\s\\S]*?</p>`))![0].replace(/<[^>]+>/g, "").replace(/\s+/g, " ");
+      expect(text(b2(render("year=2023-24"))!, "dq-note-enrollment-left-out")).toContain("Left out: 1 report we’ve marked");
+      const many = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT)) as QualitySnapshot;
+      many.years.find((x) => x.cds_year === "2023-24")!.federal_checks!.enrollment.single_campus = 2;
+      const note = text(b2(render("year=2023-24", many))!, "dq-note-enrollment-left-out");
+      expect(note).toContain("Left out: 2 reports we’ve marked");
+      expect(note).toContain("No value means no usable CDS number was available to compare: the school may have left it blank, or we may have missed it or set it aside.");
+      expect(note).not.toContain("the report has no usable number");
+    });
+
+    it("hides the match rate under 5 reports, in the All formats row too", () => {
+      const small = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT)) as QualitySnapshot;
+      const y = small.years.find((x) => x.cds_year === "2024-25")!;
+      for (const r of [...y.rows, y.total]) r.checks!.enrollment = { reports: 4, matches: 3, no_value: 1, differs: 0, differs_2_to_10pct: 0, differs_over_10pct: 0 };
+      expect(cells(b2(render("year=2024-25", small))!, "dq-table-enrollment", "All formats").at(-1)).toBe("–");
     });
 
     it("shows dashes and a notice, no notes and no download, where IPEDS figures aren't loaded", () => {
