@@ -7355,7 +7355,12 @@ def _h_layout_h1_rows(block: str) -> dict[str, dict]:
     return out
 
 
-_H1_AMOUNT_RE = re.compile(r"(?:\$\s*(\d[\d,]*(?:\.\d+)?)|(?<![\w,.$/-])(\d{1,3}(?:,\d{3})+(?:\.\d+)?)(?![\w,/-]))")
+# A dollar amount: with "$", or bare with thousands commas, or a bare 0 (a
+# zero is printed "0" in cells where the other amounts have no "$").
+_H1_AMOUNT_RE = re.compile(
+    r"(?:\$\s*(\d[\d,]*(?:\.\d+)?)"
+    r"|(?<![\w,.$/-])(\d{1,3}(?:,\d{3})+(?:\.\d+)?|0(?:\.0+)?)(?![\w,/-]|\.\d))"
+)
 _H1_CONTINUATION_RE = re.compile(r"excludes|captured above|reported below|not awarded by|excluding|\(which|which are", re.IGNORECASE)
 
 
@@ -7421,9 +7426,17 @@ def _h_layout_h1_rows_by_column(block: str) -> dict[str, dict]:
         elif len(amts) == 1:
             end, val = amts[0]
             dl, dr = abs(end - left_med), abs(end - right_med)
-            if min(dl, dr) > 12 or abs(dl - dr) < 6:
+            # Beyond either column's median there is only one column it can
+            # be in. Between them it goes to the nearer, unless it is near
+            # neither or about as near to both.
+            if end >= right_med:
+                pairs = [(nn_qn, val)]
+            elif end <= left_med:
+                pairs = [(nb_qn, val)]
+            elif min(dl, dr) > 12 or abs(dl - dr) < 6:
                 continue
-            pairs = [(nb_qn, val)] if dl < dr else [(nn_qn, val)]
+            else:
+                pairs = [(nb_qn, val)] if dl < dr else [(nn_qn, val)]
         else:
             continue
         for qn, val in pairs:

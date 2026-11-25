@@ -137,6 +137,24 @@ class H1TextLayerTest(unittest.TestCase):
         self.assertEqual(values["H.117"], "0")  # Athletic Awards need-based
         self.assertEqual(values["H.110"], "79257874")
 
+    def test_bare_amounts_and_zeros_without_a_dollar_sign(self) -> None:
+        # Lee and Florida A&M print "9,375,016" and "0" with no "$".
+        bare = TRINITY_ROWS.replace("$", "")
+        values = h1(read(INSTRUCTIONS + HEADER + bare + AFTER))
+        self.assertEqual(values["H.110"], "79257874")
+        self.assertEqual(values["H.117"], "0")
+
+    def test_a_lone_amount_printed_beyond_the_non_need_column(self) -> None:
+        # Dartmouth: Parent Loans' non-need-based amount sits further right
+        # than the column's other amounts.
+        far = " " * 38 + "Parent Loans"
+        far = far.ljust(170 - len("$3,104,361")) + "$3,104,361\n"
+        rows = TRINITY_ROWS.replace(line("Parent Loans", "", "$3,104,361"), far)
+        self.assertIn(far, rows)
+        values = h1(read(INSTRUCTIONS + HEADER + rows + AFTER))
+        self.assertEqual(values["H.126"], "3104361")
+        self.assertNotIn("H.115", values)
+
     def test_text_layer_replaces_the_markdown_h1_block(self) -> None:
         # The markdown reading put the work-study amount in H.113 ("State and
         # other") where the text layer has it in H.112. Both would be summed
