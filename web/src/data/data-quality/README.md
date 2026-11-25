@@ -12,10 +12,8 @@ the file with the newest `snapshot_of`. The build fails when:
 - a file's `public_format` is one the page doesn't know;
 - a file is not valid JSON or is missing the keys the page reads
   (including `renewal`);
-- this directory has no `.json` file **and the launch gate
-  (`isDataQualityLaunched()` in `web/src/lib/data-quality.ts`) is open**.
+- this directory has no `.json` file, with the launch gate open or closed.
 
-Before launch, an empty directory is allowed: `/data-quality` returns 404 and
-the `/coverage` tile is left out. Once the gate opens, an empty directory is
-an error, never "no data, ok". Keep old snapshots here: they feed a later
-trend line.
+An empty directory is an error, never "no data, ok": `/coverage` reads the
+newest snapshot for its renewal tile whether or not the gate is open. Keep old
+snapshots here: they feed a later trend line.

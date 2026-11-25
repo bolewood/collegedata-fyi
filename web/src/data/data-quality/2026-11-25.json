@@ -1,0 +1,859 @@
+{
+ "public_format": 1,
+ "snapshot_of": "2026-11-25T14:09:26Z",
+ "scoreboard_run": "scoreboard-20261125T140926Z.json",
+ "renewal": {
+  "as_of": "2026-11-25",
+  "current_year": "2025-26",
+  "previous_year": "2024-25",
+  "current": 435,
+  "previous": 498,
+  "both": 373,
+  "two_year_previous": 556,
+  "two_year_both": 385
+ },
+ "years": [
+  {
+   "cds_year": "2023-24",
+   "form": {
+    "form_year": "2023-24",
+    "full_field_schema": true,
+    "questions": 1053
+   },
+   "federal_fall_loaded": true,
+   "other_form_numbering": 66,
+   "removed": 18,
+   "no_file": 0,
+   "set_aside_reasons": {
+    "blank_form": 8,
+    "too_little_read": 20,
+    "wrong_file": 0
+   },
+   "federal_left_out": {
+    "single_campus": 1,
+    "no_federal_figures": 18
+   },
+   "rows": [
+    {
+     "format": "pdf_flat",
+     "label": "standard PDF",
+     "status": {
+      "published": 405,
+      "set_aside": 14,
+      "couldnt_read": 5,
+      "not_read_yet": 0
+     },
+     "fields_stored": {
+      "median": 411,
+      "p10": 217
+     },
+     "federal": {
+      "reports": 387,
+      "values": 1161,
+      "matches": 994,
+      "no_value": 66,
+      "differs": 101
+     },
+     "totals": {
+      "reports": 405,
+      "B1": {
+       "adds_up": 323,
+       "under_2pct": 3,
+       "off_more": 7,
+       "cant_check": 72
+      },
+      "C1": {
+       "adds_up": 234,
+       "under_2pct": 52,
+       "off_more": 37,
+       "cant_check": 82
+      },
+      "H1": {
+       "adds_up": 143,
+       "doesnt": 47,
+       "cant_check": 215
+      }
+     }
+    },
+    {
+     "format": "pdf_fillable",
+     "label": "fillable PDF",
+     "status": {
+      "published": 20,
+      "set_aside": 0,
+      "couldnt_read": 0,
+      "not_read_yet": 0
+     },
+     "fields_stored": {
+      "median": 579,
+      "p10": 399
+     },
+     "federal": {
+      "reports": 19,
+      "values": 57,
+      "matches": 45,
+      "no_value": 0,
+      "differs": 12
+     },
+     "totals": {
+      "reports": 20,
+      "B1": {
+       "adds_up": 5,
+       "under_2pct": 0,
+       "off_more": 0,
+       "cant_check": 15
+      },
+      "C1": {
+       "adds_up": 9,
+       "under_2pct": 3,
+       "off_more": 4,
+       "cant_check": 4
+      },
+      "H1": {
+       "adds_up": 16,
+       "doesnt": 0,
+       "cant_check": 4
+      }
+     }
+    },
+    {
+     "format": "pdf_scanned",
+     "label": "scanned PDF",
+     "status": {
+      "published": 1,
+      "set_aside": 0,
+      "couldnt_read": 0,
+      "not_read_yet": 0
+     },
+     "fields_stored": {
+      "median": 281,
+      "p10": 281
+     },
+     "federal": {
+      "reports": 1,
+      "values": 3,
+      "matches": 3,
+      "no_value": 0,
+      "differs": 0
+     },
+     "totals": {
+      "reports": 1,
+      "B1": {
+       "adds_up": 1,
+       "under_2pct": 0,
+       "off_more": 0,
+       "cant_check": 0
+      },
+      "C1": {
+       "adds_up": 1,
+       "under_2pct": 0,
+       "off_more": 0,
+       "cant_check": 0
+      },
+      "H1": {
+       "adds_up": 0,
+       "doesnt": 0,
+       "cant_check": 1
+      }
+     }
+    },
+    {
+     "format": "xlsx",
+     "label": "spreadsheet",
+     "status": {
+      "published": 5,
+      "set_aside": 14,
+      "couldnt_read": 37,
+      "not_read_yet": 0
+     },
+     "fields_stored": {
+      "median": 36,
+      "p10": 29
+     },
+     "federal": {
+      "reports": 5,
+      "values": 15,
+      "matches": 11,
+      "no_value": 2,
+      "differs": 2
+     },
+     "totals": {
+      "reports": 5,
+      "B1": {
+       "adds_up": 0,
+       "under_2pct": 0,
+       "off_more": 0,
+       "cant_check": 5
+      },
+      "C1": {
+       "adds_up": 2,
+       "under_2pct": 0,
+       "off_more": 1,
+       "cant_check": 2
+      },
+      "H1": {
+       "adds_up": 0,
+       "doesnt": 1,
+       "cant_check": 4
+      }
+     }
+    },
+    {
+     "format": "docx",
+     "label": "Word",
+     "status": {
+      "published": 0,
+      "set_aside": 0,
+      "couldnt_read": 2,
+      "not_read_yet": 0
+     },
+     "fields_stored": {
+      "median": 0,
+      "p10": 0
+     },
+     "federal": {
+      "reports": 0,
+      "values": 0,
+      "matches": 0,
+      "no_value": 0,
+      "differs": 0
+     },
+     "totals": {
+      "reports": 0,
+      "B1": {
+       "adds_up": 0,
+       "under_2pct": 0,
+       "off_more": 0,
+       "cant_check": 0
+      },
+      "C1": {
+       "adds_up": 0,
+       "under_2pct": 0,
+       "off_more": 0,
+       "cant_check": 0
+      },
+      "H1": {
+       "adds_up": 0,
+       "doesnt": 0,
+       "cant_check": 0
+      }
+     }
+    },
+    {
+     "format": "html",
+     "label": "web page",
+     "status": {
+      "published": 1,
+      "set_aside": 0,
+      "couldnt_read": 0,
+      "not_read_yet": 0
+     },
+     "fields_stored": {
+      "median": 187,
+      "p10": 187
+     },
+     "federal": {
+      "reports": 1,
+      "values": 3,
+      "matches": 2,
+      "no_value": 0,
+      "differs": 1
+     },
+     "totals": {
+      "reports": 1,
+      "B1": {
+       "adds_up": 0,
+       "under_2pct": 0,
+       "off_more": 0,
+       "cant_check": 1
+      },
+      "C1": {
+       "adds_up": 0,
+       "under_2pct": 0,
+       "off_more": 1,
+       "cant_check": 0
+      },
+      "H1": {
+       "adds_up": 0,
+       "doesnt": 1,
+       "cant_check": 0
+      }
+     }
+    }
+   ],
+   "total": {
+    "status": {
+     "published": 432,
+     "set_aside": 28,
+     "couldnt_read": 44,
+     "not_read_yet": 0
+    },
+    "fields_stored": {
+     "median": 415,
+     "p10": 215
+    },
+    "federal": {
+     "reports": 413,
+     "values": 1239,
+     "matches": 1055,
+     "no_value": 68,
+     "differs": 116
+    },
+    "totals": {
+     "reports": 432,
+     "B1": {
+      "adds_up": 329,
+      "under_2pct": 3,
+      "off_more": 7,
+      "cant_check": 93
+     },
+     "C1": {
+      "adds_up": 246,
+      "under_2pct": 55,
+      "off_more": 43,
+      "cant_check": 88
+     },
+     "H1": {
+      "adds_up": 159,
+      "doesnt": 49,
+      "cant_check": 224
+     }
+    }
+   }
+  },
+  {
+   "cds_year": "2024-25",
+   "form": {
+    "form_year": "2024-25",
+    "full_field_schema": true,
+    "questions": 1083
+   },
+   "federal_fall_loaded": true,
+   "other_form_numbering": 0,
+   "removed": 17,
+   "no_file": 0,
+   "set_aside_reasons": {
+    "blank_form": 4,
+    "too_little_read": 10,
+    "wrong_file": 0
+   },
+   "federal_left_out": {
+    "single_campus": 1,
+    "no_federal_figures": 18
+   },
+   "rows": [
+    {
+     "format": "pdf_flat",
+     "label": "standard PDF",
+     "status": {
+      "published": 348,
+      "set_aside": 9,
+      "couldnt_read": 0,
+      "not_read_yet": 1
+     },
+     "fields_stored": {
+      "median": 564,
+      "p10": 365
+     },
+     "federal": {
+      "reports": 334,
+      "values": 1002,
+      "matches": 898,
+      "no_value": 19,
+      "differs": 85
+     },
+     "totals": {
+      "reports": 348,
+      "B1": {
+       "adds_up": 257,
+       "under_2pct": 29,
+       "off_more": 29,
+       "cant_check": 33
+      },
+      "C1": {
+       "adds_up": 294,
+       "under_2pct": 20,
+       "off_more": 22,
+       "cant_check": 12
+      },
+      "H1": {
+       "adds_up": 250,
+       "doesnt": 49,
+       "cant_check": 49
+      }
+     }
+    },
+    {
+     "format": "pdf_fillable",
+     "label": "fillable PDF",
+     "status": {
+      "published": 84,
+      "set_aside": 2,
+      "couldnt_read": 0,
+      "not_read_yet": 0
+     },
+     "fields_stored": {
+      "median": 540,
+      "p10": 437
+     },
+     "federal": {
+      "reports": 81,
+      "values": 243,
+      "matches": 219,
+      "no_value": 3,
+      "differs": 21
+     },
+     "totals": {
+      "reports": 84,
+      "B1": {
+       "adds_up": 60,
+       "under_2pct": 21,
+       "off_more": 2,
+       "cant_check": 1
+      },
+      "C1": {
+       "adds_up": 34,
+       "under_2pct": 35,
+       "off_more": 6,
+       "cant_check": 9
+      },
+      "H1": {
+       "adds_up": 80,
+       "doesnt": 1,
+       "cant_check": 3
+      }
+     }
+    },
+    {
+     "format": "pdf_scanned",
+     "label": "scanned PDF",
+     "status": {
+      "published": 4,
+      "set_aside": 0,
+      "couldnt_read": 0,
+      "not_read_yet": 0
+     },
+     "fields_stored": {
+      "median": 418,
+      "p10": 361
+     },
+     "federal": {
+      "reports": 4,
+      "values": 12,
+      "matches": 11,
+      "no_value": 0,
+      "differs": 1
+     },
+     "totals": {
+      "reports": 4,
+      "B1": {
+       "adds_up": 0,
+       "under_2pct": 1,
+       "off_more": 0,
+       "cant_check": 3
+      },
+      "C1": {
+       "adds_up": 2,
+       "under_2pct": 1,
+       "off_more": 1,
+       "cant_check": 0
+      },
+      "H1": {
+       "adds_up": 0,
+       "doesnt": 4,
+       "cant_check": 0
+      }
+     }
+    },
+    {
+     "format": "xlsx",
+     "label": "spreadsheet",
+     "status": {
+      "published": 53,
+      "set_aside": 3,
+      "couldnt_read": 3,
+      "not_read_yet": 0
+     },
+     "fields_stored": {
+      "median": 142,
+      "p10": 114
+     },
+     "federal": {
+      "reports": 51,
+      "values": 153,
+      "matches": 134,
+      "no_value": 6,
+      "differs": 13
+     },
+     "totals": {
+      "reports": 53,
+      "B1": {
+       "adds_up": 19,
+       "under_2pct": 0,
+       "off_more": 0,
+       "cant_check": 34
+      },
+      "C1": {
+       "adds_up": 45,
+       "under_2pct": 2,
+       "off_more": 1,
+       "cant_check": 5
+      },
+      "H1": {
+       "adds_up": 14,
+       "doesnt": 5,
+       "cant_check": 34
+      }
+     }
+    },
+    {
+     "format": "html",
+     "label": "web page",
+     "status": {
+      "published": 2,
+      "set_aside": 0,
+      "couldnt_read": 0,
+      "not_read_yet": 0
+     },
+     "fields_stored": {
+      "median": 150,
+      "p10": 150
+     },
+     "federal": {
+      "reports": 2,
+      "values": 6,
+      "matches": 6,
+      "no_value": 0,
+      "differs": 0
+     },
+     "totals": {
+      "reports": 2,
+      "B1": {
+       "adds_up": 0,
+       "under_2pct": 0,
+       "off_more": 0,
+       "cant_check": 2
+      },
+      "C1": {
+       "adds_up": 2,
+       "under_2pct": 0,
+       "off_more": 0,
+       "cant_check": 0
+      },
+      "H1": {
+       "adds_up": 1,
+       "doesnt": 1,
+       "cant_check": 0
+      }
+     }
+    }
+   ],
+   "total": {
+    "status": {
+     "published": 491,
+     "set_aside": 14,
+     "couldnt_read": 3,
+     "not_read_yet": 1
+    },
+    "fields_stored": {
+     "median": 547,
+     "p10": 213
+    },
+    "federal": {
+     "reports": 472,
+     "values": 1416,
+     "matches": 1268,
+     "no_value": 28,
+     "differs": 120
+    },
+    "totals": {
+     "reports": 491,
+     "B1": {
+      "adds_up": 336,
+      "under_2pct": 51,
+      "off_more": 31,
+      "cant_check": 73
+     },
+     "C1": {
+      "adds_up": 377,
+      "under_2pct": 58,
+      "off_more": 30,
+      "cant_check": 26
+     },
+     "H1": {
+      "adds_up": 345,
+      "doesnt": 60,
+      "cant_check": 86
+     }
+    }
+   }
+  },
+  {
+   "cds_year": "2025-26",
+   "form": {
+    "form_year": "2025-26",
+    "full_field_schema": true,
+    "questions": 1105
+   },
+   "federal_fall_loaded": false,
+   "other_form_numbering": 0,
+   "removed": 19,
+   "no_file": 0,
+   "set_aside_reasons": {
+    "blank_form": 4,
+    "too_little_read": 4,
+    "wrong_file": 1
+   },
+   "federal_left_out": {
+    "single_campus": 0,
+    "no_federal_figures": 0
+   },
+   "rows": [
+    {
+     "format": "pdf_flat",
+     "label": "standard PDF",
+     "status": {
+      "published": 270,
+      "set_aside": 8,
+      "couldnt_read": 0,
+      "not_read_yet": 0
+     },
+     "fields_stored": {
+      "median": 565,
+      "p10": 321
+     },
+     "federal": {
+      "reports": 0,
+      "values": 0,
+      "matches": 0,
+      "no_value": 0,
+      "differs": 0
+     },
+     "totals": {
+      "reports": 270,
+      "B1": {
+       "adds_up": 231,
+       "under_2pct": 4,
+       "off_more": 7,
+       "cant_check": 28
+      },
+      "C1": {
+       "adds_up": 182,
+       "under_2pct": 38,
+       "off_more": 15,
+       "cant_check": 35
+      },
+      "H1": {
+       "adds_up": 222,
+       "doesnt": 27,
+       "cant_check": 21
+      }
+     }
+    },
+    {
+     "format": "pdf_fillable",
+     "label": "fillable PDF",
+     "status": {
+      "published": 101,
+      "set_aside": 1,
+      "couldnt_read": 0,
+      "not_read_yet": 0
+     },
+     "fields_stored": {
+      "median": 678,
+      "p10": 558
+     },
+     "federal": {
+      "reports": 0,
+      "values": 0,
+      "matches": 0,
+      "no_value": 0,
+      "differs": 0
+     },
+     "totals": {
+      "reports": 101,
+      "B1": {
+       "adds_up": 98,
+       "under_2pct": 0,
+       "off_more": 0,
+       "cant_check": 3
+      },
+      "C1": {
+       "adds_up": 73,
+       "under_2pct": 9,
+       "off_more": 3,
+       "cant_check": 16
+      },
+      "H1": {
+       "adds_up": 95,
+       "doesnt": 1,
+       "cant_check": 5
+      }
+     }
+    },
+    {
+     "format": "xlsx",
+     "label": "spreadsheet",
+     "status": {
+      "published": 50,
+      "set_aside": 0,
+      "couldnt_read": 3,
+      "not_read_yet": 0
+     },
+     "fields_stored": {
+      "median": 671,
+      "p10": 522
+     },
+     "federal": {
+      "reports": 0,
+      "values": 0,
+      "matches": 0,
+      "no_value": 0,
+      "differs": 0
+     },
+     "totals": {
+      "reports": 50,
+      "B1": {
+       "adds_up": 45,
+       "under_2pct": 1,
+       "off_more": 0,
+       "cant_check": 4
+      },
+      "C1": {
+       "adds_up": 46,
+       "under_2pct": 3,
+       "off_more": 0,
+       "cant_check": 1
+      },
+      "H1": {
+       "adds_up": 42,
+       "doesnt": 3,
+       "cant_check": 5
+      }
+     }
+    },
+    {
+     "format": "docx",
+     "label": "Word",
+     "status": {
+      "published": 1,
+      "set_aside": 0,
+      "couldnt_read": 3,
+      "not_read_yet": 0
+     },
+     "fields_stored": {
+      "median": 462,
+      "p10": 462
+     },
+     "federal": {
+      "reports": 0,
+      "values": 0,
+      "matches": 0,
+      "no_value": 0,
+      "differs": 0
+     },
+     "totals": {
+      "reports": 1,
+      "B1": {
+       "adds_up": 0,
+       "under_2pct": 0,
+       "off_more": 0,
+       "cant_check": 1
+      },
+      "C1": {
+       "adds_up": 1,
+       "under_2pct": 0,
+       "off_more": 0,
+       "cant_check": 0
+      },
+      "H1": {
+       "adds_up": 0,
+       "doesnt": 0,
+       "cant_check": 1
+      }
+     }
+    },
+    {
+     "format": "html",
+     "label": "web page",
+     "status": {
+      "published": 1,
+      "set_aside": 0,
+      "couldnt_read": 0,
+      "not_read_yet": 0
+     },
+     "fields_stored": {
+      "median": 194,
+      "p10": 194
+     },
+     "federal": {
+      "reports": 0,
+      "values": 0,
+      "matches": 0,
+      "no_value": 0,
+      "differs": 0
+     },
+     "totals": {
+      "reports": 1,
+      "B1": {
+       "adds_up": 0,
+       "under_2pct": 0,
+       "off_more": 0,
+       "cant_check": 1
+      },
+      "C1": {
+       "adds_up": 1,
+       "under_2pct": 0,
+       "off_more": 0,
+       "cant_check": 0
+      },
+      "H1": {
+       "adds_up": 0,
+       "doesnt": 1,
+       "cant_check": 0
+      }
+     }
+    }
+   ],
+   "total": {
+    "status": {
+     "published": 423,
+     "set_aside": 9,
+     "couldnt_read": 6,
+     "not_read_yet": 0
+    },
+    "fields_stored": {
+     "median": 610,
+     "p10": 414
+    },
+    "federal": {
+     "reports": 0,
+     "values": 0,
+     "matches": 0,
+     "no_value": 0,
+     "differs": 0
+    },
+    "totals": {
+     "reports": 423,
+     "B1": {
+      "adds_up": 374,
+      "under_2pct": 5,
+      "off_more": 7,
+      "cant_check": 37
+     },
+     "C1": {
+      "adds_up": 303,
+      "under_2pct": 50,
+      "off_more": 18,
+      "cant_check": 52
+     },
+     "H1": {
+      "adds_up": 359,
+      "doesnt": 32,
+      "cant_check": 32
+     }
+    }
+   }
+  }
+ ]
+}

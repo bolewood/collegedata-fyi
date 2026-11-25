@@ -320,18 +320,12 @@ export function validateSnapshot(raw: unknown, source: string): QualitySnapshot 
 }
 
 /**
- * Pick the snapshot with the newest `snapshot_of`. Throws on: no files (when
- * `requireAny`), two files with the same date, or a file the page can't read.
+ * Pick the snapshot with the newest `snapshot_of`. Throws on: no files, two
+ * files with the same date, or a file the page can't read.
  */
-export function selectSnapshot(
-  files: { name: string; json: unknown }[],
-  requireAny: boolean,
-): QualitySnapshot | null {
+export function selectSnapshot(files: { name: string; json: unknown }[]): QualitySnapshot {
   if (files.length === 0) {
-    if (requireAny) {
-      throw new SnapshotError("web/src/data/data-quality has no snapshot (.json) files");
-    }
-    return null;
+    throw new SnapshotError("web/src/data/data-quality has no snapshot (.json) files");
   }
   const parsed = files.map((f) => validateSnapshot(f.json, f.name));
   const days = new Map<string, string>();

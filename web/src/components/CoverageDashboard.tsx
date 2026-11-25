@@ -47,7 +47,7 @@ import {
 } from "@/lib/coverage-model";
 import { isDataQualityLaunched, formatSnapshotDate, renewalTile, type Renewal } from "@/lib/data-quality";
 
-/** The committed Data quality snapshot's renewal block, passed in by the server page (null before the first snapshot). */
+/** The committed Data quality snapshot's renewal block, passed in by the server page, which always has one (the loader throws without a snapshot). Without it the dashboard leaves the tile out. */
 export type RenewalProp = { renewal: Renewal; snapshotOf: string } | null;
 
 const ROW_HEIGHT = 64;

@@ -25,10 +25,9 @@ export default async function CoveragePage() {
   ]);
   // PRD 040 amendment: current-year renewal comes from the committed Data
   // quality snapshot, not the live rows (they carry only the latest year with
-  // numbers). Null before the first snapshot is committed; throws once the
-  // Data quality gate is open and no snapshot exists.
+  // numbers). The loader throws when no snapshot is committed.
   const snapshot = loadLatestSnapshot();
-  const renewal = snapshot ? { renewal: snapshot.renewal, snapshotOf: snapshot.snapshot_of } : null;
+  const renewal = { renewal: snapshot.renewal, snapshotOf: snapshot.snapshot_of };
   const coloredRows = rows.map((row) => ({
     ...row,
     brand_colors: brandIndex[row.school_id] ?? null,

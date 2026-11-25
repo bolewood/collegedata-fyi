@@ -3,7 +3,6 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   SnapshotError,
-  isDataQualityLaunched,
   selectSnapshot,
   type QualitySnapshot,
 } from "./data-quality";
@@ -16,11 +15,10 @@ export const SNAPSHOT_DIR = path.join(process.cwd(), "src", "data", "data-qualit
  *
  * Failure rules (PRD 040): two files with one date, a file with a
  * `public_format` this page doesn't know, or a malformed file always throw.
- * An empty directory throws once the page is launched; before launch it
- * returns null so the repo can build while the lead hasn't committed the
- * first snapshot yet. A null result means "no data", never "zero".
+ * An empty directory also throws, gate open or closed: a missing snapshot is
+ * never shown as "no data, ok".
  */
-export function loadLatestSnapshot(dir: string = SNAPSHOT_DIR): QualitySnapshot | null {
+export function loadLatestSnapshot(dir: string = SNAPSHOT_DIR): QualitySnapshot {
   let names: string[];
   try {
     names = fs.readdirSync(dir).filter((n) => n.endsWith(".json")).sort();
@@ -38,5 +36,5 @@ export function loadLatestSnapshot(dir: string = SNAPSHOT_DIR): QualitySnapshot 
       throw new SnapshotError(`data-quality snapshot ${name} is not valid JSON: ${(error as Error).message}`);
     }
   });
-  return selectSnapshot(files, isDataQualityLaunched());
+  return selectSnapshot(files);
 }

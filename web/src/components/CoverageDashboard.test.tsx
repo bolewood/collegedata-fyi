@@ -67,7 +67,7 @@ describe("renewal tile", () => {
     expect(body).toContain("Snapshot of November 24, 2026");
   });
 
-  it("is left out, not shown as zero, when no snapshot has been committed", () => {
+  it("is left out, not shown as zero, when the dashboard is given no renewal block", () => {
     expect(render("", null)).not.toContain("renewal-tile");
   });
 });

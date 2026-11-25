@@ -58,7 +58,7 @@ describe("snapshot selection", () => {
       { name: "2026-11-24.json", json: withDate("2026-11-24T12:25:03Z") },
       { name: "2026-11-03.json", json: withDate("2026-11-03T09:00:00Z") },
     ];
-    expect(selectSnapshot(files, true)?.snapshot_of).toBe("2026-11-24T12:25:03Z");
+    expect(selectSnapshot(files).snapshot_of).toBe("2026-11-24T12:25:03Z");
   });
 
   it("fails on two files with the same date", () => {
@@ -66,27 +66,26 @@ describe("snapshot selection", () => {
       { name: "a.json", json: withDate("2026-11-24T01:00:00Z") },
       { name: "b.json", json: withDate("2026-11-24T23:00:00Z") },
     ];
-    expect(() => selectSnapshot(files, false)).toThrow(/same date 2026-11-24/);
+    expect(() => selectSnapshot(files)).toThrow(/same date 2026-11-24/);
   });
 
-  it("fails on an empty directory once the page is launched, and returns null before", () => {
-    expect(() => selectSnapshot([], true)).toThrow(SnapshotError);
-    expect(selectSnapshot([], false)).toBeNull();
+  it("fails on an empty directory", () => {
+    expect(() => selectSnapshot([])).toThrow(SnapshotError);
   });
 
   it("fails on a public_format the page doesn't know, even before launch", () => {
     const bad = { ...clone(), public_format: 2 };
-    expect(() => selectSnapshot([{ name: "x.json", json: bad }], false)).toThrow(/public_format/);
+    expect(() => selectSnapshot([{ name: "x.json", json: bad }])).toThrow(/public_format/);
   });
 
   it("fails on a snapshot with no renewal block or an empty renewal denominator", () => {
     const noBlock: Record<string, unknown> = { ...clone() };
     delete noBlock.renewal;
-    expect(() => selectSnapshot([{ name: "x.json", json: noBlock }], false)).toThrow(/renewal/);
+    expect(() => selectSnapshot([{ name: "x.json", json: noBlock }])).toThrow(/renewal/);
     const zero = clone();
     zero.renewal.previous = 0;
     zero.renewal.both = 0;
-    expect(() => selectSnapshot([{ name: "x.json", json: zero }], false)).toThrow(/denominator/);
+    expect(() => selectSnapshot([{ name: "x.json", json: zero }])).toThrow(/denominator/);
   });
 });
 
@@ -94,7 +93,7 @@ describe("snapshot validation", () => {
   const bad = (mutate: (s: QualitySnapshot) => void, why: RegExp) => {
     const snap = clone();
     mutate(snap);
-    expect(() => selectSnapshot([{ name: "x.json", json: snap }], false)).toThrow(why);
+    expect(() => selectSnapshot([{ name: "x.json", json: snap }])).toThrow(why);
   };
 
   it("fails on a missing or non-boolean federal_fall_loaded", () => {
@@ -153,7 +152,7 @@ describe("snapshot arithmetic", () => {
   const bad = (mutate: (s: QualitySnapshot) => void, why: RegExp) => {
     const snap = clone();
     mutate(snap);
-    expect(() => selectSnapshot([{ name: "x.json", json: snap }], false)).toThrow(why);
+    expect(() => selectSnapshot([{ name: "x.json", json: snap }])).toThrow(why);
   };
   /** Apply the same change to a format row and to the year total, so only the rule under test is broken. */
   const both = (s: QualitySnapshot, change: (r: QualityRow) => void) => {
@@ -219,7 +218,7 @@ describe("snapshot arithmetic", () => {
     const snap = clone();
     const y = snap.years.find((x) => !x.federal_fall_loaded)!;
     expect(y.federal_left_out.single_campus + y.federal_left_out.no_federal_figures + y.total.federal.reports).not.toBe(y.total.status.published);
-    expect(() => selectSnapshot([{ name: "x.json", json: snap }], false)).not.toThrow();
+    expect(() => selectSnapshot([{ name: "x.json", json: snap }])).not.toThrow();
   });
 
   it("refuses a key nothing reads, even when the named sums still add up", () => {
@@ -276,14 +275,14 @@ describe("snapshot arithmetic", () => {
     it("accepts not_compared of 0 (the producer omits it, but it is a count)", () => {
       const snap = clone();
       anyRec(snap.years[0].federal_left_out).not_compared = 0;
-      expect(() => selectSnapshot([{ name: "x.json", json: snap }], false)).not.toThrow();
+      expect(() => selectSnapshot([{ name: "x.json", json: snap }])).not.toThrow();
     });
   });
 
   it("accepts a year with no documents: no rows, all-zero totals (the producer writes one for a new form year)", () => {
     const snap = clone();
     snap.years.push(emptyYear("2026-27"));
-    const picked = selectSnapshot([{ name: "x.json", json: snap }], false)!;
+    const picked = selectSnapshot([{ name: "x.json", json: snap }]);
     expect(picked.years.find((y) => y.cds_year === "2026-27")!.rows).toEqual([]);
   });
 
@@ -296,7 +295,7 @@ describe("snapshot arithmetic", () => {
     y.total.totals.C1.adds_up = 1;
     y.total.totals.H1.adds_up = 1;
     snap.years.push(y);
-    expect(() => selectSnapshot([{ name: "x.json", json: snap }], false)).toThrow(/total status\.published is 1, but the rows add up to 0/);
+    expect(() => selectSnapshot([{ name: "x.json", json: snap }])).toThrow(/total status\.published is 1, but the rows add up to 0/);
   });
 
   it("requires every federal count to be zero in a year with no federal figures", () => {
@@ -312,7 +311,7 @@ describe("snapshot arithmetic", () => {
   });
 
   it("accepts the unmodified fixture", () => {
-    expect(selectSnapshot([{ name: "x.json", json: clone() }], false)).not.toBeNull();
+    expect(selectSnapshot([{ name: "x.json", json: clone() }]).years.length).toBeGreaterThan(0);
   });
 });
 
