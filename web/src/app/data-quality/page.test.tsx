@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FIXTURE_SNAPSHOT } from "@/lib/__fixtures__/data-quality-snapshot";
@@ -5,9 +7,10 @@ import { DATA_QUALITY_LAUNCH_DATE } from "@/lib/data-quality";
 
 const mocks = vi.hoisted(() => ({
   loadLatestSnapshot: vi.fn(),
+  loadReportsFor: vi.fn(),
 }));
 
-vi.mock("@/lib/data-quality-snapshots", () => ({ loadLatestSnapshot: mocks.loadLatestSnapshot }));
+vi.mock("@/lib/data-quality-snapshots", () => ({ loadLatestSnapshot: mocks.loadLatestSnapshot, loadReportsFor: mocks.loadReportsFor }));
 vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
@@ -17,6 +20,7 @@ import DataQualityPage, { generateMetadata } from "./page";
 afterEach(() => {
   vi.useRealTimers();
   mocks.loadLatestSnapshot.mockReset();
+  mocks.loadReportsFor.mockReset();
 });
 
 describe("/data-quality launch gate", () => {
@@ -70,5 +74,43 @@ describe("/data-quality launch gate", () => {
     expect(line).toContain("12:25 UTC");
     expect(line).toContain(FIXTURE_SNAPSHOT.scoreboard_run);
     expect(html).not.toMatch(/class="meta"[^>]*>\s*Numbers from/);
+  });
+});
+
+describe("/data-quality list of reports behind each count", () => {
+  const realReports = () => {
+    const dir = path.join(process.cwd(), "src", "data", "data-quality", "reports");
+    return JSON.parse(fs.readFileSync(path.join(dir, fs.readdirSync(dir).filter((n) => n.endsWith(".json")).sort().at(-1)!), "utf8"));
+  };
+  const LAUNCH = Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`);
+  const renderAt = (ms: number, reports: unknown) => {
+    mocks.loadLatestSnapshot.mockReturnValue(FIXTURE_SNAPSHOT);
+    mocks.loadReportsFor.mockReturnValue(reports);
+    vi.useFakeTimers();
+    vi.setSystemTime(ms);
+    return renderToStaticMarkup(<DataQualityPage />);
+  };
+
+  it("makes no count a button before launch, and builds the page with the reports file loaded (so the build checks it)", () => {
+    const html = renderAt(LAUNCH - 1000, realReports());
+    expect(html).not.toContain("dq-count");
+    expect(mocks.loadReportsFor).toHaveBeenCalledWith(FIXTURE_SNAPSHOT);
+  });
+
+  it("makes counts buttons once launched, only when the snapshot has a reports file", () => {
+    expect(renderAt(LAUNCH, realReports())).toContain('class="dq-count"');
+    expect(renderAt(LAUNCH, null)).not.toContain("dq-count");
+  });
+
+  it("does not put the reports in the page: no report id, school name or school link of the file is in its HTML", () => {
+    const reports = realReports();
+    const html = renderAt(LAUNCH, reports);
+    const sample = Object.values(reports.years as Record<string, { id: string; school: string | null }[]>).flatMap((rows) => rows.slice(0, 40));
+    expect(sample.length).toBeGreaterThan(100);
+    for (const r of sample) {
+      expect(html).not.toContain(r.id);
+      if (r.school) expect(html).not.toContain(`/schools/${r.school}/`);
+    }
+    for (const name of Object.values(reports.schools as Record<string, string>).slice(0, 40)) expect(html).not.toContain(name);
   });
 });

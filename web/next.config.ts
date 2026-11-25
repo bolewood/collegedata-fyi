@@ -15,9 +15,18 @@ export const nextConfig: NextConfig = {
   trailingSlash: false,
   // PRD 040: the Data quality snapshots are read with node:fs at build and on
   // the coverage page's ISR re-render, so make sure the files ship with them.
+  // The snapshots are the top-level files; the reports file (reports/<date>.json,
+  // about 320 KB) is read only by the Data quality page and its reports route, so
+  // /coverage does not carry it (see the excludes below).
   outputFileTracingIncludes: {
-    "/coverage": ["./src/data/data-quality/**/*.json"],
+    "/coverage": ["./src/data/data-quality/*.json"],
     "/data-quality": ["./src/data/data-quality/**/*.json"],
+    "/data-quality/reports/[date]": ["./src/data/data-quality/**/*.json"],
+  },
+  // Next traces the whole data-quality directory for any route that reads it, so /coverage would still carry the reports
+  // file; leave it out there (the include above is not enough on its own, measured with `npm run build`).
+  outputFileTracingExcludes: {
+    "/coverage": ["./src/data/data-quality/reports/**"],
   },
   async redirects() {
     return [

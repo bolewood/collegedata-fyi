@@ -106,6 +106,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any, Callable, Iterable, NoReturn, Optional, Union
 
+import yaml
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "tools" / "browser_backend"))
 sys.path.insert(0, str(REPO_ROOT))
@@ -797,6 +799,8 @@ def manifest_entry(row: dict[str, Any]) -> dict[str, Any]:
         "document_id": row["document_id"], "year": row["canonical_year"],
         "source_format": row.get("source_format"), "extraction_status": row["extraction_status"],
         "data_quality_flag": row.get("data_quality_flag"), "removed": bool(row.get("removed_at")),
+        # So a document with no served extraction can still be listed under its school (runs before this had none).
+        "school_id": row.get("school_id"),
     }
 
 
@@ -1837,12 +1841,166 @@ def build_public(run: dict[str, Any], run_name: str) -> dict[str, Any]:
     return public
 
 
-def write_public(run_path: Path, out_dir: Path) -> Path:
+# ---------------------------------------------------------------------------
+# The reports behind each count (PRD 040 "click a cell to list its reports")
+# ---------------------------------------------------------------------------
+
+REPORTS_FORMAT = 1
+DEFAULT_SCHOOLS_YAML = REPO_ROOT / "tools" / "finder" / "schools.yaml"
+# A federal outcome as one letter: the value matched IPEDS, had no usable number of ours, or differs by over 2% up
+# to 10% (s) or by over 10% (l). `null` means the value is not counted (no IPEDS figure, one campus, no comparison).
+REPORT_CODES = {"m": "matches", "n": "no_value", "s": "differs_2_to_10pct", "l": "differs_over_10pct"}
+CHECK_NAMES = ("enrollment", "tuition")
+# A school's year page (/schools/<id>/<year>) 404s when it has no publicly listed document that year: web/src/lib/public-documents.ts
+# hides the flags below, and the page's query also leaves out removed documents. A test keeps this list equal to that file's.
+PUBLIC_HIDDEN_QUALITY_FLAGS = ("blank_template",)
+LISTED_STATUSES = ("published", "set_aside", "couldnt_read", "not_read_yet")
+
+
+def federal_code(ours: Optional[Union[int, Decimal]], federal: Optional[Decimal]) -> Optional[str]:
+    outcome = classify_federal(ours, federal)
+    if outcome is None:
+        return None
+    if outcome == "match":
+        return "m"
+    if outcome == "blank":
+        return "n"
+    return "s" if federal_difference_band(ours, federal) == "2_to_10" else "l"
+
+
+def load_school_names(path: Path = DEFAULT_SCHOOLS_YAML) -> dict[str, str]:
+    """{school id: display name} from the school list in the repo (no database read)."""
+    return {s["id"]: s["name"] for s in yaml.safe_load(path.read_text())["schools"]}
+
+
+def build_reports(run: dict[str, Any], public: dict[str, Any], names: dict[str, str]) -> dict[str, Any]:
+    """One row per report a count in the public snapshot counts, and only what a count needs: ids, school, format,
+    status, and for a published report the outcome in each table. No values. `public` (from `build_public`) says
+    which checks are loaded for a year, so a row carries an outcome exactly when the snapshot counts it."""
+    served = {d["document_id"]: d for d in run["documents"]}
+    years_out: dict[str, list[dict[str, Any]]] = {}
+    used: set[str] = set()
+    for year_block in public["years"]:
+        year = year_block["cds_year"]
+        loaded = year_block["federal_fall_loaded"]
+        # School-years whose page exists, as far as the run shows: some document of the school that year, not removed and not
+        # hidden, whatever its extraction status (checked in web/src/app/schools/[school_id]/[year]/page.tsx: it calls notFound()
+        # only when the listed documents are empty, and renders a document with no extraction as "not extracted"). A document
+        # the run has no school for cannot vouch for a page, so a row it would have vouched for stays unlinked. The page
+        # query also leaves out schools whose `participation_status` is withdrawn or verified_absent, which the run does not carry.
+        has_page = {(served[m["document_id"]].get("school_id") if m["document_id"] in served else m.get("school_id"))
+                    for m in run["manifest"]
+                    if m["year"] == year and not m["removed"] and m.get("data_quality_flag") not in PUBLIC_HIDDEN_QUALITY_FLAGS}
+        rows = []
+        for entry in (m for m in run["manifest"] if m["year"] == year):
+            doc = served.get(entry["document_id"])
+            status = classify_document(entry, doc)
+            if status not in LISTED_STATUSES:
+                continue
+            school = (doc or {}).get("school_id") or entry.get("school_id")
+            if school is not None and school not in names:
+                raise SystemExit(f"--public: school {school!r} (document {entry['document_id']}) is not in the school list")
+            fmt = public_format_key(entry["source_format"])
+            row: dict[str, Any] = {"id": entry["document_id"], "school": school, "format": fmt, "status": status}
+            if status == "published":
+                if public_format_key(doc["format"]) != fmt:
+                    raise SystemExit(f"--public: {entry['document_id']} has format {doc['format']!r} but the manifest says {entry['source_format']!r}")
+                counted = loaded and not doc["sub_institutional"]
+                row["fed"] = [federal_code(doc["federal_values"][m]["ours"], Decimal(doc["federal_values"][m]["federal"])
+                                           if doc["federal_values"][m]["federal"] is not None else None)
+                              if counted and doc["federal"][m] else None for m in FEDERAL_KEYS]
+                row["sums"] = [(SUM_OUTCOME_KEY if t in NEAR_MISS_TABLES else AID_OUTCOME_KEY)[doc["sums"][t]] for t in SUM_TABLES]
+                row["checks"] = [federal_code(*federal_check_pair(doc, name))
+                                 if year_block["federal_checks"][name]["loaded"] and not doc["sub_institutional"] else None
+                                 for name in CHECK_NAMES]
+            if school is not None:
+                used.add(school)
+                if school not in has_page:
+                    row["nopage"] = True     # listed by name, not linked: its year page does not exist
+            rows.append(row)
+        rows.sort(key=lambda r: (names.get(r["school"] or "", "~").casefold(), r["id"]))
+        years_out[year] = rows
+    return {"reports_format": REPORTS_FORMAT, "snapshot_of": public["snapshot_of"], "scoreboard_run": public["scoreboard_run"],
+            "codes": REPORT_CODES, "schools": {k: names[k] for k in sorted(used)}, "years": years_out}
+
+
+def _cell(counts: Counter, year: str, row: str, table: str, column: str, by: int = 1) -> None:
+    counts[(year, row, table, column)] += by
+
+
+def cells_from_reports(reports: dict[str, Any]) -> Counter:
+    """Every count a snapshot cell holds, worked out from the report rows alone: {(year, row, table, column): n}."""
+    counts: Counter = Counter()
+    for year, rows in reports["years"].items():
+        for r in rows:
+            for key in (r["format"], "total"):
+                _cell(counts, year, key, "status", r["status"])
+                if r["status"] != "published":
+                    continue
+                _cell(counts, year, key, "totals", "reports")
+                for table, outcome in zip(SUM_TABLES, r["sums"]):
+                    _cell(counts, year, key, "totals", f"{table}.{outcome}")
+                federal = [c for c in r["fed"] if c]
+                if federal:
+                    _cell(counts, year, key, "federal", "reports")
+                for code in federal:
+                    _cell(counts, year, key, "federal", "values")
+                    _cell(counts, year, key, "federal", REPORT_CODES[code])
+                    if code in "sl":
+                        _cell(counts, year, key, "federal", "differs")
+                for name, code in zip(CHECK_NAMES, r["checks"]):
+                    if code:
+                        _cell(counts, year, key, name, "reports")
+                        _cell(counts, year, key, name, REPORT_CODES[code])
+                        if code in "sl":
+                            _cell(counts, year, key, name, "differs")
+    return counts
+
+
+def cells_from_public(public: dict[str, Any]) -> Counter:
+    """The same cells, read from the aggregate snapshot (every count cell of Tables A, B, B2 and C)."""
+    counts: Counter = Counter()
+    for year_block in public["years"]:
+        year = year_block["cds_year"]
+        for block in [*year_block["rows"], {**year_block["total"], "format": "total"}]:
+            key = block["format"]
+            for status in LISTED_STATUSES:
+                _cell(counts, year, key, "status", status, block["status"][status])
+            _cell(counts, year, key, "totals", "reports", block["totals"]["reports"])
+            for table in SUM_TABLES:
+                for outcome, n in block["totals"][table].items():
+                    _cell(counts, year, key, "totals", f"{table}.{outcome}", n)
+            for column, n in block["federal"].items():
+                _cell(counts, year, key, "federal", column, n)
+            for name in CHECK_NAMES:
+                for column, n in block["checks"][name].items():
+                    _cell(counts, year, key, name, column, n)
+    return Counter({k: v for k, v in counts.items() if v})
+
+
+def check_reports_agree(public: dict[str, Any], reports: dict[str, Any]) -> None:
+    """Refuse unless every count in the snapshot equals the number of report rows that count lists."""
+    if reports["snapshot_of"] != public["snapshot_of"] or reports["scoreboard_run"] != public["scoreboard_run"]:
+        raise SystemExit("--public: the reports file is not from the same run as the snapshot")
+    have = Counter({k: v for k, v in cells_from_reports(reports).items() if v})
+    want = cells_from_public(public)
+    if have != want:
+        diff = sorted(set(have) | set(want), key=str)
+        bad = [(k, want.get(k, 0), have.get(k, 0)) for k in diff if have.get(k, 0) != want.get(k, 0)]
+        raise SystemExit(f"--public: the reports file disagrees with the snapshot in {len(bad)} cells, e.g. {bad[:3]}")
+
+
+def write_public(run_path: Path, out_dir: Path, names: Optional[dict[str, str]] = None) -> Path:
     run = json.loads(run_path.read_text())
     public = build_public(run, run_path.name)
+    reports = build_reports(run, public, load_school_names() if names is None else names)
+    check_reports_agree(public, reports)
     out_dir.mkdir(parents=True, exist_ok=True)
-    target = out_dir / f"{public['snapshot_of'][:10]}.json"
+    day = public["snapshot_of"][:10]
+    target = out_dir / f"{day}.json"
     target.write_text(json.dumps(public, indent=1) + "\n")
+    (out_dir / "reports").mkdir(exist_ok=True)
+    (out_dir / "reports" / f"{day}.json").write_text(json.dumps(reports, separators=(",", ":")) + "\n")
     return target
 
 
