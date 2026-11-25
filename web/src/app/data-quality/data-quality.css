@@ -23,6 +23,7 @@
   .dq-table--s { width: calc(100cqw + 180px); }
   .dq-table--b { width: calc(100cqw + 400px); }
   .dq-table--b-split { width: calc(100cqw + 600px); }
+  .dq-table--x { width: calc(100cqw + 500px); }
   .dq-table--glance col:nth-child(1) { width: 24cqw; }
   .dq-table--glance col:nth-child(2) { width: 26cqw; }
   .dq-table--glance col:nth-child(3) { width: 25cqw; }
@@ -40,6 +41,10 @@
   .dq-table--b col:nth-child(2) { width: 33cqw; }
   .dq-table--b col:nth-child(3) { width: 33cqw; }
   .dq-table--b col:nth-child(n + 4) { width: 100px; }
+  .dq-table--x col:nth-child(1) { width: 34cqw; }
+  .dq-table--x col:nth-child(2) { width: 33cqw; }
+  .dq-table--x col:nth-child(3) { width: 33cqw; }
+  .dq-table--x col:nth-child(n + 4) { width: 100px; }
 }
 @container (max-width: 819px) {
   .dq-table--c { min-width: 0; table-layout: fixed; width: calc(100cqw + 540px); }

@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V2 } from "@/lib/__fixtures__/data-quality-snapshot";
+import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V2, FIXTURE_SNAPSHOT_V3 } from "@/lib/__fixtures__/data-quality-snapshot";
 import { DATA_LICENSE_LINK_HEADER } from "@/lib/data-license";
 import { DATA_QUALITY_LAUNCH_DATE, TABLE_TITLES, buildQualityCsv, qualityCsvPath, type QualityTableId } from "@/lib/data-quality";
 
@@ -99,6 +99,23 @@ describe("/data-quality/csv/[table]/[year]", () => {
     expect(pairs).not.toContain("sections/2024-25");
     expect(pairs).toContain("sections/2023-24");
     expect(pairs).toContain("reports/2024-25");
+  });
+
+  it("serves the enrollment and tuition tables with the Link header and filenames, and 404s them for a format 3 snapshot", async () => {
+    open();
+    writeSnapshot();
+    for (const [table, slug] of [["enrollment", "federal-enrollment"], ["tuition", "federal-tuition"]]) {
+      const res = await get(table, "2023-24");
+      expect(res.status).toBe(200);
+      expect(res.headers.get("Link")).toBe(DATA_LICENSE_LINK_HEADER);
+      expect(res.headers.get("Content-Disposition")).toBe(`attachment; filename="collegedata-data-quality-${slug}-2023-24-2026-11-24.csv"`);
+      expect((await raw(res)).charCodeAt(0)).toBe(0xfeff);
+    }
+    writeSnapshot(FIXTURE_SNAPSHOT_V3);
+    expect((await get("enrollment", "2023-24")).status).toBe(404);
+    expect((await get("tuition", "2023-24")).status).toBe(404);
+    expect((await get("sections", "2023-24")).status).toBe(200);
+    expect(generateStaticParams().some((p) => p.table === "enrollment" || p.table === "tuition")).toBe(false);
   });
 
   it("has no by-section table for a snapshot written before public_format 3", async () => {

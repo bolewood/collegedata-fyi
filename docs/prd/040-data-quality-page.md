@@ -376,6 +376,29 @@ path").
     15 differing values, 5 (in 3 reports) are over 10%, and of those 3
     reports 2 had the number we compared in the school's file and 1
     (Fairleigh Dickinson) was our scope error.
+- **Table B, more checks** (`public_format` 4): under Table B, two tables with
+  Table B's columns minus "Values" (one value per report). Same classes (match
+  within 2%, no value, differs split over 2% to 10% and over 10%), same
+  population rule (a value counts only when IPEDS has a positive figure; one
+  campus or unit left out).
+  - **Enrollment:** our B1 "Total all undergraduates" against IPEDS `EFUG`
+    (DRVEF, fall of the CDS year). Both count degree-seeking and
+    non-degree-seeking, full-time and part-time undergraduates on a fall census
+    date. Expected differences: the census date, and a school counting a
+    different group. In the 2026-11-25 run 90% of compared totals are within
+    2%.
+  - **Tuition:** one figure per report, the all-undergraduates private figure
+    (G.102) else the in-state figure (G.108), against IPEDS `TUITION2`
+    (COST1, in-state, academic year starting the fall after the CDS year,
+    because the form asks for the following year's price). Neither includes
+    required fees (IPEDS FEE2, CDS G.111). Out-of-state (G.109/TUITION3) and
+    first-year rows are not compared: one figure per report keeps a school that
+    fills several rows from counting several times, and the first-year rows
+    match the all-undergraduates rows closely. Not aligned: per-credit or
+    program-specific pricing, several rates, a different year.
+  - Whether IPEDS figures are loaded is per check and per year: the CDS 2024-25
+    and 2025-26 tuition (IPEDS 2025 and 2026) and 2025-26 enrollment (fall
+    2025) are not loaded, so those cells are dashes with a notice.
 - Population: published reports with at least one IPEDS figure to compare.
   - Left out, with counts in the note: reports filed for one campus or unit
     (IPEDS reports the whole institution), and reports whose school has no
@@ -496,7 +519,7 @@ example, two 2023-24 spreadsheets were read by Tier 4.
 
   ```json
   {
-    "public_format": 3,
+    "public_format": 4,
     "snapshot_of": "2026-11-24T12:25:03Z",
     "scoreboard_run": "scoreboard-20261124T122503Z.json",
     "years": [{
@@ -540,6 +563,14 @@ example, two 2023-24 spreadsheets were read by Tier 4.
   [{"section": "A", "questions": 0, "stored_median": 0, "usable_median": 0}]}`
   (rows empty for a year whose form has no full field schema). Required on 3,
   refused on 1 and 2.
+
+  `public_format` 4 adds `checks` to every row and total
+  (`{"enrollment": C, "tuition": C}`, where `C` is `{reports, matches,
+  no_value, differs, differs_2_to_10pct, differs_over_10pct}`, one value per
+  report so `matches + no_value + differs = reports`) and `federal_checks` to
+  every year (`{"enrollment": I, "tuition": I}`, where `I` is `{loaded,
+  data_year, single_campus, no_federal_figures}`). Required on 4, refused on 1
+  to 3.
 
   The row values are placeholders. The year-level values are from the
   2026-11-24 run.
@@ -721,8 +752,9 @@ UI tests across M1 and M2:
   a different count date from a misread column or a scope mismatch, but size
   alone does not say which. The hand check holds only 3 reports with a gap
   over 10%, too few to say how many large gaps are ours.
-- **More federal checks:** undergraduate enrollment (B1) against IPEDS fall
-  enrollment, and tuition (G1) against IPEDS. Each needs a
+- **More federal checks:** built (`public_format` 4; see "Table B, more
+  checks"): undergraduate enrollment (B1) against IPEDS fall undergraduate
+  enrollment, and tuition (G1) against IPEDS in-state tuition, each with a
   definition-alignment note.
 - **Click a cell to list its reports,** with links to each school's page.
   There's no privacy bar. It needs per-report rows in the public snapshot.

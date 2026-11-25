@@ -27,9 +27,10 @@ export const PROJECTED_FROM_YEAR_START = 2024;
  * Format 1 is the first snapshot shape. Format 2 adds the size of federal differences (`federal.differs_2_to_10pct`
  * and `federal.differs_over_10pct`); those keys are required on 2 and refused on 1. Format 1 files stay readable so a
  * later trend line can use them. Format 3 adds `sections` to each year (fields stored and usable answers by CDS
- * section): required on 3, refused on 1 and 2.
+ * section): required on 3, refused on 1 and 2. Format 4 adds the enrollment (B1) and tuition (G1) checks against IPEDS
+ * (`checks` in each row and total, `federal_checks` in each year): required on 4, refused on 1 to 3.
  */
-export const KNOWN_PUBLIC_FORMATS: readonly number[] = [1, 2, 3];
+export const KNOWN_PUBLIC_FORMATS: readonly number[] = [1, 2, 3, 4];
 
 export type StatusCounts = {
   published: number;
@@ -60,11 +61,30 @@ export type SumOutcomes = {
 export type AidOutcomes = { adds_up: number; doesnt: number; cant_check: number };
 export type TotalsCounts = { reports: number; B1: SumOutcomes; C1: SumOutcomes; H1: AidOutcomes };
 
+/**
+ * One of the two extra federal checks, one value per report, so `reports` is also the number of values:
+ * matches + no_value + differs = reports. Differs split by size as in Table B.
+ */
+export type CheckCounts = {
+  reports: number;
+  matches: number;
+  no_value: number;
+  differs: number;
+  differs_2_to_10pct: number;
+  differs_over_10pct: number;
+};
+export type CheckName = "enrollment" | "tuition";
+export type ChecksBlock = Record<CheckName, CheckCounts>;
+/** What a year knows about a check: whether IPEDS figures are loaded for it, which IPEDS year they are, who was left out. */
+export type CheckInfo = { loaded: boolean; data_year: number; single_campus: number; no_federal_figures: number };
+
 export type QualityRow = {
   status: StatusCounts;
   fields_stored: FieldsStored;
   federal: FederalCounts;
   totals: TotalsCounts;
+  /** public_format 4; absent on 1 to 3. */
+  checks?: ChecksBlock;
 };
 
 export type QualityFormatRow = QualityRow & { format: string; label: string };
@@ -98,6 +118,8 @@ export type QualityYear = {
   total: QualityRow;
   /** public_format 3; absent on 1 and 2. */
   sections?: QualitySections;
+  /** public_format 4; absent on 1 to 3. */
+  federal_checks?: Record<CheckName, CheckInfo>;
 };
 
 export type Renewal = {
@@ -169,6 +191,23 @@ const FEDERAL_SPLIT_KEYS = ["differs_2_to_10pct", "differs_over_10pct"];
 const SUM_KEYS = ["adds_up", "under_2pct", "off_more", "cant_check"];
 const AID_KEYS = ["adds_up", "doesnt", "cant_check"];
 
+const CHECK_KEYS = ["reports", "matches", "no_value", "differs", "differs_2_to_10pct", "differs_over_10pct"];
+const CHECK_NAMES: CheckName[] = ["enrollment", "tuition"];
+
+/** `checks` of a row or total: both checks, each exactly the six counts (format 4), or absent (formats 1 to 3). */
+function checksProblem(r: Record<string, unknown>, format: number): string | null {
+  if (format < 4) return r.checks === undefined ? null : `unexpected key checks on public_format ${format}`;
+  const checks = r.checks as Record<string, unknown> | undefined;
+  if (!checks || typeof checks !== "object") return "checks is missing";
+  const extra = Object.keys(checks).find((k) => !CHECK_NAMES.includes(k as CheckName));
+  if (extra) return `checks: unexpected key ${extra}`;
+  for (const name of CHECK_NAMES) {
+    const problem = allCounts(checks[name], CHECK_KEYS);
+    if (problem) return `checks.${name}: ${problem}`;
+  }
+  return null;
+}
+
 /** A row or year total: status, fields_stored, federal and totals blocks, all counts, no other keys. */
 function rowCountsProblem(row: unknown, format: number): string | null {
   if (!row || typeof row !== "object") return "missing";
@@ -181,7 +220,8 @@ function rowCountsProblem(row: unknown, format: number): string | null {
     (totals && isCount(totals.reports) ? null : "totals.reports must be a non-negative integer") ??
     allCounts(totals?.B1, SUM_KEYS) ??
     allCounts(totals?.C1, SUM_KEYS) ??
-    allCounts(totals?.H1, AID_KEYS)
+    allCounts(totals?.H1, AID_KEYS) ??
+    checksProblem(r, format)
   );
 }
 
@@ -198,6 +238,38 @@ export const SECTION_NAMES: Readonly<Record<string, string>> = {
   I: "Instructional faculty and class size",
   J: "Disciplinary areas of degrees conferred",
 };
+
+/**
+ * `federal_checks` of a year (format 4): per check, whether IPEDS figures are loaded, the IPEDS year, and who was left
+ * out. The IPEDS year is the fall for enrollment and the next fall's academic year for tuition (the CDS form asks for the
+ * following year's price). When loaded, reports checked + left out = published; when not, no report is checked.
+ */
+function federalChecksProblem(year: Record<string, unknown>): string | null {
+  const block = year.federal_checks as Record<string, Record<string, unknown>> | undefined;
+  if (!block || typeof block !== "object") return "federal_checks is missing";
+  const extra = Object.keys(block).find((k) => !CHECK_NAMES.includes(k as CheckName));
+  if (extra) return `federal_checks: unexpected key ${extra}`;
+  const total = year.total as QualityRow;
+  for (const name of CHECK_NAMES) {
+    const info = block[name];
+    if (!info || typeof info !== "object") return `federal_checks.${name} is missing`;
+    const { loaded, ...counts } = info;
+    if (typeof loaded !== "boolean") return `federal_checks.${name}: loaded must be a boolean`;
+    const problem = allCounts(counts, ["data_year", "single_campus", "no_federal_figures"]);
+    if (problem) return `federal_checks.${name}: ${problem}`;
+    const expected = Number(String(year.cds_year).slice(0, 4)) + (name === "tuition" ? 1 : 0);
+    if (info.data_year !== expected) return `federal_checks.${name}: data_year is ${String(info.data_year)}, not ${expected}`;
+    const reports = total.checks![name].reports;
+    if (!loaded) {
+      for (const r of [...(year.rows as QualityRow[]), total]) {
+        if (Object.values(r.checks![name]).some((n) => n !== 0)) return `federal_checks.${name}: counts are not zero for a year with no IPEDS figures`;
+      }
+    } else if (reports + (info.single_campus as number) + (info.no_federal_figures as number) !== total.status.published) {
+      return `federal_checks.${name}: reports checked + left out don't add up to the total's published`;
+    }
+  }
+  return null;
+}
 
 /** Shape and arithmetic of a year's `sections` block. Returns the first problem or null. */
 function sectionsProblem(year: Record<string, unknown>): string | null {
@@ -259,6 +331,11 @@ function summedCounts(r: QualityRow): Counts {
     // Public format 1 has no split: leave the keys out (a sum of rows that are all absent is zero either way).
     ...(f.differs_2_to_10pct === undefined ? {} : { "federal.differs_2_to_10pct": f.differs_2_to_10pct }),
     ...(f.differs_over_10pct === undefined ? {} : { "federal.differs_over_10pct": f.differs_over_10pct }),
+    ...(r.checks === undefined
+      ? {}
+      : Object.fromEntries(
+          CHECK_NAMES.flatMap((name) => CHECK_KEYS.map((k) => [`checks.${name}.${k}`, r.checks![name][k as keyof CheckCounts]])),
+        )),
     "totals.reports": t.reports,
     "totals.B1.adds_up": t.B1.adds_up,
     "totals.B1.under_2pct": t.B1.under_2pct,
@@ -306,6 +383,12 @@ function arithmeticProblem(year: QualityYear): string | null {
     if (f.matches + f.no_value + f.differs !== f.values) return `${name}: federal matches + no_value + differs is not values`;
     if (f.differs_2_to_10pct !== undefined && f.differs_2_to_10pct + (f.differs_over_10pct ?? 0) !== f.differs) {
       return `${name}: federal differs_2_to_10pct + differs_over_10pct is not differs`;
+    }
+    for (const which of r.checks ? CHECK_NAMES : []) {
+      const c = r.checks![which];
+      if (c.matches + c.no_value + c.differs !== c.reports) return `${name}: ${which} matches + no_value + differs is not reports`;
+      if (c.differs_2_to_10pct + c.differs_over_10pct !== c.differs) return `${name}: ${which} differs_2_to_10pct + differs_over_10pct is not differs`;
+      if (c.reports > r.status.published) return `${name}: ${which} reports exceeds published`;
     }
     if (f.values > 3 * f.reports) return `${name}: federal values exceed 3 per report`;
     if (f.reports > r.status.published) return `${name}: federal.reports exceeds published`;
@@ -409,6 +492,12 @@ export function validateSnapshot(raw: unknown, source: string): QualitySnapshot 
     const arithmetic = arithmeticProblem(y as unknown as QualityYear);
     if (arithmetic) return fail(`${where}: ${arithmetic}`);
     // Public format 3 adds `sections`; formats 1 and 2 must not carry it.
+    if (s.public_format >= 4) {
+      const checks = federalChecksProblem(y);
+      if (checks) return fail(`${where}: ${checks}`);
+    } else if (y.federal_checks !== undefined) {
+      return fail(`${where}: unexpected key federal_checks on public_format ${s.public_format}`);
+    }
     if (s.public_format >= 3) {
       const sections = sectionsProblem(y);
       if (sections) return fail(`${where}: ${sections}`);
@@ -654,12 +743,14 @@ export function csvLine(cells: (string | number | null | undefined)[]): string {
 /** UTF-8 byte order mark. Excel needs it to read non-ASCII text; CSV routes start the body with it. */
 export const CSV_BOM = "\uFEFF";
 
-export type QualityTableId = "reports" | "sections" | "federal" | "totals";
+export type QualityTableId = "reports" | "sections" | "federal" | "enrollment" | "tuition" | "totals";
 
 export const TABLE_TITLES: Record<QualityTableId, string> = {
   reports: "Reports and fields stored",
   sections: "Fields stored and usable answers by section",
   federal: "Admissions against federal figures",
+  enrollment: "Undergraduate enrollment against federal figures",
+  tuition: "Tuition against federal figures",
   totals: "Do the printed totals add up?",
 };
 
@@ -667,8 +758,15 @@ const TABLE_SLUG: Record<QualityTableId, string> = {
   reports: "reports",
   sections: "sections",
   federal: "federal-match",
+  enrollment: "federal-enrollment",
+  tuition: "federal-tuition",
   totals: "totals-add-up",
 };
+
+/** True when the year has the enrollment and tuition checks (public_format 4). */
+export function hasFederalChecks(year: QualityYear): boolean {
+  return year.federal_checks !== undefined;
+}
 
 /** True when the year has a by-section table (public_format 3 and a form with a full field schema). */
 export function hasSections(year: QualityYear): boolean {
@@ -714,6 +812,15 @@ export function buildQualityCsv(table: QualityTableId, year: QualityYear): strin
       // No reports: nothing to take a median of. Blank, like the page's dash, not 0. Under 5 reports: no share.
       const none = block.reports === 0;
       lines.push(csvLine([r.section, SECTION_NAMES[r.section], r.questions, block.reports, none ? "" : r.stored_median, none ? "" : r.usable_median, none ? "" : sectionUsableShare(r, block.reports)]));
+    }
+  } else if (table === "enrollment" || table === "tuition") {
+    // Only a year with the checks is served (the route 404s otherwise).
+    const loaded = year.federal_checks![table].loaded;
+    lines.push(csvLine(["format", "reports_checked", "matches", "no_value", "differs", "differs_over_2pct_to_10pct", "differs_over_10pct"]));
+    for (const { name, row } of all) {
+      const c = row.checks![table];
+      // No IPEDS figures for the year: blanks, not zeros.
+      lines.push(csvLine(loaded ? [name, c.reports, c.matches, c.no_value, c.differs, c.differs_2_to_10pct, c.differs_over_10pct] : [name, "", "", "", "", "", ""]));
     }
   } else if (table === "federal") {
     // The size columns exist only for a public_format 2 snapshot.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V1, FIXTURE_SNAPSHOT_V2, emptyYear } from "./__fixtures__/data-quality-snapshot";
+import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V1, FIXTURE_SNAPSHOT_V2, FIXTURE_SNAPSHOT_V3, emptyYear } from "./__fixtures__/data-quality-snapshot";
 import {
   DATA_QUALITY_LAUNCH_DATE,
   MIN_REPORTS_FOR_RATE,
@@ -7,6 +7,7 @@ import {
   buildQualityCsv,
   compareYearsDesc,
   hasDifferenceSplit,
+  hasFederalChecks,
   hasSections,
   sectionUsableShare,
   isDataQualityLaunched,
@@ -205,6 +206,107 @@ describe("fields and usable answers by section (public_format 3)", () => {
   });
 });
 
+describe("enrollment and tuition against federal figures (public_format 4)", () => {
+  const select = (snap: QualitySnapshot) => selectSnapshot([{ name: "x.json", json: snap }]);
+  const bad = (mutate: (s: QualitySnapshot) => void, why: RegExp) => {
+    const snap = clone();
+    mutate(snap);
+    expect(() => select(snap)).toThrow(why);
+  };
+  const y = (s: QualitySnapshot, year = "2023-24") => s.years.find((x) => x.cds_year === year)!;
+  const NAMES = ["enrollment", "tuition"] as const;
+  const KEYS = ["reports", "matches", "no_value", "differs", "differs_2_to_10pct", "differs_over_10pct"] as const;
+
+  it("is required on format 4 and refused on formats 1 to 3, in rows, totals and years", () => {
+    bad((s) => delete y(s).rows[0].checks, /checks is missing/);
+    bad((s) => delete y(s).total.checks, /checks is missing/);
+    bad((s) => delete y(s).federal_checks, /federal_checks is missing/);
+    for (const snap of [FIXTURE_SNAPSHOT_V1, FIXTURE_SNAPSHOT_V2, FIXTURE_SNAPSHOT_V3]) {
+      const withRow = JSON.parse(JSON.stringify(snap)) as QualitySnapshot;
+      withRow.years[0].total.checks = clone().years[0].total.checks;
+      expect(() => select(withRow)).toThrow(/unexpected key checks on public_format/);
+      const withYear = JSON.parse(JSON.stringify(snap)) as QualitySnapshot;
+      withYear.years[0].federal_checks = clone().years[0].federal_checks;
+      expect(() => select(withYear)).toThrow(/unexpected key federal_checks on public_format/);
+    }
+    expect(select(FIXTURE_SNAPSHOT_V3).years.some(hasFederalChecks)).toBe(false);
+  });
+
+  it.each(NAMES.flatMap((n) => KEYS.map((k) => [n, k] as const)))("requires %s %s, even in a row whose count is zero", (name, key) => {
+    for (const target of ["a counted row", "a zero row"] as const) {
+      const snap = clone();
+      const r = target === "a counted row" ? y(snap).rows[0] : y(snap, "2025-26").rows[0];
+      delete (r.checks![name] as Partial<Record<string, number>>)[key];
+      expect(() => select(snap)).toThrow(new RegExp(`checks\\.${name}: ${key} must be a non-negative integer`));
+    }
+  });
+
+  it("has exactly the keys it lists", () => {
+    bad((s) => ((y(s).total.checks!.enrollment as unknown as Record<string, number>).values = 1), /unexpected key values/);
+    bad((s) => ((y(s).total.checks as unknown as Record<string, unknown>).other = {}), /checks: unexpected key other/);
+    bad((s) => ((y(s).federal_checks!.tuition as unknown as Record<string, number>).extra = 1), /unexpected key extra/);
+    bad((s) => ((y(s).federal_checks as unknown as Record<string, unknown>).other = {}), /federal_checks: unexpected key other/);
+    bad((s) => ((y(s).federal_checks!.tuition as unknown as Record<string, unknown>).loaded = "yes"), /loaded must be a boolean/);
+    bad((s) => delete (y(s).federal_checks as Partial<Record<string, unknown>>).tuition, /federal_checks\.tuition is missing/);
+  });
+
+  it("makes matches + no value + differs equal reports, and the split equal differs, in a row and the total", () => {
+    for (const name of NAMES) {
+      bad((s) => { y(s).rows[0].checks![name].reports += 1; y(s).total.checks![name].reports += 1; }, new RegExp(`${name} matches \\+ no_value \\+ differs is not reports`));
+      bad((s) => { y(s).rows[0].checks![name].differs_over_10pct += 1; y(s).total.checks![name].differs_over_10pct += 1; }, new RegExp(`${name} differs_2_to_10pct \\+ differs_over_10pct is not differs`));
+    }
+  });
+
+  it("makes each total the sum of its rows", () => {
+    for (const name of NAMES) {
+      for (const key of KEYS) {
+        const snap = clone();
+        y(snap).total.checks![name][key] += 1;
+        expect(() => select(snap)).toThrow(new RegExp(`total checks\\.${name}\\.${key} is`));
+      }
+    }
+  });
+
+  it("keeps reports within published, and reports checked + left out equal to published when loaded", () => {
+    bad((s) => {
+      const r = y(s).rows[0].checks!.enrollment;
+      const pub = y(s).rows[0].status.published;
+      const d = pub + 1 - r.reports;
+      r.reports += d; r.matches += d;
+      y(s).total.checks!.enrollment.reports += d; y(s).total.checks!.enrollment.matches += d;
+    }, /enrollment reports exceeds published/);
+    bad((s) => (y(s).federal_checks!.enrollment.no_federal_figures += 1), /reports checked \+ left out don't add up/);
+    bad((s) => (y(s).federal_checks!.tuition.single_campus += 1), /reports checked \+ left out don't add up/);
+  });
+
+  it("requires zero counts in a year with no IPEDS figures for a check, and the right IPEDS year", () => {
+    bad((s) => {
+      for (const r of [y(s, "2024-25").rows[0], y(s, "2024-25").total]) { r.checks!.tuition.reports = 1; r.checks!.tuition.matches = 1; }
+    }, /counts are not zero for a year with no IPEDS figures/);
+    bad((s) => (y(s, "2024-25").federal_checks!.tuition.data_year = 2024), /data_year is 2024, not 2025/);
+    bad((s) => (y(s).federal_checks!.enrollment.data_year = 2024), /data_year is 2024, not 2023/);
+  });
+
+  it("reports which years have the checks", () => {
+    expect(FIXTURE_SNAPSHOT.years.every(hasFederalChecks)).toBe(true);
+    expect(y(FIXTURE_SNAPSHOT, "2024-25").federal_checks).toEqual({
+      enrollment: { loaded: true, data_year: 2024, single_campus: 1, no_federal_figures: 0 },
+      tuition: { loaded: false, data_year: 2025, single_campus: 1, no_federal_figures: 0 },
+    });
+  });
+
+  it("writes the enrollment and tuition CSVs from hand-worked cells, and blanks, not zeros, where nothing is loaded", () => {
+    const y2425 = y(FIXTURE_SNAPSHOT, "2024-25");
+    const head = "format,reports_checked,matches,no_value,differs,differs_over_2pct_to_10pct,differs_over_10pct";
+    // Fixture: of the reports Table B checked, a fifth have no value, a tenth differ, 60% of those 2% to 10% off (rounded down).
+    expect(buildQualityCsv("enrollment", y2425).split("\r\n").filter(Boolean)).toEqual([
+      head, "standard PDF,49,36,9,4,2,2", "fillable PDF,25,18,5,2,1,1", "spreadsheet,3,3,0,0,0,0", "All formats,77,57,14,6,3,3",
+    ]);
+    expect(buildQualityCsv("tuition", y2425).split("\r\n")[1]).toBe("standard PDF,,,,,,");
+    expect(buildQualityCsv("tuition", y(FIXTURE_SNAPSHOT)).split("\r\n").slice(0, 2)).toEqual([head, "standard PDF,269,136,80,53,31,22"]);
+  });
+});
+
 describe("launch gate", () => {
   it("is closed the instant before the launch date and open at it", () => {
     const at = Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`);
@@ -253,14 +355,15 @@ describe("snapshot selection", () => {
   });
 
   it("fails on a public_format the page doesn't know, even before launch", () => {
-    const bad = { ...clone(), public_format: 4 };
+    const bad = { ...clone(), public_format: 5 };
     expect(() => selectSnapshot([{ name: "x.json", json: bad }])).toThrow(/public_format/);
   });
 
-  it("reads public_format 1, 2 and 3", () => {
+  it("reads public_format 1 to 4", () => {
     expect(selectSnapshot([{ name: "one.json", json: FIXTURE_SNAPSHOT_V1 }]).public_format).toBe(1);
     expect(selectSnapshot([{ name: "two.json", json: FIXTURE_SNAPSHOT_V2 }]).public_format).toBe(2);
-    expect(selectSnapshot([{ name: "three.json", json: FIXTURE_SNAPSHOT }]).public_format).toBe(3);
+    expect(selectSnapshot([{ name: "three.json", json: FIXTURE_SNAPSHOT_V3 }]).public_format).toBe(3);
+    expect(selectSnapshot([{ name: "four.json", json: FIXTURE_SNAPSHOT }]).public_format).toBe(4);
   });
 
   it("fails on a snapshot with no renewal block or an empty renewal denominator", () => {

@@ -10,7 +10,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/data-quality",
 }));
 
-import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V1, FIXTURE_SNAPSHOT_V2, emptyYear } from "@/lib/__fixtures__/data-quality-snapshot";
+import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V1, FIXTURE_SNAPSHOT_V2, FIXTURE_SNAPSHOT_V3, emptyYear } from "@/lib/__fixtures__/data-quality-snapshot";
 import { DATA_LICENSE_NAME, DATA_LICENSE_URL } from "@/lib/data-license";
 import {
   type QualitySnapshot,
@@ -374,6 +374,69 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
     });
   });
 
+  describe("enrollment and tuition against federal figures (Table B, more checks)", () => {
+    const b2 = (html: string) => html.match(/<section aria-labelledby="dq-b2-heading"[\s\S]*?<\/section>/)?.[0] ?? null;
+    const cells = (html: string, id: string, name: string) => {
+      const tbl = html.match(new RegExp(`<table[^>]*id="${id}"[\\s\\S]*?</table>`))![0];
+      const tr = tbl.match(new RegExp(`<tr[^>]*><th scope="row"[^>]*>${name}</th>([\\s\\S]*?)</tr>`))![1];
+      return [...tr.matchAll(/<td[^>]*>([^<]*)<\/td>/g)].map((m) => m[1]);
+    };
+
+    it("follows Table B and precedes Table C, with both checks and hand-worked cells (2024-25 enrollment)", () => {
+      const html = render("year=2024-25");
+      expect(html.indexOf('id="dq-table-b"')).toBeLessThan(html.indexOf('id="dq-table-enrollment"'));
+      expect(html.indexOf('id="dq-table-tuition"')).toBeLessThan(html.indexOf('id="dq-table-c"'));
+      const s = b2(html)!;
+      const heads = [...s.matchAll(/<th scope="col"[^>]*>([^<]*)<\/th>/g)].map((m) => m[1]).slice(0, 8);
+      expect(heads).toEqual(["Format", "Reports checked", "Matches", "No value", "Differs", "Differs by over 2% to 10%", "Differs by over 10%", "Match rate"]);
+      // Reports, matches, no value, differs, 2-10%, over 10%, match rate.
+      expect(cells(s, "dq-table-enrollment", "standard PDF")).toEqual(["49", "36", "9", "4", "2", "2", "73%"]);
+      expect(cells(s, "dq-table-enrollment", "fillable PDF")).toEqual(["25", "18", "5", "2", "1", "1", "72%"]);
+      expect(cells(s, "dq-table-enrollment", "spreadsheet")).toEqual(["3", "3", "0", "0", "0", "0", "–"]);   // 3 reports: no rate
+      expect(cells(s, "dq-table-enrollment", "All formats")).toEqual(["77", "57", "14", "6", "3", "3", "74%"]);
+    });
+
+    it("names the IPEDS table, variable and year, and what can differ, in each note", () => {
+      const html = b2(render("year=2023-24"))!;
+      const text = (id: string) => html.match(new RegExp(`<p id="${id}"[^>]*>[\\s\\S]*?</p>`))![0].replace(/<[^>]+>/g, "").replace(/\s+/g, " ");
+      const enr = text("dq-note-enrollment");
+      expect(enr).toContain("DRVEF2023, variable EFUG, fall 2023");
+      expect(enr).toMatch(/census date.*can differ/);
+      expect(enr).toMatch(/provisional or final.*imputed/);
+      const tui = text("dq-note-tuition");
+      expect(tui).toContain("COST1_2024");
+      expect(tui).toContain("TUITION2");
+      expect(tui).toContain("academic year 2024-25");
+      expect(tui).toContain("CDS form for 2023-24 asks for that following year’s tuition");
+      expect(tui).toMatch(/Neither includes required fees/);
+      expect(tui).toMatch(/per-credit or program-specific pricing/);
+      expect(tui).toMatch(/Out-of-state and first-year tuition aren’t compared/);
+      for (const note of [enr, tui]) expect(note).not.toMatch(/\b(most|usually|always|typically)\b/i);
+      expect(text("dq-note-enrollment-left-out")).toContain("Left out: 1 report we’ve marked as filed for one campus or unit and 0 whose school has no federal undergraduate enrollment figure");
+      expect(text("dq-note-tuition-left-out")).toContain("whose school has no federal tuition figure");
+    });
+
+    it("shows dashes and a notice, no notes and no download, where IPEDS figures aren't loaded", () => {
+      const html = openHtml("2024-25");
+      const s = b2(html)!;
+      expect(s).toContain('id="dq-no-tuition"');
+      expect(s).toContain("No federal tuition figures for the 2025-26 academic year yet.");
+      expect(s).not.toContain('id="dq-no-enrollment"');
+      expect(s).not.toContain('id="dq-note-tuition"');
+      expect(s).not.toContain("/data-quality/csv/tuition/");
+      expect(cells(s, "dq-table-tuition", "standard PDF")).toEqual(["–", "–", "–", "–", "–", "–", "–"]);
+      expect(s).toContain('href="/data-quality/csv/enrollment/2024-25"');
+      const last = b2(openHtml("2025-26"))!;
+      expect(last).toContain("No federal fall 2025 undergraduate enrollment figures yet.");
+      expect(last).toContain("No federal tuition figures for the 2026-27 academic year yet.");
+      expect(last).not.toContain("/data-quality/csv/");
+    });
+
+    it("is absent for a snapshot written before public_format 4", () => {
+      expect(render("year=2024-25", FIXTURE_SNAPSHOT_V3)).not.toContain("dq-b2-heading");
+    });
+  });
+
   describe("size of federal differences", () => {
     const sizeNote = (html: string) => html.match(/<p id="dq-note-differs-size"[^>]*>[\s\S]*?<\/p>/)?.[0] ?? null;
     const bText = (html: string) => table(html, "dq-table-b");
@@ -470,11 +533,11 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
 
   it("puts a static, aria-hidden hint above each wide table (CSS decides when it shows) and no script-driven cue", () => {
     const html = render("year=2024-25");
-    expect(html.match(/class="dq-scroll-hint acc-table-hint" aria-hidden="true"/g)).toHaveLength(5);
+    expect(html.match(/class="dq-scroll-hint acc-table-hint" aria-hidden="true"/g)).toHaveLength(6);
     expect(html.match(/dq-scroll--wide/g)).toHaveLength(1);
     expect(html).not.toContain("linear-gradient");
     // Every table's scroll region is still focusable and labelled.
-    expect(html.match(/role="region" aria-label="[^"]+" tabindex="0"/g)).toHaveLength(5);
+    expect(html.match(/role="region" aria-label="[^"]+" tabindex="0"/g)).toHaveLength(7);
     const src = readFileSync(resolve(__dirname, "DataQualityView.tsx"), "utf8");
     expect(src).not.toMatch(/useState|useEffect|ResizeObserver|scrollWidth/);
   });
@@ -543,6 +606,7 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
     ["glance", "dq-glance", "\\.dq-table--glance"],
     ["a", "dq-table-a", "\\.dq-table--a"],
     ["a, by section", "dq-table-sections", "\\.dq-table--s"],
+    ["b2 (enrollment and tuition)", "dq-table-enrollment", "\\.dq-table--x"],
     ["b (format 2, with the size columns)", "dq-table-b", "\\.dq-table--b-split"],
     ["b (format 1, without them)", "dq-table-b", "\\.dq-table--b", FIXTURE_SNAPSHOT_V1],
     ["c", "dq-table-c", "\\.dq-table--c"],

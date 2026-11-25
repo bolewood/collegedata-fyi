@@ -3,10 +3,12 @@ import {
   CSV_BOM,
   TABLE_TITLES,
   buildQualityCsv,
+  hasFederalChecks,
   hasSections,
   isDataQualityLaunched,
   qualityCsvFilename,
   type QualityTableId,
+  type QualityYear,
 } from "@/lib/data-quality";
 import { loadLatestSnapshot } from "@/lib/data-quality-snapshots";
 
@@ -15,11 +17,18 @@ import { loadLatestSnapshot } from "@/lib/data-quality-snapshots";
 export const dynamic = "force-static";
 export const dynamicParams = false;
 
+/** A table that a snapshot written before it existed doesn't have is a 404, not an empty file. */
+function tableServed(table: QualityTableId, year: QualityYear): boolean {
+  if (table === "sections") return hasSections(year);
+  if (table === "enrollment" || table === "tuition") return hasFederalChecks(year);
+  return true;
+}
+
 export function generateStaticParams() {
   const snapshot = isDataQualityLaunched() ? loadLatestSnapshot() : null;
   if (!snapshot) return [];
   return (Object.keys(TABLE_TITLES) as QualityTableId[]).flatMap((table) =>
-    snapshot.years.filter((y) => table !== "sections" || hasSections(y)).map((y) => ({ table, year: y.cds_year })),
+    snapshot.years.filter((y) => tableServed(table, y)).map((y) => ({ table, year: y.cds_year })),
   );
 }
 
@@ -30,7 +39,7 @@ export async function GET(
   const { table, year } = await params;
   const snapshot = isDataQualityLaunched() ? loadLatestSnapshot() : null;
   const found = snapshot?.years.find((y) => y.cds_year === year);
-  if (!snapshot || !found || !Object.hasOwn(TABLE_TITLES, table) || (table === "sections" && !hasSections(found))) {
+  if (!snapshot || !found || !Object.hasOwn(TABLE_TITLES, table) || !tableServed(table as QualityTableId, found)) {
     return new Response("Not found", { status: 404 });
   }
   return new Response(CSV_BOM + buildQualityCsv(table as QualityTableId, found), {
