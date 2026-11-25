@@ -21,6 +21,7 @@
   .dq-table--glance { width: calc(100cqw + 490px); }
   .dq-table--a { width: calc(100cqw + 360px); }
   .dq-table--b { width: calc(100cqw + 400px); }
+  .dq-table--b-split { width: calc(100cqw + 600px); }
   .dq-table--glance col:nth-child(1) { width: 24cqw; }
   .dq-table--glance col:nth-child(2) { width: 26cqw; }
   .dq-table--glance col:nth-child(3) { width: 25cqw; }

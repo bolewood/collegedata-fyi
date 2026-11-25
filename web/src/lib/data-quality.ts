@@ -23,7 +23,12 @@ export const MIN_REPORTS_FOR_RATE = 5;
 /** Years before this start year aren't in the published projection (MIN_YEAR_START in project_browser_data.py). */
 export const PROJECTED_FROM_YEAR_START = 2024;
 
-export const KNOWN_PUBLIC_FORMATS: readonly number[] = [1];
+/**
+ * Format 1 is the first snapshot shape. Format 2 adds the size of federal differences (`federal.differs_2_to_10pct`
+ * and `federal.differs_over_10pct`); those keys are required on 2 and refused on 1. Format 1 files stay readable so a
+ * later trend line can use them.
+ */
+export const KNOWN_PUBLIC_FORMATS: readonly number[] = [1, 2];
 
 export type StatusCounts = {
   published: number;
@@ -38,6 +43,12 @@ export type FederalCounts = {
   matches: number;
   no_value: number;
   differs: number;
+  /**
+   * Differing values split by the gap as a share of the federal figure: over 2% up to and including 10%, and over
+   * 10% (exactly 10% is in the first). They add up to `differs`. Present on public_format 2, absent on 1.
+   */
+  differs_2_to_10pct?: number;
+  differs_over_10pct?: number;
 };
 export type SumOutcomes = {
   adds_up: number;
@@ -135,18 +146,19 @@ function allCounts(obj: unknown, keys: string[], optional: string[] = []): strin
 
 const STATUS_KEYS = ["published", "set_aside", "couldnt_read", "not_read_yet"];
 const FEDERAL_KEYS = ["reports", "values", "matches", "no_value", "differs"];
+const FEDERAL_SPLIT_KEYS = ["differs_2_to_10pct", "differs_over_10pct"];
 const SUM_KEYS = ["adds_up", "under_2pct", "off_more", "cant_check"];
 const AID_KEYS = ["adds_up", "doesnt", "cant_check"];
 
 /** A row or year total: status, fields_stored, federal and totals blocks, all counts, no other keys. */
-function rowCountsProblem(row: unknown): string | null {
+function rowCountsProblem(row: unknown, format: number): string | null {
   if (!row || typeof row !== "object") return "missing";
   const r = row as Record<string, unknown>;
   const totals = r.totals as Record<string, unknown> | undefined;
   return (
     allCounts(r.status, STATUS_KEYS) ??
     allCounts(r.fields_stored, ["median", "p10"]) ??
-    allCounts(r.federal, FEDERAL_KEYS) ??
+    allCounts(r.federal, format >= 2 ? [...FEDERAL_KEYS, ...FEDERAL_SPLIT_KEYS] : FEDERAL_KEYS) ??
     (totals && isCount(totals.reports) ? null : "totals.reports must be a non-negative integer") ??
     allCounts(totals?.B1, SUM_KEYS) ??
     allCounts(totals?.C1, SUM_KEYS) ??
@@ -169,6 +181,9 @@ function summedCounts(r: QualityRow): Counts {
     "federal.matches": f.matches,
     "federal.no_value": f.no_value,
     "federal.differs": f.differs,
+    // Public format 1 has no split: leave the keys out (a sum of rows that are all absent is zero either way).
+    ...(f.differs_2_to_10pct === undefined ? {} : { "federal.differs_2_to_10pct": f.differs_2_to_10pct }),
+    ...(f.differs_over_10pct === undefined ? {} : { "federal.differs_over_10pct": f.differs_over_10pct }),
     "totals.reports": t.reports,
     "totals.B1.adds_up": t.B1.adds_up,
     "totals.B1.under_2pct": t.B1.under_2pct,
@@ -191,7 +206,7 @@ const sumH = (o: AidOutcomes) => o.adds_up + o.doesnt + o.cant_check;
  * Part of the arithmetic the Python `--public` step enforces (PRD 040, "Tests: Sums"), repeated here so a
  * hand-edited or mis-merged snapshot fails the build instead of rendering a rate over 100%. Checked: the total
  * equals the sum of the rows in every summed count (so the rows' statuses give the live count), federal
- * matches + no value + differs = values, values <= 3 per report, federal reports <= published, B1, C1 and H1
+ * matches + no value + differs = values, differs = its two size parts (format 2), values <= 3 per report, federal reports <= published, B1, C1 and H1
  * outcomes = totals.reports = published, set-aside reasons = set aside, and, for a year with federal figures,
  * checked + left out = published, and (for a year with no federal figures) every federal count zero. Not checked here: live + removed + no file = manifest (the snapshot has no
  * manifest count) and the run-level agreement with `aggregate()`. Counts are already known to be non-negative
@@ -214,6 +229,9 @@ function arithmeticProblem(year: QualityYear): string | null {
   const check = (name: string, r: QualityRow): string | null => {
     const f = r.federal;
     if (f.matches + f.no_value + f.differs !== f.values) return `${name}: federal matches + no_value + differs is not values`;
+    if (f.differs_2_to_10pct !== undefined && f.differs_2_to_10pct + (f.differs_over_10pct ?? 0) !== f.differs) {
+      return `${name}: federal differs_2_to_10pct + differs_over_10pct is not differs`;
+    }
     if (f.values > 3 * f.reports) return `${name}: federal values exceed 3 per report`;
     if (f.reports > r.status.published) return `${name}: federal.reports exceeds published`;
     if (r.totals.reports !== r.status.published) return `${name}: totals.reports is not status.published`;
@@ -304,13 +322,13 @@ export function validateSnapshot(raw: unknown, source: string): QualitySnapshot 
       allCounts(y.federal_left_out, ["single_campus", "no_federal_figures"], ["not_compared"]);
     if (problem) return fail(`${where}: ${problem}`);
     if (!Array.isArray(y.rows)) return fail(`${where}: rows is missing`);
-    const totalProblem = rowCountsProblem(y.total);
+    const totalProblem = rowCountsProblem(y.total, s.public_format);
     if (totalProblem) return fail(`${where}: total: ${totalProblem}`);
     for (const row of y.rows as Record<string, unknown>[]) {
       if (typeof row?.format !== "string" || typeof row?.label !== "string") {
         return fail(`${where}: a row has no format or label`);
       }
-      const rowProblem = rowCountsProblem(row);
+      const rowProblem = rowCountsProblem(row, s.public_format);
       if (rowProblem) return fail(`${where}: row ${row.format}: ${rowProblem}`);
     }
     const arithmetic = arithmeticProblem(y as unknown as QualityYear);
@@ -441,6 +459,11 @@ export const FEDERAL_DIFFERS_SAMPLE = {
   populationValues: 219,
   keepRange: [0.9, 1.1],
 } as const;
+
+/** True when the year carries the size of federal differences (public_format 2). Validation makes every row agree with the total. */
+export function hasDifferenceSplit(year: QualityYear): boolean {
+  return year.total.federal.differs_2_to_10pct !== undefined;
+}
 
 /** Differing values pooled over the years the sample covered, from the snapshot. */
 export function pooledDiffers(snapshot: QualitySnapshot): number {
@@ -587,11 +610,15 @@ export function buildQualityCsv(table: QualityTableId, year: QualityYear): strin
       lines.push(csvLine([name, row.status.published, row.status.set_aside, row.status.couldnt_read, row.status.not_read_yet, none ? "" : row.fields_stored.median, none ? "" : row.fields_stored.p10]));
     }
   } else if (table === "federal") {
-    lines.push(csvLine(["format", "reports_checked", "values_up_to_3_per_report", "matches", "no_value", "differs"]));
+    // The size columns exist only for a public_format 2 snapshot.
+    const split = hasDifferenceSplit(year);
+    lines.push(csvLine(["format", "reports_checked", "values_up_to_3_per_report", "matches", "no_value", "differs", ...(split ? ["differs_over_2pct_to_10pct", "differs_over_10pct"] : [])]));
     for (const { name, row } of all) {
       const f = row.federal;
       // No federal figures for the year: blanks, not zeros.
-      lines.push(csvLine(year.federal_fall_loaded ? [name, f.reports, f.values, f.matches, f.no_value, f.differs] : [name, "", "", "", "", ""]));
+      lines.push(csvLine(year.federal_fall_loaded
+        ? [name, f.reports, f.values, f.matches, f.no_value, f.differs, ...(split ? [f.differs_2_to_10pct, f.differs_over_10pct] : [])]
+        : [name, "", "", "", "", "", ...(split ? ["", ""] : [])]));
     }
   } else {
     lines.push(csvLine(["format", "reports", "B1_adds_up", "B1_off_by_under_2pct", "B1_off_by_more", "B1_cant_check", "C1_adds_up", "C1_off_by_under_2pct", "C1_off_by_more", "C1_cant_check", "H1_adds_up", "H1_doesnt_add_up", "H1_cant_check"]));

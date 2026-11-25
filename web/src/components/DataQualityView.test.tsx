@@ -10,7 +10,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/data-quality",
 }));
 
-import { FIXTURE_SNAPSHOT, emptyYear } from "@/lib/__fixtures__/data-quality-snapshot";
+import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V1, emptyYear } from "@/lib/__fixtures__/data-quality-snapshot";
 import { DATA_LICENSE_NAME, DATA_LICENSE_URL } from "@/lib/data-license";
 import {
   type QualitySnapshot,
@@ -29,9 +29,9 @@ import { secondaryNavLinks, isActive } from "@/lib/nav-links";
 import { ArchiveStatusHeader, visibleArchiveTabs } from "./ArchiveStatusHeader";
 import { DataQualityView, yearNotices } from "./DataQualityView";
 
-function render(search = "") {
+function render(search = "", snapshot: QualitySnapshot = FIXTURE_SNAPSHOT) {
   currentParams = new URLSearchParams(search);
-  return renderToStaticMarkup(<DataQualityView snapshot={FIXTURE_SNAPSHOT} />);
+  return renderToStaticMarkup(<DataQualityView snapshot={snapshot} />);
 }
 
 /** The text of one table's HTML, by its id. */
@@ -280,6 +280,74 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
     expect(loaded).toContain("/data-quality/csv/federal/2024-25");
   });
 
+  describe("size of federal differences", () => {
+    const sizeNote = (html: string) => html.match(/<p id="dq-note-differs-size"[^>]*>[\s\S]*?<\/p>/)?.[0] ?? null;
+    const bText = (html: string) => table(html, "dq-table-b");
+
+    it("shows two size columns after Differs, with the fixture's counts in the right cells", () => {
+      const html = bText(openHtml("2024-25"));
+      const heads = [...html.matchAll(/<th scope="col"[^>]*>([^<]*)<\/th>/g)].map((m) => m[1]);
+      expect(heads.indexOf("Differs by over 2% to 10%")).toBe(heads.indexOf("Differs") + 1);
+      expect(heads.indexOf("Differs by over 10%")).toBe(heads.indexOf("Differs") + 2);
+      // Standard PDF, 2024-25: 60 differ, 36 of them 2% to 10% off and 24 over 10%. All formats: 89, 53 and 36.
+      const cells = (rowName: string) => {
+        const tr = html.match(new RegExp(`<tr[^>]*><th scope="row"[^>]*>${rowName}</th>([\\s\\S]*?)</tr>`))![1];
+        return [...tr.matchAll(/<td[^>]*>([^<]*)<\/td>/g)].map((m) => m[1]);
+      };
+      expect(cells("standard PDF").slice(4, 7)).toEqual(["60", "36", "24"]);
+      expect(cells("All formats").slice(4, 7)).toEqual(["89", "53", "36"]);
+    });
+
+    it("marks the rendered table as the split one on format 2 and not on format 1", () => {
+      const open = (html: string) => html.match(/<table[^>]*id="dq-table-b"[^>]*>/)![0];
+      expect(open(openHtml("2024-25"))).toContain("dq-table--b-split");
+      expect(open(render("year=2024-25", FIXTURE_SNAPSHOT_V1))).not.toContain("dq-table--b-split");
+    });
+
+    it("gives every row the same cell count as the header", () => {
+      const html = bText(openHtml("2024-25"));
+      const head = (html.match(/<thead>[\s\S]*?<\/thead>/)![0].match(/<th\b/g) ?? []).length;
+      for (const tr of html.match(/<tbody>[\s\S]*<\/tbody>/)![0].match(/<tr[\s\S]*?<\/tr>/g)!) {
+        expect((tr.match(/<t[hd]\b/g) ?? []).length).toBe(head);
+      }
+    });
+
+    it("explains the size without overclaiming, and states the boundary rule", () => {
+      const note = sizeNote(openHtml("2024-25"))!;
+      expect(note).not.toBeNull();
+      // The columns are named as in the header, not "first" and "second".
+      expect(note).toContain("Differs by over 2% to 10%");
+      expect(note).toContain("Differs by over 10%");
+      expect(note).not.toMatch(/first column|second column/);
+      expect(note).toMatch(/exactly\s+10% counts in “over 2% to 10%”/);
+      expect(note).toMatch(/2% or less is a match/);
+      expect(note).toMatch(/over 2% to 10% may come from a different count date/);
+      expect(note).toMatch(/may be a real difference between the two filings, a scope mismatch/);
+      expect(note).toMatch(/misreading; the size alone can’t say which/);
+      expect(note).not.toMatch(/isn’t necessarily our error|some are real/);
+      // No claim about how many large gaps are ours or the school's.
+      expect(note).not.toMatch(/\b(most|usually|always|mostly|typically)\b/i);
+      expect(note).not.toMatch(/\d+(\.\d+)?%\s+of/);
+    });
+
+    it("shows dashes and no size note for a year with no federal figures", () => {
+      const html = openHtml("2025-26");
+      expect(sizeNote(html)).toBeNull();
+      const dashes = bText(html).match(/<tr[^>]*><th scope="row"[^>]*>standard PDF<\/th>[\s\S]*?<\/tr>/)![0];
+      expect((dashes.match(/<td[^>]*>–<\/td>/g) ?? []).length).toBe(8);
+    });
+
+    it("renders a format 1 snapshot without the split: seven columns, no size note, same Differs count", () => {
+      const html = render("year=2024-25", FIXTURE_SNAPSHOT_V1);
+      const b = bText(html);
+      expect(b).not.toContain("Differs by over");
+      expect((b.match(/<thead>[\s\S]*?<\/thead>/)![0].match(/<th\b/g) ?? []).length).toBe(7);
+      expect(sizeNote(html)).toBeNull();
+      expect(b).toContain(">89<");
+      expect(html).toContain('id="dq-note-differs"');
+    });
+  });
+
   it("renders the licence note beside the downloads only when launched, built from the license constants", () => {
     vi.useFakeTimers();
     try {
@@ -380,17 +448,18 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
   it.each([
     ["glance", "dq-glance", "\\.dq-table--glance"],
     ["a", "dq-table-a", "\\.dq-table--a"],
-    ["b", "dq-table-b", "\\.dq-table--b"],
+    ["b (format 2, with the size columns)", "dq-table-b", "\\.dq-table--b-split"],
+    ["b (format 1, without them)", "dq-table-b", "\\.dq-table--b", FIXTURE_SNAPSHOT_V1],
     ["c", "dq-table-c", "\\.dq-table--c"],
-  ])("sizes Table %s's phone columns to end the first screen on a column edge", (_, id, sel) => {
+  ])("sizes Table %s's phone columns to end the first screen on a column edge", (_: string, id: string, sel: string, snap?: QualitySnapshot) => {
     // The column count is the rendered header's, so a new column without a CSS rule for it fails here.
-    const whole = render("year=2024-25").match(new RegExp(`<table[^>]*id="${id}"[\\s\\S]*?</table>`))![0];
+    const whole = render("year=2024-25", snap).match(new RegExp(`<table[^>]*id="${id}"[\\s\\S]*?</table>`))![0];
     const cols = (whole.match(/<thead>[\s\S]*?<\/tr>/)![0].match(/<th\b/g) ?? []).length;
     expect(cols).toBeGreaterThan(0);
     const text = css();
     const width = new RegExp(`${sel} \\{[^}]*width: calc\\(100cqw \\+ (\\d+)px\\)`).exec(text);
     expect(width).not.toBeNull();
-    const rules = [...text.matchAll(new RegExp(`${sel} col:nth-child\\((n \\+ )?(\\d+)\\) \\{ width: (\\d+)(cqw|px)`, "g"))];
+    const rules = [...text.matchAll(new RegExp(`${sel.replace("-split", "")} col:nth-child\\((n \\+ )?(\\d+)\\) \\{ width: (\\d+)(cqw|px)`, "g"))];
     let cqw = 0;
     let px = 0;
     let covered = 0;

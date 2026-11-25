@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { FIXTURE_SNAPSHOT, emptyYear } from "./__fixtures__/data-quality-snapshot";
+import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V1, emptyYear } from "./__fixtures__/data-quality-snapshot";
 import {
   DATA_QUALITY_LAUNCH_DATE,
   MIN_REPORTS_FOR_RATE,
   SnapshotError,
   buildQualityCsv,
   compareYearsDesc,
+  hasDifferenceSplit,
   isDataQualityLaunched,
   liveCount,
   publishedTotal,
@@ -25,6 +26,68 @@ import { formatLabel } from "./format-labels";
 const anyRec = (v: unknown) => v as Record<string, unknown>;
 const clone = (): QualitySnapshot => JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT));
 const withDate = (iso: string): QualitySnapshot => ({ ...clone(), snapshot_of: iso });
+
+describe("size of federal differences (public_format 2)", () => {
+  const clone1 = (): QualitySnapshot => JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT_V1));
+  const select = (snap: QualitySnapshot) => selectSnapshot([{ name: "x.json", json: snap }]);
+  const KEYS = ["differs_2_to_10pct", "differs_over_10pct"] as const;
+
+  it.each(KEYS)("requires %s on format 2, in a row and in the total", (key) => {
+    for (const target of ["row", "total"] as const) {
+      const snap = clone();
+      const r = target === "row" ? snap.years[0].rows[0] : snap.years[0].total;
+      delete r.federal[key];
+      expect(() => select(snap)).toThrow(new RegExp(key));
+    }
+  });
+
+  it.each(KEYS)("requires %s even where the count is zero (a no-federal year's row and total)", (key) => {
+    for (const target of ["row", "total"] as const) {
+      const snap = clone();
+      const y = snap.years.find((x) => !x.federal_fall_loaded)!;
+      const r = target === "row" ? y.rows[0] : y.total;
+      expect(r.federal[key]).toBe(0);
+      delete r.federal[key];
+      expect(() => select(snap)).toThrow(new RegExp(`${key} must be a non-negative integer`));
+    }
+  });
+
+  it.each(KEYS)("refuses %s on format 1", (key) => {
+    const snap = clone1();
+    snap.years[0].total.federal[key] = 0;
+    expect(() => select(snap)).toThrow(/unexpected key/);
+  });
+
+  it("reads a format 1 snapshot that has no split", () => {
+    expect(select(clone1()).years[0].total.federal.differs_over_10pct).toBeUndefined();
+  });
+
+  it("refuses a row whose parts don't add up to its differs, even when the total follows the row", () => {
+    const row = clone();
+    row.years[0].rows[0].federal.differs_over_10pct! += 1;
+    row.years[0].total.federal.differs_over_10pct! += 1;
+    expect(() => select(row)).toThrow(/row pdf_flat: federal differs_2_to_10pct \+ differs_over_10pct is not differs/);
+  });
+
+  it.each(KEYS)("refuses a total whose %s isn't the sum of the rows", (key) => {
+    const snap = clone();
+    snap.years[0].total.federal[key]! += 1;
+    expect(() => select(snap)).toThrow(new RegExp(`total federal\\.${key}`));
+  });
+
+  it("requires the split to be zero in a year with no federal figures", () => {
+    const snap = clone();
+    const y = snap.years.find((x) => !x.federal_fall_loaded)!;
+    y.total.federal.differs_over_10pct = 1;
+    y.rows[0].federal.differs_over_10pct = 1;
+    expect(() => select(snap)).toThrow(/no federal figures/);
+  });
+
+  it("is reported by hasDifferenceSplit", () => {
+    expect(FIXTURE_SNAPSHOT.years.every(hasDifferenceSplit)).toBe(true);
+    expect(FIXTURE_SNAPSHOT_V1.years.some(hasDifferenceSplit)).toBe(false);
+  });
+});
 
 describe("launch gate", () => {
   it("is closed the instant before the launch date and open at it", () => {
@@ -74,8 +137,13 @@ describe("snapshot selection", () => {
   });
 
   it("fails on a public_format the page doesn't know, even before launch", () => {
-    const bad = { ...clone(), public_format: 2 };
+    const bad = { ...clone(), public_format: 3 };
     expect(() => selectSnapshot([{ name: "x.json", json: bad }])).toThrow(/public_format/);
+  });
+
+  it("reads public_format 1 and 2", () => {
+    expect(selectSnapshot([{ name: "one.json", json: FIXTURE_SNAPSHOT_V1 }]).public_format).toBe(1);
+    expect(selectSnapshot([{ name: "two.json", json: FIXTURE_SNAPSHOT }]).public_format).toBe(2);
   });
 
   it("fails on a snapshot with no renewal block or an empty renewal denominator", () => {
@@ -230,6 +298,7 @@ describe("snapshot arithmetic", () => {
     bad((s) => both(s, typo), /unexpected key typo/);
     bad((s) => ((s.years[0].rows[0].status as unknown as Record<string, number>).extra = 0), /unexpected key extra/);
     bad((s) => ((s.years[0].rows[0].federal as unknown as Record<string, number>).extra = 0), /unexpected key extra/);
+    bad((s) => ((s.years[0].total.federal as unknown as Record<string, number>).differs_over_20pct = 0), /unexpected key differs_over_20pct/);
     bad((s) => ((s.years[0].rows[0].totals.H1 as unknown as Record<string, number>).extra = 0), /unexpected key extra/);
   });
 
@@ -432,7 +501,16 @@ describe("data quality CSV", () => {
   it("leaves federal cells blank, not zero, for a year with no federal figures", () => {
     const csv = buildQualityCsv("federal", y2526);
     const lines = csv.split("\r\n").filter(Boolean);
-    expect(lines[1]).toBe("standard PDF,,,,,");
+    expect(lines[0]).toBe("format,reports_checked,values_up_to_3_per_report,matches,no_value,differs,differs_over_2pct_to_10pct,differs_over_10pct");
+    expect(lines[1]).toBe("standard PDF,,,,,,,");
+  });
+
+  it("writes the two size columns only for a public_format 2 year", () => {
+    const y1 = FIXTURE_SNAPSHOT_V1.years.find((y) => y.cds_year === "2024-25")!;
+    expect(buildQualityCsv("federal", y1).split("\r\n")[0]).toBe("format,reports_checked,values_up_to_3_per_report,matches,no_value,differs");
+    expect(buildQualityCsv("federal", y1).split("\r\n")[1]).toBe("standard PDF,49,120,50,10,60");
+    const y1blank = FIXTURE_SNAPSHOT_V1.years.find((y) => y.cds_year === "2025-26")!;
+    expect(buildQualityCsv("federal", y1blank).split("\r\n")[1]).toBe("standard PDF,,,,,");
   });
 
   // Cells written by hand from the fixture's inputs (flat 50 / fillable 25 / sheets 3, 2024-25),
@@ -453,11 +531,12 @@ describe("data quality CSV", () => {
 
     it("federal", () => {
       expect(lines("federal")).toEqual([
-        "format,reports_checked,values_up_to_3_per_report,matches,no_value,differs",
-        "standard PDF,49,120,50,10,60",
-        "fillable PDF,25,64,30,5,29",
-        "spreadsheet,3,9,8,1,0",
-        "All formats,77,193,88,16,89",
+        "format,reports_checked,values_up_to_3_per_report,matches,no_value,differs,differs_over_2pct_to_10pct,differs_over_10pct",
+        // The fixture puts floor(60%) of the differences in the 2% to 10% band: 36 of 60, 17 of 29, 0 of 0.
+        "standard PDF,49,120,50,10,60,36,24",
+        "fillable PDF,25,64,30,5,29,17,12",
+        "spreadsheet,3,9,8,1,0,0,0",
+        "All formats,77,193,88,16,89,53,36",
       ]);
     });
 
