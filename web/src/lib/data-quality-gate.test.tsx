@@ -9,7 +9,7 @@ import path from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FIXTURE_SNAPSHOT } from "./__fixtures__/data-quality-snapshot";
-import { DATA_QUALITY_LAUNCH_DATE } from "./data-quality";
+import { DATA_QUALITY_LAUNCH_DATE, aidCantCheckNote, federalDiffersNote, formatSnapshotDate, selectSnapshot } from "./data-quality";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/data-quality",
@@ -24,6 +24,8 @@ vi.mock("@/components/HeaderSchoolSearch", () => ({ HeaderSchoolSearch: () => nu
 vi.mock("@/components/CmdKCatalog", () => ({ CmdKCatalog: () => null }));
 vi.mock("@/lib/queries", () => ({
   fetchManifest: async () => [],
+  fetchCoverageRows: async () => [],
+  fetchBrandColorIndex: async () => ({}),
   aggregateSchools: () => [],
   fetchSchoolSlugResolver: async () => (slug: string) => slug,
 }));
@@ -41,7 +43,9 @@ import sitemap from "@/app/sitemap";
 import { generateMetadata } from "@/app/data-quality/page";
 import { CoverageDashboard } from "@/components/CoverageDashboard";
 import { DataQualityBody, DataQualityView } from "@/components/DataQualityView";
-import { loadLatestSnapshot } from "./data-quality-snapshots";
+import { SNAPSHOT_DIR, loadLatestSnapshot } from "./data-quality-snapshots";
+import DataQualityPage from "@/app/data-quality/page";
+import CoveragePage from "@/app/coverage/page";
 
 const LAUNCH_MS = Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`);
 const CLOSED = new Date(LAUNCH_MS - 1000);
@@ -153,6 +157,71 @@ describe("gate: page metadata", () => {
   });
 });
 
+const text = (html: string) => html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ");
+
+describe("the real pages against the committed snapshot", () => {
+  it("/coverage: the renewal tile is the first cell of the summary strip and carries the snapshot's numbers", async () => {
+    for (const when of [CLOSED, OPEN]) {
+      at(when);
+      const snap = loadLatestSnapshot();
+      const r = snap.renewal;
+      const html = renderToStaticMarkup(await CoveragePage());
+      const strip = html.slice(html.indexOf('aria-label="Coverage summary"'));
+      expect(strip.indexOf('data-testid="renewal-tile"')).toBeGreaterThan(-1);
+      // First test id after the strip opens is the renewal tile.
+      expect(strip.match(/data-testid="([^"]+)"/)![1]).toBe("renewal-tile");
+      const from = strip.indexOf('data-testid="renewal-tile"');
+      const rest = strip.slice(from + 1);
+      const next = rest.indexOf("data-testid=");
+      const tile = text(next === -1 ? rest : rest.slice(0, next));
+      expect(tile).toContain(`${Math.round((r.both / r.previous) * 100)}%`);
+      expect(tile).toContain(
+        `Of the ${r.previous.toLocaleString("en-US")} schools with a ${r.previous_year} report on file, ${r.both.toLocaleString("en-US")} also have a ${r.current_year} report on file.`,
+      );
+      expect(tile).toContain(`Snapshot of ${formatSnapshotDate(snap.snapshot_of)}.`);
+    }
+  });
+
+  it("/data-quality renders the newest year with no throw and shows the no-federal state for a year without figures", () => {
+    at(OPEN);
+    const snap = loadLatestSnapshot();
+    const html = renderToStaticMarkup(<DataQualityPage />);
+    expect(html).toContain("Data quality");
+    const noFederal = snap.years.find((y) => !y.federal_fall_loaded);
+    expect(noFederal).toBeDefined();
+    const body = text(renderToStaticMarkup(<DataQualityBody snapshot={snap} year={noFederal!} />));
+    expect(body).toContain("No federal admissions figures for fall");
+    expect(renderToStaticMarkup(<DataQualityBody snapshot={snap} year={noFederal!} />)).not.toContain(
+      `/data-quality/csv/federal/${noFederal!.cds_year}`,
+    );
+  });
+
+  it("a format row with no published reports shows dashes for its field counts", () => {
+    at(OPEN);
+    const snap = loadLatestSnapshot();
+    const found = snap.years.flatMap((y) => y.rows.filter((r) => r.status.published === 0).map((r) => ({ y, r })))[0];
+    expect(found).toBeDefined();
+    const html = renderToStaticMarkup(<DataQualityBody snapshot={snap} year={found.y} />);
+    const row = html.match(new RegExp(`<tr[^>]*><th[^>]*>${found.r.label}</th>.*?</tr>`))![0];
+    expect(row.match(/>–</g)).toHaveLength(2);
+  });
+
+  // The sample notes sit behind count windows tied to the 2026-11-25 numbers, so this one test is pinned to that file.
+  it("the two hand-check sample notes render for the 2026-11-25 snapshot", () => {
+    at(OPEN);
+    const json = JSON.parse(fs.readFileSync(path.join(SNAPSHOT_DIR, "2026-11-25.json"), "utf8"));
+    const snap = selectSnapshot([{ name: "2026-11-25.json", json }]);
+    const aid = snap.years.filter((y) => aidCantCheckNote(y));
+    const differs = snap.years.filter((y) => federalDiffersNote(y, snap));
+    expect(aid.map((y) => y.cds_year)).toEqual(["2023-24"]);
+    expect(differs.map((y) => y.cds_year)).toEqual(["2023-24", "2024-25"]);
+    expect(renderToStaticMarkup(<DataQualityBody snapshot={snap} year={aid[0]} />)).toContain('id="dq-note-aid-sample"');
+    for (const y of differs) {
+      expect(renderToStaticMarkup(<DataQualityBody snapshot={snap} year={y} />)).toContain('id="dq-differs-sample"');
+    }
+  });
+});
+
 describe("gate: the real snapshot loader", () => {
   it("throws on a directory with only a README, in both gate states", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dq-snap-"));
@@ -168,33 +237,37 @@ describe("gate: the real snapshot loader", () => {
   });
 
   it("throws when the directory does not exist, in both gate states", () => {
-    const dir = path.join(os.tmpdir(), "dq-snap-missing-dir");
-    for (const when of [CLOSED, OPEN]) {
-      at(when);
-      expect(() => loadLatestSnapshot(dir)).toThrow(/no snapshot/);
+    const parent = fs.mkdtempSync(path.join(os.tmpdir(), "dq-snap-"));
+    try {
+      for (const when of [CLOSED, OPEN]) {
+        at(when);
+        expect(() => loadLatestSnapshot(path.join(parent, "absent"))).toThrow(/no snapshot/);
+      }
+    } finally {
+      fs.rmSync(parent, { recursive: true, force: true });
     }
   });
 
   it("loads the newest committed snapshot from the real directory in both states", () => {
+    const files = fs
+      .readdirSync(SNAPSHOT_DIR)
+      .filter((n) => n.endsWith(".json"))
+      .map((n) => JSON.parse(fs.readFileSync(path.join(SNAPSHOT_DIR, n), "utf8")) as { snapshot_of: string });
+    const newest = files.map((f) => f.snapshot_of).sort((x, y) => Date.parse(y) - Date.parse(x))[0];
     for (const when of [CLOSED, OPEN]) {
       at(when);
       const snap = loadLatestSnapshot();
-      expect(snap.snapshot_of.slice(0, 10)).toBe("2026-11-25");
+      expect(snap.snapshot_of).toBe(newest);
       expect(snap.public_format).toBe(1);
-      expect(snap.scoreboard_run).toBe("scoreboard-20261125T140926Z.json");
-      expect(snap.renewal.both).toBe(373);
-      expect(snap.renewal.previous).toBe(498);
+      expect(snap.scoreboard_run).toMatch(/^scoreboard-\d{8}T\d{6}Z\.json$/);
     }
   });
 
-  it("feeds the /coverage renewal tile from the committed snapshot: 373 of 498", () => {
-    at(CLOSED);
-    const snap = loadLatestSnapshot();
-    const html = renderToStaticMarkup(
-      <CoverageDashboard rows={[]} renewal={{ renewal: snap.renewal, snapshotOf: snap.snapshot_of }} />,
-    );
-    const tile = html.slice(html.indexOf('data-testid="renewal-tile"'));
-    expect(tile.slice(0, 1200)).toContain(`${Math.round((373 / 498) * 100)}%`);
+  it("pins the provenance of the 2026-11-25 snapshot", () => {
+    const first = JSON.parse(fs.readFileSync(path.join(SNAPSHOT_DIR, "2026-11-25.json"), "utf8"));
+    expect(first.scoreboard_run).toBe("scoreboard-20261125T140926Z.json");
+    expect(first.renewal.both).toBe(373);
+    expect(first.renewal.previous).toBe(498);
   });
 
   it("reads real files, picks the newest, and fails on same-date files in both states", () => {
@@ -219,14 +292,16 @@ describe("gate: the real snapshot loader", () => {
     }
   });
 
-  it("fails on invalid JSON and an unknown public_format even before launch", () => {
+  it("fails on invalid JSON and an unknown public_format in both gate states", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dq-snap-"));
     try {
-      at(CLOSED);
-      fs.writeFileSync(path.join(dir, "bad.json"), "{nope");
-      expect(() => loadLatestSnapshot(dir)).toThrow(/not valid JSON/);
-      fs.writeFileSync(path.join(dir, "bad.json"), JSON.stringify({ ...FIXTURE_SNAPSHOT, public_format: 9 }));
-      expect(() => loadLatestSnapshot(dir)).toThrow(/public_format/);
+      for (const when of [CLOSED, OPEN]) {
+        at(when);
+        fs.writeFileSync(path.join(dir, "bad.json"), "{nope");
+        expect(() => loadLatestSnapshot(dir)).toThrow(/not valid JSON/);
+        fs.writeFileSync(path.join(dir, "bad.json"), JSON.stringify({ ...FIXTURE_SNAPSHOT, public_format: 9 }));
+        expect(() => loadLatestSnapshot(dir)).toThrow(/public_format/);
+      }
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
