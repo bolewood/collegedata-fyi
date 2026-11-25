@@ -358,6 +358,12 @@ class FetchTests(unittest.TestCase):
             dr.fetch_sql_floor("https://api", "k", date(2026, 11, 24), get=lambda *a, **k: (None, {}))
 
 
+class IdentityTests(unittest.TestCase):
+    def test_api_requests_identify_as_the_pipeline(self) -> None:
+        # PRD 033: pipeline traffic to the public API sends this User-Agent.
+        self.assertIn("collegedata-pipeline/", dr._headers("k")["User-Agent"])
+
+
 class BacktestTests(unittest.TestCase):
     def test_month_range(self) -> None:
         days = dr.parse_month_range("2026-11..2027-02")

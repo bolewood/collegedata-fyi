@@ -43,6 +43,8 @@ import yaml  # noqa: E402
 from tools.finder.stuck_pdf_seeds import is_direct_doc_seed  # noqa: E402
 
 DEFAULT_API = "https://api.collegedata.fyi"
+# PRD 033: pipeline traffic to the public API identifies itself.
+USER_AGENT = "collegedata-pipeline/discovery-renewal"
 DEFAULT_SCHOOLS_YAML = REPO_ROOT / "tools" / "finder" / "schools.yaml"
 SCHOOL_PAGE_URL = "https://www.collegedata.fyi/schools/{school_id}"
 PAGE_SIZE = 1000
@@ -562,7 +564,13 @@ def http_json(
 
 
 def _headers(anon_key: str, **extra: str) -> dict[str, str]:
-    return {"apikey": anon_key, "Authorization": f"Bearer {anon_key}", "Accept": "application/json", **extra}
+    return {
+        "apikey": anon_key,
+        "Authorization": f"Bearer {anon_key}",
+        "Accept": "application/json",
+        "User-Agent": USER_AGENT,
+        **extra,
+    }
 
 
 def parse_content_range_total(value: str | None) -> int:
