@@ -81,7 +81,7 @@ set allowed_keys = (
     select k, min(pos) as first_pos
     from unnest(
       s.allowed_keys || array[
-        'not_searched', 'not_searched_causes', 'capped_out', 'capped_out_detail'
+        'attempted', 'not_searched', 'not_searched_causes', 'capped_out', 'capped_out_detail'
       ]
     ) with ordinality as t(k, pos)
     group by k
@@ -259,7 +259,7 @@ begin
   if keys is null then
     raise exception 'finder_brave station missing or has null allowed_keys';
   end if;
-  if not (keys @> array['probed', 'run_url', 'not_searched', 'not_searched_causes', 'capped_out', 'capped_out_detail']) then
+  if not (keys @> array['probed', 'run_url', 'attempted', 'not_searched', 'not_searched_causes', 'capped_out', 'capped_out_detail']) then
     raise exception 'finder_brave allowed_keys not extended: %', keys;
   end if;
   if cardinality(keys) <> (select count(distinct k) from unnest(keys) k) then
