@@ -383,7 +383,7 @@ export function qualityCsvFilename(table: QualityTableId, year: string, snapshot
 }
 
 /** CSV of one table for one year: header, one line per format, then the year total. */
-export function buildQualityCsv(table: QualityTableId, year: QualityYear, snapshot: QualitySnapshot): string {
+export function buildQualityCsv(table: QualityTableId, year: QualityYear): string {
   const lines: string[] = [];
   const all: { name: string; row: QualityRow }[] = [
     ...year.rows.map((r) => ({ name: formatLabel(r.format), row: r as QualityRow })),

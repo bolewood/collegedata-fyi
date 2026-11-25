@@ -228,37 +228,30 @@ export function latestYearBuckets(rows: InstitutionCoverage[], currentYear: stri
 export type SortKey = "name" | "state" | "enrollment" | "status" | "numbers" | "found" | "checked";
 export type SortDir = "asc" | "desc";
 
-const SORT_KEYS: readonly SortKey[] = ["name", "state", "enrollment", "status", "numbers", "found", "checked"];
-
 /** The direction a column starts in when first chosen. */
 export function defaultSortDir(key: SortKey): SortDir {
   return key === "enrollment" || key === "checked" ? "desc" : "asc";
 }
 
-/** `sort` and `dir` from a query string. Anything unrecognised falls back to name, A to Z. */
-export function parseCoverageSort(params: { get(name: string): string | null }): { key: SortKey; dir: SortDir } {
-  const key = SORT_KEYS.find((k) => k === params.get("sort")) ?? "name";
-  const dir = params.get("dir") === "asc" || params.get("dir") === "desc" ? (params.get("dir") as SortDir) : defaultSortDir(key);
-  return { key, dir };
-}
+const COLLATOR = new Intl.Collator("en-US");
 
-/** A sorted copy. Ties break by school name, except name itself. */
+/** A sorted copy, in the order the table shows. Ties break by school name, A to Z, on every column. */
 export function sortCoverageRows(rows: InstitutionCoverage[], key: SortKey, dir: SortDir): InstitutionCoverage[] {
   const d = dir === "asc" ? 1 : -1;
-  const byName = (a: InstitutionCoverage, b: InstitutionCoverage) => a.school_name.localeCompare(b.school_name);
+  const byName = (a: InstitutionCoverage, b: InstitutionCoverage) => COLLATOR.compare(a.school_name, b.school_name);
   return [...rows].sort((a, b) => {
     switch (key) {
       case "name":
         return byName(a, b) * d;
       case "state":
-        return (a.state ?? "").localeCompare(b.state ?? "") * d || byName(a, b);
+        return COLLATOR.compare(a.state ?? "", b.state ?? "") * d || byName(a, b);
       case "enrollment": {
         const ae = a.undergraduate_enrollment;
         const be = b.undergraduate_enrollment;
         if (ae == null && be == null) return byName(a, b);
         if (ae == null) return 1;
         if (be == null) return -1;
-        return (ae - be) * d;
+        return (ae - be) * d || byName(a, b);
       }
       case "status":
         return (STATUS_ORDER.indexOf(a.coverage_status) - STATUS_ORDER.indexOf(b.coverage_status)) * d || byName(a, b);
@@ -276,6 +269,11 @@ export function sortCoverageRows(rows: InstitutionCoverage[], key: SortKey, dir:
   });
 }
 
+/** The rows the table shows: filtered by the page's query string, then sorted. The download uses the same call. */
+export function coverageViewRows(rows: InstitutionCoverage[], query: string, key: SortKey, dir: SortDir): InstitutionCoverage[] {
+  return sortCoverageRows(filterCoverageRows(rows, parseCoverageView(new URLSearchParams(query))), key, dir);
+}
+
 // ── CSV ───────────────────────────────────────────────────────────
 
 export const COVERAGE_CSV_COLUMNS = [
@@ -290,19 +288,19 @@ export const COVERAGE_CSV_COLUMNS = [
   "last_checked",
 ] as const;
 
-/** Said next to the download links. The file itself carries no notice (a comment block breaks readers); the license rides in the route's Link header. */
-export const COVERAGE_CSV_FEDERAL_NOTE = `IPEDS ID and undergraduate enrollment are federal figures from IPEDS, which our license doesn\u2019t cover; the other columns are licensed ${DATA_LICENSE_NAME}.`;
-
-/** The route that serves the CSV. `query` is the page's own query string; the sort is added so the file matches the table on screen. */
-export function coverageCsvHref(query: string, sort?: { key: SortKey; dir: SortDir }): string {
-  const params = new URLSearchParams(query);
-  if (sort) {
-    params.set("sort", sort.key);
-    params.set("dir", sort.dir);
-  }
-  const qs = params.toString();
-  return qs ? `/coverage.csv?${qs}` : "/coverage.csv";
-}
+/**
+ * Said next to the download buttons. The file carries no notice (a comment
+ * block breaks readers), so the page says which columns are ours. Name, state
+ * and enrollment come from the College Scorecard institution file
+ * (`tools/scorecard/load_directory.py`: INSTNM, STABBR, UGDS), which is
+ * IPEDS-derived and federal; the IPEDS ID is the Scorecard's UNITID.
+ */
+export const COVERAGE_CSV_FEDERAL_COLUMNS = ["ipeds_id", "school_name", "state", "undergraduate_enrollment"] as const;
+export const COVERAGE_CSV_LICENSED_COLUMNS = ["school_id", "status", "latest_year_with_numbers", "latest_year_found", "last_checked"] as const;
+export const COVERAGE_CSV_FEDERAL_NOTE =
+  "IPEDS ID, school name, state and undergraduate enrollment come from the federal College Scorecard and IPEDS, which our license doesn\u2019t cover.";
+export const COVERAGE_CSV_DEFINITION_NOTE =
+  "latest_year_with_numbers is the latest year whose numbers we read; latest_year_found is the latest year of any file we hold.";
 
 export function coverageCsvFilename(scope: "view" | "all", day: string): string {
   return `collegedata-coverage-${scope === "all" ? "all-colleges" : "view"}-${day}.csv`;

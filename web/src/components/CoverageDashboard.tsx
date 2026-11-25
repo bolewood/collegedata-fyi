@@ -23,6 +23,7 @@ import { ListLink } from "./ListLink";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type { CoverageStatus, InstitutionCoverage } from "@/lib/types";
 import { CoverageBadge } from "./CoverageBadge";
+import { CoverageDownloads } from "./CoverageDownloads";
 import { SchoolGlyph } from "./SchoolGlyph";
 import {
   COVERAGE_STATUS_LABELS,
@@ -32,15 +33,12 @@ import {
   HAS_CDS_STATUSES,
   RECENCY_OPTIONS,
   STATUS_ORDER,
-  COVERAGE_CSV_FEDERAL_NOTE,
-  coverageCsvHref,
   currentCdsYear,
   defaultSortDir,
-  filterCoverageRows,
+  coverageViewRows,
   latestYearBuckets,
   parseCoverageView,
   sameSet,
-  sortCoverageRows,
   weightedShare,
   type EnrollmentBandId,
   type RecencyId,
@@ -111,7 +109,7 @@ export function CoverageDashboard({
 
   const query = searchParams.toString();
   const filteredRows = useMemo(() => {
-    return sortCoverageRows(filterCoverageRows(rows, parseCoverageView(new URLSearchParams(query))), sortKey, sortDir);
+    return coverageViewRows(rows, query, sortKey, sortDir);
   }, [rows, query, sortKey, sortDir]);
 
   // ── URL writers ──────────────────────────────────────────────────
@@ -368,26 +366,7 @@ export function CoverageDashboard({
       </div>
 
       {/* CSV downloads ship with the Data quality launch gate. */}
-      {isDataQualityLaunched() && (
-        <div style={{ marginBottom: 12 }}>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <a
-              className="cd-chip"
-              style={{ background: "transparent" }}
-              href={coverageCsvHref(query, { key: sortKey, dir: sortDir })}
-              download
-            >
-              Download this view (CSV)
-            </a>
-            <a className="cd-chip" style={{ background: "transparent" }} href={coverageCsvHref("all=1")} download>
-              Download all colleges (CSV)
-            </a>
-          </div>
-          <p className="meta" style={{ marginTop: 8, marginBottom: 0 }}>
-            {COVERAGE_CSV_FEDERAL_NOTE}
-          </p>
-        </div>
-      )}
+      {isDataQualityLaunched() && <CoverageDownloads viewRows={filteredRows} allRows={rows} />}
 
       <div
         style={{

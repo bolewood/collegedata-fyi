@@ -12,6 +12,7 @@ import { loadLatestSnapshot } from "@/lib/data-quality-snapshots";
 // Built from the committed snapshot at build, like the page. A new snapshot
 // reaches the site with the next deploy.
 export const dynamic = "force-static";
+export const dynamicParams = false;
 
 export function generateStaticParams() {
   const snapshot = isDataQualityLaunched() ? loadLatestSnapshot() : null;
@@ -31,7 +32,7 @@ export async function GET(
   if (!snapshot || !found || !Object.hasOwn(TABLE_TITLES, table)) {
     return new Response("Not found", { status: 404 });
   }
-  return new Response(CSV_BOM + buildQualityCsv(table as QualityTableId, found, snapshot), {
+  return new Response(CSV_BOM + buildQualityCsv(table as QualityTableId, found), {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="${qualityCsvFilename(table as QualityTableId, year, snapshot.snapshot_of)}"`,

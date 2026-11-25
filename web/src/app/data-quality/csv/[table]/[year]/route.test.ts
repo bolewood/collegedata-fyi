@@ -1,20 +1,41 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FIXTURE_SNAPSHOT } from "@/lib/__fixtures__/data-quality-snapshot";
 import { DATA_LICENSE_LINK_HEADER } from "@/lib/data-license";
-import { DATA_QUALITY_LAUNCH_DATE, buildQualityCsv } from "@/lib/data-quality";
+import { DATA_QUALITY_LAUNCH_DATE, TABLE_TITLES, buildQualityCsv, qualityCsvPath, type QualityTableId } from "@/lib/data-quality";
 
-const mocks = vi.hoisted(() => ({ loadLatestSnapshot: vi.fn() }));
-vi.mock("@/lib/data-quality-snapshots", () => ({ loadLatestSnapshot: mocks.loadLatestSnapshot }));
+// The real loader, pointed at a temp directory instead of src/data/data-quality.
+const dirs = vi.hoisted(() => ({ current: "" }));
+vi.mock("@/lib/data-quality-snapshots", async (importOriginal) => {
+  const real = await importOriginal<typeof import("@/lib/data-quality-snapshots")>();
+  return { ...real, loadLatestSnapshot: () => real.loadLatestSnapshot(dirs.current) };
+});
 
 import { GET, generateStaticParams } from "./route";
 
 const LAUNCH_MS = Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`);
 
-function open() {
-  vi.useFakeTimers();
-  vi.setSystemTime(LAUNCH_MS);
-  mocks.loadLatestSnapshot.mockReturnValue(FIXTURE_SNAPSHOT);
+beforeEach(() => {
+  dirs.current = fs.mkdtempSync(path.join(os.tmpdir(), "dq-snap-"));
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+  fs.rmSync(dirs.current, { recursive: true, force: true });
+});
+
+function writeSnapshot() {
+  fs.writeFileSync(path.join(dirs.current, "2026-11-24.json"), JSON.stringify(FIXTURE_SNAPSHOT));
 }
+
+function at(ms: number) {
+  vi.useFakeTimers();
+  vi.setSystemTime(ms);
+}
+
+const open = () => at(LAUNCH_MS);
 
 const get = (table: string, year: string) =>
   GET(new Request("https://collegedata.fyi/x"), { params: Promise.resolve({ table, year }) });
@@ -22,22 +43,18 @@ const get = (table: string, year: string) =>
 /** The body as sent: Response.text() would drop the BOM. */
 const raw = async (res: Response) => new TextDecoder("utf-8", { ignoreBOM: true }).decode(await res.arrayBuffer());
 
-afterEach(() => {
-  vi.useRealTimers();
-  mocks.loadLatestSnapshot.mockReset();
-});
-
 describe("/data-quality/csv/[table]/[year]", () => {
-  it("is a 404 before the launch date, and builds no static pages", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(LAUNCH_MS - 1000);
-    mocks.loadLatestSnapshot.mockReturnValue(FIXTURE_SNAPSHOT);
+  it("is a 404 before the launch date, builds no static pages, and never reads the directory", async () => {
+    at(LAUNCH_MS - 1000);
+    writeSnapshot();
+    fs.rmSync(dirs.current, { recursive: true });
     expect((await get("reports", "2024-25")).status).toBe(404);
     expect(generateStaticParams()).toEqual([]);
   });
 
   it("serves the table with the Link header, filename and a BOM, header on row 1", async () => {
     open();
+    writeSnapshot();
     const res = await get("totals", "2024-25");
     expect(res.status).toBe(200);
     expect(res.headers.get("Link")).toBe(DATA_LICENSE_LINK_HEADER);
@@ -50,27 +67,52 @@ describe("/data-quality/csv/[table]/[year]", () => {
     expect(text.slice(1).startsWith("format,reports,B1_adds_up,")).toBe(true);
     expect(text).not.toContain("#");
     const year = FIXTURE_SNAPSHOT.years.find((y) => y.cds_year === "2024-25")!;
-    expect(text.slice(1)).toBe(buildQualityCsv("totals", year, FIXTURE_SNAPSHOT));
+    expect(text.slice(1)).toBe(buildQualityCsv("totals", year));
   });
 
   it("has one line per format plus the total", async () => {
     open();
+    writeSnapshot();
     const year = FIXTURE_SNAPSHOT.years.find((y) => y.cds_year === "2023-24")!;
     const lines = (await raw(await get("reports", "2023-24"))).split("\r\n").filter(Boolean);
     expect(lines).toHaveLength(1 + year.rows.length + 1);
   });
 
-  it("is a 404 for an unknown table, an unknown year, or no snapshot", async () => {
+  it("is a 404 for an unknown table or year", async () => {
     open();
+    writeSnapshot();
     expect((await get("nope", "2024-25")).status).toBe(404);
     expect((await get("constructor", "2024-25")).status).toBe(404);
     expect((await get("reports", "1999-00")).status).toBe(404);
-    mocks.loadLatestSnapshot.mockReturnValue(null);
-    expect((await get("reports", "2024-25")).status).toBe(404);
   });
 
-  it("lists every table and year for the static build once launched", () => {
+  it("throws, by design, when launched with no snapshot (the build fails rather than ship an empty page)", async () => {
     open();
-    expect(generateStaticParams()).toHaveLength(3 * FIXTURE_SNAPSHOT.years.length);
+    await expect(get("reports", "2024-25")).rejects.toThrow(/no snapshot/);
+    expect(() => generateStaticParams()).toThrow(/no snapshot/);
+  });
+
+  it("lists exactly the unique (table, year) pairs once launched", () => {
+    open();
+    writeSnapshot();
+    const pairs = generateStaticParams().map((p) => `${p.table}/${p.year}`).sort();
+    const expected = (Object.keys(TABLE_TITLES) as QualityTableId[])
+      .flatMap((t) => FIXTURE_SNAPSHOT.years.map((y) => `${t}/${y.cds_year}`))
+      .sort();
+    expect(pairs).toEqual(expected);
+    expect(new Set(pairs).size).toBe(pairs.length);
+  });
+
+  it("answers for the path the page links to", async () => {
+    open();
+    writeSnapshot();
+    for (const table of Object.keys(TABLE_TITLES) as QualityTableId[]) {
+      const [, , , t, y] = qualityCsvPath(table, "2025-26").split("/");
+      expect(qualityCsvPath(table, "2025-26")).toBe(`/data-quality/csv/${t}/${y}`);
+      expect(generateStaticParams()).toContainEqual({ table: t, year: y });
+      const res = await get(t, y);
+      expect(res.status).toBe(200);
+      expect(res.headers.get("Content-Disposition")).toContain(`-${y}-`);
+    }
   });
 });

@@ -1,17 +1,21 @@
 import { describe, expect, it } from "vitest";
 import {
   COVERAGE_CSV_COLUMNS,
+  COVERAGE_CSV_DEFINITION_NOTE,
+  COVERAGE_CSV_FEDERAL_COLUMNS,
   COVERAGE_CSV_FEDERAL_NOTE,
+  COVERAGE_CSV_LICENSED_COLUMNS,
   COVERAGE_STATUS_LABELS,
   DEFAULT_MISSING,
   HAS_CDS_HREF,
   buildCoverageCsv,
-  coverageCsvHref,
+  coverageCsvFilename,
+  coverageViewRows,
+  defaultSortDir,
   currentCdsYear,
   filterCoverageRows,
   latestYearBuckets,
   matchesSearch,
-  parseCoverageSort,
   parseCoverageView,
   sortCoverageRows,
   type SortDir,
@@ -220,43 +224,92 @@ describe("coverage CSV", () => {
     expect(lines).toHaveLength(1 + 5);
   });
 
-  it("says the federal columns aren't ours to license, in one sentence built from the license name", () => {
-    expect(COVERAGE_CSV_FEDERAL_NOTE).toContain("IPEDS ID and undergraduate enrollment");
-    expect(COVERAGE_CSV_FEDERAL_NOTE).toContain("CC BY 4.0");
-  });
 });
 
 describe("coverage sort", () => {
-  const order = (key: SortKey, dir: SortDir) => ids(sortCoverageRows(ROWS, key, dir));
+  // Two schools tie on every column except name, plus a null in each nullable column.
+  const T = [
+    row({ school_id: "zed", school_name: "Zed College", state: "NY", undergraduate_enrollment: 2000, coverage_status: "cds_available_stale", latest_available_cds_year: "2023-24", latest_found_cds_year: "2024-25", last_checked_at: "2026-11-10T00:00:00Z" }),
+    row({ school_id: "abe", school_name: "Abe College", state: "NY", undergraduate_enrollment: 2000, coverage_status: "cds_available_stale", latest_available_cds_year: "2023-24", latest_found_cds_year: "2024-25", last_checked_at: "2026-11-10T00:00:00Z" }),
+    row({ school_id: "new", school_name: "Newest U", state: "CA", undergraduate_enrollment: 9000, coverage_status: "cds_available_current", latest_available_cds_year: "2025-26", latest_found_cds_year: "2025-26", last_checked_at: "2026-11-20T00:00:00Z" }),
+    row({ school_id: "nul", school_name: "Null U", state: null, undergraduate_enrollment: null, coverage_status: "not_checked", latest_available_cds_year: null, latest_found_cds_year: null, last_checked_at: null }),
+  ];
+  const order = (key: SortKey, dir: SortDir) => ids(sortCoverageRows(T, key, dir));
 
-  it("sorts every column both ways, nulls last for enrollment", () => {
-    expect(order("name", "asc")).toEqual(["alpha", "beta", "delta", "gamma", "eps"].sort((a, b) => ROWS.find((r) => r.school_id === a)!.school_name.localeCompare(ROWS.find((r) => r.school_id === b)!.school_name)));
-    expect(order("name", "desc")[0]).toBe("gamma");
-    expect(order("enrollment", "desc")).toEqual(["eps", "alpha", "beta", "gamma", "delta"]);
-    expect(order("enrollment", "asc")).toEqual(["gamma", "beta", "alpha", "eps", "delta"]);
-    expect(order("state", "asc")[0]).toBe("delta");
-    // Rows with no year sort as oldest, as the table always has.
-    expect(order("numbers", "asc")).toEqual(["delta", "gamma", "eps", "beta", "alpha"]);
-    expect(order("found", "desc")[0]).toBe("alpha");
+  it("name: A to Z and back", () => {
+    expect(order("name", "asc")).toEqual(["abe", "new", "nul", "zed"]);
+    expect(order("name", "desc")).toEqual(["zed", "nul", "new", "abe"]);
+  });
+
+  it("state: blank state first when ascending, ties by name", () => {
+    expect(order("state", "asc")).toEqual(["nul", "new", "abe", "zed"]);
+    expect(order("state", "desc")).toEqual(["abe", "zed", "new", "nul"]);
+  });
+
+  it("enrollment: equal enrollments tie by name, unknown always last", () => {
+    expect(order("enrollment", "desc")).toEqual(["new", "abe", "zed", "nul"]);
+    expect(order("enrollment", "asc")).toEqual(["abe", "zed", "new", "nul"]);
+  });
+
+  it("status: the display order of the tiles, ties by name", () => {
+    expect(order("status", "asc")).toEqual(["new", "abe", "zed", "nul"]);
+    expect(order("status", "desc")).toEqual(["nul", "abe", "zed", "new"]);
+  });
+
+  it("numbers and found: oldest first when ascending, no year first, ties by name", () => {
+    expect(order("numbers", "asc")).toEqual(["nul", "abe", "zed", "new"]);
+    expect(order("numbers", "desc")).toEqual(["new", "abe", "zed", "nul"]);
+    expect(order("found", "asc")).toEqual(["nul", "abe", "zed", "new"]);
+    expect(order("found", "desc")).toEqual(["new", "abe", "zed", "nul"]);
+  });
+
+  it("checked: never checked counts as oldest, ties by name", () => {
+    expect(order("checked", "desc")).toEqual(["new", "abe", "zed", "nul"]);
+    expect(order("checked", "asc")).toEqual(["nul", "abe", "zed", "new"]);
   });
 
   it("does not change the rows it is given", () => {
-    const before = ids(ROWS);
-    sortCoverageRows(ROWS, "enrollment", "desc");
-    expect(ids(ROWS)).toEqual(before);
+    const before = ids(T);
+    sortCoverageRows(T, "enrollment", "desc");
+    expect(ids(T)).toEqual(before);
   });
 
-  it("reads sort and dir from a query string, with name as the fallback", () => {
-    const p = (qs: string) => parseCoverageSort(new URLSearchParams(qs));
-    expect(p("sort=enrollment&dir=asc")).toEqual({ key: "enrollment", dir: "asc" });
-    expect(p("sort=enrollment")).toEqual({ key: "enrollment", dir: "desc" });
-    expect(p("sort=bogus&dir=sideways")).toEqual({ key: "name", dir: "asc" });
-    expect(p("")).toEqual({ key: "name", dir: "asc" });
+  it("starts each column in the direction the table does", () => {
+    expect(defaultSortDir("enrollment")).toBe("desc");
+    expect(defaultSortDir("checked")).toBe("desc");
+    expect(defaultSortDir("name")).toBe("asc");
   });
 
-  it("puts the current sort on the download link only", () => {
-    expect(coverageCsvHref("state=NY", { key: "checked", dir: "desc" })).toBe("/coverage.csv?state=NY&sort=checked&dir=desc");
-    expect(coverageCsvHref("all=1")).toBe("/coverage.csv?all=1");
+  it("is the table's rows: filtered by the query, then sorted", () => {
+    const rows = coverageViewRows(ROWS, "all=1&state=NY&sort=ignored", "enrollment", "desc");
+    expect(ids(rows)).toEqual(["eps", "alpha", "beta", "gamma"]);
+    expect(rows).toEqual(sortCoverageRows(filterCoverageRows(ROWS, parseCoverageView(new URLSearchParams("all=1&state=NY"))), "enrollment", "desc"));
+  });
+});
+
+describe("coverage CSV notes", () => {
+  it("keeps federal columns out of the licensed list and every column in one list or the other", () => {
+    const fed: readonly string[] = COVERAGE_CSV_FEDERAL_COLUMNS;
+    const ours: readonly string[] = COVERAGE_CSV_LICENSED_COLUMNS;
+    expect(fed.filter((c) => ours.includes(c))).toEqual([]);
+    expect([...fed, ...ours].sort()).toEqual([...COVERAGE_CSV_COLUMNS].sort());
+  });
+
+  it("says our license does not cover the federal columns and names the Scorecard", () => {
+    expect(COVERAGE_CSV_FEDERAL_NOTE).toContain("College Scorecard");
+    expect(COVERAGE_CSV_FEDERAL_NOTE).toMatch(/our license doesn\u2019t cover/);
+    expect(COVERAGE_CSV_FEDERAL_NOTE).not.toMatch(/licensed|CC BY/);
+    for (const w of ["IPEDS ID", "school name", "state", "undergraduate enrollment"]) expect(COVERAGE_CSV_FEDERAL_NOTE).toContain(w);
+  });
+
+  it("defines the two year columns", () => {
+    expect(COVERAGE_CSV_DEFINITION_NOTE).toContain("latest_year_with_numbers is the latest year whose numbers we read");
+    expect(COVERAGE_CSV_DEFINITION_NOTE).toContain("latest_year_found is the latest year of any file we hold");
+  });
+
+  it("names the view and all-colleges files differently", () => {
+    expect(coverageCsvFilename("view", "2026-11-25")).toBe("collegedata-coverage-view-2026-11-25.csv");
+    expect(coverageCsvFilename("all", "2026-11-25")).toBe("collegedata-coverage-all-colleges-2026-11-25.csv");
   });
 });
 
