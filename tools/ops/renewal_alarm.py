@@ -1,32 +1,44 @@
 #!/usr/bin/env python3
-"""Open, update and close the discovery-renewal alarm issues, one per CDS year.
+"""Open, update and close the discovery-renewal alarm issues.
 
-Reads the state (and the per-year issue bodies) written by
-`discovery_renewal.py`. Each CDS year has its own checks: the one-year and
-two-year renewal of the current year, the early-curve check of the next year,
-and the flat mature floors of earlier years. For every year:
+Reads the state (and the per-scope issue bodies) written by
+`discovery_renewal.py`. There are two kinds of scope, each with its own issue:
 
-- Below its floor and no open issue for that year: open a new issue assigned
-  to the owner and post to Discord #alerts. A next-year breach opens its own
-  issue even while the current year's issue is open.
-- Below its floor and an issue for that year is open: replace its title and
-  body. Never comment, never post again (a count added to a standing issue is a
-  log, not an alarm, #136), except to retry a Discord post that failed, and
-  except when the issue has gone stale (below).
-- Still below its floor after RENOTIFY_AFTER_DAYS days, or after the gap to the
-  floor has grown by RENOTIFY_GAP_GROWTH points since the issue was opened:
-  supersede it. Open a new assigned issue, post to Discord, and close the old
-  one with "Superseded by #N: still behind". Without this, one issue opened in
-  April would be the only notification for a gap that grew for seven months.
-- Back above its floor and an issue for that year is open: close it with one
-  comment that states the recovered number, and post a recovery to Discord.
-  The September switch never closes an earlier year's issue: that year is
-  judged on its own numbers against the flat mature floor.
-- Above its floor and no issue: nothing.
+- `renewal:<Y>`: the renewal numbers of CDS year Y (one-year, two-year, and for
+  the next year the early-curve check), against their floors. Earlier years are
+  judged against the flat mature floor.
+- `arrivals:<Y>`: how many schools gained a usable document for Y in the last
+  30 days (60 in winter), against what the posting curve expects. It exists for
+  the current year and the next year only.
 
-An issue's year is kept in a hidden marker, `alarm-scope: year:<Y>`. If the
-marker is gone or edited, the year in the issue's title is used, else the
-current year, with a warning, so an edit never silently re-scopes an alarm.
+For every scope:
+
+- Below its floor and no open issue for it: open a new issue assigned to the
+  owner and post to Discord #alerts. The renewal and arrivals issues of one
+  year are separate, so a stop in arrivals is announced as its own issue even
+  while the renewal issue is open.
+- Below its floor and its issue is open: replace its title and body. Never
+  comment, never post again (a count added to a standing issue is a log, not an
+  alarm, #136), except to retry a Discord post that failed, and except when the
+  issue has gone stale (next point).
+- Still below after RENOTIFY_AFTER_DAYS days (renewal also: the gap to the floor
+  grew by RENOTIFY_GAP_GROWTH points since it opened): supersede it. Open a new
+  assigned issue, post to Discord, and close the old one with "Superseded by
+  #N: still behind".
+- Back above its floor and its issue is open: close it with one comment that
+  states the recovered number, and post a recovery to Discord. An arrivals
+  issue closes only when that year's own 30-day arrivals are back (see
+  ARRIVALS_RECOVER_SHARE): a change of window or an unchecked window never
+  closes it.
+- A scope that is no longer tracked (a renewal year two or more cycles old, an
+  arrivals year that is no longer current or next) has its issue closed with
+  "No longer tracked" and never counts as outstanding.
+
+An issue's scope is kept in a hidden marker, `alarm-scope: renewal:<Y>` or
+`arrivals:<Y>`; the older `year:<Y>`, `current:<Y>` and `two_year:<Y>` markers
+read as `renewal:<Y>`. If the marker is gone or edited, an arrivals title or the
+year in a renewal title is used, else the current year, with a warning, so an
+edit never silently re-scopes an alarm.
 
 Issues are found by LABEL, never by title search (search lags), through the
 REST issues list. Test runs use a different label and a `[test] ` title
@@ -58,7 +70,6 @@ if str(REPO_ROOT) not in sys.path:
 from tools.ops import notify_discord  # noqa: E402
 from tools.ops.discovery_renewal import (  # noqa: E402
     ARRIVALS_FLOOR_SHARE,
-    breaching_checks,
     check_descriptor,
     lead_check,
 )
@@ -68,36 +79,26 @@ TEST_LABEL = "alarm:discovery-renewal-test"
 TEST_TITLE_PREFIX = "[test] "
 DEFAULT_ASSIGNEE = "santhonys"
 LABEL_COLOR = "D73A4A"
-LABEL_DESCRIPTION = "Discovery renewal is below its floor (one open issue per CDS year)"
-# `year:2025-26`; the older `current:2025-26` / `two_year:2025-26` format is
-# read as a match on its year.
+LABEL_DESCRIPTION = "Discovery renewal or arrivals is below its floor (one open issue per scope)"
 SCOPE_RE = re.compile(r"<!-- alarm-scope: ([a-z_]+):(\d{4}-\d{2}) -->")
 DISCORD_RE = re.compile(r"<!-- discord-posted: (true|false) -->")
-# An arrivals breach is not cleared by the check changing windows (30 to 60 days
-# in winter) or by not being checkable: once it is why an issue is open, it
-# recovers only on a real 30-day count of at least this many arrivals or this
-# share of what the curve expects, whichever is larger.
-ARRIVALS_RECOVER_MIN = 3
-ARRIVALS_OPEN_MARKER = "<!-- alarm-arrivals: open -->"
-# Every check that has been below its floor since this issue opened. A check
-# that joins the set (arrivals going below on an issue that was opened for the
-# renewal number) is new information, and supersedes the issue at once.
-CHECKS_RE = re.compile(r"<!-- alarm-checks: ([a-z_,]*) -->")
-# A check that has not been in the issue's set must be below its floor on this
-# many consecutive daily runs before it counts as joining; the set only grows
-# for an issue's lifetime. Together they keep a check sitting on its floor from
-# superseding the issue every time it crosses.
-JOIN_AFTER_RUNS = 3
-PENDING_RE = re.compile(r"<!-- alarm-pending: ([a-z_=@0-9,-]*) -->")
 GAP_RE = re.compile(r"<!-- alarm-gap: (-?\d+(?:\.\d+)?) -->")
-# A year's issue that is still open and still below its floor is replaced by a
-# new one (a new notification) after this many days, or when the gap to the
-# floor has grown by this many percentage points since it was opened.
+# An arrivals issue closes only when that year's own 30-day count is back above
+# max(ARRIVALS_RECOVER_MIN, ARRIVALS_RECOVER_SHARE x expected). The share is
+# higher than the 0.4 that opens it (ARRIVALS_FLOOR_SHARE) so a count sitting on
+# the boundary cannot open and close the issue every day.
+ARRIVALS_RECOVER_MIN = 3
+ARRIVALS_RECOVER_SHARE = 0.5
+# A scope's issue that is still open and still below its floor is replaced by a
+# new one (a new notification) after this many days, or (renewal) when the gap
+# to the floor has grown by this many percentage points since it was opened.
 RENOTIFY_AFTER_DAYS = 30
 RENOTIFY_GAP_GROWTH = 5.0
 TITLE_YEAR_RE = re.compile(r"\bhave (\d{4}-\d{2})\b")
+ARRIVALS_TITLE_RE = re.compile(r"Almost nothing new arrived for (\d{4}-\d{2})")
 
 Runner = Callable[[list[str]], "subprocess.CompletedProcess[str]"]
+Scope = tuple[str, str]  # ("renewal" | "arrivals", CDS year)
 
 
 class AlarmError(RuntimeError):
@@ -127,108 +128,12 @@ def _pct1(value: Any) -> str:
     return "n/a" if value is None else f"{float(value):.1f}%"
 
 
-def scope_marker(year: str) -> str:
-    return f"<!-- alarm-scope: year:{year} -->"
+def scope_marker(year: str, kind: str = "renewal") -> str:
+    return f"<!-- alarm-scope: {kind}:{year} -->"
 
 
 def discord_marker(posted: bool) -> str:
     return f"<!-- discord-posted: {'true' if posted else 'false'} -->"
-
-
-def arrivals_marked(body: str | None) -> bool:
-    return ARRIVALS_OPEN_MARKER in (body or "")
-
-
-def arrivals_recovered(ysum: dict[str, Any]) -> bool:
-    """True when the 30-day arrivals are back: for every year with a checkable
-    expectation, at least max(3, a share of the expected 30-day arrivals).
-    With no checkable year the totals are used, so an unchecked window never
-    clears a breach. A summary with no arrivals figures (not the current year)
-    holds nothing."""
-    if ysum.get("arrivals_30d") is None:
-        return True
-
-    def back(count: Any, expected: Any) -> bool:
-        return count >= max(ARRIVALS_RECOVER_MIN, ARRIVALS_FLOOR_SHARE * float(expected))
-
-    years = [
-        name for name in ("current", "next")
-        if ysum.get(f"arrivals_{name}_checked") is True
-    ]
-    if not years:
-        return back(ysum["arrivals_30d"], ysum.get("arrivals_expected_30d") or 0.0)
-    return all(
-        back(ysum[f"arrivals_{name}_30d"], ysum[f"arrivals_expected_{name}_30d"]) for name in years
-    )
-
-
-def arrivals_hold_note(ysum: dict[str, Any]) -> str:
-    return (
-        f"Arrivals breach still open: {ysum.get('arrivals_30d')} schools gained a document in the "
-        "last 30 days; it stays open until each year that can be judged is back to at least the "
-        f"larger of {ARRIVALS_RECOVER_MIN} and {ARRIVALS_FLOOR_SHARE:.0%} of the expected "
-        "30-day arrivals, whatever window the check is using.\n\n"
-    )
-
-
-def parse_checks(body: str | None) -> set[str] | None:
-    """The checks recorded as below their floor since the issue opened, or None
-    for an issue that predates the marker (nothing is "new" for it)."""
-    match = CHECKS_RE.search(body or "")
-    if match:
-        return {c for c in match.group(1).split(",") if c}
-    if arrivals_marked(body):
-        return {"arrivals"}
-    return None
-
-
-def checks_marker(
-    checks: set[str] | list[str], pending: dict[str, tuple[int, str]] | None = None
-) -> str:
-    out = f"<!-- alarm-checks: {','.join(sorted(checks))} -->\n"
-    if pending:
-        out += "<!-- alarm-pending: " + ",".join(
-            f"{c}={n}@{d}" for c, (n, d) in sorted(pending.items())
-        ) + " -->\n"
-    return out
-
-
-def parse_pending(body: str | None) -> dict[str, tuple[int, str]]:
-    """Checks below their floor that are not yet in the issue's set:
-    {check: (consecutive daily runs below, date of the last such run)}."""
-    match = PENDING_RE.search(body or "")
-    out: dict[str, tuple[int, str]] = {}
-    if match:
-        for part in match.group(1).split(","):
-            if "=" in part and "@" in part:
-                name, rest = part.split("=", 1)
-                count, day = rest.split("@", 1)
-                if count.isdigit():
-                    out[name] = (int(count), day)
-    return out
-
-
-def join_progress(
-    now_below: list[str], confirmed: set[str], pending: dict[str, tuple[int, str]], today: str
-) -> tuple[list[str], dict[str, tuple[int, str]]]:
-    """(checks that have just joined the set, the new pending record).
-
-    A check not in `confirmed` and below its floor counts one more run, once per
-    calendar day; one that is not below loses its count. At JOIN_AFTER_RUNS it
-    joins."""
-    joined: list[str] = []
-    new_pending: dict[str, tuple[int, str]] = {}
-    for check in now_below:
-        if check in confirmed:
-            continue
-        count, last = pending.get(check, (0, ""))
-        if last != today:
-            count += 1
-        if count >= JOIN_AFTER_RUNS:
-            joined.append(check)
-        else:
-            new_pending[check] = (count, today if last != today else last)
-    return joined, new_pending
 
 
 def gap_marker(gap: float | None) -> str:
@@ -240,10 +145,9 @@ def parse_gap(body: str | None) -> float | None:
     return float(match.group(1)) if match else None
 
 
-def gap_of(ysum: dict[str, Any], lead: str | None = None) -> float | None:
-    """Points between the leading check's floor and its number: how far behind.
-    None for the arrivals check, which has no percentage."""
-    d = check_descriptor(ysum, lead or lead_check(ysum) or "current")
+def gap_of(ysum: dict[str, Any]) -> float | None:
+    """Points between the leading renewal check's floor and its number."""
+    d = check_descriptor(ysum, lead_check(ysum) or "current")
     if d["floor"] is None or d["pct"] is None:
         return None
     return round(float(d["floor"]) - float(d["pct"]), 1)
@@ -260,26 +164,40 @@ def parse_created(issue: dict[str, Any]) -> datetime | None:
     return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
 
 
-def stale_reason(
-    issue: dict[str, Any], ysum: dict[str, Any], now: datetime
-) -> str | None:
-    """Why a still-open, still-short issue should be replaced by a new one:
-    old enough, or the gap grew. None when it should only be updated."""
+def age_days(issue: dict[str, Any], now: datetime) -> int | None:
     created = parse_created(issue)
-    if created is not None and (now - created).days >= RENOTIFY_AFTER_DAYS:
-        gap_now, gap_then = gap_of(ysum), parse_gap(issue.get("body"))
-        if gap_now is not None and gap_then is not None:
-            return f"still behind (gap {gap_then:.1f}\u2192{gap_now:.1f} points)"
-        return f"still behind after {(now - created).days} days"
+    return None if created is None else (now - created).days
+
+
+def stale_reason(issue: dict[str, Any], ysum: dict[str, Any], now: datetime) -> str | None:
+    """Why a still-open, still-short renewal issue should be replaced by a new
+    one: old enough, or the gap grew. None when it should only be updated."""
+    days = age_days(issue, now)
     gap_now, gap_then = gap_of(ysum), parse_gap(issue.get("body"))
+    if days is not None and days >= RENOTIFY_AFTER_DAYS:
+        if gap_now is not None and gap_then is not None:
+            return f"still behind (gap {gap_then:.1f}→{gap_now:.1f} points)"
+        return f"still behind after {days} days"
     if gap_now is not None and gap_then is not None and gap_now - gap_then >= RENOTIFY_GAP_GROWTH:
-        return f"still behind (gap {gap_then:.1f}\u2192{gap_now:.1f} points)"
+        return f"still behind (gap {gap_then:.1f}→{gap_now:.1f} points)"
     return None
 
 
-def parse_scope(body: str | None) -> tuple[str, str] | None:
+def arrivals_stale_reason(issue: dict[str, Any], now: datetime) -> str | None:
+    days = age_days(issue, now)
+    if days is not None and days >= RENOTIFY_AFTER_DAYS:
+        return f"still behind after {days} days"
+    return None
+
+
+def parse_scope(body: str | None) -> Scope | None:
+    """(kind, year) from the marker; the older `year:`, `current:` and
+    `two_year:` markers are renewal scopes."""
     match = SCOPE_RE.search(body or "")
-    return (match.group(1), match.group(2)) if match else None
+    if not match:
+        return None
+    kind = "arrivals" if match.group(1) == "arrivals" else "renewal"
+    return kind, match.group(2)
 
 
 def discord_posted(body: str | None) -> bool:
@@ -288,22 +206,29 @@ def discord_posted(body: str | None) -> bool:
     return match is None or match.group(1) == "true"
 
 
-def issue_year(issue: dict[str, Any], current_year: str) -> tuple[str, str | None]:
-    """(CDS year, legacy kind) an open alarm issue is about. A missing or
-    edited marker falls back to the year in the title, else the current year,
-    with a warning: it must never re-scope the alarm silently."""
+def issue_scope(issue: dict[str, Any], current_year: str) -> tuple[Scope, str | None]:
+    """((kind, year), legacy marker kind) an open alarm issue is about. A missing
+    or edited marker falls back to the title, else the current year's renewal
+    scope, with a warning: it must never re-scope the alarm silently."""
     scope = parse_scope(issue.get("body"))
     if scope is not None:
-        return scope[1], scope[0]
-    title_year = TITLE_YEAR_RE.search(str(issue.get("title") or ""))
-    year = title_year.group(1) if title_year else current_year
-    where = "its title" if title_year else "the current year"
+        match = SCOPE_RE.search(issue.get("body") or "")
+        return scope, match.group(1) if match else None
+    title = str(issue.get("title") or "")
+    arrivals = ARRIVALS_TITLE_RE.search(title)
+    if arrivals:
+        found: Scope = ("arrivals", arrivals.group(1))
+        where = "its title"
+    else:
+        title_year = TITLE_YEAR_RE.search(title)
+        found = ("renewal", title_year.group(1) if title_year else current_year)
+        where = "its title" if title_year else "the current year"
     print(
         f"::warning::alarm issue #{issue['number']} has no readable alarm-scope marker; "
-        f"treating it as {year} (from {where})",
+        f"treating it as {found[0]}:{found[1]} (from {where})",
         file=sys.stderr,
     )
-    return year, None
+    return found, None
 
 
 def retired_comment(ysum: dict[str, Any] | None) -> str:
@@ -316,23 +241,16 @@ def retired_comment(ysum: dict[str, Any] | None) -> str:
     return f"No longer tracked: {figures}; lapsed schools stay in the two-year check."
 
 
-def issue_title(ysum: dict[str, Any], *, test_mode: bool, lead: str | None = None) -> str:
-    d = check_descriptor(ysum, lead or lead_check(ysum) or "current")
-    if d["kind"] == "arrivals":
-        title = (
-            f"Almost nothing new arrived for {d['arrival_year']}: {d['renewed']} schools "
-            f"in {d['window']} days (expected {d['total']})"
-        )
-    else:
-        title = (
-            f"Discovery is behind: {_pct0(d['pct'])} of schools with {d['prev']} "
-            f"have {d['year']} (floor {_pct0(d['floor'])})"
-        )
+def issue_title(ysum: dict[str, Any], *, test_mode: bool) -> str:
+    d = check_descriptor(ysum, lead_check(ysum) or "current")
+    title = (
+        f"Discovery is behind: {_pct0(d['pct'])} of schools with {d['prev']} "
+        f"have {d['year']} (floor {_pct0(d['floor'])})"
+    )
     return (TEST_TITLE_PREFIX if test_mode else "") + title
 
 
 def recovery_comment(ysum: dict[str, Any], kind: str = "current") -> str:
-    kind = "current" if kind == "arrivals" else kind
     d = check_descriptor(ysum, kind)
     other = check_descriptor(ysum, "two_year" if kind == "current" else "current")
     other_text = (
@@ -347,20 +265,13 @@ def recovery_comment(ysum: dict[str, Any], kind: str = "current") -> str:
     )
 
 
-def discord_alert(
-    ysum: dict[str, Any], issue_url: str | None, *, test_mode: bool, lead: str | None = None
-) -> dict[str, Any]:
-    d = check_descriptor(ysum, lead or lead_check(ysum) or "current")
-    renewal_text = (
-        f"{d['renewed']} arrived, about {d['total']} expected"
-        if d["kind"] == "arrivals"
-        else f"{d['renewed']} of {d['total']} ({_pct1(d['pct'])})"
-    )
+def discord_alert(ysum: dict[str, Any], issue_url: str | None, *, test_mode: bool) -> dict[str, Any]:
+    d = check_descriptor(ysum, lead_check(ysum) or "current")
     return {
-        "title": issue_title(ysum, test_mode=test_mode, lead=lead),
+        "title": issue_title(ysum, test_mode=test_mode),
         "fields": [
             ("Check", d["name"]),
-            ("Renewal", renewal_text),
+            ("Renewal", f"{d['renewed']} of {d['total']} ({_pct1(d['pct'])})"),
             ("Floor", _pct1(d["floor"])),
             ("Years", f"{d['prev']} to {d['year']}"),
             ("Issue", issue_url or "—"),
@@ -387,6 +298,77 @@ def discord_recovery(
         "url": issue_url,
         "recovered": True,
     }
+
+
+# ---------------------------------------------------------------- arrivals scope
+
+
+def arrivals_recovered(a: dict[str, Any]) -> bool:
+    """True when the year's own 30-day arrivals are back above
+    max(3, ARRIVALS_RECOVER_SHARE x expected_30). The 30-day figures are used
+    whatever window the check judges with, so a window switch or an unchecked
+    window never closes an arrivals issue."""
+    return a["count_30"] >= max(ARRIVALS_RECOVER_MIN, ARRIVALS_RECOVER_SHARE * float(a["expected_30"]))
+
+
+def arrivals_figures(a: dict[str, Any], *, holding: bool) -> tuple[int, int, int]:
+    """(arrived, expected rounded, window days) for words. Held with the flag
+    off: the 30-day figures."""
+    window = 30 if holding else int(a["window_days"])
+    return int(a[f"count_{window}"]), round(float(a[f"expected_{window}"])), window
+
+
+def arrivals_title(year: str, a: dict[str, Any], *, holding: bool, test_mode: bool) -> str:
+    arrived, expected, window = arrivals_figures(a, holding=holding)
+    return (TEST_TITLE_PREFIX if test_mode else "") + (
+        f"Almost nothing new arrived for {year}: {arrived} schools in {window} days "
+        f"(expected {expected})"
+    )
+
+
+def arrivals_alert(
+    year: str, a: dict[str, Any], issue_url: str | None, *, holding: bool, test_mode: bool
+) -> dict[str, Any]:
+    arrived, expected, window = arrivals_figures(a, holding=holding)
+    return {
+        "title": arrivals_title(year, a, holding=holding, test_mode=test_mode),
+        "fields": [
+            ("Check", "arrivals"),
+            ("Arrived", f"{arrived} in {window} days, about {expected} expected"),
+            ("Year", year),
+            ("Issue", issue_url or "—"),
+        ],
+        "url": issue_url,
+        "recovered": False,
+    }
+
+
+def arrivals_recovery_comment(year: str, a: dict[str, Any]) -> str:
+    need = max(ARRIVALS_RECOVER_MIN, ARRIVALS_RECOVER_SHARE * float(a["expected_30"]))
+    return (
+        f"Recovered: {a['count_30']} schools gained a {year} document in the last 30 days "
+        f"(at least {need:.0f} needed, with about {float(a['expected_30']):.0f} expected). Closing."
+    )
+
+
+def arrivals_recovery(year: str, a: dict[str, Any], issue_url: str | None, *, test_mode: bool) -> dict[str, Any]:
+    return {
+        "title": (TEST_TITLE_PREFIX if test_mode else "")
+        + f"Discovery arrivals recovered for {year}: {a['count_30']} schools in 30 days",
+        "fields": [("Check", "arrivals"), ("Year", year), ("Issue", issue_url or "—")],
+        "url": issue_url,
+        "recovered": True,
+    }
+
+
+def arrivals_hold_note(year: str, a: dict[str, Any]) -> str:
+    need = max(ARRIVALS_RECOVER_MIN, ARRIVALS_RECOVER_SHARE * float(a["expected_30"]))
+    return (
+        f"Arrivals for {year} are not back yet: {a['count_30']} schools in the last 30 days; "
+        f"this issue stays open until at least {need:.0f} (the larger of {ARRIVALS_RECOVER_MIN} and "
+        f"{ARRIVALS_RECOVER_SHARE:.0%} of the expected 30-day arrivals), whatever window the "
+        "check is using.\n\n"
+    )
 
 
 def _gh(runner: Runner, args: list[str]) -> str:
@@ -447,16 +429,23 @@ def _with_body_file(body: str, fn: Callable[[str], str]) -> str:
 
 
 def build_body(
-    report: str, year: str, posted: bool, gap: float | None = None, arrivals_open: bool = False,
-    checks: set[str] | list[str] | None = None,
-    pending: dict[str, tuple[int, str]] | None = None,
+    report: str, scope: Scope, posted: bool, gap: float | None = None
 ) -> str:
+    kind, year = scope
     return (
         report.rstrip("\n")
-        + f"\n\n{scope_marker(year)}\n{discord_marker(posted)}\n{gap_marker(gap)}"
-        + (f"{ARRIVALS_OPEN_MARKER}\n" if arrivals_open else "")
-        + (checks_marker(checks, pending) if checks is not None else "")
+        + f"\n\n{scope_marker(year, kind)}\n{discord_marker(posted)}\n{gap_marker(gap)}"
     )
+
+
+def _retire(scope: Scope, current_start: int) -> bool:
+    """A renewal year two or more cycles old, or an arrivals year that is no
+    longer the current or next one, is no longer tracked. Some years never
+    reached the flat mature floor (2023-24 sat at 82.9%), and an issue that can
+    never close would hold the board lamp down for good."""
+    kind, year = scope
+    start = int(year[:4])
+    return start < current_start - 1 if kind == "renewal" else start < current_start
 
 
 def act(
@@ -469,15 +458,18 @@ def act(
     dry_run: bool,
     assignee: str,
     runner: Runner,
+    arrivals: dict[str, dict[str, Any]] | None = None,
     fallback_report: str = "",
     discord: Callable[..., bool] = notify_discord.post_custom_embed,
     now: datetime | None = None,
 ) -> dict[str, Any]:
-    """Do (or, in a dry run, print) what each year calls for.
+    """Do (or, in a dry run, print) what each scope calls for.
 
-    Returns {"actions": [{year, action, issue}], "issue": <alarm issue number
-    afterwards: the current year's, else the newest year's>, "discord_failed"}.
+    Returns {"actions": [{scope, year, action, issue}], "issue": <the alarm
+    issue number afterwards: the current year's renewal issue, else the newest>,
+    "discord_failed"}.
     """
+    arrivals = arrivals or {}
     label = label_for(test_mode)
     now = now or datetime.now(timezone.utc)
     issues = find_open_issues(repo, label, runner)
@@ -488,25 +480,23 @@ def act(
                     f"issue #{existing['number']} carries {label} but is not a test issue; "
                     "refusing to touch it"
                 )
-    by_year: dict[str, list[dict[str, Any]]] = {}
+    by_scope: dict[Scope, list[dict[str, Any]]] = {}
     legacy_kind: dict[int, str | None] = {}
     for issue in issues:
-        year, kind = issue_year(issue, current_year)
-        by_year.setdefault(year, []).append(issue)
+        scope, kind = issue_scope(issue, current_year)
+        by_scope.setdefault(scope, []).append(issue)
         legacy_kind[issue["number"]] = kind
-    # Only the current year and the next one can open an alarm. An earlier year
-    # is judged by the flat mature floor, which some years never reached (2023-24
-    # held at about 82%); it is evaluated only to decide whether an issue that
-    # is already open for it recovers.
+    # Only the current year and the next one can open an alarm. An earlier
+    # renewal year is evaluated only to decide whether an issue that is already
+    # open for it recovers.
     current_start = int(current_year[:4])
-    breaching = {
-        y for y, ys in years.items()
+    breaching: set[Scope] = {
+        ("renewal", y) for y, ys in years.items()
         if int(y[:4]) >= current_start and lead_check(ys) is not None
+    } | {
+        ("arrivals", y) for y, a in arrivals.items()
+        if int(y[:4]) >= current_start and a.get("below_floor") is True
     }
-    # A year two or more cycles old is no longer tracked. Some years never
-    # reached the flat mature floor (2023-24 sat at 82.9%), and an issue that can
-    # never close would hold the board lamp down for good.
-    retired_before = current_start - 1  # years <= current - 2
     prefix = "[dry run] " if dry_run else ""
     discord_failed = False
 
@@ -527,17 +517,30 @@ def act(
         _gh(runner, ["issue", "close", str(issue_number), "--repo", repo, "--comment", comment])
 
     actions: list[dict[str, Any]] = []
-    open_after: dict[str, int] = {}
+    open_after: dict[Scope, int] = {}
 
-    for year in sorted(set(by_year) | breaching):
-        ysum = years.get(year)
-        open_list = by_year.get(year, [])
+    def record(scope: Scope, action: str, issue_number: int | None) -> None:
+        actions.append({"scope": scope[0], "year": scope[1], "action": action, "issue": issue_number})
+        if issue_number is not None and action in ("create", "renotify", "update", "skip"):
+            open_after[scope] = issue_number
+
+    for scope in sorted(set(by_scope) | breaching):
+        kind, year = scope
+        open_list = by_scope.get(scope, [])
         active = open_list[-1] if open_list else None
         older = open_list[:-1]
         number = active["number"] if active else None
-        if open_list and int(year[:4]) < retired_before:
-            comment = retired_comment(ysum)
-            print(f"{prefix}alarm {year}: retire (no longer tracked)")
+        ysum = years.get(year) if kind == "renewal" else None
+        a = arrivals.get(year) if kind == "arrivals" else None
+        name = f"{kind}:{year}"
+
+        if open_list and _retire(scope, current_start):
+            comment = (
+                retired_comment(ysum) if kind == "renewal"
+                else f"No longer tracked: arrivals are checked for {current_year} and the next "
+                     "year only."
+            )
+            print(f"{prefix}alarm {name}: retire (no longer tracked)")
             if dry_run:
                 print(f"{prefix}would close #{number} with the comment: {comment}")
             else:
@@ -546,109 +549,92 @@ def act(
                     print(f"closed issue #{old['number']} (no longer tracked)")
             send({
                 "title": (TEST_TITLE_PREFIX if test_mode else "")
-                + f"Discovery renewal: {year} is no longer tracked",
+                + f"Discovery {kind}: {year} is no longer tracked",
                 "fields": [("Year", year), ("Issue", (active or {}).get("url") or "—")],
                 "url": (active or {}).get("url"),
                 "recovered": True,
             })
-            actions.append({"year": year, "action": "retire", "issue": None})
+            record(scope, "retire", None)
             continue
-        if ysum is None:
-            print(f"::warning::open alarm issue(s) for {year}, which is outside the evaluated "
-                  "years; left untouched", file=sys.stderr)
-            if number is not None:
-                open_after[year] = number
-            actions.append({"year": year, "action": "skip", "issue": number})
+        if (kind == "renewal" and ysum is None) or (kind == "arrivals" and a is None):
+            print(f"::warning::open alarm issue(s) for {name}, which is outside the evaluated "
+                  "scopes; left untouched", file=sys.stderr)
+            record(scope, "skip", number)
             continue
-        # An arrivals breach that is why this issue is open is not cleared by the
-        # check changing windows or being unchecked (a stale count re-entering
-        # the 60-day window, expected near 10): only a real 30-day recovery.
-        holds = (
-            active is not None
-            and arrivals_marked(active["body"])
-            and not arrivals_recovered(ysum)
-        )
-        if holds:
-            ysum = {**ysum, "arrivals_below_floor": True}
-            if not (ysum.get("arrivals_current_below_floor") or ysum.get("arrivals_next_below_floor")):
-                ysum["arrivals_current_below_floor"] = True
-                ysum["arrivals_current_window_days"] = 30
-        arrivals_open = ysum.get("arrivals_below_floor") is True
-        checks_now = breaching_checks(ysum)
-        old_checks = parse_checks(active["body"]) if active else None
-        # A check that was not below its floor when the issue opened and is now:
-        # arrivals going short on a renewal issue is the case. It is new
-        # information, so the issue is superseded at once with a title that
-        # leads with the new check, not a body edit nobody reads.
-        if old_checks is None:
-            newly, pending_now = [], {}
+
+        # What differs between the two scopes, in one place.
+        holding = False
+        if kind == "arrivals":
+            below_now = a.get("below_floor") is True
+            # Held open by this year's own recovery rule, not by the flag.
+            holding = active is not None and not below_now and not arrivals_recovered(a)
+            below = below_now or holding
+            title = arrivals_title(year, a, holding=holding, test_mode=test_mode)
+            alert = lambda url: arrivals_alert(  # noqa: E731
+                year, a, url, holding=holding, test_mode=test_mode)
+            recovery_text = arrivals_recovery_comment(year, a)
+            recovery = lambda url: arrivals_recovery(year, a, url, test_mode=test_mode)  # noqa: E731
+            report = reports.get(f"arrivals:{year}") or fallback_report
+            if holding:
+                report = arrivals_hold_note(year, a) + report
+            gap = None
         else:
-            newly, pending_now = join_progress(
-                checks_now, old_checks, parse_pending(active["body"]), now.date().isoformat()
-            )
-        lead = newly[0] if newly else None
-        # Monotonic for the issue's lifetime: nothing leaves the set. A new issue
-        # starts with the checks that are below now.
-        seen_checks = set(checks_now) | (old_checks or set()) if active is None else (
-            (old_checks or set()) | set(newly)
-        )
-        if active is None or (old_checks is None):
-            seen_checks = set(checks_now)
-        below = bool(checks_now)
+            below = lead_check(ysum) is not None
+            title = issue_title(ysum, test_mode=test_mode)
+            alert = lambda url: discord_alert(ysum, url, test_mode=test_mode)  # noqa: E731
+            old_kind = legacy_kind.get(number)
+            old_kind = old_kind if old_kind in ("current", "two_year") else "current"
+            recovery_text = recovery_comment(ysum, old_kind)
+            recovery = lambda url: discord_recovery(  # noqa: E731
+                ysum, url, old_kind, test_mode=test_mode)
+            report = reports.get(year) or fallback_report
+            gap = gap_of(ysum)
+
         action = decide(below, number)
         renotify_reason = None
         if action == "update":
-            if newly:
-                renotify_reason = f"still behind, and now also below its floor: {', '.join(newly)}"
-            else:
-                renotify_reason = stale_reason(active, ysum, now)
+            renotify_reason = (
+                arrivals_stale_reason(active, now) if kind == "arrivals"
+                else stale_reason(active, ysum, now)
+            )
             if renotify_reason:
                 action = "renotify"
-        print(f"{prefix}alarm {year}: {action} (below_floor={below}, open issue={number}, "
+        print(f"{prefix}alarm {name}: {action} (below_floor={below}, open issue={number}, "
               f"label={label})")
-        report = reports.get(year) or fallback_report
-        if holds:
-            report = arrivals_hold_note(ysum) + report
 
         if action == "none":
-            actions.append({"year": year, "action": action, "issue": None})
+            record(scope, action, None)
             continue
 
         if action in ("create", "renotify"):
-            title = issue_title(ysum, test_mode=test_mode, lead=lead)
-            gap = gap_of(ysum, lead if lead != "arrivals" else None)
-            seen_checks = set(checks_now)  # a new issue starts a new set and no pending joins
             if dry_run:
                 who = "none (test)" if test_mode else assignee
                 extra = (f"\n  would close #{number} as superseded: {renotify_reason}"
                          if action == "renotify" else "")
                 print(f"{prefix}would create issue: {title}\n  label={label} assignee={who}{extra}\n{report}")
-                send(discord_alert(ysum, None, test_mode=test_mode, lead=lead))
-                actions.append({"year": year, "action": action, "issue": None})
+                send(alert(None))
+                record(scope, action, None)
                 continue
             ensure_label(repo, label, runner)
             assign = [] if test_mode else ["--assignee", assignee]
-            out = _with_body_file(build_body(report, year, False, gap, arrivals_open, seen_checks), lambda path: _gh(
+            out = _with_body_file(build_body(report, scope, False, gap), lambda path: _gh(
                 runner, ["issue", "create", "--repo", repo, "--title", title,
                          "--body-file", path, "--label", label, *assign]))
             new_number = parse_issue_number(out)
             url = out.strip().splitlines()[-1]
-            print(f"opened issue #{new_number} for {year}")
+            print(f"opened issue #{new_number} for {name}")
             if action == "renotify":
                 for old in open_list:
                     close(old["number"], f"Superseded by #{new_number}: {renotify_reason}.")
                     print(f"closed issue #{old['number']} as superseded ({renotify_reason})")
-            outcome = send(discord_alert(ysum, url, test_mode=test_mode, lead=lead))
-            if outcome == "posted":
-                _with_body_file(build_body(report, year, True, gap, arrivals_open, seen_checks), lambda path: _gh(
+            if send(alert(url)) == "posted":
+                _with_body_file(build_body(report, scope, True, gap), lambda path: _gh(
                     runner, ["issue", "edit", str(new_number), "--repo", repo,
                              "--body-file", path]))
-            open_after[year] = new_number
-            actions.append({"year": year, "action": action, "issue": new_number})
+            record(scope, action, new_number)
             continue
 
         if action == "update":
-            title = issue_title(ysum, test_mode=test_mode)
             posted = discord_posted(active["body"])
             retry = not posted
             if dry_run:
@@ -656,95 +642,109 @@ def act(
                       + (", retry the Discord post" if retry else ", no Discord post")
                       + f"): {title}\n{report}")
                 if retry:
-                    send(discord_alert(ysum, active.get("url"), test_mode=test_mode))
-                open_after[year] = number
-                actions.append({"year": year, "action": action, "issue": number})
+                    send(alert(active.get("url")))
+                record(scope, action, number)
                 continue
             if retry:
-                posted = send(discord_alert(ysum, active.get("url"), test_mode=test_mode)) == "posted"
+                posted = send(alert(active.get("url"))) == "posted"
             # The gap recorded when the issue was opened stays: it is what the
             # growth since then is measured against.
             gap_at_open = parse_gap(active["body"])
             if gap_at_open is None:
-                gap_at_open = gap_of(ysum)
+                gap_at_open = gap
             _with_body_file(
-                build_body(report, year, posted, gap_at_open, arrivals_open, seen_checks,
-                           pending_now),
+                build_body(report, scope, posted, gap_at_open),
                 lambda path: _gh(
-                runner, ["issue", "edit", str(number), "--repo", repo, "--title", title,
-                         "--body-file", path]))
+                    runner, ["issue", "edit", str(number), "--repo", repo, "--title", title,
+                             "--body-file", path]))
             print(f"updated issue #{number}")
             for old in older:
                 close(old["number"], f"Superseded by #{number}.")
                 print(f"closed duplicate issue #{old['number']}")
-            open_after[year] = number
-            actions.append({"year": year, "action": action, "issue": number})
+            record(scope, action, number)
             continue
 
-        # close: this year is back above its floors
-        kind = legacy_kind.get(number)
-        kind = kind if kind in ("current", "two_year") else "current"
-        comment = recovery_comment(ysum, kind)
+        # close: this scope is back above its floors
         if dry_run:
-            print(f"{prefix}would close #{number} with the comment: {comment}")
-            send(discord_recovery(ysum, active.get("url"), kind, test_mode=test_mode))
-            actions.append({"year": year, "action": action, "issue": None})
+            print(f"{prefix}would close #{number} with the comment: {recovery_text}")
+            send(recovery(active.get("url")))
+            record(scope, action, None)
             continue
         for old in open_list:
-            close(old["number"], comment if old is active else f"Superseded by #{number}; recovered.")
+            close(old["number"], recovery_text if old is active else f"Superseded by #{number}; recovered.")
             print(f"closed issue #{old['number']}")
-        send(discord_recovery(ysum, active.get("url"), kind, test_mode=test_mode))
-        actions.append({"year": year, "action": action, "issue": None})
+        send(recovery(active.get("url")))
+        record(scope, action, None)
 
-    if current_year in open_after:
-        alarm_issue: int | None = open_after[current_year]
+    if ("renewal", current_year) in open_after:
+        alarm_issue: int | None = open_after[("renewal", current_year)]
     else:
-        alarm_issue = open_after[max(open_after)] if open_after else None
+        renewals = {s: n for s, n in open_after.items() if s[0] == "renewal"}
+        pool = renewals or open_after
+        alarm_issue = pool[max(pool)] if pool else None
     return {"actions": actions, "issue": alarm_issue, "discord_failed": discord_failed}
 
 
 def outstanding(outcome: dict[str, Any]) -> tuple[bool, str]:
     """(any alarm outstanding, comma-separated CDS years still short): every
-    year whose alarm issue is open after this run, including an earlier year
-    that is no longer the current or next one."""
-    years = sorted(
+    year with an alarm issue, of either scope, open after this run, including
+    an earlier year that is no longer the current or next one. Retired scopes
+    never count."""
+    years = sorted({
         a["year"] for a in outcome["actions"]
         if a["action"] in ("create", "renotify", "update", "skip")
-    )
+    })
     return bool(years), ",".join(years)
+
+
+def arrivals_years(outcome: dict[str, Any]) -> str:
+    """The years with an open or new arrivals issue."""
+    return ",".join(sorted({
+        a["year"] for a in outcome["actions"]
+        if a.get("scope") == "arrivals" and a["action"] in ("create", "renotify", "update", "skip")
+    }))
 
 
 def real_outstanding(
     years: dict[str, dict[str, Any]],
+    arrivals: dict[str, dict[str, Any]],
     current_year: str,
     repo: str,
     runner: Runner,
-    outcome: dict[str, Any],
-) -> tuple[bool, str]:
+) -> tuple[bool, str, str]:
     """Outstanding years for the heartbeat in a test-mode run: the REAL alarm
-    label's open issues (a read-only list), plus the current and next years
+    label's open issues (a read-only list), plus the current and next scopes
     that are below their floors now. A test run opens test issues only, so
     without this it would report "nothing outstanding" and turn a lamp that is
-    really down green. Retired years never count."""
+    really down green. Retired scopes never count."""
     current_start = int(current_year[:4])
     found: set[str] = set()
+    found_arrivals: set[str] = set()
     for issue_ in find_open_issues(repo, ALARM_LABEL, runner):
-        year, _ = issue_year(issue_, current_year)
-        if int(year[:4]) >= current_start - 1:
-            found.add(year)
+        scope, _ = issue_scope(issue_, current_year)
+        if _retire(scope, current_start):
+            continue
+        found.add(scope[1])
+        if scope[0] == "arrivals":
+            found_arrivals.add(scope[1])
     for year, ysum in years.items():
         if int(year[:4]) >= current_start and lead_check(ysum) is not None:
             found.add(year)
+    for year, a in arrivals.items():
+        if int(year[:4]) >= current_start and a.get("below_floor") is True:
+            found.add(year)
+            found_arrivals.add(year)
     ordered = sorted(found)
-    return bool(ordered), ",".join(ordered)
+    return bool(ordered), ",".join(ordered), ",".join(sorted(found_arrivals))
 
 
 def main(argv: list[str] | None = None, *, runner: Runner = run_gh) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--state", type=Path, required=True, help="out-state JSON from discovery_renewal.py")
     parser.add_argument("--report", type=Path, required=True,
-                        help="fallback issue body markdown (used when a year has no report of its own)")
-    parser.add_argument("--year-reports", type=Path, help="directory of <year>.md issue bodies")
+                        help="fallback issue body markdown (used when a scope has no report of its own)")
+    parser.add_argument("--year-reports", type=Path,
+                        help="directory of <year>.md renewal bodies and arrivals-<year>.md arrivals bodies")
     parser.add_argument("--summary", type=Path, required=True,
                         help="heartbeat summary JSON; rewritten with alarm_issue")
     parser.add_argument("--repo", default=os.environ.get("GITHUB_REPOSITORY", "bolewood/collegedata-fyi"))
@@ -760,13 +760,21 @@ def main(argv: list[str] | None = None, *, runner: Runner = run_gh) -> int:
         years = state.get("years")
         if not isinstance(years, dict) or not years:
             raise AlarmError("state has no per-year checks")
+        arrivals = state.get("arrivals")
+        if arrivals is None:
+            arrivals = {}
+        if not isinstance(arrivals, dict):
+            raise AlarmError("state arrivals is not an object")
         reports: dict[str, str] = {}
         if args.year_reports and args.year_reports.is_dir():
             for path in args.year_reports.glob("*.md"):
-                reports[path.stem] = path.read_text(encoding="utf-8")
+                stem = path.stem
+                key = "arrivals:" + stem[len("arrivals-"):] if stem.startswith("arrivals-") else stem
+                reports[key] = path.read_text(encoding="utf-8")
         current_year = str(state.get("current_year") or summary["current_year"])
         outcome = act(
             years=years,
+            arrivals=arrivals,
             reports=reports,
             current_year=current_year,
             repo=args.repo,
@@ -787,10 +795,12 @@ def main(argv: list[str] | None = None, *, runner: Runner = run_gh) -> int:
         if args.test_mode:
             # Never derived from the test label's issues: a test dispatch must
             # not flip the real lamp.
-            summary["outstanding_below_floor"], summary["outstanding_years"] = real_outstanding(
-                years, current_year, args.repo, runner, outcome)
+            (summary["outstanding_below_floor"], summary["outstanding_years"],
+             summary["arrivals_years"]) = real_outstanding(
+                years, arrivals, current_year, args.repo, runner)
         else:
             summary["outstanding_below_floor"], summary["outstanding_years"] = outstanding(outcome)
+            summary["arrivals_years"] = arrivals_years(outcome)
         args.summary.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     # The issue action is done; a Discord delivery failure still fails the job
     # (which posts through workflow_run).

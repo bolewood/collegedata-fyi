@@ -34,26 +34,14 @@ def ysum(year: str, *, one: float, one_floor: float | None, two: float | None = 
     }
 
 
-def arrivals_fields(cur_30: int, cur_exp: float, *, next_30: int = 0, next_exp: float = 0.0,
-                    cur_win: int = 30, next_win: int = 30, cur_checked: bool = True,
-                    next_checked: bool = False, cur_below: bool = False,
-                    next_below: bool = False, cur_60: int | None = None,
-                    cur_exp_60: float = 25.0) -> dict:
-    """The per-year arrivals keys of a heartbeat summary, with their totals."""
-    cur_60 = cur_30 + 400 if cur_60 is None else cur_60
+def arr(count_30: int, expected_30: float, *, count_60: int | None = None,
+        expected_60: float = 25.0, window: int = 30, checked: bool = True,
+        below: bool = False) -> dict:
+    """One year's arrivals state, as discovery_renewal.arrivals_state writes it."""
     return {
-        "arrivals_30d": cur_30 + next_30, "arrivals_expected_30d": cur_exp + next_exp,
-        "arrivals_60d": cur_60 + next_30, "arrivals_expected_60d": cur_exp_60,
-        "arrivals_window_days": cur_win, "arrivals_checked": cur_checked or next_checked,
-        "arrivals_below_floor": cur_below or next_below,
-        "arrivals_current_30d": cur_30, "arrivals_expected_current_30d": cur_exp,
-        "arrivals_current_60d": cur_60, "arrivals_expected_current_60d": cur_exp_60,
-        "arrivals_current_window_days": cur_win, "arrivals_current_checked": cur_checked,
-        "arrivals_current_below_floor": cur_below,
-        "arrivals_next_30d": next_30, "arrivals_expected_next_30d": next_exp,
-        "arrivals_next_60d": next_30, "arrivals_expected_next_60d": next_exp,
-        "arrivals_next_window_days": next_win, "arrivals_next_checked": next_checked,
-        "arrivals_next_below_floor": next_below,
+        "count_30": count_30, "expected_30": expected_30,
+        "count_60": count_30 + 400 if count_60 is None else count_60, "expected_60": expected_60,
+        "window_days": window, "checked": checked, "below_floor": below,
     }
 
 
@@ -119,16 +107,21 @@ class Discord:
         return not self.skip
 
 
-def run(years, gh, discord=None, *, current="2025-26", test_mode=False, dry_run=False, reports=None):
+def run(years, gh, discord=None, *, current="2025-26", test_mode=False, dry_run=False, reports=None,
+        arrivals=None):
     return ra.act(
-        years=years, reports=reports or {}, current_year=current, repo="o/r",
+        years=years, arrivals=arrivals, reports=reports or {}, current_year=current, repo="o/r",
         test_mode=test_mode, dry_run=dry_run, assignee="santhonys", runner=gh,
         fallback_report="REPORT BODY", discord=discord or Discord(),
     )
 
 
 def actions(outcome) -> dict[str, str]:
-    return {a["year"]: a["action"] for a in outcome["actions"]}
+    """{year: action} for renewal scopes, {"arrivals:<year>": action} for arrivals."""
+    return {
+        (a["year"] if a["scope"] == "renewal" else f"arrivals:{a['year']}"): a["action"]
+        for a in outcome["actions"]
+    }
 
 
 class DecisionTests(unittest.TestCase):
@@ -156,7 +149,7 @@ class ActTests(unittest.TestCase):
         self.assertFalse(discord.posts[0]["recovered"])
         # Created marked as not posted, then flipped once the post went out.
         created, flipped = gh.bodies[0][1], gh.bodies[1][1]
-        self.assertIn("alarm-scope: year:2025-26", created)
+        self.assertIn("alarm-scope: renewal:2025-26", created)
         self.assertIn("discord-posted: false", created)
         self.assertIn("discord-posted: true", flipped)
 
@@ -279,7 +272,7 @@ class PerYearTests(unittest.TestCase):
         self.assertIn("2026-27", discord.posts[0]["title"])
         self.assertEqual(outcome["issue"], 12)  # the current year's issue is the alarm issue
         created = [b for verb, b in gh.bodies if verb == "issue create"][0]
-        self.assertIn("alarm-scope: year:2026-27", created)
+        self.assertIn("alarm-scope: renewal:2026-27", created)
 
     def test_each_year_gets_its_own_report(self) -> None:
         years = {"2025-26": BELOW, "2026-27": NEXT_BELOW}
@@ -372,36 +365,41 @@ class PerYearTests(unittest.TestCase):
 
 
 class MarkerTests(unittest.TestCase):
-    def test_year_marker_is_read_and_legacy_markers_match_on_year(self) -> None:
-        self.assertEqual(ra.issue_year({"number": 1, "body": ra.scope_marker("2025-26")}, "2026-27"),
-                         ("2025-26", "year"))
+    def test_scope_markers_are_read_and_legacy_markers_are_renewal_scopes(self) -> None:
+        self.assertEqual(ra.issue_scope({"number": 1, "body": ra.scope_marker("2025-26")}, "2026-27"),
+                         (("renewal", "2025-26"), "renewal"))
         self.assertEqual(
-            ra.issue_year({"number": 1, "body": "<!-- alarm-scope: two_year:2025-26 -->"}, "2026-27"),
-            ("2025-26", "two_year"))
+            ra.issue_scope({"number": 1, "body": ra.scope_marker("2026-27", "arrivals")}, "2026-27")[0],
+            ("arrivals", "2026-27"))
+        for legacy in ("year", "current", "two_year"):
+            body = f"<!-- alarm-scope: {legacy}:2025-26 -->"
+            self.assertEqual(ra.issue_scope({"number": 1, "body": body}, "2026-27")[0],
+                             ("renewal", "2025-26"), legacy)
 
-    def test_a_missing_marker_uses_the_year_in_the_title_and_warns(self) -> None:
+    def test_a_missing_marker_uses_the_title_and_warns(self) -> None:
         edited = issue(12, "2025-26", body="someone rewrote the whole body")
         with contextlib.redirect_stderr(io.StringIO()) as err:
-            year, _ = ra.issue_year(edited, "2026-27")
-        self.assertEqual(year, "2025-26")  # from the title, not the current year
+            scope, _ = ra.issue_scope(edited, "2026-27")
+        self.assertEqual(scope, ("renewal", "2025-26"))  # from the title, not the current year
         self.assertIn("::warning::", err.getvalue())
+        arrivals = {"number": 5, "body": "", "title": "Almost nothing new arrived for 2026-27: 0 schools in 30 days (expected 14)"}
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(ra.issue_scope(arrivals, "2025-26")[0], ("arrivals", "2026-27"))
 
     def test_a_missing_marker_and_title_falls_back_to_the_current_year_and_warns(self) -> None:
         with contextlib.redirect_stderr(io.StringIO()) as err:
-            year, _ = ra.issue_year({"number": 3, "title": "renamed", "body": ""}, "2026-27")
-        self.assertEqual(year, "2026-27")
+            scope, _ = ra.issue_scope({"number": 3, "title": "renamed", "body": ""}, "2026-27")
+        self.assertEqual(scope, ("renewal", "2026-27"))
         self.assertIn("::warning::", err.getvalue())
 
     def test_an_edited_marker_does_not_open_a_duplicate_or_silently_rescope(self) -> None:
-        # The body lost its marker. The issue is still the 2025-26 alarm: it
-        # is updated (and the marker restored), not duplicated or re-scoped.
         edited = issue(12, "2025-26", body="edited by hand")
         gh = FakeGh([edited])
         with contextlib.redirect_stderr(io.StringIO()):
             outcome = run({"2025-26": BELOW, "2026-27": NEXT_UNTRACKED}, gh, current="2026-27")
         self.assertEqual(actions(outcome), {"2025-26": "update"})
         self.assertNotIn("issue create", gh.verbs())
-        self.assertIn("alarm-scope: year:2025-26", gh.bodies[0][1])
+        self.assertIn("alarm-scope: renewal:2025-26", gh.bodies[0][1])
 
 
 class DiscordRetryTests(unittest.TestCase):
@@ -623,244 +621,195 @@ class RenotifyTests(unittest.TestCase):
         self.assertEqual(gh.verbs(), ["issue list"])
         self.assertIn("renotify", buf.getvalue())
 
-    def test_the_arrivals_title_names_the_window(self) -> None:
-        ys = {**ysum("2025-26", one=90.0, one_floor=80.0, two=90.0, two_floor=70.0),
-              **arrivals_fields(5, 3.0, cur_win=60, cur_below=True, cur_60=4, cur_exp_60=24.0)}
-        self.assertEqual(ra.issue_title(ys, test_mode=False),
-                         "Almost nothing new arrived for 2025-26: 4 schools in 60 days (expected 24)")
 
-    def test_the_gap_boundary_is_exactly_five_points(self) -> None:
-        # Gap at open 8.0. Exactly +5.0 notifies before day 30; +4.9 does not.
-        gh, _ = self.replay(10, lambda d: 72.0 if d < 5 else 67.0)
-        self.assertEqual(gh.created, 2)
-        gh, _ = self.replay(10, lambda d: 72.0 if d < 5 else 67.1)
-        self.assertEqual(gh.created, 1)
+class ArrivalsScopeTests(unittest.TestCase):
+    """Arrivals have their own issue per year (`arrivals:<Y>`), separate from the
+    renewal issue (`renewal:<Y>`)."""
 
-    def test_the_arrivals_check_alone_renotifies_by_age(self) -> None:
-        ys = {**ysum("2025-26", one=90.0, one_floor=80.0, two=90.0, two_floor=70.0),
-              **arrivals_fields(2, 30.0, cur_below=True)}
-        self.assertIsNone(ra.gap_of(ys))
-        self.assertEqual(ra.issue_title(ys, test_mode=False),
-                         "Almost nothing new arrived for 2025-26: 2 schools in 30 days (expected 30)")
-        gh, discord = SimGh(), Discord()
-        for day in range(0, 65):
-            gh.now = datetime(2026, 9, 1, tzinfo=timezone.utc) + timedelta(days=day)
-            ra.act(years={"2025-26": ys}, reports={}, current_year="2025-26", repo="o/r",
-                   test_mode=False, dry_run=False, assignee="santhonys", runner=gh,
-                   fallback_report="R", discord=discord, now=gh.now)
-        self.assertEqual(gh.created, 3)  # days 0, 30, 60
+    def short(self, count: int = 0, expected: float = 14.0) -> dict:
+        return arr(count, expected, below=True)
 
-
-class JoinTests(unittest.TestCase):
-    """A check that joins an open issue's set (arrivals going short on an issue
-    opened for the renewal number) supersedes it, after 3 daily runs, once."""
-
-    def two_checks(self, *, renewal_below: bool, arrivals_below: bool) -> dict:
-        one = 70.0 if renewal_below else 95.0
-        return {
-            **ysum("2025-26", one=one, one_floor=82.5, two=95.0, two_floor=74.5),
-            **arrivals_fields(0 if arrivals_below else 30, 20.0, cur_below=arrivals_below),
-        }
-
-    def run_days(self, gh, discord, series, start=datetime(2026, 11, 25, 13, tzinfo=timezone.utc)):
-        out = []
-        for day, ys in enumerate(series):
-            gh.now = start + timedelta(days=day)
-            out.append(ra.act(years={"2025-26": ys}, reports={}, current_year="2025-26", repo="o/r",
-                              test_mode=False, dry_run=False, assignee="santhonys", runner=gh,
-                              fallback_report="R", discord=discord, now=gh.now))
-        return out
-
-    def test_arrivals_joining_a_renewal_issue_supersedes_it_with_its_own_title(self) -> None:
-        gh, discord = SimGh(), Discord()
-        renewal_only = self.two_checks(renewal_below=True, arrivals_below=False)
-        both = self.two_checks(renewal_below=True, arrivals_below=True)
-        out = self.run_days(gh, discord, [renewal_only, renewal_only] + [both] * 3)
-        kinds = [actions(o)["2025-26"] for o in out]
-        # Below on three consecutive daily runs (days 3, 4, 5): joins on the third.
-        self.assertEqual(kinds, ["create", "update", "update", "update", "renotify"])
-        self.assertEqual(gh.created, 2)
-        newest = max(gh.issues)
-        self.assertTrue(gh.issues[newest]["title"].startswith("Almost nothing new arrived for 2025-26"))
-        self.assertIn("Superseded by #", gh.closed[-1][1])
-        self.assertIn("also below its floor: arrivals", gh.closed[-1][1])
-        self.assertEqual(len(discord.posts), 2)
-        self.assertIn("alarm-checks: arrivals,current", gh.issues[newest]["body"])
-
-    def test_a_daily_boundary_flap_never_supersedes(self) -> None:
-        gh, discord = SimGh(), Discord()
-        renewal_only = self.two_checks(renewal_below=True, arrivals_below=False)
-        both = self.two_checks(renewal_below=True, arrivals_below=True)
-        series = [renewal_only] + [both if d % 2 else renewal_only for d in range(40)]
-        out = self.run_days(gh, discord, series)
-        self.assertEqual(sum(actions(o)["2025-26"] == "renotify" for o in out), 1)  # the 30-day rule only
-        self.assertEqual(sum("also below its floor" in c for _, c in gh.closed), 0)
-
-    def test_once_joined_it_is_not_a_second_supersede_when_the_check_flaps(self) -> None:
-        gh, discord = SimGh(), Discord()
-        renewal_only = self.two_checks(renewal_below=True, arrivals_below=False)
-        both = self.two_checks(renewal_below=True, arrivals_below=True)
-        series = [renewal_only] + [both] * 3 + [renewal_only, both, renewal_only, both, both, both]
-        out = self.run_days(gh, discord, series)
-        joins = [i for i, o in enumerate(out) if actions(o)["2025-26"] == "renotify"]
-        self.assertEqual(len(joins), 1)
-
-    def test_a_check_below_for_two_runs_then_back_resets_its_count(self) -> None:
-        gh, discord = SimGh(), Discord()
-        renewal_only = self.two_checks(renewal_below=True, arrivals_below=False)
-        both = self.two_checks(renewal_below=True, arrivals_below=True)
-        series = [renewal_only, both, both, renewal_only, both, both, renewal_only]
-        out = self.run_days(gh, discord, series)
-        self.assertNotIn("renotify", [actions(o)["2025-26"] for o in out])
-
-    def test_an_issue_with_no_checks_marker_is_never_superseded_for_a_new_check(self) -> None:
-        gh, discord = FakeGh([issue(12)]), Discord()
-        both = self.two_checks(renewal_below=True, arrivals_below=True)
-        for _ in range(4):
-            out = run({"2025-26": both}, gh, discord)
-            self.assertEqual(actions(out), {"2025-26": "update"})
-
-    def test_pending_counts_once_per_calendar_day(self) -> None:
-        confirmed, pending = {"current"}, {}
-        for _ in range(5):  # five runs on the same day
-            joined, pending = ra.join_progress(["current", "arrivals"], confirmed, pending, "2026-11-25")
-        self.assertEqual((joined, pending), ([], {"arrivals": (1, "2026-11-25")}))
-        joined, pending = ra.join_progress(["current", "arrivals"], confirmed, pending, "2026-11-26")
-        joined, pending = ra.join_progress(["current", "arrivals"], confirmed, pending, "2026-11-27")
-        self.assertEqual(joined, ["arrivals"])
-
-
-class ArrivalsHoldTests(unittest.TestCase):
-    """An arrivals breach that is why an issue is open is cleared only by a real
-    30-day recovery, never by the check changing windows or being unchecked."""
-
-    def arrivals_ysum(self, *, count_30: int, expected_30: float, below: bool,
-                      window: int = 30, checked: bool = True) -> dict:
-        return {
-            **ysum("2025-26", one=95.0, one_floor=82.5, two=95.0, two_floor=74.5),
-            **arrivals_fields(count_30, expected_30, cur_win=window, cur_checked=checked,
-                              cur_below=below),
-        }
-
-    def open_with_arrivals(self):
-        gh, discord = SimGh(), Discord()
-        gh.now = datetime(2026, 11, 25, 12, tzinfo=timezone.utc)
-        first = self.arrivals_ysum(count_30=0, expected_30=12.0, below=True)
-        out = ra.act(years={"2025-26": first}, reports={}, current_year="2025-26", repo="o/r",
-                     test_mode=False, dry_run=False, assignee="santhonys", runner=gh,
-                     fallback_report="R", discord=discord, now=gh.now)
-        self.assertEqual(actions(out), {"2025-26": "create"})
-        (body,) = [i["body"] for i in gh.issues.values()]
-        self.assertIn(ra.ARRIVALS_OPEN_MARKER, body)
-        return gh, discord
-
-    def step(self, gh, discord, ys, days: int = 1):
+    def step(self, gh, discord, years, arrivals_by_year, days: int = 1, current: str = "2025-26"):
         gh.now += timedelta(days=days)
-        return ra.act(years={"2025-26": ys}, reports={}, current_year="2025-26", repo="o/r",
-                      test_mode=False, dry_run=False, assignee="santhonys", runner=gh,
+        return ra.act(years=years, arrivals=arrivals_by_year, reports={}, current_year=current,
+                      repo="o/r", test_mode=False, dry_run=False, assignee="santhonys", runner=gh,
                       fallback_report="R", discord=discord, now=gh.now)
 
-    def test_a_window_switch_that_clears_the_flag_does_not_close_the_issue(self) -> None:
-        gh, discord = self.open_with_arrivals()
-        # December: the 30-day window cannot judge, the 60-day one still holds
+    def start(self, years, arrivals_by_year):
+        gh, discord = SimGh(), Discord()
+        gh.now = datetime(2026, 11, 25, 12, tzinfo=timezone.utc)
+        out = ra.act(years=years, arrivals=arrivals_by_year, reports={}, current_year="2025-26",
+                     repo="o/r", test_mode=False, dry_run=False, assignee="santhonys", runner=gh,
+                     fallback_report="R", discord=discord, now=gh.now)
+        return gh, discord, out
+
+    def test_arrivals_open_their_own_issue_while_the_renewal_issue_is_open(self) -> None:
+        gh, discord = FakeGh([issue(12)]), Discord()
+        out = run({"2025-26": BELOW}, gh, discord, arrivals={"2025-26": self.short()})
+        self.assertEqual(actions(out), {"2025-26": "update", "arrivals:2025-26": "create"})
+        create = gh.calls_for("issue create")[0]
+        self.assertEqual(
+            create[create.index("--title") + 1],
+            "Almost nothing new arrived for 2025-26: 0 schools in 30 days (expected 14)")
+        self.assertIn("--assignee", create)
+        self.assertEqual(len(discord.posts), 1)
+        self.assertFalse(discord.posts[0]["recovered"])
+        self.assertIn("Almost nothing new arrived", discord.posts[0]["title"])
+        created = [b for verb, b in gh.bodies if verb == "issue create"][0]
+        self.assertIn("alarm-scope: arrivals:2025-26", created)
+
+    def test_the_renewal_issue_never_gets_an_arrivals_marker_or_title(self) -> None:
+        # Gemini 1 and 2: nothing about arrivals is stamped on, or reverts the
+        # title of, the renewal issue.
+        gh, discord, _ = self.start({"2025-26": BELOW}, {"2025-26": self.short()})
+        for _ in range(3):
+            self.step(gh, discord, {"2025-26": BELOW}, {"2025-26": self.short()})
+        by_scope = {}
+        for number, i in gh.issues.items():
+            if i["open"]:
+                by_scope["arrivals" if "alarm-scope: arrivals:" in i["body"] else "renewal"] = i
+        self.assertEqual(set(by_scope), {"arrivals", "renewal"})
+        self.assertTrue(by_scope["arrivals"]["title"].startswith("Almost nothing new arrived for 2025-26"))
+        self.assertTrue(by_scope["renewal"]["title"].startswith("Discovery is behind: "))
+        self.assertNotIn("arrivals", by_scope["renewal"]["body"].lower().replace("arrivals-", ""))
+        self.assertEqual(gh.created, 2)
+
+    def test_the_two_years_recover_independently_and_the_comment_names_the_held_year(self) -> None:
+        # Gemini 3: recovery looks at the year the issue is about only.
+        years = {"2025-26": HEALTHY}
+        gh, discord, _ = self.start(years, {"2025-26": self.short(0, 14.0),
+                                             "2026-27": arr(1, 12.0, below=True)})
+        self.assertEqual(gh.created, 2)
+        out = self.step(gh, discord, years, {"2025-26": arr(40, 30.0),  # back
+                                              "2026-27": arr(1, 12.0, window=60, below=False)})  # not back
+        self.assertEqual(actions(out), {"arrivals:2025-26": "close", "arrivals:2026-27": "update"})
+        (closed_number, comment), = gh.closed
+        self.assertIn("2025-26", comment)
+        self.assertNotIn("2026-27", comment)
+        self.assertIn("2025-26", discord.posts[-1]["title"])
+        self.assertTrue(discord.posts[-1]["recovered"])
+        open_titles = [i["title"] for i in gh.issues.values() if i["open"]]
+        self.assertEqual(len(open_titles), 1)
+        self.assertIn("2026-27", open_titles[0])
+
+    def test_a_thirty_day_renotify_of_the_renewal_issue_does_not_swallow_arrivals(self) -> None:
+        # Gemini 4: the renewal issue is replaced on its own schedule; arrivals
+        # still alert, as their own issue.
+        old = issue(12)
+        old["created_at"] = "2026-10-20T00:00:00+00:00"
+        gh, discord = FakeGh([old]), Discord()
+        out = ra.act(years={"2025-26": BELOW}, arrivals={"2025-26": self.short()}, reports={},
+                     current_year="2025-26", repo="o/r", test_mode=False, dry_run=False,
+                     assignee="santhonys", runner=gh, fallback_report="R", discord=discord,
+                     now=datetime(2026, 11, 25, tzinfo=timezone.utc))
+        self.assertEqual(actions(out), {"2025-26": "renotify", "arrivals:2025-26": "create"})
+        titles = [c[c.index("--title") + 1] for c in gh.calls_for("issue create")]
+        self.assertEqual(len(titles), 2)
+        self.assertTrue(any(t.startswith("Almost nothing new arrived") for t in titles))
+        self.assertEqual(len(discord.posts), 2)
+
+    def test_a_window_switch_or_an_unchecked_window_never_closes_it(self) -> None:
+        gh, discord, _ = self.start({"2025-26": HEALTHY}, {"2025-26": self.short()})
+        # December: the 30-day window cannot judge; the 60-day one still holds
         # October's arrivals, so the flag is off. 30-day arrivals are still 0.
-        out = self.step(gh, discord, self.arrivals_ysum(
-            count_30=0, expected_30=8.0, below=False, window=60))
-        self.assertEqual(actions(out), {"2025-26": "update"})
+        out = self.step(gh, discord, {"2025-26": HEALTHY},
+                        {"2025-26": arr(0, 8.0, window=60, below=False)})
+        self.assertEqual(actions(out), {"arrivals:2025-26": "update"})
+        for _ in range(10):
+            out = self.step(gh, discord, {"2025-26": HEALTHY},
+                            {"2025-26": arr(1, 5.0, window=60, checked=False, below=False)})
+            self.assertEqual(actions(out), {"arrivals:2025-26": "update"})
         self.assertEqual(gh.closed, [])
         self.assertEqual(ra.outstanding(out), (True, "2025-26"))
+        self.assertEqual(ra.arrivals_years(out), "2025-26")
         (issue_,) = [i for i in gh.issues.values() if i["open"]]
-        self.assertIn(ra.ARRIVALS_OPEN_MARKER, issue_["body"])
-        self.assertIn("Arrivals breach still open", issue_["body"])
-        self.assertIn("Almost nothing new arrived for 2025-26: 0 schools", issue_["title"])
+        self.assertIn("Arrivals for 2025-26 are not back yet", issue_["body"])
+        self.assertTrue(issue_["title"].startswith("Almost nothing new arrived for 2025-26: 1 schools in 30 days"))
 
-    def test_an_unchecked_window_holds_the_breach(self) -> None:
-        gh, discord = self.open_with_arrivals()
-        for _ in range(10):
-            out = self.step(gh, discord, self.arrivals_ysum(
-                count_30=1, expected_30=5.0, below=False, window=60, checked=False))
-            self.assertEqual(actions(out), {"2025-26": "update"})
-        self.assertEqual(gh.closed, [])
-
-    def test_the_breach_closes_on_a_real_recovery_only(self) -> None:
-        gh, discord = self.open_with_arrivals()
-        # Expected 12: the threshold is max(3, 0.4 x 12) = 4.8. Four is not back.
-        self.assertEqual(actions(self.step(gh, discord, self.arrivals_ysum(
-            count_30=4, expected_30=12.0, below=False))), {"2025-26": "update"})
-        out = self.step(gh, discord, self.arrivals_ysum(count_30=5, expected_30=12.0, below=False))
-        self.assertEqual(actions(out), {"2025-26": "close"})
+    def test_it_closes_only_on_a_real_30_day_recovery(self) -> None:
+        gh, discord, _ = self.start({"2025-26": HEALTHY}, {"2025-26": self.short(0, 12.0)})
+        # Recovery needs max(3, 0.5 x 12) = 6 in 30 days.
+        self.assertEqual(actions(self.step(gh, discord, {"2025-26": HEALTHY},
+                                           {"2025-26": arr(5, 12.0)})), {"arrivals:2025-26": "update"})
+        out = self.step(gh, discord, {"2025-26": HEALTHY}, {"2025-26": arr(6, 12.0)})
+        self.assertEqual(actions(out), {"arrivals:2025-26": "close"})
         self.assertEqual(ra.outstanding(out), (False, ""))
         self.assertTrue(discord.posts[-1]["recovered"])
         # A small expectation never asks for fewer than 3.
-        gh2, discord2 = SimGh(), Discord()
-        gh2.now = datetime(2026, 11, 25, 12, tzinfo=timezone.utc)
-        ra.act(years={"2025-26": self.arrivals_ysum(count_30=0, expected_30=12.0, below=True)},
-               reports={}, current_year="2025-26", repo="o/r", test_mode=False, dry_run=False,
-               assignee="santhonys", runner=gh2, fallback_report="R", discord=discord2, now=gh2.now)
-        self.assertEqual(actions(self.step(gh2, discord2, self.arrivals_ysum(
-            count_30=2, expected_30=5.0, below=False, window=60, checked=False))), {"2025-26": "update"})
-        self.assertEqual(actions(self.step(gh2, discord2, self.arrivals_ysum(
-            count_30=3, expected_30=5.0, below=False, window=60, checked=False))), {"2025-26": "close"})
-        # A larger expectation asks for more: 0.4 x 40 = 16.
-        gh3, discord3 = self.open_with_arrivals()
-        self.assertEqual(actions(self.step(gh3, discord3, self.arrivals_ysum(
-            count_30=15, expected_30=40.0, below=False))), {"2025-26": "update"})
-        self.assertEqual(actions(self.step(gh3, discord3, self.arrivals_ysum(
-            count_30=16, expected_30=40.0, below=False))), {"2025-26": "close"})
+        gh2, discord2, _ = self.start({"2025-26": HEALTHY}, {"2025-26": self.short(0, 5.0)})
+        self.assertEqual(actions(self.step(gh2, discord2, {"2025-26": HEALTHY},
+                                           {"2025-26": arr(2, 5.0, window=60, checked=False)})),
+                         {"arrivals:2025-26": "update"})
+        self.assertEqual(actions(self.step(gh2, discord2, {"2025-26": HEALTHY},
+                                           {"2025-26": arr(3, 5.0, window=60, checked=False)})),
+                         {"arrivals:2025-26": "close"})
 
-    def test_no_flapping_when_expected_crosses_ten(self) -> None:
-        gh, discord = self.open_with_arrivals()
-        created = gh.created
+    def test_a_count_sitting_on_the_boundary_does_not_open_and_close_it_daily(self) -> None:
+        # Expected 12: below at 4 or fewer (0.4 x 12 = 4.8), back only at 6 or more.
+        gh, discord = SimGh(), Discord()
+        gh.now = datetime(2026, 11, 25, 12, tzinfo=timezone.utc)
         for day in range(40):
-            expected = 10.4 if day % 2 == 0 else 9.6  # the boundary the window switches at
-            checked = expected >= 10
-            ys = self.arrivals_ysum(count_30=2, expected_30=expected,
-                                    below=checked and 2 < 0.25 * expected,
-                                    window=30 if checked else 60, checked=checked)
-            out = self.step(gh, discord, ys)
-            self.assertIn(actions(out)["2025-26"], ("update", "renotify"))
-        self.assertEqual(sum(1 for a in gh.issues.values() if a["open"]), 1)
-        # Only the 30-day cadence ever replaced it: one extra issue in 40 days.
-        self.assertEqual(gh.created - created, 1)
+            count = 4 if day % 2 == 0 else 5
+            self.step(gh, discord, {"2025-26": HEALTHY},
+                      {"2025-26": arr(count, 12.0, below=count < 0.4 * 12)}, days=1)
+        self.assertEqual(gh.created, 2)  # the day-0 issue and one 30-day replacement
+        self.assertEqual(sum(1 for i in gh.issues.values() if i["open"]), 1)
         self.assertFalse(any(p["recovered"] for p in discord.posts))
 
-    def test_an_issue_not_opened_for_arrivals_is_not_held_by_them(self) -> None:
-        # A renewal issue (no arrivals marker) closes as soon as it recovers.
-        gh, discord = FakeGh([issue(12)]), Discord()
-        ys = self.arrivals_ysum(count_30=0, expected_30=30.0, below=False)
-        self.assertEqual(actions(run({"2025-26": ys}, gh, discord)), {"2025-26": "close"})
+    def test_it_renotifies_every_thirty_days_like_a_renewal_issue(self) -> None:
+        gh, discord = SimGh(), Discord()
+        gh.now = datetime(2026, 9, 1, 12, tzinfo=timezone.utc)
+        for _ in range(65):
+            self.step(gh, discord, {"2025-26": HEALTHY}, {"2025-26": self.short()})
+        self.assertEqual(gh.created, 3)  # days 1, 31, 61
+        self.assertTrue(all(gh.assignees))
 
-    def test_the_october_stop_stays_open_through_december(self) -> None:
-        """Replay a frozen archive: its last arrivals land on 2026-10-25."""
+    def test_an_arrivals_issue_for_a_year_no_longer_checked_is_retired(self) -> None:
+        old = issue(8, "2025-26", body=ra.scope_marker("2025-26", "arrivals") + "\n"
+                    + ra.discord_marker(True), title="Almost nothing new arrived for 2025-26: 0 schools")
+        gh, discord = FakeGh([old]), Discord()
+        out = run({"2026-27": HEALTHY_NEXT}, gh, discord, current="2026-27",
+                  arrivals={"2026-27": arr(30, 20.0), "2027-28": arr(0, 0.0, checked=False)})
+        self.assertEqual(actions(out), {"arrivals:2025-26": "retire"})
+        close = gh.calls_for("issue close")[0]
+        self.assertIn("No longer tracked", close[close.index("--comment") + 1])
+        self.assertEqual(ra.outstanding(out), (False, ""))
+
+    def test_a_frozen_archive_opens_a_distinct_arrivals_issue_beside_the_renewal_issue(self) -> None:
+        """500 schools; 300 filed 2025-26 on 2026-10-25 and nothing since. The
+        renewal issue is open from the start (60% against its floor)."""
         from tools.ops import discovery_renewal as dr
         rows = []
         for i in range(500):
             rows.append(_row(f"s{i}", "2023-24"))
             rows.append({**_row(f"s{i}", "2024-25"), "discovered_at": "2026-01-10T00:00:00+00:00"})
-            rows.append({**_row(f"s{i}", "2025-26"), "discovered_at": "2026-10-25T12:00:00+00:00"})
+            if i < 300:
+                rows.append({**_row(f"s{i}", "2025-26"), "discovered_at": "2026-10-25T12:00:00+00:00"})
         gh, discord = SimGh(), Discord()
-        opened = None
+        first_arrivals = None
         day = date(2026, 10, 25)
-        while day <= date(2026, 12, 31):
+        while day <= date(2027, 1, 20):
             res = dr.compute(rows, day)
-            years = {dr.format_year(y): dr.year_summary(c, res.arrivals if y == res.current_year else None)
-                     for y, c in res.year_checks.items()}
+            years = {dr.format_year(y): dr.year_summary(c) for y, c in res.year_checks.items()}
             gh.now = datetime(day.year, day.month, day.day, 13, 41, tzinfo=timezone.utc)
-            out = ra.act(years=years, reports={}, current_year="2025-26", repo="o/r",
-                         test_mode=False, dry_run=False, assignee="santhonys", runner=gh,
+            out = ra.act(years=years, arrivals=dr.arrivals_state(res), reports={}, current_year="2025-26",
+                         repo="o/r", test_mode=False, dry_run=False, assignee="santhonys", runner=gh,
                          fallback_report="R", discord=discord, now=gh.now)
-            if opened is None and gh.created:
-                opened = day
-            if opened:
-                self.assertEqual(sum(1 for i in gh.issues.values() if i["open"]), 1, day)
-                self.assertIn("2025-26", ra.outstanding(out)[1], day)
+            if first_arrivals is None and any(
+                    a["scope"] == "arrivals" and a["action"] == "create" for a in out["actions"]):
+                first_arrivals = day
             day += timedelta(days=1)
-        self.assertIsNotNone(opened)
-        self.assertLessEqual(abs((opened - date(2026, 11, 25)).days), 3)
-        # It never recovered, and 60-day windows opened and closed under it.
+        self.assertIsNotNone(first_arrivals)
+        # The renewal issue had been open since Oct 25; arrivals opened separately
+        # within about a month of the current year's check going active.
+        self.assertLessEqual((first_arrivals - date(2026, 10, 25)).days, 62)
+        scopes = sorted({"arrivals" if "alarm-scope: arrivals:" in i["body"] else "renewal"
+                         for i in gh.issues.values() if i["open"]})
+        self.assertEqual(scopes, ["arrivals", "renewal"])
         self.assertFalse(any(p["recovered"] for p in discord.posts))
-        (final,) = [i for i in gh.issues.values() if i["open"]]
-        self.assertIn(ra.ARRIVALS_OPEN_MARKER, final["body"])
+
+
+HEALTHY_NEXT = ysum("2026-27", one=85.0, one_floor=76.0, two=85.0, two_floor=68.0)
 
 
 
@@ -940,11 +889,10 @@ class OutstandingTests(unittest.TestCase):
             self.assertFalse(any(" ".join(c[:2]) in ("issue close", "issue edit") for c in gh.calls))
 
     def test_a_retired_real_issue_is_not_outstanding_in_a_test_run(self) -> None:
-        out = ra.real_outstanding({"2025-26": HEALTHY}, "2025-26", "o/r",
+        out = ra.real_outstanding({"2025-26": HEALTHY}, {}, "2025-26", "o/r",
                                   lambda args: subprocess.CompletedProcess(
-                                      args, 0, json.dumps([{**issue(8, "2019-20"), "html_url": "u"}]), ""),
-                                  {"actions": []})
-        self.assertEqual(out, (False, ""))
+                                      args, 0, json.dumps([{**issue(8, "2019-20"), "html_url": "u"}]), ""))
+        self.assertEqual(out, (False, "", ""))
 
     def test_nothing_outstanding_when_every_year_is_fine(self) -> None:
         outcome = {"actions": [{"year": "2025-26", "action": "close", "issue": None},

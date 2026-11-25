@@ -708,12 +708,20 @@ def outstanding_years(result: Result) -> list[str]:
     """The CDS years, current or next, with a check below its floor now. The
     alarm step replaces this with the years that have an open alarm issue,
     which also covers an earlier year that is still short."""
-    arrivals_short = result.arrivals is not None and result.arrivals.below_floor
+    short = set(arrivals_years(result))
     return [
         format_year(y)
         for y, c in sorted(result.year_checks.items())
-        if y >= result.current_year
-        and (c.one_below or c.two_below or (arrivals_short and y == result.current_year))
+        if y >= result.current_year and (c.one_below or c.two_below or format_year(y) in short)
+    ]
+
+
+def arrivals_years(result: Result) -> list[str]:
+    """The current and next years whose arrivals are below their floors now."""
+    if result.arrivals is None:
+        return []
+    return [
+        format_year(y.year) for y in result.arrivals.years if y.below_floor
     ]
 
 
@@ -756,6 +764,7 @@ def summary_dict(
         "same_year_duplicates": same_year_duplicates,
         "outstanding_below_floor": bool(outstanding_years(result)),
         "outstanding_years": ",".join(outstanding_years(result)),
+        "arrivals_years": ",".join(arrivals_years(result)),
         **arrivals_keys(
             result.arrivals if result.arrivals is not None else empty_arrivals(result.current_year)
         ),
@@ -799,13 +808,12 @@ def lead_check(summary: dict[str, Any]) -> str | None:
         return "two_year"
     if summary.get("next_below_floor") is True:
         return "next"
-    if summary.get("arrivals_below_floor") is True:
-        return "arrivals"
     return None
 
 
 def breaching_checks(summary: dict[str, Any]) -> list[str]:
-    """Every check below its floor, in the order the alarm leads with them."""
+    """Every renewal check below its floor, in the order the alarm leads with
+    them. Arrivals are a scope of their own and are not in this list."""
     out = []
     if summary.get("below_floor") is True:
         out.append("current")
@@ -813,8 +821,6 @@ def breaching_checks(summary: dict[str, Any]) -> list[str]:
         out.append("two_year")
     if summary.get("next_below_floor") is True:
         out.append("next")
-    if summary.get("arrivals_below_floor") is True:
-        out.append("arrivals")
     return out
 
 
@@ -933,6 +939,63 @@ def _check_line(d: dict[str, Any], below: bool | None) -> str:
         f"{d['renewed']} of {d['total']} schools ({_pct(d['pct'])}) with {d['prev']} "
         f"have {d['year']}; floor {_pct(d['floor'])}, {state}"
     )
+
+
+def arrivals_state(result: Result) -> dict[str, dict[str, Any]]:
+    """Per year (current and next): the figures the alarm needs for its
+    `arrivals:<Y>` scope."""
+    out: dict[str, dict[str, Any]] = {}
+    if result.arrivals is None:
+        return out
+    for y in result.arrivals.years:
+        out[format_year(y.year)] = {
+            "count_30": y.count_30, "expected_30": round(y.expected_30, 3),
+            "count_60": y.count_60, "expected_60": round(y.expected_60, 3),
+            "window_days": y.window_days, "checked": y.checked, "below_floor": y.below_floor,
+        }
+    return out
+
+
+def render_arrivals_report(
+    result: Result,
+    year: int,
+    worklist: list[dict[str, Any]],
+    *,
+    schools: dict[str, dict[str, Any]] | None = None,
+    run_url: str | None = None,
+    max_chars: int = 60000,
+) -> str:
+    """The issue body for the `arrivals:<year>` scope."""
+    assert result.arrivals is not None
+    y = result.arrivals.current if year == result.current_year else result.arrivals.next
+    ystr = format_year(year)
+    lines = [
+        f"# Discovery arrivals for {ystr}, {result.as_of.isoformat()}",
+        "",
+        f"**{y.count} schools gained a {ystr} document in the last {y.window_days} days; the "
+        f"posting curve expects about {y.expected:.0f}.** The alarm fires under "
+        f"{ARRIVALS_FLOOR_SHARE:.0%} of that"
+        + (" and it is below." if y.below_floor else ", and it is not.")
+        + ("" if y.checked else f" (Not checked: under {ARRIVALS_MIN_EXPECTED:.0f} expected.)"),
+        "",
+        f"What this is: the schools in {ystr}'s cohort that gained a usable {ystr} document in the "
+        "window, counted once, on the earliest live document for the year, against what the "
+        "posting curve expects for that year alone. A winter month expects too few, so the "
+        f"window is {ARRIVALS_LONG_WINDOW_DAYS} days then. It catches discovery stopping while "
+        "the renewal percentages still look fine, and files archived by hand for another year do "
+        "not hide it. A document removed and replaced cannot be told apart from a first arrival, "
+        "because removed rows are not read.",
+        "",
+        f"30 days: {y.count_30} arrived, about {y.expected_30:.0f} expected. "
+        f"60 days: {y.count_60} arrived, about {y.expected_60:.0f} expected.",
+        "",
+        f"## Schools still without {ystr} ({len(worklist)})",
+        "",
+        *_worklist_lines(worklist),
+    ]
+    if run_url:
+        lines += [f"Run: {run_url}", ""]
+    return _cap("\n".join(lines), max_chars)
 
 
 def _arrivals_lines(s: dict[str, Any], cur: str, nxt: str) -> list[str]:
@@ -1484,13 +1547,10 @@ def run(args: argparse.Namespace) -> int:
         seed_summary=seed_summary,
     )
     lead = lead_check(summary)
-    years = {
-        format_year(y): year_summary(c, result.arrivals if y == result.current_year else None)
-        for y, c in sorted(result.year_checks.items())
-    }
+    years = {format_year(y): year_summary(c) for y, c in sorted(result.year_checks.items())}
     year_reports: dict[str, str] = {}
     for y, check in sorted(result.year_checks.items()):
-        ys = year_summary(check, result.arrivals if y == result.current_year else None)
+        ys = year_summary(check)
         kind = lead_check(ys) or "current"
         wl = missing_worklist(result, schools, kind, y)
         if y == result.current_year:
@@ -1501,6 +1561,12 @@ def run(args: argparse.Namespace) -> int:
         else:
             year_reports[format_year(y)] = render_year_report(
                 result, y, wl, schools=schools, run_url=args.run_url or None)
+    arrivals_by_year = arrivals_state(result)
+    arrivals_reports: dict[str, str] = {}
+    for y in (result.current_year, result.current_year + 1):
+        arrivals_reports[f"arrivals-{format_year(y)}"] = render_arrivals_report(
+            result, y, missing_worklist(result, schools, "current", y), schools=schools,
+            run_url=args.run_url or None)
     cur_str = format_year(result.current_year)
     next_str = format_year(result.current_year + 1)
     worklist = missing_worklist(result, schools, lead_check(years[cur_str]) or "current")
@@ -1509,7 +1575,7 @@ def run(args: argparse.Namespace) -> int:
         report += "\n\n---\n\n" + year_reports[next_str]
     if args.out_year_reports:
         args.out_year_reports.mkdir(parents=True, exist_ok=True)
-        for ystr, text in year_reports.items():
+        for ystr, text in {**year_reports, **arrivals_reports}.items():
             (args.out_year_reports / f"{ystr}.md").write_text(text, encoding="utf-8")
 
     write_json(args.out_summary, summary)
@@ -1527,6 +1593,7 @@ def run(args: argparse.Namespace) -> int:
             "next_below_floor": summary["next_below_floor"],
             "two_year_below_floor": summary["two_year_below_floor"],
             "years": years,
+            "arrivals": arrivals_by_year,
             "current_year": cur_str,
             "summary": summary,
         },

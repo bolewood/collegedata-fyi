@@ -167,7 +167,7 @@ class ComputeTests(unittest.TestCase):
                 "sub_institutional_excluded", "outstanding_below_floor", "outstanding_years",
                 "arrivals_30d", "arrivals_expected_30d", "arrivals_below_floor",
                 "arrivals_60d", "arrivals_expected_60d", "arrivals_window_days",
-                "arrivals_checked", "unextracted_next_docs",
+                "arrivals_checked", "unextracted_next_docs", "arrivals_years",
                 *(f"arrivals_{n}_{k}" for n in ("current", "next")
                   for k in ("30d", "60d", "window_days", "checked", "below_floor")),
                 *(f"arrivals_expected_{n}_{k}" for n in ("current", "next") for k in ("30d", "60d")),
@@ -793,11 +793,14 @@ class ArrivalsTests(unittest.TestCase):
         self.assertIs(summary["arrivals_below_floor"], True)
         self.assertEqual(summary["arrivals_30d"], 0)
         self.assertGreaterEqual(summary["arrivals_expected_30d"], 10)
-        ys = dr.year_summary(res.year_checks[res.current_year], res.arrivals)
-        self.assertEqual(dr.lead_check({**ys, "below_floor": False, "two_year_below_floor": False}),
-                         "arrivals")
-        # It shares the current year's issue: the current year is outstanding.
-        self.assertIn(dr.format_year(res.current_year), dr.outstanding_years(res))
+        # Arrivals are their own alarm scope: they are not a renewal check.
+        ys = dr.year_summary(res.year_checks[res.current_year])
+        self.assertIsNone(dr.lead_check({**ys, "below_floor": False, "two_year_below_floor": False}))
+        self.assertEqual(summary["arrivals_years"], dr.format_year(res.current_year + 1))
+        self.assertIn(dr.format_year(res.current_year + 1), dr.outstanding_years(res))
+        state = dr.arrivals_state(res)
+        self.assertEqual(sorted(state), [dr.format_year(res.current_year), dr.format_year(res.current_year + 1)])
+        self.assertTrue(state[dr.format_year(res.current_year + 1)]["below_floor"])
 
     def test_the_report_leads_with_arrivals_when_nothing_else_is_below(self) -> None:
         res = dr.compute(self.archive("2026-05-01T12:00:00+00:00"), date(2026, 6, 20))
@@ -882,8 +885,10 @@ class YearReportTests(unittest.TestCase):
             self.assertTrue(state["years"]["2026-27"]["below_floor"])
             self.assertEqual(
                 sorted(p.name for p in (tmp / "yr").glob("*.md")),
-                [f"{y}.md" for y in sorted(state["years"])],
+                sorted([f"{y}.md" for y in state["years"]] + ["arrivals-2025-26.md", "arrivals-2026-27.md"]),
             )
+            self.assertEqual(sorted(state["arrivals"]), ["2025-26", "2026-27"])
+            self.assertIn("Discovery arrivals for 2026-27", (tmp / "yr" / "arrivals-2026-27.md").read_text())
             # The next year breaches, so the step summary carries it too.
             self.assertIn("Discovery renewal for 2026-27", (tmp / "report.md").read_text())
 
