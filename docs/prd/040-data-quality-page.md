@@ -1,6 +1,6 @@
 # PRD 040: Archive status — coverage and data quality
 
-**Status:** Final draft rev 4 (2026-11-24), amended the same day for the [stale-seeds postmortem](../postmortems/2026-11-24-stale-discovery-seeds.md) (see [Amendment](#amendment-2026-11-24-current-year-freshness)). Not started.
+**Status:** Final draft rev 4 (2026-11-24), amended the same day for the [stale-seeds postmortem](../postmortems/2026-11-24-stale-discovery-seeds.md) (see [Amendment](#amendment-2026-11-24-current-year-renewal)). Not started.
 **Author:** Anthony Showalter (with Claude)
 **URLs (planned):** `https://www.collegedata.fyi/coverage` (existing, reworked) and `https://www.collegedata.fyi/data-quality` (new)
 **Related:** [scoreboard script](../../tools/extraction-validator/scoreboard.py) (#432, #447, the data source), extraction scoreboard issue #431, [PRD 015](015-institution-directory-and-cds-coverage.md) (institution directory and coverage), [PRD 033](033-public-usage-page.md) (public usage page: the launch-gate pattern), [PRD 030](030-pipeline-observation.md) (pipeline board, which stays), [design system](../../web/DESIGN_SYSTEM.md), [voice](../../web/VOICE.md)
@@ -171,13 +171,16 @@ uses fields already selected into the client rows by both query paths in
 `web/src/lib/queries.ts`.
 
 1. **Summary strip.**
+   - **This year's reports on file** (added by the amendment), first in the
+     strip: current-year renewal, as defined in the
+     [amendment](#amendment-2026-11-24-current-year-renewal). For example,
+     "Of the 479 schools with a 2024-25 report on file, 364 also have a
+     2025-26 report on file." It counts what we hold, not what schools have
+     posted. The client rows can't compute it (they carry only the latest
+     year with numbers), so it reads the committed Data quality snapshot's
+     `renewal` block and names the snapshot's date. This is the strip's one
+     exception to live data.
    - **Colleges tracked**, and the status tiles.
-   - **This year's reports arrived** (added by the amendment): of the
-     schools with a report on file for the previous CDS year, how many also
-     have one for the current year. For example, "Of the schools with a
-     2024-25 report on file, N have a 2025-26 report on file." The count is
-     what we hold, not what schools have posted. A smaller line gives the
-     share at the same date last year, once a snapshot from last year exists.
    - **Share of undergraduates at tracked colleges with CDS numbers on file.**
      - Numerator: the summed `undergraduate_enrollment` of rows with a
        `latest_available_cds_year`.
@@ -601,15 +604,18 @@ both states. M2's improvements to `/coverage` don't depend on the gate.
   - Run changes (`run_format: 2`), `--public`, the tests, and a first
     committed snapshot.
   - Size the earlier-years job.
-  - **Current-year freshness** (amendment). Add `freshness` to the run and to
-    the public snapshot: for the current CDS year and the one before, the
-    number of schools with a live document, and the number with both. Count
-    only dated documents (`unknown` is not a year). Record the count in every
-    snapshot so later snapshots give a curve by date.
+  - **Current-year renewal** (amendment). Add a `renewal` block to the run
+    and to the public snapshot: the current CDS year (`cds_freshness_floor()`
+    on the run date), the previous year, the number of schools with a live
+    document filed under each (`canonical_year`), and the number with both.
+    `unknown` is not a year. Every snapshot records it, so later snapshots
+    give a curve by date.
 - **M1, Data quality tab.** `/data-quality` with the page order above, the
   shared format-label map, and `ArchiveStatusHeader`, all behind the gate.
 - **M2, Coverage tab.** In order:
   - the header (gated tab);
+  - the "This year's reports on file" tile from the snapshot's `renewal`
+    block;
   - the summary strip with the weighted share;
   - status wording;
   - latest year with numbers, and latest year found;
@@ -634,6 +640,7 @@ UI tests across M1 and M2:
 - search;
 - back and forward with filters;
 - the weighted share with null enrollments;
+- the renewal tile matches the snapshot's `renewal` block;
 - CSV contents.
 
 ## Later, needs new data
@@ -661,8 +668,8 @@ UI tests across M1 and M2:
 - A researcher can get from either tab to the other in one click, and from
   Data quality to the list of colleges we have a CDS for in one click.
 - A new snapshot reaches the site within one PR of a scoreboard run.
-- The Coverage tab's first number answers "are this year's reports arriving?"
-  and equals the snapshot's `freshness` count.
+- The Coverage tab's first number is current-year renewal and equals the
+  snapshot's `renewal.both` over `renewal.previous`, checked by a test.
 
 ## Decisions (owner, 2026-11-24)
 
@@ -675,30 +682,41 @@ UI tests across M1 and M2:
   "XLSX", "DOCX" and "HTML" become "spreadsheet", "Word" and "web page" there
   too.
 
-## Amendment (2026-11-24): current-year freshness
+## Amendment (2026-11-24): current-year renewal
 
 The [stale-seeds postmortem](../postmortems/2026-11-24-stale-discovery-seeds.md)
-found that the archive had stopped collecting new years for over 100
+found that the archive had stopped collecting new years for about 150
 schools, and that no page or alarm showed it. The coverage page labeled each
 school "Older CDS available" but never added the labels up.
 
 This PRD is the public view of the archive's health, so it takes the
-postmortem's headline number:
+postmortem's headline number. "Freshness" already means refresh timing here
+(Coverage item 7), so the number is called renewal:
 
-- **Coverage tab:** the "This year's reports arrived" tile, first in the
-  summary strip.
-- **M0:** a `freshness` block in the run and the public snapshot.
+> **Current-year renewal:** of the schools with a live document whose filed
+> year (`canonical_year`) is the previous CDS year, the share that also have
+> one for the current CDS year. The current CDS year is
+> `cds_freshness_floor()` on the snapshot date. `unknown` years don't count.
+
+On 2026-11-24 it was 236 of 476 (50%) in the morning and 364 of 479 (76%)
+the next morning.
+
+- **Coverage tab:** the "This year's reports on file" tile, first in the
+  summary strip, read from the snapshot.
+- **M0:** a `renewal` block in the run and the public snapshot.
+- **M2:** the tile and its test.
 - **Success criteria:** one line for it.
 
-The alarm itself is not part of this PRD. A scheduled workflow that opens a
-GitHub issue when the share falls behind is postmortem action 1, tracked in
-#460, because a page nobody is prompted to open doesn't warn anyone.
+The alarm itself is not part of this PRD. It is postmortem action 1 (#460):
+a scheduled workflow that opens a new issue when renewal falls below a
+monthly floor, because a page nobody is prompted to open doesn't warn anyone.
 
-Last year's curve can't be rebuilt from `discovered_at`. The archive began
-in April 2026, after most schools had posted 2024-25: 348 of the 471 live
-2024-25 documents were first seen that month, and 105 came from a mirror
-import. Their dates record when we first looked, not when schools posted. Until a year of snapshots exists,
-the tile shows the current count only, and the alarm uses a fixed floor.
+`discovered_at` can't give last year's curve, because the archive began in
+April 2026 (348 of the 471 live 2024-25 documents were first seen that
+month). The files' own production dates give an approximate one: of 2024-25
+files with a usable date, 18% were produced by February 2025, 46% by April,
+68% by June, 81% by August and 88% by November. #460 uses that for its
+floor until a year of snapshots exists.
 
 ## Open questions
 

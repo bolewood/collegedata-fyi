@@ -140,6 +140,7 @@ collegedata.fyi sits between official higher-education data systems and the docu
 - [`docs/research/cds-vs-college-scorecard.md`](docs/research/cds-vs-college-scorecard.md) — CDS vs College Scorecard schema comparison
 - [`docs/decisions/`](docs/decisions/) — Architectural Decision Records (0001 to 0008)
 - [`docs/known-issues/`](docs/known-issues/) — per-school extraction quality notes
+- [`docs/postmortems/`](docs/postmortems/) — what went wrong when the pipeline failed silently, and what changed
 
 ## Contributing
 

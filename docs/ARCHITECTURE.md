@@ -610,3 +610,4 @@ Status as of 2026-11-09. Live corpus counts are not repeated here because they g
 - [`docs/decisions/`](decisions/) — ADRs 0001-0008 for every foundational choice (0008 is the takedown process)
 - [`docs/backlog.md`](backlog.md) — priority queue for near-term work
 - [`docs/known-issues/`](known-issues/) — per-school extraction quality notes
+- [`docs/postmortems/`](postmortems/) — what went wrong when the pipeline failed silently, and what changed
