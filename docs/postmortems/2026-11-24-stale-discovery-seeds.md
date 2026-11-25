@@ -29,11 +29,11 @@ We searched by hand the 273 schools whose newest year was 2023-24 or
 
 79 had not posted 2025-26, and 43 gave no answer after two search rounds.
 
-By the next morning, 364 of 479 schools with a 2024-25 document also had a
+After the fixes, 364 of 479 schools with a 2024-25 document also had a
 2025-26 one (76%). 417 schools had a 2025-26 document, up from 278.
 
-The monthly job built to catch this failed loudly four times and was fixed
-each time. Then, in November, it reported `ok` while its own summary said
+The monthly job built to catch this failed loudly four times, and each
+failure was handled. Then, in November, it reported `ok` while its own summary said
 71 of its 78 schools were still stuck. An issue had been collecting that
 count every month since August, and no one acted on it.
 
@@ -122,7 +122,7 @@ coverage view's SQL. The same comparison in the Python job lived on for
 three more months. We fixed the instance, not the mechanism: a text year
 column that sorts `unknown` above real years.
 
-### 3. The re-probe's results swung, and its status didn't
+### 3. The re-probe's results swung, and November's status didn't show it
 
 For the schools it flagged, the monthly re-probe searched the web for a
 better seed. Its results varied a lot from month to month:
@@ -230,9 +230,16 @@ The posting season matters for the alarm floor and the hand check. For the
 | November 2025 | 88% |
 
 Most files appear between March and August of the year after the fall they
-describe. By November of that year, 88% exist. So the comparison year for
-"this year" in November 2026 is 2025-26, which matches the project's freshness
-floor (`cds_freshness_floor()` in SQL, `default_min_fresh_year` in Python).
+describe. By November of that year, 88% exist. So "this year" in November
+2026 is 2025-26, which matches the project's freshness floor
+(`cds_freshness_floor()` in SQL, `default_min_fresh_year` in Python).
+
+That floor moves to a new year each September, when about 81% of that year's
+files already exist. An alarm floor must be read off the curve by months since
+the CDS year's fall, not by calendar month: from September the current year
+should be at 81% or more. The early part of the curve applies to the next
+year (the floor year plus one), which is how a break in the newest year can be
+caught before the September switch.
 
 ## What the fixes changed, including side effects
 
@@ -270,7 +277,7 @@ One definition, used by the alarm, the pipeline page, PRD 040 and
 > `cds_freshness_floor()`. Undated (`unknown`) documents don't count.
 
 On 2026-11-24 that was 236 of 476 (50%) in the morning and 364 of 479 (76%)
-the next morning. A ratio of the two years' counts (278 against 476) is not
+after the fixes. A ratio of the two years' counts (278 against 476) is not
 the same number, because it counts schools that have only the current year.
 
 ## Actions
@@ -279,7 +286,7 @@ Owner means who does the work; "agent" work still needs the owner's review.
 
 | # | Action | Targets | Owner | Issue |
 |---|---|---|---|---|
-| 1 | **Alarm on current-year renewal.** A scheduled workflow computes [the headline number](#the-headline-number) and compares it with a monthly floor taken from [when schools post](#when-schools-post), less a margin. Below the floor, it opens a new issue assigned to the owner and closes it only when the number recovers. It never comments on a standing issue, which is how #136 was ignored. | 4, 8, 9, 10 | agent | #460 |
+| 1 | **Alarm on current-year renewal.** A scheduled workflow computes [the headline number](#the-headline-number) and compares it with a floor read off [when schools post](#when-schools-post) by months since that CDS year's fall, less a margin (81% or more from September). It also tracks the next CDS year against the early curve (18% by February, 46% by April), so a break in the newest year shows before September. Below the floor, it opens a new issue assigned to the owner and closes it only when the number recovers. It never comments on a standing issue, which is how #136 was ignored. | 4, 8, 9, 10 | agent | #460 |
 | 2 | **Measure the miss rate from outside the pipeline.** Every month, a workflow opens an issue listing 20 random schools with links to their sites. Someone checks each by hand and records whether the school had a newer CDS than the archive. Year-round, because files appear from March to November. | 1, 2, 3, 6 | owner, with agent help | #461 |
 | 3 | **Date every seed by the last new year it produced.** A seed that has not produced a new year within one cycle is suspect, whatever kind of URL it is. | 1, 6 | agent | #462 |
 | 4 | **A sweep's status reflects its result.** The re-probe counts a school as fixed when the new seed reaches a newer year than the archive holds, or is a listing page whose newest year matches ours (the school hasn't posted). A single file older than the current year is not a fix. The station warns when most of its schools are still stuck, and keeps a history of summaries. | 3, 8 | agent | #463 |

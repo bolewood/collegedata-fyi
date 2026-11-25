@@ -699,7 +699,7 @@ postmortem's headline number. "Freshness" already means refresh timing here
 > `cds_freshness_floor()` on the snapshot date. `unknown` years don't count.
 
 On 2026-11-24 it was 236 of 476 (50%) in the morning and 364 of 479 (76%)
-the next morning.
+after the fixes.
 
 - **Coverage tab:** the "This year's reports on file" tile, first in the
   summary strip, read from the snapshot.
@@ -715,8 +715,9 @@ monthly floor, because a page nobody is prompted to open doesn't warn anyone.
 April 2026 (348 of the 471 live 2024-25 documents were first seen that
 month). The files' own production dates give an approximate one: of 2024-25
 files with a usable date, 18% were produced by February 2025, 46% by April,
-68% by June, 81% by August and 88% by November. #460 uses that for its
-floor until a year of snapshots exists.
+68% by June, 81% by August and 88% by November. #460 reads its floor off
+that curve by months since the CDS year's fall (so 81% or more once the
+current year switches in September) until a year of snapshots exists.
 
 ## Open questions
 
