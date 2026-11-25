@@ -808,6 +808,39 @@ class ArrivalsScopeTests(unittest.TestCase):
         self.assertEqual(actions(run({"2025-26": HEALTHY}, gh4, arrivals={"2025-26": early})),
                          {"arrivals:2025-26": "update"})
 
+    def legacy_issue(self, number: int = 12) -> dict:
+        return issue(number, "2025-26", body=(
+            "old report\n" + ra.scope_marker("2025-26", "year") + "\n" + ra.discord_marker(True)
+            + "\n" + ra.LEGACY_ARRIVALS_MARKER + "\n"))
+
+    def test_a_legacy_arrivals_hold_keeps_the_renewal_issue_open_until_arrivals_recover(self) -> None:
+        # An issue from the previous model: renewal numbers are fine now, but it was
+        # held open for arrivals. Arrivals are not below (the 60-day window) and not
+        # back either, and the arrivals scope has opened nothing: it must not close.
+        not_back = arr(1, 12.0, window=60, checked=False, below=False)
+        gh, discord = FakeGh([self.legacy_issue()]), Discord()
+        out = run({"2025-26": HEALTHY}, gh, discord, arrivals={"2025-26": not_back})
+        self.assertEqual(actions(out), {"2025-26": "update"})
+        self.assertNotIn("issue close", gh.verbs())
+        self.assertEqual(ra.outstanding(out), (True, "2025-26"))
+        edit = gh.calls_for("issue edit")[0]
+        body = [b for verb, b in gh.bodies if verb == "issue edit"][0]
+        self.assertIn(ra.LEGACY_ARRIVALS_MARKER, body)  # the hold survives the update
+        self.assertIn("Arrivals for 2025-26 are not back yet", body)
+        # Once arrivals are back under the current rule it closes as a normal recovery
+        # and the marker is gone.
+        back = arr(7, 12.0, window=60, checked=False, below=False)
+        gh2 = FakeGh([self.legacy_issue()])
+        out2 = run({"2025-26": HEALTHY}, gh2, Discord(), arrivals={"2025-26": back})
+        self.assertEqual(actions(out2), {"2025-26": "close"})
+
+    def test_a_legacy_arrivals_hold_hands_over_to_the_arrivals_scope_when_it_is_below(self) -> None:
+        gh, discord = FakeGh([self.legacy_issue()]), Discord()
+        out = run({"2025-26": HEALTHY}, gh, discord, arrivals={"2025-26": arr(0, 14.0, below=True)})
+        # The renewal issue closes (its numbers recovered) and arrivals open their own.
+        self.assertEqual(actions(out), {"2025-26": "close", "arrivals:2025-26": "create"})
+        self.assertEqual(len(gh.calls_for("issue create")), 1)
+
     def test_a_sixty_day_issue_needs_the_sixty_day_count_back_too(self) -> None:
         # Opened on the 60-day window with 4 against 25 expected (under 0.4 x 25).
         gh, discord, _ = self.start({"2025-26": HEALTHY},

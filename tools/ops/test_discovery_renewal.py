@@ -757,6 +757,28 @@ class ArrivalsTests(unittest.TestCase):
         res = dr.compute(rows, date(2026, 6, 2))
         self.assertNotIn("fresh", res.arrivals.schools_30)
 
+    def test_unextracted_next_year_documents_do_not_make_a_healthy_run_look_short(self) -> None:
+        rows = []
+        for i in range(400):
+            rows.append(row(f"s{i}", "2024-25"))
+            rows.append({**row(f"s{i}", "2025-26", discovered="2026-11-10T00:00:00+00:00"),
+                         "extraction_status": "extracted"})
+        # Next year's first files, filed but not extracted yet.
+        rows += [{**row(f"s{i}", "2026-27", discovered="2026-11-20T00:00:00+00:00"),
+                  "extraction_status": "extraction_pending"} for i in range(12)]
+        res = dr.compute(rows, date(2026, 11, 24))
+        summary = dr.summary_dict(res)
+        self.assertEqual(summary["unextracted_next_docs"], 12)
+        self.assertEqual(summary["unextracted_current_docs"], 0)
+        for flag in ("below_floor", "two_year_below_floor", "arrivals_below_floor",
+                     "outstanding_below_floor"):
+            self.assertIs(summary[flag], False, flag)
+        self.assertIsNot(summary["next_below_floor"], True)
+        self.assertEqual((summary["outstanding_years"], summary["arrivals_years"]), ("", ""))
+        self.assertEqual(dr.outstanding_years(res), [])
+        self.assertIsNone(dr.lead_check(summary))
+        self.assertFalse(any(s["below_floor"] for s in dr.arrivals_state(res).values()))
+
     def test_unextracted_next_year_documents_are_reported_not_alarmed(self) -> None:
         rows = many_schools(400, with_current=400)
         for r in rows:

@@ -92,6 +92,11 @@ ARRIVALS_RECOVER_SHARE = 0.5
 # Marker: this arrivals issue has been judged on the 60-day window. Its recovery
 # then also needs the 60-day count back (the same hysteresis on that window).
 WINDOW60_MARKER = "<!-- alarm-window: 60 -->"
+# Written by the previous model (#499), where arrivals were part of the renewal
+# issue. A renewal issue that still carries it is kept open until that year's
+# arrivals recover under the current rule, unless the arrivals scope opens its
+# own issue for it.
+LEGACY_ARRIVALS_MARKER = "<!-- alarm-arrivals: open -->"
 # A current year whose posting curve has run out cannot be checked any more
 # (expected ~0 a month, so "not checked" for good); its arrivals issue is retired.
 ARRIVALS_CURVE_OVER_MONTHS = 12.0
@@ -454,13 +459,15 @@ def _with_body_file(body: str, fn: Callable[[str], str]) -> str:
 
 
 def build_body(
-    report: str, scope: Scope, posted: bool, gap: float | None = None, sixty: bool = False
+    report: str, scope: Scope, posted: bool, gap: float | None = None, sixty: bool = False,
+    legacy_arrivals: bool = False,
 ) -> str:
     kind, year = scope
     return (
         report.rstrip("\n")
         + f"\n\n{scope_marker(year, kind)}\n{discord_marker(posted)}\n{gap_marker(gap)}"
         + (f"{WINDOW60_MARKER}\n" if sixty else "")
+        + (f"{LEGACY_ARRIVALS_MARKER}\n" if legacy_arrivals else "")
     )
 
 
@@ -606,6 +613,7 @@ def act(
         # What differs between the two scopes, in one place.
         holding = False
         sixty = False
+        legacy_hold = False
         if kind == "arrivals":
             below_now = a.get("below_floor") is True
             # Held open by this year's own recovery rule, not by the flag.
@@ -625,6 +633,19 @@ def act(
             gap = None
         else:
             below = lead_check(ysum) is not None
+            # An older renewal issue that carries the arrivals-held marker stays
+            # open until that year's arrivals recover, unless the arrivals scope
+            # has opened its own issue for the year (then this one can close).
+            arr_now = arrivals.get(year)
+            legacy_hold = (
+                active is not None
+                and LEGACY_ARRIVALS_MARKER in active["body"]
+                and arr_now is not None
+                and arr_now.get("below_floor") is not True
+                and not arrivals_recovered(
+                    arr_now, sixty=arr_now["window_days"] == 60 or WINDOW60_MARKER in active["body"])
+            )
+            below = below or legacy_hold
             title = issue_title(ysum, test_mode=test_mode)
             alert = lambda url: discord_alert(ysum, url, test_mode=test_mode)  # noqa: E731
             old_kind = legacy_kind.get(number)
@@ -633,6 +654,8 @@ def act(
             recovery = lambda url: discord_recovery(  # noqa: E731
                 ysum, url, old_kind, test_mode=test_mode)
             report = reports.get(year) or fallback_report
+            if legacy_hold:
+                report = arrivals_hold_note(year, arr_now) + report
             gap = gap_of(ysum)
 
         action = decide(below, number)
@@ -662,7 +685,7 @@ def act(
                 continue
             ensure_label(repo, label, runner)
             assign = [] if test_mode else ["--assignee", assignee]
-            out = _with_body_file(build_body(report, scope, False, gap, sixty), lambda path: _gh(
+            out = _with_body_file(build_body(report, scope, False, gap, sixty, legacy_hold), lambda path: _gh(
                 runner, ["issue", "create", "--repo", repo, "--title", title,
                          "--body-file", path, "--label", label, *assign]))
             new_number = parse_issue_number(out)
@@ -673,7 +696,7 @@ def act(
                     close(old["number"], f"Superseded by #{new_number}: {renotify_reason}.")
                     print(f"closed issue #{old['number']} as superseded ({renotify_reason})")
             if send(alert(url)) == "posted":
-                _with_body_file(build_body(report, scope, True, gap, sixty), lambda path: _gh(
+                _with_body_file(build_body(report, scope, True, gap, sixty, legacy_hold), lambda path: _gh(
                     runner, ["issue", "edit", str(new_number), "--repo", repo,
                              "--body-file", path]))
             record(scope, action, new_number)
@@ -698,7 +721,7 @@ def act(
             if gap_at_open is None:
                 gap_at_open = gap
             _with_body_file(
-                build_body(report, scope, posted, gap_at_open, sixty),
+                build_body(report, scope, posted, gap_at_open, sixty, legacy_hold),
                 lambda path: _gh(
                     runner, ["issue", "edit", str(number), "--repo", repo, "--title", title,
                              "--body-file", path]))
