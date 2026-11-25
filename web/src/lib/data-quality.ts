@@ -10,10 +10,13 @@ import { formatLabel } from "./format-labels";
  * change that turns on the header tab, nav and footer labels, sitemap entry,
  * indexing, methodology link and CSV downloads in one build.
  *
- * PLACEHOLDER: the owner picks the real date. A deploy must run on or after
- * that date: `/data-quality` and its CSV route are force-static, so a build
- * made before the date bakes in the closed gate and stays closed until the
- * next deploy. Nothing flips on its own at midnight.
+ * PLACEHOLDER: the owner picks the real date. Deploy on the date. Pages
+ * read the gate when they render: `/data-quality` and its CSV routes are
+ * force-static, so a build made before the date keeps them closed (noindex,
+ * no CSV, CSV routes 404) until the next deploy. `/coverage` is ISR
+ * (revalidate 900) and shows the tab, CSV buttons and labels within 15
+ * minutes of the date without a deploy, so with no deploy it links to a page
+ * that is still closed.
  */
 export const DATA_QUALITY_LAUNCH_DATE = "2026-12-01";
 
