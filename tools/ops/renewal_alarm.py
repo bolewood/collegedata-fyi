@@ -11,7 +11,13 @@ and the flat mature floors of earlier years. For every year:
   issue even while the current year's issue is open.
 - Below its floor and an issue for that year is open: replace its title and
   body. Never comment, never post again (a count added to a standing issue is a
-  log, not an alarm, #136), except to retry a Discord post that failed.
+  log, not an alarm, #136), except to retry a Discord post that failed, and
+  except when the issue has gone stale (below).
+- Still below its floor after RENOTIFY_AFTER_DAYS days, or after the gap to the
+  floor has grown by RENOTIFY_GAP_GROWTH points since the issue was opened:
+  supersede it. Open a new assigned issue, post to Discord, and close the old
+  one with "Superseded by #N: still behind". Without this, one issue opened in
+  April would be the only notification for a gap that grew for seven months.
 - Back above its floor and an issue for that year is open: close it with one
   comment that states the recovered number, and post a recovery to Discord.
   The September switch never closes an earlier year's issue: that year is
@@ -41,6 +47,7 @@ import re
 import subprocess
 import sys
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
@@ -61,6 +68,12 @@ LABEL_DESCRIPTION = "Discovery renewal is below its floor (one open issue per CD
 # read as a match on its year.
 SCOPE_RE = re.compile(r"<!-- alarm-scope: ([a-z_]+):(\d{4}-\d{2}) -->")
 DISCORD_RE = re.compile(r"<!-- discord-posted: (true|false) -->")
+GAP_RE = re.compile(r"<!-- alarm-gap: (-?\d+(?:\.\d+)?) -->")
+# A year's issue that is still open and still below its floor is replaced by a
+# new one (a new notification) after this many days, or when the gap to the
+# floor has grown by this many percentage points since it was opened.
+RENOTIFY_AFTER_DAYS = 30
+RENOTIFY_GAP_GROWTH = 5.0
 TITLE_YEAR_RE = re.compile(r"\bhave (\d{4}-\d{2})\b")
 
 Runner = Callable[[list[str]], "subprocess.CompletedProcess[str]"]
@@ -101,6 +114,52 @@ def discord_marker(posted: bool) -> str:
     return f"<!-- discord-posted: {'true' if posted else 'false'} -->"
 
 
+def gap_marker(gap: float | None) -> str:
+    return "" if gap is None else f"<!-- alarm-gap: {gap:.1f} -->\n"
+
+
+def parse_gap(body: str | None) -> float | None:
+    match = GAP_RE.search(body or "")
+    return float(match.group(1)) if match else None
+
+
+def gap_of(ysum: dict[str, Any]) -> float | None:
+    """Points between the leading check's floor and its number: how far behind.
+    None for the arrivals check, which has no percentage."""
+    d = check_descriptor(ysum, lead_check(ysum) or "current")
+    if d["floor"] is None or d["pct"] is None:
+        return None
+    return round(float(d["floor"]) - float(d["pct"]), 1)
+
+
+def parse_created(issue: dict[str, Any]) -> datetime | None:
+    raw = str(issue.get("created_at") or "")
+    if not raw:
+        return None
+    try:
+        parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+
+
+def stale_reason(
+    issue: dict[str, Any], ysum: dict[str, Any], now: datetime
+) -> str | None:
+    """Why a still-open, still-short issue should be replaced by a new one:
+    old enough, or the gap grew. None when it should only be updated."""
+    created = parse_created(issue)
+    if created is not None and (now - created).days >= RENOTIFY_AFTER_DAYS:
+        gap_now, gap_then = gap_of(ysum), parse_gap(issue.get("body"))
+        if gap_now is not None and gap_then is not None:
+            return f"still behind (gap {gap_then:.1f}\u2192{gap_now:.1f} points)"
+        return f"still behind after {(now - created).days} days"
+    gap_now, gap_then = gap_of(ysum), parse_gap(issue.get("body"))
+    if gap_now is not None and gap_then is not None and gap_now - gap_then >= RENOTIFY_GAP_GROWTH:
+        return f"still behind (gap {gap_then:.1f}\u2192{gap_now:.1f} points)"
+    return None
+
+
 def parse_scope(body: str | None) -> tuple[str, str] | None:
     match = SCOPE_RE.search(body or "")
     return (match.group(1), match.group(2)) if match else None
@@ -130,16 +189,33 @@ def issue_year(issue: dict[str, Any], current_year: str) -> tuple[str, str | Non
     return year, None
 
 
+def retired_comment(ysum: dict[str, Any] | None) -> str:
+    if ysum is None:
+        figures = "final numbers are no longer computed"
+    else:
+        one = check_descriptor(ysum, "current")
+        two = check_descriptor(ysum, "two_year")
+        figures = f"final one-year {_pct1(one['pct'])}, two-year {_pct1(two['pct'])}"
+    return f"No longer tracked: {figures}; lapsed schools stay in the two-year check."
+
+
 def issue_title(ysum: dict[str, Any], *, test_mode: bool) -> str:
     d = check_descriptor(ysum, lead_check(ysum) or "current")
-    title = (
-        f"Discovery is behind: {_pct0(d['pct'])} of schools with {d['prev']} "
-        f"have {d['year']} (floor {_pct0(d['floor'])})"
-    )
+    if d["kind"] == "arrivals":
+        title = (
+            f"Discovery is behind: only {d['renewed']} schools gained a {d['year']} or later "
+            f"document in 30 days (expected about {d['total']})"
+        )
+    else:
+        title = (
+            f"Discovery is behind: {_pct0(d['pct'])} of schools with {d['prev']} "
+            f"have {d['year']} (floor {_pct0(d['floor'])})"
+        )
     return (TEST_TITLE_PREFIX if test_mode else "") + title
 
 
 def recovery_comment(ysum: dict[str, Any], kind: str = "current") -> str:
+    kind = "current" if kind == "arrivals" else kind
     d = check_descriptor(ysum, kind)
     other = check_descriptor(ysum, "two_year" if kind == "current" else "current")
     other_text = (
@@ -156,11 +232,16 @@ def recovery_comment(ysum: dict[str, Any], kind: str = "current") -> str:
 
 def discord_alert(ysum: dict[str, Any], issue_url: str | None, *, test_mode: bool) -> dict[str, Any]:
     d = check_descriptor(ysum, lead_check(ysum) or "current")
+    renewal_text = (
+        f"{d['renewed']} arrived, about {d['total']} expected"
+        if d["kind"] == "arrivals"
+        else f"{d['renewed']} of {d['total']} ({_pct1(d['pct'])})"
+    )
     return {
         "title": issue_title(ysum, test_mode=test_mode),
         "fields": [
             ("Check", d["name"]),
-            ("Renewal", f"{d['renewed']} of {d['total']} ({_pct1(d['pct'])})"),
+            ("Renewal", renewal_text),
             ("Floor", _pct1(d["floor"])),
             ("Years", f"{d['prev']} to {d['year']}"),
             ("Issue", issue_url or "—"),
@@ -214,7 +295,8 @@ def find_open_issues(repo: str, label: str, runner: Runner) -> list[dict[str, An
         raise AlarmError("gh issues list did not return a list")
     issues = [
         {"number": int(r["number"]), "title": r.get("title", ""),
-         "url": r.get("html_url") or r.get("url"), "body": r.get("body") or ""}
+         "url": r.get("html_url") or r.get("url"), "body": r.get("body") or "",
+         "created_at": r.get("created_at") or ""}
         for r in rows
         if "pull_request" not in r
     ]
@@ -245,8 +327,11 @@ def _with_body_file(body: str, fn: Callable[[str], str]) -> str:
         Path(path).unlink(missing_ok=True)
 
 
-def build_body(report: str, year: str, posted: bool) -> str:
-    return report.rstrip("\n") + f"\n\n{scope_marker(year)}\n{discord_marker(posted)}\n"
+def build_body(report: str, year: str, posted: bool, gap: float | None = None) -> str:
+    return (
+        report.rstrip("\n")
+        + f"\n\n{scope_marker(year)}\n{discord_marker(posted)}\n{gap_marker(gap)}"
+    )
 
 
 def act(
@@ -261,6 +346,7 @@ def act(
     runner: Runner,
     fallback_report: str = "",
     discord: Callable[..., bool] = notify_discord.post_custom_embed,
+    now: datetime | None = None,
 ) -> dict[str, Any]:
     """Do (or, in a dry run, print) what each year calls for.
 
@@ -268,6 +354,7 @@ def act(
     afterwards: the current year's, else the newest year's>, "discord_failed"}.
     """
     label = label_for(test_mode)
+    now = now or datetime.now(timezone.utc)
     issues = find_open_issues(repo, label, runner)
     if test_mode:
         for existing in issues:
@@ -291,6 +378,10 @@ def act(
         y for y, ys in years.items()
         if int(y[:4]) >= current_start and lead_check(ys) is not None
     }
+    # A year two or more cycles old is no longer tracked. Some years never
+    # reached the flat mature floor (2023-24 sat at 82.9%), and an issue that can
+    # never close would hold the board lamp down for good.
+    retired_before = current_start - 1  # years <= current - 2
     prefix = "[dry run] " if dry_run else ""
     discord_failed = False
 
@@ -319,6 +410,24 @@ def act(
         active = open_list[-1] if open_list else None
         older = open_list[:-1]
         number = active["number"] if active else None
+        if open_list and int(year[:4]) < retired_before:
+            comment = retired_comment(ysum)
+            print(f"{prefix}alarm {year}: retire (no longer tracked)")
+            if dry_run:
+                print(f"{prefix}would close #{number} with the comment: {comment}")
+            else:
+                for old in open_list:
+                    close(old["number"], comment)
+                    print(f"closed issue #{old['number']} (no longer tracked)")
+            send({
+                "title": (TEST_TITLE_PREFIX if test_mode else "")
+                + f"Discovery renewal: {year} is no longer tracked",
+                "fields": [("Year", year), ("Issue", (active or {}).get("url") or "—")],
+                "url": (active or {}).get("url"),
+                "recovered": True,
+            })
+            actions.append({"year": year, "action": "retire", "issue": None})
+            continue
         if ysum is None:
             print(f"::warning::open alarm issue(s) for {year}, which is outside the evaluated "
                   "years; left untouched", file=sys.stderr)
@@ -328,6 +437,11 @@ def act(
             continue
         below = lead_check(ysum) is not None
         action = decide(below, number)
+        renotify_reason = None
+        if action == "update":
+            renotify_reason = stale_reason(active, ysum, now)
+            if renotify_reason:
+                action = "renotify"
         print(f"{prefix}alarm {year}: {action} (below_floor={below}, open issue={number}, "
               f"label={label})")
         report = reports.get(year) or fallback_report
@@ -336,25 +450,32 @@ def act(
             actions.append({"year": year, "action": action, "issue": None})
             continue
 
-        if action == "create":
+        if action in ("create", "renotify"):
             title = issue_title(ysum, test_mode=test_mode)
+            gap = gap_of(ysum)
             if dry_run:
                 who = "none (test)" if test_mode else assignee
-                print(f"{prefix}would create issue: {title}\n  label={label} assignee={who}\n{report}")
+                extra = (f"\n  would close #{number} as superseded: {renotify_reason}"
+                         if action == "renotify" else "")
+                print(f"{prefix}would create issue: {title}\n  label={label} assignee={who}{extra}\n{report}")
                 send(discord_alert(ysum, None, test_mode=test_mode))
                 actions.append({"year": year, "action": action, "issue": None})
                 continue
             ensure_label(repo, label, runner)
             assign = [] if test_mode else ["--assignee", assignee]
-            out = _with_body_file(build_body(report, year, False), lambda path: _gh(
+            out = _with_body_file(build_body(report, year, False, gap), lambda path: _gh(
                 runner, ["issue", "create", "--repo", repo, "--title", title,
                          "--body-file", path, "--label", label, *assign]))
             new_number = parse_issue_number(out)
             url = out.strip().splitlines()[-1]
             print(f"opened issue #{new_number} for {year}")
+            if action == "renotify":
+                for old in open_list:
+                    close(old["number"], f"Superseded by #{new_number}: {renotify_reason}.")
+                    print(f"closed issue #{old['number']} as superseded ({renotify_reason})")
             outcome = send(discord_alert(ysum, url, test_mode=test_mode))
             if outcome == "posted":
-                _with_body_file(build_body(report, year, True), lambda path: _gh(
+                _with_body_file(build_body(report, year, True, gap), lambda path: _gh(
                     runner, ["issue", "edit", str(new_number), "--repo", repo,
                              "--body-file", path]))
             open_after[year] = new_number
@@ -376,7 +497,12 @@ def act(
                 continue
             if retry:
                 posted = send(discord_alert(ysum, active.get("url"), test_mode=test_mode)) == "posted"
-            _with_body_file(build_body(report, year, posted), lambda path: _gh(
+            # The gap recorded when the issue was opened stays: it is what the
+            # growth since then is measured against.
+            gap_at_open = parse_gap(active["body"])
+            if gap_at_open is None:
+                gap_at_open = gap_of(ysum)
+            _with_body_file(build_body(report, year, posted, gap_at_open), lambda path: _gh(
                 runner, ["issue", "edit", str(number), "--repo", repo, "--title", title,
                          "--body-file", path]))
             print(f"updated issue #{number}")
@@ -413,8 +539,36 @@ def outstanding(outcome: dict[str, Any]) -> tuple[bool, str]:
     """(any alarm outstanding, comma-separated CDS years still short): every
     year whose alarm issue is open after this run, including an earlier year
     that is no longer the current or next one."""
-    years = sorted(a["year"] for a in outcome["actions"] if a["action"] in ("create", "update", "skip"))
+    years = sorted(
+        a["year"] for a in outcome["actions"]
+        if a["action"] in ("create", "renotify", "update", "skip")
+    )
     return bool(years), ",".join(years)
+
+
+def real_outstanding(
+    years: dict[str, dict[str, Any]],
+    current_year: str,
+    repo: str,
+    runner: Runner,
+    outcome: dict[str, Any],
+) -> tuple[bool, str]:
+    """Outstanding years for the heartbeat in a test-mode run: the REAL alarm
+    label's open issues (a read-only list), plus the current and next years
+    that are below their floors now. A test run opens test issues only, so
+    without this it would report "nothing outstanding" and turn a lamp that is
+    really down green. Retired years never count."""
+    current_start = int(current_year[:4])
+    found: set[str] = set()
+    for issue_ in find_open_issues(repo, ALARM_LABEL, runner):
+        year, _ = issue_year(issue_, current_year)
+        if int(year[:4]) >= current_start - 1:
+            found.add(year)
+    for year, ysum in years.items():
+        if int(year[:4]) >= current_start and lead_check(ysum) is not None:
+            found.add(year)
+    ordered = sorted(found)
+    return bool(ordered), ",".join(ordered)
 
 
 def main(argv: list[str] | None = None, *, runner: Runner = run_gh) -> int:
@@ -442,10 +596,11 @@ def main(argv: list[str] | None = None, *, runner: Runner = run_gh) -> int:
         if args.year_reports and args.year_reports.is_dir():
             for path in args.year_reports.glob("*.md"):
                 reports[path.stem] = path.read_text(encoding="utf-8")
+        current_year = str(state.get("current_year") or summary["current_year"])
         outcome = act(
             years=years,
             reports=reports,
-            current_year=str(state.get("current_year") or summary["current_year"]),
+            current_year=current_year,
             repo=args.repo,
             test_mode=args.test_mode,
             dry_run=args.dry_run,
@@ -461,7 +616,13 @@ def main(argv: list[str] | None = None, *, runner: Runner = run_gh) -> int:
         summary["alarm_issue"] = None if args.test_mode else outcome["issue"]
         # The heartbeat must show an earlier year that is still short even
         # when the current and next year are healthy.
-        summary["outstanding_below_floor"], summary["outstanding_years"] = outstanding(outcome)
+        if args.test_mode:
+            # Never derived from the test label's issues: a test dispatch must
+            # not flip the real lamp.
+            summary["outstanding_below_floor"], summary["outstanding_years"] = real_outstanding(
+                years, current_year, args.repo, runner, outcome)
+        else:
+            summary["outstanding_below_floor"], summary["outstanding_years"] = outstanding(outcome)
         args.summary.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     # The issue action is done; a Discord delivery failure still fails the job
     # (which posts through workflow_run).

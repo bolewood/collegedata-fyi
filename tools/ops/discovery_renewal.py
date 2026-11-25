@@ -28,9 +28,9 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-from collections import defaultdict
+from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
@@ -51,7 +51,7 @@ PAGE_SIZE = 1000
 HTTP_TIMEOUT_SEC = 60
 MANIFEST_QUERY = (
     "select=school_id,canonical_year,discovered_at,removed_at,participation_status,"
-    "data_quality_flag,sub_institutional"
+    "data_quality_flag,sub_institutional,extraction_status"
     "&removed_at=is.null&order=document_id.asc"
 )
 
@@ -93,12 +93,29 @@ NEXT_YEAR_FLOOR_FACTOR = 0.75
 # misses a year leaves its denominator.
 TWO_YEAR_MARGIN_PTS = 8.0
 
+# Arrivals check: a total stop (no new documents at all) barely moves the
+# renewal percentages for weeks, so count the schools that gained a document
+# for the current or next year in the last 30 days and compare with what the
+# posting curve expects for a month.
+ARRIVALS_WINDOW_DAYS = 30
+ARRIVALS_MIN_EXPECTED = 10.0  # below this the curve says too little arrives to judge
+ARRIVALS_FLOOR_SHARE = 0.25  # alarm when arrivals fall under this share of expected
+
 VALID_PARTICIPATION = "published"
 # A current-year document with one of these flags is not a usable renewal: the
 # file is the wrong school's, an empty template, or mostly unread. It does not
 # count in the numerator (it still counts as having filed that year in a
 # denominator, so a school is not dropped for posting a bad file).
 UNCOUNTED_FLAGS = frozenset({"wrong_file", "blank_template", "low_coverage"})
+
+
+def is_flagged(row: dict[str, Any]) -> bool:
+    """True when the document carries any data-quality flag. This fails
+    closed: UNCOUNTED_FLAGS lists the values known today, but a new value (a
+    flag added later) also keeps a document from counting as a renewal, and the
+    report lists every flag value with its count so a new one is seen."""
+    flag = row.get("data_quality_flag")
+    return flag is not None and str(flag).strip() != ""
 YEAR_RE = re.compile(r"^(\d{4})-(\d{2})$")
 
 
@@ -183,7 +200,7 @@ def school_years(
     """Valid filed start years per school from live published documents.
 
     With `exclude_flagged`, documents whose `data_quality_flag` is in
-    UNCOUNTED_FLAGS are left out: the years a school usefully renewed.
+    any flag are left out: the years a school usefully renewed.
     """
     out: dict[str, set[int]] = defaultdict(set)
     for row in rows:
@@ -201,7 +218,7 @@ def school_years(
         year = parse_year(row.get("canonical_year"))
         if year is None:
             continue
-        if exclude_flagged and row.get("data_quality_flag") in UNCOUNTED_FLAGS:
+        if exclude_flagged and is_flagged(row):
             continue
         out[school_id].add(year)
     return dict(out)
@@ -269,6 +286,8 @@ class Result:
     year_checks: dict[int, "YearCheck"]
     flagged_docs: list[dict[str, str]]
     sub_institutional_excluded: int = 0
+    arrivals: Arrivals | None = None
+    unextracted_current_docs: int = 0
 
     @property
     def below_floor(self) -> bool:
@@ -286,6 +305,22 @@ class Result:
     def two_year_below_floor(self) -> bool:
         pct = self.two_year.pct
         return pct is not None and pct < round(self.two_year_floor_pct, 1)
+
+
+@dataclass
+class Arrivals:
+    """Schools that gained a usable current- or next-year document recently."""
+
+    count: int
+    expected: float
+    schools: set[str]
+
+    @property
+    def below_floor(self) -> bool:
+        return (
+            self.expected >= ARRIVALS_MIN_EXPECTED
+            and self.count < ARRIVALS_FLOOR_SHARE * self.expected
+        )
 
 
 @dataclass
@@ -345,10 +380,11 @@ def year_checks(
     return out
 
 
-def year_summary(check: YearCheck) -> dict[str, Any]:
+def year_summary(check: YearCheck, arrivals: "Arrivals | None" = None) -> dict[str, Any]:
     """One year's checks in the shape of the heartbeat summary (as the
-    "current" year), so titles and descriptors work for any year."""
-    return {
+    "current" year), so titles and descriptors work for any year. The arrivals
+    check belongs to the current year's issue; pass it for that year only."""
+    out = {
         "current_year": format_year(check.year),
         "is_next_year": check.is_next,
         "renewed": len(check.one.renewed),
@@ -361,6 +397,17 @@ def year_summary(check: YearCheck) -> dict[str, Any]:
         "two_year_renewal_pct": check.two.pct,
         "two_year_floor_pct": None if check.two_floor is None else round(check.two_floor, 1),
         "two_year_below_floor": check.two_below,
+    }
+    if arrivals is not None:
+        out.update(arrivals_keys(arrivals))
+    return out
+
+
+def arrivals_keys(arrivals: Arrivals) -> dict[str, Any]:
+    return {
+        "arrivals_30d": arrivals.count,
+        "arrivals_expected_30d": round(arrivals.expected, 1),
+        "arrivals_below_floor": arrivals.below_floor,
     }
 
 
@@ -393,6 +440,65 @@ def count_sub_institutional(rows: Iterable[dict[str, Any]]) -> int:
     )
 
 
+def compute_arrivals(
+    rows: Iterable[dict[str, Any]],
+    checks: dict[int, "YearCheck"],
+    current: int,
+    as_of: date,
+) -> Arrivals:
+    """Distinct schools that gained a live, unflagged, valid-year document
+    filed under the current or next year with `discovered_at` in the last
+    ARRIVALS_WINDOW_DAYS days, against what the posting curve expects in a
+    month: for each of the two years, its previous-year cohort times the curve's
+    gain over the last month.
+
+    A school gained a year when the earliest such document it has for that
+    year is inside the window; a school that already had the year (an undated
+    document counts as old) does not count again for a second file."""
+    start = datetime.combine(
+        as_of - timedelta(days=ARRIVALS_WINDOW_DAYS), datetime.min.time(), tzinfo=timezone.utc
+    )
+    wanted = {current, current + 1}
+    earliest: dict[tuple[str, int], datetime | None] = {}
+    for row in rows:
+        if row.get("removed_at") or row.get("participation_status") != VALID_PARTICIPATION:
+            continue
+        if row.get("sub_institutional") or is_flagged(row):
+            continue
+        school = row.get("school_id")
+        year = parse_year(row.get("canonical_year"))
+        if not school or year not in wanted:
+            continue
+        key = (school, year)
+        ts = _parse_ts(row.get("discovered_at"))
+        if ts is None:
+            earliest[key] = datetime.min.replace(tzinfo=timezone.utc)  # old, undated
+        elif key not in earliest or ts < earliest[key]:  # type: ignore[operator]
+            earliest[key] = ts
+    gained = {school for (school, _year), ts in earliest.items() if ts is not None and ts >= start}
+    expected = 0.0
+    for year in wanted:
+        months = months_since_fall(year, as_of)
+        gain = expected_pct(months) - expected_pct(months - 1.0)
+        expected += len(checks[year].one.prev_schools) * gain / 100.0
+    return Arrivals(count=len(gained), expected=expected, schools=gained)
+
+
+def unextracted_current_docs(rows: Iterable[dict[str, Any]], year: int) -> int:
+    """Live published documents filed under `year` that are not extracted yet.
+    Report only: they count as filed (see issue #477)."""
+    return sum(
+        1
+        for row in rows
+        if not row.get("removed_at")
+        and row.get("participation_status") == VALID_PARTICIPATION
+        and not row.get("sub_institutional")
+        and parse_year(row.get("canonical_year")) == year
+        and "extraction_status" in row
+        and row["extraction_status"] != "extracted"
+    )
+
+
 def flagged_current_docs(rows: Iterable[dict[str, Any]], year: int) -> list[dict[str, str]]:
     """Live published documents filed under `year` that carry an uncounted
     flag: they do not count as renewing."""
@@ -405,7 +511,7 @@ def flagged_current_docs(rows: Iterable[dict[str, Any]], year: int) -> list[dict
         if parse_year(row.get("canonical_year")) != year:
             continue
         flag = row.get("data_quality_flag")
-        if flag in UNCOUNTED_FLAGS and row.get("school_id"):
+        if is_flagged(row) and row.get("school_id"):
             out.append({"school_id": row["school_id"], "flag": flag})
     return sorted(out, key=lambda d: (d["school_id"], d["flag"]))
 
@@ -461,6 +567,8 @@ def compute(
         year_checks=checks,
         flagged_docs=flagged_current_docs(rows, year),
         sub_institutional_excluded=count_sub_institutional(rows),
+        arrivals=compute_arrivals(rows, checks, year, as_of),
+        unextracted_current_docs=unextracted_current_docs(rows, year),
     )
 
 
@@ -468,10 +576,12 @@ def outstanding_years(result: Result) -> list[str]:
     """The CDS years, current or next, with a check below its floor now. The
     alarm step replaces this with the years that have an open alarm issue,
     which also covers an earlier year that is still short."""
+    arrivals_short = result.arrivals is not None and result.arrivals.below_floor
     return [
         format_year(y)
         for y, c in sorted(result.year_checks.items())
-        if y >= result.current_year and (c.one_below or c.two_below)
+        if y >= result.current_year
+        and (c.one_below or c.two_below or (arrivals_short and y == result.current_year))
     ]
 
 
@@ -514,6 +624,8 @@ def summary_dict(
         "same_year_duplicates": same_year_duplicates,
         "outstanding_below_floor": bool(outstanding_years(result)),
         "outstanding_years": ",".join(outstanding_years(result)),
+        **arrivals_keys(result.arrivals if result.arrivals is not None else Arrivals(0, 0.0, set())),
+        "unextracted_current_docs": result.unextracted_current_docs,
         "flagged_current_docs": len(result.flagged_docs),
         "sub_institutional_excluded": result.sub_institutional_excluded,
         "floor_overridden": result.floor_overridden,
@@ -552,6 +664,8 @@ def lead_check(summary: dict[str, Any]) -> str | None:
         return "two_year"
     if summary.get("next_below_floor") is True:
         return "next"
+    if summary.get("arrivals_below_floor") is True:
+        return "arrivals"
     return None
 
 
@@ -574,6 +688,13 @@ def check_descriptor(summary: dict[str, Any], kind: str) -> dict[str, Any]:
                 "year": summary["next_year"],
                 "renewed": summary["next_renewed"], "total": summary["next_prev_schools"],
                 "pct": summary["next_renewal_pct"], "floor": summary["next_floor_pct"]}
+    if kind == "arrivals":
+        # No percentages: `renewed` is the schools that arrived, `total` what
+        # the curve expected (rounded); the alarm words this check itself.
+        return {"kind": kind, "name": "arrivals", "prev": prev, "year": summary["current_year"],
+                "renewed": summary["arrivals_30d"],
+                "total": round(summary["arrivals_expected_30d"]),
+                "pct": None, "floor": None}
     raise ValueError(kind)
 
 
@@ -615,6 +736,8 @@ def missing_worklist(
     """Schools missing for the given check: one-year, two-year or next-year.
     With `year`, that year's own check (`kind` is then "current" or
     "two_year"); the default is the current year."""
+    if kind == "arrivals":
+        kind = "current"  # the schools still missing the current year
     if year is not None and year != result.current_year:
         yc = result.year_checks[year]
         renewal_for = yc.two if kind == "two_year" else yc.one
@@ -665,6 +788,12 @@ def _notes_lines(result: Result, schools: dict[str, dict[str, Any]] | None) -> l
         lines += [
             f"{len(result.flagged_docs)} current-year documents not counted (flagged): "
             + ", ".join(names) + ".",
+            "",
+            "Flag values among them: " + ", ".join(
+                f"{flag} {count}" + ("" if flag in UNCOUNTED_FLAGS else " (a new value: any flag "
+                                     "keeps a document from counting)")
+                for flag, count in sorted(Counter(d["flag"] for d in result.flagged_docs).items())
+            ) + ".",
             "",
         ]
     if result.sub_institutional_excluded:
@@ -768,8 +897,15 @@ def render_report(
     cur = format_year(result.current_year)
     prev = format_year(result.current_year - 1)
     below = {"current": s["below_floor"], "two_year": s["two_year_below_floor"],
-             "next": s["next_below_floor"]}
+             "next": s["next_below_floor"], "arrivals": s["arrivals_below_floor"]}
     why = {
+        "arrivals": (
+            f"the schools that gained a usable {cur} or {format_year(result.current_year + 1)} "
+            f"document in the last {ARRIVALS_WINDOW_DAYS} days, against about what the posting "
+            f"curve expects in a month. Fewer than {ARRIVALS_FLOOR_SHARE:.0%} of that means new "
+            "documents have nearly stopped arriving, even if the renewal percentages still look "
+            "fine."
+        ),
         "current": (
             f"of the schools with a live document filed under {prev}, the share that also "
             f"have one filed under {cur}. `unknown` years do not count, and a school that has "
@@ -787,18 +923,29 @@ def render_report(
             "for the newest year."
         ),
     }[lead]
+    if lead == "arrivals":
+        headline = (
+            f"**Only {d['renewed']} schools gained a {cur} or "
+            f"{format_year(result.current_year + 1)} document in the last "
+            f"{ARRIVALS_WINDOW_DAYS} days; the posting curve expects about {d['total']}.** "
+            f"The alarm fires under {ARRIVALS_FLOOR_SHARE:.0%} of that."
+        )
+    else:
+        headline = (
+            f"**{d['renewed']} of {d['total']} schools ({_pct(d['pct'])}) that have {d['prev']} also "
+            f"have {d['year']}.** The {d['name']} floor today is {_pct(d['floor'])}"
+            + (" (overridden for a test)" if result.floor_overridden and lead == "current" else "")
+            + ". "
+            + ("It is below the floor." if below[lead] else "It is above the floor.")
+        )
     lines = [
         f"# Discovery renewal, {result.as_of.isoformat()}",
         "",
-        f"**{d['renewed']} of {d['total']} schools ({_pct(d['pct'])}) that have {d['prev']} also "
-        f"have {d['year']}.** The {d['name']} floor today is {_pct(d['floor'])}"
-        + (" (overridden for a test)" if result.floor_overridden and lead == "current" else "")
-        + ". "
-        + ("It is below the floor." if below[lead] else "It is above the floor."),
+        headline,
         "",
         f"What the {d['name']} number is: {why}",
         "",
-        "All three checks today:",
+        "All checks today:",
         "",
         f"- One-year: {_check_line(check_descriptor(s, 'current'), below['current'])}"
         + (f" (floor overridden for a test)" if result.floor_overridden else "")
@@ -811,7 +958,18 @@ def render_report(
         + ("" if result.next_active else
            f" (the curve says under {NEXT_YEAR_ACTIVE_FROM_PCT:.0f}% of files exist this early)")
         + ".",
+        f"- Arrivals: {s['arrivals_30d']} schools gained a {cur} or "
+        f"{format_year(result.current_year + 1)} document in the last {ARRIVALS_WINDOW_DAYS} "
+        f"days; the curve expects about {s['arrivals_expected_30d']:.0f}"
+        + (" (too few to judge)" if s["arrivals_expected_30d"] < ARRIVALS_MIN_EXPECTED
+           else (", below its floor" if s["arrivals_below_floor"] else ", above its floor"))
+        + ".",
         "",
+        *(
+            [f"{s['unextracted_current_docs']} current-year documents are filed but not extracted "
+             "yet; they count as renewed (see #477).", ""]
+            if s["unextracted_current_docs"] else []
+        ),
         f"Schools that already missed a year: {s['lapsed_schools']} have a live "
         f"document filed under {prev} or {format_year(result.current_year - 2)} but none "
         f"under {cur}.",
@@ -1139,10 +1297,13 @@ def run(args: argparse.Namespace) -> int:
         seed_summary=seed_summary,
     )
     lead = lead_check(summary)
-    years = {format_year(y): year_summary(c) for y, c in sorted(result.year_checks.items())}
+    years = {
+        format_year(y): year_summary(c, result.arrivals if y == result.current_year else None)
+        for y, c in sorted(result.year_checks.items())
+    }
     year_reports: dict[str, str] = {}
     for y, check in sorted(result.year_checks.items()):
-        ys = year_summary(check)
+        ys = year_summary(check, result.arrivals if y == result.current_year else None)
         kind = lead_check(ys) or "current"
         wl = missing_worklist(result, schools, kind, y)
         if y == result.current_year:

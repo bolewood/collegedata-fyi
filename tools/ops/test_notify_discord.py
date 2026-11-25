@@ -608,7 +608,31 @@ class NotifyDiscordTests(unittest.TestCase):
                 fetch_snapshot=lambda url: {"as_of": NOW.isoformat(), "stations": [], "strip": {}},
                 runner=runner, now=NOW, sleeper=lambda s: None,
             )
-        self.assertEqual(seen, ["API usage ingest", "Ops discovery renewal"])
+        self.assertEqual(seen, ["API usage ingest", "Ops discovery renewal", "Ops monthly hand check"])
+
+    def test_the_monthly_hand_check_is_watched_with_a_35_day_limit(self) -> None:
+        watch = {w: (key, hours) for w, key, hours in nd.SCHEDULED_RUN_WATCHES}
+        self.assertEqual(watch["Ops monthly hand check"], ("hand_check", 35 * 24))
+        kwargs = {"workflow": "Ops monthly hand check", "state_key": "hand_check",
+                  "max_age_hours": 35 * 24}
+        state: dict = {"stations": {}, "hand_check": "ok"}
+
+        def run_at(days: float) -> dict:
+            created = (NOW - timedelta(days=days)).isoformat().replace("+00:00", "Z")
+            return {"createdAt": created, "url": "u", "headSha": "abc1234"}
+
+        self.assertEqual(nd.api_usage_staleness_messages(run_at(31), state, NOW, **kwargs), [])
+        missed = nd.api_usage_staleness_messages(run_at(36), state, NOW, **kwargs)
+        self.assertEqual(len(missed), 1)
+        self.assertIn("/ 840h", {f["name"]: f["value"] for f in missed[0][1]["fields"]}["Age vs limit"])
+        self.assertEqual(nd.api_usage_staleness_messages(run_at(40), state, NOW, **kwargs), [])
+        back = nd.api_usage_staleness_messages(run_at(2), state, NOW, **kwargs)
+        self.assertEqual(back[0][1]["title"], "Scheduled pipeline heartbeat recovered")
+        # The state file keeps the new key between hourly polls.
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "s.json"
+            path.write_text(json.dumps({"stations": {}, "hand_check": "down"}))
+            self.assertEqual(nd.load_state(path)["hand_check"], "down")
 
     def test_missing_webhook_skips_without_failing_or_logging_url(self) -> None:
         stdout = io.StringIO()

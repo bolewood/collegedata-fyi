@@ -51,6 +51,14 @@ Setup, once:
 
 What it does: scheduled runs of `Ops discovery renewal` end with `curl -fsS -m 10 --retry 3 "$RENEWAL_DEADMAN_URL"` when the job succeeded, and with `"$RENEWAL_DEADMAN_URL/fail"` when an earlier step failed. Manual runs never check in. If the secret is unset the step prints `RENEWAL_DEADMAN_URL not set; no outside check-in (see docs/ops-discord.md)` and the job passes. The URL is never printed.
 
+## Discovery renewal alarm: what posts, and when again
+
+One alarm issue per CDS year (label `alarm:discovery-renewal`, marker `alarm-scope: year:<Y>`). A year opens one when any of its checks is below its floor: one-year, two-year, next-year (from March), or arrivals (the current year's issue). The arrivals check counts schools that gained a usable current- or next-year document in the last 30 days and compares with what the posting curve expects for a month; under a quarter of that, with at least 10 expected, is a breach. It is quiet from about December to February, when the curve expects almost nothing.
+
+An open issue is not a latch. While it stays below its floor it is replaced by a new assigned issue and a new Discord post after 30 days, or when the gap to the floor has grown by 5 points since it opened (the gap at open is in the `alarm-gap` marker). The old one is closed with "Superseded by #N: still behind". It closes for good only when its year is back above its floors (a recovery post).
+
+A year two or more cycles old is retired: its issue is closed with "No longer tracked: final one-year X%, two-year Y%", and it never counts as outstanding. `Ops monthly hand check` is watched like the daily workflows, with a limit of 35 days since its last scheduled run.
+
 ## Repeated failures
 
 The notifier posts the first failure of a run of failures only. When a scheduled `Ops discovery renewal` run fails and the one before it failed too, the run prints `::error::renewal check has failed N days running` (a red annotation on the run), and every 7th consecutive failure also posts to `#alerts` directly (`tools/ops/consecutive_failures.py`).

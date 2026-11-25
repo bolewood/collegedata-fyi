@@ -165,6 +165,8 @@ class ComputeTests(unittest.TestCase):
                 "two_year_renewal_pct", "two_year_floor_pct", "two_year_below_floor",
                 "lapsed_schools", "same_year_duplicates", "flagged_current_docs",
                 "sub_institutional_excluded", "outstanding_below_floor", "outstanding_years",
+                "arrivals_30d", "arrivals_expected_30d", "arrivals_below_floor",
+                "unextracted_current_docs",
                 "floor_overridden", "alarm_issue", "run_url",
                 "seeds_with_seed", "seeds_without_new_year",
                 "seeds_without_new_year_one_file", "seeds_without_new_year_listing_page",
@@ -516,8 +518,10 @@ class FlaggedAndSubInstitutionTests(unittest.TestCase):
         self.assertIn("s0", result.current.missing)
 
     def test_each_uncounted_flag_is_uncounted_and_other_flags_are_not(self) -> None:
+        # Fails closed: any flag at all keeps a document from counting, known or not.
         for flag, counts in (("wrong_file", False), ("blank_template", False),
-                             ("low_coverage", False), ("some_other_flag", True), (None, True)):
+                             ("low_coverage", False), ("some_other_flag", False),
+                             ("brand_new_flag_2027", False), ("", True), (None, True)):
             rows = self.base()
             for r in rows:
                 if r["school_id"] == "s0" and r["canonical_year"] == "2025-26":
@@ -563,6 +567,21 @@ class FlaggedAndSubInstitutionTests(unittest.TestCase):
                 r["data_quality_flag"] = "low_coverage"
         self.assertIn("s350", dr.compute(rows, date(2026, 11, 24)).current.prev_schools)
 
+    def test_an_unknown_flag_does_not_count_and_is_visible_in_the_report(self) -> None:
+        rows = self.base()
+        for r in rows:
+            if r["school_id"] in {"s0", "s1"} and r["canonical_year"] == "2025-26":
+                r["data_quality_flag"] = "brand_new_flag_2027"
+            if r["school_id"] == "s2" and r["canonical_year"] == "2025-26":
+                r["data_quality_flag"] = "wrong_file"
+        result = dr.compute(rows, date(2026, 11, 24))
+        for sid in ("s0", "s1", "s2"):
+            self.assertNotIn(sid, result.current.renewed)
+        text = dr.render_report(result, [], schools={})
+        self.assertIn("brand_new_flag_2027 2 (a new value", text)
+        self.assertIn("wrong_file 1", text)
+        self.assertNotIn("wrong_file 1 (a new value", text)
+
     def test_the_report_names_flagged_documents(self) -> None:
         rows = self.base()
         for r in rows:
@@ -590,6 +609,114 @@ class FlaggedAndSubInstitutionTests(unittest.TestCase):
     def test_the_manifest_query_asks_for_both_columns(self) -> None:
         self.assertIn("data_quality_flag", dr.MANIFEST_QUERY)
         self.assertIn("sub_institutional", dr.MANIFEST_QUERY)
+
+
+class ArrivalsTests(unittest.TestCase):
+    """The total-stop check: schools that gained a usable current or next year
+    document in the last 30 days, against what the posting curve expects."""
+
+    def archive(self, last_arrival: str, *, schools: int = 400, renewed: int = 200) -> list[dict]:
+        rows = []
+        for i in range(schools):
+            rows.append(row(f"s{i}", "2023-24", discovered="2025-12-01T00:00:00+00:00"))
+            rows.append(row(f"s{i}", "2024-25", discovered="2026-01-10T00:00:00+00:00"))
+            if i < renewed:
+                rows.append(row(f"s{i}", "2025-26", discovered=last_arrival))
+        return rows
+
+    def test_a_frozen_archive_fires_within_thirty_days_of_the_freeze(self) -> None:
+        rows = self.archive("2026-05-01T12:00:00+00:00")
+        fired = None
+        for offset in range(0, 60):
+            day = date(2026, 5, 1) + timedelta(days=offset)
+            res = dr.compute(rows, day)
+            if res.arrivals.below_floor:
+                fired = offset
+                break
+        self.assertIsNotNone(fired)
+        self.assertLessEqual(fired, 31)
+        self.assertGreater(fired, 0)  # not the day of the last arrivals
+
+    def test_new_arrivals_keep_it_quiet(self) -> None:
+        rows = self.archive("2026-05-01T12:00:00+00:00")
+        # 40 more schools arrive in the last two weeks before 2026-06-02.
+        rows += [row(f"s{i}", "2025-26", discovered="2026-05-25T00:00:00+00:00") for i in range(200, 240)]
+        res = dr.compute(rows, date(2026, 6, 2))
+        self.assertEqual(res.arrivals.count, 40)
+        self.assertGreaterEqual(res.arrivals.expected, 10)
+        self.assertFalse(res.arrivals.below_floor)
+
+    def test_it_is_inactive_when_the_curve_expects_almost_nothing(self) -> None:
+        # Mature curve, no next year yet: expected is ~0, so no verdict.
+        res = dr.compute(self.archive("2026-05-01T12:00:00+00:00"), date(2026, 12, 20))
+        self.assertLess(res.arrivals.expected, dr.ARRIVALS_MIN_EXPECTED)
+        self.assertFalse(res.arrivals.below_floor)
+
+    def test_the_threshold_is_a_quarter_of_expected(self) -> None:
+        for count, below in ((7, True), (8, False)):
+            arrivals = dr.Arrivals(count=count, expected=30.0, schools=set())
+            self.assertEqual(arrivals.below_floor, below, count)
+        self.assertFalse(dr.Arrivals(count=0, expected=9.9, schools=set()).below_floor)
+
+    def test_a_school_counts_once_for_either_year_and_for_a_second_file(self) -> None:
+        rows = self.archive("2026-05-01T12:00:00+00:00")
+        recent = "2026-05-28T00:00:00+00:00"
+        rows += [row("s300", "2024-25", discovered=recent)]  # current year, new file
+        rows += [row("s300", "2025-26", discovered=recent)]  # same school, next year
+        rows += [row("s0", "2025-26", discovered=recent)]  # s0 already had 2025-26 in May
+        res = dr.compute(rows, date(2026, 6, 2))
+        self.assertIn("s300", res.arrivals.schools)
+        self.assertEqual(res.arrivals.count, 1)
+        self.assertNotIn("s0", res.arrivals.schools)
+
+    def test_flagged_sub_institution_and_undated_documents_are_not_arrivals(self) -> None:
+        rows = self.archive("2026-05-01T12:00:00+00:00")
+        recent = "2026-05-28T00:00:00+00:00"
+        rows += [{**row("s300", "2025-26", discovered=recent), "data_quality_flag": "wrong_file"}]
+        rows += [{**row("s301", "2025-26", discovered=recent), "sub_institutional": "x"}]
+        rows += [row("s302", "2025-26", discovered=None)]
+        rows += [row("s303", "2025-26", discovered=recent, removed="2026-05-30T00:00:00+00:00")]
+        rows += [row("s304", "unknown", discovered=recent)]
+        res = dr.compute(rows, date(2026, 6, 2))
+        self.assertEqual(res.arrivals.count, 0)
+
+    def test_the_summary_and_the_lead_check_carry_it(self) -> None:
+        res = dr.compute(self.archive("2026-05-01T12:00:00+00:00"), date(2026, 6, 20))
+        summary = dr.summary_dict(res)
+        self.assertIs(summary["arrivals_below_floor"], True)
+        self.assertEqual(summary["arrivals_30d"], 0)
+        self.assertGreaterEqual(summary["arrivals_expected_30d"], 10)
+        ys = dr.year_summary(res.year_checks[res.current_year], res.arrivals)
+        self.assertEqual(dr.lead_check({**ys, "below_floor": False, "two_year_below_floor": False}),
+                         "arrivals")
+        # It shares the current year's issue: the current year is outstanding.
+        self.assertIn(dr.format_year(res.current_year), dr.outstanding_years(res))
+
+    def test_the_report_leads_with_arrivals_when_nothing_else_is_below(self) -> None:
+        res = dr.compute(self.archive("2026-05-01T12:00:00+00:00"), date(2026, 6, 20))
+        text = dr.render_report(res, [], lead="arrivals")
+        self.assertIn("Only 0 schools gained", text)
+        self.assertIn("- Arrivals: 0 schools gained", text)
+
+    def test_unextracted_current_year_documents_are_counted_for_the_report_only(self) -> None:
+        rows = many_schools(400, with_current=400)
+        for r in rows:
+            r["extraction_status"] = "extracted"
+        for r in rows[:6]:
+            if r["canonical_year"] == "2025-26":
+                r["extraction_status"] = "extraction_pending"
+        rows[1]["extraction_status"] = "failed"
+        result = dr.compute(rows, date(2026, 11, 24))
+        self.assertEqual(result.unextracted_current_docs, 3)
+        summary = dr.summary_dict(result)
+        self.assertEqual(summary["unextracted_current_docs"], 3)
+        self.assertEqual(summary["renewed"], 400)  # they still count as filed
+        self.assertIn("3 current-year documents are filed but not extracted yet", dr.render_report(result, []))
+        self.assertIn("#477", dr.render_report(result, []))
+
+    def test_rows_without_an_extraction_status_column_count_as_zero(self) -> None:
+        result = dr.compute(many_schools(400, with_current=400), date(2026, 11, 24))
+        self.assertEqual(result.unextracted_current_docs, 0)
 
 
 class YearReportTests(unittest.TestCase):

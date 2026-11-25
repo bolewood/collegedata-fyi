@@ -88,6 +88,9 @@ API_USAGE_WORKFLOW = "API usage ingest"
 API_USAGE_MAX_AGE_HOURS = 8
 DISCOVERY_RENEWAL_WORKFLOW = "Ops discovery renewal"
 DISCOVERY_RENEWAL_MAX_AGE_HOURS = 36
+# Monthly: a miss is a run more than 35 days old.
+HAND_CHECK_WORKFLOW = "Ops monthly hand check"
+HAND_CHECK_MAX_AGE_HOURS = 35 * 24
 # Daily-or-faster scheduled workflows the hourly poll watches directly, so a
 # disabled or deleted workflow is noticed even though nothing runs to report
 # it. (workflow name, key in the saved state, max hours since the last
@@ -95,6 +98,7 @@ DISCOVERY_RENEWAL_MAX_AGE_HOURS = 36
 SCHEDULED_RUN_WATCHES: tuple[tuple[str, str, int], ...] = (
     (API_USAGE_WORKFLOW, "api_usage_ingest", API_USAGE_MAX_AGE_HOURS),
     (DISCOVERY_RENEWAL_WORKFLOW, "discovery_renewal", DISCOVERY_RENEWAL_MAX_AGE_HOURS),
+    (HAND_CHECK_WORKFLOW, "hand_check", HAND_CHECK_MAX_AGE_HOURS),
 )
 PRODUCTION_ENV_NAMES = frozenset({"production", "prod"})
 # Longer than hourly poll + Vercel SWR (60s + 300s). Shorter than a

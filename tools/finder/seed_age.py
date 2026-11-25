@@ -57,7 +57,7 @@ from tools.ops.discovery_renewal import (  # noqa: E402
     DEFAULT_API,
     DEFAULT_SCHOOLS_YAML,
     VALID_PARTICIPATION,
-    UNCOUNTED_FLAGS,
+    is_flagged,
     RenewalError,
     _parse_ts,
     cds_freshness_floor,
@@ -92,7 +92,7 @@ class SeedAge:
 
 def _counts(row: dict[str, Any]) -> bool:
     """The renewal check's rule for a document that can show a new year."""
-    return not row.get("sub_institutional") and row.get("data_quality_flag") not in UNCOUNTED_FLAGS
+    return not row.get("sub_institutional") and not is_flagged(row)
 
 
 def newest_year_info(
