@@ -25,6 +25,8 @@ insert into public.pipeline_stations (
     'current_year', 'renewed', 'prev_schools', 'renewal_pct', 'floor_pct', 'below_floor',
     'months_since_fall', 'next_year', 'next_renewed', 'next_prev_schools',
     'next_renewal_pct', 'next_floor_pct', 'next_below_floor', 'lapsed_schools',
+    'two_year_renewed', 'two_year_prev_schools', 'two_year_renewal_pct',
+    'two_year_floor_pct', 'two_year_below_floor',
     'floor_overridden', 'alarm_issue', 'same_year_duplicates', 'seeds_without_new_year',
     'fetch_failures', 'fetch_failures_blocked', 'fetch_failures_viewer',
     'fetch_failures_section_files', 'fetch_failures_dead_link', 'fetch_failures_other',
