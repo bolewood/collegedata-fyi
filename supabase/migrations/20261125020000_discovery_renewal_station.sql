@@ -29,6 +29,8 @@ insert into public.pipeline_stations (
     'two_year_renewed', 'two_year_prev_schools', 'two_year_renewal_pct',
     'two_year_floor_pct', 'two_year_below_floor',
     'floor_overridden', 'alarm_issue', 'same_year_duplicates', 'seeds_without_new_year',
+    'seeds_with_seed', 'seeds_without_new_year_one_file',
+    'seeds_without_new_year_listing_page',
     'fetch_failures', 'fetch_failures_blocked', 'fetch_failures_viewer',
     'fetch_failures_section_files', 'fetch_failures_dead_link', 'fetch_failures_other',
     'run_url'
@@ -228,6 +230,18 @@ begin
     select 1 from public.pipeline_heartbeats where station_id = 'discovery_renewal'
   ) then
     raise exception 'discovery_renewal heartbeat row missing';
+  end if;
+  select allowed_keys into keys from public.pipeline_stations
+  where station_id = 'discovery_renewal';
+  if not (keys @> array[
+    'current_year', 'below_floor', 'run_url', 'seeds_without_new_year',
+    'seeds_with_seed', 'seeds_without_new_year_one_file',
+    'seeds_without_new_year_listing_page'
+  ]) then
+    raise exception 'discovery_renewal allowed_keys missing seed keys: %', keys;
+  end if;
+  if cardinality(keys) <> (select count(distinct k) from unnest(keys) k) then
+    raise exception 'discovery_renewal allowed_keys has duplicates: %', keys;
   end if;
 
   select allowed_keys into keys from public.pipeline_stations
