@@ -2,12 +2,16 @@ import { cache } from "react";
 import {
   BOARD_STATION_IDS,
   LAMP_HEX,
+  isResultFailure,
+  renewalOutcomeSummary,
+  stuckShare,
   MANUAL_STATION_IDS,
   stationLamp,
   stripLamp,
   type HeartbeatStatus,
   type Lamp,
   type StationClass,
+  type StationLampInput,
   type StripLamp,
 } from "./pipeline-lamps";
 
@@ -121,6 +125,9 @@ export type PipelineStationView = {
   error_code: string;
   source_url: string | null;
   result_line: string;
+  detail_line: string;
+  /** Set when the lamp is down or late with a fresh clock because the result failed. */
+  failure_text: string | null;
   ago_label: string;
   help: string;
   queue_unfinished: number | null;
@@ -152,6 +159,14 @@ const SEED_META: Array<{
   on_board: boolean;
   help: string;
 }> = [
+  {
+    station_id: "discovery_renewal",
+    display_name: "Renewal",
+    cadence_label: "daily · SLA 36h",
+    class: "daily_sla",
+    on_board: true,
+    help: "The number this archive exists for: of the schools that had last year's Common Data Set with us, how many also have this year's. It is checked every day. The lamp goes red when that share drops below the floor, which we read off how fast schools usually post.",
+  },
   {
     station_id: "finder_brave",
     display_name: "Finder",
@@ -450,16 +465,139 @@ export function activityFromRows(
     .slice(0, 50);
 }
 
-function resultLine(row: PipelineFactRow, lamp: Lamp): string {
+function pctValue(numerator: unknown, denominator: unknown, fallback: unknown): number | null {
+  const n = Number(numerator);
+  const d = Number(denominator);
+  if (numerator != null && denominator != null && Number.isFinite(n) && Number.isFinite(d) && d > 0) {
+    return (n / d) * 100;
+  }
+  const f = Number(fallback);
+  return fallback != null && Number.isFinite(f) ? f : null;
+}
+
+/** Whole percents, unless rounding would hide a miss against the floor. */
+function pctPair(share: number | null, floor: number | null): [string, string] {
+  const fmt = (v: number | null, places: number) => (v === null ? "" : v.toFixed(places));
+  if (share !== null && floor !== null && share < floor && Math.round(share) === Math.round(floor)) {
+    return [fmt(share, 1), fmt(floor, 1)];
+  }
+  return [fmt(share, 0), fmt(floor, floor !== null && !Number.isInteger(floor) ? 1 : 0)];
+}
+
+function renewalSummary(row: PipelineFactRow): Record<string, unknown> {
+  return renewalOutcomeSummary({
+    lastStatus: asStatus(row.last_status),
+    lastFinishedAt: row.last_finished_at,
+    lastScheduledFinishedAt: row.last_scheduled_finished_at,
+    lastSummary: asRecord(row.last_summary),
+    lastScheduledSummary: asRecord(row.last_scheduled_summary),
+  });
+}
+
+function finiteOrNull(value: unknown): number | null {
+  if (value == null) return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function renewalResultLine(summary: Record<string, unknown>, lamp: Lamp): string {
+  if (summary.renewed == null || summary.prev_schools == null) {
+    return lamp === "down" ? "No renewal figures reported." : "";
+  }
+  const [share, floor] = pctPair(
+    pctValue(summary.renewed, summary.prev_schools, summary.renewal_pct),
+    finiteOrNull(summary.floor_pct),
+  );
+  const parts = [
+    `${num(summary.renewed)} of ${num(summary.prev_schools)} renewed${share ? ` (${share}%)` : ""}`,
+  ];
+  if (floor) parts.push(`floor ${floor}%`);
+  if (summary.current_year) parts.push(String(summary.current_year));
+  return parts.join(" · ");
+}
+
+function nextYearPart(summary: Record<string, unknown>): string {
+  if (!(summary.next_year && summary.next_prev_schools != null)) return "";
+  const [share, floor] = pctPair(
+    pctValue(summary.next_renewed, summary.next_prev_schools, summary.next_renewal_pct),
+    finiteOrNull(summary.next_floor_pct),
+  );
+  return `${String(summary.next_year)}: ${num(summary.next_renewed)} of ${num(summary.next_prev_schools)}${share ? ` (${share}%)` : ""}${floor ? ` · floor ${floor}%` : ""}`;
+}
+
+function twoYearPart(summary: Record<string, unknown>): string {
+  if (summary.two_year_prev_schools == null) return "";
+  const [share, floor] = pctPair(
+    pctValue(summary.two_year_renewed, summary.two_year_prev_schools, summary.two_year_renewal_pct),
+    finiteOrNull(summary.two_year_floor_pct),
+  );
+  return `two-year: ${num(summary.two_year_renewed)} of ${num(summary.two_year_prev_schools)}${share ? ` (${share}%)` : ""}${floor ? ` · floor ${floor}%` : ""}`;
+}
+
+function renewalDetailLine(summary: Record<string, unknown>): string {
+  const parts: string[] = [];
+  for (const part of [nextYearPart(summary), twoYearPart(summary)]) {
+    if (part) parts.push(part);
+  }
+  const counts: Array<[string, string]> = [
+    ["same_year_duplicates", "same-year duplicates"],
+    ["seeds_without_new_year", "seeds without the new year"],
+    ["fetch_failures", "fetch failures"],
+  ];
+  for (const [key, label] of counts) {
+    if (summary[key] != null) parts.push(`${num(summary[key])} ${label}`);
+  }
+  return parts.join(" · ");
+}
+
+/** Strip wording for a down/late lamp whose clock is fine but whose result failed. */
+function failureText(row: PipelineFactRow): string {
+  if (row.station_id === "discovery_renewal") {
+    const summary = renewalSummary(row);
+    if (summary.below_floor === true) {
+      return `Renewal below floor · ${renewalResultLine(summary, "down")}`;
+    }
+    if (summary.next_below_floor === true) {
+      return `Renewal below floor · ${nextYearPart(summary)}`;
+    }
+    if (summary.two_year_below_floor === true) {
+      return `Renewal below floor · ${twoYearPart(summary)}`;
+    }
+    return "Renewal figures missing from the last run";
+  }
   const summary = asRecord(row.last_scheduled_summary);
-  const errorCode = row.last_scheduled_error_code ?? row.last_error_code ?? "none";
+  const share = stuckShare(summary);
+  if (share === "malformed" || share === null) return "Stuck PDFs: no counts reported";
+  return `Stuck PDFs: ${num(summary.still_stuck)} of ${num(summary.stuck)} still stuck`;
+}
+
+function resultLine(row: PipelineFactRow, lamp: Lamp, registered = true): string {
+  const summary = asRecord(row.last_scheduled_summary);
+  if (row.station_id === "discovery_renewal") {
+    if (!registered) return "Waiting for its registry row";
+    const errorCopy =
+      row.last_scheduled_status === "error"
+        ? (ERROR_COPY[row.last_scheduled_error_code ?? "none"] ?? "")
+        : "";
+    if (lamp === "down" && errorCopy) return errorCopy;
+    return renewalResultLine(renewalSummary(row), lamp);
+  }
+  const errorCode =
+    row.station_id === "finder_stuck_pdf"
+      ? row.last_scheduled_status === "error"
+        ? (row.last_scheduled_error_code ?? "none")
+        : "none"
+      : (row.last_scheduled_error_code ?? row.last_error_code ?? "none");
   const errorCopy = ERROR_COPY[errorCode] ?? "";
   if (lamp === "down" && errorCopy) return errorCopy;
   switch (row.station_id) {
     case "finder_brave":
       return `${num(summary.probed)} probed · ${num(summary.found)} found · ${num(summary.budget_remaining)} budget left`;
     case "finder_stuck_pdf":
-      return `${num(summary.stuck)} stuck · ${num(summary.reprobed)} reprobed · ${num(summary.still_stuck)} still stuck`;
+      {
+        const share = stuckShare(summary);
+        return `${num(summary.stuck)} stuck · ${num(summary.reprobed)} reprobed · ${num(summary.still_stuck)} still stuck${typeof share === "number" ? ` (${Math.round(share * 100)}%)` : ""}`;
+      }
     case "finder_landing_hints":
       return `${num(summary.proposals)} proposals · ${num(summary.promoted)} promoted`;
     case "archive_enqueue":
@@ -524,11 +662,17 @@ function stripText(lamp: StripLamp, stations: PipelineStationView[], loadError: 
   const overdue = stations.filter((station) => station.on_board && station.lamp === "down");
   const late = stations.filter((station) => station.on_board && station.lamp === "late");
   if (lamp === "down") {
-    const first = overdue[0];
+    const clockDown = overdue.filter((station) => !station.failure_text);
+    const failed = overdue.filter((station) => station.failure_text);
+    if (clockDown.length === 0 && failed.length > 0) {
+      const more = failed.length > 1 ? ` (+${failed.length - 1} more)` : "";
+      return `${failed[0].failure_text}${more}`;
+    }
+    const first = clockDown[0];
     const detail = first
       ? `${first.display_name} ${first.ago_label}`
       : "scheduled clock missing";
-    return `${overdue.length} station${overdue.length === 1 ? "" : "s"} overdue · ${detail}`;
+    return `${clockDown.length} station${clockDown.length === 1 ? "" : "s"} overdue · ${detail}`;
   }
   if (lamp === "late") {
     const first = late[0];
@@ -551,7 +695,8 @@ export function snapshotFromFacts(
   const byId = new Map(facts.map((row) => [row.station_id, row]));
   const merged = SEED_META.map((meta) => byId.get(meta.station_id) ?? seedFacts().find((row) => row.station_id === meta.station_id)!);
   const stations = merged.map((row) => {
-    const lamp = stationLamp({
+    const registered = byId.has(row.station_id);
+    const lampInput: StationLampInput = {
       stationId: row.station_id,
       class: row.class,
       lastStatus: asStatus(row.last_status),
@@ -560,10 +705,14 @@ export function snapshotFromFacts(
       lastScheduledStatus: asStatus(row.last_scheduled_status),
       lastScheduledFinishedAt: row.last_scheduled_finished_at,
       lastScheduledSummary: asRecord(row.last_scheduled_summary),
+      lastSummary: asRecord(row.last_summary),
+      registered,
       queueUnfinished: row.queue_unfinished,
       extractionPending: row.extraction_pending,
       now,
-    });
+    };
+    const lamp = stationLamp(lampInput);
+    const resultFailure = isResultFailure(lampInput, lamp);
     const clockIso =
       row.class === "yearly" ? row.last_finished_at : row.last_scheduled_finished_at;
     return {
@@ -579,10 +728,18 @@ export function snapshotFromFacts(
       last_started_at: row.last_started_at,
       last_trigger: row.last_trigger,
       last_status: asStatus(row.last_status),
-      summary: asRecord(row.last_scheduled_summary),
+      summary:
+        row.station_id === "discovery_renewal"
+          ? renewalSummary(row)
+          : asRecord(row.last_scheduled_summary),
       error_code: row.last_scheduled_error_code ?? "none",
       source_url: row.source_url,
-      result_line: resultLine(row, lamp),
+      result_line: resultLine(row, lamp, registered),
+      failure_text: resultFailure ? failureText(row) : null,
+      detail_line:
+        row.station_id === "discovery_renewal" && registered
+          ? renewalDetailLine(renewalSummary(row))
+          : "",
       ago_label: formatAgo(clockIso, now),
       help: SEED_META.find((meta) => meta.station_id === row.station_id)?.help ?? "",
       queue_unfinished: row.queue_unfinished,
@@ -640,6 +797,8 @@ export function toPublicJson(snapshot: PipelineSnapshot) {
       last_trigger: station.last_trigger,
       summary: station.summary,
       error_code: station.error_code,
+      result_line: station.result_line,
+      failure_text: station.failure_text,
     })),
     extraction_activity: snapshot.extraction_activity.map((item) => ({
       activity_at: item.activity_at,
