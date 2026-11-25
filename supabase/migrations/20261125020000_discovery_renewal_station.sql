@@ -89,9 +89,17 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  station_class text;
 begin
   -- Finishes only. 'running' updates and no-op maintenance updates are skipped.
-  if new.last_finished_at is not null
+  -- High-frequency stations (hourly_sla, continuous_sla) are not kept: archive_process
+  -- finishes every 30 s and would add about a million rows a year for no trend value.
+  select class into station_class
+  from public.pipeline_stations where station_id = new.station_id;
+
+  if station_class in ('monthly_sla', 'daily_sla', 'yearly', 'adhoc')
+     and new.last_finished_at is not null
      and new.last_status in ('ok', 'error')
      and (tg_op = 'INSERT' or new.last_finished_at is distinct from old.last_finished_at)
   then
@@ -105,6 +113,10 @@ begin
       new.last_error_code,
       new.last_finished_at
     );
+    -- Retention: 400 days per station (indexed on station_id, recorded_at).
+    delete from public.pipeline_heartbeat_history
+    where station_id = new.station_id
+      and recorded_at < now() - interval '400 days';
   end if;
   return null;
 end;
@@ -144,7 +156,7 @@ as $$
 $$;
 
 comment on function public.pipeline_station_history(text, int) is
-  'Anon-readable history of finished runs for one on-board station, newest first, capped at 100 rows. summary is already filtered to the station allowed keys by record_pipeline_heartbeat.';
+  'Anon-readable history of finished runs for one on-board station, newest first, capped at 100 rows. summary is already filtered to the station allowed keys by record_pipeline_heartbeat. Only monthly, daily, yearly and adhoc stations are recorded. Callers wanting the scheduled trend should filter trigger in (''schedule'', ''cron'').';
 
 revoke all on function public.pipeline_station_history(text, int) from public;
 grant execute on function public.pipeline_station_history(text, int) to anon, authenticated, service_role;
@@ -156,7 +168,9 @@ insert into public.pipeline_heartbeat_history (
 select h.station_id, h.last_status, h.last_trigger, h.last_summary,
        h.last_error_code, h.last_finished_at
 from public.pipeline_heartbeats h
-where h.last_finished_at is not null
+join public.pipeline_stations st using (station_id)
+where st.class in ('monthly_sla', 'daily_sla', 'yearly', 'adhoc')
+  and h.last_finished_at is not null
   and h.last_status in ('ok', 'error')
   and not exists (
     select 1 from public.pipeline_heartbeat_history x
@@ -184,6 +198,9 @@ begin
 
   select allowed_keys into keys from public.pipeline_stations
   where station_id = 'finder_stuck_pdf';
+  if keys is null then
+    raise exception 'finder_stuck_pdf station missing or has null allowed_keys';
+  end if;
   if not (keys @> array['stuck', 'still_stuck', 'run_url', 'total', 'skipped_no_seed']) then
     raise exception 'finder_stuck_pdf allowed_keys not extended: %', keys;
   end if;
