@@ -139,16 +139,18 @@ class H1TextLayerTest(unittest.TestCase):
         self.assertEqual(values["H.110"], "79257874")
         self.assertEqual(values["H.117"], "0")
 
-    def test_a_lone_amount_printed_beyond_the_non_need_column(self) -> None:
-        # Dartmouth: Parent Loans' non-need-based amount sits further right
-        # than the column's other amounts.
+    def test_a_lone_amount_far_from_both_columns_is_not_placed_but_the_printed_markdown_value_stays(self) -> None:
+        # Dartmouth: Parent Loans' non-need-based amount sits 30 columns right
+        # of the column's other amounts. It is within no column, so the text
+        # reading does not place it; the markdown's value stands because the
+        # row prints it.
         far = " " * 38 + "Parent Loans"
         far = far.ljust(170 - len("$3,104,361")) + "$3,104,361\n"
         rows = TRINITY_ROWS.replace(line("Parent Loans", "", "$3,104,361"), far)
         self.assertIn(far, rows)
-        values = h1(read(INSTRUCTIONS + HEADER + rows + AFTER))
-        self.assertEqual(values["H.126"], "3104361")
-        self.assertNotIn("H.115", values)
+        self.assertNotIn("H.126", h1(read(INSTRUCTIONS + HEADER + rows + AFTER)))
+        markdown = "| Question | Value |\n|---|---|\n| H.126 | 3104361 |\n"
+        self.assertEqual(h1(read(INSTRUCTIONS + HEADER + rows + AFTER, markdown))["H.126"], "3104361")
 
     def test_a_row_label_that_wraps_past_the_word_excludes_is_still_the_row(self) -> None:
         # Baruch: "State and other (e.g., institutional) work-study/employment
@@ -247,13 +249,27 @@ class H1TextLayerTest(unittest.TestCase):
         self.assertEqual(values["H.126"], "3104361")
 
     def test_a_lone_amount_about_as_near_to_both_columns_is_dropped(self) -> None:
-        mid = (NEED_END + NON_NEED_END) // 2
-        rows = TRINITY_ROWS.replace(
-            line("Athletic Awards", "$0", "$0"), line("Athletic Awards", "$5,000", ends=(mid, mid))
+        # Columns 12 apart (the least that counts as separated); the lone
+        # amount ends midway, 6 columns from each.
+        ends = (110, 122)
+        rows = "".join(
+            line(label, need, non, ends=ends)
+            for label, need, non in (
+                ("Federal", "$1,973,493", "$265,723"),
+                ("State - all states, not only the state in which", "$141,723", "$0"),
+                ("Instititutional - Endowed scholarships, annual", "$75,746,654", "$4,204,069"),
+                ("Scholarships/grants from external sources", "$1,396,004", "$751,916"),
+            )
         )
-        values = h1(read(INSTRUCTIONS + HEADER + rows + AFTER))
-        self.assertNotIn("H.117", values)
-        self.assertNotIn("H.128", values)
+        rows += line("Total Scholarships/Grants", "$79,257,874", "$5,221,708", at=60, ends=ends)
+        rows += line("Student loans from all sources", "$2,308,770", "$7,214,427", ends=ends)
+        rows += line("Federal Work-Study", "$735,526", ends=ends)
+        rows += line("Total Self-Help", "$3,044,296", "$7,214,427", at=70, ends=ends)
+        placed = h1(read(INSTRUCTIONS + HEADER + rows + line("Athletic Awards", "$5,000", ends=(110, 110)) + AFTER))
+        self.assertEqual(placed["H.117"], "5000")  # control: at the need-based column
+        midway = h1(read(INSTRUCTIONS + HEADER + rows + line("Athletic Awards", "$5,000", ends=(116, 116)) + AFTER))
+        self.assertNotIn("H.117", midway)
+        self.assertNotIn("H.128", midway)
 
     def test_a_missing_self_help_block_refuses_the_reading(self) -> None:
         start = TRINITY_ROWS.index(line("Student loans from all sources", "$2,308,770", "$7,214,427"))

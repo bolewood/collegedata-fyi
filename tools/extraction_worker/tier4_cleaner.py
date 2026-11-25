@@ -7384,7 +7384,8 @@ def _h_layout_h1_reading(block: str) -> tuple[dict[str, dict], list[tuple[str, s
     label text and is not an amount. A lone amount is placed only by column:
     against the medians of the two-amount rows of its own block (grants,
     self-help, other aid), only when those medians are 12 or more columns
-    apart, and not when it is about as near to both.
+    apart, it is within 8 columns of the nearer one, and it is not about as
+    near to both (within 6 columns of equal distance).
     A label wrapped over lines is one row; the wrapped fragments that read
     like another row ("excluding athletic aid and tuition waivers (which are
     reported below)") are not row labels.
@@ -7473,16 +7474,13 @@ def _h_layout_h1_reading(block: str) -> tuple[dict[str, dict], list[tuple[str, s
         elif len(amts) == 1:
             end, val = amts[0]
             dl, dr = abs(end - left_med), abs(end - right_med)
-            if right_med - left_med < 12:
+            # Placed only when it sits within 8 columns of one column's median
+            # and clearly nearer to it than to the other. An amount further
+            # out could be in either column (or a different block's layout);
+            # the markdown value, if the row prints it, is kept instead.
+            if right_med - left_med < 12 or min(dl, dr) > 8 or abs(dl - dr) < 6:
                 continue
-            if end >= right_med:
-                pairs = [(nn_qn, val)]
-            elif end <= left_med:
-                pairs = [(nb_qn, val)]
-            elif abs(dl - dr) < 6:
-                continue
-            else:
-                pairs = [(nb_qn, val)] if dl < dr else [(nn_qn, val)]
+            pairs = [(nb_qn, val)] if dl < dr else [(nn_qn, val)]
         elif len(amts) > 2 and nb_qn:
             # Three or more amounts under one label: two rows printed as one
             # (Boston College 2024-25 prints Athletic Awards' amounts above
