@@ -1544,6 +1544,8 @@ def check_public_sections(public: dict[str, Any]) -> None:
         if rows and sum(r["questions"] for r in rows) != year["form"]["questions"]:
             raise SystemExit(f"{where}: the sections' questions do not add up to the form's {year['form']['questions']}")
         for r in rows:
+            if r["questions"] <= 0:
+                raise SystemExit(f"{where}: section {r['section']} has no questions")
             if not 0 <= r["usable_median"] <= r["stored_median"] <= r["questions"]:
                 raise SystemExit(f"{where}: section {r['section']} breaks 0 <= usable <= stored <= questions")
             if block["reports"] == 0 and (r["stored_median"] or r["usable_median"]):

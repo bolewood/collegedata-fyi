@@ -909,6 +909,9 @@ class SectionsPublic(unittest.TestCase):
         scoreboard.check_public_sections(pub)
         year = lambda p: p["years"][0]["sections"]  # noqa: E731
         cases = {
+            # The questions are moved to the next section so the sum still matches and only this rule can fire.
+            "no questions": lambda p: (year(p)["rows"][1].update(questions=year(p)["rows"][1]["questions"] + year(p)["rows"][0]["questions"]),
+                                       year(p)["rows"][0].update(questions=0, stored_median=0, usable_median=0)),
             "questions sum": lambda p: year(p)["rows"][0].update(questions=year(p)["rows"][0]["questions"] + 1),
             "reports": lambda p: year(p).update(reports=year(p)["reports"] + 1),
             "usable above stored": lambda p: year(p)["rows"][2].update(usable_median=year(p)["rows"][2]["stored_median"] + 1),
@@ -927,6 +930,15 @@ class SectionsPublic(unittest.TestCase):
             mutate(broken)
             with self.subTest(name), self.assertRaises(SystemExit):
                 scoreboard.check_public_sections(broken)
+
+    def test_build_public_runs_the_section_arithmetic(self) -> None:
+        real = scoreboard.section_block
+
+        def wrong(*args, **kwargs):
+            block = real(*args, **kwargs)
+            return {**block, "reports": block["reports"] + 1}
+        with mock.patch.object(scoreboard, "section_block", wrong), self.assertRaisesRegex(SystemExit, "sections: reports is"):
+            scoreboard.build_public(synthetic_run(), "x.json")
 
     def test_the_public_shape_requires_and_limits_the_keys(self) -> None:
         pub = scoreboard.build_public(synthetic_run(), "x.json")
@@ -1500,9 +1512,10 @@ class GatherOnAFakeApi(unittest.TestCase):
                                        "H.503": "reported", "H.513": "reported"})
         # A form the sanity rules don't cover is left alone.
         self.assertEqual(set(down(loans, "2018-19").values()), {"reported"})
-        # A borrower count that failed a rule is not evidence of "no borrowers".
-        failed = down({"H.401": {"value": "2023"}, "H.511": {"value": "0"}})
-        self.assertEqual(failed["H.511"], "reported")
+        # A borrower count that failed a rule is not evidence of "no borrowers". H.501 = 0 (any loan) is flagged because
+        # H.503 = 3 exceeds it, and H.511 = 0 sits beside that 0: without the filter H.511 would be "not_applicable".
+        failed = down({"H.501": {"value": "0"}, "H.511": {"value": "0"}, "H.503": {"value": "3"}, "H.513": {"value": "0"}})
+        self.assertEqual(failed, {"H.501": "parse_error", "H.503": "parse_error", "H.511": "reported", "H.513": "reported"})
 
     def test_sections_of_a_projected_document_and_the_sum_rule(self) -> None:
         self.assertEqual(self.by_id["P"]["sections"], {
