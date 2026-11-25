@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Request } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { TABLE_TITLES, hasFederalChecks, hasSections, type QualityTableId } from "../src/lib/data-quality";
+import { TABLE_TITLES, hasSections, type QualityTableId } from "../src/lib/data-quality";
 import { loadLatestSnapshot } from "../src/lib/data-quality-snapshots";
 
 function isSchoolPagePrefetch(req: Request): boolean {
@@ -110,9 +110,16 @@ function builtGate(): boolean {
 // A year with federal figures, so the page shows every table and its CSV link (2025-26 has no federal table yet).
 const dqYearRow = loadLatestSnapshot().years.find((y) => y.federal_fall_loaded)!;
 const dqYear = dqYearRow.cds_year;
-// The tables the page links for that year: the same rules the page and the CSV route use, not a hand-kept list.
+// The tables the page links for that year, by the page's own rule: a federal table only when its figures are loaded
+// (enrollment and tuition each by their own `federal_checks[t].loaded`), sections when the form has a field schema.
 const CSV_TABLES = (Object.keys(TABLE_TITLES) as QualityTableId[]).filter((t) =>
-  t === "sections" ? hasSections(dqYearRow) : t === "enrollment" || t === "tuition" ? hasFederalChecks(dqYearRow) : true,
+  t === "sections"
+    ? hasSections(dqYearRow)
+    : t === "federal"
+      ? dqYearRow.federal_fall_loaded
+      : t === "enrollment" || t === "tuition"
+        ? Boolean(dqYearRow.federal_checks?.[t].loaded)
+        : true,
 );
 
 test.describe("Data quality gate (matches the build)", () => {

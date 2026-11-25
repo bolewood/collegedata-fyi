@@ -719,7 +719,7 @@ admissions match where IPEDS figures are missing.
 
 ## Launch gate
 
-One gate, `isDataQualityLaunched()`, on the `isUsageLaunched` pattern
+One gate, `dataQualityLaunched()` (decided once per build), on the `isUsageLaunched` pattern
 (`web/src/lib/usage.ts`). Before the launch date:
 
 - `/data-quality` has `robots: noindex` and canonical metadata.

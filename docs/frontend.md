@@ -49,7 +49,7 @@ Every public route in `web/src/app/`, with caching. Details for the main pages f
 | `/match` | Local-only match-list builder | ISR, 1 h |
 | `/discover` | Guided discovery (noindex, unlinked) | default (no explicit revalidate) |
 | `/coverage` | Institution coverage dashboard | ISR, 15 min |
-| `/data-quality`, `/data-quality/csv/{reports,federal,totals}/{year}` | PRD 040 data quality tab and per-table CSVs, from the newest committed snapshot in `web/src/data/data-quality/`. Behind the launch gate (`isDataQualityLaunched()`): `noindex`, unlinked, CSV 404 until launch | static, rebuilt per deploy |
+| `/data-quality`, `/data-quality/csv/{reports,sections,federal,enrollment,tuition,totals}/{year}` | PRD 040 data quality tab and per-table CSVs, from the newest committed snapshot in `web/src/data/data-quality/`. Behind the launch gate (`dataQualityLaunched()`): `noindex`, unlinked, CSV 404 until launch | static, rebuilt per deploy |
 | `/recipes`, `/recipes/{acceptance-vs-yield, alignment-gap, endowment-draw-rate, waitlist-odds, test-optional-tracker}` | Worked analyses | default (no explicit revalidate) |
 | `/methodology`, `/methodology/{positioning, admission-strategy, merit-profile}` | Card methodology | default (no explicit revalidate) |
 | `/about`, `/about/{common-data-set, college-scorecard, ipeds}` | Background pages | default (no explicit revalidate) |

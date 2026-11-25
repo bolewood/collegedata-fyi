@@ -731,7 +731,7 @@ export function qualityLede(snapshot: QualitySnapshot): { populations: string; m
   const years = count < NUMBER_WORDS.length ? NUMBER_WORDS[count] : String(count);
   return {
     populations: `Snapshot of ${formatSnapshotDate(snapshot.snapshot_of)}: ${published} reports published with numbers across ${years} ${count === 1 ? "year" : "years"}, checked against their own printed totals${federalYearsClause(snapshot)}.`,
-    meaning: "Data quality here means the quality of what this archive publishes, not the quality of any school’s own data. These are counts of reports, and a school can file more than one (for example campuses or a re-filed year), so they won’t equal the school counts on Coverage by school.",
+    meaning: `Data quality here means the quality of what this archive publishes, not the quality of any school’s own data. These count reports across ${years} ${count === 1 ? "year" : "years"}, from a snapshot taken on ${formatSnapshotDate(snapshot.snapshot_of)}, and a school can have more than one report in a year (for example a spreadsheet and a PDF, or campuses filed separately), so they won’t match the school counts on Coverage by school, which come from the live archive.`,
   };
 }
 

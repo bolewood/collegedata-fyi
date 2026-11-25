@@ -6,7 +6,7 @@ should sound like a calm person explaining what was checked and what wasn't.
 
 Mirrors `web/src/components/DataQualityView.tsx`, `web/src/app/data-quality/page.tsx`
 and `web/src/lib/data-quality.ts`. Everything is behind the launch gate
-(`isDataQualityLaunched()`). Figures in `{braces}` come from the committed
+(`dataQualityLaunched()`). Figures in `{braces}` come from the committed
 snapshot. Sample results are from the hand checks of 2026-11-25 (PRD 040,
 "M0 samples"). Em dashes on the page: 0.
 
@@ -18,7 +18,11 @@ Awaiting Anthony's read.
 
 > Snapshot of {November 25, 2026}: {1,338} reports published with numbers
 > across {three} years, checked against their own printed totals{ and, for 2023-24 and 2024-25, against federal figures}. Data quality here means the quality of what this archive
-> publishes, not the quality of any school's own data.
+> publishes, not the quality of any school's own data. These count reports across
+> {three} years, from a snapshot taken on {November 25, 2026}, and a school can have
+> more than one report in a year (for example a spreadsheet and a PDF, or campuses
+> filed separately), so they won't match the school counts on Coverage by school,
+> which come from the live archive.
 
 Small normal-case line under it (the PRD wants the run named on the page, so the file name stays):
 
