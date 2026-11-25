@@ -128,7 +128,7 @@ For the schools it flagged, the monthly re-probe searched the web for a
 better seed. Its results varied a lot from month to month:
 
 | Run | Result |
-|---|---|---|
+|---|---|
 | 2026-09-02 | 110 stuck, 0 re-probed: a shell heredoc bug stopped the step |
 | 2026-09-11 (rerun) | 112 re-probed, 6 still stuck; many seeds moved to listing pages (#175) |
 | 2026-11-02 | 78 re-probed, 7 replaced, 71 still stuck; status `ok` |

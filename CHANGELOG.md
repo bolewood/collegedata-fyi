@@ -15,7 +15,7 @@ History before 0.1.0.0 (2026-08-03), including the June and July 2026 work, is n
   - **Floor:** each number is compared with a floor read off how fast schools usually post.
   - **Below the floor:** it opens one issue per CDS year, assigned to the owner, and posts to Discord #alerts. It updates the issue without commenting, replaces it with a new issue every 30 days (or at once on a 5-point worsening) while still below, closes it when that year recovers, and retires years that are two cycles old.
   - **A standing alarm doesn't go quiet:** while a year stays below its floor, it is superseded by a new assigned issue every 30 days, and at once when the gap widens by 5 points.
-  - **Arrivals check:** a separate per-year check opens its own issue when almost nothing new arrived for a CDS year, judged every day over both 30 and 60 days, against how fast schools usually post. That catches a total stop within about a month.
+  - **Arrivals check:** a separate per-year check opens its own issue when almost nothing new arrived for a CDS year, judged every day over both 30 and 60 days, against how fast schools usually post. That catches most total stops within about a month; a stop starting in late November can take up to about six weeks (#506).
   - **Fails loudly:** a short or empty read, too few schools in the denominator, or a floor that disagrees with the database fails the job; it never reports zero.
   - **First run:** on 2026-11-25 renewal was 373 of 498 (75%) against a floor of 82.5%, so the first scheduled run opens an issue.
 - **Watching the alarm:**

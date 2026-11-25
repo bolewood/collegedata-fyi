@@ -45,7 +45,7 @@ The alarm would have opened an issue at the end of April 2026, from the next-yea
 
 **Caveats:**
 - It uses today's filed years. The 22 documents re-filed to 2025-26 by #455 count as 2025-26 in past months, so the real history was lower, which strengthens the conclusion.
-- The archive began in April 2026 (348 of 471 live 2024-25 documents were first seen that month).
+- The archive began in April 2026 (about 350 of the live 2024-25 documents were first seen that month: 346 of 471 by `cds_year` in the local snapshot).
 - 118 rows have no `discovered_at` and are treated as always present.
 - The first backtest table in #474 was wrong: a timestamp parser silently returned None on Python 3.9. Fable caught it, and the parser now raises.
 
@@ -55,8 +55,8 @@ The alarm would have opened an issue at the end of April 2026, from the next-yea
 
 - **Control:**
   - The renewal alarm (#474) measures the outcome whatever the seed is.
-  - The stuck-seed sweep (#472) flags every one-file seed behind the cycle (122 on 2026-11-25).
-  - Seed dating (#490, #462) counts every seed whose newest year is behind, of any kind (411 of 820: 120 one-file, 291 listing pages).
+  - The stuck-seed sweep (#472) flags every one-file seed behind the cycle (122 when it merged; 95 after #495 moved seeds).
+  - Seed dating (#490, #462) counts every seed whose newest year is behind, of any kind (403 on the final dry run: 93 one-file, 310 listing pages).
   - The monthly hand check (#471, #461) samples from outside the pipeline.
 - **Told:**
   - The alarm issue and Discord, when renewal falls below its floor.
@@ -122,7 +122,7 @@ The alarm would have opened an issue at the end of April 2026, from the next-yea
 - **Test:** `test_year_detection.StaleTitleTest` and `test_same_year_duplicates`.
 - **Evidence:**
   - Reinsertion 4 (stale-title correction disabled) fails.
-  - Live read on 2026-11-25: 38 groups, 22 `year_conflict` (4 look like #455 residue), 14 `same_file`, 2 `duplicate`.
+  - 43 groups on the final dry run. At #491's live read there were 38: 22 `year_conflict` (4 look like #455 residue), 14 `same_file` and 2 `duplicate`.
 - **Not covered:** the duplicates count is reported, not alarmed. A rise in duplicates does not post anywhere by itself.
 
 ### 6. Fetch failures had no owner
@@ -131,7 +131,7 @@ The alarm would have opened an issue at the end of April 2026, from the next-yea
 - **Told:** the board detail line, the monthly issue, and the renewal report.
 - **Test:** `test_fetch_failures`.
 - **Evidence:**
-  - 158 failures on 2026-11-25: blocked 28, viewer 7, dead link 17, other 106 (93 of them `no_pdfs_found`).
+  - 160 failures on the final dry run: blocked 27, viewer 7, dead link 18, other 108 (at #488: 158, with 93 of the `other` being `no_pdfs_found`).
   - It agrees 6 of 6 with #452's blocked list.
 - **Not covered:**
   - Viewer and section-file causes are poorly detected: 1 of 8 and 0 of 3 agree with #452, because the archive records no evidence for them.
@@ -206,7 +206,7 @@ Each original bug was put back in a throwaway worktree at `origin/main` 054b2b7 
 
 | Run | Inputs | Result |
 |---|---|---|
-| 45551072276 | dry run (default) | It read 5,836 live rows and the floor 2025-26 agrees with SQL. 364/479 = 76.0% against a floor of 82.5%. It printed the issue it would open, unassigned for a test. No heartbeat |
+| 45551072276 | dry run (default) | It read 5,836 live rows and the floor 2025-26 agrees with SQL. 365/479 = 76.2% (two-year 379/536) against a floor of 82.5%. It printed the issue it would open, unassigned for a test. No heartbeat |
 | 45551257009 | test mode, floor override 99 | It opened `[test]` #489, unassigned, and posted to #alerts. The heartbeat was rejected with a warning (the station is unregistered until #469) |
 | 45551423155 | test mode, floor override 10 | It closed #489 with one comment ("Recovered: … 365 of 479 (76.2%) … Closing.") and posted the recovery to #alerts |
 | 45580532234 | final code (after #502), test mode, override 99 | `alarm renewal:2025-26: create`. It opened `[test]` #504, unassigned, and posted to #alerts |
@@ -216,7 +216,7 @@ The lamp part could not be shown in production: the Renewal tile is slate until 
 
 ## Red team
 
-Three rounds. In round 1, Gemini 4 Neon (xhigh) and Fable each answered, independently: "Describe three concrete ways the archive could fall behind again without a human being told within a month. For each, show where these controls fail to catch it." Fable checked each scenario against the code, ran simulations, and made one production read.
+Four rounds. In round 1, Gemini 4 Neon (xhigh) and Fable each answered, independently: "Describe three concrete ways the archive could fall behind again without a human being told within a month. For each, show where these controls fail to catch it." Fable checked each scenario against the code, ran simulations, and made one production read.
 
 | # | Scenario (round 1) | Found by | Outcome |
 |---|---|---|---|
@@ -250,7 +250,7 @@ Three rounds. In round 1, Gemini 4 Neon (xhigh) and Fable each answered, indepen
 
 | # | Scenario | Found by | Outcome |
 |---|---|---|---|
-| R21 | An arrivals breach is silent behind an already-open renewal issue: only body edits, 96 days for a total stop from today | both | **Fixed** in #502: arrivals has its own issue per year (`arrivals:<Y>`), so it is never hidden behind a renewal issue. A frozen archive from today opens a distinct `arrivals:2026-27` issue on 2027-01-06, the day that year's check becomes active. Notifications are never more than 31 days apart |
+| R21 | An arrivals breach is silent behind an already-open renewal issue: only body edits, 96 days for a total stop from today | both | **Fixed** in #502: arrivals has its own issue per year (`arrivals:<Y>`), so it is never hidden behind a renewal issue. A frozen archive from today opens a distinct `arrivals:2026-27` issue on 2027-01-05 on the final code (2027-01-06 on #502), when that year's check becomes active. Notifications are never more than 31 days apart |
 | R22 | Pooled arrivals let hand catch-up of last year mask a dead pipeline for the new year | both | **Fixed** in #502: arrivals are judged per year, against each year's own cohort, on first documents |
 | R23 | Losing 50–70% of arrivals is silent for 2–4 months at a 0.25 ratio | both | **Improved** in #502: the ratio is 0.4, the highest value that wouldn't have false-alarmed September–November 2026 per year. Partial stops removing 60–70% of arrivals took up to 38 days and 50% up to 118 (Fable round 4, before #505); total stops are covered in R26. Losses under about 60% of arrivals remain an accepted risk (below) |
 | R24 | #502's first design, a "join" state machine, had 4 bugs: self-feeding debounce, reverting titles, the wrong year blamed, a swallowed alert | Gemini | **Removed**: the separate-scope design makes them impossible, and each scenario is a test |
@@ -261,20 +261,20 @@ Three rounds. In round 1, Gemini 4 Neon (xhigh) and Fable each answered, indepen
 | # | Scenario | Found by | Outcome |
 |---|---|---|---|
 | — | Re-ran R21–R23 by simulation on `main`. A frozen archive with the renewal issue open has a longest notification gap of 30 days. Hand catch-up still opens `arrivals:2026-27` on January 4 or 5. Partial loss is as stated | Fable | **Holds.** Fable: "NOTHING NEW AND CREDIBLE" |
-| R26 | Moving from the 30-day to the 60-day window pulls in a month of pre-stop arrivals, and a cohort of 428 schools or fewer (2025-26 has 417) uses the 60-day window all autumn. A 100% stop is then silent for 37–53 days | Gemini | **Fixed** in #505: both windows are judged every day (30-day from 6 expected, 60-day from 10), and a year is short if either is. Gemini's three scenarios now fire within 22 days. Total stops on the 1st of a month: median 20 days, max 34. Healthy-year noise is unchanged |
+| R26 | Moving from the 30-day to the 60-day window pulls in a month of pre-stop arrivals, and a cohort of 428 schools or fewer uses the 60-day window all autumn (2025-26's cohort was 417 on the 2026-11-24 snapshot; 435 on the final dry run). A 100% stop is then silent for 37–53 days | Gemini | **Fixed** in #505: both windows are judged every day (30-day from 6 expected, 60-day from 10), and a year is short if either is. Gemini's three scenarios now fire within 22 days. Total stops on the 1st of a month: median 20 days, max 34. Healthy-year noise is unchanged |
 
 **Verification of #505 (Fable, simulating the code on `main` b429c142):**
 - Gemini's scenarios: 22 days or less.
 - Total stops on the 1st of each month: 4–25 days, except December 1 (34–35).
-- Every stop date from September 2026 to August 2027, on the curve: 15 of 365 dates at a cohort of 417 (11 of 365 at 480) take more than 31 days, at most 46. They all start between about November 20 and December 4. After December 1 the current year's curve is flat, and the next year expects fewer than 6 arrivals a month until about January 4, so neither window is judged until then.
+- Every stop date from September 2026 to August 2027, on the curve: 15 of 365 dates at a cohort of 417 (at most 46 days) and 12 of 365 at 480 (at most 43) take more than 31 days. They all start between about November 20 and December 4. After December 1 the current year's curve is flat, and the next year expects fewer than 6 arrivals a month until about January 4, so neither window is judged until then.
 - No close deadlock in 288 outage-and-recovery cases. An issue that is held, not below, can still re-notify, and an autumn arrivals issue can't close by recovery after December 1 (the retire rule closes it in early January).
 
 **Healthy-year noise** (a simulation of a full year, 5 seeds, the current year maturing at 87%, the next year at 0.9× the curve): a mean of 0.4 issues and 0.8 Discord posts a year. All of it is in one seed (a January arrivals dip and a March next-year check on its floor). This sits beside D1's warning that the raw curve runs close to a healthy year. Fable's earlier control, with different assumptions, tripped the two-year floor on 2027-09-01, and Fable's healthy controls: synthetic archives at 0.95–1.0 × the curve gave 0 issues over three years. A control built on the real manifest gave 0 issues through August 2027, then 13 `renewal:2026-27` issues (the two-year check at 73% against a 75% floor, re-notified monthly) from September 2027 to August 2028. Those come from schools that lapsed in 2025-26 and never return in the control. So expect several autumn issues a year in a healthy year under the current floors; that is the main reason D1 is the owner's call.
 
 ## Accepted risks (what is still not covered)
 
-1. **Partial losses.** The mature floors (83% one-year, 75% two-year) allow a steady loss of about 13% a year indefinitely (0.866² ≈ 0.75, and lapsed schools leave both denominators after two years). The arrivals check (ratio 0.4) catches a total stop within 34 days (#505), and a stop removing 60% or more of a year's arrivals within about 38 days. A mechanism that removes less than that, mid-season, can stay under every floor for months. The control for it is the monthly hand check.
-2. **Rot inside listing pages.** 291 listing seeds are behind the cycle today. They are counted on the board and listed in the alarm report, but no job tries to fix them (D9). Only the renewal number pushes.
+1. **Partial losses.** The mature floors (83% one-year, 75% two-year) allow a steady loss of about 13% a year indefinitely (0.866² ≈ 0.75, and lapsed schools leave both denominators after two years). The arrivals check (ratio 0.4) catches most total stops within 25 days (#505), except stops starting November 20 – December 4, which take up to 46 (risk 8), and a stop removing 60% or more of a year's arrivals within about 38 days. A mechanism that removes less than that, mid-season, can stay under every floor for months. The control for it is the monthly hand check.
+2. **Rot inside listing pages.** 310 listing seeds are behind the cycle today. They are counted on the board and listed in the alarm report, but no job tries to fix them (D9). Only the renewal number pushes.
 3. **Hand-check discipline.** The monthly issue depends on a person filling it in. An unanswered issue is reported next month as "N unanswered", with no escalation.
 4. **Discord and GitHub as the only channels.** There is no outside channel until the D14 check-in is set up.
 5. **Until migration #469 is applied:** the Renewal lamp is slate, heartbeat history is not kept, and new summary keys are dropped from stored heartbeats. The alarm issue, Discord and the scheduled-run staleness check all work without it.
