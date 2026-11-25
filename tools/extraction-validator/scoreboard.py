@@ -601,6 +601,28 @@ def numbers_from_values(values: dict[str, Any], schema_defs: dict[str, Any],
     return numbers
 
 
+def effective_statuses(values: dict[str, Any], schema_defs: dict[str, Any],
+                       schema_version: Optional[str]) -> dict[str, str]:
+    """{field id: value_status} of an artifact's values as `cds_fields` would hold them: the projection
+    (`project_browser_data`, where it applies the cross-field sanity rules) publishes a value that fails a rule as
+    `parse_error` and a loan average of 0 with no borrowers as `not_applicable`. A year that is not projected
+    (2023-24) is read from its artifact here, so it must apply the same two downgrades or it would count those
+    fields as usable. The runs made before this function (the 2026-11-25 run among them) counted 2023-24 usable
+    answers with `parse_field_value` alone: 266 falsely usable fields in 149 2023-24 reports. It changed no
+    published median (checked offline against the artifact cache), and the committed snapshot was not rebuilt.
+    Not reproduced: the projection passes a metric and the year to `parse_field_value` for some fields."""
+    parsed = {field_id: projection.parse_field_value(record, schema_defs.get(field_id))
+              for field_id, record in values.items()}
+    reported = {field_id: p.value_num for field_id, p in parsed.items()
+                if p.value_status == "reported" and p.value_num is not None}
+    implausible = projection._sanity.implausible_fields(schema_version or "", reported)
+    no_borrowers = set(projection._sanity.averages_without_borrowers(
+        schema_version or "", {k: v for k, v in reported.items() if k not in implausible}))
+    return {field_id: ("parse_error" if field_id in implausible
+                       else "not_applicable" if field_id in no_borrowers else p.value_status)
+            for field_id, p in parsed.items()}
+
+
 def section_counts(statuses: Iterable[tuple[str, str]]) -> dict[str, dict[str, int]]:
     """(field id, value_status) pairs -> {section letter: {status: count}}.
     The section is the id's prefix before the first `.` (`C.116` -> `C`)."""
@@ -971,9 +993,7 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
                 numbers = numbers_from_values(values, schema_defs, schema_version)
                 entry.update(producer=picked.get("producer"), version=picked.get("producer_version"),
                              schema_version=schema_version, fields=len(values))
-                entry["sections"] = section_counts(
-                    (field_id, projection.parse_field_value(record, schema_defs.get(field_id)).value_status)
-                    for field_id, record in values.items())
+                entry["sections"] = section_counts(effective_statuses(values, schema_defs, schema_version).items())
                 entry["gap_fill_not_read"] = picked.get("producer") == TIER4 and any(
                     a["producer"] == projection.FALLBACK_PRODUCER for a in artifacts)
             entry["admissions"] = printed_admissions(entry["schema_version"], numbers)
@@ -1507,16 +1527,15 @@ def section_block(year: str, published: list[dict[str, Any]], questions: dict[st
 
 def check_public_sections(public: dict[str, Any]) -> None:
     """The arithmetic of every year's `sections` block (`check_public_shape` only checks its keys and types):
-    A to J in order and not repeated, questions add up to the form's, reports = published minus those numbered by
+    all of A to J, in order and not repeated (every CDS form has the ten sections), questions add up to the form's, reports = published minus those numbered by
     another year's form, rows exactly when the form has a full field schema, 0 <= usable <= stored <= questions,
     and zero medians when there are no reports."""
     letters = "ABCDEFGHIJ"
     for year in public["years"]:
         where, block = f"--public: {year['cds_year']}: sections", year["sections"]
         rows = block["rows"]
-        order = [letters.index(r["section"]) if r["section"] in letters else -1 for r in rows]
-        if -1 in order or order != sorted(set(order)):
-            raise SystemExit(f"{where}: sections {[r['section'] for r in rows]} are not A to J in order")
+        if rows and [r["section"] for r in rows] != list(letters):
+            raise SystemExit(f"{where}: sections {[r['section'] for r in rows]} are not all of A to J, in order")
         if bool(rows) != year["form"]["full_field_schema"]:
             raise SystemExit(f"{where}: rows are present exactly when the form has a full field schema")
         expected = year["total"]["status"]["published"] - year["other_form_numbering"] if rows else 0

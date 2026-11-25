@@ -210,6 +210,8 @@ function sectionsProblem(year: Record<string, unknown>): string | null {
   const rows = block.rows;
   if (!Array.isArray(rows)) return "sections.rows is missing";
   const letters = Object.keys(SECTION_NAMES);
+  // Every CDS form has all ten sections, A to J, so a row may not be left out.
+  if (rows.length > 0 && rows.length !== letters.length) return `sections: ${rows.length} sections, not all of A to J`;
   let last = -1;
   let questions = 0;
   for (const row of rows as Record<string, unknown>[]) {

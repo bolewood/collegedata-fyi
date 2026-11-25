@@ -830,6 +830,29 @@ class SectionsPublic(unittest.TestCase):
         self.assertEqual(sum(q.values()), scoreboard.forms_for(["2024-25"])["2024-25"]["field_count"])
         self.assertEqual(scoreboard.section_questions("2022-23"), {})
 
+    def test_every_full_schema_year_has_the_questions_its_schema_file_lists(self) -> None:
+        # Hand-counted from schemas/cds_schema_<year>.json by question-number prefix; a changed or dropped section fails.
+        expected = {
+            "2023-24": dict(zip("ABCDEFGHIJ", (51, 196, 274, 70, 32, 60, 47, 154, 49, 120))),
+            "2024-25": dict(zip("ABCDEFGHIJ", (51, 219, 278, 73, 32, 60, 47, 154, 49, 120))),
+            "2025-26": dict(zip("ABCDEFGHIJ", (63, 204, 278, 88, 34, 58, 46, 165, 49, 120))),
+            "2026-27": dict(zip("ABCDEFGHIJ", (63, 204, 289, 88, 34, 58, 47, 165, 49, 120))),
+        }
+        for year, counts in expected.items():
+            with self.subTest(year):
+                self.assertEqual(scoreboard.section_questions(year), counts)
+                self.assertEqual(sum(counts.values()), scoreboard.forms_for([year])[year]["field_count"])
+
+    def test_medians_are_nearest_rank_p50_not_p10_or_an_average_for_odd_and_even_counts(self) -> None:
+        def reports(rows):
+            return [self.d(i, {"A": {"reported": r, "parse_error": e, "not_applicable": n}}) for i, (r, e, n) in enumerate(rows)]
+        # Five reports, (reported, parse_error, not_applicable): stored 10, 2, 7, 5, 8 and usable 9, 1, 5, 3, 7.
+        odd = self.row(self.block(reports([(9, 1, 0), (1, 0, 1), (5, 2, 0), (3, 0, 2), (7, 1, 0)])), "A")
+        self.assertEqual((odd["stored_median"], odd["usable_median"]), (7, 5))   # sorted 2 5 7 8 10 and 1 3 5 7 9; p10 would be 2 and 1
+        # Four reports: stored 3, 9, 4, 8 and usable 2, 8, 4, 6. Nearest rank takes the 2nd of 4 (not the 3rd, not the mean).
+        even = self.row(self.block(reports([(2, 1, 0), (8, 0, 1), (4, 0, 0), (6, 1, 1)])), "A")
+        self.assertEqual((even["stored_median"], even["usable_median"]), (4, 4))   # sorted 3 4 8 9 and 2 4 6 8; mean would be 6 and 5
+
     def test_usable_means_reported_only(self) -> None:
         block = self.block([self.d(1, {"A": {"reported": 4, "parse_error": 3, "not_applicable": 2, "missing": 1}})])
         self.assertEqual(self.row(block, "A"), {"section": "A", "questions": 10, "stored_median": 10, "usable_median": 4})
@@ -892,6 +915,8 @@ class SectionsPublic(unittest.TestCase):
             "stored above questions": lambda p: year(p)["rows"][2].update(stored_median=year(p)["rows"][2]["questions"] + 1,
                                                                         usable_median=0),
             "order": lambda p: year(p)["rows"].reverse(),
+            "omitted last section": lambda p: year(p)["rows"].pop(),
+            "omitted middle section": lambda p: year(p)["rows"].pop(3),
             "repeat": lambda p: year(p)["rows"].append(dict(year(p)["rows"][0])),
             "rows without a schema": lambda p: p["years"][0]["form"].update(full_field_schema=False),
             "no rows with a schema": lambda p: year(p).update(rows=[]),
@@ -1293,6 +1318,9 @@ class GatherOnAFakeApi(unittest.TestCase):
             "C.101": {"value": "100"}, "C.102": {"value": "150"}, "C.105": {"value": "80"},
             "C.106": {"value": "90"}, "C.109": {"value": "30"}, "C.111": {"value": "40"},
             "C.201": {"value": "N/A"}, "G.102": {"value": ""},
+            # H.401 (the graduating class) is a year, not a count: fails a sanity rule. H.511 is a loan average of 0
+            # beside a borrower count of 0 (H.501): nobody borrowed.
+            "H.401": {"value": "2023"}, "H.501": {"value": "0"}, "H.511": {"value": "0"},
         }
         p, e, s, n = "2024-25", "2024-25", "2024-25", "2025-26"
         tables = {
@@ -1453,7 +1481,28 @@ class GatherOnAFakeApi(unittest.TestCase):
         self.assertEqual(self.by_id["O"]["sections"], {
             "A": {"reported": 1}, "B": {"reported": 1},
             "C": {"not_applicable": 1, "reported": 6},
-            "G": {"missing": 1, "reported": 4}})
+            "G": {"missing": 1, "reported": 4},
+            # H.401 fails a sanity rule (parse_error), H.511 has no borrowers (not_applicable), H.501 is a real 0.
+            "H": {"not_applicable": 1, "parse_error": 1, "reported": 1}})
+
+    def test_a_2023_24_artifact_gets_the_projections_downgrades_not_the_raw_parse(self) -> None:
+        # Without them H.401 and H.511 would both be counted as usable.
+        self.assertEqual(self.by_id["O"]["sections"]["H"].get("reported"), 1)
+        defs = scoreboard.projection.load_schema_definitions()["2023-24"]
+        down = lambda values, version="2023-24": scoreboard.effective_statuses(values, defs, version)  # noqa: E731
+        # A year given as the graduating class fails a rule: parse_error, not a usable number.
+        self.assertEqual(down({"H.401": {"value": "2023"}, "G.108": {"value": "9000"}}),
+                         {"H.401": "parse_error", "G.108": "reported"})
+        # A loan average of 0 with no borrowers is not applicable; one beside real borrowers is left alone.
+        loans = {"H.501": {"value": "10"}, "H.502": {"value": "0"}, "H.512": {"value": "0"},
+                 "H.503": {"value": "3"}, "H.513": {"value": "0"}}
+        self.assertEqual(down(loans), {"H.501": "reported", "H.502": "reported", "H.512": "not_applicable",
+                                       "H.503": "reported", "H.513": "reported"})
+        # A form the sanity rules don't cover is left alone.
+        self.assertEqual(set(down(loans, "2018-19").values()), {"reported"})
+        # A borrower count that failed a rule is not evidence of "no borrowers".
+        failed = down({"H.401": {"value": "2023"}, "H.511": {"value": "0"}})
+        self.assertEqual(failed["H.511"], "reported")
 
     def test_sections_of_a_projected_document_and_the_sum_rule(self) -> None:
         self.assertEqual(self.by_id["P"]["sections"], {

@@ -299,6 +299,19 @@ describe("gate: the real snapshot loader", () => {
     });
   });
 
+  it("gives each committed year the question counts of its schema file, section by section", () => {
+    const first = JSON.parse(fs.readFileSync(path.join(SNAPSHOT_DIR, "2026-11-25.json"), "utf8"));
+    for (const y of first.years as { cds_year: string; sections: { rows: { section: string; questions: number }[] } }[]) {
+      const schema = JSON.parse(fs.readFileSync(path.join(SNAPSHOT_DIR, "../../../../schemas", `cds_schema_${y.cds_year.replace("-", "_")}.json`), "utf8"));
+      const counts: Record<string, number> = {};
+      for (const f of schema.fields as { question_number: string }[]) {
+        const letter = f.question_number.split(".")[0];
+        counts[letter] = (counts[letter] ?? 0) + 1;
+      }
+      expect(Object.fromEntries(y.sections.rows.map((r) => [r.section, r.questions])), y.cds_year).toEqual(counts);
+    }
+  });
+
   it("reads real files, picks the newest, and fails on same-date files in both states", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dq-snap-"));
     try {

@@ -122,6 +122,11 @@ describe("fields and usable answers by section (public_format 3)", () => {
     bad((s) => ((sec(s) as unknown as Record<string, unknown>).reports = 1.5), /reports/);
   });
 
+  it("refuses a snapshot that leaves a section out, in the middle or at the end", () => {
+    bad((s) => sec(s).rows.pop(), /9 sections, not all of A to J/);
+    bad((s) => sec(s).rows.splice(3, 1), /9 sections, not all of A to J/);
+  });
+
   it("refuses an unknown, repeated or out-of-order section", () => {
     bad((s) => (sec(s).rows[0].section = "Z"), /unknown section "Z"/);
     bad((s) => (sec(s).rows[1].section = "A"), /section A is out of order or listed twice/);
