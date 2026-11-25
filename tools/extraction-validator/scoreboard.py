@@ -53,6 +53,25 @@ Usage:
 
 Writes `scoreboard-<UTC timestamp>.json` and `.md` to `--out-dir`
 (default `scratch/extraction-scoreboard/`) and prints the Markdown.
+
+PRD 040 (the public Data quality page). The run JSON is `run_format: 2`: it
+adds the manifest of every document (year, format, status, flag, removed),
+`federal_left_out`, `forms`, the current-year `renewal` block (computed by
+`tools/ops/discovery_renewal.py`) and `sum_check_version: 2`, which splits a
+failing enrollment or admissions sum into off by under 2% of its printed total
+and off by more. `--compare` against an earlier version notes the switch and
+shows no deltas for those columns.
+
+    # public aggregates from one saved run: reads that file only, no database
+    tools/extraction_worker/.venv/bin/python \\
+        tools/extraction-validator/scoreboard.py \\
+        --public scratch/extraction-scoreboard/scoreboard-<ts>.json
+    # -> web/src/data/data-quality/<YYYY-MM-DD>.json
+
+    # the near-miss split of a saved run (no database)
+    tools/extraction_worker/.venv/bin/python \\
+        tools/extraction-validator/scoreboard.py \\
+        --from-json scratch/extraction-scoreboard/scoreboard-<ts>.json --report-near-miss
 """
 
 from __future__ import annotations
@@ -73,11 +92,13 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Callable, Iterable, Optional
+from typing import Any, Callable, Iterable, NoReturn, Optional
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "tools" / "browser_backend"))
+sys.path.insert(0, str(REPO_ROOT))
 import project_browser_data as projection  # noqa: E402
+from tools.ops import discovery_renewal  # noqa: E402  (one copy of the renewal mechanism)
 
 DEFAULT_YEARS = ("2023-24", "2024-25", "2025-26")
 DEFAULT_OUT_DIR = REPO_ROOT / "scratch" / "extraction-scoreboard"
@@ -95,6 +116,19 @@ FEDERAL_KEYS = {
 HIDDEN_FLAGS = ("blank_template", "low_coverage", "wrong_file")
 RELEASE_RANK = {"final": 0, "provisional": 1, "preliminary": 2}
 PAGE_SIZE = 1000
+
+# PRD 040. The run JSON is versioned so `--public` can refuse a run that lacks
+# what it needs. Format 2 adds `manifest`, `federal_left_out`, `forms`,
+# `renewal`, and near-miss sum outcomes (`sum_check_version` 2).
+RUN_FORMAT = 2
+SUM_CHECK_VERSION = 2
+PUBLIC_FORMAT = 1
+DEFAULT_PUBLIC_DIR = REPO_ROOT / "web" / "src" / "data" / "data-quality"
+SCHEMA_DIR = REPO_ROOT / "schemas"
+# A failing enrollment or admissions sum is a near miss when its gap is under
+# this share of its printed total (strictly under: exactly 2% is "off by more").
+NEAR_MISS_SHARE = Decimal("0.02")
+NEAR_MISS_TABLES = ("B1", "C1")
 
 
 # ---------------------------------------------------------------------------
@@ -179,32 +213,58 @@ SUM_CHECKS: dict[str, list[SumCheck]] = {
 SUM_TABLES = ("B1", "C1", "H1")
 
 
-def run_check(check: SumCheck, numbers: dict[str, Decimal]) -> str:
-    """'pass', 'fail' or 'nc' (not checkable).
+def run_check_detail(check: SumCheck, numbers: dict[str, Decimal]) -> tuple[str, Optional[Decimal]]:
+    """('pass' | 'fail' | 'nc', gap share).
+
+    The share is a failing sum's gap as a fraction of its printed total, so
+    enrollment and admissions can tell a small cell left out of the rows from
+    a real miss. It is None unless the sum fails, and when the printed total
+    is not positive (a gap cannot be a share of zero).
 
     A total of 0 beside rows that add to more is an unfilled auto-sum cell,
     which the projection also ignores: not checkable."""
     total = numbers.get(check.total)
     if total is None:
-        return "nc"
+        return "nc", None
     for rows, required in check.groups:
         read = [numbers[r] for r in rows if r in numbers]
         if not read or any(r not in numbers for r in required):
             continue
         row_sum = sum(read, Decimal(0))
         if total == 0 and row_sum > 0:
-            return "nc"
-        return "pass" if abs(row_sum - total) <= check.tolerance else "fail"
-    return "nc"
+            return "nc", None
+        gap = abs(row_sum - total)
+        if gap <= check.tolerance:
+            return "pass", None
+        return "fail", (gap / total if total > 0 else None)
+    return "nc", None
+
+
+def run_check(check: SumCheck, numbers: dict[str, Decimal]) -> str:
+    """'pass', 'fail' or 'nc' (not checkable)."""
+    return run_check_detail(check, numbers)[0]
+
+
+def is_near_miss(check: SumCheck, share: Optional[Decimal]) -> bool:
+    return check.table in NEAR_MISS_TABLES and share is not None and share < NEAR_MISS_SHARE
+
+
+_OUTCOME_RANK = {"nc": 0, "pass": 1, "near": 2, "fail": 3}
 
 
 def table_outcomes(schema_version: Optional[str], numbers: dict[str, Decimal]) -> dict[str, str]:
-    """One outcome per table: fail if any of its checks fails, pass if at
-    least one could be checked and none failed."""
+    """One outcome per table (`sum_check_version` 2).
+
+    'pass': at least one sum could be checked and none missed. 'near'
+    (B1 and C1 only): at least one missed, and every miss was under 2% of its
+    printed total. 'fail': at least one missed by more (for H1, at all).
+    'nc': nothing could be checked."""
     outcomes = {table: "nc" for table in SUM_TABLES}
     for check in SUM_CHECKS.get(schema_version or "", []):
-        result = run_check(check, numbers)
-        if result == "fail" or (result == "pass" and outcomes[check.table] == "nc"):
+        result, share = run_check_detail(check, numbers)
+        if result == "fail" and is_near_miss(check, share):
+            result = "near"
+        if _OUTCOME_RANK[result] > _OUTCOME_RANK[outcomes[check.table]]:
             outcomes[check.table] = result
     return outcomes
 
@@ -517,9 +577,125 @@ def current_tier4_version() -> str:
     return match.group(1) if match else "unknown"
 
 
+def forms_for(years: Iterable[str], schema_dir: Path = SCHEMA_DIR) -> dict[str, dict[str, Any]]:
+    """Per CDS year: the form its documents are expected to be numbered by,
+    whether the full field schema file exists, and its field count. Read from
+    the local `schemas/` folder at run time."""
+    forms: dict[str, dict[str, Any]] = {}
+    for year in years:
+        path = schema_dir / f"cds_schema_{year.replace('-', '_')}.json"
+        count = len(json.loads(path.read_text())["fields"]) if path.exists() else 0
+        forms[year] = {"expected_form_year": year, "schema_exists": path.exists(), "field_count": count}
+    return forms
+
+
+def renewal_block(rows: list[dict[str, Any]], as_of: dt.date, sql_floor: Optional[str] = None) -> dict[str, Any]:
+    """Current-year renewal (PRD 040 amendment), computed by `discovery_renewal`.
+
+    `rows` are every live `cds_manifest` row (school_id, canonical_year,
+    removed_at, participation_status). Fails loudly on a small denominator or
+    on a freshness floor that disagrees with the database."""
+    floor = discovery_renewal.cds_freshness_floor(as_of)
+    if sql_floor is not None:
+        discovery_renewal.check_floor_agrees(floor, sql_floor)
+    year = discovery_renewal.parse_year(floor)
+    if year is None:
+        raise SystemExit(f"cds_freshness_floor({as_of}) = {floor!r} is not a CDS year")
+    by_school = discovery_renewal.school_years(rows)
+    one = discovery_renewal.renewal(by_school, year)
+    two = discovery_renewal.two_year_renewal(by_school, year)
+    for label, schools in (("one-year", one.prev_schools), ("two-year", two.prev_schools)):
+        if len(schools) < discovery_renewal.MIN_PREV_SCHOOLS:
+            raise SystemExit(
+                f"only {len(schools)} schools in the {label} renewal denominator for {floor} "
+                f"(minimum {discovery_renewal.MIN_PREV_SCHOOLS}); the manifest does not look complete")
+    return {
+        "as_of": as_of.isoformat(),
+        "current_year": floor,
+        "previous_year": discovery_renewal.format_year(year - 1),
+        "current": sum(1 for years in by_school.values() if year in years),
+        "previous": len(one.prev_schools),
+        "both": len(one.renewed),
+        "two_year_previous": len(two.prev_schools),
+        "two_year_both": len(two.renewed),
+    }
+
+
+def gather_renewal(api: "Api", as_of: dt.date) -> dict[str, Any]:
+    rows = discovery_renewal.fetch_live_manifest(api.url, api.key)
+    sql_floor = discovery_renewal.fetch_sql_floor(api.url, api.key, as_of)
+    return renewal_block(rows, as_of, sql_floor)
+
+
+# ---------------------------------------------------------------------------
+# The status classifier (PRD 040)
+# ---------------------------------------------------------------------------
+
+STATUSES = ("published", "set_aside", "couldnt_read", "not_read_yet")
+SET_ASIDE_REASON = {"blank_template": "blank_form", "low_coverage": "too_little_read", "wrong_file": "wrong_file"}
+PENDING_STATUSES = ("extraction_pending", "discovered")
+
+
+def manifest_entry(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "document_id": row["document_id"], "year": row["canonical_year"],
+        "source_format": row.get("source_format"), "extraction_status": row["extraction_status"],
+        "data_quality_flag": row.get("data_quality_flag"), "removed": bool(row.get("removed_at")),
+    }
+
+
+def classify_document(entry: dict[str, Any], served: Optional[dict[str, Any]]) -> str:
+    """Exactly one class per manifest document, in this order of precedence:
+
+    removed, no_file, set_aside (a hidden quality flag, whatever the
+    extraction status), couldnt_read, not_read_yet, published.
+
+    `served` is the run's entry for the document (None if it has none). A
+    document that is `extracted` but has no served extraction is not read yet.
+    A document a worker guard is holding on an earlier extraction is still
+    served, so it is published."""
+    if entry["removed"]:
+        return "removed"
+    status = entry["extraction_status"]
+    if status == "not_applicable":
+        return "no_file"
+    if entry.get("data_quality_flag") in HIDDEN_FLAGS:
+        return "set_aside"
+    if status == "failed":
+        return "couldnt_read"
+    if status in PENDING_STATUSES:
+        return "not_read_yet"
+    if status == "extracted":
+        return "published" if served is not None and served.get("producer") else "not_read_yet"
+    raise ValueError(f"unknown extraction_status {status!r} on document {entry['document_id']}")
+
+
+def is_published(doc: dict[str, Any]) -> bool:
+    """A served document with a read extraction and no hidden quality flag:
+    the population of every table."""
+    return bool(doc["producer"]) and doc["flag"] not in HIDDEN_FLAGS
+
+
+def federal_left_out(documents: list[dict[str, Any]], year: str) -> dict[str, int]:
+    """Among a year's published reports: those filed for one campus or unit
+    (IPEDS reports the whole institution) and those whose school has no IPEDS
+    admissions figure to compare."""
+    published = [d for d in documents if d["year"] == year and is_published(d)]
+    rest = [d for d in published if not d["sub_institutional"]]
+    return {"single_campus": len(published) - len(rest),
+            "no_federal_figures": sum(1 for d in rest if not any(d["federal"].values()))}
+
+
 def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: float,
            field_interval: float, summaries: str, log: Callable[[str], None],
            limit: Optional[int] = None) -> dict[str, Any]:
+    # Renewal first: a short read or a floor that disagrees with the database
+    # fails before the heavy per-document reads. One timestamp serves both
+    # `generated_at` and the renewal date, so a run that crosses midnight UTC
+    # still agrees with itself.
+    now = dt.datetime.now(dt.timezone.utc)
+    renewal = gather_renewal(api, now.date())
+    log(f"renewal {renewal['current_year']}: {renewal['both']} of {renewal['previous']} schools also have the year")
     definitions = projection.load_schema_definitions()
     api.check_page_size()
     all_documents = fetch_documents(api, years)
@@ -668,8 +844,15 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
         for d in all_documents if d.get("removed_at") or d["extraction_status"] != "extracted"
     )
     return {
-        "generated_at": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "run_format": RUN_FORMAT,
+        "sum_check_version": SUM_CHECK_VERSION,
+        "limit": limit,
+        "generated_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "years": list(years),
+        "manifest": [manifest_entry(d) for d in sorted(all_documents, key=lambda d: d["document_id"])],
+        "federal_left_out": {year: federal_left_out(documents, year) for year in years},
+        "forms": forms_for(years),
+        "renewal": renewal,
         "current_tier4_version": current_tier4_version(),
         "projected_years": list(projected_years),
         "federal_schools": {year: len(facts) for year, facts in federal.items()},
@@ -698,9 +881,11 @@ def aggregate(data: dict[str, Any]) -> dict[str, Any]:
 
     for (year, fmt), docs in sorted(groups.items()):
         key = f"{year}|{fmt}"
-        shown = [d for d in docs if d["flag"] not in HIDDEN_FLAGS]
+        # Sections 1 to 3 cover published reports: not flagged, and with an
+        # extraction (a document with none counts under `no_extraction`).
+        shown = [d for d in docs if is_published(d)]
         metrics[f"{key}|docs"] = len(shown)
-        metrics[f"{key}|flagged"] = len(docs) - len(shown)
+        metrics[f"{key}|flagged"] = sum(1 for d in docs if d["flag"] in HIDDEN_FLAGS)
 
         federal = Counter()
         with_federal = 0
@@ -718,8 +903,9 @@ def aggregate(data: dict[str, Any]) -> dict[str, Any]:
 
         for table in SUM_TABLES:
             tally = Counter(d["sums"][table] for d in shown)
-            for outcome in ("pass", "fail", "nc"):
-                metrics[f"{key}|{table}_{outcome}"] = tally[outcome]
+            for outcome in ("pass", "near", "fail", "nc"):
+                if outcome != "near" or table in NEAR_MISS_TABLES:
+                    metrics[f"{key}|{table}_{outcome}"] = tally[outcome]
 
         if fmt != "all":
             continue
@@ -741,10 +927,21 @@ def aggregate(data: dict[str, Any]) -> dict[str, Any]:
     return metrics
 
 
+def sum_check_version(data: dict[str, Any]) -> int:
+    """Runs saved before near misses existed have no version: they are 1."""
+    return int(data.get("sum_check_version") or 1)
+
+
 def render(data: dict[str, Any], previous: Optional[dict[str, Any]] = None) -> str:
     metrics = aggregate(data)
     before = aggregate(previous) if previous else {}
     current = data["current_tier4_version"]
+    version = sum_check_version(data)
+    switched = previous is not None and sum_check_version(previous) != version
+    if switched:
+        # The B1 and C1 outcomes mean something different now, so a change in
+        # them is not a change in quality: show no deltas for them.
+        before = {k: v for k, v in before.items() if not re.search(r"\|(B1|C1)_(pass|near|fail|nc)$", k)}
 
     def cell(key: str) -> str:
         value = metrics.get(key)
@@ -756,7 +953,8 @@ def render(data: dict[str, Any], previous: Optional[dict[str, Any]] = None) -> s
         return text
 
     def triple(key: str, table: str) -> str:
-        return " / ".join(cell(f"{key}|{table}_{o}") for o in ("pass", "fail", "nc"))
+        outcomes = ("pass", "near", "fail", "nc") if version >= 2 and table in NEAR_MISS_TABLES else ("pass", "fail", "nc")
+        return " / ".join(cell(f"{key}|{table}_{o}") for o in outcomes)
 
     keys = sorted({k.rsplit("|", 1)[0] for k in metrics},
                   key=lambda k: (k.split("|")[0], k.split("|")[1] != "all", k.split("|")[1]))
@@ -770,6 +968,11 @@ def render(data: dict[str, Any], previous: Optional[dict[str, Any]] = None) -> s
     ]
     if previous is not None:
         lines.append(f"Changes in brackets are against the run of {previous['generated_at']}.")
+    if data.get("renewal"):
+        r = data["renewal"]
+        lines.append(f"\nCurrent-year renewal: of {r['previous']:,} schools with a live {r['previous_year']} report, "
+                     f"{r['both']:,} also have a {r['current_year']} report ({r['current']:,} schools have a "
+                     f"{r['current_year']} report in all).")
 
     lines += ["", "### 1. Federal match on admissions",
               "", "C1 applied, admitted and enrolled as published, against IPEDS for the same fall. Three values "
@@ -797,10 +1000,17 @@ def render(data: dict[str, Any], previous: Optional[dict[str, Any]] = None) -> s
             lines.append(f"| {year} | {fmt} | {cell(key + '|docs')} | {cell(key + '|fields_median')} | "
                          f"{cell(key + '|fields_p10')} |")
 
+    if switched:
+        lines.append(
+            f"Sum checks changed from version {sum_check_version(previous)} to {version}: B1 and C1 now split "
+            "failing sums into off by under 2% and off by more, so their changes are not shown. "
+            "This is a change in how the sums are scored, not in quality.")
+    near = (" B1 and C1 read pass / off by under 2% (every miss under 2% of its printed total) / off by more / "
+            "not checkable; H1 reads pass / fail / not checkable." if version >= 2 else "")
     lines += ["", "### 3. Internal consistency",
               "", "Documents whose printed totals agree with their rows: pass / fail / not checkable. "
               "B1: undergraduates by sex, and undergraduate + graduate. C1: applied, admitted and enrolled by sex. "
-              "H1: grant and self-help totals, need-based and non-need-based (within $5).",
+              "H1: grant and self-help totals, need-based and non-need-based (within $5)." + near,
               "", "| Year | Format | Docs | B1 | C1 | H1 |", "|---|---|---:|---|---|---|"]
     for key in keys:
         year, fmt = key.split("|")
@@ -855,6 +1065,302 @@ def render(data: dict[str, Any], previous: Optional[dict[str, Any]] = None) -> s
     return "\n".join(lines) + "\n"
 
 
+# ---------------------------------------------------------------------------
+# Near-miss measurement (no database)
+# ---------------------------------------------------------------------------
+
+def near_miss_counts(data: dict[str, Any], published_only: bool = True) -> dict[str, dict[str, int]]:
+    """From a saved run's `check_numbers`: how many failing B1 and C1 sums
+    (and failing tables) are off by under 2% of their printed total.
+
+    Keys are `<year>|<table>`. `sums_*` count individual sums, `tables_*`
+    count documents' table outcomes."""
+    out: dict[str, Counter] = defaultdict(Counter)
+    for doc in data["documents"]:
+        if published_only and not is_published(doc):
+            continue
+        numbers = {k: Decimal(v) for k, v in (doc.get("check_numbers") or {}).items()}
+        worst: dict[str, str] = {}
+        for check in SUM_CHECKS.get(doc["schema_version"] or "", []):
+            if check.table not in NEAR_MISS_TABLES:
+                continue
+            result, share = run_check_detail(check, numbers)
+            bucket = out[f"{doc['year']}|{check.table}"]
+            bucket["sums_checked"] += result != "nc"
+            if result == "fail":
+                bucket["sums_failing"] += 1
+                if share is None:
+                    bucket["sums_no_share"] += 1
+                bucket["sums_near" if is_near_miss(check, share) else "sums_over"] += 1
+                level = "near" if is_near_miss(check, share) else "fail"
+                if _OUTCOME_RANK[level] > _OUTCOME_RANK.get(worst.get(check.table, "nc"), 0):
+                    worst[check.table] = level
+        for table, level in worst.items():
+            out[f"{doc['year']}|{table}"][f"tables_{level}"] += 1
+    return {key: dict(counter) for key, counter in sorted(out.items())}
+
+
+def render_near_miss(data: dict[str, Any]) -> str:
+    lines = [f"## Near-miss split, run of {data['generated_at']}", "",
+             "Failing B1 (enrollment) and C1 (admissions) sums, split at 2% of the printed total "
+             "(strictly under 2% is a near miss). Built from the run's `check_numbers`; no database reads.", ""]
+    for label, published_only in (("Published reports (not flagged, with an extraction)", True),
+                                  ("All served documents, flags included", False)):
+        counts = near_miss_counts(data, published_only)
+        lines += [f"### {label}", "",
+                  "| Year | Table | Sums checked | Sums failing | Under 2% | 2% or more | Tables near | Tables off by more |",
+                  "|---|---|---:|---:|---:|---:|---:|---:|"]
+        pooled: Counter = Counter()
+        pooled_tables: Counter = Counter()
+        for key, c in counts.items():
+            year, table = key.split("|")
+            lines.append(f"| {year} | {table} | {c.get('sums_checked', 0)} | {c.get('sums_failing', 0)} | "
+                         f"{c.get('sums_near', 0)} | {c.get('sums_over', 0)} | {c.get('tables_near', 0)} | "
+                         f"{c.get('tables_fail', 0)} |")
+            pooled.update({"failing": c.get("sums_failing", 0), "near": c.get("sums_near", 0)})
+            pooled_tables.update({"near": c.get("tables_near", 0), "fail": c.get("tables_fail", 0)})
+        share = f"{100 * pooled['near'] / pooled['failing']:.1f}%" if pooled["failing"] else "n/a"
+        t_total = pooled_tables["near"] + pooled_tables["fail"]
+        t_share = f"{100 * pooled_tables['near'] / t_total:.1f}%" if t_total else "n/a"
+        lines += ["", f"All years, B1 and C1: {pooled['near']} of {pooled['failing']} failing sums are under 2% ({share}); "
+                      f"{pooled_tables['near']} of {t_total} tables that miss are near misses only ({t_share}).", ""]
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# --public: aggregates only, from one run JSON
+# ---------------------------------------------------------------------------
+
+FORMAT_LABELS = {
+    "pdf_flat": "standard PDF", "pdf_fillable": "fillable PDF", "pdf_scanned": "scanned PDF",
+    "xlsx": "spreadsheet", "docx": "Word", "html": "web page", "other": "other or unknown format",
+}
+FORMAT_ORDER = tuple(FORMAT_LABELS)
+SUM_OUTCOME_KEY = {"pass": "adds_up", "near": "under_2pct", "fail": "off_more", "nc": "cant_check"}
+AID_OUTCOME_KEY = {"pass": "adds_up", "fail": "doesnt", "nc": "cant_check"}
+
+_COUNT, _TEXT, _FLAG = "count", "text", "flag"
+_STATUS_SPEC = {k: _COUNT for k in STATUSES}
+_ROW_SPEC = {
+    "status": _STATUS_SPEC,
+    "fields_stored": {"median": _COUNT, "p10": _COUNT},
+    "federal": {k: _COUNT for k in ("reports", "values", "matches", "no_value", "differs")},
+    "totals": {
+        "reports": _COUNT,
+        "B1": {k: _COUNT for k in SUM_OUTCOME_KEY.values()},
+        "C1": {k: _COUNT for k in SUM_OUTCOME_KEY.values()},
+        "H1": {k: _COUNT for k in AID_OUTCOME_KEY.values()},
+    },
+}
+PUBLIC_SPEC = {
+    "public_format": _COUNT, "snapshot_of": _TEXT, "scoreboard_run": _TEXT,
+    "renewal": {"as_of": _TEXT, "current_year": _TEXT, "previous_year": _TEXT, "current": _COUNT,
+                "previous": _COUNT, "both": _COUNT, "two_year_previous": _COUNT, "two_year_both": _COUNT},
+    "years": [{
+        "cds_year": _TEXT,
+        "form": {"form_year": _TEXT, "full_field_schema": _FLAG, "questions": _COUNT},
+        "federal_fall_loaded": _FLAG, "other_form_numbering": _COUNT, "removed": _COUNT, "no_file": _COUNT,
+        "set_aside_reasons": {k: _COUNT for k in SET_ASIDE_REASON.values()},
+        "federal_left_out": {"single_campus": _COUNT, "no_federal_figures": _COUNT},
+        "rows": [{"format": _TEXT, "label": _TEXT, **_ROW_SPEC}],
+        "total": _ROW_SPEC,
+    }],
+}
+
+
+def check_public_shape(value: Any, spec: Any = PUBLIC_SPEC, where: str = "public") -> None:
+    """Raise unless `value` has exactly the keys of the allow-list `spec`, with
+    counts as non-negative integers. Nothing outside the list is ever written."""
+    if isinstance(spec, dict):
+        if not isinstance(value, dict) or set(value) != set(spec):
+            extra = sorted(set(value) - set(spec)) if isinstance(value, dict) else "not an object"
+            missing = sorted(set(spec) - set(value)) if isinstance(value, dict) else ""
+            raise ValueError(f"{where}: keys outside the allow-list {extra}, missing {missing}")
+        for key, sub in spec.items():
+            check_public_shape(value[key], sub, f"{where}.{key}")
+    elif isinstance(spec, list):
+        if not isinstance(value, list):
+            raise ValueError(f"{where}: not a list")
+        for i, item in enumerate(value):
+            check_public_shape(item, spec[0], f"{where}[{i}]")
+    elif spec == _COUNT:
+        if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+            raise ValueError(f"{where}: {value!r} is not a non-negative integer")
+    elif spec == _FLAG:
+        if not isinstance(value, bool):
+            raise ValueError(f"{where}: {value!r} is not a boolean")
+    elif not isinstance(value, str):
+        raise ValueError(f"{where}: {value!r} is not text")
+
+
+def public_format_key(source_format: Optional[str]) -> str:
+    return source_format if source_format in FORMAT_LABELS else "other"
+
+
+def _row_counts(classes: Counter, published: list[dict[str, Any]], federal_loaded: bool) -> dict[str, Any]:
+    counts = [d["fields"] for d in published]
+    # Reports filed for one campus or unit are left out of the federal comparison
+    # (they are counted in federal_left_out.single_campus instead).
+    outcomes = [[o for o in d["federal"].values() if o]
+                for d in published if not d["sub_institutional"]] if federal_loaded else []
+    federal_values = Counter(o for each in outcomes for o in each)
+    totals: dict[str, Any] = {"reports": len(published)}
+    for table in SUM_TABLES:
+        keys = SUM_OUTCOME_KEY if table in NEAR_MISS_TABLES else AID_OUTCOME_KEY
+        tally = Counter(d["sums"][table] for d in published)
+        if set(tally) - set(keys):
+            raise SystemExit(f"{table} outcome {sorted(set(tally) - set(keys))} is not valid at sum_check_version 2")
+        totals[table] = {name: tally[outcome] for outcome, name in keys.items()}
+    return {
+        "status": {name: classes[name] for name in STATUSES},
+        "fields_stored": {"median": percentile(counts, 50) or 0, "p10": percentile(counts, 10) or 0},
+        "federal": {
+            "reports": sum(1 for each in outcomes if each),
+            "values": sum(federal_values.values()),
+            "matches": federal_values["match"], "no_value": federal_values["blank"],
+            "differs": federal_values["different"],
+        },
+        "totals": totals,
+    }
+
+
+def require_public_run(run: Any) -> None:
+    """Refuse a run that lacks what `--public` needs, instead of inventing zeros."""
+    if not isinstance(run, dict) or run.get("run_format") != RUN_FORMAT:
+        found = run.get("run_format") if isinstance(run, dict) else None
+        raise SystemExit(f"--public needs a run with run_format {RUN_FORMAT} (this one has {found!r}); "
+                         "run the scoreboard again.")
+    missing = [k for k in ("generated_at", "years", "manifest", "documents", "federal_left_out", "forms",
+                           "renewal", "federal_schools", "sum_check_version") if k not in run]
+    if missing:
+        raise SystemExit(f"--public: the run is missing {', '.join(missing)}")
+    if run["sum_check_version"] != SUM_CHECK_VERSION:
+        raise SystemExit(f"--public needs sum_check_version {SUM_CHECK_VERSION}, got {run['sum_check_version']!r}")
+    if "limit" not in run or run["limit"] is not None:
+        raise SystemExit("--public: the run must record limit: null; a --limit run covers only part of each year")
+    years = run["years"]
+    if not years or not run["manifest"]:
+        raise SystemExit("--public: the run has no years or an empty manifest")
+    if len(set(years)) != len(years):
+        raise SystemExit(f"--public: the run lists a year twice: {years}")
+    if not set(DEFAULT_YEARS) <= set(years):
+        raise SystemExit(f"--public: the run must cover {', '.join(DEFAULT_YEARS)}; it has {', '.join(years)}")
+    for year in years:
+        if year not in run["forms"] or year not in run["federal_left_out"]:
+            raise SystemExit(f"--public: the run has no forms or federal_left_out entry for {year}")
+    require_public_renewal(run["renewal"], run["generated_at"])
+
+
+def require_public_renewal(renewal: Any, generated_at: str) -> None:
+    """The renewal block must be internally consistent and match the run date, offline."""
+    def bad(why: str) -> NoReturn:
+        raise SystemExit(f"--public: renewal block: {why}")
+
+    keys = ("as_of", "current_year", "previous_year", "current", "previous", "both",
+            "two_year_previous", "two_year_both")
+    if not isinstance(renewal, dict):
+        bad("not an object")
+    for key in keys:
+        if key not in renewal:
+            bad(f"{key} is missing")
+    for key in keys[3:]:
+        if not isinstance(renewal[key], int) or isinstance(renewal[key], bool) or renewal[key] < 0:
+            bad(f"{key} is not a non-negative integer")
+    try:
+        snapshot_day = dt.date.fromisoformat(str(generated_at)[:10])
+        as_of = dt.date.fromisoformat(str(renewal["as_of"]))
+    except ValueError:
+        bad("as_of or the run's generated_at is not an ISO date")
+    if as_of != snapshot_day:
+        bad(f"as_of {as_of} is not the snapshot date {snapshot_day}")
+    floor = discovery_renewal.cds_freshness_floor(snapshot_day)
+    if renewal["current_year"] != floor:
+        bad(f"current_year {renewal['current_year']!r} is not the freshness floor {floor} for {snapshot_day}")
+    start = discovery_renewal.parse_year(floor)
+    if renewal["previous_year"] != discovery_renewal.format_year(start - 1):
+        bad(f"previous_year {renewal['previous_year']!r} is not the year before {floor}")
+    minimum = discovery_renewal.MIN_PREV_SCHOOLS
+    if renewal["previous"] < minimum or renewal["two_year_previous"] < minimum:
+        bad(f"a denominator is under {minimum} schools")
+    if renewal["both"] > renewal["previous"] or renewal["both"] > renewal["current"]:
+        bad("both exceeds previous or current")
+    if renewal["two_year_both"] > renewal["two_year_previous"] or renewal["two_year_both"] > renewal["current"]:
+        bad("two_year_both exceeds two_year_previous or current")
+    if renewal["two_year_previous"] < renewal["previous"] or renewal["two_year_both"] < renewal["both"]:
+        bad("the two-year figures are smaller than the one-year figures")
+
+
+def build_public(run: dict[str, Any], run_name: str) -> dict[str, Any]:
+    """The public snapshot (PRD 040 "Public JSON shape"): aggregates and
+    labels only, from one run. No database, no per-document rows."""
+    require_public_run(run)
+    served = {d["document_id"]: d for d in run["documents"]}
+    manifest_ids = {m["document_id"] for m in run["manifest"]}
+    if len(manifest_ids) != len(run["manifest"]):
+        raise SystemExit("--public: the manifest lists a document twice")
+    if set(served) - manifest_ids:
+        raise SystemExit("--public: the run serves documents that are not in its manifest")
+    years_out = []
+    for year in run["years"]:
+        entries = [m for m in run["manifest"] if m["year"] == year]
+        by_class: dict[str, list[dict[str, Any]]] = defaultdict(list)
+        for entry in entries:
+            by_class[classify_document(entry, served.get(entry["document_id"]))].append(entry)
+        published_docs = [d for d in run["documents"] if d["year"] == year and is_published(d)]
+        if len(by_class["published"]) != len(published_docs):
+            raise SystemExit(f"--public: {year}: the manifest classifies {len(by_class['published'])} reports as "
+                             f"published, the run's documents say {len(published_docs)}")
+        left_out = federal_left_out(run["documents"], year)
+        if left_out != run["federal_left_out"][year]:
+            raise SystemExit(f"--public: {year}: federal_left_out in the run disagrees with its documents")
+        loaded = run["federal_schools"].get(year, 0) > 0
+        if not loaded:
+            left_out = {"single_campus": left_out["single_campus"], "no_federal_figures": 0}
+        form = run["forms"][year]
+        rows = []
+        for fmt in FORMAT_ORDER:
+            classes = Counter()
+            for cls, members in by_class.items():
+                classes[cls] = sum(1 for m in members if public_format_key(m["source_format"]) == fmt)
+            if not any(classes[s] for s in STATUSES):
+                continue
+            docs = [d for d in published_docs if public_format_key(d["format"]) == fmt]
+            rows.append({"format": fmt, "label": FORMAT_LABELS[fmt], **_row_counts(classes, docs, loaded)})
+        classes = Counter({cls: len(members) for cls, members in by_class.items()})
+        reasons = Counter(SET_ASIDE_REASON[m["data_quality_flag"]] for m in by_class["set_aside"])
+        years_out.append({
+            "cds_year": year,
+            "form": {"form_year": form["expected_form_year"], "full_field_schema": form["schema_exists"],
+                     "questions": form["field_count"]},
+            "federal_fall_loaded": loaded,
+            "other_form_numbering": sum(1 for d in published_docs if d["schema_version"] != year),
+            "removed": classes["removed"], "no_file": classes["no_file"],
+            "set_aside_reasons": {name: reasons[name] for name in SET_ASIDE_REASON.values()},
+            "federal_left_out": left_out,
+            "rows": rows,
+            "total": _row_counts(classes, published_docs, loaded),
+        })
+    renewal = run["renewal"]
+    public = {
+        "public_format": PUBLIC_FORMAT,
+        "snapshot_of": run["generated_at"],
+        "scoreboard_run": run_name,
+        "renewal": {k: renewal[k] for k in PUBLIC_SPEC["renewal"]},
+        "years": years_out,
+    }
+    check_public_shape(public)
+    return public
+
+
+def write_public(run_path: Path, out_dir: Path) -> Path:
+    run = json.loads(run_path.read_text())
+    public = build_public(run, run_path.name)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    target = out_dir / f"{public['snapshot_of'][:10]}.json"
+    target.write_text(json.dumps(public, indent=1) + "\n")
+    return target
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--years", nargs="+", default=list(DEFAULT_YEARS))
@@ -871,10 +1377,27 @@ def main() -> int:
                         help="Glob of local worker --summary-json files, for guard holds.")
     parser.add_argument("--limit", type=int, help="Smoke test: only this many documents per year.")
     parser.add_argument("--from-json", type=Path, help="Render a saved scoreboard JSON instead of reading the database.")
+    parser.add_argument("--public", type=Path, metavar="RUN_JSON",
+                        help="Write the public aggregates (PRD 040) from one saved run JSON. Reads nothing else: "
+                             "no database, no network. Needs a run_format 2 run.")
+    parser.add_argument("--public-out-dir", type=Path, default=DEFAULT_PUBLIC_DIR,
+                        help="Where --public writes <YYYY-MM-DD>.json (default web/src/data/data-quality).")
+    parser.add_argument("--report-near-miss", action="store_true",
+                        help="With --from-json: print the enrollment and admissions near-miss split from the run.")
     args = parser.parse_args()
 
     def log(message: str) -> None:
         print(message, file=sys.stderr, flush=True)
+
+    if args.public:
+        target = write_public(args.public, args.public_out_dir)
+        log(f"wrote {target}")
+        return 0
+    if args.report_near_miss:
+        if not args.from_json:
+            raise SystemExit("--report-near-miss needs --from-json")
+        print(render_near_miss(json.loads(args.from_json.read_text())))
+        return 0
 
     if args.from_json:
         data = json.loads(args.from_json.read_text())
