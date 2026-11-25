@@ -188,6 +188,41 @@ jobs:
             --run-url "${PIPELINE_RUN_URL}" \
             "${args[@]}"
 
+      # Dead man's switch: an outside service that alerts when this check-in
+      # stops arriving. GitHub disables scheduled workflows after 60 days
+      # without repository activity, which silences every alert that lives in
+      # GitHub, this one included. See docs/ops-discord.md. The URL is a secret
+      # and is never printed.
+      - name: Outside check-in
+        if: always() && github.event_name == 'schedule'
+        env:
+          RENEWAL_DEADMAN_URL: ${{ secrets.RENEWAL_DEADMAN_URL }}
+          JOB_STATUS: ${{ job.status }}
+          FETCH_OUTCOME: ${{ steps.fetch_failures.outcome }}
+        run: |
+          if [[ -z "${RENEWAL_DEADMAN_URL}" ]]; then
+            echo "RENEWAL_DEADMAN_URL not set; no outside check-in (see docs/ops-discord.md)"
+            exit 0
+          fi
+          suffix=""
+          # The fetch-failures step is continue-on-error, so job.status stays
+          # "success" when it crashes; the final step below turns that red.
+          if [[ "${JOB_STATUS}" != "success" || "${FETCH_OUTCOME}" == "failure" ]]; then
+            suffix="/fail"
+          fi
+          curl -fsS -m 10 --retry 3 -o /dev/null "${RENEWAL_DEADMAN_URL}${suffix}" \
+            || echo "::warning::outside check-in did not go through"
+
+      # fetch_failures is continue-on-error so a crash there cannot hide the
+      # alarm, which also leaves the job green: no workflow_run post and no
+      # failure counter. This step makes that crash a red job. It runs after the
+      # heartbeat and the outside check-in, which both record it already.
+      - name: Fail the job when fetch failures crashed
+        if: always() && steps.fetch_failures.outcome == 'failure'
+        run: |
+          echo "::error::the fetch-failures step failed; the renewal alarm itself ran"
+          exit 1
+
       # The notifier posts the first failure of a run of failures only. Say how
       # long the check has been broken, and post every 7th day.
       - name: Count consecutive failures
@@ -201,25 +236,3 @@ jobs:
             --run-id "${{ github.run_id }}" \
             --run-url "${PIPELINE_RUN_URL}" \
             --label "renewal check"
-
-      # Dead man's switch: an outside service that alerts when this check-in
-      # stops arriving. GitHub disables scheduled workflows after 60 days
-      # without repository activity, which silences every alert that lives in
-      # GitHub, this one included. See docs/ops-discord.md. The URL is a secret
-      # and is never printed.
-      - name: Outside check-in
-        if: always() && github.event_name == 'schedule'
-        env:
-          RENEWAL_DEADMAN_URL: ${{ secrets.RENEWAL_DEADMAN_URL }}
-          JOB_STATUS: ${{ job.status }}
-        run: |
-          if [[ -z "${RENEWAL_DEADMAN_URL}" ]]; then
-            echo "RENEWAL_DEADMAN_URL not set; no outside check-in (see docs/ops-discord.md)"
-            exit 0
-          fi
-          suffix=""
-          if [[ "${JOB_STATUS}" != "success" ]]; then
-            suffix="/fail"
-          fi
-          curl -fsS -m 10 --retry 3 -o /dev/null "${RENEWAL_DEADMAN_URL}${suffix}" \
-            || echo "::warning::outside check-in did not go through"

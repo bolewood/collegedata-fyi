@@ -89,7 +89,10 @@ class BehindCycleTests(unittest.TestCase):
             ages = by_id(sa.compute_seed_ages(schools(x=LISTING), rows, AS_OF))
             self.assertEqual(ages["x"].newest_year, "2024-25", flag)
             self.assertTrue(ages["x"].behind_cycle, flag)
+        # Fails closed: a flag value nobody has seen yet is not a new year either.
         rows = [doc("x", "2024-25"), doc("x", "2025-26", data_quality_flag="some_other_flag")]
+        self.assertTrue(by_id(sa.compute_seed_ages(schools(x=LISTING), rows, AS_OF))["x"].behind_cycle)
+        rows = [doc("x", "2024-25"), doc("x", "2025-26", data_quality_flag=None)]
         self.assertFalse(by_id(sa.compute_seed_ages(schools(x=LISTING), rows, AS_OF))["x"].behind_cycle)
 
     def test_a_sub_institution_document_does_not_date_the_main_seed(self):

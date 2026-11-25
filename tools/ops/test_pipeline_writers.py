@@ -84,6 +84,26 @@ class PipelineWriterLintTests(unittest.TestCase):
         self.assertNotIn("echo \"${RENEWAL_DEADMAN_URL", text)
         self.assertNotIn("echo ${RENEWAL_DEADMAN_URL", text)
 
+    def test_a_crashed_fetch_failures_step_still_fails_the_job(self) -> None:
+        text = DISCOVERY_RENEWAL.read_text(encoding="utf-8")
+        # The step is continue-on-error so it cannot hide the alarm; a final step
+        # turns its failure into a red job so workflow_run and the failure
+        # counter see it.
+        self.assertIn("continue-on-error: true", text.split("id: fetch_failures")[1].split("run: |")[0])
+        final = text.split("- name: Fail the job when fetch failures crashed")[1]
+        header = final.split("run: |")[0]
+        self.assertIn("steps.fetch_failures.outcome == 'failure'", header)
+        self.assertIn("always()", header)
+        self.assertIn("exit 1", final.split("run: |")[1].split("- name:")[0])
+        # After the heartbeat and the outside check-in, before the counter.
+        order = [text.index(n) for n in ("Heartbeat discovery_renewal finish", "- name: Outside check-in",
+                                         "- name: Fail the job when fetch failures crashed",
+                                         "- name: Count consecutive failures")]
+        self.assertEqual(order, sorted(order))
+        # The outside check-in reports the same failure.
+        checkin = text.split("- name: Outside check-in")[1].split("- name:")[0]
+        self.assertIn("steps.fetch_failures.outcome", checkin)
+
     def test_discovery_renewal_counts_consecutive_failures_on_scheduled_runs(self) -> None:
         text = DISCOVERY_RENEWAL.read_text(encoding="utf-8")
         step = text.split("- name: Count consecutive failures")[1].split("- name:")[0]
