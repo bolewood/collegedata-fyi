@@ -7367,7 +7367,9 @@ _H1_AMOUNT_RE = re.compile(
 # above)", "tuition waivers (which are reported below)"). A row name on the
 # wrong side of its word belongs to the label, not a row.
 _H1_LEADING_WORDS_RE = re.compile(r"excludes|excluding|not awarded by", re.IGNORECASE)
-_H1_TRAILING_WORDS_RE = re.compile(r"captured above|reported below|which", re.IGNORECASE)
+# "which" counts only as the parenthetical "(which are reported below)" or its
+# first half at the end of a line, never "in which" inside a primary label.
+_H1_TRAILING_WORDS_RE = re.compile(r"captured above|reported below|which are|(?<!\bin )which\s*$", re.IGNORECASE)
 # A line that starts a new page of the document.
 _H1_PAGE_START_RE = re.compile(r"\f|Common Data Set\s+20\d\d|^\s*CDS-H\b|^\s*H\.\s*FINANCIAL AID", re.IGNORECASE)
 
@@ -7420,8 +7422,13 @@ def _h_layout_h1_reading(block: str) -> tuple[dict[str, dict], list[tuple[str, s
             at = norm.find(substr)
             if at < 0:
                 continue
+            # A trailing phrase belongs to the row name right before it
+            # ("Federal Work/Study captured above)"), not to a primary label
+            # that merely ends with one ("State and other ... (Note: Excludes
+            # Federal Work-Study captured above.)", 2 of 974 layouts).
             if not substr.startswith("total") and (
-                (leading and at >= leading.start()) or (trailing and at < trailing.start())
+                (leading and at >= leading.start())
+                or (trailing and at < trailing.start() and trailing.start() - (at + len(substr)) <= 25)
             ):
                 continue
             # The same row named again within three lines is its wrapped label.
@@ -9281,7 +9288,11 @@ def clean(
                 for qn in h1_qns:
                     values.pop(qn, None)
                 new = {qn: rec for qn, rec in new.items() if qn not in h1_qns}
-                supplemental_new = {qn: rec for qn, rec in supplemental_new.items() if qn not in h1_qns}
+                # The legacy six-line reader's H1 values never stand beside the
+                # column reading, rows the text layer has or not (0 of 974
+                # layouts differ).
+                all_h1 = _h1_amount_qns(idx)
+                supplemental_new = {qn: rec for qn, rec in supplemental_new.items() if qn not in all_h1}
                 supplemental_new.update(kept)
                 supplemental_new.update(h1_by_column)
             if resolver in (resolve_a_general, resolve_b1_enrollment) and supplemental_new:

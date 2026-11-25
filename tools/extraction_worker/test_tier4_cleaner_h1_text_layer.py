@@ -391,6 +391,36 @@ class H1TextLayerTest(unittest.TestCase):
         self.assertIn("external sources not awarded by", rows)
         self.assertEqual(h1(read(INSTRUCTIONS + HEADER + rows + AFTER))["H.109"], "1396004")
 
+    def test_a_primary_label_that_ends_with_a_trailing_phrase_is_still_a_row(self) -> None:
+        # Seen in two layouts: "State and other ... (Note: Excludes Federal
+        # Work-Study captured above.)" on one line, with its amounts.
+        label = "State and other work-study (Excludes Federal Work-Study captured above.)"
+        rows = TRINITY_ROWS.replace(
+            line("Federal Work-Study", "$735,526")
+            + line("State and other (e.g., institutional) work-")
+            + line("study/employment (Note: excludes Federal")
+            + line("Work/Study captured above)"),
+            line("Federal Work-Study", "Not Applicable") + line(label, "$2,309,770", "$0", at=0),
+        ).replace("$3,044,296", "$4,618,540")
+        values = h1(read(INSTRUCTIONS + HEADER + rows + AFTER))
+        self.assertEqual(values["H.113"], "2309770")
+        self.assertNotIn("H.112", values)
+
+    def test_in_which_inside_a_primary_label_does_not_disqualify_it(self) -> None:
+        rows = TRINITY_ROWS.replace(
+            line("Federal Work-Study", "$735,526"), line("Federal Work-Study, the amount in which", "$735,526")
+        )
+        self.assertEqual(h1(read(INSTRUCTIONS + HEADER + rows + AFTER))["H.112"], "735526")
+
+    def test_the_older_readers_values_do_not_stand_for_rows_the_text_layer_lacks(self) -> None:
+        # The text layer ends at Total Self-Help. With no "H2" in the
+        # instructions the older reader takes the label "(excluding parent
+        # loans)" for the Parent Loans row and reads work-study into it.
+        instructions = INSTRUCTIONS.replace("items H1, H2, H2A, and H6", "the items below")
+        rows = TRINITY_ROWS.split(line("Parent Loans", "", "$3,104,361"))[0]
+        self.assertEqual(h1(read(instructions + HEADER + rows + AFTER)).get("H.110"), "79257874")
+        self.assertNotIn("H.115", h1(read(instructions + HEADER + rows + AFTER)))
+
     def test_text_layer_replaces_the_markdown_h1_block(self) -> None:
         # The markdown reading put the work-study amount in H.113 ("State and
         # other") where the text layer has it in H.112. Both would be summed
