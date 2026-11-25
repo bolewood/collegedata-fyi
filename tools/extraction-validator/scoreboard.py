@@ -689,9 +689,14 @@ def forms_for(years: Iterable[str], schema_dir: Path = SCHEMA_DIR) -> dict[str, 
     0 there: "no question list", not "no questions".
 
     `sum_tables`: for a form with its own `SUM_CHECKS`, the tables they cover.
-    For an older form, the tables the overlay maps (its `scope`) that the
-    overlay's target numbering has sums for. Only those field ids are known
-    for it; B1 and H1 ids of the target form are not applied to an older one."""
+    For an older form, the tables its overlay maps (its `scope`) that the
+    overlay's target numbering has sums for. The worker reads an older
+    document into the 2025-26 field ids by row label (`schema_fallback_used`),
+    and the overlay is the only place those label matches were checked: C1
+    rows by rule at high confidence. B1 and H1 have no checked mapping, and
+    the cross-year diffs show those subsections changed (2022-23 to 2023-24:
+    B1 15 rows added and 9 renamed, H1 10 removed and 10 added), so a sum over
+    their 2025-26 ids is not trusted on an older form."""
     forms: dict[str, dict[str, Any]] = {}
     for year in years:
         stem = schema_dir / f"cds_schema_{year.replace('-', '_')}"
@@ -964,8 +969,11 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
             entry["admissions"] = printed_admissions(entry["schema_version"], numbers)
 
         facts = {} if entry["sub_institutional"] else federal[year].get(str(doc.get("ipeds_id") or ""), {})
+        # Compared only where C1's ids are known for the document's numbering; else
+        # "not compared" (None), not "blank", which would say the school left it empty.
+        compared = "C1" in forms[year]["sum_tables"] and entry["schema_version"] in SUM_CHECKS
         entry["federal"] = {
-            metric: classify_federal(entry["admissions"][metric], facts.get(key))
+            metric: classify_federal(entry["admissions"][metric], facts.get(key)) if compared else None
             for metric, key in FEDERAL_KEYS.items()
         }
         # `ours` is an int here (the admissions counts compared) and a string

@@ -32,16 +32,15 @@ Federal figures come from `ipeds_facts` (the unified view keeps only each school
 `--years` takes any canonical CDS year, oldest or newest first (the run lists them oldest first). Years before 2023-24 are read from `cds_artifacts` the same way 2023-24 is. Their forms have no full field schema, only a structural schema and a core-table overlay (C1, C7, C9), so:
 
 - `forms[year].field_count` is 0 and `schema_exists` false (public: `full_field_schema: false`, `questions: 0`). The structural row and answer-cell counts do not equal the full schemas' field counts, so no number is shown for them.
-- Sums are judged only for tables the overlay maps and the target numbering has sums for: **C1** (`forms[year].sum_tables`). B1 and H1 stay "can't check" whatever the artifact's numbering says, because their field ids on an older form are unknown. `--public` lists the tables with no sums in `sum_checks_unavailable` (omitted when none), so the page can show a dash and a notice instead of a "can't check" count read as a result.
+- The worker reads an older document into the 2025-26 field ids by row label (`schema_fallback_used`). The core-table overlay is the only place those label matches were checked: C1 by rule, at high confidence. B1 and H1 have no checked mapping, and the cross-year diffs show them changing (2022-23 to 2023-24: B1 15 rows added, 9 renamed; H1 10 removed, 10 added). So sums are judged only for **C1** on an older form (`forms[year].sum_tables`); B1 and H1 stay "can't check". `--public` lists the tables with no sums in `sum_checks_unavailable` (omitted when none), so the page can show a dash and a notice instead of a "can't check" count read as a result.
 - B1 enrollment and G1 tuition candidates (`federal_extra`) have no field on an older form (`cds_field` null).
-- Federal admissions (Table B) are compared when `ipeds_facts` holds the fall figures for that year; `federal_schools[year]` and `federal_fall_loaded` say whether it does. Documents numbered by their own older form (not the 2025-26 one the overlay maps to) have no C1 ids we read, so their federal values show "blank" where IPEDS has a figure.
+- Federal admissions (Table B) are compared when `ipeds_facts` holds the fall figures for that year (`federal_schools[year]` and `federal_fall_loaded`, decided at run time) **and** C1 is a table with sums for the year's form. A year before 2019-20 has no overlay, so its admissions are "not compared" (null), not "blank". The same applies to a document whose artifact is numbered by a form with no sum checks.
 - `renewal` is computed from the live manifest and does not depend on `--years`.
 
-Run from the main checkout, on `main` after this change has merged, one copy at a time. First slice: 2022-23 alone, about 445 to 980 artifact reads, **30 to 70 minutes** (a sizing run; it is not publishable because `--public` needs 2023-24 to 2025-26 too):
+Run from the main checkout. Precondition: it is on an up-to-date `main` that contains this change, and no extraction job is running there (this README does not switch branches for you). One copy at a time. First slice: 2022-23 alone, about 445 to 980 artifact reads, **30 to 70 minutes** (a sizing run; it is not publishable because `--public` needs 2023-24 to 2025-26 too):
 
 ```bash
 cd /Users/santhonys/Projects/Owen/colleges/collegedata-fyi
-git switch main && git pull --ff-only
 caffeinate -i tools/extraction_worker/.venv/bin/python tools/extraction-validator/scoreboard.py \
   --years 2022-23 \
   --artifact-interval 4.0 --field-interval 0.25 --min-free-mb 300 \
@@ -57,7 +56,7 @@ caffeinate -i tools/extraction_worker/.venv/bin/python tools/extraction-validato
   --out-dir scratch/extraction-scoreboard 2>&1 | tee scratch/extraction-scoreboard/run-earlier-years.log
 ```
 
-Add years before 2019-20 the same way; they have no overlay, so `sum_tables` is empty and every sum reads "can't check". Never pass `--limit` for a run you mean to publish: `--public` refuses it.
+Add years before 2019-20 the same way; they have no overlay, so `sum_tables` is empty: every sum reads "can't check" and admissions are not compared. Never pass `--limit` for a run you mean to publish: `--public` refuses it.
 
 If a run is interrupted (Ctrl-C, a stop for low memory, a dropped connection), run the same command again. Each artifact read is cached by id in `scratch/extraction-scoreboard/cache/`, so the second run re-reads only what was missing, plus the cheap index and `cds_fields` reads (a few minutes). No JSON is written until a run finishes. The run waits whenever the host has under `--min-free-mb` free; do not lower it.
 
