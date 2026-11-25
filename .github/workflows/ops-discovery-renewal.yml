@@ -1,0 +1,161 @@
+name: Ops discovery renewal
+
+# Daily check that the archive is keeping up with what schools publish.
+#
+# Current-year renewal: of the schools with a live document filed under the
+# previous CDS year, the share that also have one filed under the current CDS
+# year (cds_freshness_floor()). It is compared with a floor read off the
+# posting curve by months since that year's fall. Below the floor, it opens ONE
+# issue assigned to the owner and posts to Discord #alerts; it closes the issue
+# only when the number recovers and never comments on a standing one.
+# See tools/ops/discovery_renewal.py and docs/postmortems/2026-11-24-stale-discovery-seeds.md.
+#
+# Data errors (a short page of rows, an empty result, a small denominator, a
+# freshness floor that disagrees with the database) fail the job, which posts
+# to Discord through ops-discord-notify.yml. Being below the floor does not.
+#
+# The discovery_renewal heartbeat station is registered by a separate migration.
+# Until that migration is applied, record_heartbeat.py prints a warning and
+# exits 0; that is expected.
+#
+# Manual runs default to a dry run against the test label, so nothing real is
+# opened or posted unless both inputs are turned off.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Print what the alarm would do; open, edit and post nothing"
+        type: boolean
+        default: true
+      test_mode:
+        description: "Use the [test] title prefix and the alarm:discovery-renewal-test label"
+        type: boolean
+        default: true
+      floor_override_pct:
+        description: "Test only: replace the current-year floor with this percent (e.g. 99)"
+        type: string
+        default: ""
+  schedule:
+    # Daily 13:41 UTC, after the archive (02:00) and extraction (09:17) runs.
+    - cron: "41 13 * * *"
+
+concurrency:
+  group: ops-discovery-renewal
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  renewal:
+    name: Check current-year renewal
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+      PIPELINE_TRIGGER: ${{ github.event_name == 'schedule' && 'schedule' || 'dispatch' }}
+      PIPELINE_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # Scheduled runs are always real. Only a dispatch can turn them off.
+      DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || inputs.dry_run }}
+      TEST_MODE: ${{ github.event_name == 'schedule' && 'false' || inputs.test_mode }}
+      FLOOR_OVERRIDE: ${{ github.event_name == 'workflow_dispatch' && inputs.floor_override_pct || '' }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/ci-requirements.txt
+
+      - name: Install Python dependencies
+        run: python -m pip install -r tools/ci-requirements.txt
+
+      # No `running` heartbeat: record_pipeline_heartbeat overwrites last_summary
+      # on `running`, which would blank the board's result for the whole run.
+      # Only the finish is sent. The service role key is scoped to that step so
+      # dependency install code never sees it.
+      - id: compute
+        name: Compute renewal
+        env:
+          # The public anon key, the same one ops-finder-probe.yml uses. The
+          # check reads cds_manifest and cds_freshness_floor() through the
+          # public API and writes nothing.
+          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzZHV3bXlndm1kb3pocHZ6YWl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDk3NTksImV4cCI6MjA5MTY4NTc1OX0.fYZOIHyrOWzidgc-CVxWCY5Fe9pQk12-6YjDIS6y9qs
+        run: |
+          set -euo pipefail
+          args=()
+          if [[ -n "${FLOOR_OVERRIDE}" ]]; then
+            args+=(--floor-override-pct "${FLOOR_OVERRIDE}")
+          fi
+          # The override is refused outside a test run.
+          if [[ "${TEST_MODE}" == "true" ]]; then
+            args+=(--test-mode)
+          fi
+          python tools/ops/discovery_renewal.py \
+            --out-summary renewal/summary.json \
+            --out-report renewal/report.md \
+            --out-state renewal/state.json \
+            --out-worklist renewal/worklist.json \
+            "${args[@]}"
+          cat renewal/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - id: alarm
+        name: Open, update or close the alarm issue
+        if: steps.compute.outcome == 'success'
+        env:
+          DISCORD_ALERTS_WEBHOOK_URL: ${{ secrets.DISCORD_ALERTS_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+          args=(--state renewal/state.json --report renewal/report.md --summary renewal/summary.json --repo "${REPO}")
+          if [[ "${DRY_RUN}" == "true" ]]; then
+            args+=(--dry-run)
+          fi
+          if [[ "${TEST_MODE}" == "true" ]]; then
+            args+=(--test-mode)
+          fi
+          python tools/ops/renewal_alarm.py "${args[@]}"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: discovery-renewal
+          path: renewal/
+          if-no-files-found: ignore
+
+      # ok means the number was computed and the alarm step ran, even when
+      # the number is below the floor. A failure of either is an error.
+      - name: Heartbeat discovery_renewal finish
+        if: always()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          COMPUTE_OUTCOME: ${{ steps.compute.outcome }}
+          ALARM_OUTCOME: ${{ steps.alarm.outcome }}
+          DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || inputs.dry_run }}
+        run: |
+          # A dry run changes nothing, including the board.
+          if [[ "${DRY_RUN}" == "true" ]]; then
+            echo "dry run: heartbeat not sent"
+            exit 0
+          fi
+          status=ok
+          error=none
+          if [[ "${COMPUTE_OUTCOME}" != "success" || "${ALARM_OUTCOME}" != "success" ]]; then
+            status=error
+            error=job_failed
+          fi
+          args=()
+          if [[ -f renewal/summary.json ]]; then
+            args+=(--summary-json renewal/summary.json)
+          fi
+          python tools/ops/record_heartbeat.py \
+            --station discovery_renewal \
+            --status "${status}" \
+            --trigger "${PIPELINE_TRIGGER}" \
+            --error-code "${error}" \
+            --run-url "${PIPELINE_RUN_URL}" \
+            "${args[@]}"

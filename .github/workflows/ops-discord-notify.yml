@@ -17,6 +17,7 @@ on:
       - Ops archive seed catchup
       - Ops headless archive
       - Ops corpus audit
+      - Ops discovery renewal
       - Page refresh sweep
     types:
       - completed

@@ -389,15 +389,21 @@ class NotifyDiscordTests(unittest.TestCase):
         self.assertEqual(recovered[0][1]["title"], "Scheduled pipeline heartbeat recovered")
         self.assertEqual(recovered[0][1]["color"], nd.COLOR_SUCCESS)
 
-    def test_api_usage_staleness_baselines_without_posting(self) -> None:
-        state: dict = {"stations": {}}
+    def test_first_poll_alerts_on_a_stale_run_and_baselines_a_fresh_one(self) -> None:
         stale_run = {
             "createdAt": (NOW - timedelta(hours=10)).isoformat().replace("+00:00", "Z"),
             "url": "https://github.com/bolewood/collegedata-fyi/actions/runs/1",
             "headSha": "fff1111",
         }
-        self.assertEqual(nd.api_usage_staleness_messages(stale_run, state, NOW), [])
+        state: dict = {"stations": {}}
+        first = nd.api_usage_staleness_messages(stale_run, state, NOW)
+        self.assertEqual(first[0][1]["title"], "Scheduled pipeline heartbeat missed")
         self.assertEqual(state["api_usage_ingest"], "down")
+        self.assertEqual(nd.api_usage_staleness_messages(stale_run, state, NOW), [])
+        fresh = dict(stale_run, createdAt=(NOW - timedelta(hours=1)).isoformat().replace("+00:00", "Z"))
+        state = {"stations": {}}
+        self.assertEqual(nd.api_usage_staleness_messages(fresh, state, NOW), [])
+        self.assertEqual(state["api_usage_ingest"], "ok")
 
     def test_api_usage_staleness_first_miss_and_recovery(self) -> None:
         state: dict = {"stations": {}, "api_usage_ingest": "ok"}
@@ -416,6 +422,132 @@ class NotifyDiscordTests(unittest.TestCase):
         }
         recovered = nd.api_usage_staleness_messages(fresh, state, NOW)
         self.assertEqual(recovered[0][1]["title"], "Scheduled pipeline heartbeat recovered")
+
+    def _station(self, station_id="discovery_renewal", lamp="down", status="ok",
+                 finished=None, summary=None, **extra) -> dict:
+        # Shaped like toPublicJson: station.summary holds the heartbeat figures.
+        return {
+            "station_id": station_id, "label": "Discovery renewal", "lamp": lamp,
+            "last_scheduled_finished_at": (finished or NOW - timedelta(hours=2)).isoformat(),
+            "last_scheduled_status": status,
+            "summary": summary if summary is not None else {
+                "renewed": 364, "prev_schools": 479, "renewal_pct": 76, "floor_pct": 82.5,
+                "below_floor": True},
+            **extra,
+        }
+
+    def _poll(self, station: dict, previous: str = "ok") -> list:
+        snapshot = {"as_of": NOW.isoformat(), "strip": {}, "stations": [station]}
+        state: dict = {"stations": {station["station_id"]: previous}}
+        return nd.pipeline_observation_messages(snapshot, state, NOW)
+
+    def test_result_title_with_text_derived_from_the_public_summary(self) -> None:
+        down = self._poll(self._station())
+        self.assertEqual(down[0][1]["title"], "Discovery renewal below floor")
+        names = [f["name"] for f in down[0][1]["fields"]]
+        self.assertEqual(len(names), len(set(names)))
+        self.assertIn("Last success", names)
+        fields = {f["name"]: f["value"] for f in down[0][1]["fields"]}
+        self.assertEqual(fields["Result"], "364 of 479 renewed (76%) · floor 82.5%")
+        self.assertIn("/ 36h", fields["Age vs limit"])
+        self.assertEqual(names[:2], ["Station", "Result"])
+
+    def test_result_line_wins_over_derived_text(self) -> None:
+        down = self._poll(self._station(result_line="364 of 479 renewed (76%) · floor 82%"))
+        fields = {f["name"]: f["value"] for f in down[0][1]["fields"]}
+        self.assertEqual(fields["Result"], "364 of 479 renewed (76%) · floor 82%")
+
+    def test_result_recovery_title(self) -> None:
+        back = self._poll(self._station(lamp="ok", summary={"below_floor": False, "renewed": 410, "prev_schools": 479}),
+                          previous="down")
+        self.assertEqual(back[0][1]["title"], "Discovery renewal recovered")
+
+    def test_fresh_error_run_is_a_failure_not_below_floor(self) -> None:
+        down = self._poll(self._station(status="error", summary={}))
+        self.assertEqual(down[0][1]["title"], "Discovery renewal failed")
+
+    def test_missing_or_ambiguous_figures_stay_a_missed_heartbeat(self) -> None:
+        for summary in ({}, {"below_floor": None}, {"below_floor": False}, {"renewed": 1}):
+            down = self._poll(self._station(summary=summary))
+            self.assertEqual(down[0][1]["title"], "Scheduled pipeline heartbeat missed", summary)
+        stale = self._poll(self._station(finished=NOW - timedelta(hours=60)))
+        self.assertEqual(stale[0][1]["title"], "Scheduled pipeline heartbeat missed")
+        other = self._poll(self._station(station_id="finder_brave"))
+        self.assertEqual(other[0][1]["title"], "Scheduled pipeline heartbeat missed")
+
+    def test_stuck_pdf_title_needs_the_share_from_the_summary(self) -> None:
+        def stuck(summary):
+            return self._poll(self._station(station_id="finder_stuck_pdf", summary=summary,
+                                            finished=NOW - timedelta(days=3)))
+        self.assertEqual(stuck({"stuck": 78, "still_stuck": 71})[0][1]["title"], "Stuck PDFs mostly still stuck")
+        self.assertEqual(stuck({"stuck": 78, "still_stuck": 30})[0][1]["title"], "Scheduled pipeline heartbeat missed")
+        self.assertEqual(stuck({"stuck": 0, "still_stuck": 0})[0][1]["title"], "Scheduled pipeline heartbeat missed")
+
+    def test_discovery_renewal_staleness_alerts_once_then_recovers(self) -> None:
+        state: dict = {"stations": {}, "discovery_renewal": "ok"}
+        kwargs = {
+            "workflow": nd.DISCOVERY_RENEWAL_WORKFLOW,
+            "state_key": "discovery_renewal",
+            "max_age_hours": nd.DISCOVERY_RENEWAL_MAX_AGE_HOURS,
+        }
+        # 30h old is fine for a daily job; 40h is a miss.
+        ok_run = {"createdAt": (NOW - timedelta(hours=30)).isoformat().replace("+00:00", "Z"), "url": "u", "headSha": "abc1234"}
+        self.assertEqual(nd.api_usage_staleness_messages(ok_run, state, NOW, **kwargs), [])
+        stale_run = {"createdAt": (NOW - timedelta(hours=40)).isoformat().replace("+00:00", "Z"), "url": "u", "headSha": "abc1234"}
+        missed = nd.api_usage_staleness_messages(stale_run, state, NOW, **kwargs)
+        self.assertEqual(len(missed), 1)
+        self.assertEqual(missed[0][1]["title"], "Scheduled pipeline heartbeat missed")
+        fields = {f["name"]: f["value"] for f in missed[0][1]["fields"]}
+        self.assertEqual(fields["Workflow"], "Ops discovery renewal")
+        self.assertIn("/ 36h", fields["Age vs limit"])
+        # Still stale: no repeat.
+        self.assertEqual(nd.api_usage_staleness_messages(stale_run, state, NOW, **kwargs), [])
+        # A fresh run: one recovery.
+        fresh = {"createdAt": (NOW - timedelta(hours=2)).isoformat().replace("+00:00", "Z"), "url": "u", "headSha": "abc1234"}
+        recovered = nd.api_usage_staleness_messages(fresh, state, NOW, **kwargs)
+        self.assertEqual(recovered[0][1]["title"], "Scheduled pipeline heartbeat recovered")
+        self.assertEqual(state["discovery_renewal"], "ok")
+
+    def test_discovery_renewal_never_run_is_not_announced_as_a_recovery_later(self) -> None:
+        state: dict = {"stations": {}}
+        kwargs = {"workflow": nd.DISCOVERY_RENEWAL_WORKFLOW, "state_key": "discovery_renewal",
+                  "max_age_hours": 36}
+        self.assertEqual(nd.api_usage_staleness_messages(None, state, NOW, **kwargs), [])
+        self.assertNotIn("discovery_renewal", state)
+        first = {"createdAt": (NOW - timedelta(hours=1)).isoformat().replace("+00:00", "Z"), "url": "u", "headSha": "abc1234"}
+        self.assertEqual(nd.api_usage_staleness_messages(first, state, NOW, **kwargs), [])
+        self.assertEqual(state["discovery_renewal"], "ok")
+
+    def test_deleted_workflow_that_was_ok_alerts(self) -> None:
+        state: dict = {"stations": {}, "discovery_renewal": "ok"}
+        out = nd.api_usage_staleness_messages(
+            None, state, NOW, workflow=nd.DISCOVERY_RENEWAL_WORKFLOW,
+            state_key="discovery_renewal", max_age_hours=36)
+        self.assertEqual(len(out), 1)
+
+    def test_state_round_trip_keeps_every_watched_workflow_key(self) -> None:
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "state.json"
+            path.write_text(json.dumps({"stations": {}, "api_usage_ingest": "down", "discovery_renewal": "ok"}))
+            loaded = nd.load_state(path)
+            self.assertEqual(loaded["api_usage_ingest"], "down")
+            self.assertEqual(loaded["discovery_renewal"], "ok")
+
+    def test_hourly_poll_checks_every_watched_workflow(self) -> None:
+        seen: list[str] = []
+
+        def runner(args, token):
+            if args[:2] == ["run", "list"] and "--event" in args:
+                seen.append(args[args.index("--workflow") + 1])
+            return subprocess.CompletedProcess(args, 0, "[]", "")
+
+        with tempfile.TemporaryDirectory() as d:
+            nd.main(
+                ["--event-name", "schedule", "--state-path", str(Path(d) / "s.json"), "--dry-run"],
+                fetch_snapshot=lambda url: {"as_of": NOW.isoformat(), "stations": [], "strip": {}},
+                runner=runner, now=NOW, sleeper=lambda s: None,
+            )
+        self.assertEqual(seen, ["API usage ingest", "Ops discovery renewal"])
 
     def test_missing_webhook_skips_without_failing_or_logging_url(self) -> None:
         stdout = io.StringIO()

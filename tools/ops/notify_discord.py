@@ -38,6 +38,7 @@ WATCHED_WORKFLOWS = {
     "Ops headless archive": "ops-headless-archive.yml",
     "Ops corpus audit": "ops-corpus-audit.yml",
     "Page refresh sweep": "ops-page-refresh.yml",
+    "Ops discovery renewal": "ops-discovery-renewal.yml",
 }
 DEPLOY_SUCCESS_WORKFLOWS = frozenset({"CI", "Deploy Edge Functions"})
 SELF_WORKFLOW_FILE = "ops-discord-notify.yml"
@@ -60,10 +61,37 @@ STATION_SLA: dict[str, tuple[str, int]] = {
     "scorecard_load": ("18mo", 18 * 30 * 24 * 3600),
     "api_usage_ingest": ("8h", 8 * 3600),
     "corpus_audit": ("36h", 36 * 3600),
+    "discovery_renewal": ("36h", 36 * 3600),
 }
+
+# Stations whose lamp goes down on a RESULT (the job ran on time and reported
+# a bad number), not on a missed clock: (down title, recovered title, failed title).
+RESULT_STATION_TITLES: dict[str, tuple[str, str, str]] = {
+    "discovery_renewal": (
+        "Discovery renewal below floor",
+        "Discovery renewal recovered",
+        "Discovery renewal failed",
+    ),
+    "finder_stuck_pdf": (
+        "Stuck PDFs mostly still stuck",
+        "Stuck PDFs recovered",
+        "Stuck PDF re-probe failed",
+    ),
+}
+STUCK_SHARE_FAILURE = 0.9
 
 API_USAGE_WORKFLOW = "API usage ingest"
 API_USAGE_MAX_AGE_HOURS = 8
+DISCOVERY_RENEWAL_WORKFLOW = "Ops discovery renewal"
+DISCOVERY_RENEWAL_MAX_AGE_HOURS = 36
+# Daily-or-faster scheduled workflows the hourly poll watches directly, so a
+# disabled or deleted workflow is noticed even though nothing runs to report
+# it. (workflow name, key in the saved state, max hours since the last
+# scheduled run)
+SCHEDULED_RUN_WATCHES: tuple[tuple[str, str, int], ...] = (
+    (API_USAGE_WORKFLOW, "api_usage_ingest", API_USAGE_MAX_AGE_HOURS),
+    (DISCOVERY_RENEWAL_WORKFLOW, "discovery_renewal", DISCOVERY_RENEWAL_MAX_AGE_HOURS),
+)
 PRODUCTION_ENV_NAMES = frozenset({"production", "prod"})
 # Longer than hourly poll + Vercel SWR (60s + 300s). Shorter than a
 # build-time seed that sat in cache for days.
@@ -176,8 +204,9 @@ def load_state(path: Path) -> dict[str, Any]:
             if not str(key).startswith("_")
         },
     }
-    if "api_usage_ingest" in data and data.get("api_usage_ingest"):
-        out["api_usage_ingest"] = str(data["api_usage_ingest"])
+    for _workflow, state_key, _hours in SCHEDULED_RUN_WATCHES:
+        if data.get(state_key):
+            out[state_key] = str(data[state_key])
     if "board" in data and data.get("board"):
         out["board"] = str(data["board"])
     if "board_unhealthy_streak" in data:
@@ -516,27 +545,111 @@ def deployment_status_messages(event: dict[str, Any]) -> list[tuple[str, dict[st
     return [(channel, embed(title=title, color=color, url=url or environment_url or None, fields=fields))]
 
 
+def _num(value: Any) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return float(value)
+
+
+def station_result_text(station: dict[str, Any]) -> str:
+    """The station's result line: the public JSON's `result_line`, else derived
+    from its `summary` figures, else empty."""
+    line = str(station.get("result_line") or "")
+    if line:
+        return line
+    summary = station.get("summary")
+    if not isinstance(summary, dict):
+        return ""
+    station_id = str(station.get("station_id") or "")
+    if station_id == "discovery_renewal":
+        renewed, prev = _num(summary.get("renewed")), _num(summary.get("prev_schools"))
+        if renewed is None or prev is None:
+            return ""
+        text = f"{int(renewed)} of {int(prev)} renewed"
+        pct = _num(summary.get("renewal_pct"))
+        if pct is not None:
+            text += f" ({pct:g}%)"
+        floor = _num(summary.get("floor_pct"))
+        if floor is not None:
+            text += f" · floor {floor:g}%"
+        return text
+    if station_id == "finder_stuck_pdf":
+        stuck, still = _num(summary.get("stuck")), _num(summary.get("still_stuck"))
+        if stuck is None or still is None:
+            return ""
+        return f"{int(still)} of {int(stuck)} still stuck"
+    return ""
+
+
+def station_shows_failure(station: dict[str, Any]) -> bool:
+    """True when the summary's own figures say the result is bad."""
+    summary = station.get("summary")
+    if not isinstance(summary, dict):
+        return False
+    station_id = str(station.get("station_id") or "")
+    if station_id == "discovery_renewal":
+        return summary.get("below_floor") is True
+    if station_id == "finder_stuck_pdf":
+        stuck, still = _num(summary.get("stuck")), _num(summary.get("still_stuck"))
+        return stuck is not None and still is not None and stuck > 0 and still / stuck >= STUCK_SHARE_FAILURE
+    return False
+
+
 def station_alert_fields(station: dict[str, Any], now: datetime) -> list[tuple[str, str]]:
     station_id = str(station.get("station_id") or "")
     label, limit_sec = STATION_SLA.get(station_id, ("unknown", 0))
     last = station.get("last_scheduled_finished_at") or station.get("last_finished_at")
-    fields = [
-        ("Station", str(station.get("label") or station_id or "unknown")),
+    age_text = label
+    if limit_sec:
+        parsed = parse_time(str(last) if last else None)
+        age_text = f"{age_label(str(last), now)} / {label}" if parsed is not None else f"never / {label}"
+    fields = [("Station", str(station.get("label") or station_id or "unknown"))]
+    result = station_result_text(station) if station_id in RESULT_STATION_TITLES else ""
+    if result:
+        fields.append(("Result", result))
+    fields += [
         ("Last success", age_label(str(last) if last else None, now)),
-        ("Age vs limit", label),
+        ("Age vs limit", age_text),
         ("Status", str(station.get("last_scheduled_status") or station.get("lamp") or "—")),
     ]
     error = str(station.get("error_code") or "")
     if error and error != "none":
         fields.append(("Error", error))
-    if limit_sec:
-        parsed = parse_time(str(last) if last else None)
-        if parsed is not None:
-            age = max(0, int((now - parsed).total_seconds()))
-            fields[2] = ("Age vs limit", f"{age_label(str(last), now)} / {label}")
-        else:
-            fields[2] = ("Age vs limit", f"never / {label}")
     return fields
+
+
+def station_clock_is_fresh(station: dict[str, Any], now: datetime) -> bool:
+    """True when the station's last finish is within its SLA window."""
+    _label, limit_sec = STATION_SLA.get(str(station.get("station_id") or ""), ("", 0))
+    last = station.get("last_scheduled_finished_at") or station.get("last_finished_at")
+    parsed = parse_time(str(last) if last else None)
+    if not limit_sec or parsed is None:
+        return False
+    return (now - parsed).total_seconds() <= limit_sec
+
+
+def station_result_title(station: dict[str, Any], now: datetime, *, recovered: bool) -> str | None:
+    """A result-shaped title, or None to keep the missed-heartbeat wording.
+
+    Down: the clock is fresh and the last scheduled run reported `ok` with
+    figures that show the failure -> "below floor"; a fresh `error` run -> a
+    job failure ("... failed"). Anything else (stale clock, missing or
+    malformed figures) stays a missed heartbeat. Recovered: the last scheduled
+    run is `ok`.
+    """
+    titles = RESULT_STATION_TITLES.get(str(station.get("station_id") or ""))
+    if titles is None:
+        return None
+    status = str(station.get("last_scheduled_status") or "")
+    if recovered:
+        return titles[1] if status == "ok" else None
+    if not station_clock_is_fresh(station, now):
+        return None
+    if status == "error":
+        return titles[2]
+    if status == "ok" and station_shows_failure(station):
+        return titles[0]
+    return None
 
 
 def as_of_is_fresh(snapshot: dict[str, Any], now: datetime) -> bool:
@@ -663,7 +776,8 @@ def pipeline_observation_messages(
                 (
                     "alerts",
                     embed(
-                        title="Scheduled pipeline heartbeat missed",
+                        title=station_result_title(station, now, recovered=False)
+                        or "Scheduled pipeline heartbeat missed",
                         color=COLOR_FAILURE,
                         url=PIPELINE_BOARD_URL,
                         fields=station_alert_fields(station, now),
@@ -675,7 +789,8 @@ def pipeline_observation_messages(
                 (
                     "alerts",
                     embed(
-                        title="Scheduled pipeline heartbeat recovered",
+                        title=station_result_title(station, now, recovered=True)
+                        or "Scheduled pipeline heartbeat recovered",
                         color=COLOR_SUCCESS,
                         url=PIPELINE_BOARD_URL,
                         fields=station_alert_fields(station, now),
@@ -690,16 +805,27 @@ def api_usage_staleness_messages(
     run: dict[str, Any] | None,
     state: dict[str, Any],
     now: datetime,
-    *, workflow: str = API_USAGE_WORKFLOW, state_key: str = "api_usage_ingest",
+    *,
+    workflow: str = API_USAGE_WORKFLOW,
+    state_key: str = "api_usage_ingest",
+    max_age_hours: int = API_USAGE_MAX_AGE_HOURS,
 ) -> list[tuple[str, dict[str, Any]]]:
     created = parse_time(str((run or {}).get("createdAt") or ""))
     age_hours = None if created is None else (now - created).total_seconds() / 3600
-    stale = age_hours is None or age_hours > API_USAGE_MAX_AGE_HOURS
+    stale = age_hours is None or age_hours > max_age_hours
     current = "down" if stale else "ok"
     previous = state.get(state_key, "ok" if state_key == "community_feedback" else None)
-    if previous is None:
-        state[state_key] = current
+    if run is None and previous is None:
+        # Never seen a scheduled run (a workflow added but not yet run).
+        # Record nothing, so its first run is not announced as a recovery.
         return []
+    if previous is None:
+        if run is None or not stale:
+            state[state_key] = current
+            return []
+        # A run exists and is already older than the limit: alert now, not
+        # after a silent baseline of "down".
+        previous = "ok"
     state[state_key] = current
     if current == previous:
         return []
@@ -709,7 +835,7 @@ def api_usage_staleness_messages(
     fields = [
         ("Workflow", workflow),
         ("Last run", last),
-        ("Age vs limit", f"{last} / {API_USAGE_MAX_AGE_HOURS}h"),
+        ("Age vs limit", f"{last} / {max_age_hours}h"),
         ("Commit", f"`{sha}`"),
     ]
     if current == "down":
@@ -767,6 +893,52 @@ def deliver(
     return posted
 
 
+def post_custom_embed(
+    *,
+    title: str,
+    fields: list[tuple[str, str]],
+    url: str | None = None,
+    recovered: bool = False,
+    dry_run: bool = False,
+    webhook_url: str | None = None,
+    poster: Callable[[str, dict[str, Any]], None] = post_webhook,
+    raise_on_failure: bool = False,
+) -> bool:
+    """Post one alert (red) or recovery (green) embed to #alerts.
+
+    For tools that decide for themselves when to alert. Never prints the webhook
+    URL. A missing DISCORD_ALERTS_WEBHOOK_URL skips the post with a warning. A
+    failed post prints an error and returns False, or with `raise_on_failure`
+    raises DiscordPostError (its text never includes the URL).
+    """
+    body = embed(
+        title=title,
+        color=COLOR_SUCCESS if recovered else COLOR_FAILURE,
+        url=url,
+        fields=fields,
+    )
+    if dry_run:
+        print(json.dumps({"channel": "alerts", "embed": body}, sort_keys=True))
+        return False
+    webhook = (
+        webhook_url
+        if webhook_url is not None
+        else os.environ.get("DISCORD_ALERTS_WEBHOOK_URL", "")
+    ).strip()
+    if not webhook:
+        print("::warning::DISCORD_ALERTS_WEBHOOK_URL not set; skipped Discord post")
+        return False
+    try:
+        poster(webhook, {"embeds": [body]})
+    except DiscordPostError as exc:
+        print(f"::error::discord post failed (#alerts): {exc}", file=sys.stderr)
+        if raise_on_failure:
+            raise
+        return False
+    print(f"discord notify posted #alerts: {title}")
+    return True
+
+
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--event-name", required=True)
@@ -812,13 +984,23 @@ def main(
                 sleeper=sleeper,
             )
             messages.extend(pipeline_observation_messages(snapshot, state, clock))
-            latest = latest_scheduled_run(
-                repo=args.repo,
-                workflow=API_USAGE_WORKFLOW,
-                token=token,
-                runner=runner,
-            )
-            messages.extend(api_usage_staleness_messages(latest, state, clock))
+            for watched, state_key, max_hours in SCHEDULED_RUN_WATCHES:
+                latest = latest_scheduled_run(
+                    repo=args.repo,
+                    workflow=watched,
+                    token=token,
+                    runner=runner,
+                )
+                messages.extend(
+                    api_usage_staleness_messages(
+                        latest,
+                        state,
+                        clock,
+                        workflow=watched,
+                        state_key=state_key,
+                        max_age_hours=max_hours,
+                    )
+                )
             save_state(args.state_path, state)
         else:
             print(f"discord notify skipped: unsupported event {args.event_name}")

@@ -47,6 +47,7 @@ REGISTRY_STATIONS = (
     "mirror_ingest",
     "api_usage_ingest",
     "corpus_audit",
+    "discovery_renewal",
 )
 
 
