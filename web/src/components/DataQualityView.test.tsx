@@ -10,7 +10,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/data-quality",
 }));
 
-import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V1, FIXTURE_SNAPSHOT_V2, FIXTURE_SNAPSHOT_V3, emptyYear } from "@/lib/__fixtures__/data-quality-snapshot";
+import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V1, FIXTURE_SNAPSHOT_V2, FIXTURE_SNAPSHOT_V3, FIXTURE_SNAPSHOT_V4, emptyYear } from "@/lib/__fixtures__/data-quality-snapshot";
 import { DATA_LICENSE_NAME, DATA_LICENSE_URL } from "@/lib/data-license";
 import {
   type QualitySnapshot,
@@ -26,6 +26,7 @@ import {
   aidCantCheckNote,
   federalDiffersNote,
 } from "@/lib/data-quality";
+import { buildQualityCsv, qualityLede, ON_FILE_NOTE } from "@/lib/data-quality";
 import { HAS_CDS_HREF } from "@/lib/coverage-model";
 import { secondaryNavLinks, isActive } from "@/lib/nav-links";
 import { ArchiveStatusHeader, visibleArchiveTabs } from "./ArchiveStatusHeader";
@@ -80,7 +81,8 @@ describe("notices", () => {
 
   it("explains the empty-federal year instead of showing zeros", () => {
     const html = render("year=2025-26");
-    expect(html).toContain("No federal admissions figures for fall 2025 yet.");
+    expect(html).toContain("Federal admissions figures for fall 2025 are not loaded in this archive yet.");
+    expect(html).toContain("Federal admissions and enrollment figures for fall 2025, and tuition figures for the 2026-27 academic year, are not loaded in this archive yet.");
     const b = table(html, "dq-table-b");
     // every data cell of every row is a dash
     const cells = [...b.matchAll(/<td[^>]*>([^<]*)</g)].map((m) => m[1]);
@@ -655,7 +657,7 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
       const tui = text("dq-note-tuition");
       expect(tui).toContain("IPEDS table COST1_2024, variable TUITION2");
       expect(tui).toContain("academic year 2024-25");
-      expect(tui).toContain("CDS form for 2023-24 asks for that following year’s tuition");
+      expect(tui).toContain("CDS form for 2023-24 names both years, and its G1 asks for the following year’s tuition; schools differ in which of the two they report");
       expect(tui).toMatch(/Neither includes required fees/);
       expect(tui).toMatch(/per-credit or program-specific pricing/);
       expect(tui).toMatch(/Out-of-state and first-year tuition aren’t compared/);
@@ -728,15 +730,15 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
       const html = openHtml("2024-25");
       const s = b2(html)!;
       expect(s).toContain('id="dq-no-tuition"');
-      expect(s).toContain("No federal tuition figures for the 2025-26 academic year yet.");
+      expect(s).toContain("Federal tuition figures for the 2025-26 academic year are not loaded in this archive yet.");
       expect(s).not.toContain('id="dq-no-enrollment"');
       expect(s).not.toContain('id="dq-note-tuition"');
       expect(s).not.toContain("/data-quality/csv/tuition/");
       expect(cells(s, "dq-table-tuition", "standard PDF")).toEqual(["–", "–", "–", "–", "–", "–", "–"]);
       expect(s).toContain('href="/data-quality/csv/enrollment/2024-25"');
       const last = b2(openHtml("2025-26"))!;
-      expect(last).toContain("No federal fall 2025 undergraduate enrollment figures yet.");
-      expect(last).toContain("No federal tuition figures for the 2026-27 academic year yet.");
+      expect(last).toContain("Federal fall 2025 undergraduate enrollment figures are not loaded in this archive yet.");
+      expect(last).toContain("Federal tuition figures for the 2026-27 academic year are not loaded in this archive yet.");
       expect(last).not.toContain("/data-quality/csv/");
     });
 
@@ -953,5 +955,177 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
         .filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l) && /&(?:[a-zA-Z]+|#x?[0-9a-fA-F]+);/.test(l));
       expect(hits, file).toEqual([]);
     }
+  });
+});
+
+
+// ── Launch fixes (final review) ──────────────────────────────────
+
+describe("launch fixes from the final review", () => {
+  const text = (html: string) => html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ");
+  const clone = (): QualitySnapshot => JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT));
+  const year = (snap: QualitySnapshot, name: string) => snap.years.find((y) => y.cds_year === name)!;
+  const page = (search: string, snap: QualitySnapshot = FIXTURE_SNAPSHOT) => text(render(search, snap));
+  const SHARED = "with a file filed under more than one federal record, which we can’t compare to either record alone";
+
+  it("names the shared-file rule in Table B and in both further checks, only when something was left out for it", () => {
+    const snap = clone();
+    const y = year(snap, "2024-25");
+    y.federal_left_out.shared_file = 2;
+    y.federal_checks!.enrollment.shared_file = 2;
+    y.federal_checks!.tuition.shared_file = 2;
+    const html = render("year=2024-25", snap);
+    const b = text(table(html, "dq-table-b") + html.match(/<p id="dq-note-left-out"[\s\S]*?<\/p>/)![0]);
+    expect(b).toContain(`2 reports ${SHARED}, and`);
+    expect(text(html.match(/<p id="dq-note-enrollment-left-out"[\s\S]*?<\/p>/)![0])).toContain(`2 reports ${SHARED}`);
+    y.federal_left_out.shared_file = 1;
+    expect(page("year=2024-25", snap)).toContain(`1 report ${SHARED}`);
+    expect(page("year=2024-25")).not.toContain("filed under more than one federal record");
+    expect(text(render("year=2024-25", FIXTURE_SNAPSHOT_V4))).not.toContain("filed under more than one federal record");   // older format: no key, no clause, no throw
+  });
+
+  it("counts a file held twice by one school once and says so in Table A's note", () => {
+    const snap = clone();
+    year(snap, "2024-25").duplicate_file = 2;
+    expect(page("year=2024-25", snap)).toContain("2 that are the same file as another report from the same school");
+    year(snap, "2024-25").duplicate_file = 1;
+    expect(page("year=2024-25", snap)).toContain("1 that is the same file as another report from the same school");
+    expect(page("year=2024-25")).not.toContain("the same file as another report");
+  });
+
+  it("no longer calls an off-by-under-2% miss usually the school's file, and names our known gap", () => {
+    const t = page("year=2024-25");
+    expect(t).not.toContain("usually the school");
+    expect(t).toContain("Off by under 2% is often a small cell, such as students of another or unknown gender: the school may have left it out of the rows while the total includes it, or we may not have read it.");
+    expect(t).toContain("in 2024-25 we don’t yet read the another-gender cells in fillable PDFs");
+    // The gap is a 2024-25 fact: 2025-26 fillable PDFs carry those cells, so the other years don't say it.
+    for (const other of ["2023-24", "2025-26"]) expect(page(`year=${other}`)).not.toContain("another-gender cells in fillable PDFs");
+    expect(t).not.toMatch(/#\d{3}/);
+  });
+
+  it("says what the match rate counts, in the glance sentence, Table B and both further checks", () => {
+    const t = page("year=2023-24");
+    expect(t).toContain("which is a share of all the values that have a federal figure, including those with no usable CDS number");
+    expect(t).not.toContain("share of values compared");
+    expect(t).toContain("The match rate is matches over all the values that have a federal figure, including those with no usable CDS number");
+    expect(t.match(/The match rate is matches over all the reports checked, including those with no usable CDS number/g)).toHaveLength(2);
+  });
+
+  it("says the financial aid adds-up rate partly reflects a rule of some layouts, and does not claim it for every reading", () => {
+    const t = page("year=2024-25");
+    expect(t).toContain("For financial aid, adds up partly reflects how we read the table: for some layouts the reader keeps a financial aid table only when its totals add up, so for those a reading that fails the check shows as can’t check, not as doesn’t add up.");
+    expect(t).not.toContain("we keep a financial aid table only when");
+  });
+
+  it("says the form names both years for tuition and that schools differ", () => {
+    const t = page("year=2023-24");
+    expect(t).toContain("The CDS form for 2023-24 names both years, and its G1 asks for the following year’s tuition; schools differ in which of the two they report.");
+  });
+
+  it("discloses that another-gender rows aren't always read, so the rows by sex can undercount", () => {
+    expect(page("year=2024-25")).toContain("Another-gender rows aren’t always read, so for some reports the rows by sex add up to less than the printed total.");
+  });
+
+  it("says section E is largely unread in a one-reading year with a zero median, and keeps the old sentence elsewhere", () => {
+    const snap = clone();
+    const e = (y: string) => year(snap, y).sections!.rows.find((r) => r.section === "E")!;
+    const usable = (search: string, s: QualitySnapshot = FIXTURE_SNAPSHOT) => text(render(search, s).match(/<p id="dq-note-usable"[\s\S]*?<\/p>/)![0]);
+    e("2023-24").stored_median = 0;
+    e("2023-24").usable_median = 0;
+    const t = usable("year=2023-24", snap);
+    expect(t).toContain("Section E is largely unread for 2023-24 in this archive: the median report stores none of its");
+    expect(t).toContain("so a low number there is ours, not the schools’. For the other sections, a low number can mean the school left a section blank");
+    expect(t).not.toContain("2023-24 is published from one reading");   // that sentence is Table A's counting note, not repeated here
+    expect(usable("year=2023-24")).toContain("this table can’t say which.");      // a nonzero median keeps the general sentence
+    e("2024-25").stored_median = 0;
+    expect(usable("year=2024-25", snap)).toContain("this table can’t say which.");   // a second-reading year is not "one reading"
+  });
+
+  it("cites the IPEDS admissions table and variables and the release sentence on Table B, and says 'not loaded in this archive'", () => {
+    const html = render("year=2023-24");
+    expect(text(html)).toContain("compared with the federal figures for the same fall (IPEDS table ADM2023, variables APPLCN, ADMSSN and ENRLT, fall 2023).");
+    expect(text(html.match(/<p id="dq-note-b-release"[\s\S]*?<\/p>/)![0])).toContain("final or provisional");
+    const last = page("year=2025-26");
+    expect(last).toContain("Federal admissions figures for fall 2025 are not loaded in this archive yet.");
+    expect(last).toContain("Federal admissions and enrollment figures for fall 2025, and tuition figures for the 2026-27 academic year, are not loaded in this archive yet.");
+    expect(last).not.toContain("No federal");
+    expect(yearNotices(year(FIXTURE_SNAPSHOT_V3, "2025-26"))).toContain("Federal admissions figures for fall 2025 are not loaded in this archive yet.");   // no checks in that format
+  });
+
+  it("limits 'checked against federal figures' in the lede to the years that have them", () => {
+    expect(qualityLede(FIXTURE_SNAPSHOT).populations).toContain("checked against their own printed totals and, for 2023-24 and 2024-25, against federal figures.");
+    const all = clone();
+    year(all, "2025-26").federal_fall_loaded = true;
+    expect(qualityLede(all).populations).toContain("checked against their own printed totals and against federal figures.");
+    const none = clone();
+    for (const y of none.years) y.federal_fall_loaded = false;
+    expect(qualityLede(none).populations).toMatch(/checked against their own printed totals\.$/);
+    const one = clone();
+    one.years = one.years.filter((y) => y.cds_year !== "2024-25");
+    expect(qualityLede(one).populations).toContain("and, for 2023-24, against federal figures");
+  });
+
+  it("says what 'on file' counts, in the renewal note", () => {
+    // The renewal count: the earlier year counts any report we hold; the current year counts only a report we did not set aside.
+    expect(ON_FILE_NOTE).toContain("The earlier-year count includes any report we hold for that year, including ones we set aside or couldn’t read.");
+    expect(ON_FILE_NOTE).toContain("A school counts as renewed only if its current-year report is one we have not set aside; a report we couldn’t read still counts.");
+    expect(ON_FILE_NOTE).not.toContain("any report we currently hold");
+    expect(page("year=2024-25")).toContain(ON_FILE_NOTE);
+  });
+
+  it("says these are our older readings under another year's numbering, not the school's choice", () => {
+    expect(yearNotices(year(FIXTURE_SNAPSHOT, "2023-24"))[0]).toContain("These are our older readings, stored under another year’s numbering, not the school’s choice.");
+  });
+
+  it("says counts can fall when duplicates or wrong files are removed, in the trend note", () => {
+    const a = clone();
+    const b = clone();
+    b.snapshot_of = "2026-12-01T12:00:00Z";
+    b.scoreboard_run = "scoreboard-20261201T120000Z.json";
+    currentParams = new URLSearchParams("year=2024-25");
+    const html = renderToStaticMarkup(<DataQualityView snapshot={b} trend={buildTrend([a, b])} />);
+    expect(text(html)).toContain("Counts can also fall when we remove duplicates or wrong files.");
+  });
+
+  it("shows dashes for fields stored in a row with no published report, and the CSV leaves them blank", () => {
+    const snap = clone();
+    const y = year(snap, "2023-24");
+    const empty = { ...JSON.parse(JSON.stringify(y.rows[0])), format: "docx", label: "Word" };
+    empty.status = { published: 0, set_aside: 0, couldnt_read: 2, not_read_yet: 0 };
+    empty.fields_stored = { median: 0, p10: 0 };
+    y.rows.push(empty);
+    const row = table(render("year=2023-24", snap), "dq-table-a").match(/<tr[^>]*><th[^>]*>Word<\/th>[\s\S]*?<\/tr>/)![0];
+    expect([...row.matchAll(/<td[^>]*>([^<]*)</g)].map((m) => m[1]).slice(-2)).toEqual(["–", "–"]);
+    const csv = buildQualityCsv("reports", y).split("\r\n").find((l) => l.startsWith("Word,"))!;
+    expect(csv).toBe("Word,0,0,2,0,,");
+  });
+
+  it("says in Table A's counting note that 2023-24 is published from one reading, once", () => {
+    const html = render("year=2023-24");
+    const t = text(html);
+    expect(t).toContain("2023-24 is published from one reading of each file, with no second reading. From 2024-25 on, fields stored also includes values from a second reading of the same file, so this year reads lower partly for that reason.");
+    expect(t).not.toContain("is counted differently");
+    expect(t).not.toContain("This year counts one reading");
+    expect(t.match(/is published from one reading of each file/g)).toHaveLength(2);   // Table A and the by-section table, one each
+  });
+
+  it("names only the federal figures that are missing in a year's notice (IPEDS releases them separately)", () => {
+    const snap = clone();
+    const last = year(snap, "2025-26");
+    expect(yearNotices(last)).toContain("Federal admissions and enrollment figures for fall 2025, and tuition figures for the 2026-27 academic year, are not loaded in this archive yet.");
+    last.federal_checks!.enrollment.loaded = true;
+    expect(yearNotices(last)).toContain("Federal admissions figures for fall 2025, and tuition figures for the 2026-27 academic year, are not loaded in this archive yet.");
+    last.federal_checks!.tuition.loaded = true;
+    expect(yearNotices(last)).toContain("Federal admissions figures for fall 2025 are not loaded in this archive yet.");
+  });
+
+  it("cites the IPEDS admissions table only for a year that has federal admissions figures", () => {
+    expect(page("year=2025-26")).not.toContain("ADM2025");
+    expect(page("year=2024-25")).toContain("IPEDS table ADM2024");
+  });
+
+  it("says a hand-checked report of a different scope is now left out", () => {
+    const sample = federalDiffersNote(year(FIXTURE_SNAPSHOT, "2024-25"), FIXTURE_SNAPSHOT);
+    expect(sample).toContain("one report filed for a different scope than the federal record, which Table B for 2024-25 now leaves out.");
   });
 });

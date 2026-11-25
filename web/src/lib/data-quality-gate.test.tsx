@@ -191,7 +191,7 @@ describe("the real pages against the committed snapshot", () => {
     const noFederal = snap.years.find((y) => !y.federal_fall_loaded);
     expect(noFederal).toBeDefined();
     const body = text(renderToStaticMarkup(<DataQualityBody snapshot={snap} trend={buildTrend([snap])} year={noFederal!} />));
-    expect(body).toContain("No federal admissions figures for fall");
+    expect(body).toContain("Federal admissions figures for fall");
     expect(renderToStaticMarkup(<DataQualityBody snapshot={snap} trend={buildTrend([snap])} year={noFederal!} />)).not.toContain(
       `/data-quality/csv/federal/${noFederal!.cds_year}`,
     );
@@ -259,7 +259,7 @@ describe("gate: the real snapshot loader", () => {
       at(when);
       const snap = loadLatestSnapshot();
       expect(snap.snapshot_of).toBe(newest);
-      expect(snap.public_format).toBe(4);
+      expect(snap.public_format).toBe(5);
       expect(snap.scoreboard_run).toMatch(/^scoreboard-\d{8}T\d{6}Z\.json$/);
     }
   });
@@ -281,7 +281,7 @@ describe("gate: the real snapshot loader", () => {
     );
     // [differs, over 2% to 10%, over 10%], from scoreboard-20261125T140926Z.json. Pinned in two parts so a balanced
     // transcription error (one part up, the other down) fails here even though the arithmetic checks still pass.
-    expect(split).toEqual({ "2023-24": [116, 70, 46], "2024-25": [120, 61, 59], "2025-26": [0, 0, 0] });
+    expect(split).toEqual({ "2023-24": [116, 70, 46], "2024-25": [112, 60, 52], "2025-26": [0, 0, 0] });
   });
 
   it("pins the committed snapshot's sections per year (reports, then section, questions, fields stored, usable answers)", () => {
@@ -294,9 +294,9 @@ describe("gate: the real snapshot loader", () => {
     );
     // From scoreboard-20261125T140926Z.json. Pinned for every year so a balanced transcription error fails here.
     expect(got).toEqual({
-      "2023-24": [366, [["A", 51, 6, 6], ["B", 196, 143, 143], ["C", 274, 112, 112], ["D", 70, 15, 14], ["E", 32, 0, 0], ["F", 60, 16, 16], ["G", 47, 20, 20], ["H", 154, 52, 52], ["I", 49, 31, 31], ["J", 120, 27, 27]]],
-      "2024-25": [491, [["A", 51, 11, 11], ["B", 219, 158, 156], ["C", 278, 123, 122], ["D", 73, 27, 25], ["E", 32, 19, 19], ["F", 60, 35, 35], ["G", 47, 23, 22], ["H", 154, 92, 91], ["I", 49, 41, 41], ["J", 120, 26, 26]]],
-      "2025-26": [423, [["A", 63, 26, 23], ["B", 204, 152, 152], ["C", 278, 142, 141], ["D", 88, 27, 23], ["E", 34, 21, 21], ["F", 58, 37, 37], ["G", 46, 24, 23], ["H", 165, 108, 107], ["I", 49, 42, 42], ["J", 120, 27, 27]]],
+      "2023-24": [365, [["A", 51, 6, 6], ["B", 196, 143, 143], ["C", 274, 112, 112], ["D", 70, 15, 14], ["E", 32, 0, 0], ["F", 60, 16, 16], ["G", 47, 20, 20], ["H", 154, 52, 52], ["I", 49, 31, 31], ["J", 120, 27, 27]]],
+      "2024-25": [487, [["A", 51, 11, 11], ["B", 219, 157, 156], ["C", 278, 122, 121], ["D", 73, 27, 25], ["E", 32, 19, 19], ["F", 60, 35, 35], ["G", 47, 23, 22], ["H", 154, 92, 91], ["I", 49, 41, 41], ["J", 120, 26, 26]]],
+      "2025-26": [421, [["A", 63, 26, 23], ["B", 204, 152, 152], ["C", 278, 142, 141], ["D", 88, 27, 23], ["E", 34, 21, 21], ["F", 58, 37, 37], ["G", 46, 24, 23], ["H", 165, 108, 107], ["I", 49, 42, 42], ["J", 120, 27, 27]]],
     });
   });
 
@@ -323,8 +323,8 @@ describe("gate: the real snapshot loader", () => {
     );
     // [loaded, IPEDS year, reports, matches, no value, differs, over 2% to 10%, over 10%], from scoreboard-20261125T140926Z.json.
     expect(got).toEqual({
-      "2023-24": { enrollment: [true, 2023, 431, 317, 82, 32, 21, 11], tuition: [true, 2024, 430, 212, 117, 101, 63, 38] },
-      "2024-25": { enrollment: [true, 2024, 490, 378, 70, 42, 24, 18], tuition: [false, 2025, 0, 0, 0, 0, 0, 0] },
+      "2023-24": { enrollment: [true, 2023, 429, 315, 82, 32, 21, 11], tuition: [true, 2024, 428, 210, 117, 101, 63, 38] },
+      "2024-25": { enrollment: [true, 2024, 484, 375, 70, 39, 24, 15], tuition: [false, 2025, 0, 0, 0, 0, 0, 0] },
       "2025-26": { enrollment: [false, 2025, 0, 0, 0, 0, 0, 0], tuition: [false, 2026, 0, 0, 0, 0, 0, 0] },
     });
   });

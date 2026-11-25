@@ -102,7 +102,7 @@ describe("the reports behind every count (the latest committed snapshot)", () =>
     }
   });
 
-  it("pins the 2026-11-25 snapshot's cells and rows (665 cells, 1,451 rows, 1,346 published, 105 not)", () => {
+  it("pins the 2026-11-25 snapshot's cells and rows (665 cells, 1,443 rows, 1,338 published, 105 not)", () => {
     // Only while that is the latest snapshot: the next snapshot's PR deletes this reports file (see the README), and its
     // own pins replace these.
     if (DAY() !== "2026-11-25") return;
@@ -110,8 +110,8 @@ describe("the reports behind every count (the latest committed snapshot)", () =>
     const reports = JSON.parse(fs.readFileSync(path.join(SNAPSHOT_DIR, "reports", "2026-11-25.json"), "utf8")) as ReportsFile;
     expect(snapshotCells(validateSnapshot(snap, "2026-11-25.json")).length).toBe(665);
     const all = Object.values(reports.years).flat();
-    expect(all).toHaveLength(1451);
-    expect(all.filter((r) => r.status === "published")).toHaveLength(1346);
+    expect(all).toHaveLength(1443);
+    expect(all.filter((r) => r.status === "published")).toHaveLength(1338);
     expect(all.filter((r) => r.status !== "published")).toHaveLength(105);
     expect(all.filter((r) => !r.school)).toHaveLength(56);
   });

@@ -28,9 +28,12 @@ export const PROJECTED_FROM_YEAR_START = 2024;
  * and `federal.differs_over_10pct`); those keys are required on 2 and refused on 1. Format 1 files stay readable so a
  * later trend line can use them. Format 3 adds `sections` to each year (fields stored and usable answers by CDS
  * section): required on 3, refused on 1 and 2. Format 4 adds the enrollment (B1) and tuition (G1) checks against IPEDS
- * (`checks` in each row and total, `federal_checks` in each year): required on 4, refused on 1 to 3.
+ * (`checks` in each row and total, `federal_checks` in each year): required on 4, refused on 1 to 3. Format 5 leaves a file
+ * filed under more than one federal record out of every federal comparison (`shared_file` in `federal_left_out` and in each
+ * `federal_checks`) and counts a file held twice by one school once (`duplicate_file`, the reports dropped): all three are
+ * required on 5, refused on 1 to 4, and read as 0 there.
  */
-export const KNOWN_PUBLIC_FORMATS: readonly number[] = [1, 2, 3, 4];
+export const KNOWN_PUBLIC_FORMATS: readonly number[] = [1, 2, 3, 4, 5];
 
 export type StatusCounts = {
   published: number;
@@ -76,7 +79,14 @@ export type CheckCounts = {
 export type CheckName = "enrollment" | "tuition";
 export type ChecksBlock = Record<CheckName, CheckCounts>;
 /** What a year knows about a check: whether IPEDS figures are loaded for it, which IPEDS year they are, who was left out. */
-export type CheckInfo = { loaded: boolean; data_year: number; single_campus: number; no_federal_figures: number };
+export type CheckInfo = {
+  loaded: boolean;
+  data_year: number;
+  single_campus: number;
+  /** public_format 5; absent (0) on 1 to 4. */
+  shared_file?: number;
+  no_federal_figures: number;
+};
 
 export type QualityRow = {
   status: StatusCounts;
@@ -112,8 +122,11 @@ export type QualityYear = {
   other_form_numbering: number;
   removed: number;
   no_file: number;
+  /** public_format 5: reports dropped because the same school held the same file twice that year. Absent (0) on 1 to 4. */
+  duplicate_file?: number;
   set_aside_reasons: { blank_form: number; too_little_read: number; wrong_file: number };
-  federal_left_out: { single_campus: number; no_federal_figures: number };
+  /** `shared_file` (public_format 5; absent on 1 to 4): reports whose one file is filed under more than one federal record. */
+  federal_left_out: { single_campus: number; shared_file?: number; no_federal_figures: number };
   rows: QualityFormatRow[];
   total: QualityRow;
   /** public_format 3; absent on 1 and 2. */
@@ -244,7 +257,7 @@ export const SECTION_NAMES: Readonly<Record<string, string>> = {
  * out. The IPEDS year is the fall for enrollment and the next fall's academic year for tuition (the CDS form asks for the
  * following year's price). When loaded, reports checked + left out = published; when not, no report is checked.
  */
-function federalChecksProblem(year: Record<string, unknown>): string | null {
+function federalChecksProblem(year: Record<string, unknown>, format: number): string | null {
   const block = year.federal_checks as Record<string, Record<string, unknown>> | undefined;
   if (!block || typeof block !== "object") return "federal_checks is missing";
   const extra = Object.keys(block).find((k) => !CHECK_NAMES.includes(k as CheckName));
@@ -255,18 +268,18 @@ function federalChecksProblem(year: Record<string, unknown>): string | null {
     if (!info || typeof info !== "object") return `federal_checks.${name} is missing`;
     const { loaded, ...counts } = info;
     if (typeof loaded !== "boolean") return `federal_checks.${name}: loaded must be a boolean`;
-    const problem = allCounts(counts, ["data_year", "single_campus", "no_federal_figures"]);
+    const problem = allCounts(counts, ["data_year", "single_campus", "no_federal_figures", ...(format >= 5 ? ["shared_file"] : [])]);
     if (problem) return `federal_checks.${name}: ${problem}`;
     const expected = Number(String(year.cds_year).slice(0, 4)) + (name === "tuition" ? 1 : 0);
     if (info.data_year !== expected) return `federal_checks.${name}: data_year is ${String(info.data_year)}, not ${expected}`;
     const reports = total.checks![name].reports;
-    if ((info.single_campus as number) > total.status.published) return `federal_checks.${name}: single_campus exceeds the total's published`;
+    if ((info.single_campus as number) + ((info.shared_file as number | undefined) ?? 0) > total.status.published) return `federal_checks.${name}: single_campus + shared_file exceeds the total's published`;
     if (!loaded) {
       if (info.no_federal_figures !== 0) return `federal_checks.${name}: no_federal_figures must be 0 for a year with no IPEDS figures`;
       for (const r of [...(year.rows as QualityRow[]), total]) {
         if (Object.values(r.checks![name]).some((n) => n !== 0)) return `federal_checks.${name}: counts are not zero for a year with no IPEDS figures`;
       }
-    } else if (reports + (info.single_campus as number) + (info.no_federal_figures as number) !== total.status.published) {
+    } else if (reports + (info.single_campus as number) + ((info.shared_file as number | undefined) ?? 0) + (info.no_federal_figures as number) !== total.status.published) {
       return `federal_checks.${name}: reports checked + left out don't add up to the total's published`;
     }
   }
@@ -411,7 +424,7 @@ function arithmeticProblem(year: QualityYear): string | null {
     return "set_aside_reasons don't add up to the total's set_aside";
   }
   const left = year.federal_left_out;
-  if (year.federal_fall_loaded && year.total.federal.reports + left.single_campus + left.no_federal_figures !== year.total.status.published) {
+  if (year.federal_fall_loaded && year.total.federal.reports + left.single_campus + (left.shared_file ?? 0) + left.no_federal_figures !== year.total.status.published) {
     return "federal reports checked + left out don't add up to the total's published";
   }
   return null;
@@ -474,13 +487,15 @@ export function validateSnapshot(raw: unknown, source: string): QualitySnapshot 
       ["other_form_numbering", y.other_form_numbering],
       ["removed", y.removed],
       ["no_file", y.no_file],
+      ...(s.public_format >= 5 ? ([["duplicate_file", y.duplicate_file]] as const) : []),
     ] as const) {
       if (!isCount(v)) return fail(`${where}: ${k} must be a non-negative integer`);
     }
     const problem =
       allCounts(y.set_aside_reasons, ["blank_form", "too_little_read", "wrong_file"]) ??
-      allCounts(y.federal_left_out, ["single_campus", "no_federal_figures"], ["not_compared"]);
+      allCounts(y.federal_left_out, ["single_campus", "no_federal_figures", ...(s.public_format >= 5 ? ["shared_file"] : [])], ["not_compared"]);
     if (problem) return fail(`${where}: ${problem}`);
+    if (s.public_format < 5 && y.duplicate_file !== undefined) return fail(`${where}: unexpected key duplicate_file on public_format ${s.public_format}`);
     if (!Array.isArray(y.rows)) return fail(`${where}: rows is missing`);
     const totalProblem = rowCountsProblem(y.total, s.public_format);
     if (totalProblem) return fail(`${where}: total: ${totalProblem}`);
@@ -495,7 +510,7 @@ export function validateSnapshot(raw: unknown, source: string): QualitySnapshot 
     if (arithmetic) return fail(`${where}: ${arithmetic}`);
     // Public format 3 adds `sections`; formats 1 and 2 must not carry it.
     if (s.public_format >= 4) {
-      const checks = federalChecksProblem(y);
+      const checks = federalChecksProblem(y, s.public_format);
       if (checks) return fail(`${where}: ${checks}`);
     } else if (y.federal_checks !== undefined) {
       return fail(`${where}: unexpected key federal_checks on public_format ${s.public_format}`);
@@ -681,10 +696,19 @@ export function federalDiffersNote(year: QualityYear, snapshot: QualitySnapshot)
   const { low, high } = differsPoolBounds();
   if (!(s.years as readonly string[]).includes(year.cds_year) || !year.federal_fall_loaded || year.total.federal.differs === 0) return null;
   if (pooled < low || pooled > high) return null;
-  return `In a hand check of ${s.checked} differing reports (${s.years.join(" and ")}, sampled on ${HAND_CHECK_DATE}), ${s.sameInFile} had the number we compared in the school’s file, so the difference came from the federal side or from how the two filings were matched, which can include our matching. ${s.ours} were on our side: one misread and one report filed for a different scope than the federal record.`;
+  return `In a hand check of ${s.checked} differing reports (${s.years.join(" and ")}, sampled on ${HAND_CHECK_DATE}), ${s.sameInFile} had the number we compared in the school’s file, so the difference came from the federal side or from how the two filings were matched, which can include our matching. ${s.ours} were on our side: one misread and one report filed for a different scope than the federal record, which Table B for 2024-25 now leaves out.`;
 }
 
 const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+
+/** ", and, for 2023-24 and 2024-25, against federal figures": only the years that have federal figures, oldest first. */
+function federalYearsClause(snapshot: QualitySnapshot): string {
+  const loaded = snapshot.years.filter((y) => y.federal_fall_loaded).map((y) => y.cds_year).sort();
+  if (loaded.length === 0) return "";
+  if (loaded.length === snapshot.years.length) return " and against federal figures";
+  const list = loaded.length === 1 ? loaded[0] : `${loaded.slice(0, -1).join(", ")} and ${loaded[loaded.length - 1]}`;
+  return ` and, for ${list}, against federal figures`;
+}
 
 /** The two-sentence lede: what the page measures, the snapshot date, the populations. */
 export function qualityLede(snapshot: QualitySnapshot): { populations: string; meaning: string } {
@@ -692,7 +716,7 @@ export function qualityLede(snapshot: QualitySnapshot): { populations: string; m
   const count = snapshot.years.length;
   const years = count < NUMBER_WORDS.length ? NUMBER_WORDS[count] : String(count);
   return {
-    populations: `Snapshot of ${formatSnapshotDate(snapshot.snapshot_of)}: ${published} reports published with numbers across ${years} ${count === 1 ? "year" : "years"}, checked against federal figures and against their own printed totals.`,
+    populations: `Snapshot of ${formatSnapshotDate(snapshot.snapshot_of)}: ${published} reports published with numbers across ${years} ${count === 1 ? "year" : "years"}, checked against their own printed totals${federalYearsClause(snapshot)}.`,
     meaning: "Data quality here means the quality of what this archive publishes, not the quality of any school’s own data.",
   };
 }
@@ -707,6 +731,9 @@ export type RenewalTile = {
   percent: number;
   sentence: string;
 };
+
+/** What "on file" counts in the renewal figure, said wherever the figure is shown. */
+export const ON_FILE_NOTE = "The earlier-year count includes any report we hold for that year, including ones we set aside or couldn’t read. A school counts as renewed only if its current-year report is one we have not set aside; a report we couldn’t read still counts.";
 
 export function renewalTile(renewal: Renewal): RenewalTile {
   const share = renewal.both / renewal.previous;

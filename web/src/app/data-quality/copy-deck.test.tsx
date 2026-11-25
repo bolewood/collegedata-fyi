@@ -85,6 +85,9 @@ function snapshotWithNotes(): QualitySnapshot {
   y2324.total.totals.H1.cant_check = AID_CANT_CHECK_SAMPLE.population;
   y2324.form.full_field_schema = false;
   y2324.federal_left_out.single_campus = 2;
+  y2324.federal_left_out.shared_file = 1;   // the shared-file clause
+  y2324.sections!.rows.find((r) => r.section === "E")!.stored_median = 0;   // the section E sentence
+  y2324.duplicate_file = 1;   // the same-file clause
   const other = snap.years.find((y) => y.cds_year === "2024-25")!;
   y2324.total.federal.differs = FEDERAL_DIFFERS_SAMPLE.populationValues - other.total.federal.differs;
   return snap;

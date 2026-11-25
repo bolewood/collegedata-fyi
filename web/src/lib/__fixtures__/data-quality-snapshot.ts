@@ -155,6 +155,7 @@ function year(
     other_form_numbering: 0,
     removed: 2,
     no_file: 0,
+    duplicate_file: 0,
     rows,
     total,
     // The reasons add up to the set-aside count, and Table B's reports checked plus the reports left out add up to
@@ -164,7 +165,7 @@ function year(
       too_little_read: Math.floor(total.status.set_aside / 2),
       wrong_file: 0,
     },
-    federal_left_out: { single_campus: federal ? total.status.published - total.federal.reports : 0, no_federal_figures: 0 },
+    federal_left_out: { single_campus: federal ? total.status.published - total.federal.reports : 0, shared_file: 0, no_federal_figures: 0 },
     ...extra,
     // One campus or unit is left out of both checks, as of Table B; the rest of the published reports are checked or have no figure.
     federal_checks: Object.fromEntries(
@@ -172,7 +173,7 @@ function year(
         // As Table B: one campus or unit is left out when IPEDS admissions figures are loaded, and nothing is when they are not.
         const single = federal ? total.status.published - total.federal.reports : 0;
         const loaded = loadedChecks[name];
-        return [name, { loaded, data_year: Number(cds_year.slice(0, 4)) + (name === "tuition" ? 1 : 0), single_campus: single, no_federal_figures: loaded ? total.status.published - total.checks![name].reports - single : 0 }];
+        return [name, { loaded, data_year: Number(cds_year.slice(0, 4)) + (name === "tuition" ? 1 : 0), single_campus: single, shared_file: 0, no_federal_figures: loaded ? total.status.published - total.checks![name].reports - single : 0 }];
       }),
     ) as Record<CheckName, CheckInfo>,
     // The reports numbered by the year's own form: published minus those numbered by another form.
@@ -204,7 +205,7 @@ const sheets = () =>
   });
 
 export const FIXTURE_SNAPSHOT: QualitySnapshot = {
-  public_format: 4,
+  public_format: 5,
   snapshot_of: "2026-11-24T12:25:03Z",
   scoreboard_run: "scoreboard-20261124T122503Z.json",
   renewal: {
@@ -243,12 +244,13 @@ export const emptyYear = (cds_year: string): QualityYear => {
     other_form_numbering: 0,
     removed: 1,
     no_file: 1,
+    duplicate_file: 0,
     set_aside_reasons: { blank_form: 0, too_little_read: 0, wrong_file: 0 },
-    federal_left_out: { single_campus: 0, no_federal_figures: 0 },
+    federal_left_out: { single_campus: 0, shared_file: 0, no_federal_figures: 0 },
     rows: [],
     federal_checks: {
-      enrollment: { loaded: false, data_year: Number(cds_year.slice(0, 4)), single_campus: 0, no_federal_figures: 0 },
-      tuition: { loaded: false, data_year: Number(cds_year.slice(0, 4)) + 1, single_campus: 0, no_federal_figures: 0 },
+      enrollment: { loaded: false, data_year: Number(cds_year.slice(0, 4)), single_campus: 0, shared_file: 0, no_federal_figures: 0 },
+      tuition: { loaded: false, data_year: Number(cds_year.slice(0, 4)) + 1, single_campus: 0, shared_file: 0, no_federal_figures: 0 },
     },
     sections: { reports: 0, rows: SECTION_QUESTIONS["2023-24"].map((questions, i) => ({ section: "ABCDEFGHIJ"[i], questions, stored_median: 0, usable_median: 0 })) },
     total: {
@@ -261,9 +263,21 @@ export const emptyYear = (cds_year: string): QualityYear => {
   };
 };
 
+/** The same snapshot as public_format 4 wrote it: no shared-file or duplicate-file counts. */
+export const FIXTURE_SNAPSHOT_V4: QualitySnapshot = (() => {
+  const v4: QualitySnapshot = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT));
+  v4.public_format = 4;
+  for (const y of v4.years) {
+    delete y.duplicate_file;
+    delete y.federal_left_out.shared_file;
+    for (const info of Object.values(y.federal_checks!)) delete info.shared_file;
+  }
+  return v4;
+})();
+
 /** The same snapshot as public_format 3 wrote it: sections, no enrollment and tuition checks. */
 export const FIXTURE_SNAPSHOT_V3: QualitySnapshot = (() => {
-  const v3: QualitySnapshot = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT));
+  const v3: QualitySnapshot = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT_V4));
   v3.public_format = 3;
   for (const y of v3.years) {
     delete y.federal_checks;

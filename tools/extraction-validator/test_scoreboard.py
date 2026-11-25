@@ -522,7 +522,7 @@ def synthetic_run() -> dict:
         "years": YEARS, "current_tier4_version": "0.3.43", "projected_years": ["2024-25", "2025-26"],
         "federal_schools": {"2023-24": 1900, "2024-25": 1900, "2025-26": 0},
         "hold_summaries_read": 1, "not_served": {}, "manifest": manifest, "documents": documents,
-        "federal_left_out": {y: scoreboard.federal_left_out(documents, y) for y in YEARS},
+        "federal_left_out": {y: {k: v for k, v in scoreboard.federal_left_out(documents, y).items() if k != "shared_file"} for y in YEARS},
         "forms": scoreboard.forms_for(YEARS),
         "renewal": {"as_of": "2026-11-25", "current_year": "2025-26", "previous_year": "2024-25", "current": 380,
                     "previous": 479, "both": 364, "two_year_previous": 536, "two_year_both": 370},
@@ -540,6 +540,204 @@ def blocked_network() -> contextlib.ExitStack:
     return stack
 
 
+class SharedAndDuplicateFiles(unittest.TestCase):
+    """Launch fixes: one file under two federal records is left out of every federal comparison (`shared_file`); the
+    same file held twice by one school in one year counts once (`duplicate_file`)."""
+
+    def setUp(self) -> None:
+        self.run = synthetic_run()
+        # Published, whole-institution reports of 2024-25, none of them yet sharing anything.
+        self.ids = [d["document_id"] for d in self.run["documents"]
+                    if d["year"] == "2024-25" and scoreboard.is_published(d) and not d["sub_institutional"]
+                    and d["federal"]["applied"] == "match"]
+        for i, d in enumerate(self.run["documents"]):
+            d["source_sha256"] = f"sha-{i}"
+            d["ipeds_id"] = str(1000 + i)
+        self.by_id = {d["document_id"]: d for d in self.run["documents"]}
+
+    def build(self, run=None):
+        run = self.run if run is None else run
+        with blocked_network():
+            public = scoreboard.build_public(run, "x.json")
+        names = {d["school_id"]: d["school_id"] for d in run["documents"]}
+        reports = scoreboard.build_reports(run, public, names)
+        scoreboard.check_reports_agree(public, reports)
+        return public, reports
+
+    def year(self, public, name="2024-25"):
+        return next(y for y in public["years"] if y["cds_year"] == name)
+
+    def share(self, a: str, b: str) -> None:
+        self.by_id[b]["source_sha256"] = self.by_id[a]["source_sha256"]
+
+    def test_a_file_under_two_federal_records_is_left_out_of_every_federal_comparison(self) -> None:
+        before, _ = self.build()
+        self.share(self.ids[0], self.ids[1])
+        public, reports = self.build()
+        year, was = self.year(public), self.year(before)
+        self.assertEqual(year["federal_left_out"]["shared_file"], 2)
+        self.assertEqual(year["total"]["federal"]["reports"], was["total"]["federal"]["reports"] - 2)
+        self.assertEqual(year["total"]["federal"]["values"], was["total"]["federal"]["values"] - 6)
+        self.assertEqual(year["total"]["status"], was["total"]["status"])      # still published
+        for name in ("enrollment", "tuition"):
+            self.assertEqual(year["federal_checks"][name]["shared_file"], 2)
+            expected = was["total"]["checks"][name]["reports"] - 2 if year["federal_checks"][name]["loaded"] else 0
+            self.assertEqual(year["total"]["checks"][name]["reports"], expected)
+        left = year["federal_left_out"]
+        self.assertEqual(year["total"]["federal"]["reports"] + left["single_campus"] + left["shared_file"] + left["no_federal_figures"],
+                         year["total"]["status"]["published"])
+        rows = {r["id"]: r for r in reports["years"]["2024-25"]}
+        for document_id in self.ids[:2]:
+            self.assertEqual(rows[document_id]["fed"], [None, None, None])
+            self.assertEqual(rows[document_id]["checks"], [None, None])
+        self.assertEqual(rows[self.ids[2]]["fed"], ["m", "n", "l"])
+
+    def test_shared_file_counts_each_report_once_in_the_order_single_campus_then_shared_then_no_figures(self) -> None:
+        self.by_id[self.ids[0]]["sub_institutional"] = True
+        self.run["federal_left_out"] = {y: {k: v for k, v in scoreboard.federal_left_out(self.run["documents"], y).items() if k != "shared_file"}
+                                        for y in YEARS}
+        self.share(self.ids[0], self.ids[1])
+        year = self.year(self.build()[0])
+        self.assertEqual((year["federal_left_out"]["single_campus"], year["federal_left_out"]["shared_file"]), (2, 1))
+
+    def test_a_missing_hash_or_one_federal_record_is_never_shared(self) -> None:
+        for d in self.by_id.values():
+            d["source_sha256"] = None
+        self.assertEqual(self.year(self.build()[0])["duplicate_file"], 0)
+        self.assertEqual(self.year(self.build()[0])["federal_left_out"]["shared_file"], 0)
+        for d in self.by_id.values():
+            d["source_sha256"] = f"sha-{d['document_id']}"
+        self.share(self.ids[0], self.ids[1])
+        self.by_id[self.ids[1]]["ipeds_id"] = self.by_id[self.ids[0]]["ipeds_id"]      # two names, one federal record
+        self.assertEqual(self.year(self.build()[0])["federal_left_out"]["shared_file"], 0)
+        self.by_id[self.ids[1]]["ipeds_id"] = None                                      # no federal record of its own
+        self.assertEqual(self.year(self.build()[0])["federal_left_out"]["shared_file"], 0)
+
+    def test_two_reports_of_one_school_with_no_hash_are_two_reports(self) -> None:
+        a, b = self.ids[:2]
+        self.by_id[b]["school_id"] = self.by_id[a]["school_id"]
+        self.by_id[a]["source_sha256"] = self.by_id[b]["source_sha256"] = None
+        before, _ = self.build(synthetic_run())
+        public, reports = self.build()
+        self.assertEqual(self.year(public)["duplicate_file"], 0)
+        self.assertEqual(self.year(public)["total"]["status"]["published"], self.year(before)["total"]["status"]["published"])
+        self.assertLessEqual({a, b}, {r["id"] for r in reports["years"]["2024-25"]})
+
+    def test_the_same_file_held_twice_by_one_school_counts_once(self) -> None:
+        a, b = self.ids[0], self.ids[1]
+        self.by_id[b]["school_id"] = self.by_id[a]["school_id"]
+        self.share(a, b)
+        before, _ = self.build(synthetic_run())
+        public, reports = self.build()
+        year, was = self.year(public), self.year(before)
+        self.assertEqual(year["duplicate_file"], 1)
+        self.assertEqual(year["total"]["status"]["published"], was["total"]["status"]["published"] - 1)
+        self.assertEqual(sum(r["status"]["published"] for r in year["rows"]), year["total"]["status"]["published"])
+        self.assertEqual(year["total"]["totals"]["reports"], year["total"]["status"]["published"])
+        self.assertEqual(year["federal_left_out"]["shared_file"], 0)      # the same school is not a second record
+        listed = {r["id"] for r in reports["years"]["2024-25"]}
+        self.assertEqual(len({a, b} & listed), 1)
+        # Nothing moved to another column: the dropped manifest entry is gone, not reclassified.
+        self.assertEqual(sum(year["total"]["status"].values()) + year["removed"] + year["no_file"],
+                         sum(sum(was["total"]["status"].values()) for _ in [0]) + was["removed"] + was["no_file"] - 1)
+
+    def test_the_copy_kept_is_the_published_then_newest_then_lowest_id_whatever_the_order(self) -> None:
+        a, b, c = self.ids[:3]
+        for other in (b, c):
+            self.by_id[other]["school_id"] = self.by_id[a]["school_id"]
+            self.share(a, other)
+        self.by_id[a]["newest_at"] = "2026-11-23T10:00:00+00:00"
+        self.by_id[b]["newest_at"] = "2026-11-25T10:00:00+00:00"
+        self.by_id[c]["newest_at"] = "2026-11-25T10:00:00+00:00"
+        for order in (1, -1):
+            run = {**self.run, "documents": self.run["documents"][::order]}
+            kept = {d["document_id"] for d in scoreboard.prepare_run(run)["documents"]} & {a, b, c}
+            self.assertEqual(kept, {min(b, c)})
+        self.by_id[a]["producer"] = None                  # a set-aside or unread copy never beats a published one
+        self.by_id[b]["producer"] = None
+        self.assertEqual({d["document_id"] for d in scoreboard.prepare_run(self.run)["documents"]} & {a, b, c}, {c})
+
+    def test_newest_at_is_read_with_five_or_six_fractional_digits_as_the_database_writes_it(self) -> None:
+        # Python 3.9's fromisoformat rejects the 5-digit form, and a failed parse once kept the older Stetson copy.
+        a, b = self.ids[:2]
+        for other in (b,):
+            self.by_id[other]["school_id"] = self.by_id[a]["school_id"]
+            self.share(a, other)
+        self.by_id[a]["newest_at"] = "2026-04-28T06:15:18.466623+00:00"
+        self.by_id[b]["newest_at"] = "2026-11-25T00:36:38.27433+00:00"
+        for order in (1, -1):
+            run = {**self.run, "documents": self.run["documents"][::order]}
+            self.assertEqual({d["document_id"] for d in scoreboard.prepare_run(run)["documents"]} & {a, b}, {b})
+        self.by_id[b]["newest_at"] = "yesterday"
+        with self.assertRaises(SystemExit):
+            scoreboard.prepare_run(self.run)
+
+    def test_a_set_aside_copy_never_makes_a_published_report_a_shared_file(self) -> None:
+        hidden = next(d["document_id"] for d in self.run["documents"]
+                      if d["year"] == "2024-25" and d["flag"] == "blank_template" and d["producer"])
+        self.assertFalse(scoreboard.is_published(self.by_id[hidden]))
+        self.share(self.ids[0], hidden)
+        public, reports = self.build()
+        self.assertEqual(self.year(public)["federal_left_out"]["shared_file"], 0)
+        rows = {r["id"]: r for r in reports["years"]["2024-25"]}
+        self.assertNotEqual(rows[self.ids[0]]["fed"], [None, None, None])      # still compared
+
+    def test_shared_reports_are_left_out_of_the_tuition_check_too_where_tuition_is_loaded(self) -> None:
+        ids = [d["document_id"] for d in self.run["documents"]
+               if d["year"] == "2023-24" and scoreboard.is_published(d) and not d["sub_institutional"] and d["federal"]["applied"] == "match"]
+        before, _ = self.build()
+        self.share(ids[0], ids[1])
+        public, reports = self.build()
+        was, now = self.year(before, "2023-24"), self.year(public, "2023-24")
+        self.assertTrue(now["federal_checks"]["tuition"]["loaded"])
+        for name in ("enrollment", "tuition"):
+            self.assertEqual(now["federal_checks"][name]["shared_file"], 2)
+            self.assertEqual(now["total"]["checks"][name]["reports"], was["total"]["checks"][name]["reports"] - 2)
+        rows = {r["id"]: r for r in reports["years"]["2023-24"]}
+        self.assertEqual(rows[ids[0]]["checks"], [None, None])
+
+    def test_one_file_in_two_years_is_neither_a_duplicate_nor_a_shared_file(self) -> None:
+        # Keene State files one document for 2024-25 and for 2025-26: same school, same hash, two years.
+        a = self.ids[0]
+        other_year = next(d for d in self.run["documents"] if d["year"] == "2025-26" and scoreboard.is_published(d)
+                          and not d["sub_institutional"])
+        other_year["school_id"] = self.by_id[a]["school_id"]
+        other_year["source_sha256"] = self.by_id[a]["source_sha256"]
+        public, _ = self.build()
+        self.assertEqual([y["duplicate_file"] for y in public["years"]], [0, 0, 0])
+        # And a different school's report of another year with the same hash and its own IPEDS id is no shared file.
+        other_year["school_id"] = "school-elsewhere"
+        other_year["ipeds_id"] = "99999"
+        public, _ = self.build()
+        self.assertEqual([y["federal_left_out"]["shared_file"] for y in public["years"]], [0, 0, 0])
+
+    def test_newest_at_is_read_with_three_to_six_fractional_digits(self) -> None:
+        for fraction in ("123", "1234", "12345", "123456"):
+            d = {"document_id": "x", "newest_at": f"2026-11-25T00:36:38.{fraction}+00:00"}
+            self.assertAlmostEqual(scoreboard._newest_at(d), dt.datetime(2026, 11, 25, 0, 36, 38, int(fraction.ljust(6, "0")),
+                                                                           tzinfo=dt.timezone.utc).timestamp(), places=3)
+        self.assertEqual(scoreboard._newest_at({"document_id": "x", "newest_at": None}), 0.0)
+
+    def test_the_run_is_not_changed_and_the_run_s_own_block_is_still_checked_against_its_documents(self) -> None:
+        a, b = self.ids[:2]
+        self.by_id[b]["school_id"] = self.by_id[a]["school_id"]
+        self.share(a, b)
+        count = len(self.run["documents"])
+        self.build()
+        self.assertEqual(len(self.run["documents"]), count)
+        self.assertNotIn("shared_file", self.by_id[a])
+        self.run["federal_left_out"]["2024-25"]["single_campus"] += 1
+        with self.assertRaises(SystemExit):
+            self.build()
+
+    def test_the_new_counts_are_allowed_keys_and_required(self) -> None:
+        public, _ = self.build()
+        scoreboard.check_public_shape(public)
+        del public["years"][0]["duplicate_file"]
+        with self.assertRaises(ValueError):
+            scoreboard.check_public_shape(public)
+
+
 class PublicSnapshot(unittest.TestCase):
     def setUp(self) -> None:
         self.run = synthetic_run()
@@ -550,7 +748,7 @@ class PublicSnapshot(unittest.TestCase):
         return next(y for y in self.public["years"] if y["cds_year"] == name)
 
     def test_top_level_and_renewal(self) -> None:
-        self.assertEqual(self.public["public_format"], 4)
+        self.assertEqual(self.public["public_format"], 5)
         self.assertEqual(self.public["snapshot_of"], "2026-11-25T01:15:08Z")
         self.assertEqual(self.public["scoreboard_run"], "scoreboard-20261125T011508Z.json")
         self.assertEqual(self.public["renewal"], self.run["renewal"])
@@ -615,7 +813,7 @@ class PublicSnapshot(unittest.TestCase):
                                                             "differs_2_to_10pct": 0, "differs_over_10pct": 0})
         self.assertEqual(year["federal_left_out"]["no_federal_figures"], 0)
         self.assertTrue(self.year("2024-25")["federal_fall_loaded"])
-        self.assertEqual(self.year("2024-25")["federal_left_out"], {"single_campus": 1, "no_federal_figures": 1})
+        self.assertEqual(self.year("2024-25")["federal_left_out"], {"single_campus": 1, "shared_file": 0, "no_federal_figures": 1})
 
     def test_federal_reports_and_what_is_left_out_make_up_the_published_reports(self) -> None:
         for year in self.public["years"]:
@@ -1030,13 +1228,13 @@ class FederalExtraChecks(unittest.TestCase):
     def test_single_campus_reports_are_left_out_and_counted(self) -> None:
         docs = [self.d(1), self.d(2, sub_institutional=True), self.d(3, federal_extra=extra_for("2023-24", enrollment=("1000", None)))]
         year = scoreboard.federal_check_year("2023-24", docs, "enrollment", True)
-        self.assertEqual(year, {"loaded": True, "data_year": 2023, "single_campus": 1, "no_federal_figures": 1})
+        self.assertEqual(year, {"loaded": True, "data_year": 2023, "single_campus": 1, "shared_file": 0, "no_federal_figures": 1})
         self.assertEqual(self.counts(docs, "enrollment")["reports"], 1)
 
     def test_a_year_with_no_figures_or_no_schema_is_not_loaded_and_counts_zero(self) -> None:
         docs = [self.d(1, "2024-25"), self.d(2, "2024-25")]
         tuition = scoreboard.federal_check_year("2024-25", docs, "tuition", True)
-        self.assertEqual(tuition, {"loaded": False, "data_year": 2025, "single_campus": 0, "no_federal_figures": 0})
+        self.assertEqual(tuition, {"loaded": False, "data_year": 2025, "single_campus": 0, "shared_file": 0, "no_federal_figures": 0})
         self.assertTrue(scoreboard.federal_check_year("2024-25", docs, "enrollment", True)["loaded"])
         self.assertFalse(scoreboard.federal_check_year("2023-24", [self.d(3)], "enrollment", False)["loaded"])
         self.assertEqual(self.counts(docs, "tuition", loaded=False)["reports"], 0)
@@ -2037,7 +2235,7 @@ class GatherAnEarlierYear(unittest.TestCase):
             with self.subTest(year=year):
                 left = entry["federal_left_out"]
                 total = entry["total"]
-                self.assertEqual(total["federal"]["reports"] + left["single_campus"] + left["no_federal_figures"]
+                self.assertEqual(total["federal"]["reports"] + left["single_campus"] + left["shared_file"] + left["no_federal_figures"]
                                  + left.get("not_compared", 0), total["status"]["published"])
                 for row in entry["rows"]:   # and by format
                     self.assertLessEqual(row["federal"]["reports"], row["status"]["published"])
@@ -2049,7 +2247,7 @@ class GatherAnEarlierYear(unittest.TestCase):
                 self.assertEqual(old["sum_checks_unavailable"], ["B1", "C1", "H1"])
                 self.assertTrue(old["federal_fall_loaded"])   # IPEDS has the fall; we did not compare
                 self.assertEqual(old["federal_left_out"],
-                                 {"single_campus": 0, "no_federal_figures": 0, "not_compared": published})
+                                 {"single_campus": 0, "shared_file": 0, "no_federal_figures": 0, "not_compared": published})
                 self.assertEqual(old["total"]["federal"],
                                  {"reports": 0, "values": 0, "matches": 0, "no_value": 0, "differs": 0,
                                                             "differs_2_to_10pct": 0, "differs_over_10pct": 0})

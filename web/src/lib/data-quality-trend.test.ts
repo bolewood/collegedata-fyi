@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V1, FIXTURE_SNAPSHOT_V2, FIXTURE_SNAPSHOT_V3 } from "./__fixtures__/data-quality-snapshot";
+import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V1, FIXTURE_SNAPSHOT_V2, FIXTURE_SNAPSHOT_V3, FIXTURE_SNAPSHOT_V4 } from "./__fixtures__/data-quality-snapshot";
 import { SnapshotError, percent, selectAllSnapshots, selectSnapshot, snapshotDay, type QualitySnapshot } from "./data-quality";
 import { buildTrend, cohortChanges, lineRuns, renewalRow, seriesStart, seriesStarts, trendRows, type TrendPoint, type TrendRow } from "./data-quality-trend";
 import { SNAPSHOT_DIR, loadAllSnapshots, loadLatestSnapshot } from "./data-quality-snapshots";
@@ -18,11 +18,12 @@ function at(base: QualitySnapshot, day: string, change: (s: QualitySnapshot) => 
 }
 const files = (...snaps: QualitySnapshot[]) => snaps.map((json, i) => ({ name: `f${i}.json`, json }));
 
-// Mixed formats, deliberately out of order: format 2 (Nov 17), format 4 (Nov 24), format 1 (Nov 10), format 3 (Nov 20).
+// Mixed formats, deliberately out of order: format 2 (Nov 17), format 5 (Nov 24), format 1 (Nov 10), format 3 (Nov 20), format 4 (Nov 22).
 // These four are valid snapshots (they go through the loader); the metric tests below use `shifted`, which changes numbers.
 const OLDEST = at(FIXTURE_SNAPSHOT_V1, "2026-11-10");
 const SECOND = at(FIXTURE_SNAPSHOT_V2, "2026-11-17");
 const THIRD = at(FIXTURE_SNAPSHOT_V3, "2026-11-20");
+const FOURTH = at(FIXTURE_SNAPSHOT_V4, "2026-11-22");
 const NEWEST = at(FIXTURE_SNAPSHOT, "2026-11-24");
 
 /**
@@ -50,13 +51,13 @@ const committedDays = () => fs.readdirSync(SNAPSHOT_DIR).filter((n) => n.endsWit
 
 describe("loading every snapshot", () => {
   it("reads snapshots of every format together, each against its own format, oldest first", () => {
-    const all = selectAllSnapshots(files(NEWEST, OLDEST, THIRD, SECOND));
-    expect(all.map((s) => s.snapshot_of.slice(0, 10))).toEqual(["2026-11-10", "2026-11-17", "2026-11-20", "2026-11-24"]);
-    expect(all.map((s) => s.public_format)).toEqual([1, 2, 3, 4]);
+    const all = selectAllSnapshots(files(NEWEST, OLDEST, FOURTH, THIRD, SECOND));
+    expect(all.map((s) => s.snapshot_of.slice(0, 10))).toEqual(["2026-11-10", "2026-11-17", "2026-11-20", "2026-11-22", "2026-11-24"]);
+    expect(all.map((s) => s.public_format)).toEqual([1, 2, 3, 4, 5]);
   });
 
   it("still picks the newest for the tables, whatever the order", () => {
-    expect(selectSnapshot(files(OLDEST, NEWEST, SECOND)).public_format).toBe(4);
+    expect(selectSnapshot(files(OLDEST, NEWEST, SECOND)).public_format).toBe(5);
     expect(selectSnapshot(files(NEWEST, OLDEST)).snapshot_of).toBe(NEWEST.snapshot_of);
   });
 

@@ -17,8 +17,7 @@ Awaiting Anthony's read.
 **Data quality**
 
 > Snapshot of {November 24, 2026}: {1,163} reports published with numbers
-> across {three} years, checked against federal figures and against their own
-> printed totals. Data quality here means the quality of what this archive
+> across {three} years, checked against their own printed totals{ and, for 2023-24 and 2024-25, against federal figures}. Data quality here means the quality of what this archive
 > publishes, not the quality of any school's own data.
 
 Small normal-case line under it (the PRD wants the run named on the page, so the file name stays):
@@ -28,12 +27,11 @@ Small normal-case line under it (the PRD wants the run named on the page, so the
 ## All years at a glance
 
 One row per year, newest first. Rates are shares of that year's published
-reports, except the admissions match rate, which is a share of values
-compared.
+reports, except the admissions match rate, which is a share of all the values that have a federal figure, including those with no usable CDS number.
 
 Table: published, set aside, couldn't read, not read yet, admissions match
 rate, and the three "adds up" rates. Under it: *Fields stored is left out here
-because 2023-24 is counted differently; see Table A.*
+because 2023-24 is published from one reading; see Table A.*
 
 ## Over time
 
@@ -49,13 +47,13 @@ With one snapshot:
 
 > Each value is the first snapshot's own number. These six rows come from the {year} row of "All years at a glance", above.
 
-> Renewal is for the whole archive, not one year: of the schools with a report for the year before the current one, the share that also has one for the current year. It is the headline figure on the Coverage page.
+> Renewal is for the whole archive, not one year: of the schools with a report for the year before the current one, the share that also has one for the current year. It is the headline figure on the Coverage page. The earlier-year count includes any report we hold for that year, including ones we set aside or couldn't read. A school counts as renewed only if its current-year report is one we have not set aside; a report we couldn't read still counts.
 
 With several:
 
 > The numbers for {year} in each of {n} snapshots, from {first date} to {last date}.
 
-> A change between snapshots can come from reports added to the archive, from fixes to how we read them, or both. Each value is that snapshot's own number, and each line is spaced by snapshot date.
+> A change between snapshots can come from reports added to the archive, from fixes to how we read them, or both. Counts can also fall when we remove duplicates or wrong files. Each value is that snapshot's own number, and each line is spaced by snapshot date.
 
 > At the {date} snapshot the comparison moved from {2025-26 of 2024-25} to {2026-27 of 2025-26}, so a new series starts there.
 
@@ -66,9 +64,14 @@ With several:
 ## Notices (only when they apply)
 
 - > {71} of the {404} published 2023-24 reports are numbered by a different
-  > year's form. Some question numbers in them point at a different question
-  > than the 2023-24 form's.
-- > No federal admissions figures for fall 2025 yet.
+  > year's form. These are our older readings, stored under another year's
+  > numbering, not the school's choice. Some question numbers in them point at
+  > a different question than the 2023-24 form's.
+- > Federal admissions and enrollment figures for fall 2025, and tuition figures for the 2026-27 academic year, are not loaded in this archive yet.
+
+  (Only what is missing is named: with enrollment loaded it reads "Federal admissions figures for fall {year}, and tuition figures for the {academic year} academic year, are not loaded…"; with tuition loaded too, "Federal admissions figures for fall {year} are not loaded…".)
+
+  (For a snapshot with no enrollment and tuition checks, only: *Federal admissions figures for fall {year} are not loaded in this archive yet.*)
 - > Older form: tables mapped, not every question.
 
   (No year has this notice today.)
@@ -79,7 +82,7 @@ With several:
 > read or not read yet, and how much of each form we stored.
 
 - > {n} reports counted. Set aside: {n} blank form, {n} too little read, {n}
-  > wrong file. Not counted: {n} removed{, {n} with no file}.
+  > wrong file. Not counted: {n} removed{, {n} with no file}{, {n} that are the same file as another report from the same school}.
 
   The ", {n} with no file" clause shows only when the year has reports with no
   file to read.
@@ -90,9 +93,9 @@ With several:
   > {n} reports numbered by a different year's form have field numbers from that
   > form, whose size differs.}
 - **2023-24 only:**
-  > 2023-24 is counted differently. From 2024-25 on, fields stored also
-  > includes values from a second reading of the same file. This year counts one
-  > reading, so it reads lower partly for that reason.
+  > 2023-24 is published from one reading of each file, with no second
+  > reading. From 2024-25 on, fields stored also includes values from a second
+  > reading of the same file, so this year reads lower partly for that reason.
 
 ## Table A, by section: Fields stored and usable answers by section
 
@@ -119,14 +122,19 @@ says so: *Fewer than 5 reports, so no share is shown.*
   > medians are per report and per section, so they don't add up to a report's total,
   > and not every question applies to every school, so a share of 100% isn't
   > the goal. A low number can mean the school left a section blank, that we
-  > didn't reach it, or both; this table can't say which.
+  > didn't reach it, or both; this table can't say which. {For a year published
+  > from one reading whose section E median is 0, instead of the last sentence:}
+  > Section E is largely unread for 2023-24 in this archive: the median report
+  > stores none of its 32 fields there, so a low number there is ours, not the
+  > schools'. For the other sections, a low number can mean the school left a
+  > section blank, that we didn't reach it, or both; this table can't say which.
 - {Only when some reports are numbered by another year's form:} 
   > Left out: {n} reports numbered by a different year's form, whose field
   > numbers belong to that form.
 - **2023-24 only:**
-  > 2023-24 is counted differently. From 2024-25 on, fields stored also
-  > includes values from a second reading of the same file. This year counts one
-  > reading, so it reads lower partly for that reason.
+  > 2023-24 is published from one reading of each file, with no second
+  > reading. From 2024-25 on, fields stored also includes values from a second
+  > reading of the same file, so this year reads lower partly for that reason.
 
 "Usable" means `value_status` `reported` and nothing else. In the 2026-11-25
 run, over the 1,280 published reports numbered by their year's own form, the
@@ -153,10 +161,10 @@ text, only while the table is narrower than it needs (CSS only, no script):
 ## Table B: Admissions against federal figures
 
 > Applicants, admits and enrolled first-year students in each published report
-> (CDS C1), compared with the federal figures for the same fall.
+> (CDS C1), compared with the federal figures for the same fall { (IPEDS table ADM{fall}, variables APPLCN, ADMSSN and ENRLT, fall {fall}), only when the year has federal figures}.
 
 **When the year has no federal figures** (2025-26 today): right under the
-heading, *No federal admissions figures for fall 2025 yet.* The table shows
+heading, *Federal admissions figures for fall 2025 are not loaded in this archive yet.* The table shows
 dashes, and the notes about "No value", "Differs" and the size of the gap, the
 left-out note and the CSV button are hidden.
 
@@ -172,12 +180,15 @@ not reports).
 
 - > A value is compared only when the federal data has a positive figure for
   > it, and matches means within 2%. Left out: {n} reports we've marked as
-  > filed for one campus or unit (federal data reports the whole institution)
+  > filed for one campus or unit (federal data reports the whole institution){, {n} reports with a file filed under more than one federal record, which we can't compare to either record alone,}
   > and {n} whose school has no federal admissions figures.
+- > This snapshot doesn't record which IPEDS release (final or provisional), release date or imputation flag each figure came from. Where a final and a provisional release both have a figure, the final one is used. A school's page shows the release and imputation for its latest federal figures, which can be a later year than the one compared here.
 - > **No value** means no usable CDS number was available to compare. The
   > school may have left it blank. We may have missed it, read it under a
   > different year's numbering, or set it aside because it failed a sanity
-  > check. On its own, this table can't say which.
+  > check. On its own, this table can't say which. The match rate is matches
+  > over all the values that have a federal figure, including those with no
+  > usable CDS number, so a value we couldn't read counts against it.
 - > **Differs** isn't always ours. Schools sometimes report different figures
   > to the federal government than in their CDS, for example from a different
   > count date. A differing value may be our misreading or a real difference
@@ -194,7 +205,7 @@ not reports).
   > November 25, 2026), 8 had the number we compared in the school's file, so
   > the difference came from the federal side or from how the two filings were
   > matched, which can include our matching. 2 were on our side: one misread and
-  > one report filed for a different scope than the federal record.
+  > one report filed for a different scope than the federal record, which Table B for 2024-25 now leaves out.
 
 Why the size note says no more: the hand check of 10 reports covers mostly small
 gaps. Of its 15 differing values, 5 (in 3 reports) are over 10%: of those 3
@@ -220,8 +231,8 @@ the All formats row too.
 
 **Undergraduate enrollment (CDS B1)**
 
-- When the year has no federal figures for it: *No federal fall {year}
-  undergraduate enrollment figures yet.* The table shows dashes and its notes
+- When the year has no federal figures for it: *Federal fall {year}
+  undergraduate enrollment figures are not loaded in this archive yet.* The table shows dashes and its notes
   and CSV button are hidden.
 - > **Undergraduate enrollment** compares the total of all undergraduates in the
   > report (CDS B1: degree-seeking and not, full-time and part-time) with the
@@ -232,21 +243,22 @@ the All formats row too.
   > have no value:} {n} published {report is or reports are} numbered by a
   > different year's form, where the B1 total can be harder for us to find.
 - > Left out: {n} {report or reports} we've marked as filed for one campus or
-  > unit and {n} whose school has no federal undergraduate enrollment figure.
+  > unit{, {n} reports with a file filed under more than one federal record, which we can't compare to either record alone,} and {n} whose school has no federal undergraduate enrollment figure.
   > **No value** means no usable CDS number was available to compare: the
   > school may have left it blank, or we may have missed it or set it aside.
-  > **Differs** isn't always ours.
+  > **Differs** isn't always ours. The match rate is matches over all the
+  > reports checked, including those with no usable CDS number.
 
 **Tuition (CDS G1)**
 
-- When the year has none: *No federal tuition figures for the {academic year}
-  academic year yet.* (2024-25 and 2025-26 today: the federal tuition for
+- When the year has none: *Federal tuition figures for the {academic year}
+  academic year are not loaded in this archive yet.* (2024-25 and 2025-26 today: the federal tuition for
   academic years 2025-26 and 2026-27 is not loaded.)
 - > **Tuition** compares the report's tuition for all undergraduates (CDS G1:
   > the in-state figure when the school gives one, else the single private
   > figure) with the federal in-state average tuition for full-time
   > undergraduates (IPEDS table {table}, variable TUITION2, academic year {academic
-  > year}). The CDS form for {cds year} asks for that following year's tuition.
+  > year}). The CDS form for {cds year} names both years, and its G1 asks for the following year's tuition; schools differ in which of the two they report.
   > Neither includes required fees, which each lists separately. A report can
   > differ for reasons that aren't errors: per-credit or program-specific
   > pricing, a figure for a different year or group of students, or a school
@@ -299,9 +311,8 @@ difference an error.
   > missed by more. **Can't check** means no sum could be checked: the rows or
   > the total a sum needs weren't read, or the printed total is zero beside
   > non-zero rows.
-- > Off by under 2% is usually the school's file: it mostly means a small cell,
-  > such as students of unknown sex, left out of the rows while the total
-  > includes it. Off by more isn't always ours either, because some printed
+- > For financial aid, adds up partly reflects how we read the table: for some layouts the reader keeps a financial aid table only when its totals add up, so for those a reading that fails the check shows as can't check, not as doesn't add up.
+- > Off by under 2% is often a small cell, such as students of another or unknown gender: the school may have left it out of the rows while the total includes it, or we may not have read it.{ For 2024-25 only: We know of one gap on our side: in 2024-25 we don't yet read the another-gender cells in fillable PDFs, so those reports can miss by a few students.} Off by more isn't always ours either, because some printed
   > totals don't add up in the school's own file, but it is where our reading
   > errors show. Can't check can be a blank in the school's file, an unfilled
   > automatic total, a miss on our side, or a different year's numbering.
@@ -314,7 +325,7 @@ difference an error.
   The sentence shows only while the snapshot's 2023-24 count is within 90% to
   110% of 217 (196 to 238), so it disappears once a fix shrinks the pool, or a
   regression grows it, instead of going false.
-  There is no sentence about a fix: none is merged.
+  There is no sentence about the fix: it is merged, but its re-clean has not run, so the served numbers have not changed.
 
 ## How to read this
 
@@ -327,7 +338,7 @@ difference an error.
 > Some school files disagree with themselves, for example a residency table
 > whose totals differ from the table by sex. For admissions counts we use the
 > rows by sex when both men and women were read, and the printed total
-> otherwise.
+> otherwise. Another-gender rows aren't always read, so for some reports the rows by sex add up to less than the printed total.
 
 > A format with fewer than 5 reports in a table shows its counts but no
 > percentage, because a rate over so few reports isn't meaningful. Year totals
@@ -340,8 +351,8 @@ difference an error.
 
 ## /coverage strings added by PRD 040
 
-- Tile: **This year's reports on file**, "Of the {n} schools with a {previous}
-  report on file, {n} also have a {current} report on file. Snapshot of {date}."
+- Tile: **{current year} reports on file** (it read "This year's reports on file" until the launch review; this tile is public), "Of the {n} schools with a {previous}
+  report on file, {n} also have a {current} report on file. The earlier-year count includes any report we hold for that year, including ones we set aside or couldn't read. A school counts as renewed only if its current-year report is one we have not set aside; a report we couldn't read still counts. Snapshot of {date}."
 - Tile: **Colleges tracked**: "Accept federal aid and enroll undergraduates".
 - Tile: **Undergrads with CDS numbers**: "Share of undergraduates at tracked
   colleges with CDS numbers on file. {n} colleges have no enrollment figure and
