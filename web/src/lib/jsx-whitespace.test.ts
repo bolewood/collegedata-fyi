@@ -56,11 +56,6 @@ export const ALLOWED: Allowed[] = [
     text: "TABLE",
     reason: 'A plural suffix: "{n} TABLE" + {n === 1 ? "" : "S"} is meant to read TABLES, not TABLE S.',
   },
-  {
-    file: "components/DataQualityView.tsx",
-    text: "removed",
-    reason: 'Next is a template starting with ", " (", N with no file"), which attaches to "removed" on purpose. Pre-#517 text; #517 replaces it.',
-  },
 ];
 
 /** What a node renders at its edge ("start" or "end"), as the possible strings, so a space can be seen inside an expression. */
