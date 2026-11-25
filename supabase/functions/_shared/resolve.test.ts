@@ -1,6 +1,7 @@
 import { assertEquals, assertExists } from "jsr:@std/assert";
 import {
   applyPinnedUrls,
+  capSubpages,
   mergeHintWithPageDocs,
   pickCandidates,
   type ResolvedCandidate,
@@ -1346,4 +1347,12 @@ Deno.test("extractIrHubLinks: links that a <base href> sends to another host are
     </body></html>
   `;
   assertEquals(extractIrHubLinks(home, "https://www.example.edu/home/index.html"), []);
+});
+
+Deno.test("capSubpages: reports how many subpages the cap dropped", () => {
+  const subs = Array.from({ length: 30 }, (_, i) => i);
+  const r = capSubpages(subs, 25);
+  assertEquals(r.kept.length, 25);
+  assertEquals(r.dropped, 5);
+  assertEquals(capSubpages([1, 2], 25), { kept: [1, 2], dropped: 0 });
 });

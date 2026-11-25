@@ -59,6 +59,7 @@ import {
   DirectoryRow,
   LatestTerminal,
   normalizeSeedUrl,
+  schoolIdsWithDatedCds,
   selectCandidates,
 } from "./select.ts";
 import { ProbeOutcome } from "../_shared/probe_outcome.ts";
@@ -387,15 +388,21 @@ async function loadSchoolsWithCds(
   // cds_documents holds one row per (school, sub-institutional, year).
   // We just need the distinct school_ids; PostgREST has no DISTINCT but
   // dedup'ing in JS over a few thousand rows is trivial.
-  const result = await fetchPaged<{ school_id: string }>((start, end) =>
+  // Only live rows (removed_at is null) with a real YYYY-YY year count as
+  // "has a CDS". A school whose only rows are taken down or undated
+  // (`unknown`) must stay eligible for seeding. fetchPaged is exhaustive
+  // and returns an error at HARD_CAP, so a short read can't pass silently.
+  const result = await fetchPaged<{ school_id: string; cds_year: string }>((start, end) =>
     supabase
       .from("cds_documents")
-      .select("school_id")
+      .select("school_id, cds_year")
+      .is("removed_at", null)
       .order("school_id", { ascending: true })
+      .order("id", { ascending: true })
       .range(start, end)
   );
   if ("error" in result) return result;
-  return { schoolIds: new Set(result.rows.map((r) => r.school_id)) };
+  return { schoolIds: schoolIdsWithDatedCds(result.rows) };
 }
 
 async function loadInFlightSchools(

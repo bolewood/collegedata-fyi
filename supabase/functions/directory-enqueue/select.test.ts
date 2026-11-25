@@ -6,6 +6,7 @@ import {
   DirectoryRow,
   LatestTerminal,
   normalizeSeedUrl,
+  schoolIdsWithDatedCds,
   selectCandidates,
   SelectionInputs,
   SkipReason,
@@ -318,4 +319,14 @@ Deno.test("normalizeSeedUrl: invalid https URL returns null", () => {
   // Existing https-prefixed input that does not parse as a URL is
   // rejected rather than silently passed through.
   assertEquals(normalizeSeedUrl("https://"), null);
+});
+
+Deno.test("schoolIdsWithDatedCds: unknown-only schools do not count as having a CDS", () => {
+  const ids = schoolIdsWithDatedCds([
+    { school_id: "a", cds_year: "2025-26" },
+    { school_id: "b", cds_year: "unknown" },
+    { school_id: "c", cds_year: "unknown" },
+    { school_id: "c", cds_year: "2023-24" },
+  ]);
+  assertEquals([...ids].sort(), ["a", "c"]);
 });

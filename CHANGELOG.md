@@ -8,6 +8,14 @@ History before 0.1.0.0 (2026-08-03), including the June and July 2026 work, is n
 
 ## [Unreleased]
 
+### Fixed
+
+- When a school's CDS page disappears, the archive now marks the newest dated
+  year as gone, not an undated file that happened to sort first.
+- Schools whose only CDS rows are undated or taken down can be seeded again.
+- The resolver now logs and reports how many subpage links it skipped past its
+  25-page cap.
+
 ## [0.6.24.0] - 2026-11-18
 
 Covers #317 to #346: the named scholarship directory grows to its planned size

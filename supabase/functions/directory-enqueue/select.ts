@@ -187,3 +187,13 @@ export function normalizeSeedUrl(raw: string | null | undefined): string | null 
     return null;
   }
 }
+
+// Distinct school_ids with at least one row whose cds_year is a real
+// "YYYY-YY" year. `unknown` and other non-year values do not count.
+export function schoolIdsWithDatedCds(
+  rows: { school_id: string; cds_year: string }[],
+): Set<string> {
+  return new Set(
+    rows.filter((r) => /^\d{4}-\d{2}$/.test(r.cds_year ?? "")).map((r) => r.school_id),
+  );
+}

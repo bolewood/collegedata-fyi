@@ -65,10 +65,38 @@ export async function fetchDocumentForSchoolYear(
   return (data as CdsDocumentRow | null) ?? null;
 }
 
-// Most recent row (by cds_year desc) for a school with no sub-institutional
-// variant. Used by the "hint resolution failed" path to mark only the
-// current-year row as removed, not every historical year the school has
-// ever published. Returns null if the school has never been archived.
+const REAL_CDS_YEAR_RE = /^(\d{4})-\d{2}$/;
+
+// Newest document by integer start year among rows with a real "YYYY-YY"
+// year. The `unknown` sentinel (and any other non-year value) sorts ABOVE
+// every real year as text, so a text sort picks the undated row as "most
+// recent". Falls back to an undated row only when the school has no dated
+// document at all, so the caller still gets something to act on.
+export function pickMostRecentDocument<T extends { cds_year: string }>(
+  rows: T[],
+): T | null {
+  let best: T | null = null;
+  let bestStart = -Infinity;
+  for (const row of rows) {
+    const m = REAL_CDS_YEAR_RE.exec(row.cds_year ?? "");
+    if (!m) continue;
+    const start = Number(m[1]);
+    if (start > bestStart) {
+      best = row;
+      bestStart = start;
+    }
+  }
+  if (best) return best;
+  return rows[0] ?? null;
+}
+
+// Most recent live row (removed_at is null; operator takedowns are skipped)
+// for a school with no sub-institutional variant, chosen by integer start
+// year in code, never by a text sort. Used by the "hint resolution failed"
+// path to mark only the current-year row as source-gone, not every
+// historical year the school has ever published. The failing URL is the
+// school's landing hint, which is not tied to one document, so "newest
+// dated year" is the right target. Returns null if nothing live exists.
 export async function fetchMostRecentDocumentForSchool(
   client: SupabaseClient,
   schoolId: string,
@@ -78,11 +106,9 @@ export async function fetchMostRecentDocumentForSchool(
     .select("*")
     .eq("school_id", schoolId)
     .is("sub_institutional", null)
-    .order("cds_year", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .is("removed_at", null);
   if (error) throw new Error(`fetchMostRecentDocumentForSchool: ${error.message}`);
-  return (data as CdsDocumentRow | null) ?? null;
+  return pickMostRecentDocument((data ?? []) as CdsDocumentRow[]);
 }
 
 export async function fetchLatestSourceArtifact(
