@@ -316,6 +316,7 @@ def doc(document_id: str, year: str, **overrides) -> dict:
     }
     base.update(overrides)
     base.setdefault("federal_values", values_for(base["federal"]))
+    base.setdefault("sections", {"A": {"reported": 10, "not_applicable": 2}, "C": {"reported": 100, "parse_error": 3}})
     return base
 
 
@@ -525,7 +526,7 @@ class PublicSnapshot(unittest.TestCase):
         return next(y for y in self.public["years"] if y["cds_year"] == name)
 
     def test_top_level_and_renewal(self) -> None:
-        self.assertEqual(self.public["public_format"], 2)
+        self.assertEqual(self.public["public_format"], 3)
         self.assertEqual(self.public["snapshot_of"], "2026-11-25T01:15:08Z")
         self.assertEqual(self.public["scoreboard_run"], "scoreboard-20261125T011508Z.json")
         self.assertEqual(self.public["renewal"], self.run["renewal"])
@@ -805,6 +806,150 @@ class FederalDifferenceSize(unittest.TestCase):
         broken["years"][0]["total"]["federal"]["differs_over_20pct"] = 1
         with self.assertRaises(ValueError):
             scoreboard.check_public_shape(broken)
+
+
+
+class SectionsPublic(unittest.TestCase):
+    """Fields stored and usable answers by CDS section (public format 3)."""
+
+    Q = {"A": 10, "B": 20}
+
+    def block(self, docs: list[dict], year: str = "2024-25", questions: dict | None = None) -> dict:
+        return scoreboard.section_block(year, docs, self.Q if questions is None else questions)
+
+    def d(self, number: int, sections: dict, year: str = "2024-25", **kw) -> dict:
+        return doc(f"s{number}", year, sections=sections, **kw)
+
+    def row(self, block: dict, letter: str) -> dict:
+        return next(r for r in block["rows"] if r["section"] == letter)
+
+    def test_questions_come_from_the_form_schema(self) -> None:
+        q = scoreboard.section_questions("2024-25")
+        self.assertEqual(list(q), list("ABCDEFGHIJ"))
+        self.assertEqual((q["A"], q["C"], q["J"]), (51, 278, 120))
+        self.assertEqual(sum(q.values()), scoreboard.forms_for(["2024-25"])["2024-25"]["field_count"])
+        self.assertEqual(scoreboard.section_questions("2022-23"), {})
+
+    def test_every_full_schema_year_has_the_questions_its_schema_file_lists(self) -> None:
+        # Hand-counted from schemas/cds_schema_<year>.json by question-number prefix; a changed or dropped section fails.
+        expected = {
+            "2023-24": dict(zip("ABCDEFGHIJ", (51, 196, 274, 70, 32, 60, 47, 154, 49, 120))),
+            "2024-25": dict(zip("ABCDEFGHIJ", (51, 219, 278, 73, 32, 60, 47, 154, 49, 120))),
+            "2025-26": dict(zip("ABCDEFGHIJ", (63, 204, 278, 88, 34, 58, 46, 165, 49, 120))),
+            "2026-27": dict(zip("ABCDEFGHIJ", (63, 204, 289, 88, 34, 58, 47, 165, 49, 120))),
+        }
+        for year, counts in expected.items():
+            with self.subTest(year):
+                self.assertEqual(scoreboard.section_questions(year), counts)
+                self.assertEqual(sum(counts.values()), scoreboard.forms_for([year])[year]["field_count"])
+
+    def test_medians_are_nearest_rank_p50_not_p10_or_an_average_for_odd_and_even_counts(self) -> None:
+        def reports(rows):
+            return [self.d(i, {"A": {"reported": r, "parse_error": e, "not_applicable": n}}) for i, (r, e, n) in enumerate(rows)]
+        # Five reports, (reported, parse_error, not_applicable): stored 10, 2, 7, 5, 8 and usable 9, 1, 5, 3, 7.
+        odd = self.row(self.block(reports([(9, 1, 0), (1, 0, 1), (5, 2, 0), (3, 0, 2), (7, 1, 0)])), "A")
+        self.assertEqual((odd["stored_median"], odd["usable_median"]), (7, 5))   # sorted 2 5 7 8 10 and 1 3 5 7 9; p10 would be 2 and 1
+        # Four reports: stored 3, 9, 4, 8 and usable 2, 8, 4, 6. Nearest rank takes the 2nd of 4 (not the 3rd, not the mean).
+        even = self.row(self.block(reports([(2, 1, 0), (8, 0, 1), (4, 0, 0), (6, 1, 1)])), "A")
+        self.assertEqual((even["stored_median"], even["usable_median"]), (4, 4))   # sorted 3 4 8 9 and 2 4 6 8; mean would be 6 and 5
+
+    def test_usable_means_reported_only(self) -> None:
+        block = self.block([self.d(1, {"A": {"reported": 4, "parse_error": 3, "not_applicable": 2, "missing": 1}})])
+        self.assertEqual(self.row(block, "A"), {"section": "A", "questions": 10, "stored_median": 10, "usable_median": 4})
+
+    def test_a_report_with_no_fields_in_a_section_counts_as_zero_and_medians_are_nearest_rank(self) -> None:
+        docs = [self.d(i, s) for i, s in enumerate([{"A": {"reported": 8}}, {"B": {"reported": 1}}, {"A": {"reported": 2}}])]
+        # A per report: 8, 0, 2 -> median 2. B: 0, 1, 0 -> 0.
+        block = self.block(docs)
+        self.assertEqual((self.row(block, "A")["stored_median"], self.row(block, "B")["stored_median"]), (2, 0))
+        # Even count: nearest rank takes the lower middle value, as Table A's fields stored does.
+        block = self.block([self.d(1, {"A": {"reported": 2}}), self.d(2, {"A": {"reported": 6}})])
+        self.assertEqual(self.row(block, "A")["stored_median"], 2)
+
+    def test_reports_numbered_by_another_years_form_are_left_out(self) -> None:
+        docs = [self.d(1, {"A": {"reported": 4}}), self.d(2, {"A": {"reported": 9}}, schema_version="2025-26")]
+        block = self.block(docs)
+        self.assertEqual(block["reports"], 1)
+        self.assertEqual(self.row(block, "A")["stored_median"], 4)
+
+    def test_no_full_schema_gives_no_rows(self) -> None:
+        self.assertEqual(self.block([self.d(1, {"C": {"reported": 1}})], year="2022-23", questions={}), {"reports": 0, "rows": []})
+
+    def test_refuses_what_cannot_be_set_against_the_form(self) -> None:
+        for sections, why in (({"A": {"reported": 11}}, "more fields than the form has questions"),
+                              ({"A": {"reported": 1, "mystery": 1}}, "unknown value_status"),
+                              ({"Z": {"reported": 1}}, "a section the form lacks")):
+            with self.subTest(why), self.assertRaises(SystemExit):
+                self.block([self.d(1, sections)])
+        broken = self.d(1, {})
+        del broken["sections"]
+        with self.assertRaises(SystemExit):
+            self.block([broken])
+
+    def test_a_snapshots_sections_add_up(self) -> None:
+        pub = scoreboard.build_public(synthetic_run(), "x.json")
+        for year in pub["years"]:
+            block = year["sections"]
+            self.assertEqual(block["reports"], year["total"]["status"]["published"] - year["other_form_numbering"])
+            self.assertEqual(sum(r["questions"] for r in block["rows"]), year["form"]["questions"])
+            for r in block["rows"]:
+                self.assertLessEqual(r["usable_median"], r["stored_median"])
+                self.assertLessEqual(r["stored_median"], r["questions"])
+
+    def test_zero_reports_give_zero_medians_and_rows_for_the_form(self) -> None:
+        block = self.block([self.d(1, {"A": {"reported": 4}}, schema_version="2025-26")])
+        self.assertEqual(block["reports"], 0)
+        self.assertEqual([r["stored_median"] + r["usable_median"] for r in block["rows"]], [0, 0])
+        self.assertEqual([r["questions"] for r in block["rows"]], [10, 20])
+        self.assertEqual(self.block([]), {"reports": 0, "rows": [{"section": "A", "questions": 10, "stored_median": 0, "usable_median": 0},
+                                                                  {"section": "B", "questions": 20, "stored_median": 0, "usable_median": 0}]})
+
+    def test_the_section_arithmetic_is_enforced_when_the_snapshot_is_written(self) -> None:
+        pub = scoreboard.build_public(synthetic_run(), "x.json")
+        scoreboard.check_public_sections(pub)
+        year = lambda p: p["years"][0]["sections"]  # noqa: E731
+        cases = {
+            # The questions are moved to the next section so the sum still matches and only this rule can fire.
+            "no questions": lambda p: (year(p)["rows"][1].update(questions=year(p)["rows"][1]["questions"] + year(p)["rows"][0]["questions"]),
+                                       year(p)["rows"][0].update(questions=0, stored_median=0, usable_median=0)),
+            "questions sum": lambda p: year(p)["rows"][0].update(questions=year(p)["rows"][0]["questions"] + 1),
+            "reports": lambda p: year(p).update(reports=year(p)["reports"] + 1),
+            "usable above stored": lambda p: year(p)["rows"][2].update(usable_median=year(p)["rows"][2]["stored_median"] + 1),
+            "stored above questions": lambda p: year(p)["rows"][2].update(stored_median=year(p)["rows"][2]["questions"] + 1,
+                                                                        usable_median=0),
+            "order": lambda p: year(p)["rows"].reverse(),
+            "omitted last section": lambda p: year(p)["rows"].pop(),
+            "omitted middle section": lambda p: year(p)["rows"].pop(3),
+            "repeat": lambda p: year(p)["rows"].append(dict(year(p)["rows"][0])),
+            "rows without a schema": lambda p: p["years"][0]["form"].update(full_field_schema=False),
+            "no rows with a schema": lambda p: year(p).update(rows=[]),
+            "median without reports": lambda p: (year(p).update(reports=0), p["years"][0].update(other_form_numbering=p["years"][0]["total"]["status"]["published"])),
+        }
+        for name, mutate in cases.items():
+            broken = json.loads(json.dumps(pub))
+            mutate(broken)
+            with self.subTest(name), self.assertRaises(SystemExit):
+                scoreboard.check_public_sections(broken)
+
+    def test_build_public_runs_the_section_arithmetic(self) -> None:
+        real = scoreboard.section_block
+
+        def wrong(*args, **kwargs):
+            block = real(*args, **kwargs)
+            return {**block, "reports": block["reports"] + 1}
+        with mock.patch.object(scoreboard, "section_block", wrong), self.assertRaisesRegex(SystemExit, "sections: reports is"):
+            scoreboard.build_public(synthetic_run(), "x.json")
+
+    def test_the_public_shape_requires_and_limits_the_keys(self) -> None:
+        pub = scoreboard.build_public(synthetic_run(), "x.json")
+        for mutate in (lambda y: y.pop("sections"), lambda y: y["sections"].pop("reports"),
+                       lambda y: y["sections"]["rows"][0].pop("usable_median"),
+                       lambda y: y["sections"]["rows"][0].update(extra=1),
+                       lambda y: y["sections"]["rows"][0].update(usable_median=-1)):
+            broken = json.loads(json.dumps(pub))
+            mutate(broken["years"][0])
+            with self.assertRaises(ValueError):
+                scoreboard.check_public_shape(broken)
 
 
 class PublicInputs(unittest.TestCase):
@@ -1185,6 +1330,9 @@ class GatherOnAFakeApi(unittest.TestCase):
             "C.101": {"value": "100"}, "C.102": {"value": "150"}, "C.105": {"value": "80"},
             "C.106": {"value": "90"}, "C.109": {"value": "30"}, "C.111": {"value": "40"},
             "C.201": {"value": "N/A"}, "G.102": {"value": ""},
+            # H.401 (the graduating class) is a year, not a count: fails a sanity rule. H.511 is a loan average of 0
+            # beside a borrower count of 0 (H.501): nobody borrowed.
+            "H.401": {"value": "2023"}, "H.501": {"value": "0"}, "H.511": {"value": "0"},
         }
         p, e, s, n = "2024-25", "2024-25", "2024-25", "2025-26"
         tables = {
@@ -1209,7 +1357,7 @@ class GatherOnAFakeApi(unittest.TestCase):
                 field_row("P", p, "B.193", 5000), field_row("P", p, "G.108", 11000), field_row("P", p, "G.109", 30000),
                 field_row("P", p, "G.104", 10500), field_row("P", p, "G.105", 29500),
                 field_row("P", p, "G.102", None, "not_applicable"), field_row("P", p, "C.101", 100),
-                field_row("P", p, "C.201", None, "not_reported"), field_row("P", p, "A.001", None, "reported"),
+                field_row("P", p, "C.201", None, "parse_error"), field_row("P", p, "A.001", None, "reported"),
                 field_row("E", e, "B.193", 2000), field_row("E", e, "G.101", 40000), field_row("E", e, "G.102", 41000),
                 field_row("S", s, "B.193", 800), field_row("S", s, "C.201", None, "not_applicable"),
                 field_row("N", n, "B.176", 900), field_row("N", n, "G.108", 9000),
@@ -1345,11 +1493,33 @@ class GatherOnAFakeApi(unittest.TestCase):
         self.assertEqual(self.by_id["O"]["sections"], {
             "A": {"reported": 1}, "B": {"reported": 1},
             "C": {"not_applicable": 1, "reported": 6},
-            "G": {"missing": 1, "reported": 4}})
+            "G": {"missing": 1, "reported": 4},
+            # H.401 fails a sanity rule (parse_error), H.511 has no borrowers (not_applicable), H.501 is a real 0.
+            "H": {"not_applicable": 1, "parse_error": 1, "reported": 1}})
+
+    def test_a_2023_24_artifact_gets_the_projections_downgrades_not_the_raw_parse(self) -> None:
+        # Without them H.401 and H.511 would both be counted as usable.
+        self.assertEqual(self.by_id["O"]["sections"]["H"].get("reported"), 1)
+        defs = scoreboard.projection.load_schema_definitions()["2023-24"]
+        down = lambda values, version="2023-24": scoreboard.effective_statuses(values, defs, version)  # noqa: E731
+        # A year given as the graduating class fails a rule: parse_error, not a usable number.
+        self.assertEqual(down({"H.401": {"value": "2023"}, "G.108": {"value": "9000"}}),
+                         {"H.401": "parse_error", "G.108": "reported"})
+        # A loan average of 0 with no borrowers is not applicable; one beside real borrowers is left alone.
+        loans = {"H.501": {"value": "10"}, "H.502": {"value": "0"}, "H.512": {"value": "0"},
+                 "H.503": {"value": "3"}, "H.513": {"value": "0"}}
+        self.assertEqual(down(loans), {"H.501": "reported", "H.502": "reported", "H.512": "not_applicable",
+                                       "H.503": "reported", "H.513": "reported"})
+        # A form the sanity rules don't cover is left alone.
+        self.assertEqual(set(down(loans, "2018-19").values()), {"reported"})
+        # A borrower count that failed a rule is not evidence of "no borrowers". H.501 = 0 (any loan) is flagged because
+        # H.503 = 3 exceeds it, and H.511 = 0 sits beside that 0: without the filter H.511 would be "not_applicable".
+        failed = down({"H.501": {"value": "0"}, "H.511": {"value": "0"}, "H.503": {"value": "3"}, "H.513": {"value": "0"}})
+        self.assertEqual(failed, {"H.501": "parse_error", "H.503": "parse_error", "H.511": "reported", "H.513": "reported"})
 
     def test_sections_of_a_projected_document_and_the_sum_rule(self) -> None:
         self.assertEqual(self.by_id["P"]["sections"], {
-            "A": {"reported": 1}, "B": {"reported": 1}, "C": {"not_reported": 1, "reported": 1},
+            "A": {"reported": 1}, "B": {"reported": 1}, "C": {"parse_error": 1, "reported": 1},
             "G": {"not_applicable": 1, "reported": 4}})
         for document in self.by_id.values():
             with self.subTest(document=document["document_id"]):

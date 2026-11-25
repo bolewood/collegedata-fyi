@@ -115,8 +115,8 @@ describe("gate: CSV downloads on both tabs", () => {
     const dqOpen = renderToStaticMarkup(<DataQualityView snapshot={FIXTURE_SNAPSHOT} />);
     expect(covOpen).toContain("Download this view (CSV)");
     expect(covOpen).toContain("Download all colleges (CSV)");
-    // 2025-26 has no federal figures, so Table B has no download: two tables, two links.
-    expect(dqOpen.match(/as CSV/g)).toHaveLength(2);
+    // 2025-26 has no federal figures, so Table B has no download: Table A, Table A by section and Table C, three links.
+    expect(dqOpen.match(/as CSV/g)).toHaveLength(3);
     // Plain links to the route, for the selected year, one per table.
     expect(dqOpen).toContain('href="/data-quality/csv/reports/2025-26"');
     expect(dqOpen).not.toContain('href="/data-quality/csv/federal/2025-26"');
@@ -258,7 +258,7 @@ describe("gate: the real snapshot loader", () => {
       at(when);
       const snap = loadLatestSnapshot();
       expect(snap.snapshot_of).toBe(newest);
-      expect(snap.public_format).toBe(2);
+      expect(snap.public_format).toBe(3);
       expect(snap.scoreboard_run).toMatch(/^scoreboard-\d{8}T\d{6}Z\.json$/);
     }
   });
@@ -281,6 +281,35 @@ describe("gate: the real snapshot loader", () => {
     // [differs, over 2% to 10%, over 10%], from scoreboard-20261125T140926Z.json. Pinned in two parts so a balanced
     // transcription error (one part up, the other down) fails here even though the arithmetic checks still pass.
     expect(split).toEqual({ "2023-24": [116, 70, 46], "2024-25": [120, 61, 59], "2025-26": [0, 0, 0] });
+  });
+
+  it("pins the committed snapshot's sections per year (reports, then section, questions, fields stored, usable answers)", () => {
+    const first = JSON.parse(fs.readFileSync(path.join(SNAPSHOT_DIR, "2026-11-25.json"), "utf8"));
+    const got = Object.fromEntries(
+      first.years.map((y: { cds_year: string; sections: { reports: number; rows: { section: string; questions: number; stored_median: number; usable_median: number }[] } }) => [
+        y.cds_year,
+        [y.sections.reports, y.sections.rows.map((r) => [r.section, r.questions, r.stored_median, r.usable_median])],
+      ]),
+    );
+    // From scoreboard-20261125T140926Z.json. Pinned for every year so a balanced transcription error fails here.
+    expect(got).toEqual({
+      "2023-24": [366, [["A", 51, 6, 6], ["B", 196, 143, 143], ["C", 274, 112, 112], ["D", 70, 15, 14], ["E", 32, 0, 0], ["F", 60, 16, 16], ["G", 47, 20, 20], ["H", 154, 52, 52], ["I", 49, 31, 31], ["J", 120, 27, 27]]],
+      "2024-25": [491, [["A", 51, 11, 11], ["B", 219, 158, 156], ["C", 278, 123, 122], ["D", 73, 27, 25], ["E", 32, 19, 19], ["F", 60, 35, 35], ["G", 47, 23, 22], ["H", 154, 92, 91], ["I", 49, 41, 41], ["J", 120, 26, 26]]],
+      "2025-26": [423, [["A", 63, 26, 23], ["B", 204, 152, 152], ["C", 278, 142, 141], ["D", 88, 27, 23], ["E", 34, 21, 21], ["F", 58, 37, 37], ["G", 46, 24, 23], ["H", 165, 108, 107], ["I", 49, 42, 42], ["J", 120, 27, 27]]],
+    });
+  });
+
+  it("gives each committed year the question counts of its schema file, section by section", () => {
+    const first = JSON.parse(fs.readFileSync(path.join(SNAPSHOT_DIR, "2026-11-25.json"), "utf8"));
+    for (const y of first.years as { cds_year: string; sections: { rows: { section: string; questions: number }[] } }[]) {
+      const schema = JSON.parse(fs.readFileSync(path.join(SNAPSHOT_DIR, "../../../../schemas", `cds_schema_${y.cds_year.replace("-", "_")}.json`), "utf8"));
+      const counts: Record<string, number> = {};
+      for (const f of schema.fields as { question_number: string }[]) {
+        const letter = f.question_number.split(".")[0];
+        counts[letter] = (counts[letter] ?? 0) + 1;
+      }
+      expect(Object.fromEntries(y.sections.rows.map((r) => [r.section, r.questions])), y.cds_year).toEqual(counts);
+    }
   });
 
   it("reads real files, picks the newest, and fails on same-date files in both states", () => {
