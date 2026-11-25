@@ -557,7 +557,7 @@ const academicYear = (start: number) => `${start}-${String((start + 1) % 100).pa
 const RELEASE_NOTE = "This snapshot doesn’t record which IPEDS release (final or provisional), release date or imputation flag each figure came from. Where a final and a provisional release both have a figure, the final one is used. A school’s page shows the release and imputation for its latest federal figures, which can be a later year than the one compared here.";
 
 /** What each extra check compares, in the page's words. The IPEDS table and variable follow the data year. */
-function checkCopy(check: CheckName, dataYear: number) {
+function checkCopy(check: CheckName, dataYear: number, otherNumbered: number) {
   if (check === "enrollment") {
     return {
       heading: "Undergraduate enrollment (CDS B1)",
@@ -568,7 +568,9 @@ function checkCopy(check: CheckName, dataYear: number) {
           <strong>Undergraduate enrollment</strong> compares the total of all undergraduates in the report (CDS B1:
           degree-seeking and not, full-time and part-time) with the federal fall undergraduate enrollment (IPEDS table
           DRVEF{dataYear}, variable EFUG, fall {dataYear}). Both count undergraduates on a fall census date, and the
-          dates can differ. A school may also count a different group of students in each.
+          dates can differ. A school may also count a different group of students in each.{" "}
+          {otherNumbered > 0 &&
+            `Many of the reports with no value are among the ${n(otherNumbered)} numbered by a different year’s form, where the B1 total is harder for us to find.`}
         </>
       ),
     };
@@ -579,8 +581,9 @@ function checkCopy(check: CheckName, dataYear: number) {
     noFigure: "federal tuition figure",
     note: (
       <>
-        <strong>Tuition</strong> compares the report’s tuition for all undergraduates (CDS G1: the single private
-        figure, else the in-state figure) with the federal published in-state tuition (IPEDS table IC{dataYear}_AY, which
+        <strong>Tuition</strong> compares the report’s tuition for all undergraduates (CDS G1: the in-state figure when
+        the school gives one, else the single private figure) with the federal in-state average tuition for full-time
+        undergraduates (IPEDS table IC{dataYear}_AY, which
         our federal facts label COST1_{dataYear}, variable TUITION2, academic year {academicYear(dataYear)}). The CDS form for {academicYear(dataYear - 1)} asks
         for that following year’s tuition. Neither includes required fees,
         which each lists separately. A report can differ for reasons that aren’t errors: per-credit or program-specific
@@ -617,7 +620,7 @@ function FederalChecks({ year }: { year: QualityYear }) {
 function CheckTable({ year, check }: { year: QualityYear; check: CheckName }) {
   const info = year.federal_checks![check];
   const loaded = info.loaded;
-  const copy = checkCopy(check, info.data_year);
+  const copy = checkCopy(check, info.data_year, year.other_form_numbering);
   const id = `dq-table-${check}`;
   return (
     <div style={{ marginTop: 28 }}>

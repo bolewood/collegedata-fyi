@@ -388,14 +388,17 @@ path").
     different group. In the 2026-11-25 run 90% of the reports that have both a B1
     total and a federal figure are within 2% (the table's match rate, 74% and
     77%, also counts the reports with no usable B1 total).
-  - **Tuition:** one figure per report, the all-undergraduates private figure
-    (G.102) else the in-state figure (G.108), a 0 counting as no value, against IPEDS `TUITION2`
-    (COST1, in-state, academic year starting the fall after the CDS year,
+  - **Tuition:** one figure per report, the all-undergraduates in-state figure
+    (G.108) when filled, else the private single figure (G.102), a 0 counting
+    as no value, against IPEDS `TUITION2` (in-state average tuition for
+    full-time undergraduates, table IC<year>_AY, labelled COST1_<year> in our
+    facts, academic year starting the fall after the CDS year,
     because the form asks for the following year's price). Neither includes
     required fees (IPEDS FEE2, CDS G.111). Out-of-state (G.109/TUITION3) and
     first-year rows are not compared: one figure per report keeps a school that
     fills several rows from counting several times, and the first-year rows
-    match the all-undergraduates rows closely. Not aligned: per-credit or
+    match the all-undergraduates rows closely. G.108 comes first because a public
+    school that fills G.102 too has put another rate there (West Chester). Not aligned: per-credit or
     program-specific pricing, several rates, a different year.
   - Whether IPEDS figures are loaded is per check and per year: the CDS 2024-25
     and 2025-26 tuition (IPEDS 2025 and 2026) and 2025-26 enrollment (fall

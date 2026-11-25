@@ -1562,8 +1562,9 @@ def check_public_sections(public: dict[str, Any]) -> None:
 def federal_check_pair(d: dict[str, Any], check: str) -> tuple[Optional[Decimal], Optional[Decimal]]:
     """(our number, IPEDS figure) for one report and one of the two extra checks.
     enrollment: our B1 total of all undergraduates against IPEDS fall undergraduate enrollment.
-    tuition: our all-undergraduates tuition (G.102, the private single figure, else G.108, in-state)
-    against IPEDS in-state tuition (TUITION2). Out-of-state and first-year tuition are not compared:
+    tuition: our all-undergraduates in-state tuition (G.108) when it is filled, else the private single figure
+    (G.102), against IPEDS in-state tuition (TUITION2). G.108 comes first because a public school that fills G.102
+    too has put its out-of-state or another rate there (west-chester: G.102 = IPEDS out-of-state, G.108 = in-state). Out-of-state and first-year tuition are not compared:
     one figure per report keeps a school that fills several rows from counting several times."""
     extra = d.get("federal_extra")
     if extra is None:
@@ -1571,7 +1572,7 @@ def federal_check_pair(d: dict[str, Any], check: str) -> tuple[Optional[Decimal]
     if check == "enrollment":
         names = ["b1_undergraduates"]
     else:
-        names = ["g1_private_undergraduates", "g1_in_state_undergraduates"]
+        names = ["g1_in_state_undergraduates", "g1_private_undergraduates"]
     # A tuition of 0 is a form's blank (a public school's G.102 beside its real G.108), not a price: no value.
     chosen = next((extra[n] for n in names if extra[n]["ours"] is not None and Decimal(extra[n]["ours"]) > 0), extra[names[0]])
     if chosen["ours"] is not None and Decimal(chosen["ours"]) <= 0:

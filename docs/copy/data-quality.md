@@ -204,7 +204,9 @@ the All formats row too.
   > federal fall undergraduate enrollment (IPEDS table DRVEF{year}, variable
   > EFUG, fall {year}). Both count undergraduates on a fall census date, and the
   > dates can differ. A school may also count a different group of students in
-  > each.
+  > each. {Only when some reports are numbered by another year's form:} Many of
+  > the reports with no value are among the {n} numbered by a different year's
+  > form, where the B1 total is harder for us to find.
 - > Left out: {n} {report or reports} we've marked as filed for one campus or
   > unit and {n} whose school has no federal undergraduate enrollment figure.
   > **No value** means no usable CDS number was available to compare: the
@@ -217,8 +219,9 @@ the All formats row too.
   academic year yet.* (2024-25 and 2025-26 today: the federal tuition for
   academic years 2025-26 and 2026-27 is not loaded.)
 - > **Tuition** compares the report's tuition for all undergraduates (CDS G1:
-  > the single private figure, else the in-state figure) with the federal
-  > published in-state tuition (IPEDS table IC{year}_AY, which our federal
+  > the in-state figure when the school gives one, else the single private
+  > figure) with the federal in-state average tuition for full-time
+  > undergraduates (IPEDS table IC{year}_AY, which our federal
   > facts label COST1_{year}, variable TUITION2, academic year {academic
   > year}). The CDS form for {cds year} asks for that following year's tuition.
   > Neither includes required fees, which each lists separately. A report can
@@ -229,9 +232,11 @@ the All formats row too.
 - The left-out note is the same as for enrollment, ending "…no federal tuition
   figure."
 
-A tuition of 0 is treated as no value (a public school's private-tuition row
-left at 0 beside its real in-state figure), and the in-state row is used.
-Likewise a B1 total of 0.
+A tuition of 0 is treated as no value and the other row is used (Rollins
+College 2023-24: in-state 0, private 60,580, which matches). The in-state row is
+preferred because a public school that fills both has put another rate in the
+private row (West Chester 2023-24: private 19,290 is the out-of-state figure,
+in-state 7,716). Likewise a B1 total of 0 is no value.
 
 **Once, under both tables** (when either table has figures):
 
@@ -248,8 +253,8 @@ Why these two pairings: enrollment lines up well. Of the reports with both a B1
 total and a federal figure (so leaving out "no value"), 90% in 2023-24 and 2024-25 are
 within 2%, with a median ratio of 1.00; the table's own match rate is lower
 (74% in 2023-24, 77% in 2024-25) because it counts "no value" reports too.
-Tuition is noisier: 65% of the reports with both numbers match in 2023-24
-(203 of 313), with differences on both sides, and the table's match rate is 47%
+Tuition is noisier: 68% of the reports with both numbers match in 2023-24
+(212 of 313), with differences on both sides, and the table's match rate is 49%
 with "no value" counted. So the page says what can differ and does not call a
 difference an error.
 

@@ -87,11 +87,11 @@
       },
       "tuition": {
        "reports": 404,
-       "matches": 193,
+       "matches": 202,
        "no_value": 106,
-       "differs": 105,
-       "differs_2_to_10pct": 54,
-       "differs_over_10pct": 51
+       "differs": 96,
+       "differs_2_to_10pct": 60,
+       "differs_over_10pct": 36
       }
      }
     },
@@ -452,11 +452,11 @@
      },
      "tuition": {
       "reports": 430,
-      "matches": 203,
+      "matches": 212,
       "no_value": 117,
-      "differs": 110,
-      "differs_2_to_10pct": 57,
-      "differs_over_10pct": 53
+      "differs": 101,
+      "differs_2_to_10pct": 63,
+      "differs_over_10pct": 38
      }
     }
    },

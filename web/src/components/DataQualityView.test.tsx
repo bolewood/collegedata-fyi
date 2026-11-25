@@ -435,6 +435,21 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
       expect(cells(s, "dq-table-tuition", "spreadsheet")).toEqual(["2", "2", "0", "0", "0", "0", "–"]);   // 2 reports: no rate
     });
 
+    it("says where no-value reports come from only for a year with reports numbered by another year's form", () => {
+      const note = (html: string) => (html.match(/<p id="dq-note-enrollment"[^>]*>[\s\S]*?<\/p>/)![0]).replace(/<[^>]+>/g, "").replace(/\s+/g, " ");
+      expect(note(b2(render("year=2023-24"))!)).toContain("Many of the reports with no value are among the 12 numbered by a different year’s form, where the B1 total is harder for us to find.");
+      expect(note(b2(render("year=2024-25"))!)).not.toContain("Many of the reports with no value");
+      // Tuition's note makes no such claim: it was measured for enrollment only.
+      expect(b2(render("year=2023-24"))!.match(/<p id="dq-note-tuition"[^>]*>[\s\S]*?<\/p>/)![0]).not.toContain("Many of the reports");
+    });
+
+    it("describes the in-state figure as the one used first, and the federal figure by its IPEDS name", () => {
+      const tui = b2(render("year=2023-24"))!.match(/<p id="dq-note-tuition"[^>]*>[\s\S]*?<\/p>/)![0].replace(/<[^>]+>/g, "").replace(/\s+/g, " ");
+      expect(tui).toContain("the in-state figure when the school gives one, else the single private figure");
+      expect(tui).toContain("the federal in-state average tuition for full-time undergraduates");
+      expect(tui).not.toContain("federal published in-state tuition");
+    });
+
     it("says 'report' for one left out and 'reports' for more, and ends the left-out note with the open-cause No value", () => {
       const text = (html: string, id: string) => html.match(new RegExp(`<p id="${id}"[^>]*>[\\s\\S]*?</p>`))![0].replace(/<[^>]+>/g, "").replace(/\s+/g, " ");
       expect(text(b2(render("year=2023-24"))!, "dq-note-enrollment-left-out")).toContain("Left out: 1 report we’ve marked");

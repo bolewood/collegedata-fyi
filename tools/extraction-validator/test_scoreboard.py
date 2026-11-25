@@ -989,16 +989,20 @@ class FederalExtraChecks(unittest.TestCase):
         d = self.d(1)
         self.assertEqual(pair(d, "enrollment"), (Decimal("1000"), Decimal("1000")))
         self.assertEqual(pair(d, "tuition"), (Decimal("30000"), Decimal("30000")))
-        # G.102 first; else G.108; first-year and out-of-state rows are never used.
+        # G.108 (in-state) first; else G.102 (private); first-year and out-of-state rows are never used.
         only108 = extra_for("2023-24")
         only108["g1_private_undergraduates"]["ours"] = None
         only108["g1_in_state_undergraduates"]["ours"] = "9500"
         only108["g1_out_of_state_undergraduates"]["ours"] = "20000"
         only108["g1_private_first_year"]["ours"] = "1"
         self.assertEqual(pair(self.d(2, federal_extra=only108), "tuition")[0], Decimal("9500"))
-        both = extra_for("2023-24")
-        both["g1_in_state_undergraduates"]["ours"] = "9500"
-        self.assertEqual(pair(self.d(3, federal_extra=both), "tuition")[0], Decimal("30000"))
+        # A public school that also fills G.102 (west-chester 2023-24: G.102 19,290 = IPEDS out-of-state, G.108 7,716 = in-state):
+        # the in-state figure is the one held against IPEDS in-state tuition.
+        both = extra_for("2023-24", tuition=("19290", "7716"))
+        both["g1_in_state_undergraduates"]["ours"] = "7716"
+        self.assertEqual(pair(self.d(3, federal_extra=both), "tuition"), (Decimal("7716"), Decimal("7716")))
+        only102 = extra_for("2023-24")
+        self.assertEqual(pair(self.d(5, federal_extra=only102), "tuition")[0], Decimal("30000"))
         neither = extra_for("2023-24")
         neither["g1_private_undergraduates"]["ours"] = None
         self.assertIsNone(pair(self.d(4, federal_extra=neither), "tuition")[0])
@@ -1036,11 +1040,15 @@ class FederalExtraChecks(unittest.TestCase):
         self.assertEqual(self.counts(docs, "tuition", loaded=False)["reports"], 0)
 
     def test_a_tuition_of_zero_is_no_value_and_the_next_candidate_is_used(self) -> None:
-        # A public school's G.102 left at 0 beside its real G.108: never compare $0 with the federal tuition.
+        # A school's in-state row left at 0 beside its real private figure (and the other way round): never compare $0
+        # with the federal tuition.
         extra = extra_for("2023-24")
+        extra["g1_private_undergraduates"]["ours"] = "12000"
+        extra["g1_in_state_undergraduates"]["ours"] = "0"
+        self.assertEqual(scoreboard.federal_check_pair(self.d(1, federal_extra=extra), "tuition")[0], Decimal("12000"))
         extra["g1_private_undergraduates"]["ours"] = "0"
         extra["g1_in_state_undergraduates"]["ours"] = "9500"
-        self.assertEqual(scoreboard.federal_check_pair(self.d(1, federal_extra=extra), "tuition")[0], Decimal("9500"))
+        self.assertEqual(scoreboard.federal_check_pair(self.d(6, federal_extra=extra), "tuition")[0], Decimal("9500"))
         zero_only = extra_for("2023-24")
         zero_only["g1_private_undergraduates"]["ours"] = "0.00"
         self.assertIsNone(scoreboard.federal_check_pair(self.d(2, federal_extra=zero_only), "tuition")[0])
