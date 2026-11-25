@@ -573,6 +573,7 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
 
     it("links the CSV for the selected year, once launched, and says '1 report' for one", () => {
       expect(openHtml("2024-25")).toContain('href="/data-quality/csv/sections/2024-25"');
+      setLaunchGate(false);
       expect(render("year=2024-25")).not.toContain("/data-quality/csv/sections/");
       const one = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT)) as QualitySnapshot;
       const y = one.years.find((x) => x.cds_year === "2024-25")!;
@@ -592,13 +593,8 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
       expect(hasSections(y)).toBe(false);
       expect(render("year=2024-25", none)).not.toContain("dq-sections-heading");
       expect(render("year=2024-25", none)).not.toContain("dq-table-sections");
-      vi.useFakeTimers();
-      try {
-        vi.setSystemTime(LAUNCH_MS);
-        expect(render("year=2024-25", none)).not.toContain("/data-quality/csv/sections/");
-      } finally {
-        vi.useRealTimers();
-      }
+      setLaunchGate(true);
+      expect(render("year=2024-25", none)).not.toContain("/data-quality/csv/sections/");
     });
 
     it("is absent for a snapshot written before public_format 3", () => {

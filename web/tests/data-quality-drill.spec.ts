@@ -4,7 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
 // without a DOM: focus moving into the list, Escape and Close giving it back, aria-expanded/aria-controls, the file being
 // fetched on the first click only, and the list closing on a year change.
 //
-// The counts are buttons only when the page was built launched (DATA_QUALITY_LAUNCH_DATE in the past). Against a build with
+// The counts are buttons only when the page was built launched (the build's launch gate, from DATA_QUALITY_LAUNCH_DATE in src/lib/data-quality.ts, is open). Against a build with
 // the gate closed this spec skips, saying so. To run it before launch: set the date in src/lib/data-quality.ts to a past day
 // locally (do not commit it), start `npm run dev` with dummy NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY, and
 //   PLAYWRIGHT_BASE_URL=http://localhost:<port> npx playwright test tests/data-quality-drill.spec.ts --project=chromium

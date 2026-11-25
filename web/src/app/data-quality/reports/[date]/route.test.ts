@@ -4,7 +4,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FIXTURE_SNAPSHOT } from "@/lib/__fixtures__/data-quality-snapshot";
 import { DATA_LICENSE_LINK_HEADER } from "@/lib/data-license";
-import { DATA_QUALITY_LAUNCH_DATE } from "@/lib/data-quality";
+import { setLaunchGate } from "@/lib/__fixtures__/data-quality-gate";
 import { SNAPSHOT_DIR } from "@/lib/data-quality-snapshots";
 import { snapshotDay } from "@/lib/data-quality";
 
@@ -21,7 +21,6 @@ vi.mock("@/lib/data-quality-snapshots", async (importOriginal) => {
 
 import { GET, generateStaticParams } from "./route";
 
-const LAUNCH_MS = Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`);
 // The latest committed snapshot, copied to a temp directory with its reports file; nothing here names a date.
 const realSnapshots = await vi.importActual<typeof import("@/lib/data-quality-snapshots")>("@/lib/data-quality-snapshots");
 const LATEST = realSnapshots.loadLatestSnapshot();
@@ -32,7 +31,6 @@ beforeEach(() => {
   dirs.current = fs.mkdtempSync(path.join(os.tmpdir(), "dq-reports-route-"));
 });
 afterEach(() => {
-  vi.useRealTimers();
   fs.rmSync(dirs.current, { recursive: true, force: true });
 });
 
@@ -44,16 +42,12 @@ function writeReal(withReports = true) {
     fs.writeFileSync(path.join(dirs.current, "reports", `${DAY}.json`), realFile("reports/DAY.json"));
   }
 }
-const open = () => {
-  vi.useFakeTimers();
-  vi.setSystemTime(LAUNCH_MS);
-};
+const open = () => setLaunchGate(true);
 const get = (date: string) => GET(new Request("https://collegedata.fyi/x"), { params: Promise.resolve({ date }) });
 
 describe("/data-quality/reports/[date]", () => {
   it("is a 404 before the launch date, builds no static page, and never reads the directory", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(LAUNCH_MS - 1000);
+    setLaunchGate(false);
     writeReal();
     fs.rmSync(dirs.current, { recursive: true });
     expect((await get(DAY)).status).toBe(404);
