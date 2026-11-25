@@ -13,6 +13,7 @@ HEADLESS = ROOT / ".github/workflows/ops-headless-archive.yml"
 IPEDS = ROOT / ".github/workflows/ipeds-release-probe.yml"
 API_USAGE = ROOT / ".github/workflows/ops-api-usage-ingest.yml"
 CORPUS_AUDIT = ROOT / ".github/workflows/ops-corpus-audit.yml"
+DISCOVERY_RENEWAL = ROOT / ".github/workflows/ops-discovery-renewal.yml"
 STATION_RE = re.compile(r"--station\s+(\S+)")
 
 
@@ -26,6 +27,38 @@ class PipelineWriterLintTests(unittest.TestCase):
         self.assertIn("headless_archive", stations)
         self.assertIn("api_usage_ingest", stations)
         self.assertIn("corpus_audit", stations)
+
+    def test_discovery_renewal_workflow_is_safe_by_default_and_registered(self) -> None:
+        text = DISCOVERY_RENEWAL.read_text(encoding="utf-8")
+        self.assertIn("--station discovery_renewal", text)
+        self.assertIn("discovery_renewal", REGISTRY_STATIONS)
+        # Manual runs default to a dry run and the test label.
+        self.assertRegex(text, r"dry_run:\n(?:.*\n){1,3}?\s+default: true")
+        self.assertRegex(text, r"test_mode:\n(?:.*\n){1,3}?\s+default: true")
+        # Scheduled runs are always real, and the job needs only these scopes.
+        self.assertIn("github.event_name == 'schedule' && 'false'", text)
+        self.assertIn("issues: write", text)
+        self.assertIn("cron:", text)
+        # A floor override only works with --test-mode, which the compute step passes.
+        self.assertIn("args+=(--test-mode)", text.split("id: compute")[1].split("id: alarm")[0])
+        # No `running` heartbeat: it would blank the board's last_summary.
+        self.assertNotIn("--status running", text)
+        self.assertIn('--status "${status}"', text)
+        # The service key is only in the heartbeat steps.
+        compute = text.split("id: compute")[1].split("id: alarm")[0]
+        self.assertNotIn("SERVICE_ROLE", compute)
+        job_env = text.split("    env:\n", 1)[1].split("    steps:")[0]
+        self.assertNotIn("SERVICE_ROLE", job_env)
+        self.assertNotIn("SUPABASE_URL", job_env)
+        install = text.split("Install Python dependencies")[1].split("- id: compute")[0]
+        self.assertNotIn("SERVICE_ROLE", install)
+        alarm = text.split("id: alarm")[1].split("upload-artifact")[0]
+        self.assertNotIn("SERVICE_ROLE", alarm)
+        # A dry run sends no heartbeat, and says so before calling the writer.
+        finish = text.split("Heartbeat discovery_renewal finish")[1]
+        guard = finish.index('"${DRY_RUN}" == "true"')
+        self.assertIn("dry run: heartbeat not sent", finish[guard:guard + 200])
+        self.assertLess(guard, finish.index("record_heartbeat.py"))
 
     def test_corpus_audit_keeps_the_service_key_out_of_dependency_install(self) -> None:
         text = CORPUS_AUDIT.read_text(encoding="utf-8")
