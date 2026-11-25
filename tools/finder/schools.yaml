@@ -18158,7 +18158,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.stvincent.edu/assets/docs/meet-saint-vincent/common-data-set-current-year.pdf
+  discovery_seed_url: https://www.stvincent.edu/assets/docs/meet-saint-vincent/cds.pdf
 - id: saint-vincent-de-paul-regional-seminary
   name: Saint Vincent de Paul Regional Seminary
   domain: svdp.edu
@@ -25233,7 +25233,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.vanguard.edu/about/disclosures-and-consumer-information
+  discovery_seed_url: https://www.vanguard.edu/uploaded/Provost/CDS2009_2010.pdf
 - id: vassar-college
   name: Vassar College
   domain: vassar.edu
@@ -26683,7 +26683,7 @@ schools:
   # request from the school). The old seed was the 2021-22 PDF, and the
   # College Transitions mirror supplied Iowa State's files for five other
   # years (hidden 2026-11-14).
-  discovery_seed_url: https://www.winona.edu/ipar/common-data-set.asp
+  discovery_seed_url: https://www.winona.edu/about/leadership/institutional-data/
 - id: winston-salem-state-university
   name: Winston-Salem State University
   domain: wssu.edu
