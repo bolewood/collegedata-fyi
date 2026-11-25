@@ -48,12 +48,12 @@ export function CoverageDownloads({ viewRows, allRows }: { viewRows: Institution
           Download all colleges (CSV)
         </button>
       </div>
-      <p className="meta" style={{ marginTop: 8, marginBottom: 0, maxWidth: 720 }}>
+      <p style={{ margin: "8px 0 0", maxWidth: 720, fontSize: 13, lineHeight: 1.5, color: "var(--ink-3)" }}>
         {COVERAGE_CSV_FEDERAL_NOTE} {COVERAGE_CSV_LICENSED_LEAD}{" "}
         <a href={DATA_LICENSE_URL} style={{ textDecoration: "underline" }}>
           {DATA_LICENSE_NAME}
         </a>
-        . {COVERAGE_CSV_DEFINITION_NOTE}
+        . Credit collegedata.fyi. {COVERAGE_CSV_DEFINITION_NOTE}
       </p>
     </div>
   );

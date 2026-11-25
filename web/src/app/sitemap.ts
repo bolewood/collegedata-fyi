@@ -3,7 +3,7 @@ import { fetchManifest, aggregateSchools, fetchSchoolSlugResolver } from "@/lib/
 import { SITE_URL, staticSitemapEntries } from "@/lib/sitemap-static";
 import { canonicalizeSchoolRows } from "@/lib/school-alias";
 import { isUsageLaunched } from "@/lib/usage";
-import { isDataQualityLaunched } from "@/lib/data-quality";
+import { dataQualityLaunched } from "@/lib/data-quality";
 import type { ManifestRow } from "@/lib/types";
 import { acceptanceRateSitemap, earlyDecisionSitemap, gpaSitemap } from "@/lib/acceptance-history-data";
 
@@ -51,7 +51,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     staticPages.push({ url: `${SITE_URL}/usage`, changeFrequency: "daily", priority: 0.6 });
   }
 
-  if (isDataQualityLaunched()) {
+  if (dataQualityLaunched()) {
     staticPages.push({ url: `${SITE_URL}/data-quality`, changeFrequency: "weekly", priority: 0.6 });
   }
 

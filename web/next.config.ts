@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs/config";
 import retiredSchoolAliases from "./src/data/school-redirects.json";
+import { isDataQualityLaunched } from "./src/lib/data-quality";
 import { APEX_TO_WWW_REDIRECTS } from "./src/lib/apex-redirect";
 import { PIPELINE_OBSERVATION_REDIRECTS } from "./src/lib/pipeline-redirect";
 import { buildRetiredSchoolRedirects } from "./src/lib/school-alias";
@@ -13,6 +14,11 @@ import {
 
 export const nextConfig: NextConfig = {
   trailingSlash: false,
+  // PRD 040 launch gate: decided once per build (see data-quality.ts) and
+  // inlined into the server and client bundles.
+  env: {
+    DATA_QUALITY_LAUNCHED: isDataQualityLaunched(new Date()) ? "1" : "0",
+  },
   // PRD 040: the Data quality snapshots are read with node:fs at build and on
   // the coverage page's ISR re-render, so make sure the files ship with them.
   // The snapshots are the top-level files; the reports file (reports/<date>.json,

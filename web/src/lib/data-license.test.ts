@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 vi.mock("./supabase", () => ({ supabase: {}, STORAGE_BASE_URL: "https://example.test/storage" }));
 vi.mock("./supabase-friendly-api", () => ({ friendlyApiSupabase: {} }));
@@ -12,7 +12,7 @@ import {
   DATA_LICENSE_URL,
   dataLicenseFields,
 } from "./data-license";
-import { DATA_QUALITY_LAUNCH_DATE } from "./data-quality";
+import { setLaunchGate } from "./__fixtures__/data-quality-gate";
 import { loadLatestSnapshot } from "./data-quality-snapshots";
 
 const repo = (path: string) => readFileSync(resolve(__dirname, "../../..", path), "utf8");
@@ -60,18 +60,14 @@ describe("machine-readable license surfaces", () => {
   });
 
   // PRD 040: the Data quality CSV route is a licensed surface once launched.
-  // Faked clock, so this passes on both sides of the launch date.
-  it("carries the license Link header on the Data quality CSV once launched", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`));
+  it("carries the license Link header on all three Data quality CSV tables once launched", async () => {
+    setLaunchGate(true);
     const { GET } = await import("../app/data-quality/csv/[table]/[year]/route");
     const year = loadLatestSnapshot().years[0].cds_year;
-    const res = await GET(new Request("https://collegedata.fyi/x"), { params: Promise.resolve({ table: "reports", year }) });
-    expect(res.status).toBe(200);
-    expect(res.headers.get("Link")).toBe(DATA_LICENSE_LINK_HEADER);
+    for (const table of ["reports", "federal", "totals"]) {
+      const res = await GET(new Request("https://collegedata.fyi/x"), { params: Promise.resolve({ table, year }) });
+      expect(res.status, table).toBe(200);
+      expect(res.headers.get("Link"), table).toBe(DATA_LICENSE_LINK_HEADER);
+    }
   });
-});
-
-afterEach(() => {
-  vi.useRealTimers();
 });

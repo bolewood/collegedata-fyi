@@ -3,7 +3,7 @@
 // gated: before launch only the Coverage tab shows.
 
 import Link from "next/link";
-import { isDataQualityLaunched } from "@/lib/data-quality";
+import { dataQualityLaunched } from "@/lib/data-quality";
 
 export const ARCHIVE_TABS = [
   { id: "coverage", label: "Coverage by school", href: "/coverage" },
@@ -18,7 +18,7 @@ export function visibleArchiveTabs(launched: boolean) {
 
 export function ArchiveStatusHeader({
   active,
-  launched = isDataQualityLaunched(),
+  launched = dataQualityLaunched(),
 }: {
   active: ArchiveTabId;
   /** Test seam. Defaults to the launch gate. */

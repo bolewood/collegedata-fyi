@@ -1,5 +1,5 @@
 import { isUsageLaunched } from "@/lib/usage";
-import { isDataQualityLaunched } from "@/lib/data-quality";
+import { dataQualityLaunched } from "@/lib/data-quality";
 import { CommunityLink } from "./CommunityInvitation";
 import { Wordmark } from "./Wordmark";
 
@@ -36,7 +36,7 @@ export function Footer() {
             GitHub
           </a>
           <CommunityLink surface="footer">Feedback</CommunityLink>
-          <a href="/coverage">{isDataQualityLaunched() ? "Archive status" : "Coverage"}</a>
+          <a href="/coverage">{dataQualityLaunched() ? "Archive status" : "Coverage"}</a>
           <a href="/scholarships">Scholarships</a>
           <a href="/pipeline-observation">Pipeline</a>
           {isUsageLaunched() ? <a href="/usage">Usage</a> : null}

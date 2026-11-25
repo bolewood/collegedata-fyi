@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { HeaderSchoolSearch } from "./HeaderSchoolSearch";
 import { CmdKCatalog } from "./CmdKCatalog";
 import { Wordmark } from "./Wordmark";
-import { isDataQualityLaunched } from "@/lib/data-quality";
+import { dataQualityLaunched } from "@/lib/data-quality";
 import { isActive, secondaryNavLinks } from "@/lib/nav-links";
 
 const PRIMARY_NAV_LINKS = [
@@ -16,7 +16,7 @@ const PRIMARY_NAV_LINKS = [
 
 export function Nav() {
   const pathname = usePathname();
-  const secondaryLinks = secondaryNavLinks(isDataQualityLaunched());
+  const secondaryLinks = secondaryNavLinks(dataQualityLaunched());
   const secondaryActive = secondaryLinks.some((l) => isActive(pathname, l.href, l.alsoActiveOn));
 
   return (

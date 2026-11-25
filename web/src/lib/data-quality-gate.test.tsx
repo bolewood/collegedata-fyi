@@ -10,7 +10,8 @@ import { buildTrend } from "@/lib/data-quality-trend";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FIXTURE_SNAPSHOT } from "./__fixtures__/data-quality-snapshot";
-import { DATA_QUALITY_LAUNCH_DATE, aidCantCheckNote, aidPoolBounds, federalDiffersNote, formatSnapshotDate, selectSnapshot } from "./data-quality";
+import { setLaunchGate } from "./__fixtures__/data-quality-gate";
+import { aidCantCheckNote, aidPoolBounds, federalDiffersNote, formatSnapshotDate, selectSnapshot } from "./data-quality";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/data-quality",
@@ -48,18 +49,10 @@ import { SNAPSHOT_DIR, loadLatestSnapshot } from "./data-quality-snapshots";
 import DataQualityPage from "@/app/data-quality/page";
 import CoveragePage from "@/app/coverage/page";
 
-const LAUNCH_MS = Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`);
-const CLOSED = new Date(LAUNCH_MS - 1000);
-const OPEN = new Date(LAUNCH_MS);
+const CLOSED = false;
+const OPEN = true;
 
-function at(when: Date) {
-  vi.useFakeTimers();
-  vi.setSystemTime(when);
-}
-
-afterEach(() => {
-  vi.useRealTimers();
-});
+const at = setLaunchGate;
 
 describe("gate: nav and footer", () => {
   // The nav's More menu lists its links in the markup whether or not it is open.

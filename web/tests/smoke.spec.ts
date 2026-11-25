@@ -1,5 +1,6 @@
 import { expect, test, type Page, type Request } from "@playwright/test";
-import { isDataQualityLaunched } from "../src/lib/data-quality";
+import { nextConfig } from "../next.config";
+import { loadLatestSnapshot } from "../src/lib/data-quality-snapshots";
 
 function isSchoolPagePrefetch(req: Request): boolean {
   let url: URL;
@@ -85,31 +86,63 @@ test("coverage page renders filterable accountability data", async ({ page }) =>
   await expect(page.getByText("Methodology")).toBeVisible();
 });
 
-// PRD 040 launch gate. The server renders the gate from its own clock, and
-// Playwright can't fake that, so this reads the same clock and the same
-// constant: it passes on both sides of DATA_QUALITY_LAUNCH_DATE. (The vitest
-// gate tests in src/lib/data-quality-gate.test.tsx fake the clock and pin both
-// states.) The /coverage heading is "Archive coverage" in both states.
-test("Data quality tab and page follow the launch gate", async ({ page, request }) => {
-  const launched = isDataQualityLaunched();
-  await page.goto("/coverage");
-  const tab = page.getByRole("navigation", { name: "Archive status" }).getByRole("link", { name: "Data quality" });
-  await expect(tab).toHaveCount(launched ? 1 : 0);
+// PRD 040 launch gate, decided once per build in next.config.ts. This reads the
+// value the config computes when the test starts, the same one the dev server
+// it starts from this config gets, so no wall clock is compared. With
+// PLAYWRIGHT_BASE_URL pointing at a server built earlier, that build's gate may
+// differ. The vitest gate tests drive both states through the same seam.
+const launched = nextConfig.env?.DATA_QUALITY_LAUNCHED === "1";
+const dqYear = loadLatestSnapshot().years[0].cds_year;
+const CSV_TABLES = ["reports", "federal", "totals"];
 
-  await page.goto("/data-quality");
-  await expect(page.getByRole("heading", { name: "Data quality", level: 1 })).toBeVisible();
-  const robots = await page.evaluate(() => document.querySelector('meta[name="robots"]')?.getAttribute("content") ?? null);
-  if (launched) {
-    expect(robots).toBeNull();
-    await expect(page.getByText("as CSV").first()).toBeVisible();
-    const csv = page.locator('a[href^="/data-quality/csv/"]').first();
-    const res = await request.get((await csv.getAttribute("href"))!);
-    expect(res.status()).toBe(200);
-    expect(res.headers()["link"]).toContain('rel="license"');
-  } else {
-    expect(robots).toMatch(/noindex/);
-    expect((await request.get("/data-quality/csv/reports/2025-26")).status()).toBe(404);
-  }
+test.describe(`Data quality gate (${launched ? "launched" : "closed"} build)`, () => {
+  test("/coverage tab, CSV buttons and nav label", async ({ page }) => {
+    await page.goto("/coverage");
+    const tab = page.getByRole("navigation", { name: "Archive status" }).getByRole("link", { name: "Data quality" });
+    await expect(tab).toHaveCount(launched ? 1 : 0);
+    await expect(page.getByRole("button", { name: /\(CSV\)/ })).toHaveCount(launched ? 2 : 0);
+    // The More menu is a closed <details>, so its links are in the markup but not in the accessibility tree.
+    const labels = await page.locator('nav a[href="/coverage"], footer a[href="/coverage"]').allTextContents();
+    expect(labels.map((t) => t.trim()).filter((t) => !t.startsWith("Coverage by")).length).toBeGreaterThanOrEqual(2);
+    for (const t of labels.map((t) => t.trim()).filter((t) => !t.startsWith("Coverage by"))) {
+      expect(t).toBe(launched ? "Archive status" : "Coverage");
+    }
+  });
+
+  test("/data-quality page: indexing, canonical and CSV links", async ({ page }) => {
+    await page.goto("/data-quality");
+    await expect(page.getByRole("heading", { name: "Data quality", level: 1 })).toBeVisible();
+    const robots = await page.evaluate(() => document.querySelector('meta[name="robots"]')?.getAttribute("content") ?? null);
+    const canonical = await page.evaluate(() => document.querySelector('link[rel="canonical"]')?.getAttribute("href") ?? null);
+    expect(canonical).toMatch(/\/data-quality$/);
+    if (launched) {
+      expect(robots).toBeNull();
+      await expect(page.locator('a[href^="/data-quality/csv/"]').first()).toBeAttached();
+    } else {
+      expect(robots).toMatch(/noindex/);
+      await expect(page.locator('a[href^="/data-quality/csv/"]')).toHaveCount(0);
+    }
+  });
+
+  test("CSV routes", async ({ request }) => {
+    for (const table of CSV_TABLES) {
+      const res = await request.get(`/data-quality/csv/${table}/${dqYear}`);
+      if (launched) {
+        expect(res.status(), table).toBe(200);
+        expect(res.headers()["link"], table).toContain('rel="license"');
+      } else {
+        expect(res.status(), table).toBe(404);
+      }
+    }
+  });
+
+  test("sitemap and methodology", async ({ request }) => {
+    test.setTimeout(120_000);
+    const sitemap = await (await request.get("/sitemap.xml", { timeout: 100_000 })).text();
+    expect(/<loc>[^<]*\/data-quality<\/loc>/.test(sitemap)).toBe(launched);
+    const methodology = await (await request.get("/methodology")).text();
+    expect(methodology.includes('href="/data-quality"')).toBe(launched);
+  });
 });
 
 test("browser loads live rows and source links resolve", async ({ page, request }) => {

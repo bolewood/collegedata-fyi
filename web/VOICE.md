@@ -136,7 +136,7 @@ door.
 
 - **Primary nav:** Match / Schools / API. API stays in the header (for
   researchers, and for families pointing LLMs at a public endpoint).
-- **More menu:** Compare, Coverage, Recipes, About, GitHub. Do not put
+- **More menu:** Compare, Archive status, Recipes, About, GitHub. Do not put
   Pipeline in More.
 - **Footer:** Pipeline stays here like a status link; GitHub lives here
   and in More, not on the homepage hero.

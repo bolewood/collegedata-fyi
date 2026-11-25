@@ -9,6 +9,7 @@ export default defineConfig({
   },
   test: {
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    unstubEnvs: true,
     setupFiles: ["./vitest.setup.ts"],
   },
 });

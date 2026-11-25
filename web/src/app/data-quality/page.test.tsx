@@ -3,7 +3,7 @@ import path from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FIXTURE_SNAPSHOT } from "@/lib/__fixtures__/data-quality-snapshot";
-import { DATA_QUALITY_LAUNCH_DATE } from "@/lib/data-quality";
+import { setLaunchGate } from "@/lib/__fixtures__/data-quality-gate";
 
 const mocks = vi.hoisted(() => ({
   earlier: [] as unknown[],
@@ -20,20 +20,18 @@ import DataQualityPage, { generateMetadata } from "./page";
 
 afterEach(() => {
   mocks.earlier = [];   // a failure in the middle of a loop must not leak snapshots into later tests
-  vi.useRealTimers();
   mocks.loadLatestSnapshot.mockReset();
   mocks.loadReportsFor.mockReset();
 });
 
 describe("/data-quality launch gate", () => {
   it("is noindex before launch and indexable after, with the same canonical", () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`).getTime() - 1000);
+    setLaunchGate(false);
     const before = generateMetadata();
     expect(before.robots).toEqual({ index: false, follow: false });
     expect(before.alternates?.canonical).toBe("/data-quality");
 
-    vi.setSystemTime(new Date(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`));
+    setLaunchGate(true);
     const after = generateMetadata();
     expect(after.robots).toBeUndefined();
     expect(after.alternates?.canonical).toBe("/data-quality");
@@ -52,7 +50,6 @@ describe("/data-quality launch gate", () => {
     const banned =
       /\b(extract(ed|or|ion|s)?|docling|tier ?\d?|drain(ed)?|manifest|projection|pipeline|overlay|acroform|served|scoreboard|base reading|parse error|live (report|reports|count))\b/i;
     const em = /\u2014|&mdash;|&#8212;|&#x2014;/gi;
-    vi.useFakeTimers();
     // One snapshot, then three (so the several-snapshot labels, notes and cohort sentence are checked too).
     const older = (day: string, cohort: [string, string]) => {
       const c = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT));
@@ -63,8 +60,8 @@ describe("/data-quality launch gate", () => {
     };
     for (const earlier of [[], [older("2026-08-01", ["2024-25", "2023-24"]), older("2026-08-20", ["2025-26", "2024-25"])]]) {
       mocks.earlier = earlier;
-      for (const t of [Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`) - 1000, Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`)]) {
-        vi.setSystemTime(t);
+      for (const launched of [false, true]) {
+        setLaunchGate(launched);
         const meta = generateMetadata();
         const page = renderToStaticMarkup(<DataQualityPage />);
         // The source line names the run's file (PRD: the numbers equal the run named on the page). It is the one element
@@ -101,29 +98,27 @@ describe("/data-quality list of reports behind each count", () => {
     const dir = path.join(process.cwd(), "src", "data", "data-quality", "reports");
     return JSON.parse(fs.readFileSync(path.join(dir, fs.readdirSync(dir).filter((n) => n.endsWith(".json")).sort().at(-1)!), "utf8"));
   };
-  const LAUNCH = Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`);
-  const renderAt = (ms: number, reports: unknown) => {
+  const renderAt = (launched: boolean, reports: unknown) => {
     mocks.loadLatestSnapshot.mockReturnValue(FIXTURE_SNAPSHOT);
     mocks.loadReportsFor.mockReturnValue(reports);
-    vi.useFakeTimers();
-    vi.setSystemTime(ms);
+    setLaunchGate(launched);
     return renderToStaticMarkup(<DataQualityPage />);
   };
 
   it("makes no count a button before launch, and builds the page with the reports file loaded (so the build checks it)", () => {
-    const html = renderAt(LAUNCH - 1000, realReports());
+    const html = renderAt(false, realReports());
     expect(html).not.toContain("dq-count");
     expect(mocks.loadReportsFor).toHaveBeenCalledWith(FIXTURE_SNAPSHOT);
   });
 
   it("makes counts buttons once launched, only when the snapshot has a reports file", () => {
-    expect(renderAt(LAUNCH, realReports())).toContain('class="dq-count"');
-    expect(renderAt(LAUNCH, null)).not.toContain("dq-count");
+    expect(renderAt(true, realReports())).toContain('class="dq-count"');
+    expect(renderAt(true, null)).not.toContain("dq-count");
   });
 
   it("does not put the reports in the page: no report id, school name or school link of the file is in its HTML", () => {
     const reports = realReports();
-    const html = renderAt(LAUNCH, reports);
+    const html = renderAt(true, reports);
     const sample = Object.values(reports.years as Record<string, { id: string; school: string | null }[]>).flatMap((rows) => rows.slice(0, 40));
     expect(sample.length).toBeGreaterThan(100);
     for (const r of sample) {
@@ -138,9 +133,8 @@ describe("/data-quality over time", () => {
   it("is part of the page, so it is gated with it: one snapshot gives the first-snapshot state, with no line", () => {
     mocks.loadLatestSnapshot.mockReturnValue(FIXTURE_SNAPSHOT);
     mocks.loadReportsFor.mockReturnValue(null);
-    vi.useFakeTimers();
-    for (const t of [Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`) - 1000, Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`)]) {
-      vi.setSystemTime(t);
+    for (const launched of [false, true]) {
+      setLaunchGate(launched);
       const html = renderToStaticMarkup(<DataQualityPage />);
       const section = html.match(/<section aria-labelledby="dq-trend-heading"[\s\S]*?<\/section>/)![0];
       expect(section).toContain("First snapshot, November 24, 2026");

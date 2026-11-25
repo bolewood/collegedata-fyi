@@ -6,22 +6,29 @@ import { isCanonicalCdsYear } from "./format";
 import { formatLabel } from "./format-labels";
 
 /**
- * Launch gate, on the isUsageLaunched pattern. Flipping it is a one-line
- * change that turns on the header tab, nav and footer labels, sitemap entry,
- * indexing, methodology link and CSV downloads in one build.
- *
- * PLACEHOLDER: the owner picks the real date. Deploy on the date. Pages
- * read the gate when they render: `/data-quality` and its CSV routes are
- * force-static, so a build made before the date keeps them closed (noindex,
- * no CSV, CSV routes 404) until the next deploy. `/coverage` is ISR
- * (revalidate 900) and shows the tab, CSV buttons and labels within 15
- * minutes of the date without a deploy, so with no deploy it links to a page
- * that is still closed.
+ * Launch gate, on the isUsageLaunched pattern, decided once per build.
+ * `next.config.ts` calls `isDataQualityLaunched(new Date())` when the build
+ * starts and inlines the answer as `process.env.DATA_QUALITY_LAUNCHED`, so the
+ * server pages, the sitemap and the client components all read one value. The
+ * first production build on or after the date launches every surface together
+ * (header tab, nav and footer labels, sitemap entry, indexing, methodology
+ * link, CSV downloads and CSV routes). A build made before it stays closed,
+ * whatever the clock says later.
  */
-export const DATA_QUALITY_LAUNCH_DATE = "2026-12-01";
+export const DATA_QUALITY_LAUNCH_DATE = "2026-12-01"; // PLACEHOLDER: the owner picks the real date. One-line edit.
 
-export function isDataQualityLaunched(now: Date = new Date()): boolean {
+/** The pure rule the build config and tests use. */
+export function isDataQualityLaunched(now: Date): boolean {
   return now.getTime() >= Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`);
+}
+
+/**
+ * What every consumer reads: the answer the build was made with. Unset (a
+ * bare script or test) means closed. Keep `process.env.DATA_QUALITY_LAUNCHED`
+ * written out in full: Next replaces that exact text at build.
+ */
+export function dataQualityLaunched(): boolean {
+  return process.env.DATA_QUALITY_LAUNCHED === "1";
 }
 
 /** A rate over fewer reports than this isn't meaningful; the row shows counts only. */
@@ -724,7 +731,7 @@ export function qualityLede(snapshot: QualitySnapshot): { populations: string; m
   const years = count < NUMBER_WORDS.length ? NUMBER_WORDS[count] : String(count);
   return {
     populations: `Snapshot of ${formatSnapshotDate(snapshot.snapshot_of)}: ${published} reports published with numbers across ${years} ${count === 1 ? "year" : "years"}, checked against their own printed totals${federalYearsClause(snapshot)}.`,
-    meaning: "Data quality here means the quality of what this archive publishes, not the quality of any school’s own data.",
+    meaning: "Data quality here means the quality of what this archive publishes, not the quality of any school’s own data. These are counts of reports, and a school can file more than one (for example campuses or a re-filed year), so they won’t equal the school counts on Coverage by school.",
   };
 }
 

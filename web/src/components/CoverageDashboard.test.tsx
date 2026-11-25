@@ -11,7 +11,8 @@ vi.mock("next/navigation", () => ({
 }));
 
 import { FIXTURE_SNAPSHOT } from "@/lib/__fixtures__/data-quality-snapshot";
-import { DATA_QUALITY_LAUNCH_DATE, renewalTile } from "@/lib/data-quality";
+import { setLaunchGate } from "@/lib/__fixtures__/data-quality-gate";
+import { renewalTile } from "@/lib/data-quality";
 import type { InstitutionCoverage } from "@/lib/types";
 import { CoverageDashboard } from "./CoverageDashboard";
 
@@ -49,7 +50,6 @@ function render(search = "", renewal: typeof RENEWAL | null = RENEWAL) {
 
 afterEach(() => {
   currentParams = new URLSearchParams();
-  vi.useRealTimers();
 });
 
 describe("renewal tile", () => {
@@ -158,8 +158,7 @@ describe("filters bar", () => {
   });
 
   it("shows the two year columns, and no CSV links before launch", () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`) - 1000);
+    setLaunchGate(false);
     const html = render();
     expect(html).not.toContain("(CSV)");
     expect(html).toContain("With numbers");

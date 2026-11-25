@@ -5,7 +5,7 @@ import {
   buildQualityCsv,
   hasFederalChecks,
   hasSections,
-  isDataQualityLaunched,
+  dataQualityLaunched,
   qualityCsvFilename,
   type QualityTableId,
   type QualityYear,
@@ -25,7 +25,7 @@ function tableServed(table: QualityTableId, year: QualityYear): boolean {
 }
 
 export function generateStaticParams() {
-  const snapshot = isDataQualityLaunched() ? loadLatestSnapshot() : null;
+  const snapshot = dataQualityLaunched() ? loadLatestSnapshot() : null;
   if (!snapshot) return [];
   return (Object.keys(TABLE_TITLES) as QualityTableId[]).flatMap((table) =>
     snapshot.years.filter((y) => tableServed(table, y)).map((y) => ({ table, year: y.cds_year })),
@@ -37,7 +37,7 @@ export async function GET(
   { params }: { params: Promise<{ table: string; year: string }> },
 ) {
   const { table, year } = await params;
-  const snapshot = isDataQualityLaunched() ? loadLatestSnapshot() : null;
+  const snapshot = dataQualityLaunched() ? loadLatestSnapshot() : null;
   const found = snapshot?.years.find((y) => y.cds_year === year);
   if (!snapshot || !found || !Object.hasOwn(TABLE_TITLES, table) || !tableServed(table as QualityTableId, found)) {
     return new Response("Not found", { status: 404 });

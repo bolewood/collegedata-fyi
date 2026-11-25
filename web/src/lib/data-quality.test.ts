@@ -707,6 +707,9 @@ describe("rates and small groups", () => {
 describe("lede", () => {
   it("states the snapshot date and the published population from the snapshot", () => {
     const lede = qualityLede(FIXTURE_SNAPSHOT);
+    // Bridges the two tabs: report counts here are not the school counts on Coverage by school.
+    expect(lede.meaning).toContain("a school can file more than one");
+    expect(lede.meaning).toContain("school counts on Coverage by school");
     expect(lede.populations).toContain("November 24, 2026");
     expect(lede.populations).toContain(`${publishedTotal(FIXTURE_SNAPSHOT)} reports published`);
     expect(lede.populations).toContain("three years");
