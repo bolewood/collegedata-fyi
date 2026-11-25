@@ -1,30 +1,35 @@
 #!/usr/bin/env python3
-"""Open, update, supersede and close the one discovery-renewal alarm issue.
+"""Open, update and close the discovery-renewal alarm issues, one per CDS year.
 
-Reads the state, summary and report written by `discovery_renewal.py`. Three
-checks feed it: one-year renewal, two-year renewal and next-year renewal. The
-alarm is on when ANY of them is below its floor.
+Reads the state (and the per-year issue bodies) written by
+`discovery_renewal.py`. Each CDS year has its own checks: the one-year and
+two-year renewal of the current year, the early-curve check of the next year,
+and the flat mature floors of earlier years. For every year:
 
-- Below the floor and no open alarm issue: open a new issue assigned to the
-  owner and post to Discord #alerts.
-- Below the floor and an issue is open for the same check and year: replace
-  its title and body. Never comment, never post to Discord again. A count
-  added to a standing issue is a log, not an alarm (#136).
-- Below the floor but the open issue is about a different check or year (the
-  September switch moved the current year, or the breach moved from one check
-  to another): open a new issue, post to Discord, and close the old one with
-  one comment, "Superseded by #N".
-- Back above the floor on ALL checks and an issue is open: close it with one
+- Below its floor and no open issue for that year: open a new issue assigned
+  to the owner and post to Discord #alerts. A next-year breach opens its own
+  issue even while the current year's issue is open.
+- Below its floor and an issue for that year is open: replace its title and
+  body. Never comment, never post again (a count added to a standing issue is a
+  log, not an alarm, #136), except to retry a Discord post that failed.
+- Back above its floor and an issue for that year is open: close it with one
   comment that states the recovered number, and post a recovery to Discord.
-- Above the floor and no issue: nothing.
+  The September switch never closes an earlier year's issue: that year is
+  judged on its own numbers against the flat mature floor.
+- Above its floor and no issue: nothing.
 
-The issue is found by LABEL, never by title search (search lags), through the
+An issue's year is kept in a hidden marker, `alarm-scope: year:<Y>`. If the
+marker is gone or edited, the year in the issue's title is used, else the
+current year, with a warning, so an edit never silently re-scopes an alarm.
+
+Issues are found by LABEL, never by title search (search lags), through the
 REST issues list. Test runs use a different label and a `[test] ` title
 prefix, are not assigned to anyone, and can never touch a real alarm issue.
 A failed `gh` call is an error and exits nonzero: an alarm that cannot
 deliver must not look like a quiet day. So is a failed Discord post when the
 webhook is set, after the issue action has been done. A missing webhook is a
-warning only.
+warning only. Either way the issue records `discord-posted: false` and a later
+run retries the post.
 """
 
 from __future__ import annotations
@@ -51,8 +56,12 @@ TEST_LABEL = "alarm:discovery-renewal-test"
 TEST_TITLE_PREFIX = "[test] "
 DEFAULT_ASSIGNEE = "santhonys"
 LABEL_COLOR = "D73A4A"
-LABEL_DESCRIPTION = "Discovery renewal is below its floor (one open issue at a time)"
-SCOPE_RE = re.compile(r"<!-- alarm-scope: ([a-z_]+):(\S+) -->")
+LABEL_DESCRIPTION = "Discovery renewal is below its floor (one open issue per CDS year)"
+# `year:2025-26`; the older `current:2025-26` / `two_year:2025-26` format is
+# read as a match on its year.
+SCOPE_RE = re.compile(r"<!-- alarm-scope: ([a-z_]+):(\d{4}-\d{2}) -->")
+DISCORD_RE = re.compile(r"<!-- discord-posted: (true|false) -->")
+TITLE_YEAR_RE = re.compile(r"\bhave (\d{4}-\d{2})\b")
 
 Runner = Callable[[list[str]], "subprocess.CompletedProcess[str]"]
 
@@ -84,17 +93,12 @@ def _pct1(value: Any) -> str:
     return "n/a" if value is None else f"{float(value):.1f}%"
 
 
-def scope_of(summary: dict[str, Any]) -> tuple[str, str]:
-    """("year", Y): the CDS year the alarm is about today. The one-year and
-    two-year checks both concern the current year, so a flip of the lead
-    between them updates one issue; the next-year check concerns the year
-    after, and is its own scope."""
-    kind = lead_check(summary) or "current"
-    return "year", check_descriptor(summary, kind)["year"]
+def scope_marker(year: str) -> str:
+    return f"<!-- alarm-scope: year:{year} -->"
 
 
-def scope_marker(scope: tuple[str, str]) -> str:
-    return f"<!-- alarm-scope: {scope[0]}:{scope[1]} -->"
+def discord_marker(posted: bool) -> str:
+    return f"<!-- discord-posted: {'true' if posted else 'false'} -->"
 
 
 def parse_scope(body: str | None) -> tuple[str, str] | None:
@@ -102,8 +106,32 @@ def parse_scope(body: str | None) -> tuple[str, str] | None:
     return (match.group(1), match.group(2)) if match else None
 
 
-def issue_title(summary: dict[str, Any], *, test_mode: bool) -> str:
-    d = check_descriptor(summary, lead_check(summary) or "current")
+def discord_posted(body: str | None) -> bool:
+    """False only when the issue says its alarm post did not go out."""
+    match = DISCORD_RE.search(body or "")
+    return match is None or match.group(1) == "true"
+
+
+def issue_year(issue: dict[str, Any], current_year: str) -> tuple[str, str | None]:
+    """(CDS year, legacy kind) an open alarm issue is about. A missing or
+    edited marker falls back to the year in the title, else the current year,
+    with a warning: it must never re-scope the alarm silently."""
+    scope = parse_scope(issue.get("body"))
+    if scope is not None:
+        return scope[1], scope[0]
+    title_year = TITLE_YEAR_RE.search(str(issue.get("title") or ""))
+    year = title_year.group(1) if title_year else current_year
+    where = "its title" if title_year else "the current year"
+    print(
+        f"::warning::alarm issue #{issue['number']} has no readable alarm-scope marker; "
+        f"treating it as {year} (from {where})",
+        file=sys.stderr,
+    )
+    return year, None
+
+
+def issue_title(ysum: dict[str, Any], *, test_mode: bool) -> str:
+    d = check_descriptor(ysum, lead_check(ysum) or "current")
     title = (
         f"Discovery is behind: {_pct0(d['pct'])} of schools with {d['prev']} "
         f"have {d['year']} (floor {_pct0(d['floor'])})"
@@ -111,28 +139,25 @@ def issue_title(summary: dict[str, Any], *, test_mode: bool) -> str:
     return (TEST_TITLE_PREFIX if test_mode else "") + title
 
 
-def _all_checks(summary: dict[str, Any]) -> str:
-    parts = []
-    for kind in ("current", "two_year", "next"):
-        d = check_descriptor(summary, kind)
-        floor = "not tracked" if d["floor"] is None else f"floor {_pct1(d['floor'])}"
-        parts.append(f"{d['name']} {_pct1(d['pct'])} ({floor})")
-    return "; ".join(parts)
-
-
-def recovery_comment(summary: dict[str, Any], kind: str = "current") -> str:
-    d = check_descriptor(summary, kind)
+def recovery_comment(ysum: dict[str, Any], kind: str = "current") -> str:
+    d = check_descriptor(ysum, kind)
+    other = check_descriptor(ysum, "two_year" if kind == "current" else "current")
+    other_text = (
+        f" The {other['name']} check is {_pct1(other['pct'])}"
+        + ("" if other["floor"] is None else f" (floor {_pct1(other['floor'])})")
+        + "."
+    )
     return (
-        f"Recovered: the {d['name']} check is {d['renewed']} of {d['total']} "
+        f"Recovered: the {d['name']} check for {d['year']} is {d['renewed']} of {d['total']} "
         f"({_pct1(d['pct'])}) of schools with {d['prev']} having {d['year']}, "
-        f"floor {_pct1(d['floor'])}. All checks are above their floors: {_all_checks(summary)}. Closing."
+        f"floor {_pct1(d['floor'])}.{other_text} Closing."
     )
 
 
-def discord_alert(summary: dict[str, Any], issue_url: str | None, *, test_mode: bool) -> dict[str, Any]:
-    d = check_descriptor(summary, lead_check(summary) or "current")
+def discord_alert(ysum: dict[str, Any], issue_url: str | None, *, test_mode: bool) -> dict[str, Any]:
+    d = check_descriptor(ysum, lead_check(ysum) or "current")
     return {
-        "title": issue_title(summary, test_mode=test_mode),
+        "title": issue_title(ysum, test_mode=test_mode),
         "fields": [
             ("Check", d["name"]),
             ("Renewal", f"{d['renewed']} of {d['total']} ({_pct1(d['pct'])})"),
@@ -146,9 +171,9 @@ def discord_alert(summary: dict[str, Any], issue_url: str | None, *, test_mode: 
 
 
 def discord_recovery(
-    summary: dict[str, Any], issue_url: str | None, kind: str, *, test_mode: bool
+    ysum: dict[str, Any], issue_url: str | None, kind: str, *, test_mode: bool
 ) -> dict[str, Any]:
-    d = check_descriptor(summary, kind)
+    d = check_descriptor(ysum, kind)
     return {
         "title": (TEST_TITLE_PREFIX if test_mode else "")
         + f"Discovery renewal recovered: {d['name']} {_pct1(d['pct'])} "
@@ -179,7 +204,7 @@ def find_open_issues(repo: str, label: str, runner: Runner) -> list[dict[str, An
     out = _gh(
         runner,
         ["api", "-X", "GET", f"repos/{repo}/issues", "-f", f"labels={label}",
-         "-f", "state=open", "-f", "per_page=20"],
+         "-f", "state=open", "-f", "per_page=50"],
     )
     try:
         rows = json.loads(out or "[]")
@@ -194,12 +219,6 @@ def find_open_issues(repo: str, label: str, runner: Runner) -> list[dict[str, An
         if "pull_request" not in r
     ]
     return sorted(issues, key=lambda r: r["number"])
-
-
-def find_open_issue(repo: str, label: str, runner: Runner) -> dict[str, Any] | None:
-    """The alarm issue: the newest open one carrying the label."""
-    issues = find_open_issues(repo, label, runner)
-    return issues[-1] if issues else None
 
 
 def ensure_label(repo: str, label: str, runner: Runner) -> None:
@@ -226,21 +245,28 @@ def _with_body_file(body: str, fn: Callable[[str], str]) -> str:
         Path(path).unlink(missing_ok=True)
 
 
+def build_body(report: str, year: str, posted: bool) -> str:
+    return report.rstrip("\n") + f"\n\n{scope_marker(year)}\n{discord_marker(posted)}\n"
+
+
 def act(
     *,
-    summary: dict[str, Any],
-    below_floor: bool,
-    report: str,
+    years: dict[str, dict[str, Any]],
+    reports: dict[str, str],
+    current_year: str,
     repo: str,
     test_mode: bool,
     dry_run: bool,
     assignee: str,
     runner: Runner,
+    fallback_report: str = "",
     discord: Callable[..., bool] = notify_discord.post_custom_embed,
 ) -> dict[str, Any]:
-    """Do (or, in a dry run, print) what the state calls for. Returns
-    {"action", "issue", "discord_failed"} where issue is the open alarm issue
-    afterwards."""
+    """Do (or, in a dry run, print) what each year calls for.
+
+    Returns {"actions": [{year, action, issue}], "issue": <alarm issue number
+    afterwards: the current year's, else the newest year's>, "discord_failed"}.
+    """
     label = label_for(test_mode)
     issues = find_open_issues(repo, label, runner)
     if test_mode:
@@ -250,106 +276,153 @@ def act(
                     f"issue #{existing['number']} carries {label} but is not a test issue; "
                     "refusing to touch it"
                 )
-    active = issues[-1] if issues else None
-    older = issues[:-1]
-    number = active["number"] if active else None
-    url = active.get("url") if active else None
-    scope = scope_of(summary)
-    old_scope = parse_scope(active.get("body")) if active else None
-    action = decide(below_floor, number)
-    # Scope is the CDS year only; an older marker that names a check matches
-    # on its year.
-    if action == "update" and old_scope is not None and old_scope[1] != scope[1]:
-        action = "supersede"
+    by_year: dict[str, list[dict[str, Any]]] = {}
+    legacy_kind: dict[int, str | None] = {}
+    for issue in issues:
+        year, kind = issue_year(issue, current_year)
+        by_year.setdefault(year, []).append(issue)
+        legacy_kind[issue["number"]] = kind
+    # Only the current year and the next one can open an alarm. An earlier year
+    # is judged by the flat mature floor, which some years never reached (2023-24
+    # held at about 82%); it is evaluated only to decide whether an issue that
+    # is already open for it recovers.
+    current_start = int(current_year[:4])
+    breaching = {
+        y for y, ys in years.items()
+        if int(y[:4]) >= current_start and lead_check(ys) is not None
+    }
     prefix = "[dry run] " if dry_run else ""
-    print(f"{prefix}alarm action: {action} (below_floor={below_floor}, open issue={number}, "
-          f"scope={scope[0]}:{scope[1]}, label={label})")
-
     discord_failed = False
 
-    def send(payload: dict[str, Any]) -> None:
+    def send(payload: dict[str, Any]) -> str:
+        """posted / skipped (no webhook) / failed."""
         nonlocal discord_failed
         try:
             if dry_run:
                 discord(**payload, dry_run=True)
-            else:
-                discord(**payload, raise_on_failure=True)
+                return "posted"
+            return "posted" if discord(**payload, raise_on_failure=True) else "skipped"
         except notify_discord.DiscordPostError as exc:
             discord_failed = True
             print(f"::error::Discord post failed after the issue action: {exc}", file=sys.stderr)
-
-    body = report.rstrip("\n") + "\n\n" + scope_marker(scope) + "\n"
-
-    def create() -> tuple[int, str]:
-        title = issue_title(summary, test_mode=test_mode)
-        ensure_label(repo, label, runner)
-        assign = [] if test_mode else ["--assignee", assignee]
-        out = _with_body_file(body, lambda path: _gh(
-            runner, ["issue", "create", "--repo", repo, "--title", title,
-                     "--body-file", path, "--label", label, *assign]))
-        return parse_issue_number(out), out.strip().splitlines()[-1]
+            return "failed"
 
     def close(issue_number: int, comment: str) -> None:
         _gh(runner, ["issue", "close", str(issue_number), "--repo", repo, "--comment", comment])
 
-    if action == "none":
-        return {"action": action, "issue": None, "discord_failed": False}
+    actions: list[dict[str, Any]] = []
+    open_after: dict[str, int] = {}
 
-    if action in ("create", "supersede"):
-        title = issue_title(summary, test_mode=test_mode)
+    for year in sorted(set(by_year) | breaching):
+        ysum = years.get(year)
+        open_list = by_year.get(year, [])
+        active = open_list[-1] if open_list else None
+        older = open_list[:-1]
+        number = active["number"] if active else None
+        if ysum is None:
+            print(f"::warning::open alarm issue(s) for {year}, which is outside the evaluated "
+                  "years; left untouched", file=sys.stderr)
+            if number is not None:
+                open_after[year] = number
+            actions.append({"year": year, "action": "skip", "issue": number})
+            continue
+        below = lead_check(ysum) is not None
+        action = decide(below, number)
+        print(f"{prefix}alarm {year}: {action} (below_floor={below}, open issue={number}, "
+              f"label={label})")
+        report = reports.get(year) or fallback_report
+
+        if action == "none":
+            actions.append({"year": year, "action": action, "issue": None})
+            continue
+
+        if action == "create":
+            title = issue_title(ysum, test_mode=test_mode)
+            if dry_run:
+                who = "none (test)" if test_mode else assignee
+                print(f"{prefix}would create issue: {title}\n  label={label} assignee={who}\n{report}")
+                send(discord_alert(ysum, None, test_mode=test_mode))
+                actions.append({"year": year, "action": action, "issue": None})
+                continue
+            ensure_label(repo, label, runner)
+            assign = [] if test_mode else ["--assignee", assignee]
+            out = _with_body_file(build_body(report, year, False), lambda path: _gh(
+                runner, ["issue", "create", "--repo", repo, "--title", title,
+                         "--body-file", path, "--label", label, *assign]))
+            new_number = parse_issue_number(out)
+            url = out.strip().splitlines()[-1]
+            print(f"opened issue #{new_number} for {year}")
+            outcome = send(discord_alert(ysum, url, test_mode=test_mode))
+            if outcome == "posted":
+                _with_body_file(build_body(report, year, True), lambda path: _gh(
+                    runner, ["issue", "edit", str(new_number), "--repo", repo,
+                             "--body-file", path]))
+            open_after[year] = new_number
+            actions.append({"year": year, "action": action, "issue": new_number})
+            continue
+
+        if action == "update":
+            title = issue_title(ysum, test_mode=test_mode)
+            posted = discord_posted(active["body"])
+            retry = not posted
+            if dry_run:
+                print(f"{prefix}would replace the title and body of #{number} (no comment"
+                      + (", retry the Discord post" if retry else ", no Discord post")
+                      + f"): {title}\n{report}")
+                if retry:
+                    send(discord_alert(ysum, active.get("url"), test_mode=test_mode))
+                open_after[year] = number
+                actions.append({"year": year, "action": action, "issue": number})
+                continue
+            if retry:
+                posted = send(discord_alert(ysum, active.get("url"), test_mode=test_mode)) == "posted"
+            _with_body_file(build_body(report, year, posted), lambda path: _gh(
+                runner, ["issue", "edit", str(number), "--repo", repo, "--title", title,
+                         "--body-file", path]))
+            print(f"updated issue #{number}")
+            for old in older:
+                close(old["number"], f"Superseded by #{number}.")
+                print(f"closed duplicate issue #{old['number']}")
+            open_after[year] = number
+            actions.append({"year": year, "action": action, "issue": number})
+            continue
+
+        # close: this year is back above its floors
+        kind = legacy_kind.get(number)
+        kind = kind if kind in ("current", "two_year") else "current"
+        comment = recovery_comment(ysum, kind)
         if dry_run:
-            who = "none (test)" if test_mode else assignee
-            extra = ""
-            if action == "supersede":
-                extra = (f"\n  would close #{number}"
-                         + "".join(f", #{o['number']}" for o in older)
-                         + " as superseded")
-            print(f"{prefix}would create issue: {title}\n  label={label} assignee={who}{extra}\n{report}")
-            send(discord_alert(summary, None, test_mode=test_mode))
-            return {"action": action, "issue": None, "discord_failed": discord_failed}
-        new_number, new_url = create()
-        print(f"opened issue #{new_number}")
-        if action == "supersede":
-            for old in issues:
-                close(old["number"], f"Superseded by #{new_number}: the alarm is now about "
-                      f"renewal for {scope[1]}.")
-                print(f"closed issue #{old['number']} as superseded")
-        send(discord_alert(summary, new_url, test_mode=test_mode))
-        return {"action": action, "issue": new_number, "discord_failed": discord_failed}
+            print(f"{prefix}would close #{number} with the comment: {comment}")
+            send(discord_recovery(ysum, active.get("url"), kind, test_mode=test_mode))
+            actions.append({"year": year, "action": action, "issue": None})
+            continue
+        for old in open_list:
+            close(old["number"], comment if old is active else f"Superseded by #{number}; recovered.")
+            print(f"closed issue #{old['number']}")
+        send(discord_recovery(ysum, active.get("url"), kind, test_mode=test_mode))
+        actions.append({"year": year, "action": action, "issue": None})
 
-    if action == "update":
-        title = issue_title(summary, test_mode=test_mode)
-        if dry_run:
-            print(f"{prefix}would replace the title and body of #{number} "
-                  f"(no comment, no Discord post): {title}\n{report}")
-            return {"action": action, "issue": number, "discord_failed": False}
-        _with_body_file(body, lambda path: _gh(
-            runner, ["issue", "edit", str(number), "--repo", repo, "--title", title,
-                     "--body-file", path]))
-        print(f"updated issue #{number}")
-        for old in older:
-            close(old["number"], f"Superseded by #{number}.")
-            print(f"closed issue #{old['number']} as superseded")
-        return {"action": action, "issue": number, "discord_failed": False}
+    if current_year in open_after:
+        alarm_issue: int | None = open_after[current_year]
+    else:
+        alarm_issue = open_after[max(open_after)] if open_after else None
+    return {"actions": actions, "issue": alarm_issue, "discord_failed": discord_failed}
 
-    # close: name the check the standing issue was about
-    kind = old_scope[0] if old_scope and old_scope[0] in ("current", "two_year", "next") else "current"
-    comment = recovery_comment(summary, kind)
-    if dry_run:
-        print(f"{prefix}would close #{number} with the comment: {comment}")
-        send(discord_recovery(summary, url, kind, test_mode=test_mode))
-        return {"action": action, "issue": None, "discord_failed": discord_failed}
-    for old in issues:
-        close(old["number"], comment if old is active else f"Superseded by #{number}; recovered.")
-        print(f"closed issue #{old['number']}")
-    send(discord_recovery(summary, url, kind, test_mode=test_mode))
-    return {"action": action, "issue": None, "discord_failed": discord_failed}
+
+def outstanding(outcome: dict[str, Any]) -> tuple[bool, str]:
+    """(any alarm outstanding, comma-separated CDS years still short): every
+    year whose alarm issue is open after this run, including an earlier year
+    that is no longer the current or next one."""
+    years = sorted(a["year"] for a in outcome["actions"] if a["action"] in ("create", "update", "skip"))
+    return bool(years), ",".join(years)
 
 
 def main(argv: list[str] | None = None, *, runner: Runner = run_gh) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--state", type=Path, required=True, help="out-state JSON from discovery_renewal.py")
-    parser.add_argument("--report", type=Path, required=True, help="issue body markdown")
+    parser.add_argument("--report", type=Path, required=True,
+                        help="fallback issue body markdown (used when a year has no report of its own)")
+    parser.add_argument("--year-reports", type=Path, help="directory of <year>.md issue bodies")
     parser.add_argument("--summary", type=Path, required=True,
                         help="heartbeat summary JSON; rewritten with alarm_issue")
     parser.add_argument("--repo", default=os.environ.get("GITHUB_REPOSITORY", "bolewood/collegedata-fyi"))
@@ -361,18 +434,24 @@ def main(argv: list[str] | None = None, *, runner: Runner = run_gh) -> int:
     try:
         state = json.loads(args.state.read_text(encoding="utf-8"))
         summary = json.loads(args.summary.read_text(encoding="utf-8"))
-        report = args.report.read_text(encoding="utf-8")
-        if not isinstance(state.get("below_floor"), bool):
-            raise AlarmError("state has no boolean below_floor")
+        fallback = args.report.read_text(encoding="utf-8")
+        years = state.get("years")
+        if not isinstance(years, dict) or not years:
+            raise AlarmError("state has no per-year checks")
+        reports: dict[str, str] = {}
+        if args.year_reports and args.year_reports.is_dir():
+            for path in args.year_reports.glob("*.md"):
+                reports[path.stem] = path.read_text(encoding="utf-8")
         outcome = act(
-            summary=summary,
-            below_floor=state["below_floor"],
-            report=report,
+            years=years,
+            reports=reports,
+            current_year=str(state.get("current_year") or summary["current_year"]),
             repo=args.repo,
             test_mode=args.test_mode,
             dry_run=args.dry_run,
             assignee=args.assignee,
             runner=runner,
+            fallback_report=fallback,
         )
     except (AlarmError, OSError, json.JSONDecodeError, KeyError) as exc:
         print(f"::error::renewal alarm: {type(exc).__name__}: {exc}", file=sys.stderr)
@@ -380,6 +459,9 @@ def main(argv: list[str] | None = None, *, runner: Runner = run_gh) -> int:
     if not args.dry_run:
         # A test issue is not the alarm: keep it out of the heartbeat summary.
         summary["alarm_issue"] = None if args.test_mode else outcome["issue"]
+        # The heartbeat must show an earlier year that is still short even
+        # when the current and next year are healthy.
+        summary["outstanding_below_floor"], summary["outstanding_years"] = outstanding(outcome)
         args.summary.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     # The issue action is done; a Discord delivery failure still fails the job
     # (which posts through workflow_run).

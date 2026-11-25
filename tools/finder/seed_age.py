@@ -57,6 +57,7 @@ from tools.ops.discovery_renewal import (  # noqa: E402
     DEFAULT_API,
     DEFAULT_SCHOOLS_YAML,
     VALID_PARTICIPATION,
+    UNCOUNTED_FLAGS,
     RenewalError,
     _parse_ts,
     cds_freshness_floor,
@@ -89,12 +90,20 @@ class SeedAge:
     behind_cycle: bool
 
 
+def _counts(row: dict[str, Any]) -> bool:
+    """The renewal check's rule for a document that can show a new year."""
+    return not row.get("sub_institutional") and row.get("data_quality_flag") not in UNCOUNTED_FLAGS
+
+
 def newest_year_info(
     rows: list[dict[str, Any]],
 ) -> dict[str, tuple[int, datetime | None, bool]]:
     """Per school: (newest valid start year, earliest discovered_at, all dated).
 
-    Only live published documents count. `first_seen` is the minimum
+    Only live published documents count, as in the renewal check: a flagged
+    document (`wrong_file`, `blank_template`, `low_coverage`) is not a new
+    year, and a sub-institution's document does not date the main campus's
+    seed. `first_seen` is the minimum
     `discovered_at` over documents filed under the newest year; `all dated`
     is False when any of them has no `discovered_at`, in which case the
     first-seen date is reported as unknown.
@@ -105,7 +114,7 @@ def newest_year_info(
             continue
         sid = row.get("school_id")
         year = parse_year(row.get("canonical_year"))
-        if not sid or year is None:
+        if not sid or year is None or not _counts(row):
             continue
         if year > best.get(sid, -1):
             best[sid] = year
@@ -115,7 +124,7 @@ def newest_year_info(
         if row.get("removed_at") or row.get("participation_status") != VALID_PARTICIPATION:
             continue
         sid = row.get("school_id")
-        if sid not in best or parse_year(row.get("canonical_year")) != best[sid]:
+        if sid not in best or parse_year(row.get("canonical_year")) != best[sid] or not _counts(row):
             continue
         ts = _parse_ts(row.get("discovered_at"))
         if ts is None:

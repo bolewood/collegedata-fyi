@@ -40,6 +40,21 @@ Not posted: pull-request CI, feature-branch workflow_dispatch, cancelled/skipped
 - Successful `Deploy Edge Functions` runs on `main`
 - Successful Vercel **production** `deployment_status` events, when Vercel's GitHub integration emits them
 
+## Outside check-in for the renewal check (dead man's switch)
+
+Every alert above lives in GitHub. GitHub disables scheduled workflows after 60 days without repository activity, and then the renewal check, the Discord poll and the failure notifier all go quiet together, with nothing to say so. The renewal workflow can therefore check in with an outside service, which alerts when the check-in stops.
+
+Setup, once:
+
+1. Create one free check at [healthchecks.io](https://healthchecks.io) (or any service with the same URL convention). Schedule: every 1 day, grace time 2 days. Send the alert email to the owner.
+2. Copy the check's ping URL into the repository secret `RENEWAL_DEADMAN_URL` (Settings, Secrets and variables, Actions).
+
+What it does: scheduled runs of `Ops discovery renewal` end with `curl -fsS -m 10 --retry 3 "$RENEWAL_DEADMAN_URL"` when the job succeeded, and with `"$RENEWAL_DEADMAN_URL/fail"` when an earlier step failed. Manual runs never check in. If the secret is unset the step prints `RENEWAL_DEADMAN_URL not set; no outside check-in (see docs/ops-discord.md)` and the job passes. The URL is never printed.
+
+## Repeated failures
+
+The notifier posts the first failure of a run of failures only. When a scheduled `Ops discovery renewal` run fails and the one before it failed too, the run prints `::error::renewal check has failed N days running` (a red annotation on the run), and every 7th consecutive failure also posts to `#alerts` directly (`tools/ops/consecutive_failures.py`).
+
 ## Local check
 
 ```bash

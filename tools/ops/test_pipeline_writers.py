@@ -65,6 +65,37 @@ class PipelineWriterLintTests(unittest.TestCase):
         self.assertIn("dry run: heartbeat not sent", finish[guard:guard + 200])
         self.assertLess(guard, finish.index("record_heartbeat.py"))
 
+    def test_discovery_renewal_outside_check_in_is_schedule_only_and_never_echoes_the_url(self) -> None:
+        text = DISCOVERY_RENEWAL.read_text(encoding="utf-8")
+        step = text.split("- name: Outside check-in")[1]
+        header = step.split("run: |")[0]
+        self.assertIn("github.event_name == 'schedule'", header)
+        self.assertIn("always()", header)
+        body = step.split("run: |")[1]
+        self.assertIn("RENEWAL_DEADMAN_URL not set; no outside check-in (see docs/ops-discord.md)", body)
+        self.assertIn('curl -fsS -m 10 --retry 3', body)
+        self.assertIn('"${RENEWAL_DEADMAN_URL}${suffix}"', body)
+        self.assertIn('suffix="/fail"', body)
+        # The URL is only ever tested for emptiness or passed to curl.
+        for line in body.splitlines():
+            if "${RENEWAL_DEADMAN_URL" in line:
+                self.assertTrue('-z "${RENEWAL_DEADMAN_URL}"' in line or "curl" in line, line)
+        self.assertNotIn("set -x", text)
+        self.assertNotIn("echo \"${RENEWAL_DEADMAN_URL", text)
+        self.assertNotIn("echo ${RENEWAL_DEADMAN_URL", text)
+
+    def test_discovery_renewal_counts_consecutive_failures_on_scheduled_runs(self) -> None:
+        text = DISCOVERY_RENEWAL.read_text(encoding="utf-8")
+        step = text.split("- name: Count consecutive failures")[1].split("- name:")[0]
+        self.assertIn("failure() && github.event_name == 'schedule'", step)
+        self.assertIn("tools/ops/consecutive_failures.py", step)
+        self.assertIn("actions: read", text)
+
+    def test_discovery_renewal_passes_per_year_reports_to_the_alarm(self) -> None:
+        text = DISCOVERY_RENEWAL.read_text(encoding="utf-8")
+        self.assertIn("--out-year-reports renewal/years", text)
+        self.assertIn("--year-reports renewal/years", text)
+
     def test_corpus_audit_keeps_the_service_key_out_of_dependency_install(self) -> None:
         text = CORPUS_AUDIT.read_text(encoding="utf-8")
         job_env = text.split("    steps:")[0]

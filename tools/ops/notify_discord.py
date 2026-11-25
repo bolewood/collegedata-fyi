@@ -46,6 +46,9 @@ SELF_WORKFLOW_FILE = "ops-discord-notify.yml"
 
 # Public board lamps that mean "broke". late/capped stay on the board only.
 ALERT_LAMPS = frozenset({"down"})
+# Lamps that count as healthy again after a `down`. `late`, `capped` and `run`
+# (a restarted job that may fail again) do not.
+RECOVERED_LAMPS = frozenset({"ok"})
 
 STATION_SLA: dict[str, tuple[str, int]] = {
     "finder_brave": ("40d", 40 * 24 * 3600),
@@ -552,48 +555,83 @@ def _num(value: Any) -> float | None:
     return float(value)
 
 
+def _renewal_figures(summary: dict[str, Any], prefix: str, name: str) -> str:
+    renewed = _num(summary.get(f"{prefix}renewed"))
+    prev = _num(summary.get(f"{prefix}prev_schools"))
+    if renewed is None or prev is None:
+        return ""
+    text = f"{name}: {int(renewed)} of {int(prev)} renewed"
+    pct = _num(summary.get(f"{prefix}renewal_pct"))
+    if pct is not None:
+        text += f" ({pct:g}%)"
+    floor = _num(summary.get(f"{prefix}floor_pct"))
+    if floor is not None:
+        text += f" · floor {floor:g}%"
+    return text
+
+
+# (summary flag, summary figure prefix, name) in the order they are reported.
+RENEWAL_CHECKS = (
+    ("below_floor", "", "one-year"),
+    ("two_year_below_floor", "two_year_", "two-year"),
+    ("next_below_floor", "next_", "next-year"),
+)
+
+
+def station_failure(station: dict[str, Any]) -> str | None:
+    """The one reading of "this result is bad", shared by the title and the
+    text: the figures of the first failing check, or None when the summary
+    does not show a failure.
+
+    discovery_renewal fails when any of its checks is below its floor
+    (one-year, two-year, next-year) or an earlier year with an open alarm is
+    still short (`outstanding_below_floor`). finder_stuck_pdf fails when at
+    least STUCK_SHARE_FAILURE of its stuck schools are still stuck."""
+    summary = station.get("summary")
+    if not isinstance(summary, dict):
+        return None
+    station_id = str(station.get("station_id") or "")
+    if station_id == "discovery_renewal":
+        for flag, prefix, name in RENEWAL_CHECKS:
+            if summary.get(flag) is True:
+                return _renewal_figures(summary, prefix, name) or f"{name} below its floor"
+        if summary.get("outstanding_below_floor") is True:
+            years = str(summary.get("outstanding_years") or "").strip()
+            return f"still short: {years}" if years else "an earlier year is still short"
+        return None
+    if station_id == "finder_stuck_pdf":
+        stuck, still = _num(summary.get("stuck")), _num(summary.get("still_stuck"))
+        if stuck is not None and still is not None and stuck > 0 and still / stuck >= STUCK_SHARE_FAILURE:
+            return f"{int(still)} of {int(stuck)} still stuck"
+    return None
+
+
 def station_result_text(station: dict[str, Any]) -> str:
-    """The station's result line: the public JSON's `result_line`, else derived
-    from its `summary` figures, else empty."""
+    """The station's result line: the public JSON's `result_line`, else the
+    failing check's figures, else the headline figures from its `summary`,
+    else empty."""
     line = str(station.get("result_line") or "")
     if line:
         return line
+    failure = station_failure(station)
+    if failure:
+        return failure
     summary = station.get("summary")
     if not isinstance(summary, dict):
         return ""
     station_id = str(station.get("station_id") or "")
     if station_id == "discovery_renewal":
-        renewed, prev = _num(summary.get("renewed")), _num(summary.get("prev_schools"))
-        if renewed is None or prev is None:
-            return ""
-        text = f"{int(renewed)} of {int(prev)} renewed"
-        pct = _num(summary.get("renewal_pct"))
-        if pct is not None:
-            text += f" ({pct:g}%)"
-        floor = _num(summary.get("floor_pct"))
-        if floor is not None:
-            text += f" · floor {floor:g}%"
-        return text
+        return _renewal_figures(summary, "", "one-year")
     if station_id == "finder_stuck_pdf":
         stuck, still = _num(summary.get("stuck")), _num(summary.get("still_stuck"))
-        if stuck is None or still is None:
-            return ""
-        return f"{int(still)} of {int(stuck)} still stuck"
+        if stuck is not None and still is not None:
+            return f"{int(still)} of {int(stuck)} still stuck"
     return ""
 
 
 def station_shows_failure(station: dict[str, Any]) -> bool:
     """True when the summary's own figures say the result is bad."""
-    summary = station.get("summary")
-    if not isinstance(summary, dict):
-        return False
-    station_id = str(station.get("station_id") or "")
-    if station_id == "discovery_renewal":
-        return summary.get("below_floor") is True
-    if station_id == "finder_stuck_pdf":
-        stuck, still = _num(summary.get("stuck")), _num(summary.get("still_stuck"))
-        return stuck is not None and still is not None and stuck > 0 and still / stuck >= STUCK_SHARE_FAILURE
-    return False
+    return station_failure(station) is not None
 
 
 def station_alert_fields(station: dict[str, Any], now: datetime) -> list[tuple[str, str]]:
@@ -768,7 +806,14 @@ def pipeline_observation_messages(
             continue
         lamp = str(station.get("lamp") or "")
         previous = stations_state.get(station_id)
-        current = "down" if lamp in ALERT_LAMPS else "ok"
+        if lamp in ALERT_LAMPS:
+            current = "down"
+        elif lamp in RECOVERED_LAMPS or previous != "down":
+            current = "ok"
+        else:
+            # down -> late (or capped): still not healthy. Stay down quietly;
+            # "recovered" is only for a lamp that is back to ok or running.
+            current = "down"
         if previous is None:
             stations_state[station_id] = current
             continue

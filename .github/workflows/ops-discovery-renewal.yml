@@ -47,6 +47,7 @@ concurrency:
 permissions:
   contents: read
   issues: write
+  actions: read  # the consecutive-failure count lists earlier runs
 
 jobs:
   renewal:
@@ -101,6 +102,7 @@ jobs:
             --out-state renewal/state.json \
             --out-worklist renewal/worklist.json \
             --out-seed-ages renewal/seed_age.json \
+            --out-year-reports renewal/years \
             "${args[@]}"
           cat renewal/report.md >> "$GITHUB_STEP_SUMMARY"
 
@@ -134,7 +136,7 @@ jobs:
           DISCORD_ALERTS_WEBHOOK_URL: ${{ secrets.DISCORD_ALERTS_WEBHOOK_URL }}
         run: |
           set -euo pipefail
-          args=(--state renewal/state.json --report renewal/report.md --summary renewal/summary.json --repo "${REPO}")
+          args=(--state renewal/state.json --report renewal/report.md --year-reports renewal/years --summary renewal/summary.json --repo "${REPO}")
           if [[ "${DRY_RUN}" == "true" ]]; then
             args+=(--dry-run)
           fi
@@ -185,3 +187,39 @@ jobs:
             --error-code "${error}" \
             --run-url "${PIPELINE_RUN_URL}" \
             "${args[@]}"
+
+      # The notifier posts the first failure of a run of failures only. Say how
+      # long the check has been broken, and post every 7th day.
+      - name: Count consecutive failures
+        if: failure() && github.event_name == 'schedule'
+        env:
+          DISCORD_ALERTS_WEBHOOK_URL: ${{ secrets.DISCORD_ALERTS_WEBHOOK_URL }}
+        run: |
+          python tools/ops/consecutive_failures.py \
+            --repo "${REPO}" \
+            --workflow "Ops discovery renewal" \
+            --run-id "${{ github.run_id }}" \
+            --run-url "${PIPELINE_RUN_URL}" \
+            --label "renewal check"
+
+      # Dead man's switch: an outside service that alerts when this check-in
+      # stops arriving. GitHub disables scheduled workflows after 60 days
+      # without repository activity, which silences every alert that lives in
+      # GitHub, this one included. See docs/ops-discord.md. The URL is a secret
+      # and is never printed.
+      - name: Outside check-in
+        if: always() && github.event_name == 'schedule'
+        env:
+          RENEWAL_DEADMAN_URL: ${{ secrets.RENEWAL_DEADMAN_URL }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          if [[ -z "${RENEWAL_DEADMAN_URL}" ]]; then
+            echo "RENEWAL_DEADMAN_URL not set; no outside check-in (see docs/ops-discord.md)"
+            exit 0
+          fi
+          suffix=""
+          if [[ "${JOB_STATUS}" != "success" ]]; then
+            suffix="/fail"
+          fi
+          curl -fsS -m 10 --retry 3 -o /dev/null "${RENEWAL_DEADMAN_URL}${suffix}" \
+            || echo "::warning::outside check-in did not go through"
