@@ -36,6 +36,7 @@ Federal figures come from `ipeds_facts` (the unified view keeps only each school
 - Admissions are "not compared" (`federal_compared` false, null outcomes). Public: `federal_left_out.not_compared` (omitted when 0), separate from `no_federal_figures`, which keeps meaning "IPEDS has no positive figure". For a year whose federal fall is loaded, `federal.reports + single_campus + no_federal_figures + not_compared` equals the published reports.
 - `federal_fall_loaded` is decided at run time from `federal_schools[year]`: true when `ipeds_facts` holds any C1 figure for that fall (`tools/ipeds/README.md` lists releases 2004-05 to 2024-25; the oldest falls' keys are not assumed).
 - `forms[year].field_count` is 0 and `schema_exists` false (public: `full_field_schema: false`, `questions: 0`): "no question list", not "no questions". The structural row and answer-cell counts do not reliably equal the full schemas' field counts (2023-24: 1,081 vs 1,053; 2025-26: 1,061 vs 1,105), so no number is shown.
+- In the run JSON, `admissions` and `federal_values.ours` on a document with `federal_compared` false come from unverified ids: do not use them without checking `federal_compared`.
 - B1 enrollment and G1 tuition candidates (`federal_extra`) have no field there (`cds_field` null).
 - A year with a full field schema, including one with no `SUM_CHECKS` of its own such as 2026-27, behaves as before: sums follow the numbering each document carries.
 - `renewal` is computed from the live manifest and does not depend on `--years`.

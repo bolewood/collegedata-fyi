@@ -1420,6 +1420,21 @@ class SumChecksUnavailable(unittest.TestCase):
             scoreboard.build_public(run, "x.json")
         self.assertIn("no sum_tables", str(caught.exception))
 
+    def test_a_legacy_run_with_a_full_schema_year_without_its_own_checks_is_still_accepted(self) -> None:
+        # main accepted a 2026-27 year (full schema, no SUM_CHECKS); so does a legacy run of it.
+        def run_with(year: str, form_kw: dict) -> dict:
+            run = synthetic_run()
+            for form in run["forms"].values():
+                del form["sum_tables"]
+            run["years"] = [*run["years"], year]
+            run["forms"][year] = {"expected_form_year": year, "field_count": 1117, **form_kw}
+            run["federal_left_out"][year] = {"single_campus": 0, "no_federal_figures": 0}
+            return run
+        public = scoreboard.build_public(run_with("2026-27", {"schema_exists": True}), "x.json")
+        self.assertNotIn("sum_checks_unavailable", public["years"][-1])
+        with self.assertRaises(SystemExit):
+            scoreboard.build_public(run_with("2026-27", {"schema_exists": False}), "x.json")
+
     def test_the_public_shape_allows_the_key_only_as_a_list_of_text(self) -> None:
         public = scoreboard.build_public(synthetic_run(), "x.json")
         scoreboard.check_public_shape(public)   # absent is fine

@@ -1531,10 +1531,11 @@ def require_public_renewal(renewal: Any, generated_at: str) -> None:
 
 def sum_tables_of(year: str, form: dict[str, Any]) -> list[str]:
     """The tables with sums for a year's form. A run made before earlier years
-    existed has no `sum_tables`; it covered only years that have all three."""
+    existed has no `sum_tables`; every year it covered had a full field schema,
+    and such a year has all three (as `forms_for` says now)."""
     if "sum_tables" in form:
         return form["sum_tables"]
-    if year not in SUM_CHECKS:
+    if not form.get("schema_exists"):
         raise SystemExit(f"--public: the run's forms entry for {year} has no sum_tables; run the scoreboard again")
     return list(SUM_TABLES)
 
