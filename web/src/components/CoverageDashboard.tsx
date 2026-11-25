@@ -42,7 +42,7 @@ import {
   type EnrollmentBandId,
   type RecencyId,
 } from "@/lib/coverage-model";
-import { compareYearsDesc, formatSnapshotDate, renewalTile, type Renewal } from "@/lib/data-quality";
+import { compareYearsDesc, isDataQualityLaunched, formatSnapshotDate, renewalTile, type Renewal } from "@/lib/data-quality";
 
 /** The committed Data quality snapshot's renewal block, passed in by the server page (null before the first snapshot). */
 export type RenewalProp = { renewal: Renewal; snapshotOf: string } | null;
@@ -415,24 +415,27 @@ export function CoverageDashboard({
         SHOWING {filteredRows.length.toLocaleString()} OF {total.toLocaleString()} INSTITUTIONS
       </div>
 
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-        <button
-          type="button"
-          className="cd-chip"
-          style={{ cursor: "pointer", background: "transparent" }}
-          onClick={() => downloadRows(filteredRows, "view")}
-        >
-          Download this view (CSV)
-        </button>
-        <button
-          type="button"
-          className="cd-chip"
-          style={{ cursor: "pointer", background: "transparent" }}
-          onClick={() => downloadRows(rows, "all")}
-        >
-          Download all colleges (CSV)
-        </button>
-      </div>
+      {/* CSV downloads ship with the Data quality launch gate: the # comment block isn't verified in pandas, R and Excel yet. */}
+      {isDataQualityLaunched() && (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+          <button
+            type="button"
+            className="cd-chip"
+            style={{ cursor: "pointer", background: "transparent" }}
+            onClick={() => downloadRows(filteredRows, "view")}
+          >
+            Download this view (CSV)
+          </button>
+          <button
+            type="button"
+            className="cd-chip"
+            style={{ cursor: "pointer", background: "transparent" }}
+            onClick={() => downloadRows(rows, "all")}
+          >
+            Download all colleges (CSV)
+          </button>
+        </div>
+      )}
 
       <div
         style={{

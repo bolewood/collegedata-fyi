@@ -87,6 +87,53 @@ describe("snapshot selection", () => {
   });
 });
 
+describe("snapshot validation", () => {
+  const bad = (mutate: (s: QualitySnapshot) => void, why: RegExp) => {
+    const snap = clone();
+    mutate(snap);
+    expect(() => selectSnapshot([{ name: "x.json", json: snap }], false)).toThrow(why);
+  };
+  const anyRec = (v: unknown) => v as Record<string, unknown>;
+
+  it("fails on a missing or non-boolean federal_fall_loaded", () => {
+    bad((s) => delete anyRec(s.years[0]).federal_fall_loaded, /federal_fall_loaded/);
+    bad((s) => (anyRec(s.years[0]).federal_fall_loaded = "yes"), /federal_fall_loaded/);
+  });
+
+  it("fails on a missing or non-boolean form.full_field_schema", () => {
+    bad((s) => delete anyRec(s.years[0].form).full_field_schema, /full_field_schema/);
+    bad((s) => (anyRec(s.years[0].form).full_field_schema = 1), /full_field_schema/);
+  });
+
+  it("fails on a non-count value in a row, the total, the form, set_aside_reasons or federal_left_out", () => {
+    bad((s) => (s.years[0].rows[0].status.published = -1), /row .*published/);
+    bad((s) => (s.years[0].rows[0].totals.B1.cant_check = 1.5), /cant_check/);
+    bad((s) => (anyRec(s.years[0].rows[0].federal).matches = "3"), /matches/);
+    bad((s) => (s.years[0].total.fields_stored.median = NaN), /total: .*median/);
+    bad((s) => delete anyRec(s.years[0].total.totals.H1).doesnt, /total: .*doesnt/);
+    bad((s) => (s.years[0].form.questions = -5), /form\.questions/);
+    bad((s) => (s.years[0].set_aside_reasons.blank_form = 0.5), /blank_form/);
+    bad((s) => delete anyRec(s.years[0].federal_left_out).single_campus, /single_campus/);
+    bad((s) => (s.years[0].removed = -1), /removed/);
+  });
+
+  it("fails on a duplicate cds_year", () => {
+    bad((s) => (s.years[1].cds_year = s.years[0].cds_year), /duplicate cds_year/);
+  });
+
+  it("fails when renewal years aren't consecutive", () => {
+    bad((s) => (s.renewal.current_year = "2026-27"), /year after/);
+    bad((s) => (s.renewal.previous_year = "2025-26"), /year after/);
+  });
+
+  it("fails when renewal.both exceeds previous, or a renewal count is negative or not an integer", () => {
+    bad((s) => (s.renewal.both = s.renewal.previous + 1), /exceeds/);
+    bad((s) => (s.renewal.both = -1), /renewal/);
+    bad((s) => (s.renewal.current = 10.5), /renewal/);
+    bad((s) => (s.renewal.previous = 479.2), /renewal/);
+  });
+});
+
 describe("years", () => {
   it("sorts by integer start year, newest first, with non-years last", () => {
     expect(["2023-24", "unknown", "2025-26", "2024-25"].sort(compareYearsDesc)).toEqual([
@@ -184,6 +231,22 @@ describe("data quality CSV", () => {
     expect(lines[1].startsWith("standard PDF,60,3,4,0,")).toBe(true);
     expect(lines.at(-1)!.startsWith("All formats,")).toBe(true);
     expect(csv).not.toContain("pdf_flat");
+  });
+
+  it("writes blank, not 0, for fields stored when a format has no published reports", () => {
+    const year = JSON.parse(JSON.stringify(y2324));
+    year.rows[0].status.published = 0;
+    year.rows[0].fields_stored = { median: 0, p10: 0 };
+    const lines = buildQualityCsv("reports", year, FIXTURE_SNAPSHOT).split("\r\n").filter((l) => l && !l.startsWith("#"));
+    expect(lines[1]).toBe("standard PDF,0,3,4,0,,");
+  });
+
+  it("labels formats from the shared map, not the label in the file", () => {
+    const year = JSON.parse(JSON.stringify(y2324));
+    year.rows[0].label = "STALE LABEL";
+    const csv = buildQualityCsv("reports", year, FIXTURE_SNAPSHOT);
+    expect(csv).not.toContain("STALE LABEL");
+    expect(csv).toContain("\r\nstandard PDF,");
   });
 
   it("leaves federal cells blank, not zero, for a year with no federal figures", () => {

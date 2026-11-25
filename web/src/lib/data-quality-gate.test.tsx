@@ -39,6 +39,8 @@ import { ArchiveStatusHeader } from "@/components/ArchiveStatusHeader";
 import MethodologyIndexPage from "@/app/methodology/page";
 import sitemap from "@/app/sitemap";
 import { generateMetadata } from "@/app/data-quality/page";
+import { CoverageDashboard } from "@/components/CoverageDashboard";
+import { DataQualityView } from "@/components/DataQualityView";
 import { loadLatestSnapshot } from "./data-quality-snapshots";
 
 const LAUNCH_MS = Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`);
@@ -94,6 +96,22 @@ describe("gate: methodology page", () => {
     const after = renderToStaticMarkup(<MethodologyIndexPage />);
     expect(after).toContain('href="/data-quality"');
     expect(after).toContain('href="/coverage?status=cds_available_current,cds_available_stale"');
+  });
+});
+
+describe("gate: CSV downloads on both tabs", () => {
+  it("renders no CSV links before launch and all of them after", () => {
+    at(CLOSED);
+    const cov = renderToStaticMarkup(<CoverageDashboard rows={[]} />);
+    const dq = renderToStaticMarkup(<DataQualityView snapshot={FIXTURE_SNAPSHOT} />);
+    expect(cov).not.toContain("(CSV)");
+    expect(dq).not.toContain("as CSV");
+    at(OPEN);
+    const covOpen = renderToStaticMarkup(<CoverageDashboard rows={[]} />);
+    const dqOpen = renderToStaticMarkup(<DataQualityView snapshot={FIXTURE_SNAPSHOT} />);
+    expect(covOpen).toContain("Download this view (CSV)");
+    expect(covOpen).toContain("Download all colleges (CSV)");
+    expect(dqOpen.match(/as CSV/g)).toHaveLength(3);
   });
 });
 

@@ -80,6 +80,11 @@ export function latestDocumentFreshness<T extends FreshnessFacts & { canonical_y
  * The CDS year that should already be on file on a given date. Mirrors the SQL
  * function `cds_freshness_floor()` (migration 20260821160000): from September
  * the previous academic year, before September the one before that.
+ *
+ * One rule, several copies: SQL `cds_freshness_floor()`, Python
+ * `tools/finder/stuck_pdf_seeds.default_min_fresh_year` (and
+ * `tools/ops/discovery_renewal.py` once it lands). All are checked against
+ * `tests/fixtures/freshness_floor_cases.json`.
  */
 export function cdsFreshnessFloor(asOf: Date = new Date()): string {
   const year = asOf.getUTCFullYear();

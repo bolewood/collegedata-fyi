@@ -13,6 +13,7 @@ import {
   TABLE_TITLES,
   buildQualityCsv,
   fallOf,
+  isDataQualityLaunched,
   isProjectedYear,
   liveCount,
   percent,
@@ -249,6 +250,8 @@ function Notices({ year }: { year: QualityYear }) {
 // ── CSV ──────────────────────────────────────────────────────────
 
 function CsvButton({ table, year, snapshot }: { table: QualityTableId; year: QualityYear; snapshot: QualitySnapshot }) {
+  // Gated with the page: the comment block isn't verified against pandas, R and Excel yet (owner decision in PR #487).
+  if (!isDataQualityLaunched()) return null;
   function download() {
     const blob = new Blob([buildQualityCsv(table, year, snapshot)], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);

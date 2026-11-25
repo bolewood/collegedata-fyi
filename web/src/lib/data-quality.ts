@@ -3,6 +3,7 @@
 // The page never computes live: it reads the newest reviewed snapshot at build.
 
 import { isCanonicalCdsYear } from "./format";
+import { formatLabel } from "./format-labels";
 import { DATA_LICENSE_NAME, DATA_LICENSE_URL } from "./data-license";
 
 /**
@@ -116,6 +117,33 @@ function isCount(v: unknown): v is number {
   return typeof v === "number" && Number.isInteger(v) && v >= 0;
 }
 
+/** Every named key of `obj` must be a non-negative integer. Returns a problem or null. */
+function allCounts(obj: unknown, keys: string[]): string | null {
+  if (!obj || typeof obj !== "object") return "missing counts";
+  for (const k of keys) {
+    if (!isCount((obj as Record<string, unknown>)[k])) return `${k} must be a non-negative integer`;
+  }
+  return null;
+}
+
+const SUM_KEYS = ["adds_up", "under_2pct", "off_more", "cant_check"];
+
+/** A row or year total: status, fields_stored, federal and totals blocks, all counts. */
+function rowCountsProblem(row: unknown): string | null {
+  if (!row || typeof row !== "object") return "missing";
+  const r = row as Record<string, unknown>;
+  const totals = r.totals as Record<string, unknown> | undefined;
+  return (
+    allCounts(r.status, ["published", "set_aside", "couldnt_read", "not_read_yet"]) ??
+    allCounts(r.fields_stored, ["median", "p10"]) ??
+    allCounts(r.federal, ["reports", "values", "matches", "no_value", "differs"]) ??
+    (totals && isCount(totals.reports) ? null : "totals.reports must be a non-negative integer") ??
+    allCounts(totals?.B1, SUM_KEYS) ??
+    allCounts(totals?.C1, SUM_KEYS) ??
+    allCounts(totals?.H1, ["adds_up", "doesnt", "cant_check"])
+  );
+}
+
 export function validateSnapshot(raw: unknown, source: string): QualitySnapshot {
   const fail = (why: string): never => {
     throw new SnapshotError(`data-quality snapshot ${source}: ${why}`);
@@ -138,17 +166,50 @@ export function validateSnapshot(raw: unknown, source: string): QualitySnapshot 
     !isCount(r.previous) ||
     !isCount(r.both)
   ) {
-    return fail("renewal block is missing or malformed");
+    return fail("renewal block is missing or malformed (years and counts must be real)");
+  }
+  if (yearStart(r.current_year as string) !== (yearStart(r.previous_year as string) as number) + 1) {
+    return fail("renewal.current_year is not the year after renewal.previous_year");
   }
   if (r.previous === 0) return fail("renewal.previous is 0, so there is no denominator");
   if ((r.both as number) > (r.previous as number) || (r.both as number) > (r.current as number)) {
     return fail("renewal.both exceeds renewal.previous or renewal.current");
   }
   if (!Array.isArray(s.years) || s.years.length === 0) return fail("years is empty");
+  const seen = new Set<string>();
   for (const y of s.years as Record<string, unknown>[]) {
+    if (!y || typeof y !== "object") return fail("a year entry is not an object");
+    const label = String(y.cds_year);
     if (!isCanonicalCdsYear(y.cds_year as string)) return fail(`bad cds_year ${JSON.stringify(y.cds_year)}`);
-    if (!y.total || !Array.isArray(y.rows) || !y.form || !y.set_aside_reasons || !y.federal_left_out) {
-      return fail(`year ${String(y.cds_year)} is missing rows, total, form or counts`);
+    if (seen.has(label)) return fail(`duplicate cds_year ${label}`);
+    seen.add(label);
+    const where = `year ${label}`;
+    if (typeof y.federal_fall_loaded !== "boolean") return fail(`${where}: federal_fall_loaded must be a boolean`);
+    const form = y.form as Record<string, unknown> | undefined;
+    if (!form || typeof form !== "object") return fail(`${where}: form is missing`);
+    if (typeof form.full_field_schema !== "boolean") return fail(`${where}: form.full_field_schema must be a boolean`);
+    if (typeof form.form_year !== "string") return fail(`${where}: form.form_year is missing`);
+    for (const [k, v] of [
+      ["form.questions", form.questions],
+      ["other_form_numbering", y.other_form_numbering],
+      ["removed", y.removed],
+      ["no_file", y.no_file],
+    ] as const) {
+      if (!isCount(v)) return fail(`${where}: ${k} must be a non-negative integer`);
+    }
+    const problem =
+      allCounts(y.set_aside_reasons, ["blank_form", "too_little_read", "wrong_file"]) ??
+      allCounts(y.federal_left_out, ["single_campus", "no_federal_figures"]);
+    if (problem) return fail(`${where}: ${problem}`);
+    if (!Array.isArray(y.rows)) return fail(`${where}: rows is missing`);
+    const totalProblem = rowCountsProblem(y.total);
+    if (totalProblem) return fail(`${where}: total: ${totalProblem}`);
+    for (const row of y.rows as Record<string, unknown>[]) {
+      if (typeof row?.format !== "string" || typeof row?.label !== "string") {
+        return fail(`${where}: a row has no format or label`);
+      }
+      const rowProblem = rowCountsProblem(row);
+      if (rowProblem) return fail(`${where}: row ${row.format}: ${rowProblem}`);
     }
   }
   return raw as QualitySnapshot;
@@ -328,13 +389,15 @@ export function buildQualityCsv(table: QualityTableId, year: QualityYear, snapsh
   ]);
   const lines: string[] = [];
   const all: { name: string; row: QualityRow }[] = [
-    ...year.rows.map((r) => ({ name: r.label, row: r as QualityRow })),
+    ...year.rows.map((r) => ({ name: formatLabel(r.format), row: r as QualityRow })),
     { name: "All formats", row: year.total },
   ];
   if (table === "reports") {
     lines.push(csvLine(["format", "published", "set_aside", "couldnt_read", "not_read_yet", "fields_stored_median", "fields_stored_lowest_10pct"]));
     for (const { name, row } of all) {
-      lines.push(csvLine([name, row.status.published, row.status.set_aside, row.status.couldnt_read, row.status.not_read_yet, row.fields_stored.median, row.fields_stored.p10]));
+      // No published reports: nothing to take a median of. Blank, like the page's dash, not 0.
+      const none = row.status.published === 0;
+      lines.push(csvLine([name, row.status.published, row.status.set_aside, row.status.couldnt_read, row.status.not_read_yet, none ? "" : row.fields_stored.median, none ? "" : row.fields_stored.p10]));
     }
   } else if (table === "federal") {
     lines.push(csvLine(["format", "reports_checked", "values_up_to_3_per_report", "matches", "no_value", "differs"]));

@@ -117,10 +117,9 @@ describe("filters bar", () => {
     expect(render("")).toMatch(/type="search"[^>]*value=""/);
   });
 
-  it("offers both CSVs and the two year columns", () => {
+  it("shows the two year columns, and no CSV links before launch", () => {
     const html = render();
-    expect(html).toContain("Download this view (CSV)");
-    expect(html).toContain("Download all colleges (CSV)");
+    expect(html).not.toContain("(CSV)");
     expect(html).toContain("With numbers");
     expect(html).toContain("Found");
   });
