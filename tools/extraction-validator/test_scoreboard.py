@@ -773,6 +773,15 @@ class Forms(unittest.TestCase):
             "2023-24": (True, 1053), "2024-25": (True, 1083), "2025-26": (True, 1105), "2022-23": (False, 0)})
         self.assertEqual(forms["2024-25"]["expected_form_year"], "2024-25")
 
+    def test_tables_with_sums_come_from_the_form_or_the_overlay_scope(self) -> None:
+        forms = scoreboard.forms_for(["2019-20", "2020-21", "2021-22", "2022-23", "2023-24", "2026-27"])
+        self.assertEqual({y: f["sum_tables"] for y, f in forms.items()}, {
+            "2019-20": ["C1"], "2020-21": ["C1"], "2021-22": ["C1"], "2022-23": ["C1"],
+            "2023-24": ["B1", "C1", "H1"],
+            "2026-27": []})   # a full schema, but nobody has written its sums
+        self.assertEqual(scoreboard.forms_for(["1999-00"])["1999-00"],
+                         {"expected_form_year": "1999-00", "schema_exists": False, "field_count": 0, "sum_tables": []})
+
 
 class Renewal(unittest.TestCase):
     """The block comes from discovery_renewal; these check the wiring."""
@@ -971,6 +980,8 @@ class FakeApi:
         rows = self.tables[table]
         if params.get("removed_at") == "is.null":
             rows = [r for r in rows if r.get("removed_at") is None]
+        if table == "cds_manifest" and "canonical_year" in params:
+            rows = [r for r in rows if r["canonical_year"] in params["canonical_year"][3:].strip("()").split(",")]
         if table != "cds_manifest":
             for column in ("document_id", "id", "data_year"):
                 if column in params:
@@ -1027,7 +1038,8 @@ class GatherOnAFakeApi(unittest.TestCase):
 
     YEARS = ("2023-24", "2024-25", "2025-26")
 
-    def run_gather(self) -> tuple[dict, FakeApi]:
+    def run_gather(self, years: tuple = YEARS, extend=lambda manifest, tables: None) -> tuple[dict, FakeApi]:
+        """`extend(manifest, tables)` adds documents and facts before the run."""
         floor = scoreboard.discovery_renewal.cds_freshness_floor(dt.datetime.now(dt.timezone.utc).date())
         previous = scoreboard.discovery_renewal.format_year(scoreboard.discovery_renewal.parse_year(floor) - 1)
         renewal_rows = [{"school_id": f"r{i}", "canonical_year": y, "removed_at": None,
@@ -1095,12 +1107,13 @@ class GatherOnAFakeApi(unittest.TestCase):
                 fact("777", "tuition_in_state", 7, 2025),   # the CDS year's own tuition year: a decoy
             ],
         }
+        extend(manifest, tables)
         api = FakeApi(tables)
         with blocked_network(), tempfile.TemporaryDirectory() as folder, \
                 mock.patch.object(scoreboard.time, "sleep"), \
                 mock.patch.object(scoreboard.discovery_renewal, "fetch_live_manifest", return_value=renewal_rows), \
                 mock.patch.object(scoreboard.discovery_renewal, "fetch_sql_floor", return_value=floor):
-            run = scoreboard.gather(api, self.YEARS, Path(folder), 0, 0, str(Path(folder, "none-*.json")), lambda _: None)
+            run = scoreboard.gather(api, years, Path(folder), 0, 0, str(Path(folder, "none-*.json")), lambda _: None)
         return run, api
 
     def setUp(self) -> None:
@@ -1226,6 +1239,132 @@ class GatherOnAFakeApi(unittest.TestCase):
         json.dumps(self.run)
         public = scoreboard.build_public(self.run, "scoreboard-x.json")
         scoreboard.check_public_shape(public)
+
+
+def add_earlier_year_documents(manifest: list[dict], tables: dict[str, list[dict]]) -> None:
+    """Y: 2022-23, read under the 2025-26 numbering, with a B1 sum that misses
+    (which an older form has no field ids for) and a C1 sum that adds up.
+    Z: 2022-23, numbered by its own year's form, which has no sum checks."""
+    manifest += [fake_manifest_row("Y", "2022-23", "901"), fake_manifest_row("Z", "2022-23", "902")]
+    tables["cds_documents"] += [{"id": "Y", "source_sha256": "yy", "removed_at": None},
+                                {"id": "Z", "source_sha256": "zz", "removed_at": None}]
+    y_values = {"C.101": {"value": "100"}, "C.102": {"value": "150"}, "C.116": {"value": "250"},
+                "B.113": {"value": "300"}, "B.138": {"value": "300"}, "B.163": {"value": "300"},
+                "B.176": {"value": "1000"}, "G.108": {"value": "9000"}}
+    for document_id, version, values in (("Y", "2025-26", y_values), ("Z", "2022-23", {"C.101": {"value": "100"}})):
+        tables["cds_artifacts"].append(
+            {"id": f"art-{document_id}", "document_id": document_id, "kind": "canonical", "producer": "tier4_docling",
+             "producer_version": "0.3.43", "schema_version": version, "created_at": "2026-05-01T00:00:00Z",
+             "notes": {"schema_version": version, "values": values}})
+    tables["ipeds_facts"] += [fact("901", "applicants_total", 250, 2022), fact("901", "undergraduate_enrollment", 1000, 2022),
+                              fact("902", "applicants_total", 400, 2022)]
+
+
+class GatherAnEarlierYear(unittest.TestCase):
+    YEARS = ("2025-26", "2022-23", "2023-24", "2024-25")   # given out of order
+
+    def setUp(self) -> None:
+        self.run, self.api = GatherOnAFakeApi.run_gather(self, self.YEARS, add_earlier_year_documents)
+        self.by_id = {d["document_id"]: d for d in self.run["documents"]}
+
+    def test_years_are_listed_oldest_first(self) -> None:
+        self.assertEqual(self.run["years"], ["2022-23", "2023-24", "2024-25", "2025-26"])
+        self.assertEqual(self.run["projected_years"], ["2024-25", "2025-26"])
+
+    def test_the_older_form_says_what_it_has_and_what_it_can_check(self) -> None:
+        self.assertEqual(self.run["forms"]["2022-23"], {
+            "expected_form_year": "2022-23", "schema_exists": False, "field_count": 0, "sum_tables": ["C1"]})
+        self.assertEqual(self.run["forms"]["2023-24"]["sum_tables"], ["B1", "C1", "H1"])
+
+    def test_a_document_of_an_earlier_year_is_served_from_its_artifact(self) -> None:
+        y = self.by_id["Y"]
+        self.assertEqual((y["producer"], y["version"], y["schema_version"], y["fields"]),
+                         ("tier4_docling", "0.3.43", "2025-26", 8))
+        self.assertEqual(y["admissions"], {"applied": 250, "admitted": None, "enrolled": None})
+        self.assertEqual(y["federal"]["applied"], "match")
+        self.assertEqual(y["federal_values"]["applied"], {"ours": 250, "federal": "250", "federal_data_year": 2022})
+        self.assertEqual(self.run["federal_schools"]["2022-23"], 2)
+
+    def test_only_the_mapped_tables_are_judged(self) -> None:
+        # B.176 = 1000 beside rows adding to 900 would fail on the 2025-26 form.
+        self.assertEqual(self.by_id["Y"]["sums"], {"B1": "nc", "C1": "pass", "H1": "nc"})
+        self.assertNotIn("B.176", self.by_id["Y"]["check_numbers"])
+        self.assertIn("C.116", self.by_id["Y"]["check_numbers"])
+
+    def test_b1_and_g1_have_no_field_ids_on_an_older_form(self) -> None:
+        extra = self.by_id["Y"]["federal_extra"]
+        self.assertTrue(all(c["cds_field"] is None and c["ours"] is None for c in extra.values()))
+        self.assertEqual(extra["b1_undergraduates"]["federal"], "1000")   # the federal side is still kept
+
+    def test_a_document_numbered_by_its_own_older_form_checks_nothing(self) -> None:
+        z = self.by_id["Z"]
+        self.assertEqual(z["sums"], {"B1": "nc", "C1": "nc", "H1": "nc"})
+        self.assertEqual(z["admissions"], {"applied": None, "admitted": None, "enrolled": None})
+        self.assertEqual(z["federal"]["applied"], "blank")   # a federal figure we have no number to set beside
+
+    def test_public_marks_the_tables_with_no_sums_and_leaves_other_years_unchanged(self) -> None:
+        public = scoreboard.build_public(self.run, "scoreboard-x.json")
+        scoreboard.check_public_shape(public)
+        years = {y["cds_year"]: y for y in public["years"]}
+        old = years["2022-23"]
+        self.assertEqual(old["sum_checks_unavailable"], ["B1", "H1"])
+        self.assertTrue(old["federal_fall_loaded"])   # fall 2022 figures exist in the fake ipeds_facts
+        self.assertEqual(old["form"], {"form_year": "2022-23", "full_field_schema": False, "questions": 0})
+        self.assertEqual(old["total"]["status"]["published"], 2)
+        self.assertEqual(old["total"]["totals"]["C1"], {"adds_up": 1, "under_2pct": 0, "off_more": 0, "cant_check": 1})
+        self.assertEqual(old["total"]["totals"]["B1"]["cant_check"], 2)
+        for year in ("2023-24", "2024-25", "2025-26"):
+            self.assertNotIn("sum_checks_unavailable", years[year])
+            self.assertTrue(years[year]["form"]["full_field_schema"])
+        self.assertEqual([y["cds_year"] for y in public["years"]], self.run["years"])
+
+    def test_the_markdown_says_which_tables_have_no_sums(self) -> None:
+        text = scoreboard.render(self.run)
+        self.assertIn("2022-23: the form has no sums to check for B1, H1 here", text)
+        self.assertNotIn("2023-24: the form has no sums", text)
+
+    def test_renewal_does_not_depend_on_the_years(self) -> None:
+        only_old, _ = GatherOnAFakeApi.run_gather(self, ("2022-23",), add_earlier_year_documents)
+        self.assertEqual(only_old["renewal"], self.run["renewal"])
+        scoreboard.require_public_renewal(only_old["renewal"], only_old["generated_at"])
+
+    def test_an_earlier_year_alone_cannot_be_published(self) -> None:
+        only_old, _ = GatherOnAFakeApi.run_gather(self, ("2022-23",), add_earlier_year_documents)
+        with self.assertRaises(SystemExit) as caught:
+            scoreboard.build_public(only_old, "x.json")
+        self.assertIn("2023-24", str(caught.exception))
+
+    def test_a_year_that_is_not_a_cds_year_is_refused_before_any_read(self) -> None:
+        with self.assertRaises(SystemExit):
+            GatherOnAFakeApi.run_gather(self, ("2023-24", "unknown"), add_earlier_year_documents)
+
+
+class SumChecksUnavailable(unittest.TestCase):
+    def test_a_run_without_sum_tables_is_read_only_for_years_that_have_all_three(self) -> None:
+        run = synthetic_run()
+        for form in run["forms"].values():
+            del form["sum_tables"]
+        self.assertEqual(scoreboard.build_public(run, "x.json"), scoreboard.build_public(synthetic_run(), "x.json"))
+        run["years"] = [*run["years"], "2022-23"]
+        run["forms"]["2022-23"] = {"expected_form_year": "2022-23", "schema_exists": False, "field_count": 0}
+        run["federal_left_out"]["2022-23"] = {"single_campus": 0, "no_federal_figures": 0}
+        with self.assertRaises(SystemExit) as caught:
+            scoreboard.build_public(run, "x.json")
+        self.assertIn("no sum_tables", str(caught.exception))
+
+    def test_the_public_shape_allows_the_key_only_as_a_list_of_text(self) -> None:
+        public = scoreboard.build_public(synthetic_run(), "x.json")
+        scoreboard.check_public_shape(public)   # absent is fine
+        public["years"][0]["sum_checks_unavailable"] = ["B1"]
+        scoreboard.check_public_shape(public)
+        for bad in ("B1", [1], {"B1": 1}):
+            public["years"][0]["sum_checks_unavailable"] = bad
+            with self.assertRaises(ValueError):
+                scoreboard.check_public_shape(public)
+        del public["years"][0]["sum_checks_unavailable"]
+        public["years"][0]["other"] = 1
+        with self.assertRaises(ValueError):
+            scoreboard.check_public_shape(public)
 
 
 class RunFormats(unittest.TestCase):

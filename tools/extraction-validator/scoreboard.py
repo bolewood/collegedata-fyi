@@ -75,6 +75,11 @@ tuition beside IPEDS fall undergraduate enrollment and tuition, unjudged).
         --public scratch/extraction-scoreboard/scoreboard-<ts>.json
     # -> web/src/data/data-quality/<YYYY-MM-DD>.json
 
+    # earlier years (staged, not yet run in production): see "Earlier years" in
+    # tools/extraction-validator/README.md for the commands, throttle, sizing and resume
+    #   --years 2022-23            (first slice; not publishable)
+    #   --years 2019-20 ... 2025-26   (publishable: --public needs the three current years too)
+
     # the near-miss split of a saved run (no database)
     tools/extraction_worker/.venv/bin/python \\
         tools/extraction-validator/scoreboard.py \\
@@ -292,15 +297,21 @@ def is_near_miss(check: SumCheck, share: Optional[Decimal]) -> bool:
 _OUTCOME_RANK = {"nc": 0, "pass": 1, "near": 2, "fail": 3}
 
 
-def table_outcomes(schema_version: Optional[str], numbers: dict[str, Decimal]) -> dict[str, str]:
+def table_outcomes(schema_version: Optional[str], numbers: dict[str, Decimal],
+                   tables: Iterable[str] = SUM_TABLES) -> dict[str, str]:
     """One outcome per table (`sum_check_version` 2).
 
     'pass': at least one sum could be checked and none missed. 'near'
     (B1 and C1 only): at least one missed, and every miss was under 2% of its
     printed total. 'fail': at least one missed by more (for H1, at all).
-    'nc': nothing could be checked."""
+    'nc': nothing could be checked.
+
+    `tables` are the tables the document's year has sums for (`forms_for`);
+    the others stay 'nc' whatever the numbering says."""
     outcomes = {table: "nc" for table in SUM_TABLES}
     for check in SUM_CHECKS.get(schema_version or "", []):
+        if check.table not in tables:
+            continue
         result, share = run_check_detail(check, numbers)
         if result == "fail" and is_near_miss(check, share):
             result = "near"
@@ -668,13 +679,35 @@ def current_tier4_version() -> str:
 
 def forms_for(years: Iterable[str], schema_dir: Path = SCHEMA_DIR) -> dict[str, dict[str, Any]]:
     """Per CDS year: the form its documents are expected to be numbered by,
-    whether the full field schema file exists, and its field count. Read from
-    the local `schemas/` folder at run time."""
+    whether the full field schema file exists, its field count and the tables
+    whose printed sums can be checked. Read from the local `schemas/` folder
+    at run time.
+
+    A form before 2023-24 has no full field schema, only a structural one and
+    a core-table overlay. The structural counts are of printed rows and answer
+    cells and do not equal the full schemas' field counts, so `field_count` is
+    0 there: "no question list", not "no questions".
+
+    `sum_tables`: for a form with its own `SUM_CHECKS`, the tables they cover.
+    For an older form, the tables the overlay maps (its `scope`) that the
+    overlay's target numbering has sums for. Only those field ids are known
+    for it; B1 and H1 ids of the target form are not applied to an older one."""
     forms: dict[str, dict[str, Any]] = {}
     for year in years:
-        path = schema_dir / f"cds_schema_{year.replace('-', '_')}.json"
-        count = len(json.loads(path.read_text())["fields"]) if path.exists() else 0
-        forms[year] = {"expected_form_year": year, "schema_exists": path.exists(), "field_count": count}
+        stem = schema_dir / f"cds_schema_{year.replace('-', '_')}"
+        full = stem.with_suffix(".json")
+        count = len(json.loads(full.read_text())["fields"]) if full.exists() else 0
+        if year in SUM_CHECKS:
+            tables = {c.table for c in SUM_CHECKS[year]}
+        else:
+            overlay = stem.with_suffix(".core_table_overlay.json")
+            tables = set()
+            if overlay.exists():
+                body = json.loads(overlay.read_text())
+                tables = {c.table for c in SUM_CHECKS.get(body.get("target_canonical_schema_version"), [])} \
+                    & set(body.get("scope", []))
+        forms[year] = {"expected_form_year": year, "schema_exists": full.exists(), "field_count": count,
+                       "sum_tables": [t for t in SUM_TABLES if t in tables]}
     return forms
 
 
@@ -785,6 +818,10 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
     # fails before the heavy per-document reads. One timestamp serves both
     # `generated_at` and the renewal date, so a run that crosses midnight UTC
     # still agrees with itself.
+    bad = [y for y in years if projection.parse_year_start(y) is None]
+    if bad:
+        raise SystemExit(f"--years takes CDS years like 2022-23; not {', '.join(bad)} (an `unknown` year is not one)")
+    years = tuple(sorted(years))   # the public page lists years oldest first
     now = dt.datetime.now(dt.timezone.utc)
     renewal = gather_renewal(api, now.date())
     log(f"renewal {renewal['current_year']}: {renewal['both']} of {renewal['previous']} schools also have the year")
@@ -861,6 +898,7 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
         cached.write_text(json.dumps(loaded))
         return loaded
 
+    forms = forms_for(years)
     documents: list[dict[str, Any]] = []
     for position, doc in enumerate(sorted(served, key=lambda d: (d["canonical_year"], d["document_id"])), 1):
         document_id, year = doc["document_id"], doc["canonical_year"]
@@ -940,12 +978,14 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
         }
         tuition_facts = {} if entry["sub_institutional"] else facts_by_year[fall_year[year] + 1].get(
             str(doc.get("ipeds_id") or ""), {})
-        entry["federal_extra"] = federal_extra(entry["schema_version"], numbers, facts, fall_year[year],
-                                               tuition_facts, fall_year[year] + 1)
-        entry["sums"] = table_outcomes(entry["schema_version"], numbers)
+        # B1 and G1 ids are known only for a year whose form has them (see forms_for).
+        entry["federal_extra"] = federal_extra(entry["schema_version"] if forms[year]["schema_exists"] else None,
+                                               numbers, facts, fall_year[year], tuition_facts, fall_year[year] + 1)
+        sum_tables = forms[year]["sum_tables"]
+        entry["sums"] = table_outcomes(entry["schema_version"], numbers, sum_tables)
         entry["check_numbers"] = {
             field_id: str(numbers[field_id])
-            for check in SUM_CHECKS.get(entry["schema_version"] or "", [])
+            for check in SUM_CHECKS.get(entry["schema_version"] or "", []) if check.table in sum_tables
             for field_id in (check.total, *(r for rows, _ in check.groups for r in rows))
             if field_id in numbers
         }
@@ -974,7 +1014,7 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
         "years": list(years),
         "manifest": [manifest_entry(d) for d in sorted(all_documents, key=lambda d: d["document_id"])],
         "federal_left_out": {year: federal_left_out(documents, year) for year in years},
-        "forms": forms_for(years),
+        "forms": forms,
         "renewal": renewal,
         "current_tier4_version": current_tier4_version(),
         "projected_years": list(projected_years),
@@ -1177,6 +1217,13 @@ def render(data: dict[str, Any], previous: Optional[dict[str, Any]] = None) -> s
             lines.append(f"| {year} | {fmt} | {cell(key + '|docs')} | {triple(key, 'B1')} | "
                          f"{triple(key, 'C1')} | {triple(key, 'H1')} |")
 
+    for year in data["years"]:
+        tables = data.get("forms", {}).get(year, {}).get("sum_tables", SUM_TABLES)
+        missing = [t for t in SUM_TABLES if t not in tables]
+        if missing:
+            lines.append(f"\n{year}: the form has no sums to check for {', '.join(missing)} here, "
+                         "so those columns read not checkable for every document.")
+
     lines += ["", "### 4. Fix reach",
               "", f"| Year | Served | Tier 4 | Read by {current} | Of those, written by it | Tier 4, not yet read by it | "
               "Other extractors | No extraction | "
@@ -1300,6 +1347,14 @@ SUM_OUTCOME_KEY = {"pass": "adds_up", "near": "under_2pct", "fail": "off_more", 
 AID_OUTCOME_KEY = {"pass": "adds_up", "fail": "doesnt", "nc": "cant_check"}
 
 _COUNT, _TEXT, _FLAG = "count", "text", "flag"
+
+
+@dataclass(frozen=True)
+class _Optional:
+    """A key `check_public_shape` allows but does not require."""
+    spec: Any
+
+
 _STATUS_SPEC = {k: _COUNT for k in STATUSES}
 _ROW_SPEC = {
     "status": _STATUS_SPEC,
@@ -1319,6 +1374,9 @@ PUBLIC_SPEC = {
     "years": [{
         "cds_year": _TEXT,
         "form": {"form_year": _TEXT, "full_field_schema": _FLAG, "questions": _COUNT},
+        # Present only for a year whose form has no sums to check for some table
+        # (an older form): those tables' "can't check" counts are not a result.
+        "sum_checks_unavailable": _Optional([_TEXT]),
         "federal_fall_loaded": _FLAG, "other_form_numbering": _COUNT, "removed": _COUNT, "no_file": _COUNT,
         "set_aside_reasons": {k: _COUNT for k in SET_ASIDE_REASON.values()},
         "federal_left_out": {"single_campus": _COUNT, "no_federal_figures": _COUNT},
@@ -1332,12 +1390,14 @@ def check_public_shape(value: Any, spec: Any = PUBLIC_SPEC, where: str = "public
     """Raise unless `value` has exactly the keys of the allow-list `spec`, with
     counts as non-negative integers. Nothing outside the list is ever written."""
     if isinstance(spec, dict):
-        if not isinstance(value, dict) or set(value) != set(spec):
+        required = {k for k, sub in spec.items() if not isinstance(sub, _Optional)}
+        if not isinstance(value, dict) or not required <= set(value) <= set(spec):
             extra = sorted(set(value) - set(spec)) if isinstance(value, dict) else "not an object"
-            missing = sorted(set(spec) - set(value)) if isinstance(value, dict) else ""
+            missing = sorted(required - set(value)) if isinstance(value, dict) else ""
             raise ValueError(f"{where}: keys outside the allow-list {extra}, missing {missing}")
         for key, sub in spec.items():
-            check_public_shape(value[key], sub, f"{where}.{key}")
+            if key in value:
+                check_public_shape(value[key], sub.spec if isinstance(sub, _Optional) else sub, f"{where}.{key}")
     elif isinstance(spec, list):
         if not isinstance(value, list):
             raise ValueError(f"{where}: not a list")
@@ -1450,6 +1510,16 @@ def require_public_renewal(renewal: Any, generated_at: str) -> None:
         bad("the two-year figures are smaller than the one-year figures")
 
 
+def sum_tables_of(year: str, form: dict[str, Any]) -> list[str]:
+    """The tables with sums for a year's form. A run made before earlier years
+    existed has no `sum_tables`; it covered only years that have all three."""
+    if "sum_tables" in form:
+        return form["sum_tables"]
+    if year not in SUM_CHECKS:
+        raise SystemExit(f"--public: the run's forms entry for {year} has no sum_tables; run the scoreboard again")
+    return list(SUM_TABLES)
+
+
 def build_public(run: dict[str, Any], run_name: str) -> dict[str, Any]:
     """The public snapshot (PRD 040 "Public JSON shape"): aggregates and
     labels only, from one run. No database, no per-document rows."""
@@ -1477,6 +1547,7 @@ def build_public(run: dict[str, Any], run_name: str) -> dict[str, Any]:
         if not loaded:
             left_out = {"single_campus": left_out["single_campus"], "no_federal_figures": 0}
         form = run["forms"][year]
+        unavailable = [t for t in SUM_TABLES if t not in sum_tables_of(year, form)]
         rows = []
         for fmt in FORMAT_ORDER:
             classes = Counter()
@@ -1492,6 +1563,7 @@ def build_public(run: dict[str, Any], run_name: str) -> dict[str, Any]:
             "cds_year": year,
             "form": {"form_year": form["expected_form_year"], "full_field_schema": form["schema_exists"],
                      "questions": form["field_count"]},
+            **({"sum_checks_unavailable": unavailable} if unavailable else {}),
             "federal_fall_loaded": loaded,
             "other_form_numbering": sum(1 for d in published_docs if d["schema_version"] != year),
             "removed": classes["removed"], "no_file": classes["no_file"],
