@@ -273,13 +273,13 @@ export function AlignmentGapMeritChart({
           <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--ink-2)", maxWidth: 640, lineHeight: 1.5 }}>
             These amounts are useful for comparison, but they are not
             interchangeable dollar for dollar. Merit aid is generally a tuition
-            discount rather than a cash expenditure, and changing a college&apos;s
+            discount rather than a cash expenditure, and changing a college's
             aid policy would not necessarily produce an equal change in student
             borrowing. Hover over any dot to see the school.
           </p>
         </div>
         <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, color: "var(--ink-3)" }}>
-          Find a school
+          Find a school{" "}
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <input
               list="alignment-gap-merit-schools"

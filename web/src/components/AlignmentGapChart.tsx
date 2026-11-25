@@ -235,7 +235,7 @@ export function AlignmentGapChart({
           <div className="meta">Fig. 2 · Compare debt burden with endowment per student</div>
           <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--ink-2)", maxWidth: 640, lineHeight: 1.5 }}>
             The vertical axis again shows the alignment gap. A value above zero
-            means the school&apos;s debt burden is above the{" "}
+            means the school's debt burden is above the{" "}
             {formatRecipeShare(ALIGNMENT_GAP_META.medianBurden, 2)} median. A
             value below zero means it is below the median. The horizontal axis
             shows endowment per undergraduate on a log scale. The vertical
@@ -256,7 +256,7 @@ export function AlignmentGapChart({
           </p>
         </div>
         <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, color: "var(--ink-3)" }}>
-          Find a school
+          Find a school{" "}
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <input
               list="alignment-gap-schools"

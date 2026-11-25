@@ -482,7 +482,7 @@ export function SchoolBrowser({
           <MetaStat label="Missing a number" value={metadata ? metadata.schools_missing_required_fields.toLocaleString() : "..."} />
         </div>
         <p className="meta" style={{ marginTop: 14, lineHeight: 1.55 }}>
-          Latest reports, 2024-25+. Schools missing a number your filters need are counted above. Fields needed: {requiredLabels}.
+          Latest reports, 2024-25+. Schools missing a number your filters need are counted above. Fields needed: {requiredLabels}.{" "}
           {metadata ? ` Filtered out by your criteria: ${metadata.schools_failing_filters.toLocaleString()}.` : ""}
           {" "}
           <Link href="/match">Building a list? Use Match.</Link>
@@ -491,7 +491,7 @@ export function SchoolBrowser({
 
       {error && (
         <div className="cd-card" style={{ padding: 16, borderColor: "var(--brick)", marginBottom: 18 }}>
-          <div className="meta" style={{ color: "var(--brick)", marginBottom: 6 }}>Couldn&apos;t load</div>
+          <div className="meta" style={{ color: "var(--brick)", marginBottom: 6 }}>Couldn't load</div>
           <p style={{ margin: 0, color: "var(--ink-2)", fontSize: 14 }}>Try again in a moment.</p>
         </div>
       )}

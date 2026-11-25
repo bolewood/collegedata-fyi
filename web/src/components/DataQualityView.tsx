@@ -339,7 +339,7 @@ function ReportsTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
       <Note>
         Fields stored counts the fields stored for the report as we publish it, including fields recorded as
         unreadable or “not applicable”. It measures how much of the form we reached, not how many usable answers we have.
-        The {year.form.form_year} form has {n(year.form.questions)} questions.
+        The {year.form.form_year} form has {n(year.form.questions)} questions.{" "}
         {year.other_form_numbering > 0
           ? ` The ${n(year.other_form_numbering)} reports numbered by a different year’s form have field numbers from that form, whose size differs.`
           : ""}
@@ -430,7 +430,7 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
         <Note id="dq-note-differs">
           <strong>Differs</strong> isn’t always ours. Schools sometimes report different figures to the federal
           government than in their CDS, for example from a different count date. A differing value may be our
-          misreading or a real difference between the two filings.
+          misreading or a real difference between the two filings.{" "}
           {federalDiffersNote(year, snapshot) && <span id="dq-differs-sample"> {federalDiffersNote(year, snapshot)}</span>}
         </Note>
         </>

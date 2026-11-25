@@ -69,7 +69,7 @@ export function AcceptanceRateTable({
         <table className="acc-table">
           <caption className="sr-only">
             {schoolName} first-year acceptance rate, applicants, admits, enrolled, and yield by
-            entering class, newest first.
+            entering class, newest first.{" "}
             {showEd ? " Early-decision rate is shown under the first-year rate when the report includes C21 counts." : ""}
           </caption>
           <colgroup>
@@ -101,12 +101,12 @@ export function AcceptanceRateTable({
                 return (
                   <tr key={item.year} className="acc-table__gap">
                     <th scope="row">
-                      <span className="acc-table__fall">Fall {item.yearStart}</span>
+                      <span className="acc-table__fall">Fall {item.yearStart}</span>{" "}
                       {item.hasReport ? (
                         <ListLink href={`/schools/${schoolId}/${item.year}`} className="acc-table__report">
                           {reportLabel(item.year)}
                         </ListLink>
-                      ) : null}
+                      ) : null}{" "}
                       <span className="acc-table__gap-note" aria-hidden="true">
                         {gapLabel(item.hasReport)}
                       </span>
@@ -130,7 +130,7 @@ export function AcceptanceRateTable({
                     </ListLink>
                   </th>
                   <td className="acc-num acc-table__rate">
-                    <span>{pct(row.rate)}</span>
+                    <span>{pct(row.rate)}</span>{" "}
                     {showEd ? (
                       <span className="acc-table__ed">{row.ed ? `${pct(row.ed.rate)} ED` : "—"}</span>
                     ) : null}

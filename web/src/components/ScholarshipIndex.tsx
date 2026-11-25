@@ -177,7 +177,7 @@ export function ScholarshipIndex({ rows, today }: { rows: IndexRow[]; today: str
         </div>
       )}
       <p className="sch-fine">
-        Dates are the schools&rsquo; own and may have passed. Confirm on the official page. Not a ranking: rows are
+        Dates are the schools’ own and may have passed. Confirm on the official page. Not a ranking: rows are
         sorted by the field you choose, never by how generous a program is.
       </p>
     </div>

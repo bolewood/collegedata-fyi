@@ -289,7 +289,7 @@ function FormField({
       >
         {label}
         {required && <span style={{ color: "var(--ink-3)" }}> *</span>}
-      </span>
+      </span>{" "}
       {children}
     </label>
   );

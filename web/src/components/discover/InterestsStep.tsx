@@ -36,7 +36,7 @@ export function InterestsStep({
       <p style={{ color: "var(--ink-2)", lineHeight: 1.6, maxWidth: "60ch" }}>
         This pilot covers one interest family — the environment, climate, and
         everything around them. Pick the angles that sound like you (or none,
-        and we&apos;ll use the whole family). More interest areas arrive as
+        and we'll use the whole family). More interest areas arrive as
         their data passes review.
       </p>
 
@@ -65,7 +65,7 @@ export function InterestsStep({
 
       <p style={{ fontSize: 13, color: "var(--ink-3)", maxWidth: "60ch" }}>
         Interested in something else entirely? Evidence-backed discovery for
-        other fields isn&apos;t ready yet — browse the whole archive at{" "}
+        other fields isn't ready yet — browse the whole archive at{" "}
         <a href="/browse">the school browser</a> in the meantime.
       </p>
 

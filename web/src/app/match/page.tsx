@@ -43,7 +43,7 @@ export default async function MatchPage() {
         <p className="serif" style={{ fontStyle: "italic", fontSize: 18, lineHeight: 1.55 }}>
           Enter your test scores and GPA to see schools grouped by academic fit,
           narrow the list by region, school type, admit rate, or test policy,
-          and export your results with links to each school&apos;s original
+          and export your results with links to each school's original
           report. Everything stays in your browser; we never save a student
           profile.
         </p>

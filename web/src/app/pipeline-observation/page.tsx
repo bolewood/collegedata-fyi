@@ -121,7 +121,7 @@ export default async function PipelineObservationPage() {
                 className="po-tile-tip"
                 role="tooltip"
               >
-                <span className="po-tile-tip-kicker">What this does</span>
+                <span className="po-tile-tip-kicker">What this does</span>{" "}
                 {station.help}
               </p>
             </article>

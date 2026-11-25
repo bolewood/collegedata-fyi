@@ -193,7 +193,7 @@ export function AcceptanceYieldChart() {
               lineHeight: 1.5,
             }}
           >
-            Dividers are this sample&apos;s medians, not 50% lines:{" "}
+            Dividers are this sample's medians, not 50% lines:{" "}
             {formatRatePercent(PRICING_POWER_META.medianAcceptance, 1)} acceptance
             and {formatRatePercent(PRICING_POWER_META.medianYield, 1)} yield among{" "}
             {PRICING_POWER_META.panelACount.toLocaleString("en-US")} schools.
@@ -220,7 +220,7 @@ export function AcceptanceYieldChart() {
             color: "var(--ink-3)",
           }}
         >
-          Find a school
+          Find a school{" "}
           <input
             list="pricing-power-panel-a-schools"
             value={query}

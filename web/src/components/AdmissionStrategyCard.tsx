@@ -342,7 +342,7 @@ function WaitListView({
         </>
       )}
       <p className="admission-strategy-caution">
-        Wait-list outcomes can change sharply year to year.
+        Wait-list outcomes can change sharply year to year.{" "}
         {anomalous && sourceHref ? (
           <>
             {" "}
