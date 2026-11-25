@@ -212,18 +212,17 @@ describe("data quality CSV", () => {
   const y2324 = FIXTURE_SNAPSHOT.years.find((y) => y.cds_year === "2023-24")!;
   const y2526 = FIXTURE_SNAPSHOT.years.find((y) => y.cds_year === "2025-26")!;
 
-  it("opens with a licence notice naming snapshot date, year and table", () => {
-    const csv = buildQualityCsv("totals", y2324, FIXTURE_SNAPSHOT);
-    const comments = csv.split("\r\n").filter((l) => l.startsWith("#"));
-    expect(comments[0]).toContain("2026-11-24");
-    expect(comments[0]).toContain("2023-24");
-    expect(comments[0]).toContain("Do the printed totals add up?");
-    expect(comments.join(" ")).toContain("CC BY 4.0");
+  it("opens with the real header on row 1: no comment block, no notice", () => {
+    for (const table of ["reports", "federal", "totals"] as const) {
+      const csv = buildQualityCsv(table, y2324);
+      expect(csv.startsWith("format,")).toBe(true);
+      expect(csv).not.toContain("#");
+    }
   });
 
   it("has one line per format plus the year total, with public labels", () => {
-    const csv = buildQualityCsv("reports", y2324, FIXTURE_SNAPSHOT);
-    const lines = csv.split("\r\n").filter((l) => l && !l.startsWith("#"));
+    const csv = buildQualityCsv("reports", y2324);
+    const lines = csv.split("\r\n").filter(Boolean);
     expect(lines[0]).toBe(
       "format,published,set_aside,couldnt_read,not_read_yet,fields_stored_median,fields_stored_lowest_10pct",
     );
@@ -237,21 +236,58 @@ describe("data quality CSV", () => {
     const year = JSON.parse(JSON.stringify(y2324));
     year.rows[0].status.published = 0;
     year.rows[0].fields_stored = { median: 0, p10: 0 };
-    const lines = buildQualityCsv("reports", year, FIXTURE_SNAPSHOT).split("\r\n").filter((l) => l && !l.startsWith("#"));
+    const lines = buildQualityCsv("reports", year).split("\r\n").filter(Boolean);
     expect(lines[1]).toBe("standard PDF,0,3,4,0,,");
   });
 
   it("labels formats from the shared map, not the label in the file", () => {
     const year = JSON.parse(JSON.stringify(y2324));
     year.rows[0].label = "STALE LABEL";
-    const csv = buildQualityCsv("reports", year, FIXTURE_SNAPSHOT);
+    const csv = buildQualityCsv("reports", year);
     expect(csv).not.toContain("STALE LABEL");
     expect(csv).toContain("\r\nstandard PDF,");
   });
 
   it("leaves federal cells blank, not zero, for a year with no federal figures", () => {
-    const csv = buildQualityCsv("federal", y2526, FIXTURE_SNAPSHOT);
-    const lines = csv.split("\r\n").filter((l) => l && !l.startsWith("#"));
+    const csv = buildQualityCsv("federal", y2526);
+    const lines = csv.split("\r\n").filter(Boolean);
     expect(lines[1]).toBe("standard PDF,,,,,");
+  });
+
+  // Cells written by hand from the fixture's inputs (flat 50 / fillable 25 / sheets 3, 2024-25),
+  // not read back from the builder. B1, C1 and H1 differ in every cell, so a swap shows.
+  describe("exact cells, 2024-25", () => {
+    const y2425 = FIXTURE_SNAPSHOT.years.find((y) => y.cds_year === "2024-25")!;
+    const lines = (t: "reports" | "federal" | "totals") => buildQualityCsv(t, y2425).split("\r\n").filter(Boolean);
+
+    it("reports", () => {
+      expect(lines("reports")).toEqual([
+        "format,published,set_aside,couldnt_read,not_read_yet,fields_stored_median,fields_stored_lowest_10pct",
+        "standard PDF,50,2,0,0,700,400",
+        "fillable PDF,25,0,0,0,900,650",
+        "spreadsheet,3,0,0,0,1000,950",
+        "All formats,78,2,0,0,776,501",
+      ]);
+    });
+
+    it("federal", () => {
+      expect(lines("federal")).toEqual([
+        "format,reports_checked,values_up_to_3_per_report,matches,no_value,differs",
+        "standard PDF,49,147,135,6,6",
+        "fillable PDF,25,75,72,2,1",
+        "spreadsheet,3,9,8,1,0",
+        "All formats,77,231,215,9,7",
+      ]);
+    });
+
+    it("totals: each of B1, C1 and H1 lands in its own columns", () => {
+      expect(lines("totals")).toEqual([
+        "format,reports,B1_adds_up,B1_off_by_under_2pct,B1_off_by_more,B1_cant_check,C1_adds_up,C1_off_by_under_2pct,C1_off_by_more,C1_cant_check,H1_adds_up,H1_doesnt_add_up,H1_cant_check",
+        "standard PDF,50,40,4,3,3,42,3,2,3,30,4,16",
+        "fillable PDF,25,23,1,0,1,24,0,1,0,22,1,2",
+        "spreadsheet,3,2,1,0,0,3,0,0,0,3,0,0",
+        "All formats,78,65,6,3,4,69,3,3,3,55,5,18",
+      ]);
+    });
   });
 });

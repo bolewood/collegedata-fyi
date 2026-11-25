@@ -40,7 +40,7 @@ import MethodologyIndexPage from "@/app/methodology/page";
 import sitemap from "@/app/sitemap";
 import { generateMetadata } from "@/app/data-quality/page";
 import { CoverageDashboard } from "@/components/CoverageDashboard";
-import { DataQualityView } from "@/components/DataQualityView";
+import { DataQualityBody, DataQualityView } from "@/components/DataQualityView";
 import { loadLatestSnapshot } from "./data-quality-snapshots";
 
 const LAUNCH_MS = Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`);
@@ -112,6 +112,23 @@ describe("gate: CSV downloads on both tabs", () => {
     expect(covOpen).toContain("Download this view (CSV)");
     expect(covOpen).toContain("Download all colleges (CSV)");
     expect(dqOpen.match(/as CSV/g)).toHaveLength(3);
+    // Plain links to the route, for the selected year, one per table.
+    expect(dqOpen).toContain('href="/data-quality/csv/reports/2025-26"');
+    expect(dqOpen).toContain('href="/data-quality/csv/federal/2025-26"');
+    expect(dqOpen).toContain('href="/data-quality/csv/totals/2025-26"');
+  });
+});
+
+describe("Data quality download links follow the selected year", () => {
+  it("point each table's link at the year on screen", () => {
+    at(OPEN);
+    const html = renderToStaticMarkup(
+      <DataQualityBody snapshot={FIXTURE_SNAPSHOT} year={FIXTURE_SNAPSHOT.years.find((y) => y.cds_year === "2023-24")!} />,
+    );
+    expect(html).toContain('href="/data-quality/csv/reports/2023-24"');
+    expect(html).toContain('href="/data-quality/csv/federal/2023-24"');
+    expect(html).toContain('href="/data-quality/csv/totals/2023-24"');
+    expect(html).not.toContain("/data-quality/csv/reports/2025-26");
   });
 });
 

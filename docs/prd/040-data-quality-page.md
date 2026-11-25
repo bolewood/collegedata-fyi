@@ -212,8 +212,8 @@ uses fields already selected into the client rows by both query paths in
    Data quality tab and `/methodology` go to that preset. `?all=1` stays
    and means "all tracked colleges".
 6. **CSV download** of the current view or of all rows, with `ipeds_id`,
-   `school_id`, state, undergrads, status, latest year with numbers, latest
-   year found, and last checked. See "CSV licensing".
+   `school_id`, `school_name`, state, undergrads, status, latest year with
+   numbers, latest year found, and last checked. See "CSV licensing".
 7. **Freshness copy.** The page can revalidate every 15 minutes, but the
    coverage table refreshes hourly (cron at minute 17, migration
    `20260612162500_relax_refresh_coverage_cron.sql`). The current page copy
@@ -551,20 +551,41 @@ Rejected in session:
 
 ## CSV licensing
 
-Two browser-built CSVs: coverage rows (M2) and the Data quality tables
-(M2).
+Two CSVs: coverage rows (M2) and the Data quality tables (M2). Both have
+the real header on row 1 and start with a UTF-8 BOM, like
+`app/schools/[school_id]/[year]/cds.csv`. Neither has comment lines.
 
-- **Notice.** A client download can't send the `Link` license header that the
-  existing CSV routes use (`DATA_LICENSE_LINK_HEADER`). Each file opens with a
-  short comment block instead, built from the constants in
-  `web/src/lib/data-license.ts`:
-  - **Coverage CSV:** credits federal fields (IPEDS ID, enrollment) to their
-    federal source, which the data license excludes from its scope.
-    Directory and status columns are licensed as the site's data.
-  - **Data quality CSV:** names the snapshot date, the CDS year and the
-    table, and is licensed as the site's data.
-- **If a `#` comment line breaks a common reader,** switch to a route handler
-  that sends the header. Decide this in M2 after trying Excel, pandas and R.
+- **Decision trail.** The first design put a `#` comment block at the top of
+  each browser-built file, because a client download can't send a header.
+  D11 tested that file in pandas, R `read.csv` and `readr`, Python
+  `csv.reader` and `DictReader`, and LibreOffice standing in for Excel
+  (Excel was not run). No reader handled it with default options. pandas and
+  `read.csv` raised errors. `readr`, `DictReader` and LibreOffice returned
+  wrong tables (for `readr` and `DictReader`, the comment text as column
+  names). `csv.reader` returned ragged rows. Only readers with a comment
+  option recovered, and only if the user knew to pass it. The block was
+  dropped.
+- **Data quality** is served by a static route,
+  `/data-quality/csv/[table]/[year]` (`reports`, `federal`, `totals`), built
+  from the committed snapshot with the `Link: <license>; rel="license"`
+  header (`DATA_LICENSE_LINK_HEADER`). The route sets
+  `dynamicParams = false`, so an unknown table or year is a 404, and the gate
+  closed means no pages are built, so every request is a 404. Launched with no
+  snapshot committed, the build fails, as the page's does. The snapshot date,
+  year and table name are in the filename, not in the file.
+- **Coverage** stays a browser download. The dashboard saves the rows the
+  table shows, filtered and sorted with the shared `coverageViewRows`, or all
+  tracked colleges. No server route: a route would re-read the rows from the
+  database for every filter and sort combination, and the file could differ
+  from the screen. A browser download can't send the `Link` header, and a saved
+  file wouldn't keep it, so this file carries no license marking. The file has
+  a `school_name` column after `school_id`.
+- **Credit.** Next to the coverage download buttons the page says that IPEDS
+  ID, school name, state and undergraduate enrollment come from the federal
+  College Scorecard and IPEDS, which our license doesn't cover; that the
+  school ID, status, year and last-checked columns are licensed CC BY 4.0
+  (linked); and what `latest_year_with_numbers` and `latest_year_found` mean.
+  Column names are unchanged.
 
 ## Years
 

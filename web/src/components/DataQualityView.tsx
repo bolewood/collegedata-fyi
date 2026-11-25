@@ -11,13 +11,12 @@ import type { ReactNode } from "react";
 import {
   MIN_REPORTS_FOR_RATE,
   TABLE_TITLES,
-  buildQualityCsv,
   fallOf,
   isDataQualityLaunched,
   isProjectedYear,
   liveCount,
   percent,
-  qualityCsvFilename,
+  qualityCsvPath,
   resolveYear,
   rowPercent,
   yearGlance,
@@ -249,24 +248,13 @@ function Notices({ year }: { year: QualityYear }) {
 
 // ── CSV ──────────────────────────────────────────────────────────
 
-function CsvButton({ table, year, snapshot }: { table: QualityTableId; year: QualityYear; snapshot: QualitySnapshot }) {
-  // Gated with the page: the comment block isn't verified against pandas, R and Excel yet (owner decision in PR #487).
+function CsvButton({ table, year }: { table: QualityTableId; year: QualityYear }) {
+  // Gated with the page.
   if (!isDataQualityLaunched()) return null;
-  function download() {
-    const blob = new Blob([buildQualityCsv(table, year, snapshot)], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = qualityCsvFilename(table, year.cds_year, snapshot.snapshot_of);
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
   return (
-    <button type="button" onClick={download} className="cd-btn cd-btn--ghost" style={{ marginTop: 14, cursor: "pointer" }}>
+    <a href={qualityCsvPath(table, year.cds_year)} download className="cd-btn cd-btn--ghost" style={{ marginTop: 14, display: "inline-block" }}>
       Download {year.cds_year} table as CSV
-    </button>
+    </a>
   );
 }
 
@@ -338,7 +326,7 @@ function ReportsTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
           for that reason.
         </Note>
       )}
-      <CsvButton table="reports" year={year} snapshot={snapshot} />
+      <CsvButton table="reports" year={year} />
     </section>
   );
 }
@@ -413,7 +401,7 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
         government than in their CDS, for example from a different count date. A differing value may be our
         misreading or a real difference between the two filings.
       </Note>
-      <CsvButton table="federal" year={year} snapshot={snapshot} />
+      <CsvButton table="federal" year={year} />
     </section>
   );
 }
@@ -526,7 +514,7 @@ function TotalsTable({ year, snapshot }: { year: QualityYear; snapshot: QualityS
           ? " We haven’t yet measured how those causes split for this year."
           : ""}
       </Note>
-      <CsvButton table="totals" year={year} snapshot={snapshot} />
+      <CsvButton table="totals" year={year} />
     </section>
   );
 }
