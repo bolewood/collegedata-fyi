@@ -321,6 +321,8 @@ GitHub Actions runs the monthly Brave probe on the 2nd of each month (`ops-finde
 gh workflow run ops-finder-probe.yml
 ```
 
+`stuck_pdf_seeds.py` reads each school's filed years from the public API, so it needs `NEXT_PUBLIC_SUPABASE_ANON_KEY` (or `--anon-key`) and fails without it. The anon key is public; it is in the finder probe workflow file.
+
 Operator equivalent, from a laptop that has `BRAVE_API_KEY` in the environment:
 
 ```bash
