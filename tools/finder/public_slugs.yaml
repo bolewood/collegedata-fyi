@@ -5,7 +5,9 @@
 # if yaml drifts back to the legal-name slug.
 #
 # Add a row when choosing a public URL that is not the INSTNM auto-slug.
-# Do not put a searchable slug in retired_aliases — that drops it from merge.
+# The legal-name slug of a pinned school may go in retired_aliases (it then 308s at
+# the edge, before ISR), but only once no live cds_manifest or school_browser_rows row
+# is filed under it: retired aliases are excluded from the alias merge (#518).
 version: 1
 by_ipeds:
   "110404": caltech

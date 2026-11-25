@@ -295,6 +295,8 @@ schools:
   name: Georgia Institute of Technology
   domain: gatech.edu
   ipeds_id: '139755'
+  retired_aliases:
+  - georgia-institute-of-technology-main-campus
   scrape_policy: active
   discovery_seed_url: https://irp.gatech.edu/common-data-set/
   probe_state:
@@ -500,6 +502,8 @@ schools:
   name: Rutgers University
   domain: rutgers.edu
   ipeds_id: '186380'
+  retired_aliases:
+  - rutgers-university-new-brunswick
   scrape_policy: active
   discovery_seed_url: https://oirap.rutgers.edu/ReportingCommonDataSet.html
   probe_state:
@@ -536,6 +540,8 @@ schools:
   name: Texas A&M University
   domain: tamu.edu
   ipeds_id: '228723'
+  retired_aliases:
+  - texas-a-and-m-university-college-station
   scrape_policy: active
   discovery_seed_url: https://abpa.tamu.edu/getattachment/439f54fe-1105-48af-955a-405775f80872/CDS-2024-2025_TexasA-M.pdf
   probe_state:
@@ -748,6 +754,8 @@ schools:
   name: University of Virginia
   domain: virginia.edu
   ipeds_id: '234076'
+  retired_aliases:
+  - university-of-virginia-main-campus
   scrape_policy: active
   notes: James Caldwell (IR office) ships a CDS PDF autofill script — UVA may have
     clean form-layer PDFs
@@ -762,6 +770,8 @@ schools:
   name: University of Washington
   domain: washington.edu
   ipeds_id: '236948'
+  retired_aliases:
+  - university-of-washington-seattle-campus
   scrape_policy: active
   discovery_seed_url: https://www.washington.edu/opb/uw-data/external-reporting/common-data-set/
   probe_state:
@@ -822,6 +832,8 @@ schools:
   name: University of Chicago
   domain: uchicago.edu
   ipeds_id: '144050'
+  retired_aliases:
+  - university-of-chicago
   scrape_policy: active
   discovery_seed_url: https://data.uchicago.edu/common-data-set/
   notes: >-
@@ -3845,6 +3857,8 @@ schools:
   name: California Institute of Technology
   domain: caltech.edu
   ipeds_id: '110404'
+  retired_aliases:
+  - california-institute-of-technology
   scrape_policy: active
   probe_state:
     last_probed_at: '2026-04-14T13:17:23Z'
@@ -22073,6 +22087,8 @@ schools:
   name: Tulane University of Louisiana
   domain: tulane.edu
   ipeds_id: '160755'
+  retired_aliases:
+  - tulane-university-of-louisiana
   scrape_policy: active
   probe_state:
     last_probed_at: '2026-04-14T13:22:53Z'
@@ -25386,6 +25402,8 @@ schools:
   name: Virginia Polytechnic Institute and State University
   domain: vt.edu
   ipeds_id: '233921'
+  retired_aliases:
+  - virginia-polytechnic-institute-and-state-university
   scrape_policy: active
   probe_state:
     last_probed_at: '2026-04-14T13:24:09Z'

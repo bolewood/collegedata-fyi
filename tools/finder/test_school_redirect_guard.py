@@ -4,7 +4,13 @@ from __future__ import annotations
 
 import unittest
 
-from tools.finder.school_redirect_guard import audit_redirect_manifest, expected_redirects
+from tools.finder.school_redirect_guard import (
+    audit_edge_aliases,
+    audit_redirect_manifest,
+    expected_redirects,
+    load_edge_aliases,
+    load_redirects,
+)
 
 
 class SchoolRedirectGuardTests(unittest.TestCase):
@@ -73,6 +79,15 @@ class SchoolRedirectGuardTests(unittest.TestCase):
                     {"school_id": "two", "retired_aliases": ["one"]},
                 ]
             )
+
+
+class EdgeAliasParityTests(unittest.TestCase):
+    def test_edge_copy_matches_web_manifest(self):
+        self.assertEqual(audit_edge_aliases(load_redirects(), load_edge_aliases()), [])
+
+    def test_drift_is_reported_both_ways(self):
+        errors = audit_edge_aliases({"a-old": "a"}, {"b-old": "b"})
+        self.assertEqual(len(errors), 2)
 
 
 if __name__ == "__main__":

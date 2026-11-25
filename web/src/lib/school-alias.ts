@@ -195,9 +195,11 @@ export function buildRetiredSchoolRedirects(
         destination: `/schools/${schoolId}`,
         permanent: true as const,
       },
+      // Any child route under the school (a year page, a sub-page, a file).
+      // `:path+` needs at least one segment, so it never overlaps the root rule.
       {
-        source: `/schools/${alias}/:year`,
-        destination: `/schools/${schoolId}/:year`,
+        source: `/schools/${alias}/:path+`,
+        destination: `/schools/${schoolId}/:path+`,
         permanent: true as const,
       },
     ]);
