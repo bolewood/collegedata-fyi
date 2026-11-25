@@ -865,7 +865,7 @@ we set aside (flagged) or couldn't read. The
 renewed count (`renewal.both`, and `two_year_both`) excludes a school whose
 current-year report is flagged (wrong file, blank template, low coverage): a
 flagged report is not a renewal. A report we couldn't read still counts.
-`renewal.current` (435 in the 2026-11-25 snapshot) counts every school with a
+`renewal.current` (436 in the 2026-11-25 snapshot, after the 2023-24 financial aid re-clean) counts every school with a
 current-year report, set-aside ones included, and is not shown on any page.
 The page's wording says this ("on file" in the earlier-year count; a school
 renews only if its current-year report is one we have not set aside).

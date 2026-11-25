@@ -22,7 +22,7 @@ Awaiting Anthony's read.
 
 Small normal-case line under it (the PRD wants the run named on the page, so the file name stays):
 
-> Numbers from the archive's scoreboard run of {November 25, 2026}, {14:09 UTC} (file {scoreboard-20261125T140926Z.json}).
+> Numbers from the archive's scoreboard run of {November 25, 2026}, {23:32 UTC} (file {scoreboard-20261125T233202Z.json}).
 
 ## All years at a glance
 
@@ -137,15 +137,15 @@ says so: *Fewer than 5 reports, so no share is shown.*
   > reading of the same file, so this year reads lower partly for that reason.
 
 "Usable" means `value_status` `reported` and nothing else. In the 2026-11-25
-run, over the 1,273 published reports numbered by their year's own form, the
-stored fields were 637,851 reported, 6,581 parse errors and 3,751 "not
+run, over the 1,292 published reports numbered by their year's own form, the
+stored fields were 647,813 reported, 6,652 parse errors and 3,966 "not
 applicable" (0.6% of fields). "Not applicable" is a school saying a question
 doesn't apply to it. It is left out because that is not an answer a reader can
 use, but it is not negligible in one section: counting it would raise transfer
-admission (D)'s usable median from 14 to 15 (2023-24), 25 to 27 (2024-25) and 23
+admission (D)'s usable median from 14 to 15 (2023-24), 25 to 27 (2024-25) and 22
 to 26 (2025-26), because "not applicable" is 6% to 9% of that section's stored
 fields (schools without transfer admission often mark it). It would also move
-financial aid (H) by 1 in 2024-25 and 2025-26 and first-time admission (C) by 1
+financial aid (H) by 1 in each year and first-time admission (C) by 1
 in 2025-26. No `missing` (empty) status is stored in the run.
 Medians are over reports numbered by the year's own form, so a section's median
 can never exceed its question count.
@@ -320,11 +320,14 @@ difference an error.
   > couldn't check, sampled on November 25, 2026, 19 had the financial aid table
   > filled in and we hadn't stored it in full.
 
-  The sample was drawn from the 217 can't-check reports in the 2026-11-25 run `scoreboard-20261125T011508Z.json` (the committed snapshot's run, `scoreboard-20261125T140926Z.json`, has 223).
+  The sample was drawn from the 217 can't-check reports in the 2026-11-25 run `scoreboard-20261125T011508Z.json` (the committed snapshot's run, `scoreboard-20261125T233202Z.json`, comes after the 2023-24 financial aid re-clean and has 74).
   The sentence shows only while the snapshot's 2023-24 count is within 90% to
   110% of 217 (196 to 238), so it disappears once a fix shrinks the pool, or a
-  regression grows it, instead of going false.
-  There is no sentence about the fix: it is merged, but its re-clean has not run, so the served numbers have not changed.
+  regression grows it, instead of going false. In the committed snapshot the
+  count is 74, so **the sentence does not show**: the page keeps the plain
+  can't-check definition above. The "for some layouts the reader keeps a financial
+  aid table only when its totals add up" note still shows and still holds: the
+  0.3.44 text-layer path now applies to 2023-24 too.
 
 ## How to read this
 

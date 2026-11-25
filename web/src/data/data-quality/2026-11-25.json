@@ -1,16 +1,16 @@
 {
  "public_format": 5,
- "snapshot_of": "2026-11-25T14:09:26Z",
- "scoreboard_run": "scoreboard-20261125T140926Z.json",
+ "snapshot_of": "2026-11-25T23:32:02Z",
+ "scoreboard_run": "scoreboard-20261125T233202Z.json",
  "renewal": {
   "as_of": "2026-11-25",
   "current_year": "2025-26",
   "previous_year": "2024-25",
-  "current": 435,
+  "current": 436,
   "previous": 498,
-  "both": 373,
+  "both": 374,
   "two_year_previous": 556,
-  "two_year_both": 385
+  "two_year_both": 386
  },
  "years": [
   {
@@ -21,7 +21,7 @@
     "questions": 1053
    },
    "federal_fall_loaded": true,
-   "other_form_numbering": 65,
+   "other_form_numbering": 47,
    "removed": 18,
    "no_file": 0,
    "duplicate_file": 2,
@@ -46,51 +46,51 @@
       "not_read_yet": 0
      },
      "fields_stored": {
-      "median": 410,
-      "p10": 217
+      "median": 419,
+      "p10": 266
      },
      "federal": {
       "reports": 385,
       "values": 1155,
-      "matches": 988,
-      "no_value": 66,
-      "differs": 101,
-      "differs_2_to_10pct": 59,
-      "differs_over_10pct": 42
+      "matches": 1009,
+      "no_value": 46,
+      "differs": 100,
+      "differs_2_to_10pct": 60,
+      "differs_over_10pct": 40
      },
      "totals": {
       "reports": 403,
       "B1": {
-       "adds_up": 321,
+       "adds_up": 336,
        "under_2pct": 3,
        "off_more": 7,
-       "cant_check": 72
+       "cant_check": 57
       },
       "C1": {
-       "adds_up": 233,
-       "under_2pct": 52,
+       "adds_up": 243,
+       "under_2pct": 56,
        "off_more": 36,
-       "cant_check": 82
+       "cant_check": 68
       },
       "H1": {
-       "adds_up": 143,
+       "adds_up": 292,
        "doesnt": 46,
-       "cant_check": 214
+       "cant_check": 65
       }
      },
      "checks": {
       "enrollment": {
        "reports": 402,
-       "matches": 308,
-       "no_value": 62,
-       "differs": 32,
-       "differs_2_to_10pct": 21,
+       "matches": 323,
+       "no_value": 46,
+       "differs": 33,
+       "differs_2_to_10pct": 22,
        "differs_over_10pct": 11
       },
       "tuition": {
        "reports": 402,
-       "matches": 200,
-       "no_value": 106,
+       "matches": 202,
+       "no_value": 104,
        "differs": 96,
        "differs_2_to_10pct": 60,
        "differs_over_10pct": 36
@@ -411,51 +411,51 @@
      "not_read_yet": 0
     },
     "fields_stored": {
-     "median": 412,
-     "p10": 213
+     "median": 422,
+     "p10": 238
     },
     "federal": {
      "reports": 411,
      "values": 1233,
-     "matches": 1049,
-     "no_value": 68,
-     "differs": 116,
-     "differs_2_to_10pct": 70,
-     "differs_over_10pct": 46
+     "matches": 1070,
+     "no_value": 48,
+     "differs": 115,
+     "differs_2_to_10pct": 71,
+     "differs_over_10pct": 44
     },
     "totals": {
      "reports": 430,
      "B1": {
-      "adds_up": 327,
+      "adds_up": 342,
       "under_2pct": 3,
       "off_more": 7,
-      "cant_check": 93
+      "cant_check": 78
      },
      "C1": {
-      "adds_up": 245,
-      "under_2pct": 55,
+      "adds_up": 255,
+      "under_2pct": 59,
       "off_more": 42,
-      "cant_check": 88
+      "cant_check": 74
      },
      "H1": {
-      "adds_up": 159,
+      "adds_up": 308,
       "doesnt": 48,
-      "cant_check": 223
+      "cant_check": 74
      }
     },
     "checks": {
      "enrollment": {
       "reports": 429,
-      "matches": 315,
-      "no_value": 82,
-      "differs": 32,
-      "differs_2_to_10pct": 21,
+      "matches": 330,
+      "no_value": 66,
+      "differs": 33,
+      "differs_2_to_10pct": 22,
       "differs_over_10pct": 11
      },
      "tuition": {
       "reports": 428,
-      "matches": 210,
-      "no_value": 117,
+      "matches": 212,
+      "no_value": 115,
       "differs": 101,
       "differs_2_to_10pct": 63,
       "differs_over_10pct": 38
@@ -463,7 +463,7 @@
     }
    },
    "sections": {
-    "reports": 365,
+    "reports": 383,
     "rows": [
      {
       "section": "A",
@@ -474,14 +474,14 @@
      {
       "section": "B",
       "questions": 196,
-      "stored_median": 143,
-      "usable_median": 143
+      "stored_median": 142,
+      "usable_median": 142
      },
      {
       "section": "C",
       "questions": 274,
-      "stored_median": 112,
-      "usable_median": 112
+      "stored_median": 111,
+      "usable_median": 111
      },
      {
       "section": "D",
@@ -510,8 +510,8 @@
      {
       "section": "H",
       "questions": 154,
-      "stored_median": 52,
-      "usable_median": 52
+      "stored_median": 61,
+      "usable_median": 60
      },
      {
       "section": "I",
@@ -1041,14 +1041,14 @@
      "format": "pdf_flat",
      "label": "standard PDF",
      "status": {
-      "published": 269,
+      "published": 270,
       "set_aside": 8,
       "couldnt_read": 0,
       "not_read_yet": 0
      },
      "fields_stored": {
       "median": 565,
-      "p10": 321
+      "p10": 316
      },
      "federal": {
       "reports": 0,
@@ -1060,15 +1060,15 @@
       "differs_over_10pct": 0
      },
      "totals": {
-      "reports": 269,
+      "reports": 270,
       "B1": {
-       "adds_up": 230,
+       "adds_up": 231,
        "under_2pct": 4,
        "off_more": 7,
        "cant_check": 28
       },
       "C1": {
-       "adds_up": 182,
+       "adds_up": 183,
        "under_2pct": 38,
        "off_more": 14,
        "cant_check": 35
@@ -1076,7 +1076,7 @@
       "H1": {
        "adds_up": 221,
        "doesnt": 27,
-       "cant_check": 21
+       "cant_check": 22
       }
      },
      "checks": {
@@ -1345,14 +1345,14 @@
    ],
    "total": {
     "status": {
-     "published": 421,
+     "published": 422,
      "set_aside": 9,
      "couldnt_read": 6,
      "not_read_yet": 0
     },
     "fields_stored": {
-     "median": 610,
-     "p10": 414
+     "median": 609,
+     "p10": 413
     },
     "federal": {
      "reports": 0,
@@ -1364,15 +1364,15 @@
      "differs_over_10pct": 0
     },
     "totals": {
-     "reports": 421,
+     "reports": 422,
      "B1": {
-      "adds_up": 372,
+      "adds_up": 373,
       "under_2pct": 5,
       "off_more": 7,
       "cant_check": 37
      },
      "C1": {
-      "adds_up": 303,
+      "adds_up": 304,
       "under_2pct": 50,
       "off_more": 17,
       "cant_check": 51
@@ -1380,7 +1380,7 @@
      "H1": {
       "adds_up": 357,
       "doesnt": 32,
-      "cant_check": 32
+      "cant_check": 33
      }
     },
     "checks": {
@@ -1403,7 +1403,7 @@
     }
    },
    "sections": {
-    "reports": 421,
+    "reports": 422,
     "rows": [
      {
       "section": "A",
@@ -1427,7 +1427,7 @@
       "section": "D",
       "questions": 88,
       "stored_median": 27,
-      "usable_median": 23
+      "usable_median": 22
      },
      {
       "section": "E",
@@ -1444,7 +1444,7 @@
      {
       "section": "G",
       "questions": 46,
-      "stored_median": 24,
+      "stored_median": 23,
       "usable_median": 23
      },
      {

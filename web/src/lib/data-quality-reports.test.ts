@@ -76,11 +76,11 @@ describe("the reports behind every count (the latest committed snapshot)", () =>
     const unlinked = Object.fromEntries(
       Object.entries(reports.years).map(([year, rows]) => [year, rows.filter((r) => r.nopage).map((r) => r.school).sort()]),
     );
-    // The 2026-11-25 run: the twelve blank-form reports whose /schools/<id>/<year> page does not exist (public-documents.ts hides
+    // The 2026-11-25 run (scoreboard-20261125T233202Z.json): the fifteen blank-form reports whose /schools/<id>/<year> page does not exist (public-documents.ts hides
     // a blank template, and the page 404s with no other listed document that year). Pinned by name; a new snapshot updates this.
     if (DAY() === "2026-11-25") {
       expect(unlinked).toEqual({
-        "2023-24": ["alfred-university", "austin-peay-state-university", "old-dominion-university", "university-of-connecticut"],
+        "2023-24": ["alfred-university", "auburn-university", "austin-peay-state-university", "florida-state-university", "old-dominion-university", "university-of-connecticut", "university-of-houston"],
         "2024-25": ["auburn-university", "florida-state-university", "university-of-nebraska-lincoln", "virginia-military-institute"],
         "2025-26": ["depaul-university", "the-university-of-texas-permian-basin", "towson-university", "union-college"],
       });
@@ -102,7 +102,7 @@ describe("the reports behind every count (the latest committed snapshot)", () =>
     }
   });
 
-  it("pins the 2026-11-25 snapshot's cells and rows (665 cells, 1,443 rows, 1,338 published, 105 not)", () => {
+  it("pins the 2026-11-25 snapshot's cells and rows (665 cells, 1,444 rows, 1,339 published, 105 not)", () => {
     // Only while that is the latest snapshot: the next snapshot's PR deletes this reports file (see the README), and its
     // own pins replace these.
     if (DAY() !== "2026-11-25") return;
@@ -110,10 +110,11 @@ describe("the reports behind every count (the latest committed snapshot)", () =>
     const reports = JSON.parse(fs.readFileSync(path.join(SNAPSHOT_DIR, "reports", "2026-11-25.json"), "utf8")) as ReportsFile;
     expect(snapshotCells(validateSnapshot(snap, "2026-11-25.json")).length).toBe(665);
     const all = Object.values(reports.years).flat();
-    expect(all).toHaveLength(1443);
-    expect(all.filter((r) => r.status === "published")).toHaveLength(1338);
+    expect(all).toHaveLength(1444);
+    expect(all.filter((r) => r.status === "published")).toHaveLength(1339);
     expect(all.filter((r) => r.status !== "published")).toHaveLength(105);
-    expect(all.filter((r) => !r.school)).toHaveLength(56);
+    // Since #510 the run keeps school_id on a couldn't-read report too, so every row names its school.
+    expect(all.filter((r) => !r.school)).toHaveLength(0);
   });
 
   it("is in the producer's order, so a file written before a change to the order fails: school name ignoring case, then id", () => {
