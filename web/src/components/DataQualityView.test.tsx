@@ -264,11 +264,12 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
     const html = openHtml("2025-26");
     expect(html).toContain('id="dq-no-federal"');
     expect(html.indexOf('id="dq-no-federal"')).toBeLessThan(html.indexOf('id="dq-table-b"'));
-    expect(html).not.toContain('id="dq-note-differs"');
+    // None of Table B's explanations apply with no federal figures: "No value", "Differs" and the left-out note.
+    for (const id of ["dq-note-no-value", "dq-note-differs", "dq-note-left-out"]) expect(html).not.toContain(`id="${id}"`);
     expect(html).not.toContain("/data-quality/csv/federal/");
     const loaded = openHtml("2024-25");
     expect(loaded).not.toContain('id="dq-no-federal"');
-    expect(loaded).toContain('id="dq-note-differs"');
+    for (const id of ["dq-note-no-value", "dq-note-differs", "dq-note-left-out"]) expect(loaded).toContain(`id="${id}"`);
     expect(loaded).toContain("/data-quality/csv/federal/2024-25");
   });
 

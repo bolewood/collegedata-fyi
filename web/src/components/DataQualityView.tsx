@@ -413,7 +413,7 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
         </table>
       </Scroll>
       {loaded && (
-        <Note>
+        <Note id="dq-note-left-out">
           A value is compared only when the federal data has a positive figure for it, and matches means within 2%.
           Left out: {n(left.single_campus)} {left.single_campus === 1 ? "report" : "reports"} we’ve marked as
           filed for one campus or unit (federal data reports the whole institution) and {n(left.no_federal_figures)} whose school has no
@@ -422,7 +422,7 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
       )}
       {loaded && (
         <>
-        <Note>
+        <Note id="dq-note-no-value">
           <strong>No value</strong> means no usable CDS number was available to compare. The school may have left it
           blank. We may have missed it, read it under a different year’s numbering, or set it aside because it
           failed a sanity check. On its own, this table can’t say which.
