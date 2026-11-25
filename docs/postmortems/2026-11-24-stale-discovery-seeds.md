@@ -1,7 +1,7 @@
 # Postmortem: why the archive silently missed 2025-26 files for about 150 schools
 
 **Date found:** 2026-11-24
-**Status:** Partly fixed. 117 of the 151 missed schools are archived; 34 are
+**Status:** Partly fixed. Prevention controls are in place (see the [prevention ledger](2026-11-24-stale-discovery-seeds-prevention.md)). 117 of the 151 missed schools are archived; 34 are
 found but not archived, and 43 searched schools have no answer yet.
 Prevention work is open (see [Actions](#actions)).
 **Tracking issue:** #452
@@ -128,7 +128,7 @@ For the schools it flagged, the monthly re-probe searched the web for a
 better seed. Its results varied a lot from month to month:
 
 | Run | Result |
-|---|---|
+|---|---|---|
 | 2026-09-02 | 110 stuck, 0 re-probed: a shell heredoc bug stopped the step |
 | 2026-09-11 (rerun) | 112 re-probed, 6 still stuck; many seeds moved to listing pages (#175) |
 | 2026-11-02 | 78 re-probed, 7 replaced, 71 still stuck; status `ok` |
@@ -282,19 +282,19 @@ the same number, because it counts schools that have only the current year.
 
 ## Actions
 
-Owner means who does the work; "agent" work still needs the owner's review.
+Owner means who does the work; "agent" work still needs the owner's review. Each control, the test that proves it, and what is still not covered are in the [prevention ledger](2026-11-24-stale-discovery-seeds-prevention.md).
 
-| # | Action | Targets | Owner | Issue |
-|---|---|---|---|---|
-| 1 | **Alarm on current-year renewal.** A scheduled workflow computes [the headline number](#the-headline-number) and compares it with a floor read off [when schools post](#when-schools-post) by months since that CDS year's fall, less a margin (81% or more from September). It also tracks the next CDS year against the early curve (18% by February, 46% by April), so a break in the newest year shows before September. Below the floor, it opens a new issue assigned to the owner and closes it only when the number recovers. It never comments on a standing issue, which is how #136 was ignored. | 4, 8, 9, 10 | agent | #460 |
-| 2 | **Measure the miss rate from outside the pipeline.** Every month, a workflow opens an issue listing 20 random schools with links to their sites. Someone checks each by hand and records whether the school had a newer CDS than the archive. Year-round, because files appear from March to November. | 1, 2, 3, 6 | owner, with agent help | #461 |
-| 3 | **Date every seed by the last new year it produced.** A seed that has not produced a new year within one cycle is suspect, whatever kind of URL it is. | 1, 6 | agent | #462 |
-| 4 | **A sweep's status reflects its result.** The re-probe counts a school as fixed when the new seed reaches a newer year than the archive holds, or is a listing page whose newest year matches ours (the school hasn't posted). A single file older than the current year is not a fix. The station warns when most of its schools are still stuck, and keeps a history of summaries. | 3, 8 | agent | #463 |
-| 5 | **Make every sweep account for every school.** A job that filters schools reports how many it checked, flagged and skipped, and why. A test asserts `flagged + fresh + skipped == total` and covers many mirror years, an `unknown` year and a stale listing page. | 2, 7 | agent | #464 |
-| 6 | **Add a denominator check to the agent rules.** Add to the "Data quality loop" rules in `CLAUDE.md`: count a fix's reach, fix the mechanism and every copy of it, and check the headline number a month after a discovery fix. | 2, 10 | agent (done) | this PR |
-| 7 | **Search the rest.** Search the 156 schools whose newest year is 2022-23 or older, so the headline number starts from a clean baseline. | impact | agent | #465 |
-| 8 | **Flag two live documents of one school in one filed year.** Report them on the pipeline page and in the scoreboard; each is a misfiled year or a duplicate. | 5 | agent | #467 |
-| 9 | **Give fetch failures a list and an owner.** Group schools whose listing is known but whose files we can't fetch by cause (blocked, viewer, section files, dead link), and work the list monthly. | 6 | agent | #468 |
+| # | Action | Targets | Owner | Issue | Status |
+|---|---|---|---|---|---|
+| 1 | **Alarm on current-year renewal.** A scheduled workflow computes [the headline number](#the-headline-number) and compares it with a floor read off [when schools post](#when-schools-post) by months since that CDS year's fall, less a margin (81% or more from September). It also tracks the next CDS year against the early curve (18% by February, 46% by April), so a break in the newest year shows before September. Below the floor, it opens a new issue assigned to the owner and closes it only when the number recovers. It never comments on a standing issue, which is how #136 was ignored. | 4, 8, 9, 10 | agent | #460 | **Done** (#474, #493, #494). The board lamp waits on migration #469 |
+| 2 | **Measure the miss rate from outside the pipeline.** Every month, a workflow opens an issue listing 20 random schools with links to their sites. Someone checks each by hand and records whether the school had a newer CDS than the archive. Year-round, because files appear from March to November. | 1, 2, 3, 6 | owner, with agent help | #461 | **Done** (#471, #497). The checking is the owner's |
+| 3 | **Date every seed by the last new year it produced.** A seed that has not produced a new year within one cycle is suspect, whatever kind of URL it is. | 1, 6 | agent | #462 | **Done** (#490). Listing seeds are reported, not re-probed: the re-probe can never replace a listing page |
+| 4 | **A sweep's status reflects its result.** The re-probe counts a school as fixed when the new seed reaches a newer year than the archive holds, or is a listing page whose newest year matches ours (the school hasn't posted). A single file older than the current year is not a fix. The station warns when most of its schools are still stuck, and keeps a history of summaries. | 3, 8 | agent | #463 | **Done** (#472, #470). History waits on migration #469 |
+| 5 | **Make every sweep account for every school.** A job that filters schools reports how many it checked, flagged and skipped, and why. A test asserts `flagged + fresh + skipped == total` and covers many mirror years, an `unknown` year and a stale listing page. | 2, 7 | agent | #464 | **Done** (#472, #476) |
+| 6 | **Add a denominator check to the agent rules.** Add to the "Data quality loop" rules in `CLAUDE.md`: count a fix's reach, fix the mechanism and every copy of it, and check the headline number a month after a discovery fix. | 2, 10 | agent (done) | this PR | **Done** (#466) |
+| 7 | **Search the rest.** Search the 156 schools whose newest year is 2022-23 or older, so the headline number starts from a clean baseline. | impact | agent | #465 | **Done** (#495: 38 seeds changed; 51 schools gave no answer) |
+| 8 | **Flag two live documents of one school in one filed year.** Report them on the pipeline page and in the scoreboard; each is a misfiled year or a duplicate. | 5 | agent | #467 | **Done** (#491) |
+| 9 | **Give fetch failures a list and an owner.** Group schools whose listing is known but whose files we can't fetch by cause (blocked, viewer, section files, dead link), and work the list monthly. | 6 | agent | #468 | **Done** (#488, #497) |
 
 ## Lessons
 

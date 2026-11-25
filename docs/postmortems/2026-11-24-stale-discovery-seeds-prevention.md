@@ -1,0 +1,275 @@
+# Prevention ledger: stale discovery seeds
+
+**Date:** 2026-11-25
+**For:** [the stale-seeds postmortem](2026-11-24-stale-discovery-seeds.md)
+**Question:** can the archive fall behind on what schools publish, with every check looking fine, and no person told within a month?
+
+This ledger maps each of the postmortem's ten causes to five things: the control that now catches it, how a person is told, the test that proves it, the evidence, and what is still not covered. Run logs and raw outputs from the overnight run are summarized where they are used.
+
+## How a person is told
+
+| Channel | Fires when | Reaches | Live today? |
+|---|---|---|---|
+| **Alarm issue** (label `alarm:discovery-renewal`) | A daily check finds current-year, two-year or next-year renewal below its floor | Assigned to the owner | Yes. The first scheduled run, 2026-11-25 13:41 UTC, opens one, because renewal is 76.0% against a floor of 82.5% |
+| **Discord #alerts, direct** | The alarm issue opens, is superseded by a new year, or recovers | Channel | Yes. The end-to-end test posted both kinds |
+| **Discord #alerts, `workflow_run`** | The renewal workflow fails (short read, too few schools in the denominator, a floor mismatch, the alarm step failing) | Channel | Yes |
+| **Discord #alerts, hourly scheduled-run check** | The renewal workflow has no scheduled run newer than 36 h | Channel | Yes |
+| **Discord #alerts, hourly board poll** | A board lamp turns `down`: Renewal (below a floor, no scheduled heartbeat in 36 h, an error, a hung run) or Stuck PDFs (90% or more still stuck) | Channel | Stuck PDFs: yes. Renewal: only after migration #469 is applied (slate until then) |
+| **Monthly hand-check issue** | The 3rd of each month | Assigned to the owner | Yes, from 2026-12-03 |
+
+## The headline number and its floor
+
+**Definition** (as in the postmortem): of schools with a live document filed under the previous CDS year, the share that also have one filed under the current year. `unknown` years don't count, and a school that has only the current year is not in the denominator. It is computed in one place, `tools/ops/discovery_renewal.py`. The PRD 040 snapshot imports it.
+
+**Floor:** the posting curve read by months since the CDS year's fall. The points are 3% at 4 months, 18% at 6, 46% at 8, 68% at 10, 81% at 12 and 88% at 15, flat after that.
+- **Current year:** curve − 5 points. That is 76% at the September switch and about 82.5% in late November.
+- **Two-year:** of schools with either of the two previous years, the share that have the current one. Floor = current-year floor − 8.
+- **Next year:** curve × 0.75, tracked once the curve reaches 18% (March 1).
+
+The floor's calibration is an owner decision (D1). A healthy year likely sits near the raw curve each fall.
+
+**Backtest** (reproduced independently by Fable). It replays the daily check at each month end, using `discovered_at` and `removed_at` on today's filed years:
+
+| Date | Check | Renewal | Floor | Fires? |
+|---|---|---:|---:|---|
+| 2026-04-30 | next (2025-26) | 25.7% | 34.1% | **yes** |
+| 2026-05-31 | next (2025-26) | 33.6% | 42.5% | **yes** |
+| 2026-06-30 | next | 39.0% | 50.7% | **yes** |
+| 2026-07-31 | next | 42.0% | 55.7% | **yes** |
+| 2026-08-31 | next | 46.6% | 60.6% | **yes** |
+| 2026-09-30 | current (2025-26) | 50.6% | 78.3% | **yes** |
+| 2026-10-31 | current | 52.7% | 80.6% | **yes** |
+| 2026-11-30 | current | 76.0% | 82.9% | **yes** |
+
+The alarm would have opened an issue at the end of April 2026, from the next-year check, and again at the September switch.
+
+**Caveats:**
+- It uses today's filed years. The 22 documents re-filed to 2025-26 by #455 count as 2025-26 in past months, so the real history was lower, which strengthens the conclusion.
+- The archive began in April 2026 (348 of 471 live 2024-25 documents were first seen that month).
+- 118 rows have no `discovered_at` and are treated as always present.
+- The first backtest table in #474 was wrong: a timestamp parser silently returned None on Python 3.9. Fable caught it, and the parser now raises.
+
+## Causes
+
+### 1. A one-file seed finds a new year only if the file is in one of two places
+
+- **Control:**
+  - The renewal alarm (#474) measures the outcome whatever the seed is.
+  - The stuck-seed sweep (#472) flags every one-file seed behind the cycle (122 on 2026-11-25).
+  - Seed dating (#490, #462) counts every seed whose newest year is behind, of any kind (411 of 820: 120 one-file, 291 listing pages).
+  - The monthly hand check (#471, #461) samples from outside the pipeline.
+- **Told:**
+  - The alarm issue and Discord, when renewal falls below its floor.
+  - The Stuck PDFs lamp and Discord, at 90% or more still stuck.
+  - The hand-check issue, monthly.
+- **Test:** `test_every_stale_one_file_seed_is_flagged` runs on the real `schools.yaml` and a committed archive snapshot. The renewal snapshot test checks 364/479.
+- **Evidence:**
+  - Backtest: it fires from 2026-04-30.
+  - Reinsertion 1: put the two-year cap back and 6 tests fail.
+- **Not covered:**
+  - The resolver mechanism itself is unchanged (`resolve.ts` parent walk, then standard paths). A one-file seed is still found stale, not fixed.
+  - Listing-page seeds behind the cycle are counted and listed, not re-probed (D9).
+
+### 2. The August fix fixed the shape, not the mechanism
+
+- **Control:**
+  - Sweeps account for every school, and `flagged + fresh + skipped == total` is enforced in code (#472).
+  - Years are parsed as integers everywhere in the new code.
+  - An every-copy sweep across Python, SQL and TypeScript found the remaining copies. Fixed: the Edge `fetchMostRecentDocumentForSchool` (#473); `probe_urls` cooldown stamping, headless caps and exit code, `published_years`, `kids_worklist`, `force_resolve_missing`, `fetch_known_years`, and the hardcoded years in `directory_enqueue_autopilot` and `top100_coverage` (#476).
+  - One fixture of freshness-floor cases is tested from Python and TypeScript (#487).
+- **Told:** CI, when the identity fails; the job, which errors.
+- **Test:** `test_every_school_lands_in_exactly_one_bucket`, `test_unknown_year_is_not_the_newest` and `test_an_inconsistent_count_raises`.
+- **Evidence:** reinsertions 1, 2a, 6 and 7a fail their tests. Trial 6 drops schools before counting, so the totals stay consistent, and it is still caught.
+- **Not covered:**
+  - Serving copies of the `unknown`-first sort (#479).
+  - Directory re-seeding of unknown-only schools (#475, pulled from #473 after review).
+  - Coverage SQL keys on `cds_year`, not `canonical_year` (#478).
+  - The `cds_freshness_floor` rule now has four copies (SQL, `discovery_renewal`, `stuck_pdf_seeds`, web `freshness.ts`). The renewal job checks SQL against Python on every run, and a shared fixture checks Python against TypeScript. `discovery_renewal`'s copy is not yet in the shared fixture.
+
+### 3. The re-probe's results swung, and November's status didn't show it
+
+- **Control:**
+  - `reprobe_outcome.py` (#472) counts a school as fixed only when its new seed reaches a CDS year newer than the archive's and at or past the floor (no section files, CDS evidence in the URL), or when it is a listing page that matches. Otherwise it is still stuck.
+  - The Stuck PDFs lamp (#470) is `late` above 50% still stuck and `down` at 90% or more.
+  - A heartbeat history table keeps each finished run (migration #469, open).
+- **Told:** the lamp, then Discord at 90% or more. On deploy it went down on November's 71/78.
+- **Test:** pipeline-lamps "71 of 78 still stuck is down", plus `test_old_file_is_not_a_fix_even_when_the_archive_has_nothing`, `test_section_file_is_never_a_fix` and `test_a_year_on_a_non_cds_link_is_ignored`.
+- **Evidence:** reinsertion 3 (lamp ignores its result) fails 6 tests.
+- **Not covered:**
+  - Between 50% and 90% the lamp is only `late`, which Discord does not post. The renewal alarm is the push for that range.
+  - History is kept only once #469 is applied.
+
+### 4. An alarm existed, and no one acted on it
+
+- **Control:**
+  - One issue per breach, found by label and assigned to the owner (#474). Its body and title update while it stays below the floor. It is never commented on. It closes with one comment on recovery. A new CDS year supersedes it with a new issue.
+  - The monthly comment on standing issue #136 is removed (#472).
+- **Told:** an issue assignment plus Discord.
+- **Test:** `tools/ops/test_renewal_alarm.py` (create, update with no comment and no post, close, supersede, test-label isolation).
+- **Evidence:** end-to-end on 2026-11-25:
+  - Run 45551257009 opened `[test]` #489 and posted to #alerts.
+  - Run 45551423155 closed it with one comment and posted the recovery.
+- **Not covered:**
+  - A person can still ignore an assigned issue, or mute Discord.
+  - The alarm floor may be noisy each fall (D1). A noisy alarm is the #136 failure in another form. Re-derive the curve from snapshots after a year (#460).
+
+### 5. The 2025-26 form prints last year's title
+
+- **Control:**
+  - The year reader fix (#455).
+  - Same-year duplicates (#491, #467): every school with two or more live documents in one filed year, classified, reported in the renewal summary and report, and in the scoreboard.
+- **Told:** the renewal report (alarm issue and step summary), the board detail line, and the scoreboard.
+- **Test:** `test_year_detection.StaleTitleTest` and `test_same_year_duplicates`.
+- **Evidence:**
+  - Reinsertion 4 (stale-title correction disabled) fails.
+  - Live read on 2026-11-25: 38 groups, 22 `year_conflict` (4 look like #455 residue), 14 `same_file`, 2 `duplicate`.
+- **Not covered:** the duplicates count is reported, not alarmed. A rise in duplicates does not post anywhere by itself.
+
+### 6. Fetch failures had no owner
+
+- **Control:** `fetch_failures.py` (#488, #468) lists schools whose listing is known and whose current-year file is missing, by cause from `archive_queue`. The counts go in the renewal summary and the board detail line. The list goes in the run summary, and in the monthly hand-check issue once wired.
+- **Told:** the board detail line, the monthly issue, and the renewal report.
+- **Test:** `test_fetch_failures`.
+- **Evidence:**
+  - 158 failures on 2026-11-25: blocked 28, viewer 7, dead link 17, other 106 (93 of them `no_pdfs_found`).
+  - It agrees 6 of 6 with #452's blocked list.
+- **Not covered:**
+  - Viewer and section-file causes are poorly detected: 1 of 8 and 0 of 3 agree with #452, because the archive records no evidence for them.
+  - `other` is the largest bucket.
+
+### 7. The tests checked the code's choices, not the goal
+
+- **Control:**
+  - Goal-level tests over real data: every stale one-file seed in the real `schools.yaml` is flagged, and renewal on the snapshot is 364/479.
+  - Every PR was reviewed for "does the test fail when the bug returns".
+  - The overnight reinsertion pass put back all seven original bugs, as 8 trials.
+- **Told:** CI.
+- **Evidence:** see [Bug reinsertion](#bug-reinsertion). All 8 trials fail on `origin/main` 054b2b7.
+- **Not covered:** the snapshot fixtures go stale. They prove the mechanism, not today's corpus.
+
+### 8. The pipeline page measures whether jobs run, not what they achieve
+
+- **Control:**
+  - The Renewal station's lamp is the outcome (#470). It fails closed on missing or malformed figures. An overridden test run can turn it red, never green.
+  - The Stuck PDFs lamp is its result.
+  - The heartbeat history table (#469).
+  - Watching the watcher: three paths; see [Watching the watcher](#watching-the-watcher).
+- **Told:** the board, then Discord.
+- **Test:** pipeline-lamps (20+ renewal and stuck cases) and `test_discovery_renewal_staleness_alerts_once_then_recovers`.
+- **Not covered:**
+  - The Renewal lamp is slate until #469 is applied.
+  - Other stations still report `ok` from completion, filed as #480 (refresh jobs ok on empty or partial counts).
+
+### 9. The coverage page showed the symptom one school at a time
+
+- **Control:**
+  - The renewal number, on the board and in the alarm issue with a worklist grouped by seed kind.
+  - The PRD 040 "This year's reports on file" tile from the snapshot's renewal block (#487, M2).
+- **Told:** the issue and the board. The tile is a page, not a push.
+- **Test:** the renewal tile test equals `renewal.both / renewal.previous` (#487).
+- **Not covered:** the Coverage tile appears only once the first snapshot is committed (M0).
+
+### 10. The project's goals never named this outcome
+
+- **Control:**
+  - The headline number is defined once (postmortem, PRD 040 amendment, `CLAUDE.md` data quality loop).
+  - It is computed by one module and alarmed daily.
+- **Told:** n/a.
+- **Not covered:** PRD 001's success criteria are unchanged. Updating them is an owner edit.
+
+
+## Bug reinsertion
+
+Each original bug was put back in a throwaway worktree at `origin/main` 054b2b7, the guarding tests were run, and the worktree was discarded.
+
+| # | Bug put back | Test that fails |
+|---|---|---|
+| 1 | The stuck sweep skips schools with more than 2 archived years | `test_every_stale_one_file_seed_is_flagged`, `test_many_archived_years_do_not_hide_a_stale_one_file_seed` and 4 more |
+| 2 | `unknown` is counted as the newest year (text sort) | `test_unknown_year_is_not_the_newest`, `test_an_undated_document_does_not_make_a_school_look_fresh` |
+| 3 | The Stuck PDFs lamp ignores its result (`ok` at 71 of 78 still stuck) | pipeline-lamps "71 of 78 still stuck is down" and 5 more (vitest) |
+| 4 | A 2025-26 form is filed as 2024-25 (the #455 correction disabled) | `test_year_detection.StaleTitleTest.*` |
+| 5 | Relative links are resolved without `<base href>` (#457 reverted) | `resolve.test.ts` "relative links resolve against `<base href>`" and 5 more |
+| 6 | The sweep silently drops no-seed schools before counting (totals stay consistent) | `test_every_school_lands_in_exactly_one_bucket` |
+| 7a | Renewal accepts `unknown` as a year | `test_unknown_and_malformed_years_are_not_years` |
+| 7b | Renewal counts schools that have only the current year | `test_a_school_with_only_the_current_year_is_not_in_the_denominator` |
+
+## Watching the watcher
+
+| If the renewal workflow… | Caught by | Test |
+|---|---|---|
+| fails (short read, too few schools, a floor mismatch, the alarm step) | the `workflow_run` post to #alerts. From #493, day after day too: every 7th consecutive failure posts | `test_scheduled_failure_on_default_branch_alerts`, `test_consecutive_failures` |
+| stops running (disabled, deleted, schedule broken) | the hourly poll: no scheduled run in 36 h posts to #alerts | `test_discovery_renewal_staleness_alerts_once_then_recovers`, `test_first_poll_alerts_on_a_stale_run_and_baselines_a_fresh_one` |
+| runs but heartbeats nothing, errors, or hangs | the station's SLA lamp (36 h), then the board poll. **Once #469 is applied** | pipeline-lamps "scheduled heartbeat older than 36h is down", "last scheduled error is down", "a hung run is a clock failure" |
+| goes quiet because GitHub disabled schedules (60 days) | the optional outside check-in (D14), **once set up** | workflow test: the step is schedule-only and the URL is never printed |
+
+## End-to-end test (2026-11-25)
+
+| Run | Inputs | Result |
+|---|---|---|
+| 45551072276 | dry run (default) | It read 5,836 live rows and the floor 2025-26 agrees with SQL. 364/479 = 76.0% against a floor of 82.5%. It printed the issue it would open, unassigned for a test. No heartbeat |
+| 45551257009 | test mode, floor override 99 | It opened `[test]` #489, unassigned, and posted to #alerts. The heartbeat was rejected with a warning (the station is unregistered until #469) |
+| 45551423155 | test mode, floor override 10 | It closed #489 with one comment ("Recovered: … 365 of 479 (76.2%) … Closing.") and posted the recovery to #alerts |
+
+The lamp part could not be shown in production: the Renewal tile is slate until #469 is applied. It is covered by the web tests above. These runs used the alarm as it was in #474. The per-year model (#493) is covered by `test_renewal_alarm`, and a dry run against production after #493 is recorded in that PR.
+
+## Red team
+
+Three rounds. In round 1, Gemini 4 Neon (xhigh) and Fable each answered, independently: "Describe three concrete ways the archive could fall behind again without a human being told within a month. For each, show where these controls fail to catch it." Fable checked each scenario against the code, ran simulations, and made one production read.
+
+| # | Scenario (round 1) | Found by | Outcome |
+|---|---|---|---|
+| R1 | An open alarm issue swallows every later breach. A next-year collapse only edits the body for up to six months, and the September switch can close the issue while the old gap stays open | both | **Fixed** in #493 (D13): one issue per breaching year, each re-evaluated against its own floors until it recovers; an earlier year still short is shown on the board (`outstanding_below_floor`, #494) |
+| R2 | The numerator counts flagged documents (change sheets, blank templates, section-only files, the wrong school's file): 9 of 422 2025-26 rows | both | **Fixed** in #493 (D12): flagged documents don't count, and they are listed in the report |
+| R3 | A sub-program filing masks a missing main-campus CDS | Gemini | **Fixed** in #493: sub-institutional rows are excluded, and the count is reported |
+| R4 | A daily failure goes quiet after the first `workflow_run` post | Fable | **Fixed** in #493: a consecutive-failure counter posts on every 7th day running |
+| R5 | A Stuck PDFs move from down to late posts "recovered", and so does a run lamp | both | **Fixed** in #493: only `ok` posts a recovery |
+| R6 | A Discord post that fails on the alarm's first day is never retried | Gemini | **Fixed** in #493: a marker in the issue body, retried on every run |
+| R7 | GitHub disables scheduled workflows after 60 days with no repository activity, which silences every in-GitHub alert | Gemini | **Built, needs the owner:** an optional outside check-in (`RENEWAL_DEADMAN_URL`, D14) |
+| R8 | The snapshot test always skips in CI | Fable | **Fixed** in #493: it now uses the committed fixture |
+| R9 | A loss smaller than the margins (3–8 points mature; next year at 0.75 of the curve) never trips | both | **Accepted risk** (below) |
+| R10 | Listing-page rot (CMS moves, WAF rules, viewers): seeds are counted, not re-probed | Gemini | **Accepted risk** (below) |
+| R11 | Re-probe "fixes" are judged before the seed PR merges and before an archive run | Fable | **Accepted risk**: renewal still catches the outcome a day after the archive runs |
+| R12 | Schools outside every denominator: no document, undated only, or the newest year 2022-23 or older | both | **Partly addressed**: #495 searched the 156 older schools and moved 38 seeds; the rest stay accepted |
+
+## Accepted risks (what is still not covered)
+
+1. **Small losses.** A mechanism that costs fewer than about 5 points of current-year renewal, or about 25% of the expected next-year share, does not cross a floor.
+   - **Why accept:** tighter margins would make a healthy year alarm (D1), and a noisy alarm is the #136 failure again.
+   - **Control:** the monthly hand check (20 schools; at a 6% miss rate a draw shows no miss 29% of the time, so it detects slowly).
+   - **Next step:** re-derive the floor from a year of daily summaries (heartbeat history, #469) and alarm on year-on-year change at the same month.
+2. **Rot inside listing pages.** 291 listing seeds are behind the cycle today. They are counted on the board and listed in the alarm report, but no job tries to fix them (D9). Only the renewal number pushes.
+3. **Hand-check discipline.** The monthly issue depends on a person filling it in. An unanswered issue is reported next month as "N unanswered", with no escalation.
+4. **Discord and GitHub as the only channels.** There is no outside channel until the D14 check-in is set up.
+5. **Until migration #469 is applied:** the Renewal lamp is slate, heartbeat history is not kept, and new summary keys are dropped from stored heartbeats. The alarm issue, Discord and the scheduled-run staleness check all work without it.
+6. **Floor calibration (D1).** The raw posting curve probably puts a healthy year near the floor each fall. The owner may prefer the scaled curve.
+
+## Corrections to earlier drafts
+
+Fable checked the round-1 draft against the code. These are fixed in this version:
+- PRs that were open at the time were described as live.
+- The snapshot test was described as running in CI; it was skipped.
+- The scheduled alarm was described as having run; the first scheduled run is 2026-11-25 13:41 UTC.
+- Discord was described as posting on every failure; it posts on a change of state.
+- The backtest was described as opening a second issue at the September switch. Under the original code it would have been a silent update. #493 fixes that.
+
+## Decisions taken overnight (for the owner)
+
+The defaults taken, each reversible. The full text, with the alternatives, is in the overnight report on #452.
+
+| ID | Decision |
+|---|---|
+| D1 | The alarm floor is the raw posting curve less 5 points, not a curve scaled by mature renewal. The scaled alternative is about 68% in September; the raw curve likely puts a healthy year near the floor each fall |
+| D2 | The next-year floor is the curve × 0.75, tracked from March 1 |
+| D3 | The migration (#469) is left open for the owner to apply from `main` |
+| D4 | Real alarm issues are assigned to `santhonys`; test issues are not |
+| D5 | The Stuck PDFs lamp is down at 90% or more still stuck and late above 50%, once 10 or more are flagged |
+| D6 | No version bump; the changelog entries are collected in this PR |
+| D7 | A two-year cohort check guards against denominator erosion. Its floor is the current-year floor − 8. `MIN_PREV_SCHOOLS` = 350 |
+| D8 | Test runs can turn the Renewal lamp red, never green. Dry runs send no heartbeat |
+| D9 | Listing-page seeds behind the cycle are counted and listed, not re-probed |
+| D10 | Changelog entries land in one docs PR |
+| D11 | The PRD 040 CSV downloads wait for the launch gate (an untested `#` comment block) |
+| D12 | Flagged documents (`wrong_file`, `blank_template`, `low_coverage`) don't count as renewing |
+| D13 | One alarm issue per breaching CDS year |
+| D14 | Optional outside check-in (`RENEWAL_DEADMAN_URL`) against GitHub's 60-day schedule disable. It needs an account, which is the owner's call |
+| D15 | The first data-quality snapshot PR (#496) is held, because it would publish the ungated `/coverage` tile under the old renewal definition |
