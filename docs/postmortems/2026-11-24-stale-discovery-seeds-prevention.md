@@ -260,14 +260,12 @@ Three rounds. In round 1, Gemini 4 Neon (xhigh) and Fable each answered, indepen
 
 ## Accepted risks (what is still not covered)
 
-1. **Partial losses.** The mature floors (83% one-year, 75% two-year) allow a steady loss of about 13% a year indefinitely (0.866² ≈ 0.75, and lapsed schools leave both denominators after two years). Before #502 (round 3), losing half or more of new arrivals mid-season was silent for 2–4 months; the measured delay after #502 is in that PR.
-   - **Why accept:** tighter margins would make a healthy year alarm (D1), and a noisy alarm is the #136 failure again.
-   - **Control:** the monthly hand check (20 schools; at a 6% miss rate a draw shows no miss 29% of the time, so it detects slowly).
-   - **Next step:** re-derive the floor from a year of daily summaries (heartbeat history, #469) and alarm on year-on-year change at the same month.
+1. **Partial losses.** The mature floors (83% one-year, 75% two-year) allow a steady loss of about 13% a year indefinitely (0.866² ≈ 0.75, and lapsed schools leave both denominators after two years). The arrivals check (ratio 0.4) catches a stop that removes more than about 60% of a year's arrivals within 7–35 days. A mechanism that removes less than that, mid-season, can stay under every floor for months. The control for it is the monthly hand check.
 2. **Rot inside listing pages.** 291 listing seeds are behind the cycle today. They are counted on the board and listed in the alarm report, but no job tries to fix them (D9). Only the renewal number pushes.
 3. **Hand-check discipline.** The monthly issue depends on a person filling it in. An unanswered issue is reported next month as "N unanswered", with no escalation.
 4. **Discord and GitHub as the only channels.** There is no outside channel until the D14 check-in is set up.
 5. **Until migration #469 is applied:** the Renewal lamp is slate, heartbeat history is not kept, and new summary keys are dropped from stored heartbeats. The alarm issue, Discord and the scheduled-run staleness check all work without it.
+7. **Renewal is not gated on extraction.** Renewal and arrivals count archived files, whether or not they have been read. A broken extractor leaves renewal green while school pages show nothing new; `unextracted_current_docs` and `unextracted_next_docs` are reported, not alarmed. Extraction is a separate lane (#477, #480).
 6. **Floor calibration (D1, D7).** The raw posting curve probably puts a healthy year near the floor each fall, and the two-year floor trips too (in a healthy simulated control, 68% against 68% on 2027-09-01). With re-notification (D16) that means monthly issues for a healthy year in autumn. The owner may prefer the scaled curve.
 
 ## Corrections to earlier drafts
