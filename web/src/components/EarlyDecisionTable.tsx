@@ -76,12 +76,12 @@ export function EarlyDecisionTable({
                   return (
                     <tr key={item.year} className="acc-table__gap">
                       <th scope="row">
-                        <span className="acc-table__fall">Fall {item.yearStart}</span>
+                        <span className="acc-table__fall">Fall {item.yearStart}</span>{" "}
                         {item.hasReport ? (
                           <ListLink href={`/schools/${schoolId}/${item.year}`} className="acc-table__report">
                             {reportLabel(item.year)}
                           </ListLink>
-                        ) : null}
+                        ) : null}{" "}
                         <span className="acc-table__gap-note" aria-hidden="true">
                           {gapLabel(item.hasReport)}
                         </span>

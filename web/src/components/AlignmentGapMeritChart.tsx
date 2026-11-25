@@ -279,7 +279,7 @@ export function AlignmentGapMeritChart({
           </p>
         </div>
         <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, color: "var(--ink-3)" }}>
-          Find a school
+          Find a school{" "}
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <input
               list="alignment-gap-merit-schools"

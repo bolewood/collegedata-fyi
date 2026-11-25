@@ -120,7 +120,7 @@ function Program({
       </header>
       {closed ? (
         <p className="sch-line">
-          The school’s page lists this program as closed to new entrants.
+          The school’s page lists this program as closed to new entrants.{" "}
           {hasTerms ? " Terms below are kept for reference." : ""}
         </p>
       ) : null}
@@ -223,7 +223,7 @@ function Program({
             >
               {sourceLabel(s.authority)}
             </a>
-          ))}
+          ))}{" "}
           <span>Confirm on the official page</span>
           <a href={SCHOLARSHIP_CORRECTION_URL} target="_blank" rel={externalLinkRel(SCHOLARSHIP_CORRECTION_URL)}>
             Report an update

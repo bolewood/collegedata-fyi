@@ -270,7 +270,7 @@ export function YieldDebtBurdenChart({
             color: "var(--ink-3)",
           }}
         >
-          Find a school
+          Find a school{" "}
           <input
             list="pricing-power-panel-b-schools"
             value={query}

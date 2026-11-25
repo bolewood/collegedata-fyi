@@ -220,7 +220,7 @@ export function AcceptanceYieldChart() {
             color: "var(--ink-3)",
           }}
         >
-          Find a school
+          Find a school{" "}
           <input
             list="pricing-power-panel-a-schools"
             value={query}

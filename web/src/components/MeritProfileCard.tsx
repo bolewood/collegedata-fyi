@@ -175,7 +175,7 @@ export function MeritProfileCard({ profile, sourceHref }: MeritProfileCardProps)
               Need-based aid for nonresidents:{" "}
               <strong>{yesNo(profile.institutionalNeedAidNonresident)}</strong>.
               {" "}Non-need aid for nonresidents:{" "}
-              <strong>{yesNo(profile.institutionalNonNeedAidNonresident)}</strong>.
+              <strong>{yesNo(profile.institutionalNonNeedAidNonresident)}</strong>.{" "}
               {profile.avgInternationalAid != null
                 ? ` Average international aid reported: ${currency(profile.avgInternationalAid)}.`
                 : ""}

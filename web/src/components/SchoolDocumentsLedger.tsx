@@ -38,7 +38,7 @@ export function SchoolDocumentsLedger({ groups }: { groups: SchoolDocumentGroup[
     <div className="school-documents-ledger rule-2">
       <div className="school-documents-ledger__head">
         <div className="meta">
-          § CDS archive
+          § CDS archive{" "}
           {total > COLLAPSED_COUNT && !expanded ? (
             <span> · latest {COLLAPSED_COUNT} shown</span>
           ) : null}

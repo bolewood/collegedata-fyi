@@ -205,7 +205,7 @@ compare <- request("https://www.collegedata.fyi/api/compare") |>
           my-app-name
         </code>
         . It helps us understand API usage and keep the free public surface
-        healthy without requiring API keys.
+        healthy without requiring API keys.{" "}
         {isUsageLaunched() ? (
           <>
             {" "}

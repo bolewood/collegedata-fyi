@@ -292,7 +292,7 @@ export function FeedbackForm({
               disabled={sending}
               checked={draft.featureInterest}
               onChange={(e) => edit("featureInterest", e.target.checked)}
-            />
+            />{" "}
             I'm interested in being featured on the site.
           </label>
           <p className="mt-2 text-sm">

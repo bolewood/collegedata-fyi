@@ -109,8 +109,8 @@ export default async function CoveragePage() {
             A school marked <em>No public CDS found</em> was checked without a
             usable public source turning up. That is different from saying the
             school never publishes one: CDS files are voluntary, and some are
-            posted in places automated discovery cannot reliably reach.
-            <em> Not checked yet</em> means we haven’t checked this
+            posted in places automated discovery cannot reliably reach.{" "}
+            <em>Not checked yet</em> means we haven’t checked this
             school yet.
           </p>
           <p style={{ margin: 0 }}>

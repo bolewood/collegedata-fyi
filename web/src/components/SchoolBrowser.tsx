@@ -482,7 +482,7 @@ export function SchoolBrowser({
           <MetaStat label="Missing a number" value={metadata ? metadata.schools_missing_required_fields.toLocaleString() : "..."} />
         </div>
         <p className="meta" style={{ marginTop: 14, lineHeight: 1.55 }}>
-          Latest reports, 2024-25+. Schools missing a number your filters need are counted above. Fields needed: {requiredLabels}.
+          Latest reports, 2024-25+. Schools missing a number your filters need are counted above. Fields needed: {requiredLabels}.{" "}
           {metadata ? ` Filtered out by your criteria: ${metadata.schools_failing_filters.toLocaleString()}.` : ""}
           {" "}
           <Link href="/match">Building a list? Use Match.</Link>

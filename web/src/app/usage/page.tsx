@@ -145,7 +145,7 @@ export default async function UsagePage() {
         <p className="usage-copy">
           A download counts once per browser or program (IP address plus user
           agent), per file, per day.
-          Reopening the same report on the same day does not add to the count.
+          Reopening the same report on the same day does not add to the count.{" "}
           {headline.siteShare !== null
             ? ` In ${period.label}, ${pct(headline.siteShare, 1)} of browser downloads started from a link on this site.`
             : ""}
@@ -242,7 +242,7 @@ export default async function UsagePage() {
         <p className="usage-copy">
           API requests are not downloads. One program can ask for a thousand
           fields in an afternoon, so this number swings more than the download
-          count.
+          count.{" "}
           {api.topThreeShare !== null
             ? ` In ${period.label}, the three busiest days made up ${pct(api.topThreeShare, 1)} of the requests.`
             : ""}

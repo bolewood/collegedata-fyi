@@ -113,7 +113,7 @@ export default function AboutPage() {
           <Link href="/api#credit">credit</Link>. {SOURCE_OWNERSHIP_SENTENCE} If
           you're curious how files
           are parsed or want to check known data quirks, GitHub is the best
-          place to look.
+          place to look.{" "}
           {isUsageLaunched() ? (
             <>
               {" "}
