@@ -17,13 +17,12 @@ import {
 } from "@/lib/queries";
 import {
   factsForYear,
-  longYear,
-  metaFactFragment,
   servedFacts,
   yearOverYearSentence,
   yearSummarySentences,
   type SchoolYearFacts,
 } from "@/lib/school-summary";
+import { yearMetadataDescription, yearMetadataTitle } from "@/lib/school-seo";
 import type { FieldValue, ArtifactNotes, ManifestRow, SchoolFactUnifiedRow } from "@/lib/types";
 import { gatedYearFacts } from "@/lib/acceptance-history-data";
 import { gateC1Counts, ipedsAdmissions, type IpedsAdmissions } from "@/lib/c1-hub-gate";
@@ -39,6 +38,7 @@ import { ScorecardVintageNote } from "@/components/ScorecardVintageNote";
 import { AdmissionStrategyCard } from "@/components/AdmissionStrategyCard";
 import { SpreadsheetDownloadLinks } from "@/components/SpreadsheetDownloadLinks";
 import { ArchiveLead } from "@/components/ArchiveLead";
+import { YearKeyFacts } from "@/components/YearKeyFacts";
 import { SchemaFallbackNote } from "@/components/SchemaFallbackNote";
 import { combinedFilingNote } from "@/lib/campus-filings";
 import { yearArchiveLead } from "@/lib/archive-lead";
@@ -86,18 +86,15 @@ export async function generateMetadata({
   const doc = docs[0];
   const { name: schoolName, facts, docs: schoolDocs, federalFacts } = await schoolContext(resolvedSchoolId, doc.school_name);
   const path = `/schools/${resolvedSchoolId}/${year}`;
-  const title = `${schoolName} Common Data Set ${year}`;
   const current = await gatedYearFacts(factsForYear(facts, year).current, schoolDocs, {
     schoolId: resolvedSchoolId,
     ipedsId: doc.ipeds_id ?? null,
     federalFacts,
   });
-  const fragment = metaFactFragment(current);
-  const printedYear = longYear(year);
-  const yearLabel = printedYear ? `${year} (${printedYear})` : year;
-  const description = fragment
-    ? `${schoolName} Common Data Set ${yearLabel}: ${fragment}. The school’s own report, plus the original file to download.`
-    : `${schoolName} ${yearLabel}: the school’s Common Data Set — admissions, cost, and aid — plus the original file to download.`;
+  const administrativeUnit = ipedsAdmissions(federalFacts, doc.ipeds_id ?? null).administrativeUnit;
+  const metadataFacts = administrativeUnit ? null : current;
+  const title = yearMetadataTitle({ schoolName, year, facts: metadataFacts });
+  const description = yearMetadataDescription({ schoolName, year, facts: metadataFacts });
 
   return {
     title,
@@ -240,14 +237,23 @@ export default async function SchoolYearPage({ params }: {
               fontSize: "clamp(36px, 5vw, 52px)",
               margin: 0,
               letterSpacing: "-0.02em",
-              lineHeight: 1,
+              lineHeight: 1.05,
             }}
           >
-            {schoolName}
+            {schoolName}{" "}
+            <span
+              style={{
+                display: "block",
+                fontSize: "clamp(20px, 2.4vw, 24px)",
+                lineHeight: 1.25,
+                marginTop: 8,
+                letterSpacing: "-0.01em",
+                fontStyle: "italic",
+              }}
+            >
+              {year} Common Data Set
+            </span>
           </h1>
-          <h2 className="serif" style={{ fontSize: 22, fontWeight: 400, margin: "10px 0 0" }}>
-            {year}
-          </h2>
         </div>
         <div className="cd-school-header__aside">
           <ShareButton
@@ -259,6 +265,14 @@ export default async function SchoolYearPage({ params }: {
         </div>
       </header>
       <ArchiveLead lead={yearLead} showHeading={false} />
+      <YearKeyFacts
+        schoolId={school_id}
+        schoolName={schoolName}
+        year={year}
+        ipedsId={ipedsId}
+        facts={administrativeUnit ? null : currentFacts}
+        sourceDownloadHref={storageUrl(docs[0]?.source_storage_path ?? null)}
+      />
 
       {/* Render each document variant. The spreadsheet download covers all
           variants in one workbook, so only the first variant shows links. */}

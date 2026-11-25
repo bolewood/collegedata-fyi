@@ -169,7 +169,7 @@ test("hosted MCP Streamable HTTP handshake and search", async ({ request }) => {
 test("school-year page renders reconstructed CDS tables", async ({ page }) => {
   await page.goto("/schools/bowdoin/2024-25");
   await expect(
-    page.getByRole("heading", { name: "Bowdoin College", exact: true, level: 1 }),
+    page.getByRole("heading", { name: "Bowdoin College 2024-25 Common Data Set", exact: true, level: 1 }),
   ).toBeVisible();
 
   const b1 = page.getByRole("table", { name: /B1 undergraduate enrollment/i });

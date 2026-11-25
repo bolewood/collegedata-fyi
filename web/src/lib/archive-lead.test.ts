@@ -31,9 +31,17 @@ describe("archiveLead", () => {
       documents: vtDocs,
     });
     expect(leadPlainText(lead)).toMatchInlineSnapshot(
-      `"Virginia Tech Common Data Set The Virginia Tech Common Data Set is the yearly report the college publishes about itself. 3 reports on file, 2011–2025; the latest is 2025-26. Downloads include PDF, XLSX, and CSV. The school's own page currently asks you to request the file. The original is here. What is a Common Data Set? Subscribe to new reports via RSS."`,
+      `"Virginia Tech Common Data Set The Virginia Tech Common Data Set archive collects 3 reports (2011–2025), through the 2025-26 report. Open any year below for full section tables and original files, or scroll for federal cost, debt, and earnings data. Downloads include PDF, XLSX, and CSV. The school's own page currently asks you to request the file. The original is here. What is a Common Data Set? Subscribe to new reports via RSS."`,
     );
     expect(leadContainsBannedCopy(leadPlainText(lead))).toBe(false);
+    const latestLink = lead?.paragraphs[0].find(
+      (part) => part.type === "link" && part.href === "/schools/virginia-tech/2025-26",
+    );
+    expect(latestLink).toEqual({
+      type: "link",
+      href: "/schools/virginia-tech/2025-26",
+      text: "2025-26 report",
+    });
   });
 
   it("snapshots Harvey Mudd excellent-official copy", () => {
@@ -44,7 +52,7 @@ describe("archiveLead", () => {
       documents: hmcDocs,
     });
     expect(leadPlainText(lead)).toMatchInlineSnapshot(
-      `"Harvey Mudd College Common Data Set The Harvey Mudd College Common Data Set is the yearly report the college publishes about itself. 16 reports on file, 2010–2025; the latest is 2025-26. Downloads include PDF, XLSX, and CSV. The school's own page is the publisher. This page is the public copy, with the numbers next to the file. What is a Common Data Set? Subscribe to new reports via RSS."`,
+      `"Harvey Mudd College Common Data Set The Harvey Mudd College Common Data Set archive collects 16 reports (2010–2025), through the 2025-26 report. Open any year below for full section tables and original files, or scroll for federal cost, debt, and earnings data. Downloads include PDF, XLSX, and CSV. The school's own page is the publisher. This page is the public copy, with the numbers next to the file. What is a Common Data Set? Subscribe to new reports via RSS."`,
     );
     expect(leadContainsBannedCopy(leadPlainText(lead))).toBe(false);
   });
@@ -62,8 +70,26 @@ describe("archiveLead", () => {
       ],
     });
     expect(leadPlainText(lead)).toMatchInlineSnapshot(
-      `"Thin College Common Data Set The Thin College Common Data Set is the yearly report the college publishes about itself. 1 report on file, 2023-24; the latest is 2023-24. Downloads include PDF, XLSX, and CSV. What is a Common Data Set? Subscribe to new reports via RSS."`,
+      `"Thin College Common Data Set The Thin College Common Data Set archive has the 2023-24 report on file alongside federal enrollment, cost, and post-college outcome records. Downloads include PDF, XLSX, and CSV. What is a Common Data Set? Subscribe to new reports via RSS."`,
     );
+  });
+
+  it("links multi-year trend pages cleanly without duplicating year-page summary prose", () => {
+    const lead = archiveLead({
+      schoolId: "virginia-tech",
+      schoolName: "Virginia Tech",
+      documents: vtDocs,
+      acceptanceRateHref: "/schools/virginia-tech/acceptance-rate",
+      earlyDecisionHref: "/schools/virginia-tech/early-decision",
+      gpaHref: "/schools/virginia-tech/gpa",
+    });
+    expect(leadPlainText(lead)).toContain(
+      "Multi-year trends: acceptance rate, early decision, and entering GPA.",
+    );
+    const links = lead!.paragraphs.flat().filter((part) => part.type === "link");
+    expect(links.map((link) => link.href)).toContain("/schools/virginia-tech/acceptance-rate");
+    expect(links.map((link) => link.href)).toContain("/schools/virginia-tech/early-decision");
+    expect(links.map((link) => link.href)).toContain("/schools/virginia-tech/gpa");
   });
 
   it("does not claim an archive for directory-only schools", () => {
@@ -139,7 +165,7 @@ describe("archiveLead", () => {
     });
     const text = leadPlainText(lead);
     expect(text).toContain("2000–2025");
-    expect(text).toContain("the latest is 2025-26");
+    expect(text).toContain("through the 2025-26 report");
     expect(text).not.toContain("unknown");
     expect(text).not.toMatch(/extracted/i);
   });

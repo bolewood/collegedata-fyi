@@ -2,10 +2,37 @@ import { expect, test, type Page } from "@playwright/test";
 import { ACCEPTANCE_PILOT_SCHOOLS, acceptanceRatePath } from "../src/lib/acceptance-pilot";
 
 // One fact, one number: the latest year's applicants, admits, and rate
-// agree on the acceptance-rate page, the school hub (summary and meta
-// description), and the year page's key stats. Rates are compared against
-// admitted ÷ applied at each surface's own display precision.
+// agree across the acceptance-rate page, the school hub's headline ribbon,
+// and the year page's key stats, lead, and meta description (#518 moved
+// latest-year prose and metaFactFragment off the hub to avoid SERP
+// duplication, while keeping the hub ribbon on the same gated figures).
 const num = (text: string) => Number(text.replace(/,/g, ""));
+
+type HubAcceptance = {
+  year: string;
+  rate: string;
+  admitted: string;
+  applied: string;
+};
+
+async function hubAcceptanceStat(page: Page): Promise<HubAcceptance | null> {
+  return page.evaluate(() => {
+    const cell = document.querySelector('[data-testid="ribbon-cell-hub-acceptance"]');
+    if (!cell) return null;
+    const value = cell.querySelector(".cd-ribbon__value")?.textContent?.trim() ?? "";
+    const sub = cell.querySelector(".cd-ribbon__sub-text")?.textContent?.trim() ?? "";
+    const href = cell.querySelector("a.cd-ribbon__source")?.getAttribute("href") ?? "";
+    const yearMatch = /\/schools\/[^/]+\/(\d{4}-\d{2})/.exec(href);
+    const countsMatch = /^([\d,]+) of ([\d,]+)$/.exec(sub);
+    if (!yearMatch || !countsMatch || !value) return null;
+    return {
+      year: yearMatch[1],
+      rate: value.replace("%", ""),
+      admitted: countsMatch[1],
+      applied: countsMatch[2],
+    };
+  });
+}
 
 // PR 035 (SchoolFactRibbon) moved year-page C1 stats out of `<p>` labels
 // into `data-testid="ribbon-cell-*"` cells. The numeric contract is unchanged.
@@ -59,19 +86,19 @@ test.describe("non-pilot hubs and year pages agree", () => {
   for (const [schoolId, suppressedYear] of GATED_SAMPLE) {
     test(schoolId, async ({ page }) => {
       await page.goto(`/schools/${schoolId}`);
-      const hubText = await page.locator(".cd-archive-lead").first().innerText();
-      const hub = /In its (\d{4}-\d{2}) report, .*? says ([\d,]+) first-year students applied and ([\d,]+) were admitted/.exec(hubText);
-      if (suppressedYear) expect(hub, hubText).toBeNull();
-      else expect(hub, hubText).not.toBeNull();
-      const year = hub?.[1] ?? suppressedYear!;
+      const hub = await hubAcceptanceStat(page);
+      if (suppressedYear) expect(hub).toBeNull();
+      else expect(hub).not.toBeNull();
+      const year = hub?.year ?? suppressedYear!;
 
       await page.goto(`/schools/${schoolId}/${year}`);
       const stats = await yearPageAdmissionsStats(page);
       const yearText = await page.locator(".cd-archive-lead").first().innerText();
       if (hub) {
-        expect(num(stats.Applications ?? "")).toBe(num(hub[2]));
-        expect(num(stats.Admitted ?? "")).toBe(num(hub[3]));
-        expect(yearText).toContain(`says ${hub[2]} first-year students applied and ${hub[3]} were admitted`);
+        expect(num(stats.Applications ?? "")).toBe(num(hub.applied));
+        expect(num(stats.Admitted ?? "")).toBe(num(hub.admitted));
+        expect(rateMatches(hub.rate, num(hub.applied), num(hub.admitted))).toBe(true);
+        expect(yearText).toContain(`says ${hub.applied} first-year students applied and ${hub.admitted} were admitted`);
       } else {
         expect(stats.Applications, `${schoolId} year page shows applications the hub withheld`).toBeUndefined();
         expect(stats["Acceptance Rate"]).toBeUndefined();
@@ -97,26 +124,15 @@ test.describe("acceptance counts agree across pages", () => {
       const year = `${fall}-${String((Number(fall) + 1) % 100).padStart(2, "0")}`;
 
       await page.goto(`/schools/${schoolId}`);
-      const hubText = await page.locator(".cd-archive-lead").first().innerText();
-      const hub = /In its (\d{4}-\d{2}) report, .*? says ([\d,]+) first-year students applied and ([\d,]+) were admitted, an acceptance rate of ([\d.]+)%/.exec(hubText);
-      const meta = (await page.locator('meta[name="description"]').getAttribute("content")) ?? "";
-      const hubMeta = /(\d{4}-\d{2}) report: ([\d.]+)% acceptance rate, ([\d,]+) applicants/.exec(meta);
+      const hub = await hubAcceptanceStat(page);
+      const hubMeta = (await page.locator('meta[name="description"]').getAttribute("content")) ?? "";
+      // Hub stays archive-level so it does not duplicate the latest year's snippet (#518).
+      expect(hubMeta).not.toMatch(/acceptance rate/);
       if (hub) {
-        expect(hub[1]).toBe(year);
-        expect(num(hub[2])).toBe(applied);
-        expect(num(hub[3])).toBe(admitted);
-        expect(rateMatches(hub[4], applied, admitted)).toBe(true);
-      } else {
-        // The hub's latest report has no usable counts (Rice 2025-26): it
-        // states no acceptance figure, so there is nothing to disagree with.
-        expect(hubText).not.toMatch(/acceptance rate of/);
-      }
-      if (hubMeta) {
-        expect(hubMeta[1]).toBe(year);
-        expect(num(hubMeta[3])).toBe(applied);
-        expect(rateMatches(hubMeta[2], applied, admitted)).toBe(true);
-      } else {
-        expect(meta).not.toMatch(/acceptance rate/);
+        expect(hub.year).toBe(year);
+        expect(num(hub.applied)).toBe(applied);
+        expect(num(hub.admitted)).toBe(admitted);
+        expect(rateMatches(hub.rate, applied, admitted)).toBe(true);
       }
 
       await page.goto(`/schools/${schoolId}/${year}`);

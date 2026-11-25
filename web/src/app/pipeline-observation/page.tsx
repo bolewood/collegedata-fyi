@@ -11,9 +11,9 @@ import "./pipeline-observation.css";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Pipeline observation — collegedata.fyi",
+  title: "Pipeline status",
   description:
-    "Every dispatch station on collegedata.fyi, when it last ran on schedule, and what it found. Missing heartbeats are red.",
+    "Live schedule status for automated jobs on collegedata.fyi, when each last ran on time, and recent extraction activity.",
   alternates: { canonical: "/pipeline-observation" },
 };
 
@@ -52,7 +52,7 @@ export default async function PipelineObservationPage() {
 
   return (
     <div className="po-page mx-auto max-w-5xl px-4 sm:px-6 py-8">
-      <div className="meta">§ Pipeline observation</div>
+      <div className="meta">§ Operations</div>
       <div
         className={`po-strip po-strip--${snapshot.strip.lamp}`}
         role="status"
@@ -71,7 +71,7 @@ export default async function PipelineObservationPage() {
             letterSpacing: "-0.02em",
           }}
         >
-          The clocks, <em>and the locked doors.</em>
+          Pipeline status
         </h1>
         <p
           style={{
@@ -82,11 +82,9 @@ export default async function PipelineObservationPage() {
             maxWidth: 720,
           }}
         >
-          Every dispatch station on collegedata.fyi, when it last ran on
-          schedule, and what it found. If a step goes quiet, the lamp turns
-          red — including the monthly search that sat idle from April to
-          August 2026. Locked doors (Tableau, SharePoint IRM, SSO) ship in
-          the next slice; this page is the clocks.
+          Scheduled jobs on collegedata.fyi, when each last ran on time, and
+          what it produced. Any job that misses its schedule turns red until a
+          scheduled run succeeds.
         </p>
       </header>
 
