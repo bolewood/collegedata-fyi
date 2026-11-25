@@ -17,7 +17,7 @@ History before 0.1.0.0 (2026-08-03), including the June and July 2026 work, is n
   - **A standing alarm doesn't go quiet:** while a year stays below its floor, it is superseded by a new assigned issue every 30 days, and at once when the gap widens by 5 points.
   - **Arrivals check:** a separate per-year check opens its own issue when almost nothing new arrived for a CDS year, judged every day over both 30 and 60 days, against how fast schools usually post. That catches most total stops within about a month; a stop starting in late November can take up to about six weeks (#506).
   - **Fails loudly:** a short or empty read, too few schools in the denominator, or a floor that disagrees with the database fails the job; it never reports zero.
-  - **First run:** on 2026-11-25 renewal was 373 of 498 (75%). Against the unscaled floor of 82.5% a manual run opened #507, before the scaled floor (about 73%) merged; the first scheduled run is on 2026-11-25 at 13:41 UTC.
+  - **First run:** on 2026-11-25 renewal was 373 of 498 (75%). Against the unscaled floor of 82.5% a manual run opened #507, before the scaled floor (about 71–73%, depending on the measured ratio) merged; the first scheduled run is on 2026-11-25 at 13:41 UTC.
 - **Watching the alarm:**
   - The hourly Discord poll alerts when the renewal workflow hasn't run on schedule for 36 hours.
   - A run that fails day after day says so, and posts every seventh day.

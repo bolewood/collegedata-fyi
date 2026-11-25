@@ -11,7 +11,7 @@ This ledger maps each of the postmortem's ten causes to five things: the control
 
 | Channel | Fires when | Reaches | Live today? |
 |---|---|---|---|
-| **Alarm issue** (label `alarm:discovery-renewal`; one per scope: `renewal:<Y>` and `arrivals:<Y>`, so up to two per CDS year) | Checked daily. It opens when current-year, two-year or next-year renewal is below its floor, or (its own `arrivals:<Y>` issue) when a year's arrivals fall below 0.4 of what the curve predicts (D17). While still below, it is superseded by a new assigned issue every 30 days and at once on a 5-point worsening (D16). It closes only when that year recovers; years two or more cycles old are retired | Assigned to the owner | From the first scheduled run, 2026-11-25 13:41 UTC (the assigned path has not run for real yet). #507 was opened at about 11:32 UTC by a manual run under the raw-curve floor (75% against 82%), before #508 merged (11:40 UTC). The first scheduled run, and what it does to #507 under the scaled floor, is still ahead |
+| **Alarm issue** (label `alarm:discovery-renewal`; one per scope: `renewal:<Y>` and `arrivals:<Y>`, so up to two per CDS year) | Checked daily. It opens when current-year, two-year or next-year renewal is below its floor, or (its own `arrivals:<Y>` issue) when a year's arrivals fall below 0.4 of what the curve predicts (D17). While still below, it is superseded by a new assigned issue every 30 days and at once on a 5-point worsening (D16). It closes only when that year recovers; years two or more cycles old are retired | Assigned to the owner | Shown for real on 2026-11-25: #507 was opened at 11:33 UTC by a manual run under the raw-curve floor (75% against 82%), before #508 merged (11:40 UTC). The first scheduled run, and what it does to #507 under the scaled floor, is still ahead |
 | **Discord #alerts, direct** | An alarm issue opens, is superseded (every 30 days or on a 5-point worsening), recovers, or is retired | Channel | Yes. The end-to-end test posted both kinds |
 | **Discord #alerts, `workflow_run`** | The renewal workflow fails (short read, too few schools in the denominator, a floor mismatch, the alarm step failing) | Channel | Yes |
 | **Discord #alerts, hourly scheduled-run check** | The renewal workflow has no scheduled run newer than 36 h (the hand check: 35 days) | Channel | From the first scheduled run; with no scheduled run ever seen it records nothing |
@@ -159,7 +159,7 @@ The alarm would have opened an issue at the end of April 2026, from the next-yea
 - **Told:** the board, then Discord.
 - **Test:** pipeline-lamps (20+ renewal and stuck cases) and `test_discovery_renewal_staleness_alerts_once_then_recovers`.
 - **Not covered:**
-  - The Renewal lamp was slate until #469 was applied (2026-11-25); it reads the heartbeat from the first scheduled run on.
+  - The Renewal lamp was slate until #469 was applied (2026-11-25); it reads the latest accepted heartbeat from then on.
   - Other stations still report `ok` from completion, filed as #480 (refresh jobs ok on empty or partial counts).
 
 ### 9. The coverage page showed the symptom one school at a time
@@ -214,7 +214,7 @@ Each original bug was put back in a throwaway worktree at `origin/main` 054b2b7 
 | 45580532234 | final code (after #502), test mode, override 99 | `alarm renewal:2025-26: create`. It opened `[test]` #504, unassigned, and posted to #alerts |
 | 45580731560 | final code, test mode, override 10 | `alarm renewal:2025-26: close`. It closed #504 and posted "[test] Discovery renewal recovered: one-year 74.9%…" |
 
-The lamp part could not be shown in production: the Renewal tile is slate until #469 is applied. It is covered by the web tests above. The first three runs used the alarm as merged in #474. The last two ran the final per-year, separate-scope model (#493, #499, #502) on `main`.
+The lamp part could not be shown in production during the run: the Renewal tile was slate until #469 was applied (2026-11-25). It is covered by the web tests above. The first three runs used the alarm as merged in #474. The last two ran the final per-year, separate-scope model (#493, #499, #502) on `main`.
 
 ## Red team
 
@@ -300,7 +300,7 @@ The defaults taken, each reversible. The full text, with the alternatives, is in
 
 | ID | Decision |
 |---|---|
-| D1 | **Changed by the owner, 2026-11-25 (#508, merged).** The alarm floor is the posting curve scaled by mature renewal, less 5 points, for all three checks (the overnight default was the raw curve less 5). Mature renewal is the median of the last five mature year-pairs, measured on each run, bounded, with a fallback; the next-year floor is the same times 0.75 and expected arrivals are scaled too (#508) |
+| D1 | **Changed by the owner, 2026-11-25 (#508, merged).** The alarm floor is the posting curve scaled by mature renewal, for all three checks, less 5 points for the one-year and two-year checks (the next-year floor is the scaled curve × 0.75; the overnight default was the raw curve less 5). Mature renewal is the median of the last five mature year-pairs, measured on each run, bounded, with a fallback; the next-year floor is the same times 0.75 and expected arrivals are scaled too (#508) |
 | D2 | The next-year floor is the curve × 0.75, tracked from March 1 |
 | D3 | The migration (#469) is left for the owner's review. Merged and applied to production from `main` on 2026-11-25 |
 | D4 | Real alarm issues are assigned to `santhonys`; test issues are not |
