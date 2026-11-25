@@ -220,7 +220,10 @@ export interface InstitutionCoverage {
   coverage_status: CoverageStatus;
   coverage_label: string;
   coverage_summary: string;
+  /** Latest year whose numbers we read. */
   latest_available_cds_year: string | null;
+  /** Latest year of any file we hold, read or not. */
+  latest_found_cds_year: string | null;
   last_checked_at: string | null;
   can_submit_source: boolean;
   brand_colors?: string[] | null;

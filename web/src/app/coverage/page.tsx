@@ -4,8 +4,12 @@ import { Suspense } from "react";
 import { fetchCoverageRows, fetchBrandColorIndex } from "@/lib/queries";
 import { ShareButton } from "@/components/ShareButton";
 import { CoverageDashboard } from "@/components/CoverageDashboard";
+import { ArchiveStatusHeader } from "@/components/ArchiveStatusHeader";
+import { loadLatestSnapshot } from "@/lib/data-quality-snapshots";
 
-export const revalidate = 900; // ISR: 15 minutes, matches the refresh-coverage cron
+// ISR: the page re-reads every 15 minutes, but the coverage table itself is
+// rebuilt hourly (refresh-coverage cron at minute 17). The copy below says hourly.
+export const revalidate = 900;
 
 export const metadata: Metadata = {
   title: "Coverage",
@@ -19,6 +23,12 @@ export default async function CoveragePage() {
     fetchCoverageRows(),
     fetchBrandColorIndex(),
   ]);
+  // PRD 040 amendment: current-year renewal comes from the committed Data
+  // quality snapshot, not the live rows (they carry only the latest year with
+  // numbers). Null before the first snapshot is committed; throws once the
+  // Data quality gate is open and no snapshot exists.
+  const snapshot = loadLatestSnapshot();
+  const renewal = snapshot ? { renewal: snapshot.renewal, snapshotOf: snapshot.snapshot_of } : null;
   const coloredRows = rows.map((row) => ({
     ...row,
     brand_colors: brandIndex[row.school_id] ?? null,
@@ -26,6 +36,7 @@ export default async function CoveragePage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
+      <ArchiveStatusHeader active="coverage" />
       <header style={{ paddingTop: 32, paddingBottom: 24 }}>
         <div className="meta" style={{ marginBottom: 12 }}>
           § Coverage
@@ -68,7 +79,7 @@ export default async function CoveragePage() {
           search params via useSearchParams; without it, Next.js bails
           out of static generation for /coverage. */}
       <Suspense fallback={<div className="mono" style={{ padding: "32px 0", color: "var(--ink-3)" }}>LOADING COVERAGE DATA…</div>}>
-        <CoverageDashboard rows={coloredRows} />
+        <CoverageDashboard rows={coloredRows} renewal={renewal} />
       </Suspense>
 
       <section style={{ marginTop: 64, maxWidth: 760 }}>
@@ -103,7 +114,7 @@ export default async function CoveragePage() {
             school yet.
           </p>
           <p style={{ margin: 0 }}>
-            Coverage refreshes every 15 minutes from{" "}
+            Coverage refreshes hourly from{" "}
             <a href="https://collegescorecard.ed.gov/" target="_blank" rel="noopener noreferrer">
               College Scorecard
             </a>. CDS files are often newer than federal outcome datasets.

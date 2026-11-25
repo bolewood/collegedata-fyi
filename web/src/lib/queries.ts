@@ -322,7 +322,7 @@ async function fetchCoverageRowsForStaticBuild(): Promise<InstitutionCoverage[]>
     const url = new URL(`${supabaseUrl}/rest/v1/institution_cds_coverage`);
     url.searchParams.set(
       "select",
-      "ipeds_id,school_id,school_name,city,state,website_url,undergraduate_enrollment,coverage_status,coverage_label,coverage_summary,latest_available_cds_year,last_checked_at,can_submit_source",
+      "ipeds_id,school_id,school_name,city,state,website_url,undergraduate_enrollment,coverage_status,coverage_label,coverage_summary,latest_available_cds_year,latest_found_cds_year,last_checked_at,can_submit_source",
     );
     url.searchParams.set("coverage_status", "neq.out_of_scope");
     url.searchParams.set("order", "school_name.asc,ipeds_id.asc");
@@ -923,7 +923,7 @@ export const fetchSiteStats = cache(async function fetchSiteStats(): Promise<Sit
 // timeouts so a transient lock does not 500 the sources route.
 // RLS already hides out_of_scope rows from anon.
 const INSTITUTION_COVERAGE_SELECT =
-  "ipeds_id, school_id, school_name, city, state, website_url, undergraduate_enrollment, coverage_status, coverage_label, coverage_summary, latest_available_cds_year, last_checked_at, can_submit_source";
+  "ipeds_id, school_id, school_name, city, state, website_url, undergraduate_enrollment, coverage_status, coverage_label, coverage_summary, latest_available_cds_year, latest_found_cds_year, last_checked_at, can_submit_source";
 
 export const fetchInstitutionCoverage = cache(
   async function fetchInstitutionCoverage(
@@ -1112,7 +1112,7 @@ export const fetchCoverageRows = cache(async function fetchCoverageRows(): Promi
     const { data, error } = await (supabase as unknown as UntypedSupabase)
       .from("institution_cds_coverage")
       .select(
-        "ipeds_id, school_id, school_name, city, state, website_url, undergraduate_enrollment, coverage_status, coverage_label, coverage_summary, latest_available_cds_year, last_checked_at, can_submit_source",
+        "ipeds_id, school_id, school_name, city, state, website_url, undergraduate_enrollment, coverage_status, coverage_label, coverage_summary, latest_available_cds_year, latest_found_cds_year, last_checked_at, can_submit_source",
       )
       .neq("coverage_status", "out_of_scope")
       .order("school_name", { ascending: true })
