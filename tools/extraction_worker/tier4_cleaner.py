@@ -7355,6 +7355,116 @@ def _h_layout_h1_rows(block: str) -> dict[str, dict]:
     return out
 
 
+_H1_AMOUNT_RE = re.compile(r"(?:\$\s*(\d[\d,]*(?:\.\d+)?)|(?<![\w,.$/-])(\d{1,3}(?:,\d{3})+(?:\.\d+)?)(?![\w,/-]))")
+_H1_CONTINUATION_RE = re.compile(r"excludes|captured above|reported below|not awarded by|excluding|\(which|which are", re.IGNORECASE)
+
+
+def _h_layout_h1_rows_by_column(block: str) -> dict[str, dict]:
+    """H1 dollar amounts from the PDF text layer, placed by column.
+
+    ``_h_layout_h1_rows`` takes the first two dollar amounts in a six-line
+    window, so a row whose need-based cell is blank puts its non-need-based
+    amount in the need-based field. Here a row is the label that starts it and
+    the amount lines up to the next label. A row with two amounts holds
+    (need-based, non-need-based) in print order, whatever the cell alignment;
+    a lone amount goes to the column median it is nearer, and is dropped when
+    it is near neither or both. A label wrapped over lines is one row, and the
+    wrapped fragments that read like another row ("excluding athletic aid and
+    tuition waivers (which are reported below)") are not row labels.
+
+    Returns {} unless the reading adds up (``_h1_amounts_add_up``): a table
+    this reader cannot place is refused whole, so the caller falls back to the
+    old reader and the markdown reading rather than publish a guess.
+    """
+    if "|" in block:
+        return {}
+    lines = block.splitlines()
+    markers = []  # (line idx, nb_qn, nn_qn)
+    for li, line in enumerate(lines):
+        norm = _normalize_label(line)
+        if not norm or _H1_CONTINUATION_RE.search(line) and not re.search(r"(?i)total|student loans", line):
+            continue
+        # "State (i.e., all states, not only ...)" is the State row too.
+        if re.match(r"state\b", norm) and "all states" in norm and "state and other" not in norm:
+            norm = "state all states"
+        for substr, nb_qn, nn_qn in _H1_ROWS:
+            if substr in norm:
+                if substr == "tuition waivers" and "excluding" in line.lower():
+                    break
+                markers.append((li, nb_qn, nn_qn))
+                break
+        else:
+            # A grand "TOTAL" under the last row (Colorado) is a row of its
+            # own with no field; its amounts are not Athletic Awards'.
+            if re.match(r"total\b", norm):
+                markers.append((li, "", ""))
+    if not markers:
+        return {}
+    per_row: dict[int, list[tuple[int, str]]] = {}
+    for li, line in enumerate(lines):
+        prior = [m for m in markers if m[0] <= li]
+        if not prior:
+            continue
+        for m in _H1_AMOUNT_RE.finditer(line):
+            per_row.setdefault(prior[-1][0], []).append((m.end(), (m.group(1) or m.group(2)).replace(",", "")))
+    lefts = sorted(a[0][0] for a in per_row.values() if len(a) == 2)
+    rights = sorted(a[1][0] for a in per_row.values() if len(a) == 2)
+    if len(lefts) < 3:
+        return {}
+    left_med, right_med = lefts[len(lefts) // 2], rights[len(rights) // 2]
+    by_marker = {m[0]: m for m in markers}
+    claimed: dict[str, dict] = {}
+    for li, amts in per_row.items():
+        _, nb_qn, nn_qn = by_marker[li]
+        if len(amts) == 2:
+            pairs = [(nb_qn, amts[0][1]), (nn_qn, amts[1][1])]
+        elif len(amts) == 1:
+            end, val = amts[0]
+            dl, dr = abs(end - left_med), abs(end - right_med)
+            if min(dl, dr) > 12 or abs(dl - dr) < 6:
+                continue
+            pairs = [(nb_qn, val)] if dl < dr else [(nn_qn, val)]
+        else:
+            continue
+        for qn, val in pairs:
+            if qn:
+                claimed[qn] = {"value": val, "source": "tier4_cleaner"}
+    if not _h1_amounts_add_up(claimed):
+        return {}
+    # A total with none of its rows read is not checked by the sum, and a
+    # reading that lost a whole block of rows would replace the markdown's.
+    for parts, total_qn in _H1_SUMS:
+        total = claimed.get(total_qn)
+        if total and float(total["value"]) != 0 and not any(qn in claimed for qn in parts):
+            return {}
+    return claimed
+
+
+_H1_TEXT_SECTION_END = r"(?:^|\n)[ \t]*H2\.?[ \t]+Number\b"
+
+
+def _h1_text_layer_claims(text: str, schema: SchemaIndex) -> dict[str, dict]:
+    """H1 as read by column from a text layer, numbered by ``schema``; {} when
+    the table is absent or its amounts do not add up.
+
+    The section runs to the H2 heading. The form's own line "Indicate the
+    academic year ... for items H1, H2, H2A, and H6" comes before the table,
+    so ending at the first "H2" left the reader the instructions only.
+    """
+    h_block = _section_between(text, r"(?:H\.\s*FINANCIAL AID|H1\b)", r"(?:I\.\s*INSTRUCTIONAL FACULTY|CDS-I|$)")
+    if not h_block:
+        return {}
+    section = _section_between(h_block, r"Aid Awarded", _H1_TEXT_SECTION_END)
+    claims = _h_layout_h1_rows_by_column(section)
+    return _h1_fields_with_same_question_in_schema(claims, schema) if claims else {}
+
+
+def _h1_amount_qns(schema: SchemaIndex) -> set[str]:
+    """Every H1 dollar field of ``schema``."""
+    every = {qn: {"value": "0"} for _, nb, nn in _H1_ROWS for qn in (nb, nn) if qn}
+    return set(_h1_fields_with_same_question_in_schema(every, schema))
+
+
 def _h_layout_h2_rows(block: str) -> dict[str, dict]:
     out: dict[str, dict] = {}
     h2 = _section_between(block, r"H2\s+Number of Enrolled Students Awarded Aid", r"H2A\b")
@@ -9014,6 +9124,15 @@ def clean(
             resolve_f_student_life,
         ) and supplemental_text:
             supplemental_new = resolver(tables, supplemental_text, idx)
+            if resolver is resolve_h_financial_aid and (h1_by_column := _h1_text_layer_claims(supplemental_text, idx)):
+                # The text layer printed the whole table and its amounts add
+                # up: it replaces the H1 block. Markdown rows left beside it
+                # are another assignment of the same table and would be
+                # summed with it (work-study in H.113 and H.112).
+                h1_qns = _h1_amount_qns(idx)
+                new = {qn: rec for qn, rec in new.items() if qn not in h1_qns}
+                supplemental_new = {qn: rec for qn, rec in supplemental_new.items() if qn not in h1_qns}
+                supplemental_new.update(h1_by_column)
             if resolver in (resolve_a_general, resolve_b1_enrollment) and supplemental_new:
                 if resolver is resolve_b1_enrollment:
                     # The text-layer reading replaces the markdown one, but a
