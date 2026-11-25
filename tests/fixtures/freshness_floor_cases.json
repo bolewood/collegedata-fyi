@@ -1,0 +1,16 @@
+{
+  "_comment": "Shared cases for the CDS freshness floor. Every copy of the rule is tested against this file: SQL cds_freshness_floor() (supabase/migrations/20260821160000), tools/finder/stuck_pdf_seeds.default_min_fresh_year (tools/finder/test_freshness_floor_cases.py), web/src/lib/freshness.ts cdsFreshnessFloor (web/src/lib/freshness.test.ts), and tools/ops/discovery_renewal.py once it lands.",
+  "cases": [
+    {"date": "2025-08-31", "floor": "2023-24"},
+    {"date": "2025-09-01", "floor": "2024-25"},
+    {"date": "2026-01-01", "floor": "2024-25"},
+    {"date": "2026-08-31", "floor": "2024-25"},
+    {"date": "2026-09-01", "floor": "2025-26"},
+    {"date": "2026-12-31", "floor": "2025-26"},
+    {"date": "2024-02-29", "floor": "2022-23"},
+    {"date": "2029-08-31", "floor": "2027-28"},
+    {"date": "2029-09-01", "floor": "2028-29"},
+    {"date": "2000-01-01", "floor": "1998-99"},
+    {"date": "2000-09-01", "floor": "1999-00"}
+  ]
+}

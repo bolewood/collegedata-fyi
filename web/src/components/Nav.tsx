@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { HeaderSchoolSearch } from "./HeaderSchoolSearch";
 import { CmdKCatalog } from "./CmdKCatalog";
 import { Wordmark } from "./Wordmark";
+import { isDataQualityLaunched } from "@/lib/data-quality";
+import { isActive, secondaryNavLinks } from "@/lib/nav-links";
 
 const PRIMARY_NAV_LINKS = [
   { href: "/match", label: "Match" },
@@ -12,25 +14,10 @@ const PRIMARY_NAV_LINKS = [
   { href: "/api", label: "API" },
 ];
 
-const SECONDARY_NAV_LINKS = [
-  { href: "/browse", label: "Compare" },
-  { href: "/coverage", label: "Coverage" },
-  { href: "/recipes", label: "Recipes" },
-  { href: "/about", label: "About" },
-];
-
-// A nav link is "active" when the user is on that section. Section pages
-// (e.g. /recipes/acceptance-vs-yield) keep the parent (/recipes) lit so
-// the nav reads as "you are here" instead of "you are nowhere."
-function isActive(pathname: string | null, href: string): boolean {
-  if (!pathname) return false;
-  if (pathname === href) return true;
-  return pathname.startsWith(href + "/");
-}
-
 export function Nav() {
   const pathname = usePathname();
-  const secondaryActive = SECONDARY_NAV_LINKS.some((l) => isActive(pathname, l.href));
+  const secondaryLinks = secondaryNavLinks(isDataQualityLaunched());
+  const secondaryActive = secondaryLinks.some((l) => isActive(pathname, l.href, l.alsoActiveOn));
 
   return (
     <nav
@@ -73,7 +60,7 @@ export function Nav() {
           <details className="cd-nav-more" data-active={secondaryActive ? "true" : "false"}>
             <summary aria-current={secondaryActive ? "page" : undefined}>More</summary>
             <div>
-              {SECONDARY_NAV_LINKS.map((l) => (
+              {secondaryLinks.map((l) => (
                 <Link key={l.href} href={l.href}>
                   {l.label}
                 </Link>

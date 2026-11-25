@@ -3,6 +3,7 @@ import { ListLink } from "@/components/ListLink";
 import { fetchPipelineObservation } from "@/lib/pipeline-observation";
 import type { ExtractionActivityItem } from "@/lib/pipeline-observation";
 import type { Lamp } from "@/lib/pipeline-lamps";
+import { formatLabel } from "@/lib/format-labels";
 import "./pipeline-observation.css";
 
 // Live clocks: ISR + stale-while-revalidate served the build-time seed
@@ -23,17 +24,6 @@ const LAMP_WORD: Record<Lamp, string> = {
   ok: "OK",
   run: "RUN",
   slate: "SLATE",
-};
-
-const FORMAT_LABEL: Record<ExtractionActivityItem["source_format"], string> = {
-  pdf_fillable: "fillable PDF",
-  pdf_flat: "flat PDF",
-  pdf_scanned: "scanned PDF",
-  xlsx: "XLSX",
-  docx: "DOCX",
-  html: "HTML",
-  other: "other",
-  unknown: "unknown format",
 };
 
 const TIER_LABEL: Record<ExtractionActivityItem["extraction_tier"], string> = {
@@ -166,7 +156,7 @@ export default async function PipelineObservationPage() {
                   <span>{item.canonical_year}</span>
                 </div>
                 <div className="po-ledger-method">
-                  {FORMAT_LABEL[item.source_format]} ·{" "}
+                  {formatLabel(item.source_format)} ·{" "}
                   {TIER_LABEL[item.extraction_tier]}
                 </div>
                 <div className={`po-ledger-outcome po-ledger-outcome--${item.outcome}`}>

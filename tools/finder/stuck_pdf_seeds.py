@@ -48,6 +48,10 @@ def default_min_fresh_year(today: date | None = None) -> str:
     Before September, last complete cycle is year-2/year-1 (Aug 2026 →
     2024-25). From September, expect the previous academic year (Sep 2026
     → 2025-26).
+
+    One rule, several copies: SQL cds_freshness_floor(), web/src/lib/freshness.ts
+    cdsFreshnessFloor, and tools/ops/discovery_renewal.py once it lands. All are
+    tested against tests/fixtures/freshness_floor_cases.json.
     """
     today = today or date.today()
     start = today.year if today.month >= 9 else today.year - 1

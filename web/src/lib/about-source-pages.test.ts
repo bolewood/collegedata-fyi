@@ -34,9 +34,11 @@ describe("Wave 1 product copy", () => {
   it("keeps API in the header and demotes GitHub off the hero", () => {
     const nav = src("components/Nav.tsx");
     expect(nav).toMatch(/href: "\/api", label: "API"/);
-    expect(nav).toMatch(/href: "\/browse", label: "Compare"/);
-    expect(nav).not.toMatch(/label: "Browser"/);
-    expect(nav).not.toMatch(/pipeline-observation/);
+    // The secondary links live in lib/nav-links.ts (PRD 040 gates the Coverage item).
+    const links = nav + src("lib/nav-links.ts");
+    expect(links).toMatch(/href: "\/browse", label: "Compare"/);
+    expect(links).not.toMatch(/label: "Browser"/);
+    expect(links).not.toMatch(/pipeline-observation/);
 
     const home = src("app/page.tsx");
     expect(home).toContain('href="/api"');

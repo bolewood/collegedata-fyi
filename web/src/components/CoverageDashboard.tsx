@@ -16,61 +16,49 @@
 // <table> stutters; with it, scroll is silky and the table stays
 // semantically correct for screen readers.
 
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ListLink } from "./ListLink";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type { CoverageStatus, InstitutionCoverage } from "@/lib/types";
 import { CoverageBadge } from "./CoverageBadge";
 import { SchoolGlyph } from "./SchoolGlyph";
+import {
+  COVERAGE_STATUS_LABELS,
+  DEFAULT_MISSING,
+  ENROLLMENT_BANDS,
+  HAS_CDS_HREF,
+  HAS_CDS_STATUSES,
+  RECENCY_OPTIONS,
+  STATUS_ORDER,
+  buildCoverageCsv,
+  currentCdsYear,
+  filterCoverageRows,
+  latestYearBuckets,
+  parseCoverageView,
+  sameSet,
+  weightedShare,
+  type EnrollmentBandId,
+  type RecencyId,
+} from "@/lib/coverage-model";
+import { compareYearsDesc, isDataQualityLaunched, formatSnapshotDate, renewalTile, type Renewal } from "@/lib/data-quality";
 
-// Display order for both the histogram and the status filter chips.
-// Mirrors PRD line 309 (most-positive → least-positive → never-checked).
-const STATUS_ORDER: CoverageStatus[] = [
-  "cds_available_current",
-  "cds_available_stale",
-  "cds_found_processing",
-  "latest_found_extract_failed_with_prior_available",
-  "extract_failed",
-  "source_not_automatically_accessible",
-  "no_public_cds_found",
-  "verified_absent",
-  "not_checked",
-];
+/** The committed Data quality snapshot's renewal block, passed in by the server page (null before the first snapshot). */
+export type RenewalProp = { renewal: Renewal; snapshotOf: string } | null;
 
-// "Missing CDS" preset — the default landing view. Everything except
-// schools where we already have current data. Matches PRD's "Missing-
-// CDS table" framing for the coverage page.
-const DEFAULT_MISSING: CoverageStatus[] = STATUS_ORDER.filter(
-  (s) => s !== "cds_available_current" && s !== "verified_absent",
-);
-
-const ENROLLMENT_BANDS = [
-  { id: "any", label: "Any size" },
-  { id: "u2k", label: "<2K", test: (n: number | null) => n != null && n < 2000 },
-  { id: "2k-10k", label: "2–10K", test: (n: number | null) => n != null && n >= 2000 && n < 10000 },
-  { id: "10k-25k", label: "10–25K", test: (n: number | null) => n != null && n >= 10000 && n < 25000 },
-  { id: "25k+", label: "25K+", test: (n: number | null) => n != null && n >= 25000 },
-] as const;
-
-type EnrollmentBandId = (typeof ENROLLMENT_BANDS)[number]["id"];
-
-const RECENCY_OPTIONS = [
-  { id: "any", label: "Any time" },
-  { id: "30d", label: "Last 30 days", days: 30 },
-  { id: "90d", label: "Last 90 days", days: 90 },
-  { id: "older", label: "Older than 90 days", olderThan: 90 },
-  { id: "never", label: "Never checked" },
-] as const;
-
-type RecencyId = (typeof RECENCY_OPTIONS)[number]["id"];
-
-type SortKey = "name" | "state" | "enrollment" | "status" | "checked";
+type SortKey = "name" | "state" | "enrollment" | "status" | "numbers" | "found" | "checked";
 type SortDir = "asc" | "desc";
 
 const ROW_HEIGHT = 64;
 
-export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
+export function CoverageDashboard({
+  rows,
+  renewal = null,
+}: {
+  rows: InstitutionCoverage[];
+  renewal?: RenewalProp;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
@@ -78,20 +66,18 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
   // URL-driven filter state. We read on every render so back/forward
   // restores the filter; we write via router.replace so changes don't
   // pollute the history stack.
-  const statusParam = searchParams.get("status");
-  const stateParam = searchParams.get("state");
-  const sizeParam = (searchParams.get("size") as EnrollmentBandId | null) ?? "any";
-  const checkedParam = (searchParams.get("checked") as RecencyId | null) ?? "any";
-  const showAllParam = searchParams.get("all") === "1";
+  const view = parseCoverageView(searchParams);
+  const activeStatuses: Set<CoverageStatus> = view.statuses;
+  const stateParam = view.state;
+  const sizeParam = view.size;
+  const checkedParam = view.checked;
+  const showAllParam = view.all;
+  const hasCdsActive = !showAllParam && sameSet(activeStatuses, new Set(HAS_CDS_STATUSES));
 
-  const activeStatuses: Set<CoverageStatus> = useMemo(() => {
-    if (showAllParam) return new Set(STATUS_ORDER);
-    if (statusParam) {
-      const parts = statusParam.split(",").filter(Boolean) as CoverageStatus[];
-      return new Set(parts.length > 0 ? parts : DEFAULT_MISSING);
-    }
-    return new Set(DEFAULT_MISSING);
-  }, [statusParam, showAllParam]);
+  // The search box is local state so typing stays responsive; it follows the
+  // URL's `q` whenever that changes (back/forward, Reset).
+  const [searchText, setSearchText] = useState(view.q);
+  useEffect(() => setSearchText(view.q), [view.q]);
 
   const allStates = useMemo(() => {
     const set = new Set<string>();
@@ -99,9 +85,9 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
     return Array.from(set).sort();
   }, [rows]);
 
-  // Histogram counts use the FULL row set (every in-scope school) so
-  // the headline doesn't lie when the user filters. The "showing X
-  // of Y" line above the table reflects the filtered count.
+  // Tile counts use the FULL row set (every tracked school) so the headline
+  // doesn't lie when the user filters. The "showing X of Y" line above the
+  // table reflects the filtered count.
   const histogram = useMemo(() => {
     const counts: Record<CoverageStatus, number> = {} as Record<CoverageStatus, number>;
     for (const s of STATUS_ORDER) counts[s] = 0;
@@ -113,33 +99,17 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
   }, [rows]);
 
   const total = rows.length;
+  const share = useMemo(() => weightedShare(rows), [rows]);
+  const currentYear = renewal?.renewal.current_year;
+  const yearBuckets = useMemo(() => latestYearBuckets(rows, currentCdsYear(currentYear)), [rows, currentYear]);
+  const tile = renewal ? renewalTile(renewal.renewal) : null;
 
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
+  const query = searchParams.toString();
   const filteredRows = useMemo(() => {
-    const enrollmentBand = ENROLLMENT_BANDS.find((b) => b.id === sizeParam);
-    const recency = RECENCY_OPTIONS.find((r) => r.id === checkedParam);
-    const now = Date.now();
-    const filtered = rows.filter((r) => {
-      if (!activeStatuses.has(r.coverage_status)) return false;
-      if (stateParam && r.state !== stateParam) return false;
-      if (enrollmentBand && "test" in enrollmentBand && !enrollmentBand.test(r.undergraduate_enrollment)) {
-        return false;
-      }
-      if (recency && recency.id !== "any") {
-        const ts = r.last_checked_at ? new Date(r.last_checked_at).getTime() : null;
-        if (recency.id === "never") {
-          if (ts != null) return false;
-        } else if ("days" in recency) {
-          if (ts == null || now - ts > recency.days * 86_400_000) return false;
-        } else if ("olderThan" in recency) {
-          if (ts == null) return false;
-          if (now - ts <= recency.olderThan * 86_400_000) return false;
-        }
-      }
-      return true;
-    });
+    const filtered = filterCoverageRows(rows, parseCoverageView(new URLSearchParams(query)));
 
     const dir = sortDir === "asc" ? 1 : -1;
     filtered.sort((a, b) => {
@@ -162,6 +132,13 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
             (STATUS_ORDER.indexOf(a.coverage_status) - STATUS_ORDER.indexOf(b.coverage_status)) * dir
             || a.school_name.localeCompare(b.school_name)
           );
+        case "numbers":
+          // compareYearsDesc is newest-first, so flip it: ascending means oldest first.
+          return -compareYearsDesc(a.latest_available_cds_year ?? "none", b.latest_available_cds_year ?? "none") * dir
+            || a.school_name.localeCompare(b.school_name);
+        case "found":
+          return -compareYearsDesc(a.latest_found_cds_year ?? "none", b.latest_found_cds_year ?? "none") * dir
+            || a.school_name.localeCompare(b.school_name);
         case "checked": {
           const ac = a.last_checked_at ? new Date(a.last_checked_at).getTime() : 0;
           const bc = b.last_checked_at ? new Date(b.last_checked_at).getTime() : 0;
@@ -170,7 +147,7 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
       }
     });
     return filtered;
-  }, [rows, activeStatuses, stateParam, sizeParam, checkedParam, sortKey, sortDir]);
+  }, [rows, query, sortKey, sortDir]);
 
   // ── URL writers ──────────────────────────────────────────────────
   function updateParams(updater: (params: URLSearchParams) => void) {
@@ -229,6 +206,27 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
     });
   }
 
+  function setQuery(value: string) {
+    setSearchText(value);
+    updateParams((p) => {
+      if (value.trim()) p.set("q", value);
+      else p.delete("q");
+    });
+  }
+
+  function downloadRows(list: InstitutionCoverage[], scope: "view" | "all") {
+    const day = new Date().toISOString().slice(0, 10);
+    const blob = new Blob([buildCoverageCsv(list, day)], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `collegedata-coverage-${scope === "all" ? "all-colleges" : "view"}-${day}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
   function clearFilters() {
     startTransition(() => router.replace("/coverage", { scroll: false }));
   }
@@ -253,27 +251,70 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
 
   return (
     <>
-      {/* Histogram banner */}
+      {/* Summary strip: renewal first, then colleges tracked, the weighted share, and the status tiles */}
       <section
+        aria-label="Coverage summary"
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-          gap: 12,
-          marginBottom: 32,
+          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+          gap: 16,
+          marginBottom: 20,
           paddingTop: 20,
           borderTop: "1px solid var(--rule-strong)",
         }}
       >
-        <StatCell label="In-scope total" value={total} note="Title-IV, undergrad-serving" emphasis />
+        {tile && renewal && (
+          <StatCell
+            label={"This year\u2019s reports on file"}
+            value={`${tile.percent}%`}
+            note={`${tile.sentence} Snapshot of ${formatSnapshotDate(renewal.snapshotOf)}.`}
+            emphasis
+            testId="renewal-tile"
+          />
+        )}
+        <StatCell
+          label="Colleges tracked"
+          value={total}
+          note="Accept federal aid and enroll undergraduates"
+          emphasis
+        />
+        <StatCell
+          label="Undergrads with CDS numbers"
+          value={share.share === null ? "\u2013" : `${Math.round(share.share * 100)}%`}
+          note={`Share of undergraduates at tracked colleges with CDS numbers on file. ${share.withoutEnrollment.toLocaleString("en-US")} ${share.withoutEnrollment === 1 ? "college has" : "colleges have"} no enrollment figure and ${share.withoutEnrollment === 1 ? "is" : "are"} left out of both sums.`}
+          emphasis
+          testId="weighted-share-tile"
+        />
         {STATUS_ORDER.filter((s) => histogram[s] > 0).map((s) => (
           <StatCell
             key={s}
-            label={LABEL_BY_STATUS[s]}
+            label={COVERAGE_STATUS_LABELS[s]}
             value={histogram[s]}
             note={`${pct(histogram[s], total)}%`}
             active={activeStatuses.has(s) && !showAllParam}
             onClick={() => toggleStatus(s)}
           />
+        ))}
+      </section>
+
+      {/* Latest year with numbers */}
+      <section
+        aria-label="Latest year with numbers"
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 20,
+          alignItems: "baseline",
+          marginBottom: 32,
+          paddingBottom: 16,
+          borderBottom: "1px solid var(--rule)",
+        }}
+      >
+        <span className="meta" style={{ color: "var(--ink-3)" }}>§ Latest year with numbers</span>
+        {yearBuckets.map((b) => (
+          <span key={b.id} className="mono nums" style={{ fontSize: 13, color: "var(--ink-2)" }}>
+            {b.label} <strong style={{ color: "var(--ink)" }}>{b.count.toLocaleString("en-US")}</strong>
+          </span>
         ))}
       </section>
 
@@ -288,6 +329,15 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
         }}
       >
         <span className="meta" style={{ color: "var(--ink-3)" }}>§ Filter</span>
+
+        <input
+          type="search"
+          value={searchText}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search name or IPEDS ID"
+          aria-label="Search by school name or IPEDS ID"
+          style={{ ...selectStyle, textTransform: "none", minWidth: 200 }}
+        />
 
         <select
           value={stateParam ?? ""}
@@ -315,6 +365,22 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
           onChange={(v) => setRecency(v as RecencyId)}
         />
 
+        <Link
+          href={HAS_CDS_HREF}
+          replace
+          scroll={false}
+          className="cd-chip"
+          aria-current={hasCdsActive ? "true" : undefined}
+          style={{
+            textDecoration: "none",
+            background: hasCdsActive ? "var(--ink)" : "transparent",
+            color: hasCdsActive ? "var(--paper)" : "var(--ink-2)",
+            borderColor: hasCdsActive ? "var(--ink)" : "var(--rule-strong)",
+          }}
+        >
+          Has a CDS
+        </Link>
+
         <button
           onClick={() => setShowAll(!showAllParam)}
           className="cd-chip"
@@ -325,7 +391,7 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
             borderColor: showAllParam ? "var(--ink)" : "var(--rule-strong)",
           }}
         >
-          {showAllParam ? "Showing all statuses" : "Showing missing only"}
+          {showAllParam ? "Showing all tracked colleges" : "Showing missing only"}
         </button>
 
         <button
@@ -348,6 +414,28 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
       >
         SHOWING {filteredRows.length.toLocaleString()} OF {total.toLocaleString()} INSTITUTIONS
       </div>
+
+      {/* CSV downloads ship with the Data quality launch gate: the # comment block isn't verified in pandas, R and Excel yet. */}
+      {isDataQualityLaunched() && (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+          <button
+            type="button"
+            className="cd-chip"
+            style={{ cursor: "pointer", background: "transparent" }}
+            onClick={() => downloadRows(filteredRows, "view")}
+          >
+            Download this view (CSV)
+          </button>
+          <button
+            type="button"
+            className="cd-chip"
+            style={{ cursor: "pointer", background: "transparent" }}
+            onClick={() => downloadRows(rows, "all")}
+          >
+            Download all colleges (CSV)
+          </button>
+        </div>
+      )}
 
       <div
         style={{
@@ -388,7 +476,7 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
             <SortHeader label="School" col="name" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
             <SortHeader label="State" col="state" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
             <SortHeader
-              label="UGDS"
+              label="Undergrads"
               col="enrollment"
               sortKey={sortKey}
               sortDir={sortDir}
@@ -396,6 +484,8 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
               align="right"
             />
             <SortHeader label="Status" col="status" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+            <SortHeader label="With numbers" col="numbers" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+            <SortHeader label="Found" col="found" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
             <SortHeader label="Last checked" col="checked" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
             <span role="columnheader">Action</span>
           </div>
@@ -469,7 +559,13 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
                         : "—"}
                     </span>
                     <span role="cell" style={{ minWidth: 0 }}>
-                      <CoverageBadge status={r.coverage_status} label={r.coverage_label} />
+                      <CoverageBadge status={r.coverage_status} label={COVERAGE_STATUS_LABELS[r.coverage_status] ?? r.coverage_label} />
+                    </span>
+                    <span role="cell" className="mono nums" style={{ fontSize: 12, color: "var(--ink-2)" }}>
+                      {yearOrDash(r.latest_available_cds_year)}
+                    </span>
+                    <span role="cell" className="mono nums" style={{ fontSize: 12, color: "var(--ink-2)" }}>
+                      {yearOrDash(r.latest_found_cds_year)}
                     </span>
                     <span role="cell" className="mono" style={{ fontSize: 12, color: "var(--ink-3)" }}>
                       {formatChecked(r.last_checked_at)}
@@ -518,23 +614,10 @@ export function CoverageDashboard({ rows }: { rows: InstitutionCoverage[] }) {
   );
 }
 
-const TABLE_COLUMNS = "minmax(280px, 2fr) 64px 96px minmax(220px, 1fr) 140px 118px";
+const TABLE_COLUMNS = "minmax(260px, 2fr) 56px 96px minmax(220px, 1fr) 100px 90px 130px 110px";
 const TABLE_COLUMN_GAP = 18;
-const TABLE_MIN_WIDTH = 1040;
+const TABLE_MIN_WIDTH = 1180;
 const TABLE_VIEWPORT_HEIGHT = ROW_HEIGHT * 10;
-
-const LABEL_BY_STATUS: Record<CoverageStatus, string> = {
-  cds_available_current: "CDS available",
-  cds_available_stale: "Older CDS",
-  cds_found_processing: "Processing",
-  latest_found_extract_failed_with_prior_available: "Latest extract failed",
-  extract_failed: "Extract failed",
-  source_not_automatically_accessible: "Source blocked",
-  no_public_cds_found: "No public CDS",
-  verified_absent: "Verified absent",
-  not_checked: "Not checked",
-  out_of_scope: "Out of scope",
-};
 
 function StatCell({
   label,
@@ -543,19 +626,22 @@ function StatCell({
   emphasis,
   active,
   onClick,
+  testId,
 }: {
   label: string;
-  value: number;
+  value: number | string;
   note: string;
   emphasis?: boolean;
   active?: boolean;
   onClick?: () => void;
+  testId?: string;
 }) {
   const Tag = onClick ? "button" : "div";
   return (
     <Tag
       onClick={onClick}
       aria-pressed={onClick ? active : undefined}
+      data-testid={testId}
       style={{
         textAlign: "left",
         padding: 0,
@@ -578,7 +664,7 @@ function StatCell({
           color: active === false ? "var(--ink-3)" : "var(--ink)",
         }}
       >
-        {value.toLocaleString()}
+        {typeof value === "number" ? value.toLocaleString() : value}
       </div>
       <div className="mono" style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 4 }}>
         {note}
@@ -690,8 +776,6 @@ function formatChecked(iso: string | null): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function sameSet<T>(a: Set<T>, b: Set<T>): boolean {
-  if (a.size !== b.size) return false;
-  for (const v of a) if (!b.has(v)) return false;
-  return true;
+function yearOrDash(year: string | null): string {
+  return year && /^\d{4}-\d{2}$/.test(year) ? year : "\u2013";
 }
