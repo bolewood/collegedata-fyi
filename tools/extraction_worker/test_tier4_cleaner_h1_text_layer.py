@@ -421,6 +421,62 @@ class H1TextLayerTest(unittest.TestCase):
         self.assertEqual(h1(read(instructions + HEADER + rows + AFTER)).get("H.110"), "79257874")
         self.assertNotIn("H.115", h1(read(instructions + HEADER + rows + AFTER)))
 
+    def test_rows_without_their_total_are_refused_with_the_missing_block_rule_satisfied(self) -> None:
+        # Total Self-Help prints its need-based amount only: the non-need-based
+        # loans have no total. Grants and self-help are both present.
+        rows = TRINITY_ROWS.replace(line("Total Self-Help", "$3,044,296", "$7,214,427", at=70), line("Total Self-Help", "$3,044,296", at=70))
+        self.assertEqual(_h_layout_h1_rows_by_column(HEADER + rows), {})
+
+    def test_a_missing_grants_block_refuses_the_reading(self) -> None:
+        rows = TRINITY_ROWS[TRINITY_ROWS.index(line("Student loans from all sources", "$2,308,770", "$7,214,427")) :]
+        self.assertEqual(_h_layout_h1_rows_by_column(HEADER + rows), {})
+
+    def test_a_markdown_value_the_text_placed_in_the_rows_other_field_is_not_kept(self) -> None:
+        # Parent Loans prints a non-need-based amount only. The markdown put it
+        # in the need-based field; the row prints the number, but the text
+        # reading has taken it for H.126.
+        markdown = "| Question | Value |\n|---|---|\n| H.115 | 3104361 |\n"
+        values = h1(read(INSTRUCTIONS + HEADER + TRINITY_ROWS + AFTER, markdown))
+        self.assertEqual(values["H.126"], "3104361")
+        self.assertNotIn("H.115", values)
+
+    def test_every_h1_id_of_a_row_the_text_has_is_cleared_in_the_documents_own_numbering(self) -> None:
+        # 2023-24 ids run to H.128 and H.105 is the "Both FM and IM" box. A
+        # stale H.128 goes with its row; H.105 is not an H1 amount.
+        rows = TRINITY_ROWS.replace(line("Athletic Awards", "$0", "$0"), line("Athletic Awards", "$5,000"))
+        markdown = "| Question | Value |\n|---|---|\n| H.105 | X |\n| H.128 | 999 |\n"
+        values = h1(read(INSTRUCTIONS + HEADER + rows + AFTER, markdown))
+        self.assertEqual(values["H.117"], "5000")
+        self.assertEqual(values["H.105"], "X")
+        self.assertNotIn("H.128", values)
+
+    def test_row_names_in_the_instructions_do_not_claim_rows_the_table_lacks(self) -> None:
+        instructions = INSTRUCTIONS + "Athletic awards are optional.\n"
+        rows = TRINITY_ROWS.split(line("Parent Loans", "", "$3,104,361"))[0]
+        markdown = "| Question | Value |\n|---|---|\n| H.117 | 555 |\n"
+        self.assertEqual(h1(read(instructions + HEADER + rows + AFTER, markdown))["H.117"], "555")
+
+    def test_each_block_is_placed_against_its_own_columns(self) -> None:
+        # The last block sits at 118 and 138, the others at 110 and 140. A lone
+        # Parent Loans amount at 120 is 2 columns from its block's need-based
+        # column and 10 from the table's.
+        rows = TRINITY_ROWS.split(line("Parent Loans", "", "$3,104,361"))[0]
+        rows += line("Parent Loans", "$3,000", ends=(120, 138))
+        rows += line("Tuition Waivers", "$320,758", "$426,282", ends=(118, 138))
+        rows += line("Athletic Awards", "$0", "$0", ends=(118, 138))
+        values = h1(read(INSTRUCTIONS + HEADER + rows + AFTER))
+        self.assertEqual(values["H.110"], "79257874")
+        self.assertEqual(values["H.115"], "3000")
+
+    def test_a_summed_row_amount_between_the_columns_goes_to_the_nearer(self) -> None:
+        # Detroit Mercy: Federal's lone amount ends 14 columns from the
+        # need-based column and 16 from the non-need-based one.
+        rows = TRINITY_ROWS.replace(
+            line("Federal", "$1,973,493", "$265,723"), line("Federal", "$1,973,493", ends=(124, 124))
+        ).replace("$5,221,708", "$4,955,985")
+        values = h1(read(INSTRUCTIONS + HEADER + rows + AFTER))
+        self.assertEqual(values["H.106"], "1973493")
+
     def test_text_layer_replaces_the_markdown_h1_block(self) -> None:
         # The markdown reading put the work-study amount in H.113 ("State and
         # other") where the text layer has it in H.112. Both would be summed

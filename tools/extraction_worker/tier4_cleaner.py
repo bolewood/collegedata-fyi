@@ -7522,9 +7522,11 @@ def _h_layout_h1_reading(block: str) -> tuple[dict[str, dict], list[tuple[str, s
                 pairs = [(nn_qn, val)]
             elif end <= left_med:
                 pairs = [(nb_qn, val)]
-            elif abs(dl - dr) < 6:
+            elif dl == dr:
                 continue
             else:
+                # Between the columns the sum checks it, so the nearer wins
+                # (Detroit Mercy's text adds up with the nearer reading).
                 pairs = [(nb_qn, val)] if dl < dr else [(nn_qn, val)]
         elif len(amts) > 2 and nb_qn:
             # Three or more amounts under one label: two rows printed as one
