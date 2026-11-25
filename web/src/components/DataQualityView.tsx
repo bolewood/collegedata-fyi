@@ -12,6 +12,8 @@ import {
   MIN_REPORTS_FOR_RATE,
   TABLE_TITLES,
   fallOf,
+  aidCantCheckNote,
+  federalDiffersNote,
   isDataQualityLaunched,
   isProjectedYear,
   liveCount,
@@ -27,6 +29,7 @@ import {
   type QualityYear,
   type SumOutcomes,
 } from "@/lib/data-quality";
+import { DATA_LICENSE_NAME, DATA_LICENSE_URL } from "@/lib/data-license";
 import { formatLabel } from "@/lib/format-labels";
 
 const DASH = "–";
@@ -82,10 +85,21 @@ function SectionHead({ id, label, title, sentence }: { id: string; label: string
   );
 }
 
-function Scroll({ children, label }: { children: ReactNode; label: string }) {
+/**
+ * Narrowest widths the tables can shrink to before they scroll sideways. The hint above each table is CSS only
+ * (data-quality.css, a container query on these numbers minus one), so it needs no script and no measuring.
+ */
+export const TABLE_MIN_WIDTH = 640;
+export const WIDE_TABLE_MIN_WIDTH = 820;
+
+/** Horizontal scroller for a wide table: a labelled, focusable region with a hint that shows only when the table is narrower than it needs. */
+function Scroll({ children, label, wide = false }: { children: ReactNode; label: string; wide?: boolean }) {
   return (
-    <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }} role="region" aria-label={label} tabIndex={0}>
-      {children}
+    <div className={wide ? "dq-scroll dq-scroll--wide" : "dq-scroll"}>
+      <p className="dq-scroll-hint">Scroll sideways to see every column.</p>
+      <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }} role="region" aria-label={label} tabIndex={0}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -94,7 +108,7 @@ const tableStyle: React.CSSProperties = {
   width: "100%",
   borderCollapse: "collapse",
   fontSize: 14,
-  minWidth: 640,
+  minWidth: TABLE_MIN_WIDTH,
 };
 const thStyle: React.CSSProperties = {
   textAlign: "right",
@@ -117,12 +131,14 @@ const tdStyle: React.CSSProperties = {
   fontFamily: "var(--mono)",
   verticalAlign: "top",
 };
-const tdLeft: React.CSSProperties = { ...tdStyle, textAlign: "left", fontFamily: "var(--sans)" };
+const tdLeft: React.CSSProperties = { ...tdStyle, textAlign: "left", fontFamily: "var(--sans)", whiteSpace: "nowrap" };
+/** Sentences under a download or at the top of the page: small, normal case. `.meta` is for labels. */
+const smallPrint: React.CSSProperties = { margin: "8px 0 0", maxWidth: 720, fontSize: 13, lineHeight: 1.5, color: "var(--ink-3)" };
 const totalRow: React.CSSProperties = { fontWeight: 600, background: "var(--paper-2)" };
 
-function Note({ children }: { children: ReactNode }) {
+function Note({ children, id }: { children: ReactNode; id?: string }) {
   return (
-    <p style={{ margin: "12px 0 0", maxWidth: 720, fontSize: 13.5, lineHeight: 1.6, color: "var(--ink-2)" }}>
+    <p id={id} style={{ margin: "12px 0 0", maxWidth: 720, fontSize: 13.5, lineHeight: 1.6, color: "var(--ink-2)" }}>
       {children}
     </p>
   );
@@ -137,7 +153,7 @@ function GlanceTable({ years }: { years: QualityYear[] }) {
         id="dq-glance-heading"
         label="§ All years at a glance"
         title="All years at a glance"
-        sentence="One row per year, newest first. Rates are shares of that year's published reports, except the admissions match rate, which is a share of values compared."
+        sentence="One row per year, newest first. Rates are shares of that year’s published reports, except the admissions match rate, which is a share of values compared."
       />
       <Scroll label="All years at a glance">
         <table style={tableStyle} id="dq-glance">
@@ -146,7 +162,7 @@ function GlanceTable({ years }: { years: QualityYear[] }) {
               <th scope="col" style={thLeft}>Year</th>
               <th scope="col" style={thStyle}>Published</th>
               <th scope="col" style={thStyle}>Set aside</th>
-              <th scope="col" style={thStyle}>Couldn&rsquo;t read</th>
+              <th scope="col" style={thStyle}>Couldn’t read</th>
               <th scope="col" style={thStyle}>Not read yet</th>
               <th scope="col" style={thStyle}>Admissions match rate</th>
               <th scope="col" style={thStyle}>Enrollment adds up</th>
@@ -252,9 +268,18 @@ function CsvButton({ table, year }: { table: QualityTableId; year: QualityYear }
   // Gated with the page.
   if (!isDataQualityLaunched()) return null;
   return (
-    <a href={qualityCsvPath(table, year.cds_year)} download className="cd-btn cd-btn--ghost" style={{ marginTop: 14, display: "inline-block" }}>
-      Download {year.cds_year} table as CSV
-    </a>
+    <div style={{ marginTop: 14 }}>
+      <a href={qualityCsvPath(table, year.cds_year)} download className="cd-btn cd-btn--ghost" style={{ display: "inline-block" }}>
+        Download {year.cds_year} table as CSV
+      </a>
+      <p style={smallPrint}>
+        This table is licensed{" "}
+        <a href={DATA_LICENSE_URL} style={{ textDecoration: "underline" }}>
+          {DATA_LICENSE_NAME}
+        </a>
+        . Credit collegedata.fyi.
+      </p>
+    </div>
   );
 }
 
@@ -284,7 +309,7 @@ function ReportsTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
               <th scope="col" style={thLeft}>Format</th>
               <th scope="col" style={thStyle}>Published</th>
               <th scope="col" style={thStyle}>Set aside</th>
-              <th scope="col" style={thStyle}>Couldn&rsquo;t read</th>
+              <th scope="col" style={thStyle}>Couldn’t read</th>
               <th scope="col" style={thStyle}>Not read yet</th>
               <th scope="col" style={thStyle}>Fields stored: median</th>
               <th scope="col" style={thStyle}>Lowest 10%</th>
@@ -306,24 +331,23 @@ function ReportsTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
         </table>
       </Scroll>
       <Note>
-        {n(liveCount(year.total.status))} live reports. Set aside:{" "}
+        {n(liveCount(year.total.status))} reports counted. Set aside:{" "}
         {n(reasons.blank_form)} blank form, {n(reasons.too_little_read)} too little read, {n(reasons.wrong_file)} wrong
-        file. Left out of the live count: {n(year.removed)} removed
+        file. Not counted: {n(year.removed)} removed
         {year.no_file > 0 ? `, ${n(year.no_file)} with no file` : ""}.
       </Note>
       <Note>
-        Fields stored counts the fields stored for the report we serve, including fields stored as a parse error or
-        &ldquo;not applicable&rdquo;. It measures how much of the form we reached, not how many usable answers we have.
+        Fields stored counts the fields stored for the report as we publish it, including fields recorded as
+        unreadable or “not applicable”. It measures how much of the form we reached, not how many usable answers we have.
         The {year.form.form_year} form has {n(year.form.questions)} questions.
         {year.other_form_numbering > 0
           ? ` The ${n(year.other_form_numbering)} reports numbered by a different year’s form have field numbers from that form, whose size differs.`
           : ""}
       </Note>
       {!isProjectedYear(year.cds_year) && (
-        <Note>
-          {year.cds_year} is counted differently. Years from 2024-25 on count rows in the published projection, which
-          includes template-overlay values. This year counts the values in one base reading, so it reads lower partly
-          for that reason.
+        <Note id="dq-note-counting">
+          {year.cds_year} is counted differently. From 2024-25 on, fields stored also includes values from a second
+          reading of the same file. This year counts one reading, so it reads lower partly for that reason.
         </Note>
       )}
       <CsvButton table="reports" year={year} />
@@ -344,6 +368,11 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
         title="Admissions against federal figures"
         sentence="Applicants, admits and enrolled first-year students in each published report (CDS C1), compared with the federal figures for the same fall."
       />
+      {!loaded && (
+        <p id="dq-no-federal" style={{ margin: "0 0 14px", maxWidth: 720, fontSize: 15, lineHeight: 1.6, color: "var(--ink-2)" }}>
+          No federal admissions figures for fall {fallOf(year.cds_year)} yet.
+        </p>
+      )}
       <Scroll label={`Table B, ${year.cds_year}`}>
         <table style={tableStyle} id="dq-table-b">
           <thead>
@@ -384,24 +413,29 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
         </table>
       </Scroll>
       {loaded && (
-        <Note>
+        <Note id="dq-note-left-out">
           A value is compared only when the federal data has a positive figure for it, and matches means within 2%.
-          Left out: {n(left.single_campus)} {left.single_campus === 1 ? "report" : "reports"} filed for one campus or
-          unit (federal data reports the whole institution) and {n(left.no_federal_figures)} whose school has no
+          Left out: {n(left.single_campus)} {left.single_campus === 1 ? "report" : "reports"} we’ve marked as
+          filed for one campus or unit (federal data reports the whole institution) and {n(left.no_federal_figures)} whose school has no
           federal admissions figures.
         </Note>
       )}
-      <Note>
-        <strong>No value</strong> means no usable CDS number was available to compare. The school may have left it
-        blank. We may have missed it, read it under a different year&rsquo;s numbering, or set it aside because it
-        failed a sanity check. On its own, this table can&rsquo;t say which.
-      </Note>
-      <Note>
-        <strong>Differs</strong> isn&rsquo;t always ours. Schools sometimes report different figures to the federal
-        government than in their CDS, for example from a different count date. A differing value may be our
-        misreading or a real difference between the two filings.
-      </Note>
-      <CsvButton table="federal" year={year} />
+      {loaded && (
+        <>
+        <Note id="dq-note-no-value">
+          <strong>No value</strong> means no usable CDS number was available to compare. The school may have left it
+          blank. We may have missed it, read it under a different year’s numbering, or set it aside because it
+          failed a sanity check. On its own, this table can’t say which.
+        </Note>
+        <Note id="dq-note-differs">
+          <strong>Differs</strong> isn’t always ours. Schools sometimes report different figures to the federal
+          government than in their CDS, for example from a different count date. A differing value may be our
+          misreading or a real difference between the two filings.
+          {federalDiffersNote(year, snapshot) && <span id="dq-differs-sample"> {federalDiffersNote(year, snapshot)}</span>}
+        </Note>
+        </>
+      )}
+      {loaded && <CsvButton table="federal" year={year} />}
     </section>
   );
 }
@@ -449,8 +483,8 @@ function TotalsTable({ year, snapshot }: { year: QualityYear; snapshot: QualityS
         title="Do the printed totals add up?"
         sentence="Whether the totals printed in each published report equal the sum of their own rows. The three tables are never averaged together."
       />
-      <Scroll label={`Table C, ${year.cds_year}`}>
-        <table style={{ ...tableStyle, minWidth: 820 }} id="dq-table-c">
+      <Scroll label={`Table C, ${year.cds_year}`} wide>
+        <table style={{ ...tableStyle, minWidth: WIDE_TABLE_MIN_WIDTH }} id="dq-table-c">
           <thead>
             <tr>
               <th scope="col" style={thLeft}>Format</th>
@@ -494,26 +528,24 @@ function TotalsTable({ year, snapshot }: { year: QualityYear; snapshot: QualityS
         <strong>Enrollment</strong> checks that undergraduates by sex sum to the total, and that undergraduate plus
         graduate sum to the grand total. <strong>Admissions</strong> checks that applicants, admits and enrolled by
         sex sum to their totals. <strong>Financial aid</strong> checks grant and self-help totals, and need-based and
-        non-need-based, within $5; rows we didn&rsquo;t read count as zero once at least one row is read.
+        non-need-based, within $5; rows we didn’t read count as zero once at least one row is read.
       </Note>
       <Note>
-        <strong>Adds up</strong> means at least one of the table&rsquo;s sums could be checked and none failed.{" "}
+        <strong>Adds up</strong> means at least one of the table’s sums could be checked and none failed.{" "}
         <strong>Off by under 2%</strong> (enrollment, admissions) means at least one sum missed, but every miss was
-        under 2% of its printed total. <strong>Off by more</strong>, or <strong>doesn&rsquo;t add up</strong> for
-        financial aid, means at least one sum missed by more. <strong>Can&rsquo;t check</strong> means no sum could be
-        checked: the rows or the total a sum needs weren&rsquo;t read, or the printed total is zero beside non-zero
+        under 2% of its printed total. <strong>Off by more</strong>, or <strong>doesn’t add up</strong> for
+        financial aid, means at least one sum missed by more. <strong>Can’t check</strong> means no sum could be
+        checked: the rows or the total a sum needs weren’t read, or the printed total is zero beside non-zero
         rows.
       </Note>
       <Note>
-        Off by under 2% is usually the school&rsquo;s file: it mostly means a small cell, such as students of unknown
-        sex, left out of the rows while the total includes it. Off by more isn&rsquo;t always ours either, because
-        some printed totals don&rsquo;t add up in the school&rsquo;s own file, but it is where our reading errors show.
-        Can&rsquo;t check can be a blank in the school&rsquo;s file, an unfilled automatic total, a miss on our side,
-        or a different year&rsquo;s numbering.
-        {!isProjectedYear(year.cds_year)
-          ? " We haven’t yet measured how those causes split for this year."
-          : ""}
+        Off by under 2% is usually the school’s file: it mostly means a small cell, such as students of unknown
+        sex, left out of the rows while the total includes it. Off by more isn’t always ours either, because
+        some printed totals don’t add up in the school’s own file, but it is where our reading errors show.
+        Can’t check can be a blank in the school’s file, an unfilled automatic total, a miss on our side,
+        or a different year’s numbering.
       </Note>
+      {aidCantCheckNote(year) && <Note id="dq-note-aid-sample">{aidCantCheckNote(year)}</Note>}
       <CsvButton table="totals" year={year} />
     </section>
   );
@@ -530,17 +562,21 @@ function HowToRead() {
       </h2>
       <div style={{ display: "grid", gap: 12, maxWidth: 720, fontSize: 15, lineHeight: 1.65, color: "var(--ink-2)" }}>
         <p style={{ margin: 0 }}>
-          Some of what looks like an error is the school&rsquo;s. A school may leave a cell blank, print a total that
-          doesn&rsquo;t add up, or report different figures to the federal government. Some is ours: we may misread a
-          cell or map it under the wrong year&rsquo;s numbering. These tables can&rsquo;t always tell which, so each
+          Some of what looks like an error is the school’s. A school may leave a cell blank, print a total that
+          doesn’t add up, or report different figures to the federal government. Some is ours: we may misread a
+          cell or map it under the wrong year’s numbering. These tables can’t always tell which, so each
           one says what its weak spots are.
         </p>
         <p style={{ margin: 0 }}>
-          A format with fewer than {MIN_REPORTS_FOR_RATE} reports in a table shows its counts but no percentage,
-          because a rate over so few reports isn&rsquo;t meaningful. Year totals always show in full.
+          Some school files disagree with themselves, for example a residency table whose totals differ from the
+          table by sex. For admissions counts we use the rows by sex when both men and women were read, and the printed total otherwise.
         </p>
         <p style={{ margin: 0 }}>
-          If a number on a school&rsquo;s page looks wrong, open that school&rsquo;s page and{" "}
+          A format with fewer than {MIN_REPORTS_FOR_RATE} reports in a table shows its counts but no percentage,
+          because a rate over so few reports isn’t meaningful. Year totals always show in full.
+        </p>
+        <p style={{ margin: 0 }}>
+          If a number on a school’s page looks wrong, open that school’s page and{" "}
           <Link href="/feedback">tell us</Link>.
         </p>
         <p style={{ margin: 0 }}>

@@ -45,6 +45,37 @@ describe("/data-quality launch gate", () => {
     expect(html).toContain("<h1");
   });
 
+  it("whole page, gate closed and open: no operator words and at most one em dash in any spelling, metadata included", () => {
+    mocks.loadLatestSnapshot.mockReturnValue(FIXTURE_SNAPSHOT);
+    const banned =
+      /\b(extract(ed|or|ion|s)?|docling|tier ?\d?|drain(ed)?|manifest|projection|pipeline|overlay|acroform|served|scoreboard|base reading|parse error|live (report|reports|count))\b/i;
+    const em = /\u2014|&mdash;|&#8212;|&#x2014;/gi;
+    vi.useFakeTimers();
+    for (const t of [Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`) - 1000, Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`)]) {
+      vi.setSystemTime(t);
+      const meta = generateMetadata();
+      const page = renderToStaticMarkup(<DataQualityPage />);
+      // The source line names the run's file (PRD: the numbers equal the run named on the page). It is the one element
+      // allowed to say "scoreboard", and nothing else about it is exempt: every other banned word is checked in it too.
+      const source = page.match(/<p id="dq-source"[\s\S]*?<\/p>/)![0];
+      const rest = page.replace(source, "");
+      expect(source.replace(/<[^>]*>/g, " ").replace(/scoreboard/gi, "")).not.toMatch(banned);
+      const text = (rest + String(meta.title) + String(meta.description)).replace(/<[^>]*>/g, " ");
+      expect(text).not.toMatch(banned);
+      expect(((page + String(meta.title) + String(meta.description)).match(em) ?? []).length).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it("names the run plainly, in normal case, with the date and time from the snapshot and the file name", () => {
+    mocks.loadLatestSnapshot.mockReturnValue(FIXTURE_SNAPSHOT);
+    const html = renderToStaticMarkup(<DataQualityPage />);
+    const line = html.match(/<p id="dq-source"[^>]*>([\s\S]*?)<\/p>/)![1].replace(/<[^>]*>/g, "");
+    expect(line).toContain("November 24, 2026");
+    expect(line).toContain("12:25 UTC");
+    expect(line).toContain(FIXTURE_SNAPSHOT.scoreboard_run);
+    expect(html).not.toMatch(/class="meta"[^>]*>\s*Numbers from/);
+  });
+
   it("is a 404, not an empty page, when no snapshot exists", () => {
     mocks.loadLatestSnapshot.mockReturnValue(null);
     expect(() => renderToStaticMarkup(<DataQualityPage />)).toThrow("NEXT_NOT_FOUND");

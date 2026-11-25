@@ -227,7 +227,7 @@ describe("data quality CSV", () => {
       "format,published,set_aside,couldnt_read,not_read_yet,fields_stored_median,fields_stored_lowest_10pct",
     );
     expect(lines).toHaveLength(1 + y2324.rows.length + 1);
-    expect(lines[1].startsWith("standard PDF,60,3,4,0,")).toBe(true);
+    expect(lines[1].startsWith("standard PDF,300,3,4,0,")).toBe(true);
     expect(lines.at(-1)!.startsWith("All formats,")).toBe(true);
     expect(csv).not.toContain("pdf_flat");
   });
@@ -273,10 +273,10 @@ describe("data quality CSV", () => {
     it("federal", () => {
       expect(lines("federal")).toEqual([
         "format,reports_checked,values_up_to_3_per_report,matches,no_value,differs",
-        "standard PDF,49,147,135,6,6",
-        "fillable PDF,25,75,72,2,1",
+        "standard PDF,49,120,50,10,60",
+        "fillable PDF,25,64,30,5,29",
         "spreadsheet,3,9,8,1,0",
-        "All formats,77,231,215,9,7",
+        "All formats,77,193,88,16,89",
       ]);
     });
 

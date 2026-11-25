@@ -84,16 +84,24 @@ function year(
   rows: QualityFormatRow[],
   extra: Partial<QualityYear> & { form: QualityYear["form"] },
 ): QualityYear {
+  const total = sumRows(rows);
+  const federal = extra.federal_fall_loaded ?? true;
   return {
     cds_year,
     federal_fall_loaded: true,
     other_form_numbering: 0,
     removed: 2,
     no_file: 0,
-    set_aside_reasons: { blank_form: 1, too_little_read: 1, wrong_file: 0 },
-    federal_left_out: { single_campus: 1, no_federal_figures: 2 },
     rows,
-    total: sumRows(rows),
+    total,
+    // The reasons add up to the set-aside count, and Table B's reports checked plus the reports left out add up to
+    // the published count (nothing is left out of a year with no federal figures).
+    set_aside_reasons: {
+      blank_form: Math.ceil(total.status.set_aside / 2),
+      too_little_read: Math.floor(total.status.set_aside / 2),
+      wrong_file: 0,
+    },
+    federal_left_out: { single_campus: federal ? total.status.published - total.federal.reports : 0, no_federal_figures: 0 },
     ...extra,
   };
 }
@@ -106,11 +114,12 @@ const flat = (published: number, extra: Partial<RowSpec> = {}) =>
     ...extra,
   });
 
-const fillable = (published: number) =>
+const fillable = (published: number, extra: Partial<RowSpec> = {}) =>
   row({
     format: "pdf_fillable", label: "fillable PDF", published, median: 900, p10: 650,
     federal: [published, published * 3 - 3, 2, 1],
     b1: [published - 2, 1, 0, 1], c1: [published - 1, 0, 1, 0], h1: [published - 3, 1, 2],
+    ...extra,
   });
 
 /** Three reports in a spreadsheet: a group under the floor of 5. */
@@ -132,7 +141,9 @@ export const FIXTURE_SNAPSHOT: QualitySnapshot = {
     both: 364,
   },
   years: [
-    year("2023-24", [flat(60, { set_aside: 3, couldnt_read: 4 }), fillable(30), sheets()], {
+    // 2023-24 is sized like the 2026-11-25 run's pools: 217 financial aid "can't check" reports, and with 2024-25 219
+    // differing admissions values (130 + 89).
+    year("2023-24", [flat(300, { set_aside: 3, couldnt_read: 4, h1: [75, 35, 190], federal: [299, 700, 60, 100] }), fillable(100, { h1: [60, 13, 27], federal: [100, 250, 20, 30] }), sheets()], {
       form: { form_year: "2023-24", full_field_schema: true, questions: 1053 },
       other_form_numbering: 12,
       removed: 4,
@@ -140,9 +151,8 @@ export const FIXTURE_SNAPSHOT: QualitySnapshot = {
     year("2025-26", [flat(40, { not_read_yet: 1 }), fillable(20)], {
       form: { form_year: "2025-26", full_field_schema: true, questions: 1105 },
       federal_fall_loaded: false,
-      federal_left_out: { single_campus: 0, no_federal_figures: 0 },
     }),
-    year("2024-25", [flat(50, { set_aside: 2 }), fillable(25), sheets()], {
+    year("2024-25", [flat(50, { set_aside: 2, federal: [49, 50, 10, 60] }), fillable(25, { federal: [25, 30, 5, 29] }), sheets()], {
       form: { form_year: "2024-25", full_field_schema: true, questions: 1083 },
     }),
   ],

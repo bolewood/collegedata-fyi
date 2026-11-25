@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -122,5 +124,23 @@ describe("filters bar", () => {
     expect(html).not.toContain("(CSV)");
     expect(html).toContain("With numbers");
     expect(html).toContain("Found");
+  });
+});
+
+describe("copy invariants (VOICE.md)", () => {
+  it("has no operator words and at most one em dash, even with empty state and enrollment cells", () => {
+    currentParams = new URLSearchParams("all=1");
+    const html = renderToStaticMarkup(
+      <CoverageDashboard rows={[...ROWS, row({ school_id: "d", state: null, undergraduate_enrollment: null })]} renewal={RENEWAL} />,
+    );
+    const text = html.replace(/<[^>]*>/g, " ");
+    expect(text).not.toMatch(/\b(extract(ed|or|ion|s)?|docling|tier ?\d?|drain(ed)?|manifest|projection|pipeline)\b/i);
+    expect((html.match(/\u2014|&mdash;|&#8212;|&#x2014;/gi) ?? []).length).toBeLessThanOrEqual(1);
+  });
+
+  // Table rows are virtualized, so a static render doesn't reach their empty-cell glyphs. Read the source:
+  // an em dash there would repeat in every row and break the one-per-page rule.
+  it("writes no em dash in the dashboard source (empty cells use an en dash)", () => {
+    expect(readFileSync(resolve(__dirname, "CoverageDashboard.tsx"), "utf8")).not.toMatch(/\u2014|&mdash;|&#8212;|&#x2014;/i);
   });
 });

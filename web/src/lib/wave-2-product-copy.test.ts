@@ -75,7 +75,7 @@ describe("Wave 2 product copy", () => {
     const coverage = src("app/coverage/page.tsx");
     expect(coverage).toContain('title: "Coverage"');
     expect(coverage).toMatch(/federal student aid/i);
-    expect(coverage).toContain("haven&rsquo;t checked this");
+    expect(coverage).toContain("haven’t checked this");
     expect(coverage).toContain("Federal numbers stay labeled as federal");
     expect(coverage).not.toMatch(/Title-IV/);
     expect(coverage).not.toMatch(/resolver has not scanned/);
