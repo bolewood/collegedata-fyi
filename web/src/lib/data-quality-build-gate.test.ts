@@ -9,8 +9,9 @@ async function buildEnv(now: number) {
   vi.resetModules();
   vi.useFakeTimers();
   vi.setSystemTime(now);
-  const { nextConfig } = await import("../../next.config");
-  return nextConfig.env?.DATA_QUALITY_LAUNCHED;
+  // The default export is the Sentry-wrapped config Next actually loads.
+  const mod = await import("../../next.config");
+  return mod.default.env?.DATA_QUALITY_LAUNCHED;
 }
 
 afterEach(() => {
@@ -23,7 +24,7 @@ describe("build-time launch gate", () => {
     expect(isDataQualityLaunched(new Date(LAUNCH_MS))).toBe(true);
   });
 
-  it("next.config inlines 0 for a build before the date and 1 for a build on it", async () => {
+  it("the default next.config export inlines 0 for a build before the date and 1 for a build on it", async () => {
     expect(await buildEnv(LAUNCH_MS - 1000)).toBe("0");
     expect(await buildEnv(LAUNCH_MS)).toBe("1");
   });
