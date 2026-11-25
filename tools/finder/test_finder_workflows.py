@@ -39,17 +39,41 @@ class FinderProbeWorkflowTests(unittest.TestCase):
         self.assertNotIn("<<", run)
         self.assertIn("printf", run)
 
-    def test_stuck_heartbeat_prefers_post_run_classifier_count(self) -> None:
-        refresh_at = FINDER.index("- name: Refresh stuck report after seed rewrites")
+    def test_stuck_heartbeat_comes_from_the_outcome_judge(self) -> None:
+        # `replaced` is not `fixed`: the heartbeat reports what the re-probe
+        # achieved, from reprobe_outcome.py, not a count of rewritten seeds.
+        judge_at = FINDER.index("id: reprobe_outcome")
         heartbeat_at = FINDER.index("- name: Heartbeat finder_stuck_pdf finish")
-        self.assertLess(refresh_at, heartbeat_at)
+        self.assertLess(judge_at, heartbeat_at)
+        judge = FINDER[judge_at:].split("\n      - name:", 1)[0]
+        self.assertIn("tools/finder/reprobe_outcome.py", judge)
+        self.assertIn("--out-heartbeat finder-probe/stuck-heartbeat.json", judge)
+        self.assertIn("--flagged finder-probe/stuck.json", judge)
         heartbeat = FINDER[heartbeat_at:].split("\n      - name:", 1)[0]
-        self.assertIn('after_path = Path("finder-probe/stuck-ids-after.txt")', heartbeat)
-        self.assertIn("still_stuck = count_ids(after_path)", heartbeat)
-        self.assertIn(
-            'initial_stuck - int(summary.get("replaced", 0))',
-            heartbeat,
-        )
+        self.assertIn("--summary-json finder-probe/stuck-heartbeat.json", heartbeat)
+        self.assertIn("steps.reprobe_outcome.outcome", heartbeat)
+        self.assertNotIn('summary.get("replaced"', FINDER)
+
+    def test_stuck_heartbeat_is_error_when_a_step_did_not_succeed(self) -> None:
+        heartbeat = FINDER.split("- name: Heartbeat finder_stuck_pdf finish", 1)[1].split(
+            "\n      - name:", 1
+        )[0]
+        for step in ("re_probe_stuck", "refresh_stuck", "reprobe_outcome"):
+            self.assertIn(f"steps.{step}.outcome", heartbeat)
+        self.assertIn('"$outcome" != "success"', heartbeat)
+        # The empty list is a lone newline, so `-s` would call it non-empty.
+        self.assertNotIn("-s finder-probe/stuck-ids.txt", FINDER)
+
+    def test_stuck_report_is_not_posted_to_a_standing_issue(self) -> None:
+        # Postmortem section 4: a monthly comment with a steady count reads as
+        # "known and handled". The report goes in the run summary and artifact.
+        self.assertNotIn("Upsert coverage issue", FINDER)
+        self.assertNotIn("'issue', 'comment'", FINDER)
+        self.assertNotIn("gh issue", FINDER)
+        summary = FINDER.split("- name: Add run summary", 1)[1].split("\n      - name:", 1)[0]
+        self.assertIn("GITHUB_STEP_SUMMARY", summary)
+        self.assertIn("reprobe-outcome.md", summary)
+        self.assertIn("head -c", summary)
 
     def test_unknown_probe_audits_failed_active_html_seeds(self) -> None:
         _, step = FINDER.split("id: probe_unknown", 1)

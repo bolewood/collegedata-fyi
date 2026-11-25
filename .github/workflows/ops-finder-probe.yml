@@ -118,7 +118,9 @@ jobs:
           # No nested bash heredocs in this step. GHA keeps relative indent, so
           # an indented terminator never closes and bash fails at parse time
           # even on the empty-ids branch (2026-09-02: 110 stuck, 0 re-probed).
-          if [[ ! -s finder-probe/stuck-ids.txt ]]; then
+          # stuck_pdf_seeds.py writes a lone newline when nothing is flagged, so
+          # -s is true for an empty list; test for any non-blank character.
+          if [[ -z "$(tr -d '[:space:]' < finder-probe/stuck-ids.txt)" ]]; then
             echo "No stuck PDF seeds to re-probe."
             printf '%s\n' '{"probed":0,"found":0,"replaced":0,"budget_remaining":0,"still_stuck":0}' \
               > finder-probe/stuck-probe-summary.json
@@ -244,47 +246,62 @@ jobs:
             --error-code "$error" \
             --run-url "${PIPELINE_RUN_URL}"
 
-      - name: Refresh stuck report after seed rewrites
+      - id: refresh_stuck
+        name: Refresh stuck report after seed rewrites
         run: |
           python tools/finder/stuck_pdf_seeds.py \
             --out-json finder-probe/stuck-after.json \
             --out-md finder-probe/stuck-after.md \
             --out-ids finder-probe/stuck-ids-after.txt
 
+      - id: reprobe_outcome
+        name: Judge re-probe outcome
+        if: ${{ always() && !cancelled() && (env.INPUT_MODE == 'both' || env.INPUT_MODE == 'stuck-pdf') }}
+        run: |
+          set -euo pipefail
+          # A school is fixed only when its new seed reaches a year newer than
+          # the archive holds, or is a current listing page. Replaced is not fixed.
+          python tools/finder/reprobe_outcome.py \
+            --flagged finder-probe/stuck.json \
+            --schools-yaml tools/finder/schools.yaml \
+            --probe-summary finder-probe/stuck-probe-summary.json \
+            --out-json finder-probe/reprobe-outcome.json \
+            --out-md finder-probe/reprobe-outcome.md \
+            --out-heartbeat finder-probe/stuck-heartbeat.json
+
       - name: Heartbeat finder_stuck_pdf finish
         if: always() && (env.INPUT_MODE == 'both' || env.INPUT_MODE == 'stuck-pdf')
         env:
           STEP_OUTCOME: ${{ steps.re_probe_stuck.outcome }}
+          REFRESH_OUTCOME: ${{ steps.refresh_stuck.outcome }}
+          JUDGE_OUTCOME: ${{ steps.reprobe_outcome.outcome }}
         run: |
-          python -c '
-          import json
-          from pathlib import Path
-
-          def count_ids(path):
-              return sum(1 for line in path.read_text().splitlines() if line.strip())
-
-          initial_path = Path("finder-probe/stuck-ids.txt")
-          after_path = Path("finder-probe/stuck-ids-after.txt")
-          initial_stuck = count_ids(initial_path) if initial_path.exists() else 0
-          summary_path = Path("finder-probe/stuck-probe-summary.json")
-          summary = {"probed": 0, "replaced": 0}
-          if summary_path.exists():
-              summary.update(json.loads(summary_path.read_text()))
-          if after_path.exists():
-              still_stuck = count_ids(after_path)
-          else:
-              still_stuck = max(0, initial_stuck - int(summary.get("replaced", 0)))
-          Path("finder-probe/stuck-heartbeat.json").write_text(json.dumps({
-              "stuck": initial_stuck,
-              "reprobed": summary.get("probed", 0),
-              "still_stuck": still_stuck,
-          }) + "\n")
-          '
           status=ok
           error=none
-          if [[ "$STEP_OUTCOME" == "failure" ]]; then
+          if [[ ! -f finder-probe/stuck-ids.txt ]]; then
+            # The classifier never wrote its list: nothing can be called ok.
             status=error
             error=job_failed
+          elif [[ -n "$(tr -d '[:space:]' < finder-probe/stuck-ids.txt)" ]]; then
+            # Schools were flagged: every step has to have run and succeeded.
+            # A skipped step after an earlier failure is not ok.
+            for outcome in "$STEP_OUTCOME" "$REFRESH_OUTCOME" "$JUDGE_OUTCOME"; do
+              if [[ "$outcome" != "success" ]]; then
+                status=error
+                error=job_failed
+              fi
+            done
+          else
+            # Nothing flagged: the re-probe exits early; only a failure counts.
+            for outcome in "$STEP_OUTCOME" "$REFRESH_OUTCOME" "$JUDGE_OUTCOME"; do
+              if [[ "$outcome" == "failure" ]]; then
+                status=error
+                error=job_failed
+              fi
+            done
+          fi
+          if [[ ! -f finder-probe/stuck-heartbeat.json ]]; then
+            printf '{"stuck":0,"reprobed":0,"still_stuck":0}\n' > finder-probe/stuck-heartbeat.json
           fi
           python tools/ops/record_heartbeat.py \
             --station finder_stuck_pdf \
@@ -297,61 +314,30 @@ jobs:
       - name: Add run summary
         if: always()
         run: |
+          # The stuck report goes here and into the artifact. It used to be a
+          # monthly comment on a standing issue, which read as "known and
+          # handled" while the count stayed flat (postmortem section 4).
           {
             echo "## Finder probe"
             echo
             echo "Mode: \`${INPUT_MODE}\`"
             echo
-            if [[ -f finder-probe/stuck.md ]]; then
-              echo "### Stuck PDF seeds (before)"
-              echo
-              wc -l finder-probe/stuck-ids.txt | awk '{print $1 " school ids"}'
+            if [[ -f finder-probe/reprobe-outcome.md ]]; then
+              head -c 20000 finder-probe/reprobe-outcome.md
               echo
             fi
-            if [[ -f finder-probe/stuck-after.md ]]; then
-              echo "### Stuck PDF seeds (after)"
+            if [[ -f finder-probe/stuck.md ]]; then
+              echo "### Stuck PDF seeds before the re-probe"
               echo
-              wc -l finder-probe/stuck-ids-after.txt | awk '{print $1 " school ids"}'
+              head -c 12000 finder-probe/stuck.md
+              echo
+            fi
+            if [[ -f finder-probe/stuck-ids-after.txt ]]; then
+              echo "### Stuck PDF seeds after"
+              echo
+              wc -l < finder-probe/stuck-ids-after.txt | awk '{print $1 " school ids still flagged (full list in the finder-probe artifact)"}'
             fi
           } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upsert coverage issue
-        if: success()
-        run: |
-          # Prefer python -c over nested bash heredocs (GHA relative-indent trap).
-          python -c "
-          import json, os, subprocess, sys
-          from pathlib import Path
-          repo = os.environ['REPO']
-          path = Path('finder-probe/stuck-after.md')
-          if not path.exists():
-              path = Path('finder-probe/stuck.md')
-          if not path.exists():
-              print('No stuck report; skipping issue.')
-              sys.exit(0)
-          title = 'Finder: stuck PDF discovery seeds'
-          body = path.read_text()[:60000]
-          existing = subprocess.run(
-              ['gh', 'issue', 'list', '--repo', repo, '--state', 'open',
-               '--search', 'in:title \"' + title + '\"', '--json', 'number,title'],
-              check=True, text=True, stdout=subprocess.PIPE,
-          )
-          rows = json.loads(existing.stdout or '[]')
-          match = next((r for r in rows if r.get('title') == title), None)
-          if match:
-              subprocess.run(
-                  ['gh', 'issue', 'comment', str(match['number']),
-                   '--repo', repo, '--body', body],
-                  check=True,
-              )
-              print('Commented on existing issue #%s' % match['number'])
-          else:
-              subprocess.run(
-                  ['gh', 'issue', 'create', '--repo', repo, '--title', title, '--body', body],
-                  check=True,
-              )
-              print('Created coverage issue')
-          "
 
       - name: Snapshot probed schools.yaml
         if: always()
@@ -444,7 +430,7 @@ jobs:
           body="$(printf '%s\n' \
             '## Summary' \
             "- Monthly finder probe (\`${INPUT_MODE}\`) updated \`tools/finder/schools.yaml\`." \
-            '- Stuck PDF-seed report is in the workflow artifacts / coverage issue.' \
+            '- Stuck PDF-seed report is in the run summary and the `finder-probe` artifact.' \
             '' \
             '## Test plan' \
             '- [ ] Skim the PR diff for accidental satellite-campus seed copies' \

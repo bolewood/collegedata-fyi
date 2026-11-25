@@ -121,28 +121,55 @@ def choose_canonical_school(schools: list[dict]) -> dict:
     return max(schools, key=score)
 
 
+SKIP_REASONS = {
+    "listing_seed": (
+        "the seed is a listing page, not a document. Not this job's failure "
+        "class; a stale listing page is covered separately (#462)"
+    ),
+    "no_seed": "the school has no discovery seed, so there is nothing to go stale",
+}
+
+
+def year_start(year: str | None) -> int | None:
+    """Start year of a real CDS year (``2025-26`` -> 2025), else None.
+
+    ``unknown`` and anything else that is not ``YYYY-YY`` is None. Never
+    compare year strings directly: ``unknown`` sorts above every real year.
+    """
+    if not year or not YEAR_RE.match(year):
+        return None
+    return int(year[:4])
+
+
 def classify_school(
     school: dict,
     years: list[str],
     *,
     min_fresh_year: str,
-) -> dict[str, Any] | None:
+) -> dict[str, Any]:
+    """Put one school in exactly one bucket: flagged, fresh or skipped."""
+    floor = year_start(min_fresh_year)
+    if floor is None:
+        raise ValueError(f"min_fresh_year is not a CDS year: {min_fresh_year!r}")
     seed = school.get("discovery_seed_url") or school.get("cds_url_hint") or ""
+    if not seed:
+        return {"bucket": "skipped", "reason": "no_seed", "id": school.get("id")}
     if not is_direct_doc_seed(seed):
-        return None
+        return {"bucket": "skipped", "reason": "listing_seed", "id": school.get("id")}
     # Real years only: the archive files a document it cannot date under
     # "unknown", and as a string that sorts above every year, which made a
     # school holding one such document look fresh forever.
-    unique_years = sorted({y for y in years if y and YEAR_RE.match(y)})
+    unique_years = sorted({y for y in years if year_start(y) is not None})
     latest = unique_years[-1] if unique_years else None
     n_years = len(unique_years)
     if is_section_seed(seed):
         reason = "section_seed"
     else:
-        if latest and latest >= min_fresh_year:
-            return None
+        if latest and year_start(latest) >= floor:
+            return {"bucket": "fresh", "reason": "fresh", "id": school.get("id")}
         reason = "stale_single_document"
     return {
+        "bucket": "flagged",
         "reason": reason,
         "id": school.get("id"),
         "name": school.get("name"),
@@ -155,45 +182,129 @@ def classify_school(
     }
 
 
+def check_accounting(counts: dict[str, int]) -> None:
+    """Raise unless flagged + fresh + skipped == total and skips add up."""
+    accounted = counts["flagged"] + counts["fresh"] + counts["skipped"]
+    by_reason = sum(counts[f"skipped_{r}"] for r in SKIP_REASONS)
+    if accounted != counts["total"] or by_reason != counts["skipped"]:
+        raise RuntimeError(
+            "school accounting does not add up: "
+            f"flagged {counts['flagged']} + fresh {counts['fresh']} + "
+            f"skipped {counts['skipped']} != total {counts['total']} "
+            f"(skip reasons sum to {by_reason})"
+        )
+
+
+def classify_all(
+    schools: list[dict],
+    years_by_school: dict[str, list[str]],
+    *,
+    min_fresh_year: str,
+) -> tuple[list[dict], dict[str, int]]:
+    """Classify every school; return (flagged rows, counts).
+
+    Raises if a school fell out of every bucket: a sweep that reports only
+    what it caught looks the same whether it found every case or a third.
+    """
+    flagged: list[dict] = []
+    counts: dict[str, int] = {
+        "total": len(schools),
+        "flagged": 0,
+        "fresh": 0,
+        "skipped": 0,
+    }
+    for reason in SKIP_REASONS:
+        counts[f"skipped_{reason}"] = 0
+    for school in schools:
+        row = classify_school(
+            school,
+            years_by_school.get(school.get("id") or "", []),
+            min_fresh_year=min_fresh_year,
+        )
+        bucket = row["bucket"]
+        counts[bucket] += 1
+        if bucket == "flagged":
+            flagged.append(row)
+        elif bucket == "skipped":
+            counts[f"skipped_{row['reason']}"] += 1
+    check_accounting(counts)
+    return flagged, counts
+
+
+def parse_content_range_total(value: str | None) -> int | None:
+    """Total from a PostgREST ``Content-Range: 0-999/6048`` header."""
+    m = re.match(r"^(?:\d+-\d+|\*)/(\d+)$", (value or "").strip())
+    return int(m.group(1)) if m else None
+
+
 def fetch_years_by_school(
     api_url: str,
     anon_key: str | None,
+    *,
+    page: int = 1000,
+    opener=urllib.request.urlopen,
 ) -> dict[str, list[str]]:
+    """Filed years per school: ``canonical_year`` of live published documents.
+
+    Reads ``cds_manifest``, the view the postmortem defines "filed year"
+    against (``cds_documents.cds_year`` is the raw detected year, not the
+    canonical one). Fails loudly: no key, an HTTP error, an empty result or
+    a short page raises, because "0 years found" would flag every school.
+    """
+    if not anon_key:
+        raise SystemExit(
+            "NEXT_PUBLIC_SUPABASE_ANON_KEY (or --anon-key) is required: "
+            "without it every school looks like it has no archived years"
+        )
     headers = {
         "Accept": "application/json",
         "User-Agent": "collegedata-pipeline/stuck-pdf-seeds",
+        "apikey": anon_key,
+        "Authorization": f"Bearer {anon_key}",
+        "Prefer": "count=exact",
     }
-    if anon_key:
-        headers["apikey"] = anon_key
-        headers["Authorization"] = f"Bearer {anon_key}"
     by_school: dict[str, list[str]] = defaultdict(list)
-    start = 0
-    page = 1000
-    while True:
+    fetched = 0
+    total: int | None = None
+    while total is None or fetched < total:
         path = (
-            "/rest/v1/cds_documents"
-            "?select=school_id,cds_year"
+            "/rest/v1/cds_manifest"
+            "?select=school_id,canonical_year"
             "&removed_at=is.null"
+            "&participation_status=eq.published"
+            "&order=document_id.asc"
         )
         req = urllib.request.Request(
             api_url.rstrip("/") + path,
-            headers={**headers, "Range": f"{start}-{start + page - 1}"},
+            headers={**headers, "Range-Unit": "items", "Range": f"{fetched}-{fetched + page - 1}"},
         )
         try:
-            with urllib.request.urlopen(req, timeout=60) as resp:
+            with opener(req, timeout=60) as resp:
+                content_range = resp.headers.get("Content-Range")
                 chunk = json.loads(resp.read().decode())
         except urllib.error.HTTPError as exc:
-            raise SystemExit(f"cds_documents fetch failed: HTTP {exc.code}") from exc
+            raise SystemExit(f"cds_manifest fetch failed: HTTP {exc.code}") from exc
+        page_total = parse_content_range_total(content_range)
+        if page_total is None:
+            raise SystemExit(f"cds_manifest fetch: no usable Content-Range ({content_range!r})")
+        if total is None:
+            total = page_total
+            if total == 0:
+                raise SystemExit("cds_manifest returned zero rows; refusing to continue")
+        elif page_total != total:
+            raise SystemExit(f"cds_manifest changed size mid-fetch ({total} -> {page_total})")
+        if not chunk:
+            raise SystemExit(
+                f"cds_manifest short read: got {fetched} of {total} rows and an empty page"
+            )
+        fetched += len(chunk)
         for row in chunk:
             sid = row.get("school_id")
-            year = row.get("cds_year")
+            year = row.get("canonical_year")
             if sid and year:
                 by_school[sid].append(year)
-        if len(chunk) < page:
-            break
-        start += page
-        if start > 50_000:
-            break
+    if fetched != total:
+        raise SystemExit(f"cds_manifest fetched {fetched} rows, expected {total}")
     return by_school
 
 
@@ -221,10 +332,30 @@ def shared_seed_groups(schools: list[dict]) -> list[dict[str, Any]]:
     return groups
 
 
-def render_markdown(stuck: list[dict], shared: list[dict], min_fresh_year: str) -> str:
+def render_counts(counts: dict[str, int]) -> list[str]:
+    lines = [
+        f"Schools checked: **{counts['total']}** = flagged {counts['flagged']} "
+        f"+ fresh {counts['fresh']} + skipped {counts['skipped']}",
+        "",
+        "Skipped, by reason:",
+        "",
+    ]
+    for reason, why in SKIP_REASONS.items():
+        lines.append(f"- `{reason}`: {counts[f'skipped_{reason}']} ({why})")
+    lines.append("")
+    return lines
+
+
+def render_markdown(
+    stuck: list[dict],
+    shared: list[dict],
+    min_fresh_year: str,
+    counts: dict[str, int],
+) -> str:
     lines = [
         f"# Stuck PDF discovery seeds",
         "",
+        *render_counts(counts),
         f"Freshness floor: `{min_fresh_year}`. `stale_single_document`: "
         f"direct-document seed, newest archived year older than the floor "
         f"(or none archived). `section_seed`: the seed is one CDS section file.",
@@ -275,36 +406,29 @@ def main() -> int:
     args = ap.parse_args()
 
     schools = load_schools(args.schools_yaml)
-    years_by_school: dict[str, list[str]] = {}
-    if args.anon_key:
-        years_by_school = fetch_years_by_school(args.api_url, args.anon_key)
-    else:
-        print("warn: no anon key; year counts will be empty", file=sys.stderr)
-
-    stuck = []
-    for school in schools:
-        row = classify_school(
-            school,
-            years_by_school.get(school.get("id") or "", []),
-            min_fresh_year=args.min_fresh_year,
-        )
-        if row:
-            stuck.append(row)
-    stuck.sort(key=lambda r: ((r.get("latest") or ""), r["id"] or ""))
+    years_by_school = fetch_years_by_school(args.api_url, args.anon_key)
+    stuck, counts = classify_all(
+        schools, years_by_school, min_fresh_year=args.min_fresh_year
+    )
+    stuck.sort(key=lambda r: ((year_start(r.get("latest")) or 0), r["id"] or ""))
     shared = shared_seed_groups(schools)
 
+    skipped_by = ", ".join(f"{r} {counts['skipped_' + r]}" for r in SKIP_REASONS)
+    print(
+        f"stuck_pdf_seeds flagged {counts['flagged']}  "
+        f"fresh {counts['fresh']}  skipped {counts['skipped']} ({skipped_by})  "
+        f"total {counts['total']}  "
+        f"shared_url_groups {len(shared)}  "
+        f"min_fresh_year {args.min_fresh_year}",
+        file=sys.stderr,
+    )
     if args.ids_only:
         sys.stdout.write("\n".join(r["id"] for r in stuck if r.get("id")) + "\n")
-    else:
-        print(
-            f"stuck_pdf_seeds {len(stuck)}  "
-            f"shared_url_groups {len(shared)}  "
-            f"min_fresh_year {args.min_fresh_year}",
-            file=sys.stderr,
-        )
 
     payload = {
         "min_fresh_year": args.min_fresh_year,
+        "counts": counts,
+        "skip_reasons": SKIP_REASONS,
         "stuck": stuck,
         "shared_seed_groups": shared,
     }
@@ -313,7 +437,7 @@ def main() -> int:
         args.out_json.write_text(json.dumps(payload, indent=2) + "\n")
     if args.out_md:
         args.out_md.parent.mkdir(parents=True, exist_ok=True)
-        args.out_md.write_text(render_markdown(stuck, shared, args.min_fresh_year))
+        args.out_md.write_text(render_markdown(stuck, shared, args.min_fresh_year, counts))
     if args.out_ids:
         args.out_ids.parent.mkdir(parents=True, exist_ok=True)
         args.out_ids.write_text(
