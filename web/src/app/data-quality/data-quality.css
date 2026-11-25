@@ -99,3 +99,8 @@
   .dq-table--trend col:nth-child(2) { width: 45cqw; }
   .dq-table--trend col:nth-child(n + 3) { width: 150px; }
 }
+
+/* A direct ?year= link shows the default year until the browser hydrates; the page's inline script sets data-dq-pending
+   on <html> and these show which year is loading and dim the old one. Cleared by YearStatus once hydrated. */
+.dq-pending { display: none; margin: 24px 0 0; font-size: 14px; color: var(--ink-3); }
+html[data-dq-pending] #dq-body { opacity: 0.5; }

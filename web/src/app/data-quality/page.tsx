@@ -3,7 +3,8 @@ import { Suspense } from "react";
 import "./data-quality.css";
 import { ArchiveStatusHeader } from "@/components/ArchiveStatusHeader";
 import { DataQualityView } from "@/components/DataQualityView";
-import { formatSnapshotDate, formatSnapshotTime, isDataQualityLaunched, qualityLede, snapshotDay, type QualitySnapshot } from "@/lib/data-quality";
+import { yearsNewestFirst, formatSnapshotDate, formatSnapshotTime, isDataQualityLaunched, qualityLede, snapshotDay, type QualitySnapshot } from "@/lib/data-quality";
+import { pendingYearScript } from "@/lib/data-quality-pending";
 import { buildTrend } from "@/lib/data-quality-trend";
 import { loadAllSnapshots, loadReportsFor } from "@/lib/data-quality-snapshots";
 
@@ -67,10 +68,27 @@ export default function DataQualityPage() {
         </p>
       </header>
 
-      {/* useSearchParams (the year picker) needs a Suspense boundary to keep the page static. */}
-      <Suspense fallback={<div className="mono" style={{ padding: "32px 0", color: "var(--ink-3)" }}>LOADING…</div>}>
-        <DataQualityView snapshot={snapshot} reportsUrl={reportsUrl} trend={trend} />
-      </Suspense>
+      {/* A direct ?year= link shows the default year until the browser hydrates (the HTML is static). Say so: an inline
+          script, which runs before hydration, sets an attribute; CSS then dims the body and shows the matching "Loading"
+          line below, and YearStatus clears the attribute once hydrated. */}
+      <style>
+        {yearsNewestFirst(snapshot)
+          .slice(1)
+          .map((y) => `html[data-dq-pending="${y.cds_year}"] .dq-pending[data-year="${y.cds_year}"]{display:block}`)
+          .join("")}
+      </style>
+      {yearsNewestFirst(snapshot).slice(1).map((y) => (
+        <p key={y.cds_year} role="status" className="dq-pending" data-year={y.cds_year}>
+          Loading {y.cds_year}…
+        </p>
+      ))}
+      <div id="dq-body">
+        {/* useSearchParams (the year picker) needs a Suspense boundary to keep the page static. */}
+        <Suspense fallback={<div className="mono" style={{ padding: "32px 0", color: "var(--ink-3)" }}>LOADING…</div>}>
+          <DataQualityView snapshot={snapshot} reportsUrl={reportsUrl} trend={trend} />
+        </Suspense>
+      </div>
+      <script dangerouslySetInnerHTML={{ __html: pendingYearScript(yearsNewestFirst(snapshot).slice(1).map((y) => y.cds_year)) }} />
     </div>
   );
 }
