@@ -7361,10 +7361,15 @@ _H1_AMOUNT_RE = re.compile(
     r"(?:\$\s*(\d[\d,]*(?:\.\d+)?)"
     r"|(?<![\w,.$/-])(\d{1,3}(?:,\d{3})+(?:\.\d+)?|0(?:\.0+)?)(?![\w,/-]|\.\d))"
 )
-# Words of the wrapped end of a row label ("... excluding athletic aid and tuition
-# waivers (which are reported below)"). A row name after one of them is part of
-# that label, not a row.
-_H1_CONTINUATION_RE = re.compile(r"excludes|captured above|reported below|not awarded by|excluding|which", re.IGNORECASE)
+# Words of a wrapped row label. Those that lead a fragment put the row name
+# after them ("... excludes Federal Work-Study", "... not awarded by"); those
+# that trail it put the row name before them ("Federal Work/Study captured
+# above)", "tuition waivers (which are reported below)"). A row name on the
+# wrong side of its word belongs to the label, not a row.
+_H1_LEADING_WORDS_RE = re.compile(r"excludes|excluding|not awarded by", re.IGNORECASE)
+_H1_TRAILING_WORDS_RE = re.compile(r"captured above|reported below|which", re.IGNORECASE)
+# A line that starts a new page of the document.
+_H1_PAGE_START_RE = re.compile(r"\f|Common Data Set\s+20\d\d|^\s*CDS-H\b|^\s*H\.\s*FINANCIAL AID", re.IGNORECASE)
 
 
 def _h_layout_h1_reading(block: str) -> tuple[dict[str, dict], list[tuple[str, str, set[float]]]]:
@@ -7409,12 +7414,15 @@ def _h_layout_h1_reading(block: str) -> tuple[dict[str, dict], list[tuple[str, s
         # "State (i.e., all states, not only ...)" is the State row too.
         if re.match(r"state\b", norm) and "all states" in norm and "state and other" not in norm:
             norm = "state all states"
-        wrapped = _H1_CONTINUATION_RE.search(norm)
+        leading = _H1_LEADING_WORDS_RE.search(norm)
+        trailing = _H1_TRAILING_WORDS_RE.search(norm)
         for substr, nb_qn, nn_qn in _H1_ROWS:
             at = norm.find(substr)
             if at < 0:
                 continue
-            if wrapped and at >= wrapped.start() and not substr.startswith("total"):
+            if not substr.startswith("total") and (
+                (leading and at >= leading.start()) or (trailing and at < trailing.start())
+            ):
                 continue
             # The same row named again within three lines is its wrapped label.
             if markers and markers[-1][1:] == (nb_qn, nn_qn) and li - markers[-1][0] <= 3:
@@ -7430,11 +7438,18 @@ def _h_layout_h1_reading(block: str) -> tuple[dict[str, dict], list[tuple[str, s
         return {}, []
     per_row: dict[int, list[tuple[int, str]]] = {}
     printed: dict[int, set[float]] = {}
+    page_of: dict[int, int] = {}  # marker line -> page number
+    marker_lines = {m[0] for m in markers}
+    row = None
+    page = 0
     for li, line in enumerate(lines):
-        prior = [m for m in markers if m[0] <= li]
-        if not prior:
+        if _H1_PAGE_START_RE.search(line):
+            page += 1
+        if li in marker_lines:
+            row = li
+            page_of[li] = page
+        if row is None:
             continue
-        row = prior[-1][0]
         for m in _H1_AMOUNT_RE.finditer(line):
             per_row.setdefault(row, []).append((m.end(), (m.group(1) or m.group(2)).replace(",", "")))
         for token in re.findall(r"\d[\d,]*(?:\.\d+)?", line):
@@ -7451,8 +7466,11 @@ def _h_layout_h1_reading(block: str) -> tuple[dict[str, dict], list[tuple[str, s
     if len(two) < 3:
         return {}, []
 
-    def medians(rows: list[tuple[int, str, str]]) -> tuple[int, int] | None:
+    def medians(rows: list[tuple[int, str, str]], floor: int | None = None) -> tuple[int, int] | None:
         pairs = [per_row[m[0]] for m in rows if len(per_row.get(m[0], ())) == 2]
+        # A number in a label ends far left of the need-based column; it must
+        # not set a sparse block's median.
+        pairs = [p for p in pairs if floor is None or p[0][0] >= floor]
         if not pairs:
             return None
         lefts, rights = sorted(p[0][0] for p in pairs), sorted(p[1][0] for p in pairs)
@@ -7460,13 +7478,17 @@ def _h_layout_h1_reading(block: str) -> tuple[dict[str, dict], list[tuple[str, s
 
     overall = medians(markers)
     # Blocks of the table: grants (to Total Scholarships), self-help (to Total
-    # Self-Help), then parent loans, tuition waivers and athletic awards.
+    # Self-Help), then parent loans, tuition waivers and athletic awards; a
+    # new page starts a new block, since a page's columns can sit elsewhere.
     blocks: list[list[tuple[int, str, str]]] = [[]]
     for m in markers:
+        if blocks[-1] and page_of[m[0]] != page_of[blocks[-1][-1][0]]:
+            blocks.append([])
         blocks[-1].append(m)
         if m[1] in ("H.109", "H.113"):
             blocks.append([])
-    block_medians = {m[0]: (medians(blk) or overall) for blk in blocks for m in blk}
+    floor = overall[0] - 20
+    block_medians = {m[0]: (medians(blk, floor) or overall) for blk in blocks for m in blk}
     claimed: dict[str, dict] = {}
     for li, nb_qn, nn_qn in markers:
         left_med, right_med = block_medians[li]
@@ -7522,7 +7544,11 @@ def _h_layout_h1_reading(block: str) -> tuple[dict[str, dict], list[tuple[str, s
     # break) leaves the sums of the other block to vouch for the reading.
     if not ({"H.109", "H.121"} & set(claimed) and {"H.113", "H.124"} & set(claimed)):
         return {}, []
-    rows = [(nb, nn, printed.get(li, set())) for li, nb, nn in markers if nb]
+    # Rows of the table: from the first row that has amounts. Row names in the
+    # instructions above it are not rows, and a row whose page has no text
+    # layer is not here, so the markdown's values for it are left alone.
+    start = min(li for li, nb, _ in markers if nb and per_row.get(li))
+    rows = [(nb, nn, printed.get(li, set())) for li, nb, nn in markers if nb and li >= start]
     return claimed, rows
 
 
@@ -7550,7 +7576,8 @@ def _h1_text_layer_reading(text: str, schema: SchemaIndex) -> tuple[dict[str, di
         return {}, []
     # The ids of rows follow the claims into the schema's numbering.
     ids = {qn for _, nb, nn in _H1_ROWS for qn in (nb, nn) if qn}
-    moved = {qn: next(iter(_h1_fields_with_same_question_in_schema({qn: {"value": qn}}, schema)), None) for qn in ids}
+    in_schema = _h1_fields_with_same_question_in_schema({qn: {"value": qn} for qn in ids}, schema)
+    moved = {rec["value"]: qn for qn, rec in in_schema.items()}
     rows = [(moved.get(nb) or "", moved.get(nn) or "", printed) for nb, nn, printed in rows]
     return _h1_fields_with_same_question_in_schema(claims, schema), rows
 
@@ -9244,10 +9271,13 @@ def clean(
                     for qn in (nb_qn, nn_qn):
                         if not qn or qn in h1_by_column:
                             continue
-                        old = values.get(qn) or new.get(qn) or supplemental_new.get(qn)
+                        old = values.get(qn) or new.get(qn)
                         number = _h1_number(old)
                         if number is not None and number in printed and number not in taken:
                             kept[qn] = old
+                # Only the rows the text layer has; a row on a page without a
+                # text layer keeps the markdown's values.
+                h1_qns = {qn for nb_qn, nn_qn, _ in h1_rows for qn in (nb_qn, nn_qn) if qn} & h1_qns
                 for qn in h1_qns:
                     values.pop(qn, None)
                 new = {qn: rec for qn, rec in new.items() if qn not in h1_qns}

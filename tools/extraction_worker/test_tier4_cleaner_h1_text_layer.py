@@ -119,6 +119,7 @@ class H1TextLayerTest(unittest.TestCase):
             + line("Athletic Awards", "$0", "$0")
         )
         self.assertEqual(_h_layout_h1_rows_by_column(HEADER + rows), {})
+
     def test_state_row_worded_with_an_example_is_still_the_state_row(self) -> None:
         text = INSTRUCTIONS + HEADER + TRINITY_ROWS.replace(
             "State - all states, not only the state in which", "State (i.e., all states, not only the state in which"
@@ -217,27 +218,29 @@ class H1TextLayerTest(unittest.TestCase):
         self.assertEqual(h1(read(INSTRUCTIONS + HEADER + rows + AFTER))["H.112"], "735526")
 
     def test_lone_amounts_need_separated_columns(self) -> None:
-        narrow = (NEED_END, NEED_END + 6)
+        # Columns 8 apart: the least that fits two short amounts, and less than
+        # the 12 that count as separated.
+        narrow = (110, 118)
         rows = "".join(
-            line(label, need, non, ends=narrow) if non else line(label, need, ends=narrow)
+            line(label, need, non, ends=narrow)
             for label, need, non in (
-                ("Federal", "$1,973,493", "$265,723"),
-                ("State - all states, not only the state in which", "$141,723", "$0"),
-                ("Instititutional - Endowed scholarships, annual", "$75,746,654", "$4,204,069"),
-                ("Scholarships/grants from external sources", "$1,396,004", "$751,916"),
+                ("Federal", "$10,000", "$1,000"),
+                ("State - all states, not only the state in which", "$20,000", "$2,000"),
+                ("Instititutional - Endowed scholarships, annual", "$30,000", "$3,000"),
+                ("Scholarships/grants from external sources", "$40,000", "$4,000"),
             )
         )
-        rows += line("Total Scholarships/Grants", "$79,257,874", "$5,221,708", at=60, ends=narrow)
-        rows += line("Student loans from all sources", "$2,308,770", "$7,214,427", ends=narrow)
-        rows += line("Federal Work-Study", "$735,526", ends=narrow)
-        rows += line("Total Self-Help", "$3,044,296", "$7,214,427", at=70, ends=narrow)
-        rows += line("Parent Loans", "", "$3,104,361", ends=narrow)
+        rows += line("Total Scholarships/Grants", "$100,000", "$10,000", at=60, ends=narrow)
+        rows += line("Student loans from all sources", "$5,000", "$500", ends=narrow)
+        rows += line("Total Self-Help", "$5,000", "$500", at=70, ends=narrow)
+        rows += line("Parent Loans", "", "$3,100", ends=narrow)
+        rows += line("Tuition Waivers", "$320", "$426", ends=narrow)
         values = h1(read(INSTRUCTIONS + HEADER + rows + AFTER))
+        self.assertEqual(values["H.110"], "100000")  # the table itself is accepted
         self.assertNotIn("H.126", values)  # the lone amount cannot be placed
-        self.assertNotIn("H.112", values)  # nor the work-study amount; the sums still refuse or hold
-        # Same layout with the columns apart: both are placed.
+        # Same layout with the columns apart: it is placed.
         apart = h1(read(INSTRUCTIONS + HEADER + TRINITY_ROWS + AFTER))
-        self.assertEqual((apart["H.112"], apart["H.126"]), ("735526", "3104361"))
+        self.assertEqual(apart["H.126"], "3104361")
 
     def test_a_number_inside_a_label_is_not_a_lone_amount(self) -> None:
         rows = TRINITY_ROWS.replace(
@@ -293,6 +296,100 @@ class H1TextLayerTest(unittest.TestCase):
         self.assertEqual(values["H.111"], "735526")
         self.assertNotIn("H.112", values)
         self.assertEqual(values["H.127"], "0")  # Athletic Awards, non-need-based
+
+    def test_a_lone_amount_the_column_reader_refuses_does_not_come_back_from_the_legacy_reader(self) -> None:
+        # Instructions that do not name H2 let the older reader reach the table;
+        # it would put Parent Loans' far-right non-need-based amount in the
+        # need-based field. The column reader does not place it; only the
+        # markdown's own value, if any, may stand, and not twice.
+        instructions = INSTRUCTIONS.replace("items H1, H2, H2A, and H6", "the items below")
+        far = " " * 38 + "Parent Loans"
+        far = far.ljust(170 - len("$3,104,361")) + "$3,104,361\n"
+        rows = TRINITY_ROWS.replace(line("Parent Loans", "", "$3,104,361"), far).replace(
+            line("(excluding parent loans)"), line("(excluding PLUS)")
+        )  # the older reader would take that label for the Parent Loans row
+        empty = h1(read(instructions + HEADER + rows + AFTER))
+        self.assertNotIn("H.115", empty)
+        self.assertNotIn("H.126", empty)
+        markdown = "| Question | Value |\n|---|---|\n| H.126 | 3104361 |\n"
+        kept = h1(read(instructions + HEADER + rows + AFTER, markdown))
+        self.assertEqual(kept["H.126"], "3104361")
+        self.assertNotIn("H.115", kept)
+
+    def test_a_trailing_continuation_line_is_not_a_row(self) -> None:
+        # Federal Work-Study is blank; "Federal Work/Study captured above)"
+        # wraps onto the line that carries State and other's amount.
+        rows = TRINITY_ROWS.replace(
+            line("Federal Work-Study", "$735,526")
+            + line("State and other (e.g., institutional) work-")
+            + line("study/employment (Note: excludes Federal")
+            + line("Work/Study captured above)"),
+            line("Federal Work-Study", "Not Applicable")
+            + line("State and other (e.g., institutional) work-")
+            + line("study/employment (Note:")
+            + line("Federal Work/Study captured above)", "$2,309,770"),
+        ).replace("$3,044,296", "$4,618,540")
+        values = h1(read(INSTRUCTIONS + HEADER + rows + AFTER))
+        self.assertEqual(values["H.113"], "2309770")  # State and other
+        self.assertNotIn("H.112", values)  # not Federal Work-Study
+
+    def test_a_row_name_before_which_are_reported_below_is_not_a_row(self) -> None:
+        # The Institutional label wraps; its last line names Tuition Waivers
+        # and carries the amounts.
+        rows = TRINITY_ROWS.replace(
+            line("gifts and tuition funded grants, awarded by", "$75,746,654", "$4,204,069")
+            + line("the college, excluding athletic aid and tuition")
+            + line("waivers (which are reported below)"),
+            line("gifts and tuition funded grants, awarded by")
+            + line("excluding athletic aid and tuition waivers (which are reported below)", "$75,746,654", "$4,204,069", at=5),
+        )
+        self.assertIn("(which are reported below)", rows)
+        values = h1(read(INSTRUCTIONS + HEADER + rows + AFTER))
+        self.assertEqual(values["H.108"], "75746654")
+        self.assertEqual(values["H.116"], "320758")  # Tuition Waivers keeps its own row
+
+    def test_columns_that_move_with_the_page_are_not_pooled(self) -> None:
+        # Parent Loans sits at the foot of one page, in columns 105 and 125;
+        # Tuition Waivers and Athletic Awards head the next, at 118 and 138.
+        # Pooled, the lone Parent Loans amount at 125 would read as need-based.
+        rows = TRINITY_ROWS.split(line("Parent Loans", "", "$3,104,361"))[0]
+        rows += line("Parent Loans", "", "$3,104,361", ends=(105, 125))
+        rows += "\n\n" + line("Common Data Set 2023-2024", at=10) + line("H. FINANCIAL AID", at=10)
+        rows += line("Tuition Waivers", "$320,758", "$426,282", ends=(118, 138))
+        rows += line("Athletic Awards", "$0", "$0", ends=(118, 138))
+        values = h1(read(INSTRUCTIONS + HEADER + rows + AFTER))
+        self.assertEqual(values["H.110"], "79257874")  # the table is accepted
+        self.assertNotIn("H.115", values)
+        self.assertNotIn("H.126", values)
+
+    def test_a_page_without_a_text_layer_keeps_the_markdown_values_for_its_rows(self) -> None:
+        # Only grants and self-help are in the text layer.
+        rows = TRINITY_ROWS.split(line("Parent Loans", "", "$3,104,361"))[0]
+        markdown = "| Question | Value |\n|---|---|\n| H.115 | 111 |\n| H.116 | 222 |\n| H.113 | 735526 |\n"
+        values = h1(read(INSTRUCTIONS + HEADER + rows + AFTER, markdown))
+        self.assertEqual(values["H.110"], "79257874")
+        self.assertEqual((values["H.115"], values["H.116"]), ("111", "222"))
+        self.assertNotIn("H.113", values)  # a row the text layer has is replaced
+
+    def test_a_number_in_a_label_does_not_set_a_sparse_blocks_median(self) -> None:
+        # Parent Loans' label holds "2,500" and its row one real amount, so
+        # the block's only two-amount row would put its median in the label.
+        rows = TRINITY_ROWS.split(line("Parent Loans", "", "$3,104,361"))[0]
+        rows += line("Parent Loans (2,500 families)", "", "$3,104,361")
+        rows += line("Tuition Waivers", "$320,758")
+        values = h1(read(INSTRUCTIONS + HEADER + rows + AFTER))
+        self.assertEqual(values["H.110"], "79257874")
+        self.assertNotIn("H.115", values)  # 2,500 is not a need-based amount
+        self.assertEqual(values["H.126"], "3104361")
+
+    def test_external_grants_row_named_with_not_awarded_by_on_one_line(self) -> None:
+        rows = TRINITY_ROWS.replace(
+            line("Scholarships/grants from external sources")
+            + line("(e.g. Kiwanis, National Merit) not awarded by", "$1,396,004", "$751,916"),
+            line("Scholarships/grants from external sources not awarded by", "$1,396,004", "$751,916"),
+        )
+        self.assertIn("external sources not awarded by", rows)
+        self.assertEqual(h1(read(INSTRUCTIONS + HEADER + rows + AFTER))["H.109"], "1396004")
 
     def test_text_layer_replaces_the_markdown_h1_block(self) -> None:
         # The markdown reading put the work-study amount in H.113 ("State and
