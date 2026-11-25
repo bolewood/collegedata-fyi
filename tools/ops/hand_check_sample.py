@@ -226,6 +226,7 @@ def render_issue(
     picks: list[dict[str, Any]],
     month: str,
     prev_body: str | None = None,
+    extra_section: str | None = None,
 ) -> str:
     lines: list[str] = []
     if prev_body is not None:
@@ -247,6 +248,10 @@ def render_issue(
         "every month of the year because schools post from March to November.",
         "",
     ]
+    if extra_section and extra_section.strip():
+        # Before the school blocks: count_answers reads only boxes after a school
+        # marker, and this section has none.
+        lines += [extra_section.strip(), ""]
     for p in picks:
         newest = p["newest_year"] or "undated only"
         lines += [f"### {p['name']}", f"<!-- hand-check-school:{p['school_id']} -->", ""]
@@ -298,6 +303,7 @@ def main() -> int:
     ap.add_argument("--prev-body-file", help="last month's issue body, to count its answers")
     ap.add_argument("--issues-json", help="gh issue list JSON (newest first) to find the previous issue")
     ap.add_argument("--exists-out", help="write true/false: does this month's issue already exist")
+    ap.add_argument("--extra-section-file", help="markdown section to put before the school blocks (fetch failures)")
     ap.add_argument("--out", help="write the issue body here (default: stdout)")
     args = ap.parse_args()
 
@@ -330,7 +336,12 @@ def main() -> int:
             Path(args.exists_out).write_text("true" if exists else "false", encoding="utf-8")
 
     picks = build_picks(rows, load_schools_yaml(), args.month)
-    body = render_issue(picks, args.month, prev_body)
+    extra = None
+    if args.extra_section_file:
+        extra = Path(args.extra_section_file).read_text(encoding="utf-8")
+        if not extra.strip():
+            raise SystemExit("--extra-section-file is empty")
+    body = render_issue(picks, args.month, prev_body, extra)
     if args.out:
         Path(args.out).write_text(body, encoding="utf-8")
     else:

@@ -231,5 +231,45 @@ class BuildPicksTests(unittest.TestCase):
             h.build_picks(data, {}, "2026-11")
 
 
+class FetchFailureSectionTests(unittest.TestCase):
+    PICK = {"school_id": "a", "name": "A U", "newest_year": "2024-25", "domain": "a.edu", "seed_url": ""}
+    SECTION = "## Fetch failures\n\n### Blocked (1)\n\n| School |\n|---|\n| x |\n"
+
+    def test_section_goes_before_the_school_blocks_and_answers_still_count(self):
+        body = h.render_issue([self.PICK], "2026-12", None, self.SECTION)
+        self.assertIn("## Fetch failures", body)
+        self.assertLess(body.index("## Fetch failures"), body.index("hand-check-school:a"))
+        # The section adds no school marker and no checkbox, so last month's
+        # answer parser sees the same blocks with or without it.
+        self.assertEqual(h.count_answers(body), h.count_answers(h.render_issue([self.PICK], "2026-12", None)))
+        self.assertNotIn("hand-check-school", self.SECTION)
+
+    def test_no_section_leaves_the_issue_unchanged(self):
+        self.assertEqual(
+            h.render_issue([self.PICK], "2026-12", None, None),
+            h.render_issue([self.PICK], "2026-12", None),
+        )
+
+
+class HandCheckWorkflowKeyTests(unittest.TestCase):
+    def test_service_key_is_in_the_fetch_failures_step_only(self):
+        from pathlib import Path
+
+        path = Path(__file__).resolve().parents[2] / ".github" / "workflows" / "ops-hand-check.yml"
+        text = path.read_text(encoding="utf-8")
+        self.assertEqual(text.count("SUPABASE_SERVICE_ROLE_KEY: ${{ secrets."), 1)
+        job_env = text.split("    env:\n", 1)[1].split("    steps:")[0]
+        self.assertNotIn("SERVICE_ROLE", job_env)
+        self.assertNotIn("secrets.SUPABASE_URL", job_env)
+        install = text.split("Install Python dependencies")[1].split("id: fetch_failures")[0]
+        self.assertNotIn("SERVICE_ROLE", install)
+        step = text.split("id: fetch_failures")[1].split("name: Build and open the issue")[0]
+        self.assertIn("SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}", step)
+        self.assertIn("Fetch-failure list skipped: no service key", step)
+        build = text.split("name: Build and open the issue")[1]
+        self.assertNotIn("SERVICE_ROLE", build)
+        self.assertIn("--extra-section-file", build)
+
+
 if __name__ == "__main__":
     unittest.main()
