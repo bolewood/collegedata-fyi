@@ -1,7 +1,43 @@
 /* PRD 040: the tables on /data-quality scroll sideways when their box is narrower than their minimum width.
-   The hint is static CSS: a container query on the wrapper, no script and no measuring. The numbers are
-   TABLE_MIN_WIDTH - 1 and WIDE_TABLE_MIN_WIDTH - 1 in DataQualityView.tsx; a test keeps them in step. */
+   Everything here is static CSS keyed to the width of the scroll box (a container query), with no script and
+   no measuring. The hint's look is the shared .acc-table-hint (12px, right-aligned); only when it shows is set here.
+
+   A phone scroll must never cut a number in half ("30" read as "3"). So below the minimum width the leading
+   columns are sized in cqw (the box's own width) to add up to exactly one box, and the rest are fixed pixels:
+   the cut then falls on a column edge at any phone width. The leading columns are few enough to hold their
+   widest content down to a 320px screen (checked: no cell's text overflows its cell). The hint's breakpoints
+   are the minimum widths minus one; a test keeps them in step. */
 .dq-scroll { container-type: inline-size; }
-.dq-scroll-hint { display: none; margin: 0 0 6px; font-size: 13px; line-height: 1.4; color: var(--ink-3); }
+/* The width lives here, not inline, so the container rules below can override it. */
+.dq-table { width: 100%; min-width: 640px; }
+.dq-table--c { min-width: 820px; }
+.dq-scroll-hint { display: none; }
 @container (max-width: 639px) { .dq-scroll .dq-scroll-hint { display: block; } }
 @container (max-width: 819px) { .dq-scroll--wide .dq-scroll-hint { display: block; } }
+
+/* Leading columns add to 100cqw; the trailing pixel columns add to the figure in each width. */
+@container (max-width: 639px) {
+  .dq-table { min-width: 0; table-layout: fixed; }
+  .dq-table--glance { width: calc(100cqw + 490px); }
+  .dq-table--a { width: calc(100cqw + 360px); }
+  .dq-table--b { width: calc(100cqw + 400px); }
+  .dq-table--glance col:nth-child(1) { width: 24cqw; }
+  .dq-table--glance col:nth-child(2) { width: 26cqw; }
+  .dq-table--glance col:nth-child(3) { width: 25cqw; }
+  .dq-table--glance col:nth-child(4) { width: 25cqw; }
+  .dq-table--glance col:nth-child(n + 5) { width: 98px; }
+  .dq-table--a col:nth-child(1) { width: 40cqw; }
+  .dq-table--a col:nth-child(2) { width: 30cqw; }
+  .dq-table--a col:nth-child(3) { width: 30cqw; }
+  .dq-table--a col:nth-child(n + 4) { width: 90px; }
+  .dq-table--b col:nth-child(1) { width: 34cqw; }
+  .dq-table--b col:nth-child(2) { width: 33cqw; }
+  .dq-table--b col:nth-child(3) { width: 33cqw; }
+  .dq-table--b col:nth-child(n + 4) { width: 100px; }
+}
+@container (max-width: 819px) {
+  .dq-table--c { min-width: 0; table-layout: fixed; width: calc(100cqw + 540px); }
+  .dq-table--c col:nth-child(1) { width: 55cqw; }
+  .dq-table--c col:nth-child(2) { width: 45cqw; }
+  .dq-table--c col:nth-child(n + 3) { width: 180px; }
+}

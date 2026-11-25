@@ -148,7 +148,8 @@ export const FIXTURE_SNAPSHOT: QualitySnapshot = {
       other_form_numbering: 12,
       removed: 4,
     }),
-    year("2025-26", [flat(40, { not_read_yet: 1 }), fillable(20)], {
+    // No federal figures for the year: every federal count is zero, as the producer writes it.
+    year("2025-26", [flat(40, { not_read_yet: 1, federal: [0, 0, 0, 0] }), fillable(20, { federal: [0, 0, 0, 0] })], {
       form: { form_year: "2025-26", full_field_schema: true, questions: 1105 },
       federal_fall_loaded: false,
     }),
@@ -156,4 +157,26 @@ export const FIXTURE_SNAPSHOT: QualitySnapshot = {
       form: { form_year: "2024-25", full_field_schema: true, questions: 1083 },
     }),
   ],
+};
+
+/** A full-schema year with no documents (test_scoreboard.py builds this 2026-27 shape): no rows, every count zero but removed and no_file. */
+export const emptyYear = (cds_year: string): QualityYear => {
+  const sums = { adds_up: 0, under_2pct: 0, off_more: 0, cant_check: 0 };
+  return {
+    cds_year,
+    form: { form_year: cds_year, full_field_schema: true, questions: 1053 },
+    federal_fall_loaded: false,
+    other_form_numbering: 0,
+    removed: 1,
+    no_file: 1,
+    set_aside_reasons: { blank_form: 0, too_little_read: 0, wrong_file: 0 },
+    federal_left_out: { single_campus: 0, no_federal_figures: 0 },
+    rows: [],
+    total: {
+      status: { published: 0, set_aside: 0, couldnt_read: 0, not_read_yet: 0 },
+      fields_stored: { median: 0, p10: 0 },
+      federal: { reports: 0, values: 0, matches: 0, no_value: 0, differs: 0 },
+      totals: { reports: 0, B1: { ...sums }, C1: { ...sums }, H1: { adds_up: 0, doesnt: 0, cant_check: 0 } },
+    },
+  };
 };

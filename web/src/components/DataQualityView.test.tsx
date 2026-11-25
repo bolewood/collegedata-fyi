@@ -10,7 +10,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/data-quality",
 }));
 
-import { FIXTURE_SNAPSHOT } from "@/lib/__fixtures__/data-quality-snapshot";
+import { FIXTURE_SNAPSHOT, emptyYear } from "@/lib/__fixtures__/data-quality-snapshot";
 import { DATA_LICENSE_NAME, DATA_LICENSE_URL } from "@/lib/data-license";
 import {
   type QualitySnapshot,
@@ -24,9 +24,10 @@ import {
   aidCantCheckNote,
   federalDiffersNote,
 } from "@/lib/data-quality";
+import { HAS_CDS_HREF } from "@/lib/coverage-model";
 import { secondaryNavLinks, isActive } from "@/lib/nav-links";
 import { ArchiveStatusHeader, visibleArchiveTabs } from "./ArchiveStatusHeader";
-import { DataQualityView, TABLE_MIN_WIDTH, WIDE_TABLE_MIN_WIDTH, yearNotices } from "./DataQualityView";
+import { DataQualityView, yearNotices } from "./DataQualityView";
 
 function render(search = "") {
   currentParams = new URLSearchParams(search);
@@ -148,6 +149,12 @@ describe("launch gate: header, nav and methodology link", () => {
     const after = renderToStaticMarkup(<ArchiveStatusHeader active="quality" launched />);
     expect(after).toContain('href="/coverage"');
     expect(after).toMatch(/aria-current="page"[^>]*>Data quality</);
+  });
+
+  it("links the list of colleges we have a CDS for, one click from the page, to the same preset the Coverage tab offers", () => {
+    const html = render();
+    expect(html).toContain(`href="${HAS_CDS_HREF}"`);
+    expect(html).toMatch(/<a href="[^"]*">colleges we have a CDS for<\/a>/);
   });
 
   it("keeps 'Coverage' in the nav before launch, and 'Archive status' lit on both routes after", () => {
@@ -299,9 +306,9 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
     expect(text).not.toMatch(/We use the table by sex\./);
   });
 
-  it("puts a static hint above each wide table (CSS decides when it shows) and no script-driven cue", () => {
+  it("puts a static, aria-hidden hint above each wide table (CSS decides when it shows) and no script-driven cue", () => {
     const html = render("year=2024-25");
-    expect(html.match(/class="dq-scroll-hint"/g)).toHaveLength(4);
+    expect(html.match(/class="dq-scroll-hint acc-table-hint" aria-hidden="true"/g)).toHaveLength(4);
     expect(html.match(/dq-scroll--wide/g)).toHaveLength(1);
     expect(html).not.toContain("linear-gradient");
     // Every table's scroll region is still focusable and labelled.
@@ -310,11 +317,93 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
     expect(src).not.toMatch(/useState|useEffect|ResizeObserver|scrollWidth/);
   });
 
+  it("leaves out the hint for Table B when the year has no federal figures (a table of dashes)", () => {
+    const html = render("year=2025-26");
+    expect(html.match(/dq-scroll-hint/g)).toHaveLength(3);
+    const b = html.slice(html.indexOf('aria-label="Table B, 2025-26"') - 400, html.indexOf('aria-label="Table B, 2025-26"'));
+    expect(b).not.toContain("dq-scroll-hint");
+  });
+
+  const css = () => readFileSync(resolve(__dirname, "../app/data-quality/data-quality.css"), "utf8");
+
   it("keeps the CSS hint's breakpoints one pixel under the tables' minimum widths", () => {
-    const css = readFileSync(resolve(__dirname, "../app/data-quality/data-quality.css"), "utf8");
-    expect(css).toContain("container-type: inline-size");
-    expect(css).toContain(`@container (max-width: ${TABLE_MIN_WIDTH - 1}px)`);
-    expect(css).toContain(`@container (max-width: ${WIDE_TABLE_MIN_WIDTH - 1}px)`);
+    const text = css();
+    expect(text).toContain("container-type: inline-size");
+    const min = (sel: string) => Number(new RegExp(`${sel} \\{[^}]*min-width: (\\d+)px`).exec(text)![1]);
+    expect(text).toContain(`@container (max-width: ${min("\\.dq-table")  - 1}px) { .dq-scroll .dq-scroll-hint`);
+    expect(text).toContain(`@container (max-width: ${min("\\.dq-table--c") - 1}px) { .dq-scroll--wide .dq-scroll-hint`);
+  });
+
+  // The scroll cut must land on a column edge (a half-shown "30" reads as "3"). On a phone each table's leading
+  // columns are sized in cqw to add up to exactly one scroll box, and its trailing columns in px to add up to the
+  // width the table adds on top, so the visible part is whole columns at any phone width.
+  it.each([
+    ["dq-glance", "glance"],
+    ["dq-table-a", "a"],
+    ["dq-table-b", "b"],
+    ["dq-table-c", "c"],
+  ])("renders %s with its phone class and one sized column per header cell", (id, name) => {
+    const html = render("year=2024-25");
+    const whole = html.match(new RegExp(`<table class="([^"]*)"[^>]*id="${id}"[\\s\\S]*?</table>`))!;
+    expect(whole[1].split(" ")).toContain("dq-table");
+    expect(whole[1].split(" ")).toContain(`dq-table--${name}`);
+    const cols = whole[0].match(/<col\b/g) ?? [];
+    const headerCells = whole[0].match(/<thead>[\s\S]*?<\/tr>/)![0].match(/<th\b/g) ?? [];
+    expect(whole[0]).toContain("<colgroup>");
+    expect(cols.length).toBe(headerCells.length);
+    expect(cols.length).toBeGreaterThan(0);
+  });
+
+  it("renders a year with no documents as dashes, not 0%", () => {
+    const snap: QualitySnapshot = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT));
+    snap.years.push(emptyYear("2026-27"));
+    currentParams = new URLSearchParams("year=2026-27");
+    const html = renderToStaticMarkup(<DataQualityView snapshot={snap} />);
+    expect(html).toContain("Table A, 2026-27");
+    for (const id of ["dq-table-b", "dq-table-c"]) expect(table(html, id)).not.toMatch(PCT);
+    expect(table(html, "dq-table-c")).toContain("(–)");
+    // The glance row: match rate and the three adds-up rates are dashes (no reports, so no denominator).
+    const row = html.match(/<tr><th scope="row"[^>]*>2026-27<\/th>[\s\S]*?<\/tr>/)![0];
+    expect(row.match(/>–</g)).toHaveLength(4);
+    expect(row).not.toMatch(/\d+%/);
+    expect(html).toContain("1 removed, 1 with no file");
+  });
+
+  it("keeps each table's width out of its inline style, so the container rules can set it", () => {
+    const html = render("year=2024-25");
+    for (const id of ["dq-glance", "dq-table-a", "dq-table-b", "dq-table-c"]) {
+      const open = html.match(new RegExp(`<table[^>]*id="${id}"[^>]*>`))![0];
+      expect(open).not.toMatch(/width/);
+    }
+  });
+
+  it.each([
+    ["glance", "dq-glance", "\\.dq-table--glance"],
+    ["a", "dq-table-a", "\\.dq-table--a"],
+    ["b", "dq-table-b", "\\.dq-table--b"],
+    ["c", "dq-table-c", "\\.dq-table--c"],
+  ])("sizes Table %s's phone columns to end the first screen on a column edge", (_, id, sel) => {
+    // The column count is the rendered header's, so a new column without a CSS rule for it fails here.
+    const whole = render("year=2024-25").match(new RegExp(`<table[^>]*id="${id}"[\\s\\S]*?</table>`))![0];
+    const cols = (whole.match(/<thead>[\s\S]*?<\/tr>/)![0].match(/<th\b/g) ?? []).length;
+    expect(cols).toBeGreaterThan(0);
+    const text = css();
+    const width = new RegExp(`${sel} \\{[^}]*width: calc\\(100cqw \\+ (\\d+)px\\)`).exec(text);
+    expect(width).not.toBeNull();
+    const rules = [...text.matchAll(new RegExp(`${sel} col:nth-child\\((n \\+ )?(\\d+)\\) \\{ width: (\\d+)(cqw|px)`, "g"))];
+    let cqw = 0;
+    let px = 0;
+    let covered = 0;
+    for (const m of rules) {
+      const from = Number(m[2]);
+      const count = m[1] ? cols - from + 1 : 1;
+      covered += count;
+      if (m[4] === "cqw") cqw += count * Number(m[3]);
+      else px += count * Number(m[3]);
+    }
+    expect(covered).toBe(cols);
+    expect(cqw).toBe(100);
+    expect(px).toBe(Number(width![1]));
   });
 
   // Seen under `next dev` and in the production build: the space before a text run containing an HTML entity is

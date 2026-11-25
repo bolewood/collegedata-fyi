@@ -2,18 +2,24 @@ name: CI
 
 on:
   pull_request:
-    paths-ignore:
-      - "docs/**"
-      - "**/*.md"
-      - ".context/**"
+    # Docs-only changes skip CI, except the copy deck: web/src/app/data-quality/copy-deck.test.tsx reads it.
+    paths:
+      - "**"
+      - "!docs/**"
+      - "!**/*.md"
+      - "!.context/**"
+      - "docs/copy/**"
   push:
     branches:
       - main
       - "santhonys/**"
-    paths-ignore:
-      - "docs/**"
-      - "**/*.md"
-      - ".context/**"
+    # Docs-only changes skip CI, except the copy deck: web/src/app/data-quality/copy-deck.test.tsx reads it.
+    paths:
+      - "**"
+      - "!docs/**"
+      - "!**/*.md"
+      - "!.context/**"
+      - "docs/copy/**"
   workflow_dispatch:
 
 jobs:
