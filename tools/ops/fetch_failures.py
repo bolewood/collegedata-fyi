@@ -475,6 +475,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--window-days", type=int, default=WINDOW_DAYS)
     parser.add_argument("--heading-level", type=int, default=2)
     parser.add_argument("--out-summary", type=Path)
+    parser.add_argument(
+        "--merge-summary",
+        type=Path,
+        help="add the fetch_failures keys to this existing summary JSON (renewal summary); "
+        "left untouched when the run is skipped",
+    )
     parser.add_argument("--out-report", type=Path)
     parser.add_argument("--out-worklist", type=Path)
     return parser
@@ -530,6 +536,12 @@ def run(args: argparse.Namespace) -> int:
         heading_level=args.heading_level,
     )
     write_json(args.out_summary, summary)
+    if args.merge_summary:
+        merged = json.loads(args.merge_summary.read_text(encoding="utf-8"))
+        if not isinstance(merged, dict):
+            raise RenewalError(f"{args.merge_summary} is not a JSON object")
+        merged.update(summary)
+        write_json(args.merge_summary, merged)
     write_json(args.out_worklist, worklist(cases))
     if args.out_report:
         args.out_report.parent.mkdir(parents=True, exist_ok=True)

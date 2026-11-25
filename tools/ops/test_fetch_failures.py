@@ -261,6 +261,36 @@ class CliTests(unittest.TestCase):
             self.assertIn("SKIPPED", err.getvalue())
             self.assertIn("No counts are reported", report.read_text())
 
+    def test_merge_summary_adds_keys_and_keeps_the_renewal_keys(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            t = Path(tmp)
+            (t / "schools.yaml").write_text(
+                f"schools:\n  - {{id: a, name: A, scrape_policy: active, discovery_seed_url: '{LISTING}'}}\n"
+            )
+            (t / "waf.yaml").write_text("schools:\n  a:\n    school_name: A\n")
+            (t / "m.json").write_text("[]")
+            (t / "q.json").write_text(json.dumps([{**attempt(), "school_id": "a"}]))
+            renewal = t / "renewal.json"
+            renewal.write_text(json.dumps({"renewal_pct": 41.2}))
+            argv = [
+                "--schools-yaml", str(t / "schools.yaml"), "--waf-yaml", str(t / "waf.yaml"),
+                "--manifest-json", str(t / "m.json"), "--queue-json", str(t / "q.json"),
+                "--as-of", "2026-11-24", "--merge-summary", str(renewal),
+            ]
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(ff.main(argv), 0)
+            merged = json.loads(renewal.read_text())
+            self.assertEqual(merged["renewal_pct"], 41.2)
+            self.assertEqual(merged["fetch_failures_blocked"], 1)
+
+    def test_skipped_run_leaves_the_renewal_summary_without_fetch_keys(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            renewal = Path(tmp) / "renewal.json"
+            renewal.write_text(json.dumps({"renewal_pct": 41.2}))
+            with patch.dict("os.environ", {}, clear=True), redirect_stderr(io.StringIO()):
+                self.assertEqual(ff.main(["--merge-summary", str(renewal)]), 0)
+            self.assertEqual(json.loads(renewal.read_text()), {"renewal_pct": 41.2})
+
     def test_local_run_writes_summary_report_and_worklist(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

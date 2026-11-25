@@ -45,8 +45,13 @@ class PipelineWriterLintTests(unittest.TestCase):
         self.assertNotIn("--status running", text)
         self.assertIn('--status "${status}"', text)
         # The service key is only in the heartbeat steps.
-        compute = text.split("id: compute")[1].split("id: alarm")[0]
+        compute = text.split("id: compute")[1].split("id: fetch_failures")[0]
         self.assertNotIn("SERVICE_ROLE", compute)
+        # The fetch-failures step reads archive_queue: the key is in its env only.
+        fetch = text.split("id: fetch_failures")[1].split("id: alarm")[0]
+        self.assertIn("SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}", fetch)
+        self.assertIn("continue-on-error: true", fetch)
+        self.assertIn('FETCH_OUTCOME}" == "failure"', text.split("Heartbeat discovery_renewal finish")[1])
         job_env = text.split("    env:\n", 1)[1].split("    steps:")[0]
         self.assertNotIn("SERVICE_ROLE", job_env)
         self.assertNotIn("SUPABASE_URL", job_env)
