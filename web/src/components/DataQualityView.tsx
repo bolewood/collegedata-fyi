@@ -156,7 +156,8 @@ const tdStyle: React.CSSProperties = {
   fontFamily: "var(--mono)",
   verticalAlign: "top",
 };
-const tdLeft: React.CSSProperties = { ...tdStyle, textAlign: "left", fontFamily: "var(--sans)", whiteSpace: "nowrap" };
+// Row labels wrap: a label that doesn't (nowrap) runs over the number beside it in a narrow phone column.
+const tdLeft: React.CSSProperties = { ...tdStyle, textAlign: "left", fontFamily: "var(--sans)", overflowWrap: "anywhere" };
 /** Sentences under a download or at the top of the page: small, normal case. `.meta` is for labels. */
 const smallPrint: React.CSSProperties = { margin: "8px 0 0", maxWidth: 720, fontSize: 13, lineHeight: 1.5, color: "var(--ink-3)" };
 const totalRow: React.CSSProperties = { fontWeight: 600, background: "var(--paper-2)" };
@@ -322,8 +323,7 @@ function TrendTable({ id, caption, rows, points, cohortLabel = false }: { id: st
         <tbody>
           {rows.map((r) => (
             <tr key={r.key}>
-              {/* Row labels wrap (tdLeft is nowrap, which ran a long label over its own value on a phone). */}
-              <th scope="row" style={{ ...tdLeft, whiteSpace: "normal" }}>{r.label}</th>
+              <th scope="row" style={tdLeft}>{r.label}</th>
               {r.values.map((v, i) => (
                 <td key={points[i].snapshot_of} style={tdStyle}>
                   {v === null ? DASH : r.unit === "percent" ? `${v}%` : n(v)}
@@ -533,6 +533,8 @@ function ReportsTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
       <Note>
         Fields stored counts the fields stored for the report as we publish it, including fields recorded as
         unreadable or “not applicable”. It measures how much of the form we reached, not how many usable answers we have.
+        The median is the middle report by rank: with an even number of reports it is the lower of the two middle
+        values, not their average, and the lowest 10% is taken the same way.
         The {year.form.form_year} form has {n(year.form.questions)} questions.{" "}
         {year.other_form_numbering > 0
           ? ` The ${n(year.other_form_numbering)} reports numbered by a different year’s form have field numbers from that form, whose size differs.`
@@ -699,7 +701,7 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
       {loaded && (
         <Note id="dq-note-left-out">
           A value is compared only when the federal data has a positive figure for it, and matches means within 2%.{" "}
-          {`Left out: ${n(left.single_campus)} ${left.single_campus === 1 ? "report" : "reports"} we’ve marked as filed for one campus or unit (federal data reports the whole institution)${sharedFileClause(left.shared_file ?? 0)} and ${n(left.no_federal_figures)} whose school has no federal admissions figures.`}
+          {leftOutSentence({ single: left.single_campus, shared: left.shared_file ?? 0, none: left.no_federal_figures, singleNote: " (federal data reports the whole institution)", noFigure: "federal admissions figures" })}
         </Note>
       )}
       {loaded && <Note id="dq-note-b-release">{RELEASE_NOTE}</Note>}
@@ -733,11 +735,24 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
   );
 }
 
-/** ", N reports from one file filed under ...,": the shared-file rule, named plainly; empty when nothing was left out for it. */
-function sharedFileClause(count: number): string {
-  return count > 0
-    ? `, ${n(count)} ${count === 1 ? "report" : "reports"} with a file filed under more than one federal record, which we can’t compare to either record alone,`
-    : "";
+const reportsWord = (count: number) => (count === 1 ? "report" : "reports");
+
+/** "A", "A and B" or "A, B, and C": the items of a left-out sentence, each already complete (an item may hold its own comma). */
+function joinItems(items: string[]): string {
+  if (items.length <= 1) return items.join("");
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
+}
+
+/**
+ * The "Left out: ..." sentence of Table B and of the further checks. One campus or unit is always named; the shared-file
+ * rule (a file filed under more than one federal record) and the schools with no federal figure only when there are some.
+ */
+function leftOutSentence({ single, shared, none, singleNote = "", noFigure }: { single: number; shared: number; none: number; singleNote?: string; noFigure: string }): string {
+  const items = [`${n(single)} ${reportsWord(single)} we’ve marked as filed for one campus or unit${singleNote}`];
+  if (shared > 0) items.push(`${n(shared)} ${reportsWord(shared)} with a file filed under more than one federal record, which we can’t compare to either record alone`);
+  if (none > 0) items.push(`${n(none)} whose school has no ${noFigure}`);
+  return `Left out: ${joinItems(items)}.`;
 }
 
 // ── Table B, more checks ─────────────────────────────────────────
@@ -866,7 +881,7 @@ function CheckTable({ year, check }: { year: QualityYear; check: CheckName }) {
         <>
           <Note id={`dq-note-${check}`}>{copy.note}</Note>
           <Note id={`dq-note-${check}-left-out`}>
-            {`Left out: ${n(info.single_campus)} ${info.single_campus === 1 ? "report" : "reports"} we’ve marked as filed for one campus or unit${sharedFileClause(info.shared_file ?? 0)} and ${n(info.no_federal_figures)} whose school has no ${copy.noFigure}.`}{" "}
+            {leftOutSentence({ single: info.single_campus, shared: info.shared_file ?? 0, none: info.no_federal_figures, noFigure: copy.noFigure })}{" "}
             <strong>No value</strong>{" "}
             means no usable CDS number was available to compare: the school may have left it blank, or we may have missed
             it or set it aside. <strong>Differs</strong> isn’t always ours. The match rate is matches over all the reports

@@ -821,7 +821,8 @@ UI tests across M1 and M2:
 - The Data quality numbers equal the scoreboard run named on the page,
   checked by the tests.
 - In every year, the format rows' statuses add up to the live count, and live
-  plus removed plus no file equals the manifest count.
+  plus removed plus no file plus `duplicate_file` (the same file held twice by
+  one school, dropped in `prepare_run`) equals the manifest count.
 - No percentage is shown for a group of fewer than 5 reports.
 - A researcher can get from either tab to the other in one click, and from
   Data quality to the list of colleges we have a CDS for in one click.
@@ -855,6 +856,17 @@ postmortem's headline number. "Freshness" already means refresh timing here
 > year (`canonical_year`) is the previous CDS year, the share that also have
 > one for the current CDS year. The current CDS year is
 > `cds_freshness_floor()` on the snapshot date. `unknown` years don't count.
+
+The rule is asymmetric (`scoreboard.py` calls the alarm's `school_years`
+twice). The previous-year count (`renewal.previous`) takes any live report for
+that year, including ones we set aside (flagged) or couldn't read. The
+renewed count (`renewal.both`, and `two_year_both`) excludes a school whose
+current-year report is flagged (wrong file, blank template, low coverage): a
+flagged report is not a renewal. A report we couldn't read still counts.
+`renewal.current` (435 in the 2026-11-25 snapshot) counts every school with a
+current-year report, set-aside ones included, and is not shown on any page.
+The page's wording says this ("on file" in the earlier-year count; a school
+renews only if its current-year report is one we have not set aside).
 
 On 2026-11-24 it was 236 of 476 (50%) in the morning and 364 of 479 (76%)
 after the fixes.

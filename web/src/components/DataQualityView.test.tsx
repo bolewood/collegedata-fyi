@@ -392,10 +392,7 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
       expect(labels).toHaveLength(7);   // six measures and renewal
       for (const attrs of labels) {
         expect(attrs).not.toMatch(/white-space:\s*nowrap/);
-        expect(attrs).toMatch(/white-space:\s*normal/);
       }
-      // The other tables' row labels still do not wrap (their short labels fit); only the trend's long ones were changed.
-      expect(renderTrend("2024-25", pointsOf(stamp("2026-11-25")))).toMatch(/<th scope="row" style="[^"]*white-space:\s*nowrap/);
     });
 
     it("with several snapshots shows a column for each, oldest first, with date and run, and a line per row", () => {
@@ -662,7 +659,8 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
       expect(tui).toMatch(/per-credit or program-specific pricing/);
       expect(tui).toMatch(/Out-of-state and first-year tuition aren’t compared/);
       for (const note of [enr, tui]) expect(note).not.toMatch(/\b(most|usually|always|typically)\b/i);
-      expect(text("dq-note-enrollment-left-out")).toContain("Left out: 1 report we’ve marked as filed for one campus or unit and 0 whose school has no federal undergraduate enrollment figure");
+      expect(text("dq-note-enrollment-left-out")).toContain("Left out: 1 report we’ve marked as filed for one campus or unit.");
+      expect(text("dq-note-enrollment-left-out")).not.toContain("whose school has no");   // nothing left out for it: no clause of zero
       expect(text("dq-note-tuition-left-out")).toContain("whose school has no federal tuition figure");
     });
 
@@ -968,20 +966,70 @@ describe("launch fixes from the final review", () => {
   const page = (search: string, snap: QualitySnapshot = FIXTURE_SNAPSHOT) => text(render(search, snap));
   const SHARED = "with a file filed under more than one federal record, which we can’t compare to either record alone";
 
-  it("names the shared-file rule in Table B and in both further checks, only when something was left out for it", () => {
-    const snap = clone();
-    const y = year(snap, "2024-25");
-    y.federal_left_out.shared_file = 2;
-    y.federal_checks!.enrollment.shared_file = 2;
-    y.federal_checks!.tuition.shared_file = 2;
-    const html = render("year=2024-25", snap);
-    const b = text(table(html, "dq-table-b") + html.match(/<p id="dq-note-left-out"[\s\S]*?<\/p>/)![0]);
-    expect(b).toContain(`2 reports ${SHARED}, and`);
-    expect(text(html.match(/<p id="dq-note-enrollment-left-out"[\s\S]*?<\/p>/)![0])).toContain(`2 reports ${SHARED}`);
-    y.federal_left_out.shared_file = 1;
-    expect(page("year=2024-25", snap)).toContain(`1 report ${SHARED}`);
+  const noteOf = (html: string, id: string) => text(html.match(new RegExp(`<p id="${id}"[\\s\\S]*?</p>`))![0]).trim();
+  const SHARED_ITEM = (count: number) => `${count} ${count === 1 ? "report" : "reports"} with a file filed under more than one federal record, which we can’t compare to either record alone`;
+
+  it("builds the left-out sentence of each further check from the items present: all four combinations, exact", () => {
+    const one = "1 report we’ve marked as filed for one campus or unit";
+    const none = (n: number) => `${n} whose school has no federal undergraduate enrollment figure`;
+    const expected: [number, number, string][] = [
+      [0, 0, `Left out: ${one}.`],
+      [2, 0, `Left out: ${one} and ${SHARED_ITEM(2)}.`],
+      [0, 3, `Left out: ${one} and ${none(3)}.`],
+      [2, 3, `Left out: ${one}, ${SHARED_ITEM(2)}, and ${none(3)}.`],
+    ];
+    for (const [shared, missing, sentence] of expected) {
+      const snap = clone();
+      const info = year(snap, "2023-24").federal_checks!.enrollment;
+      info.shared_file = shared;
+      info.no_federal_figures = missing;
+      const note = noteOf(render("year=2023-24", snap), "dq-note-enrollment-left-out");
+      expect(note.startsWith(sentence), `${shared}/${missing}: ${note}`).toBe(true);
+      expect(note[sentence.length]).toBe(" ");   // the sentence ends there, at its full stop
+    }
+  });
+
+  it("builds Table B's left-out sentence the same way, with its parenthesis and with shared 0 and 2", () => {
+    for (const shared of [0, 2]) {
+      const snap = clone();
+      const y = year(snap, "2024-25");
+      y.federal_left_out.shared_file = shared;
+      const left = y.federal_left_out;
+      const base = `Left out: ${left.single_campus} ${left.single_campus === 1 ? "report" : "reports"} we’ve marked as filed for one campus or unit (federal data reports the whole institution)`;
+      const none = left.no_federal_figures > 0 ? `${left.no_federal_figures} whose school has no federal admissions figures` : "";
+      const items = shared > 0 ? `${base}, ${SHARED_ITEM(shared)}, and ${none}` : `${base} and ${none}`;
+      expect(noteOf(render("year=2024-25", snap), "dq-note-left-out")).toContain(none ? `${items}.` : (shared > 0 ? `${base} and ${SHARED_ITEM(shared)}.` : `${base}.`));
+    }
+    // Older format: no key, no clause, no throw.
+    expect(text(render("year=2024-25", FIXTURE_SNAPSHOT_V4))).not.toContain("filed under more than one federal record");
     expect(page("year=2024-25")).not.toContain("filed under more than one federal record");
-    expect(text(render("year=2024-25", FIXTURE_SNAPSHOT_V4))).not.toContain("filed under more than one federal record");   // older format: no key, no clause, no throw
+  });
+
+  it("never prints a stray comma or full stop in any year's page, whatever is left out", () => {
+    const variants: QualitySnapshot[] = [FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V4];
+    for (const [shared, missing] of [[0, 0], [2, 0], [0, 3], [2, 3]]) {
+      const snap = clone();
+      for (const y of snap.years) {
+        y.federal_left_out.shared_file = shared;
+        y.federal_left_out.no_federal_figures = y.federal_fall_loaded ? missing : 0;
+        for (const info of Object.values(y.federal_checks!)) {
+          info.shared_file = shared;
+          info.no_federal_figures = missing;
+        }
+      }
+      variants.push(snap);
+    }
+    for (const snap of variants) {
+      for (const y of snap.years) {
+        for (const html of [render(`year=${y.cds_year}`, snap)]) {
+          const plain = text(html);
+          expect(plain).not.toMatch(/,\s*[.,]/);       // ",." and ", ," and ",,"
+          expect(html.replace(/<[^>]*>/g, "")).not.toMatch(/\s,/);   // a comma after a space, in the text as written
+          expect(plain).not.toMatch(/\.\.(?!\.)/);      // two full stops
+          expect(html).not.toMatch(/,\s*<\/p>/);       // a note that ends on a comma
+        }
+      }
+    }
   });
 
   it("counts a file held twice by one school once and says so in Table A's note", () => {
@@ -1128,4 +1176,24 @@ describe("launch fixes from the final review", () => {
     const sample = federalDiffersNote(year(FIXTURE_SNAPSHOT, "2024-25"), FIXTURE_SNAPSHOT);
     expect(sample).toContain("one report filed for a different scope than the federal record, which Table B for 2024-25 now leaves out.");
   });
+
+  it("never sets a row label to nowrap, in any table of any year (a label that can't wrap prints over the number beside it on a phone)", () => {
+    for (const y of ["2023-24", "2024-25", "2025-26"]) {
+      const html = render(`year=${y}`);
+      const rowHeads = [...html.matchAll(/<th scope="row"[^>]*>/g)].map((m) => m[0]);
+      expect(rowHeads.length).toBeGreaterThan(30);
+      for (const head of rowHeads) expect(head).not.toMatch(/white-space:\s*nowrap/);
+    }
+    // The by-section table's labels, the ones that ran over the question counts at 375 px, wrap.
+    const sections = table(render("year=2024-25"), "dq-table-sections");
+    expect(sections).toContain("First-time, first-year admission");
+    expect(sections).not.toContain("nowrap");
+  });
+
+  it("says once, in Table A's note, that the median is the middle report by rank", () => {
+    const t = text(render("year=2023-24"));
+    expect(t).toContain("The median is the middle report by rank: with an even number of reports it is the lower of the two middle values, not their average, and the lowest 10% is taken the same way.");
+    expect(t.match(/the middle report by rank/g)).toHaveLength(1);
+  });
+
 });

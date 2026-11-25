@@ -207,6 +207,9 @@ export function CoverageDashboard({
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+          // Tiles sit at the top of their row: a grid-stretched <button> centres its content, which dropped the status
+          // tiles' labels below the others' (53 px at 1280) when one tile's note is longer.
+          alignItems: "start",
           gap: 16,
           marginBottom: 20,
           paddingTop: 20,
@@ -217,7 +220,7 @@ export function CoverageDashboard({
           <StatCell
             label={`${renewal.renewal.current_year} reports on file`}
             value={`${tile.percent}%`}
-            note={`${tile.sentence} ${ON_FILE_NOTE} Snapshot of ${formatSnapshotDate(renewal.snapshotOf)}.`}
+            note={`${tile.sentence} Snapshot of ${formatSnapshotDate(renewal.snapshotOf)}.`}
             emphasis
             testId="renewal-tile"
           />
@@ -231,7 +234,7 @@ export function CoverageDashboard({
         <StatCell
           label="Undergrads with CDS numbers"
           value={share.share === null ? "\u2013" : `${Math.round(share.share * 100)}%`}
-          note={`Share of undergraduates at tracked colleges with CDS numbers on file. ${share.withoutEnrollment.toLocaleString("en-US")} ${share.withoutEnrollment === 1 ? "college has" : "colleges have"} no enrollment figure and ${share.withoutEnrollment === 1 ? "is" : "are"} left out of both sums.`}
+          note={`Share of undergraduates at tracked colleges with CDS numbers on file.${share.withoutEnrollment > 0 ? ` ${share.withoutEnrollment.toLocaleString("en-US")} ${share.withoutEnrollment === 1 ? "college has" : "colleges have"} no enrollment figure and ${share.withoutEnrollment === 1 ? "is" : "are"} left out of both sums.` : ""}`}
           emphasis
           testId="weighted-share-tile"
         />
@@ -246,6 +249,11 @@ export function CoverageDashboard({
           />
         ))}
       </section>
+      {tile && renewal && (
+        <p data-testid="renewal-definition" style={{ margin: "-8px 0 20px", maxWidth: 720, fontSize: 13, lineHeight: 1.5, color: "var(--ink-3)" }}>
+          {renewal.renewal.current_year} reports on file: {ON_FILE_NOTE}
+        </p>
+      )}
 
       {/* Latest year with numbers */}
       <section
