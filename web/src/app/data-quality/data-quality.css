@@ -83,3 +83,18 @@
 .dq-drill-list a { text-decoration: underline; }
 .dq-drill-meta { color: var(--ink-3); }
 .dq-drill-link { font: inherit; background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; }
+
+/* Over time: a measure column, one column per snapshot and, from two snapshots, a line column. The table is as wide as it
+   needs and scrolls sideways inside its region on a phone, so labels and values never run into each other. */
+.dq-table--trend { table-layout: fixed; width: 100%; min-width: calc(210px + (var(--dq-snapshots, 1) + var(--dq-line, 0)) * 150px); }
+.dq-table--trend col:first-child { width: 210px; }
+.dq-table--trend col:not(:first-child) { width: 150px; }
+.dq-table--trend th, .dq-table--trend td { overflow-wrap: anywhere; }
+/* On a phone the first screen ends on a column edge, as in the other tables: the measure and the first snapshot add up to
+   one box (cqw), the other snapshots and the line column are fixed pixels that scroll in. */
+@container (max-width: 639px) {
+  .dq-table--trend { min-width: 0; width: calc(100cqw + (var(--dq-snapshots, 1) - 1 + var(--dq-line, 0)) * 150px); }
+  .dq-table--trend col:nth-child(1) { width: 55cqw; }
+  .dq-table--trend col:nth-child(2) { width: 45cqw; }
+  .dq-table--trend col:nth-child(n + 3) { width: 150px; }
+}

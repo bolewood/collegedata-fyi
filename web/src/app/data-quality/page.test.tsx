@@ -6,11 +6,12 @@ import { FIXTURE_SNAPSHOT } from "@/lib/__fixtures__/data-quality-snapshot";
 import { DATA_QUALITY_LAUNCH_DATE } from "@/lib/data-quality";
 
 const mocks = vi.hoisted(() => ({
+  earlier: [] as unknown[],
   loadLatestSnapshot: vi.fn(),
   loadReportsFor: vi.fn(),
 }));
 
-vi.mock("@/lib/data-quality-snapshots", () => ({ loadLatestSnapshot: mocks.loadLatestSnapshot, loadReportsFor: mocks.loadReportsFor }));
+vi.mock("@/lib/data-quality-snapshots", () => ({ loadLatestSnapshot: mocks.loadLatestSnapshot, loadAllSnapshots: () => [...mocks.earlier, mocks.loadLatestSnapshot()], loadReportsFor: mocks.loadReportsFor }));
 vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
@@ -18,6 +19,7 @@ vi.mock("next/navigation", () => ({
 import DataQualityPage, { generateMetadata } from "./page";
 
 afterEach(() => {
+  mocks.earlier = [];   // a failure in the middle of a loop must not leak snapshots into later tests
   vi.useRealTimers();
   mocks.loadLatestSnapshot.mockReset();
   mocks.loadReportsFor.mockReset();
@@ -51,19 +53,36 @@ describe("/data-quality launch gate", () => {
       /\b(extract(ed|or|ion|s)?|docling|tier ?\d?|drain(ed)?|manifest|projection|pipeline|overlay|acroform|served|scoreboard|base reading|parse error|live (report|reports|count))\b/i;
     const em = /\u2014|&mdash;|&#8212;|&#x2014;/gi;
     vi.useFakeTimers();
-    for (const t of [Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`) - 1000, Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`)]) {
-      vi.setSystemTime(t);
-      const meta = generateMetadata();
-      const page = renderToStaticMarkup(<DataQualityPage />);
-      // The source line names the run's file (PRD: the numbers equal the run named on the page). It is the one element
-      // allowed to say "scoreboard", and nothing else about it is exempt: every other banned word is checked in it too.
-      const source = page.match(/<p id="dq-source"[\s\S]*?<\/p>/)![0];
-      const rest = page.replace(source, "");
-      expect(source.replace(/<[^>]*>/g, " ").replace(/scoreboard/gi, "")).not.toMatch(banned);
-      const text = (rest + String(meta.title) + String(meta.description)).replace(/<[^>]*>/g, " ");
-      expect(text).not.toMatch(banned);
-      expect(((page + String(meta.title) + String(meta.description)).match(em) ?? []).length).toBeLessThanOrEqual(1);
+    // One snapshot, then three (so the several-snapshot labels, notes and cohort sentence are checked too).
+    const older = (day: string, cohort: [string, string]) => {
+      const c = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT));
+      c.snapshot_of = `${day}T12:00:00Z`;
+      c.scoreboard_run = `scoreboard-${day.replaceAll("-", "")}T120000Z.json`;
+      [c.renewal.current_year, c.renewal.previous_year] = cohort;
+      return c;
+    };
+    for (const earlier of [[], [older("2026-08-01", ["2024-25", "2023-24"]), older("2026-08-20", ["2025-26", "2024-25"])]]) {
+      mocks.earlier = earlier;
+      for (const t of [Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`) - 1000, Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`)]) {
+        vi.setSystemTime(t);
+        const meta = generateMetadata();
+        const page = renderToStaticMarkup(<DataQualityPage />);
+        // The source line names the run's file (PRD: the numbers equal the run named on the page). It is the one element
+        // allowed to say "scoreboard", and nothing else about it is exempt: every other banned word is checked in it too.
+        const source = page.match(/<p id="dq-source"[\s\S]*?<\/p>/)![0];
+        // The trend labels each snapshot with its run's file name, the other element allowed to say "scoreboard".
+        const runs = [...page.matchAll(/<span class="dq-trend-run"[^>]*>([^<]*)<\/span>/g)].map((m) => m[1]);
+        expect(runs.length).toBe((earlier.length + 1) * 2);   // a header per snapshot in each of the two trend tables
+        for (const run of runs) expect(run).toMatch(/^scoreboard-\d{8}T\d{6}Z\.json$/);
+        const rest = page.replace(source, "").replace(/<span class="dq-trend-run"[^>]*>[^<]*<\/span>/g, "");
+        expect(source.replace(/<[^>]*>/g, " ").replace(/scoreboard/gi, "")).not.toMatch(banned);
+        const text = (rest + String(meta.title) + String(meta.description)).replace(/<[^>]*>/g, " ");
+        expect(text).not.toMatch(banned);
+        expect(text).toContain(earlier.length ? "so a new series starts there" : "A trend appears here once there are two snapshots");
+        expect(((page + String(meta.title) + String(meta.description)).match(em) ?? []).length).toBeLessThanOrEqual(1);
+      }
     }
+    mocks.earlier = [];
   });
 
   it("names the run plainly, in normal case, with the date and time from the snapshot and the file name", () => {
@@ -112,5 +131,21 @@ describe("/data-quality list of reports behind each count", () => {
       if (r.school) expect(html).not.toContain(`/schools/${r.school}/`);
     }
     for (const name of Object.values(reports.schools as Record<string, string>).slice(0, 40)) expect(html).not.toContain(name);
+  });
+});
+
+describe("/data-quality over time", () => {
+  it("is part of the page, so it is gated with it: one snapshot gives the first-snapshot state, with no line", () => {
+    mocks.loadLatestSnapshot.mockReturnValue(FIXTURE_SNAPSHOT);
+    mocks.loadReportsFor.mockReturnValue(null);
+    vi.useFakeTimers();
+    for (const t of [Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`) - 1000, Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`)]) {
+      vi.setSystemTime(t);
+      const html = renderToStaticMarkup(<DataQualityPage />);
+      const section = html.match(/<section aria-labelledby="dq-trend-heading"[\s\S]*?<\/section>/)![0];
+      expect(section).toContain("First snapshot, November 24, 2026");
+      expect(section).toContain("A trend appears here once there are two snapshots.");
+      expect(section).not.toContain("<svg");
+    }
   });
 });

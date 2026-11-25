@@ -35,6 +35,30 @@ Table: published, set aside, couldn't read, not read yet, admissions match
 rate, and the three "adds up" rates. Under it: *Fields stored is left out here
 because 2023-24 is counted differently; see Table A.*
 
+## Over time
+
+Under the notices, for the selected year. Two small tables.
+
+**Per year.** One column per committed snapshot, oldest first, each headed with its date and run file name; rows: reports published, reports we couldn't read, admissions values matching federal figures, and the enrollment, admissions and financial aid totals that add up. From the second snapshot on, a "Shape" column of small lines, spaced by snapshot date and hidden from assistive technology (the table has every value). A line breaks at a missing value. A series that starts at a later snapshot says where, in one sentence for all the series that start together. Row labels wrap.
+
+**Current-year renewal,** its own heading and table, because it is for the whole archive and not one CDS year: one row, with the two school years each snapshot compares under its value. Where the years compared change (September), a new series starts and a sentence says so (a line is drawn only where a series has two points).
+
+With one snapshot:
+
+> The numbers for {year} in the first snapshot, {November 25, 2026}. A trend appears here once there are two snapshots.
+
+> Each value is the first snapshot's own number. These six rows come from the {year} row of "All years at a glance", above.
+
+> Renewal is for the whole archive, not one year: of the schools with a report for the year before the current one, the share that also has one for the current year. It is the headline figure on the Coverage page.
+
+With several:
+
+> The numbers for {year} in each of {n} snapshots, from {first date} to {last date}.
+
+> A change between snapshots can come from reports added to the archive, from fixes to how we read them, or both. Each value is that snapshot's own number, and each line is spaced by snapshot date.
+
+> At the {date} snapshot the comparison moved from {2025-26 of 2024-25} to {2026-27 of 2025-26}, so a new series starts there.
+
 ## Year picker
 
 2025-26, 2024-25, 2023-24. Controls everything below.

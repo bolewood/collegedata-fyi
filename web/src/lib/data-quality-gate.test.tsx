@@ -6,6 +6,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { buildTrend } from "@/lib/data-quality-trend";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FIXTURE_SNAPSHOT } from "./__fixtures__/data-quality-snapshot";
@@ -107,12 +108,12 @@ describe("gate: CSV downloads on both tabs", () => {
   it("renders no CSV links before launch and all of them after", () => {
     at(CLOSED);
     const cov = renderToStaticMarkup(<CoverageDashboard rows={[]} />);
-    const dq = renderToStaticMarkup(<DataQualityView snapshot={FIXTURE_SNAPSHOT} />);
+    const dq = renderToStaticMarkup(<DataQualityView snapshot={FIXTURE_SNAPSHOT} trend={buildTrend([FIXTURE_SNAPSHOT])} />);
     expect(cov).not.toContain("(CSV)");
     expect(dq).not.toContain("as CSV");
     at(OPEN);
     const covOpen = renderToStaticMarkup(<CoverageDashboard rows={[]} />);
-    const dqOpen = renderToStaticMarkup(<DataQualityView snapshot={FIXTURE_SNAPSHOT} />);
+    const dqOpen = renderToStaticMarkup(<DataQualityView snapshot={FIXTURE_SNAPSHOT} trend={buildTrend([FIXTURE_SNAPSHOT])} />);
     expect(covOpen).toContain("Download this view (CSV)");
     expect(covOpen).toContain("Download all colleges (CSV)");
     // 2025-26 has no federal figures, so Table B has no download: Table A, Table A by section and Table C, three links.
@@ -128,7 +129,7 @@ describe("Data quality download links follow the selected year", () => {
   it("point each table's link at the year on screen", () => {
     at(OPEN);
     const html = renderToStaticMarkup(
-      <DataQualityBody snapshot={FIXTURE_SNAPSHOT} year={FIXTURE_SNAPSHOT.years.find((y) => y.cds_year === "2023-24")!} />,
+      <DataQualityBody snapshot={FIXTURE_SNAPSHOT} trend={buildTrend([FIXTURE_SNAPSHOT])} year={FIXTURE_SNAPSHOT.years.find((y) => y.cds_year === "2023-24")!} />,
     );
     expect(html).toContain('href="/data-quality/csv/reports/2023-24"');
     expect(html).toContain('href="/data-quality/csv/federal/2023-24"');
@@ -189,9 +190,9 @@ describe("the real pages against the committed snapshot", () => {
     expect(html).toContain("Data quality");
     const noFederal = snap.years.find((y) => !y.federal_fall_loaded);
     expect(noFederal).toBeDefined();
-    const body = text(renderToStaticMarkup(<DataQualityBody snapshot={snap} year={noFederal!} />));
+    const body = text(renderToStaticMarkup(<DataQualityBody snapshot={snap} trend={buildTrend([snap])} year={noFederal!} />));
     expect(body).toContain("No federal admissions figures for fall");
-    expect(renderToStaticMarkup(<DataQualityBody snapshot={snap} year={noFederal!} />)).not.toContain(
+    expect(renderToStaticMarkup(<DataQualityBody snapshot={snap} trend={buildTrend([snap])} year={noFederal!} />)).not.toContain(
       `/data-quality/csv/federal/${noFederal!.cds_year}`,
     );
   });
@@ -201,7 +202,7 @@ describe("the real pages against the committed snapshot", () => {
     const snap = loadLatestSnapshot();
     const found = snap.years.flatMap((y) => y.rows.filter((r) => r.status.published === 0).map((r) => ({ y, r })))[0];
     expect(found).toBeDefined();
-    const html = renderToStaticMarkup(<DataQualityBody snapshot={snap} year={found.y} />);
+    const html = renderToStaticMarkup(<DataQualityBody snapshot={snap} trend={buildTrend([snap])} year={found.y} />);
     const row = html.match(new RegExp(`<tr[^>]*><th[^>]*>${found.r.label}</th>.*?</tr>`))![0];
     expect(row.match(/>–</g)).toHaveLength(2);
   });
@@ -215,9 +216,9 @@ describe("the real pages against the committed snapshot", () => {
     const differs = snap.years.filter((y) => federalDiffersNote(y, snap));
     expect(aid.map((y) => y.cds_year)).toEqual(["2023-24"]);
     expect(differs.map((y) => y.cds_year)).toEqual(["2023-24", "2024-25"]);
-    expect(renderToStaticMarkup(<DataQualityBody snapshot={snap} year={aid[0]} />)).toContain('id="dq-note-aid-sample"');
+    expect(renderToStaticMarkup(<DataQualityBody snapshot={snap} trend={buildTrend([snap])} year={aid[0]} />)).toContain('id="dq-note-aid-sample"');
     for (const y of differs) {
-      expect(renderToStaticMarkup(<DataQualityBody snapshot={snap} year={y} />)).toContain('id="dq-differs-sample"');
+      expect(renderToStaticMarkup(<DataQualityBody snapshot={snap} trend={buildTrend([snap])} year={y} />)).toContain('id="dq-differs-sample"');
     }
   });
 });

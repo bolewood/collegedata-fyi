@@ -256,10 +256,13 @@ Later, needing new data:
    - "No federal admissions figures for fall 2025 yet."
    - "Older form: tables mapped, not every question." Only for years without
      a full field schema. None in v1.
-5. **Table A, Reports and fields stored,** by format.
-6. **Table B, Admissions against federal figures,** by format.
-7. **Table C, Do the printed totals add up?,** by format.
-8. **How to read this.**
+5. **Over time,** under the notices (built after the first tables; it follows
+   the year picker): the page's main numbers by committed snapshot, and
+   current-year renewal in its own small table (see History, below).
+6. **Table A, Reports and fields stored,** by format.
+7. **Table B, Admissions against federal figures,** by format.
+8. **Table C, Do the printed totals add up?,** by format.
+9. **How to read this.**
    - What may be our miss and what may be the school's.
    - Why tiny groups show no percentages.
    - How to report a wrong number from a school page.
@@ -624,7 +627,19 @@ The page imports the file in `web/src/data/data-quality/` with the newest
   production host, and back-to-back large reads have taken it down before.
 - **Cadence:** after each weekly re-clean pass, in the same PR or one right
   after it.
-- **History:** snapshots stay in the directory for the later trend line.
+- **History:** snapshots stay in the directory and feed "Over time": the page
+  reads every committed snapshot (each against its own `public_format`; two on
+  one date still fail the build) and shows, for the selected year, reports
+  published, reports we couldn't read, the admissions match rate, the three
+  adds-up rates, one column per snapshot, oldest first, each labelled with its
+  date and run name, with a small line per row from the second snapshot on,
+  spaced by snapshot date; renewal (both over previous, as /coverage shows it)
+  is archive-wide, not per year, so it has its own table with the school years
+  each snapshot compares, and a new series starts where those years change.
+  A line breaks at a missing value. Every value is that snapshot's own number. With one snapshot the page shows it as
+  "first snapshot" and says a trend appears with the second; it draws no line
+  or axis for one point. A series starts at the first snapshot that has it and
+  the page says so. The table is the accessible form of every point.
 
 ### Rejected
 
@@ -777,8 +792,9 @@ UI tests across M1 and M2:
   counts count values, so a report can hold up to three: the list says so.
   A report whose school the run did not record, or whose school has no page for
   that year (only a blank template that year), is listed without a link.
-- **Earlier years,** a **trend line** across snapshots, and **per-school
-  formats and gap years** on the Coverage tab.
+- **Earlier years** and **per-school formats and gap years** on the Coverage
+  tab. (The **trend across snapshots** is built: "Over time" on the page; see
+  History under "Other rules".)
 
 ## Success criteria
 

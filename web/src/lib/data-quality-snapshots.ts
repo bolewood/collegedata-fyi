@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   SnapshotError,
+  selectAllSnapshots,
   selectSnapshot,
   snapshotDay,
   type QualitySnapshot,
@@ -21,6 +22,15 @@ export const SNAPSHOT_DIR = path.join(process.cwd(), "src", "data", "data-qualit
  * never shown as "no data, ok".
  */
 export function loadLatestSnapshot(dir: string = SNAPSHOT_DIR): QualitySnapshot {
+  return selectSnapshot(readSnapshotFiles(dir));
+}
+
+/** Every committed snapshot, oldest first, under the same failure rules (the trend reads these). */
+export function loadAllSnapshots(dir: string = SNAPSHOT_DIR): QualitySnapshot[] {
+  return selectAllSnapshots(readSnapshotFiles(dir));
+}
+
+function readSnapshotFiles(dir: string): { name: string; json: unknown }[] {
   let names: string[];
   try {
     names = fs.readdirSync(dir).filter((n) => n.endsWith(".json")).sort();
@@ -31,14 +41,13 @@ export function loadLatestSnapshot(dir: string = SNAPSHOT_DIR): QualitySnapshot 
       throw error;
     }
   }
-  const files = names.map((name) => {
+  return names.map((name) => {
     try {
       return { name, json: JSON.parse(fs.readFileSync(path.join(dir, name), "utf8")) as unknown };
     } catch (error) {
       throw new SnapshotError(`data-quality snapshot ${name} is not valid JSON: ${(error as Error).message}`);
     }
   });
-  return selectSnapshot(files);
 }
 
 /**

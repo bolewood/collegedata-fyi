@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { buildTrend } from "@/lib/data-quality-trend";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V3 } from "@/lib/__fixtures__/data-quality-snapshot";
@@ -26,7 +27,7 @@ function render(year: string, reportsUrl: string | null, snapshot: QualitySnapsh
   currentParams = new URLSearchParams(`year=${year}`);
   vi.useFakeTimers();
   vi.setSystemTime(LAUNCH_MS);
-  return renderToStaticMarkup(<DataQualityView snapshot={snapshot} reportsUrl={reportsUrl} />);
+  return renderToStaticMarkup(<DataQualityView snapshot={snapshot} trend={buildTrend([snapshot])} reportsUrl={reportsUrl} />);
 }
 
 const buttons = (html: string) => [...html.matchAll(/<button type="button" class="dq-count" aria-expanded="false" aria-label="([^"]*)">([^<]*)<\/button>/g)].map((m) => ({ label: m[1].replace(/&#x27;|&#39;/g, "'"), text: m[2] }));
@@ -69,7 +70,7 @@ describe("count buttons", () => {
       vi.useFakeTimers();
       vi.setSystemTime(clock);
       currentParams = new URLSearchParams("year=2023-24");
-      expect(renderToStaticMarkup(<DataQualityView snapshot={FIXTURE_SNAPSHOT} reportsUrl="/x" />)).toContain("dq-count");
+      expect(renderToStaticMarkup(<DataQualityView snapshot={FIXTURE_SNAPSHOT} trend={buildTrend([FIXTURE_SNAPSHOT])} reportsUrl="/x" />)).toContain("dq-count");
     }
   });
 

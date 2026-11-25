@@ -29,11 +29,12 @@ import {
 import { HAS_CDS_HREF } from "@/lib/coverage-model";
 import { secondaryNavLinks, isActive } from "@/lib/nav-links";
 import { ArchiveStatusHeader, visibleArchiveTabs } from "./ArchiveStatusHeader";
-import { DataQualityView, yearNotices } from "./DataQualityView";
+import { DataQualityView, assertTrendMatches, yearNotices } from "./DataQualityView";
+import { buildTrend } from "@/lib/data-quality-trend";
 
 function render(search = "", snapshot: QualitySnapshot = FIXTURE_SNAPSHOT) {
   currentParams = new URLSearchParams(search);
-  return renderToStaticMarkup(<DataQualityView snapshot={snapshot} />);
+  return renderToStaticMarkup(<DataQualityView snapshot={snapshot} trend={buildTrend([snapshot])} />);
 }
 
 /** The text of one table's HTML, by its id. */
@@ -199,12 +200,43 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
       vi.useRealTimers();
     }
   };
-  const textOf = (html: string) => html.replace(/<[^>]*>/g, " ");
+  // The trend labels each snapshot with its run's file name, the one element allowed to say "scoreboard" (checked to be that name).
+  const RUN_NAME = /<span class="dq-trend-run"[^>]*>([^<]*)<\/span>/g;
+  const textOf = (html: string) => {
+    for (const m of html.matchAll(RUN_NAME)) expect(m[1]).toMatch(/^scoreboard-\d{8}T\d{6}Z\.json$/);
+    return html.replace(RUN_NAME, "").replace(/<[^>]*>/g, " ");
+  };
 
   it("uses no operator words on any year, gate closed or open", () => {
     for (const y of years) {
       expect(textOf(render(`year=${y}`))).not.toMatch(BANNED);
       expect(textOf(openHtml(y))).not.toMatch(BANNED);
+    }
+  });
+
+  it("uses no operator words with several snapshots either: every note and label of the trend, one snapshot or three", () => {
+    const stampAt = (day: string, change: (s: QualitySnapshot) => void = () => {}) => {
+      const c = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT)) as QualitySnapshot;
+      c.snapshot_of = `${day}T12:00:00Z`;
+      c.scoreboard_run = `scoreboard-${day.replaceAll("-", "")}T120000Z.json`;
+      change(c);
+      return c;
+    };
+    const cohortChange = stampAt("2026-09-15", (s) => {
+      s.renewal.current_year = "2026-27";
+      s.renewal.previous_year = "2025-26";
+    });
+    const early = stampAt("2026-08-01", (s) => {
+      s.years = s.years.filter((y) => y.cds_year !== "2025-26");
+    });
+    for (const y of years) {
+      currentParams = new URLSearchParams(`year=${y}`);
+      for (const list of [[early, stampAt("2026-08-25"), cohortChange], [stampAt("2026-08-25")]]) {
+        const html = renderToStaticMarkup(<DataQualityView snapshot={list[list.length - 1]} trend={buildTrend(list)} />);
+        expect(textOf(html)).not.toMatch(BANNED);
+        // The cohort-change, series-start and spacing sentences are in the markup being checked.
+        if (list.length > 1) expect(html).toContain("so a new series starts there");
+      }
     }
   });
 
@@ -282,6 +314,211 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
     expect(loaded).toContain("/data-quality/csv/federal/2024-25");
   });
 
+  describe("over time", () => {
+    const section = (html: string) => html.match(/<section aria-labelledby="dq-trend-heading"[\s\S]*?<\/section>/)?.[0] ?? null;
+    const asText = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+    /** Trend points straight from snapshots (no validation: some are shifted to differ in every number). */
+    const pointsOf = (...list: QualitySnapshot[]) => buildTrend(list);
+    // The view needs the trend to end at the snapshot it shows, so the tables' snapshot takes the last point's date.
+    const renderTrend = (year: string, trend: ReturnType<typeof buildTrend>) => {
+      currentParams = new URLSearchParams(`year=${year}`);
+      const shown = { ...FIXTURE_SNAPSHOT, snapshot_of: trend.length ? trend[trend.length - 1].snapshot_of : FIXTURE_SNAPSHOT.snapshot_of };
+      return renderToStaticMarkup(<DataQualityView snapshot={shown} trend={trend} />);
+    };
+    const stamp = (day: string, base: QualitySnapshot = FIXTURE_SNAPSHOT_V3, change: (s: QualitySnapshot) => void = () => {}) => {
+      const c = JSON.parse(JSON.stringify(base)) as QualitySnapshot;
+      c.snapshot_of = `${day}T12:00:00Z`;
+      c.scoreboard_run = `scoreboard-${day.replaceAll("-", "")}T120000Z.json`;
+      change(c);
+      return c;
+    };
+    /** Every trended number differs in every snapshot (k = 0, 1, 2, ...): a metric from the wrong snapshot shows. */
+    const shifted = (day: string, k: number) =>
+      stamp(day, FIXTURE_SNAPSHOT, (s) => {
+        for (const y of s.years) {
+          for (const r of [y.total, y.rows[0]]) {
+            r.status.published += 7 * k;
+            r.status.couldnt_read += 2 * k;
+            r.federal.matches += 20 * k;
+            r.totals.B1.adds_up += 6 * k;
+            r.totals.C1.adds_up += 4 * k;
+            r.totals.H1.adds_up += 5 * k;
+          }
+        }
+        s.renewal.both += 5 * k;
+      });
+    const rowText = (html: string, label: string) =>
+      html.match(new RegExp(`<th scope="row"[^>]*>${label}[^<]*</th>([\\s\\S]*?)</tr>`))![1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+    it("with one snapshot shows its numbers as the first snapshot and says a trend comes with the second, with no line", () => {
+      const html = section(renderTrend("2024-25", pointsOf(stamp("2026-11-25"))))!;
+      const text = asText(html);
+      expect(text).toContain("The numbers for 2024-25 in the first snapshot, November 25, 2026. A trend appears here once there are two snapshots.");
+      expect(text).toContain("First snapshot, November 25, 2026");
+      expect(text).toContain("scoreboard-20261125T120000Z.json");
+      expect(html).not.toContain("<svg");
+      expect(html).not.toContain("Shape");
+      // Hand-worked from the fixture: 78 published, 0 couldn't read, 46%, 83%, 88%, 71%; renewal 364 of 479 = 76%.
+      expect(rowText(html, "Reports published")).toBe("78");
+      expect(rowText(html, "Reports we couldn’t read")).toBe("0");
+      expect(rowText(html, "Admissions values matching federal figures")).toBe("46%");
+      expect(rowText(html, "Enrollment totals that add up")).toBe("83%");
+      expect(rowText(html, "Admissions totals that add up")).toBe("88%");
+      expect(rowText(html, "Financial aid totals that add up")).toBe("71%");
+      expect(rowText(html, "Schools with a report for the current year")).toBe("76% 2025-26 of 2024-25");
+    });
+
+    it("says exactly where the first snapshot's values appear: the six rows in 'All years at a glance', renewal on the Coverage page", () => {
+      const html = section(renderTrend("2024-25", pointsOf(stamp("2026-11-25"))))!;
+      const text = asText(html);
+      expect(text).toContain("These six rows come from the 2024-25 row of “All years at a glance”, above");
+      expect(text).not.toContain("the same as in the tables below");
+      expect(text).toContain("It is the headline figure on the Coverage page.");
+      // Renewal is not captioned under the selected year: its own heading, table and note.
+      const renewal = html.match(/<h3[^>]*id="dq-renewal-heading"[^>]*>([\s\S]*?)<\/h3>/)![1];
+      expect(renewal).toBe("Current-year renewal");
+      const tables = [...html.matchAll(/<table[^>]*id="([^"]+)"[\s\S]*?<caption[^>]*>([\s\S]*?)<\/caption>/g)].map((m) => [m[1], m[2]]);
+      expect(tables).toEqual([["dq-trend", "2024-25, first snapshot"], ["dq-trend-renewal", "All schools, first snapshot"]]);
+      const perYear = html.match(/<table[^>]*id="dq-trend"[\s\S]*?<\/table>/)![0];
+      expect(perYear).not.toContain("Schools with a report for the current year");
+      expect(text).toContain("Renewal is for the whole archive, not one year");
+    });
+
+    it("lets the row labels wrap, so a long label never runs over its own value", () => {
+      const html = section(renderTrend("2024-25", pointsOf(stamp("2026-11-25"))))!;
+      const labels = [...html.matchAll(/<th scope="row"([^>]*)>/g)].map((m) => m[1]);
+      expect(labels).toHaveLength(7);   // six measures and renewal
+      for (const attrs of labels) {
+        expect(attrs).not.toMatch(/white-space:\s*nowrap/);
+        expect(attrs).toMatch(/white-space:\s*normal/);
+      }
+      // The other tables' row labels still do not wrap (their short labels fit); only the trend's long ones were changed.
+      expect(renderTrend("2024-25", pointsOf(stamp("2026-11-25")))).toMatch(/<th scope="row" style="[^"]*white-space:\s*nowrap/);
+    });
+
+    it("with several snapshots shows a column for each, oldest first, with date and run, and a line per row", () => {
+      const html = section(renderTrend("2024-25", pointsOf(shifted("2026-11-10", 0), shifted("2026-11-17", 1), shifted("2026-11-24", 2))))!;
+      const heads = [...html.matchAll(/<th scope="col"[^>]*>([\s\S]*?)<\/th>/g)].map((m) => asText(m[1]).trim());
+      expect(heads.slice(0, 4)).toEqual([
+        "Measure",
+        "November 10, 2026 scoreboard-20261110T120000Z.json",
+        "November 17, 2026 scoreboard-20261117T120000Z.json",
+        "November 24, 2026 scoreboard-20261124T120000Z.json",
+      ]);
+      expect(heads.filter((h) => h === "Shape")).toHaveLength(2);   // one per table
+      const text = asText(html);
+      expect(text).toContain("The numbers for 2024-25 in each of 3 snapshots, from November 10, 2026 to November 24, 2026.");
+      expect(text).not.toContain("first snapshot");
+      expect(text).toContain("each line is spaced by snapshot date");
+      // Every value is its own snapshot's (the shifted numbers differ in every snapshot): published 78, 85, 92 and so on.
+      expect(rowText(html, "Reports published")).toMatch(/^78 85 92/);
+      expect(rowText(html, "Reports we couldn’t read")).toMatch(/^0 2 4/);
+      expect(rowText(html, "Admissions values matching federal figures")).toMatch(/^46% 56% 66%/);
+      expect(rowText(html, "Enrollment totals that add up")).toMatch(/^83% 91% 99%/);
+      expect(rowText(html, "Admissions totals that add up")).toMatch(/^88% 94% 99%/);
+      expect(rowText(html, "Financial aid totals that add up")).toMatch(/^71% 77% 83%/);
+      expect(rowText(html, "Schools with a report for the current year")).toMatch(/^76% 2025-26 of 2024-25 77% 2025-26 of 2024-25 78% 2025-26 of 2024-25/);
+      // A line per row, none readable by assistive technology: the SVG and its cell and header are aria-hidden.
+      expect(html.match(/<svg/g)).toHaveLength(7);
+      expect(html.match(/<svg[^>]*aria-hidden="true"/g)).toHaveLength(7);
+      expect(html.match(/<td aria-hidden="true"/g)).toHaveLength(7);
+      expect(html).not.toContain("sr-only");
+    });
+
+    it("starts the renewal line again where the school years it compares change, and says so", () => {
+      const a = stamp("2026-08-25");
+      const b = stamp("2026-09-08", FIXTURE_SNAPSHOT_V3, (s) => {
+        s.renewal.current_year = "2026-27";
+        s.renewal.previous_year = "2025-26";
+        s.renewal.both = 20;
+      });
+      const c = stamp("2026-09-15", FIXTURE_SNAPSHOT_V3, (s) => {
+        s.renewal.current_year = "2026-27";
+        s.renewal.previous_year = "2025-26";
+        s.renewal.both = 40;
+      });
+      const html = section(renderTrend("2024-25", pointsOf(a, b, c)))!;
+      const renewalTable = html.match(/<table[^>]*id="dq-trend-renewal"[\s\S]*?<\/table>/)![0];
+      // Two runs: the old cohort alone (a dot) and the new cohort (a line between two points): exactly one path.
+      expect(renewalTable.match(/<path/g)).toHaveLength(1);
+      expect(renewalTable.match(/<circle/g)).toHaveLength(3);
+      expect(renewalTable).toContain("2025-26 of 2024-25");
+      expect(renewalTable).toContain("2026-27 of 2025-26");
+      expect(asText(html)).toContain("At the September 8, 2026 snapshot the comparison moved from 2025-26 of 2024-25 to 2026-27 of 2025-26, so a new series starts there.");
+    });
+
+    it("breaks a line at a missing value: a series with a gap is two lines, not one through the gap", () => {
+      // Five snapshots on five dates; the third lacks 2025-26, so published is [v1, v2, null, v4, v5]: two runs of two points.
+      const without = (day: string) =>
+        stamp(day, FIXTURE_SNAPSHOT, (c) => {
+          c.years = c.years.filter((y) => y.cds_year !== "2025-26");
+        });
+      const published = (html: string) => html.match(/<th scope="row"[^>]*>Reports published<\/th>[\s\S]*?<\/tr>/)![0];
+      const gapped = published(section(renderTrend("2025-26", pointsOf(shifted("2026-11-01", 0), shifted("2026-11-08", 1), without("2026-11-15"), shifted("2026-11-22", 3), shifted("2026-11-29", 4))))!);
+      expect(gapped.match(/<td[^>]*>–<\/td>/g)).toHaveLength(1);   // the gap is a dash in the table
+      expect(gapped.match(/<path/g)).toHaveLength(2);               // two lines, none through the gap
+      expect(gapped.match(/<circle/g)).toHaveLength(4);             // four points
+      // The two lines do not touch: the first ends before the gap and the second starts after it.
+      const xs = [...gapped.matchAll(/<path d="([^"]*)"/g)].map((m) => [...m[1].matchAll(/[ML]([\d.]+),/g)].map((n) => Number(n[1])));
+      expect(Math.max(...xs[0])).toBeLessThan(Math.min(...xs[1]));
+      // And each path is exactly the two points it joins: dates 11-01, 11-08, 11-22, 11-29 spaced over 28 days (x = 2, 19, 53, 70),
+      // published 60, 67, 81, 88 on a 0-to-88 scale (y = 7.7, 6.3, 3.4, 2.0).
+      expect([...gapped.matchAll(/<path d="([^"]*)"/g)].map((m) => m[1])).toEqual(["M2.0,7.7 L19.0,6.3", "M53.0,3.4 L70.0,2.0"]);
+      // [v1, null, v2]: two single points with a gap between: nothing to connect, so no line cell at all.
+      const single = published(section(renderTrend("2025-26", pointsOf(shifted("2026-11-01", 0), without("2026-11-08"), shifted("2026-11-15", 2))))!);
+      expect(single.match(/<td[^>]*>–<\/td>/g)).toHaveLength(2);   // the gap and the empty line cell
+      expect(single).not.toContain("<svg");
+    });
+
+    it("groups series that start at the same snapshot into one sentence", () => {
+      const early = stamp("2026-11-01", FIXTURE_SNAPSHOT_V1);
+      early.years = early.years.filter((y) => y.cds_year !== "2025-26");
+      const text = asText(section(renderTrend("2025-26", pointsOf(early, stamp("2026-11-24", FIXTURE_SNAPSHOT))))!);
+      expect(text).toContain("Reports published, Reports we couldn’t read, Enrollment totals that add up, Admissions totals that add up, Financial aid totals that add up start at the November 24, 2026 snapshot; earlier snapshots don’t have them.");
+      expect(text.match(/earlier snapshots don’t have/g)).toHaveLength(1);
+    });
+
+    it("says a single late series 'starts', not 'start'", () => {
+      const second = stamp("2026-11-08", FIXTURE_SNAPSHOT);
+      const none = stamp("2026-11-01", FIXTURE_SNAPSHOT);
+      for (const y of none.years) {
+        y.federal_fall_loaded = false;
+      }
+      const text = asText(section(renderTrend("2024-25", pointsOf(none, second)))!);
+      expect(text).toContain("Admissions values matching federal figures starts at the November 8, 2026 snapshot; earlier snapshots don’t have it.");
+    });
+
+    it("follows the year picker: the same snapshots give that year's numbers", () => {
+      const trend = pointsOf(shifted("2026-11-10", 0), shifted("2026-11-24", 1));
+      expect(asText(section(renderTrend("2023-24", trend))!)).toContain("The numbers for 2023-24 in each of 2 snapshots");
+      expect(rowText(section(renderTrend("2023-24", trend))!, "Reports published")).toMatch(/^403 410/);
+    });
+
+    it("ends its first phone screen on a column edge", () => {
+      const css = readFileSync(resolve(__dirname, "../app/data-quality/data-quality.css"), "utf8");
+      const rule = (n: string) => new RegExp(`\\.dq-table--trend col:nth-child\\(${n}\\) \\{ width: (\\d+)(cqw|px)`).exec(css);
+      expect([rule("1")![1], rule("1")![2], rule("2")![1], rule("2")![2]]).toEqual(["55", "cqw", "45", "cqw"]);   // 55 + 45 = one box
+      expect(rule("n \\+ 3")![2]).toBe("px");
+      expect(css).not.toMatch(/\.sr-only/);
+    });
+
+    it("refuses a trend that is not oldest first or does not end at the snapshot shown", () => {
+      const a = stamp("2026-11-01");
+      const b = stamp("2026-11-08");
+      currentParams = new URLSearchParams("year=2024-25");
+      const view = (shown: QualitySnapshot, trend: ReturnType<typeof buildTrend>) => () => renderToStaticMarkup(<DataQualityView snapshot={shown} trend={trend} />);
+      expect(view(b, pointsOf(a, b))).not.toThrow();
+      expect(view(a, pointsOf(b, a))).toThrow(/not oldest first/);          // reversed
+      expect(view(b, pointsOf(a, a, b))).toThrow(/not oldest first/);       // the same date twice
+      expect(view(a, pointsOf(a, b))).toThrow(/not at the snapshot shown|ends at/);   // ends at a different snapshot
+      expect(view(b, [])).not.toThrow();
+      expect(assertTrendMatches(pointsOf(a, b), b)).toBeUndefined();
+    });
+
+    it("draws nothing without points (the page always passes some)", () => {
+      expect(renderTrend("2025-26", [])).not.toContain("dq-trend-heading");
+    });
+  });
   describe("by section (Table A, by section)", () => {
     const secHtml = (html: string) => html.match(/<section aria-labelledby="dq-sections-heading"[\s\S]*?<\/section>/)?.[0] ?? null;
     const cells = (html: string, name: string) => {
@@ -608,7 +845,7 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
     expect(html.match(/dq-scroll--wide/g)).toHaveLength(1);
     expect(html).not.toContain("linear-gradient");
     // Every table's scroll region is still focusable and labelled.
-    expect(html.match(/role="region" aria-label="[^"]+" tabindex="0"/g)).toHaveLength(7);
+    expect(html.match(/role="region" aria-label="[^"]+" tabindex="0"/g)).toHaveLength(9);   // 7 tables and the two trend tables
     const src = readFileSync(resolve(__dirname, "DataQualityView.tsx"), "utf8");
     expect(src).not.toMatch(/useState|useEffect|ResizeObserver|scrollWidth/);
   });
@@ -654,7 +891,7 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
     const snap: QualitySnapshot = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT));
     snap.years.push(emptyYear("2026-27"));
     currentParams = new URLSearchParams("year=2026-27");
-    const html = renderToStaticMarkup(<DataQualityView snapshot={snap} />);
+    const html = renderToStaticMarkup(<DataQualityView snapshot={snap} trend={buildTrend([snap])} />);
     expect(html).toContain("Table A, 2026-27");
     for (const id of ["dq-table-b", "dq-table-c"]) expect(table(html, id)).not.toMatch(PCT);
     expect(table(html, "dq-table-c")).toContain("(–)");
