@@ -8,11 +8,17 @@ import searchableSlugAliases from "../data/searchable-slug-aliases.json";
 // Next actually loads: the default export, wrapped by withSentryConfig.
 const AMBIGUOUS_ALIASES = ["bethel-university", "union-college", "columbia-college"];
 
-async function configRedirects() {
+type Redirect = { source: string; destination: string; permanent?: boolean };
+type LoadedConfig = { redirects?: () => Promise<Redirect[]> };
+
+async function configRedirects(): Promise<Redirect[]> {
+  const exported = nextConfigExport as unknown as
+    | LoadedConfig
+    | ((phase: string, ctx: { defaultConfig: object }) => Promise<LoadedConfig>);
   const config =
-    typeof nextConfigExport === "function"
-      ? await nextConfigExport("phase-production-build", { defaultConfig: {} })
-      : nextConfigExport;
+    typeof exported === "function"
+      ? await exported("phase-production-build", { defaultConfig: {} })
+      : exported;
   return (await config.redirects?.()) ?? [];
 }
 
