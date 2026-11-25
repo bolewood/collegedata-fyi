@@ -3,7 +3,8 @@
 -- from a branch.
 --
 -- 1. New board station `discovery_renewal`: the current-year renewal outcome.
--- 2. finder_stuck_pdf accepts the new counters the finder now reports.
+-- 2. finder_stuck_pdf, headless_archive and finder_brave accept the new counters
+--    their jobs now report.
 -- 3. pipeline_heartbeat_history keeps one row per finished run, so the page can
 --    show month-on-month change, not only the latest summary.
 
@@ -56,6 +57,37 @@ set allowed_keys = (
   ) d
 )
 where s.station_id = 'finder_stuck_pdf';
+
+update public.pipeline_stations s
+set allowed_keys = (
+  select array_agg(k order by first_pos)
+  from (
+    select k, min(pos) as first_pos
+    from unnest(
+      s.allowed_keys || array[
+        'schools_targeted', 'schools_capped', 'years_capped', 'years_below_min',
+        'years_unparseable', 'years_unparseable_known', 'summary_missing'
+      ]
+    ) with ordinality as t(k, pos)
+    group by k
+  ) d
+)
+where s.station_id = 'headless_archive';
+
+update public.pipeline_stations s
+set allowed_keys = (
+  select array_agg(k order by first_pos)
+  from (
+    select k, min(pos) as first_pos
+    from unnest(
+      s.allowed_keys || array[
+        'not_searched', 'not_searched_causes', 'capped_out', 'capped_out_detail'
+      ]
+    ) with ordinality as t(k, pos)
+    group by k
+  ) d
+)
+where s.station_id = 'finder_brave';
 
 -- 3. Heartbeat history -----------------------------------------------------
 
@@ -208,6 +240,30 @@ begin
   end if;
   if cardinality(keys) <> (select count(distinct k) from unnest(keys) k) then
     raise exception 'finder_stuck_pdf allowed_keys has duplicates: %', keys;
+  end if;
+
+  select allowed_keys into keys from public.pipeline_stations
+  where station_id = 'headless_archive';
+  if keys is null then
+    raise exception 'headless_archive station missing or has null allowed_keys';
+  end if;
+  if not (keys @> array['schools_attempted', 'run_url', 'schools_targeted', 'years_capped', 'summary_missing']) then
+    raise exception 'headless_archive allowed_keys not extended: %', keys;
+  end if;
+  if cardinality(keys) <> (select count(distinct k) from unnest(keys) k) then
+    raise exception 'headless_archive allowed_keys has duplicates: %', keys;
+  end if;
+
+  select allowed_keys into keys from public.pipeline_stations
+  where station_id = 'finder_brave';
+  if keys is null then
+    raise exception 'finder_brave station missing or has null allowed_keys';
+  end if;
+  if not (keys @> array['probed', 'run_url', 'not_searched', 'not_searched_causes', 'capped_out', 'capped_out_detail']) then
+    raise exception 'finder_brave allowed_keys not extended: %', keys;
+  end if;
+  if cardinality(keys) <> (select count(distinct k) from unnest(keys) k) then
+    raise exception 'finder_brave allowed_keys has duplicates: %', keys;
   end if;
 
   if not exists (
