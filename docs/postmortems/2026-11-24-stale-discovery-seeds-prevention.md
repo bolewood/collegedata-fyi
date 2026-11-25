@@ -10,10 +10,10 @@ This ledger maps each of the postmortem's ten causes to five things: the control
 
 | Channel | Fires when | Reaches | Live today? |
 |---|---|---|---|
-| **Alarm issue** (label `alarm:discovery-renewal`) | A daily check finds current-year, two-year or next-year renewal below its floor | Assigned to the owner | Yes. The first scheduled run, 2026-11-25 13:41 UTC, opens one, because renewal is 76.0% against a floor of 82.5% |
+| **Alarm issue** (label `alarm:discovery-renewal`) | A daily check finds current-year, two-year or next-year renewal below its floor | Assigned to the owner | From the first scheduled run, 2026-11-25 13:41 UTC (the assigned path has not run for real yet). It will open one, because renewal is 74.9% against a floor of 82.5% |
 | **Discord #alerts, direct** | The alarm issue opens, is superseded by a new year, or recovers | Channel | Yes. The end-to-end test posted both kinds |
 | **Discord #alerts, `workflow_run`** | The renewal workflow fails (short read, too few schools in the denominator, a floor mismatch, the alarm step failing) | Channel | Yes |
-| **Discord #alerts, hourly scheduled-run check** | The renewal workflow has no scheduled run newer than 36 h | Channel | Yes |
+| **Discord #alerts, hourly scheduled-run check** | The renewal workflow has no scheduled run newer than 36 h (the hand check: 35 days) | Channel | From the first scheduled run; with no scheduled run ever seen it records nothing |
 | **Discord #alerts, hourly board poll** | A board lamp turns `down`: Renewal (below a floor, no scheduled heartbeat in 36 h, an error, a hung run) or Stuck PDFs (90% or more still stuck) | Channel | Stuck PDFs: yes. Renewal: only after migration #469 is applied (slate until then) |
 | **Monthly hand-check issue** | The 3rd of each month | Assigned to the owner | Yes, from 2026-12-03 |
 
@@ -41,7 +41,7 @@ The floor's calibration is an owner decision (D1). A healthy year likely sits ne
 | 2026-10-31 | current | 52.7% | 80.6% | **yes** |
 | 2026-11-30 | current | 76.0% | 82.9% | **yes** |
 
-The alarm would have opened an issue at the end of April 2026, from the next-year check, and again at the September switch.
+The alarm would have opened an issue at the end of April 2026, from the next-year check. Under #493 alone that one issue would then have stayed open and silent through November (Fable's round-2 replay). The re-notification rule (D16) supersedes it every 30 days and on each 5-point worsening.
 
 **Caveats:**
 - It uses today's filed years. The 22 documents re-filed to 2025-26 by #455 count as 2025-26 in past months, so the real history was lower, which strengthens the conclusion.
@@ -127,7 +127,7 @@ The alarm would have opened an issue at the end of April 2026, from the next-yea
 
 ### 6. Fetch failures had no owner
 
-- **Control:** `fetch_failures.py` (#488, #468) lists schools whose listing is known and whose current-year file is missing, by cause from `archive_queue`. The counts go in the renewal summary and the board detail line. The list goes in the run summary, and in the monthly hand-check issue once wired.
+- **Control:** `fetch_failures.py` (#488, #468) lists schools whose listing is known and whose current-year file is missing, by cause from `archive_queue`. The counts go in the renewal summary and the board detail line. The list goes in the run summary and in the monthly hand-check issue (#497).
 - **Told:** the board detail line, the monthly issue, and the renewal report.
 - **Test:** `test_fetch_failures`.
 - **Evidence:**
@@ -199,7 +199,7 @@ Each original bug was put back in a throwaway worktree at `origin/main` 054b2b7 
 |---|---|---|
 | fails (short read, too few schools, a floor mismatch, the alarm step) | the `workflow_run` post to #alerts. From #493, day after day too: every 7th consecutive failure posts | `test_scheduled_failure_on_default_branch_alerts`, `test_consecutive_failures` |
 | stops running (disabled, deleted, schedule broken) | the hourly poll: no scheduled run in 36 h posts to #alerts | `test_discovery_renewal_staleness_alerts_once_then_recovers`, `test_first_poll_alerts_on_a_stale_run_and_baselines_a_fresh_one` |
-| runs but heartbeats nothing, errors, or hangs | the station's SLA lamp (36 h), then the board poll. **Once #469 is applied** | pipeline-lamps "scheduled heartbeat older than 36h is down", "last scheduled error is down", "a hung run is a clock failure" |
+| runs but heartbeats nothing, errors, or hangs | the station's SLA lamp (36 h), then the board poll. **Once #469 is applied.** The poll posts only on a change to down, so while the lamp is already down for a below-floor result this adds nothing; the paths above still fire | pipeline-lamps "scheduled heartbeat older than 36h is down", "last scheduled error is down", "a hung run is a clock failure" |
 | goes quiet because GitHub disabled schedules (60 days) | the optional outside check-in (D14), **once set up** | workflow test: the step is schedule-only and the URL is never printed |
 
 ## End-to-end test (2026-11-25)
@@ -250,7 +250,8 @@ Fable checked the round-1 draft against the code. These are fixed in this versio
 - The snapshot test was described as running in CI; it was skipped.
 - The scheduled alarm was described as having run; the first scheduled run is 2026-11-25 13:41 UTC.
 - Discord was described as posting on every failure; it posts on a change of state.
-- The backtest was described as opening a second issue at the September switch. Under the original code it would have been a silent update. #493 fixes that.
+- The backtest was described as opening a second issue at the September switch. That was false under #474 and under #493 alike: one issue, then silence. The re-notification rule (D16) is the fix.
+- "Live today" for the alarm issue and the scheduled-run check is corrected: both start with the first scheduled run.
 
 ## Decisions taken overnight (for the owner)
 
