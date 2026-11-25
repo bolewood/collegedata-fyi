@@ -863,6 +863,36 @@ class ArrivalsScopeTests(unittest.TestCase):
                         {"2025-26": arr(2, 8.0, count_60=40, expected_60=25.0, window=60, below=False)})
         self.assertEqual(actions(out), {"arrivals:2025-26": "update"})
 
+    def test_a_thirty_day_opening_with_a_judgeable_sixty_day_window_waits_for_both(self) -> None:
+        # Opened on the 30-day window, but the 60-day window is judgeable too: after the
+        # 30-day count is back (10 of 20 needs 10) the issue must stay open until the
+        # 60-day count reaches 0.5 x 40 = 20.
+        gh, discord, _ = self.start(
+            {"2025-26": HEALTHY},
+            {"2025-26": arr(0, 20.0, count_60=3, expected_60=40.0, window=30, below=True)})
+        (body,) = [i["body"] for i in gh.issues.values()]
+        self.assertIn(ra.WINDOW60_MARKER, body)  # checked_60 is true, so it is recorded
+        out = self.step(gh, discord, {"2025-26": HEALTHY},
+                        {"2025-26": arr(10, 20.0, count_60=17, expected_60=40.0, window=30, below=False)})
+        self.assertEqual(actions(out), {"arrivals:2025-26": "update"})
+        out = self.step(gh, discord, {"2025-26": HEALTHY},
+                        {"2025-26": arr(10, 20.0, count_60=19, expected_60=40.0, window=30, below=False)})
+        self.assertEqual(actions(out), {"arrivals:2025-26": "update"})
+        out = self.step(gh, discord, {"2025-26": HEALTHY},
+                        {"2025-26": arr(10, 20.0, count_60=20, expected_60=40.0, window=30, below=False)})
+        self.assertEqual(actions(out), {"arrivals:2025-26": "close"})
+
+    def test_the_legacy_hold_uses_the_same_recovery_selection(self) -> None:
+        # The renewal issue carrying the old arrivals marker: 30-day back, 60-day (judgeable) not.
+        gh = FakeGh([self.legacy_issue()])
+        stuck = arr(10, 20.0, count_60=17, expected_60=40.0, window=30, below=False)
+        self.assertEqual(actions(run({"2025-26": HEALTHY}, gh, Discord(), arrivals={"2025-26": stuck})),
+                         {"2025-26": "update"})
+        gh2 = FakeGh([self.legacy_issue()])
+        back = arr(10, 20.0, count_60=20, expected_60=40.0, window=30, below=False)
+        self.assertEqual(actions(run({"2025-26": HEALTHY}, gh2, Discord(), arrivals={"2025-26": back})),
+                         {"2025-26": "close"})
+
     def test_a_count_sitting_on_the_sixty_day_boundary_opens_it_once(self) -> None:
         gh, discord = SimGh(), Discord()
         gh.now = datetime(2027, 1, 10, 12, tzinfo=timezone.utc)

@@ -645,7 +645,7 @@ def act(
                 and arr_now is not None
                 and arr_now.get("below_floor") is not True
                 and not arrivals_recovered(
-                    arr_now, sixty=arr_now["window_days"] == 60 or WINDOW60_MARKER in active["body"])
+                    arr_now, sixty=bool(arr_now.get("checked_60")) or WINDOW60_MARKER in active["body"])
             )
             below = below or legacy_hold
             title = issue_title(ysum, test_mode=test_mode)

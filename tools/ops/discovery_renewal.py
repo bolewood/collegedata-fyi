@@ -1010,12 +1010,17 @@ def render_arrivals_report(
         f"posting curve expects about {y.expected:.0f}.** The alarm fires under "
         f"{ARRIVALS_FLOOR_SHARE:.0%} of that"
         + (" and it is below." if y.below_floor else ", and it is not.")
-        + ("" if y.checked else f" (Not checked: under {ARRIVALS_MIN_EXPECTED:.0f} expected.)"),
+        + ("" if y.checked else
+           f" (Not checked: under {ARRIVALS_MIN_EXPECTED_30:.0f} expected in 30 days and under "
+           f"{ARRIVALS_MIN_EXPECTED:.0f} in 60.)"),
         "",
         f"What this is: the schools in {ystr}'s cohort that gained a usable {ystr} document in the "
         "window, counted once, on the earliest live document for the year, against what the "
-        "posting curve expects for that year alone. A winter month expects too few, so the "
-        f"window is {ARRIVALS_LONG_WINDOW_DAYS} days then. It catches discovery stopping while "
+        "posting curve expects for that year alone. Two windows are judged every day, 30 days "
+        f"(when the curve expects at least {ARRIVALS_MIN_EXPECTED_30:.0f} in it) and "
+        f"{ARRIVALS_LONG_WINDOW_DAYS} days (at least {ARRIVALS_MIN_EXPECTED:.0f}); the year is short "
+        f"when either is under {ARRIVALS_FLOOR_SHARE:.0%} of what is expected. It catches "
+        "discovery stopping while "
         "the renewal percentages still look fine, and files archived by hand for another year do "
         "not hide it. A document removed and replaced cannot be told apart from a first arrival, "
         "because removed rows are not read.",
@@ -1032,23 +1037,23 @@ def render_arrivals_report(
     return _cap("\n".join(lines), max_chars)
 
 
-def _arrivals_lines(s: dict[str, Any], cur: str, nxt: str) -> list[str]:
-    """One line per year; both windows are judged, each from its own expectation."""
+def _arrivals_lines(arrivals: "Arrivals", cur: str, nxt: str) -> list[str]:
+    """One line per year; both windows are judged, each from its own expectation.
+    The verdicts are the exact decisions of YearArrivals, not a recomputation from
+    the rounded figures printed beside them."""
     out = []
-    for name, label in (("current", cur), ("next", nxt)):
+    for y, label in ((arrivals.current, cur), (arrivals.next, nxt)):
         parts = []
-        for window, key_checked in ((30, f"arrivals_{name}_checked_30"), (60, f"arrivals_{name}_checked_60")):
-            got = s[f"arrivals_{name}_{window}d"]
-            expected = s[f"arrivals_expected_{name}_{window}d"]
-            if not s[key_checked]:
-                parts.append(f"{window} days: {got} against about {expected:.0f} expected, too few to judge")
-                continue
-            short = got < ARRIVALS_FLOOR_SHARE * expected
-            parts.append(
-                f"{window} days: {got} against about {expected:.0f} expected, "
-                + ("below its floor" if short else "above its floor")
-            )
-        if not (s[f"arrivals_{name}_checked_30"] or s[f"arrivals_{name}_checked_60"]):
+        for window, got, expected, checked, short in (
+            (30, y.count_30, y.expected_30, y.checked_30, y.below_30),
+            (60, y.count_60, y.expected_60, y.checked_60, y.below_60),
+        ):
+            head = f"{window} days: {got} against about {expected:.0f} expected"
+            if not checked:
+                parts.append(f"{head}, too few to judge")
+            else:
+                parts.append(f"{head}, " + ("below its floor" if short else "above its floor"))
+        if not y.checked:
             out.append(f"- Arrivals for {label}: not checked. " + "; ".join(parts) + ".")
         else:
             out.append(f"- Arrivals for {label} (schools that gained a {label} document): " + "; ".join(parts) + ".")
@@ -1181,10 +1186,11 @@ def render_report(
     why = {
         "arrivals": (
             f"the schools that gained a usable {cur} document, and separately those that "
-            f"gained a {format_year(result.current_year + 1)} one, in the last 30 days (60 in "
-            "winter, when a month expects too few), each against about what the posting "
-            f"curve expects for that year. Fewer than {ARRIVALS_FLOOR_SHARE:.0%} of that for "
-            "either year means new documents have nearly stopped arriving, even if the renewal "
+            f"gained a {format_year(result.current_year + 1)} one, over 30 days and over 60 days "
+            "(each judged when the curve expects enough in it), against about what the posting "
+            f"curve expects for that year. Fewer than {ARRIVALS_FLOOR_SHARE:.0%} of that in either "
+            "window, for either year, means new documents have nearly stopped arriving, even if "
+            "the renewal "
             "percentages still look fine and files archived by hand fill the other year."
         ),
         "current": (
@@ -1238,7 +1244,9 @@ def render_report(
         + ("" if result.next_active else
            f" (the curve says under {NEXT_YEAR_ACTIVE_FROM_PCT:.0f}% of files exist this early)")
         + ".",
-        *_arrivals_lines(s, cur, format_year(result.current_year + 1)),
+        *_arrivals_lines(
+            result.arrivals if result.arrivals is not None else empty_arrivals(result.current_year),
+            cur, format_year(result.current_year + 1)),
         "",
         *(
             [f"{s['unextracted_current_docs']} current-year documents are filed but not extracted "

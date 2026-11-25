@@ -742,6 +742,26 @@ class ArrivalsTests(unittest.TestCase):
         self.assertGreater(slow, 31)  # the 60-day window alone
         self.assertLessEqual(fast, 31)  # with the 30-day window judged too
 
+    def test_report_verdicts_are_the_exact_decisions_not_the_rounded_figures(self) -> None:
+        # 3 arrivals against 7.6 expected prints as "about 8" but 3 >= 0.4 x 7.6 = 3.04 is
+        # false: the window is short even though 3 < 0.4 x 8 = 3.2 would also say so; pick a
+        # case where the rounded figure would give the other verdict.
+        exp = 8.4  # prints as 8; 0.4 x 8.4 = 3.36
+        y = dr.YearArrivals(2025, count_30=3, expected_30=exp, count_60=0, expected_60=0.0)
+        self.assertTrue(y.below_30)  # 3 < 3.36
+        arrivals = dr.Arrivals(current=y, next=dr.YearArrivals(2026))
+        lines = dr._arrivals_lines(arrivals, "2025-26", "2026-27")
+        self.assertIn("30 days: 3 against about 8 expected, below its floor", lines[0])
+        # rounded: 3 < 0.4 x 8 = 3.2 gives the same here; the opposite case:
+        y2 = dr.YearArrivals(2025, count_30=3, expected_30=7.4)  # prints "7"; 0.4 x 7.4 = 2.96
+        self.assertFalse(y2.below_30)  # 3 >= 2.96 (the rounded figure 0.4 x 7 = 2.8 agrees)
+        y3 = dr.YearArrivals(2025, count_30=3, expected_30=7.6)  # prints "8"; 0.4 x 7.6 = 3.04
+        self.assertTrue(y3.below_30)  # 3 < 3.04, while 0.4 x 8 = 3.2 would also say below
+        y4 = dr.YearArrivals(2025, count_30=4, expected_30=9.6)  # prints "10"; 0.4 x 9.6 = 3.84
+        self.assertFalse(y4.below_30)  # 4 >= 3.84, but the rounded 0.4 x 10 = 4.0 would say below
+        line = dr._arrivals_lines(dr.Arrivals(current=y4, next=dr.YearArrivals(2026)), "a", "b")[0]
+        self.assertIn("30 days: 4 against about 10 expected, above its floor", line)
+
     def test_either_window_below_its_floor_is_a_breach(self) -> None:
         only_30 = dr.YearArrivals(2025, count_30=1, expected_30=20.0, count_60=40, expected_60=40.0)
         self.assertTrue(only_30.below_30 and not only_30.below_60 and only_30.below_floor)
