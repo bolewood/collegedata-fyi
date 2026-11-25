@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 import unittest
 from datetime import date
 from pathlib import Path
@@ -15,8 +14,6 @@ AS_OF = date(2026, 11, 24)  # floor 2025-26
 LISTING = "https://a.edu/ir/cds/"
 FILE = "https://a.edu/cds_2023-24.pdf"
 FIXTURE = Path(__file__).parent / "testdata" / "archive_years_snapshot.json"
-# A local `cds_manifest` dump (rows with school_id, canonical_year, ...).
-SNAPSHOT_ENV = "SEED_AGE_MANIFEST_SNAPSHOT"
 
 
 def doc(school, year, discovered="2026-05-01T00:00:00+00:00", **kw):
@@ -158,41 +155,76 @@ class RunGuardTests(unittest.TestCase):
             sa.run_seed_age(schools(x=LISTING), [doc("x", "2025-26")], AS_OF)
 
 
-class FetchTests(unittest.TestCase):
-    def _get(self, pages, total):
-        calls = iter(pages)
+class WiringTests(unittest.TestCase):
+    def _result(self):
+        from tools.ops import discovery_renewal as dr
+        rows = [doc(f"s{i}", y) for i in range(400) for y in ("2024-25", "2025-26")]
+        return dr, dr.compute(rows, AS_OF), rows
 
-        def get(url, headers, method="GET", body=None):
-            return next(calls), {"content-range": f"0-0/{total}"}
+    def test_summary_carries_seed_counts_by_kind(self):
+        dr, result, _ = self._result()
+        ages = sa.compute_seed_ages(
+            schools(a=LISTING, b=LISTING, c=FILE), [doc("a", "2023-24"), doc("c", "2022-23")], AS_OF)
+        summary = dr.summary_dict(result, seed_summary=sa.summarize(ages))
+        self.assertEqual(summary["seeds_with_seed"], 3)
+        self.assertEqual(summary["seeds_without_new_year"], 3)
+        self.assertEqual(summary["seeds_without_new_year_listing_page"], 2)
+        self.assertEqual(summary["seeds_without_new_year_one_file"], 1)
 
-        return get
+    def test_summary_without_seed_ages_has_null_keys_not_zero(self):
+        dr, result, _ = self._result()
+        self.assertIsNone(dr.summary_dict(result)["seeds_without_new_year"])
 
-    def test_pages_until_total(self):
-        rows = sa.fetch_seed_age_rows(
-            "https://x", "k",
-            get=self._get([[doc("a", "2025-26")] * 1000, [doc("b", "2025-26")] * 5], 1005))
-        self.assertEqual(len(rows), 1005)
+    def test_report_contains_the_seed_section(self):
+        dr, result, _ = self._result()
+        ages = sa.compute_seed_ages(schools(a=LISTING), [doc("a", "2023-24")], AS_OF)
+        md = dr.render_report(result, [], seeds_section=sa.render_section(ages, "2025-26"))
+        self.assertIn("## Seeds without a new year", md)
+        self.assertIn("| `a` | 2023-24 |", md)
 
-    def test_short_read_raises(self):
-        with self.assertRaises(RenewalError):
-            sa.fetch_seed_age_rows("https://x", "k", get=self._get([[doc("a", "2025-26")], []], 5))
 
-    def test_zero_rows_raises(self):
-        with self.assertRaises(RenewalError):
-            sa.fetch_seed_age_rows("https://x", "k", get=self._get([[]], 0))
+class EndToEndTests(unittest.TestCase):
+    def test_renewal_run_writes_seed_counts_and_section(self):
+        import tempfile
+        from tools.ops import discovery_renewal as dr
 
-    def test_query_selects_discovered_at_and_filters_live(self):
-        self.assertIn("discovered_at", sa.SEED_AGE_QUERY)
-        self.assertIn("removed_at=is.null", sa.SEED_AGE_QUERY)
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            manifest = tmp / "m.json"
+            manifest.write_text(json.dumps(_snapshot_rows()))
+            argv = ["--manifest-json", str(manifest), "--as-of", "2026-11-24",
+                    "--out-summary", str(tmp / "s.json"), "--out-report", str(tmp / "r.md"),
+                    "--out-worklist", str(tmp / "w.json"), "--out-state", str(tmp / "st.json")]
+            self.assertEqual(dr.main(argv), 0)
+            summary = json.loads((tmp / "s.json").read_text())
+            self.assertEqual(
+                summary["seeds_without_new_year"],
+                summary["seeds_without_new_year_one_file"]
+                + summary["seeds_without_new_year_listing_page"])
+            self.assertGreater(summary["seeds_with_seed"], 0)
+            self.assertIn("## Seeds without a new year", (tmp / "r.md").read_text())
+
+
+class QueryTests(unittest.TestCase):
+    def test_renewal_manifest_query_carries_discovered_at(self):
+        # seed_age reuses the renewal fetch; it must select the first-seen date.
+        from tools.ops.discovery_renewal import MANIFEST_QUERY
+
+        self.assertIn("discovered_at", MANIFEST_QUERY)
+        self.assertIn("removed_at=is.null", MANIFEST_QUERY)
 
 
 def _snapshot_rows():
-    for path in (FIXTURE, Path(os.environ.get(SNAPSHOT_ENV, "/nonexistent"))):
-        if path.exists():
-            rows = json.loads(path.read_text())
-            if isinstance(rows, list) and rows and "canonical_year" in rows[0]:
-                return rows
-    return None
+    """Manifest-shaped rows from the committed years-per-school fixture."""
+    years = json.loads(FIXTURE.read_text())
+    rows = [
+        doc(sid, y, "2026-05-01T00:00:00+00:00")
+        for sid, ys in years.items()
+        for y in ys
+    ]
+    if len(rows) < 1000:
+        raise AssertionError(f"fixture looks truncated: {len(rows)} rows")
+    return rows
 
 
 class RealSchoolsTests(unittest.TestCase):
@@ -200,8 +232,6 @@ class RealSchoolsTests(unittest.TestCase):
 
     def test_every_school_with_a_seed_lands_in_exactly_one_kind(self):
         rows = _snapshot_rows()
-        if rows is None:
-            self.skipTest(f"no manifest snapshot (fixture or ${SNAPSHOT_ENV})")
         sc = load_schools(Path(__file__).parent / "schools.yaml")
         ages, summary = sa.run_seed_age(sc, rows, AS_OF)
         with_seed = [s for s in sc.values() if sa.seed_for(s)[1] != "no_seed"]

@@ -44,7 +44,7 @@ import sys
 from dataclasses import asdict, dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
@@ -56,27 +56,20 @@ if str(REPO_ROOT) not in sys.path:
 from tools.ops.discovery_renewal import (  # noqa: E402
     DEFAULT_API,
     DEFAULT_SCHOOLS_YAML,
-    PAGE_SIZE,
     VALID_PARTICIPATION,
     RenewalError,
-    _headers,
     _parse_ts,
     cds_freshness_floor,
     check_floor_agrees,
+    fetch_live_manifest,
     fetch_sql_floor,
     format_year,
-    http_json,
     load_schools,
-    parse_content_range_total,
     parse_year,
     seed_for,
 )
 
 SEED_KINDS = ("one_file", "listing_page")
-SEED_AGE_QUERY = (
-    "select=school_id,canonical_year,discovered_at,removed_at,participation_status"
-    "&removed_at=is.null&order=document_id.asc"
-)
 # Fewer live schools than this means the read was not what we think it is.
 MIN_SCHOOLS_WITH_DOCS = 200
 
@@ -219,38 +212,6 @@ def render_section(ages: list[SeedAge], floor: str) -> str:
     return "\n".join(lines)
 
 
-def fetch_seed_age_rows(
-    api_url: str,
-    anon_key: str,
-    *,
-    get: Callable[..., tuple[Any, dict[str, str]]] = http_json,
-) -> list[dict[str, Any]]:
-    """Live `cds_manifest` rows with `discovered_at`, paged; raises unless all arrive."""
-    rows: list[dict[str, Any]] = []
-    total: int | None = None
-    while total is None or len(rows) < total:
-        url = (
-            f"{api_url.rstrip('/')}/rest/v1/cds_manifest?{SEED_AGE_QUERY}"
-            f"&limit={PAGE_SIZE}&offset={len(rows)}"
-        )
-        page, headers = get(url, _headers(anon_key, Prefer="count=exact"))
-        page_total = parse_content_range_total(headers.get("content-range"))
-        if total is None:
-            total = page_total
-            if total == 0:
-                raise RenewalError("cds_manifest returned zero live rows")
-        elif page_total != total:
-            raise RenewalError(f"row count changed while paging ({total} -> {page_total})")
-        if not isinstance(page, list):
-            raise RenewalError("cds_manifest page was not a list")
-        if not page:
-            break
-        rows.extend(page)
-    if total is None or len(rows) != total:
-        raise RenewalError(f"short read: fetched {len(rows)} rows, Content-Range total {total}")
-    return rows
-
-
 def run_seed_age(
     schools: dict[str, dict[str, Any]], rows: list[dict[str, Any]], as_of: date
 ) -> tuple[list[SeedAge], dict[str, Any]]:
@@ -284,7 +245,7 @@ def main(argv: list[str] | None = None) -> int:
         else:
             if not args.anon_key:
                 raise RenewalError("no anon key: set NEXT_PUBLIC_SUPABASE_ANON_KEY or pass --anon-key")
-            rows = fetch_seed_age_rows(args.api_url, args.anon_key)
+            rows = fetch_live_manifest(args.api_url, args.anon_key)
             check_floor_agrees(
                 cds_freshness_floor(as_of), fetch_sql_floor(args.api_url, args.anon_key, as_of)
             )

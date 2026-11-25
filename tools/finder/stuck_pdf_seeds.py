@@ -127,8 +127,10 @@ def choose_canonical_school(schools: list[dict]) -> dict:
 
 SKIP_REASONS = {
     "listing_seed": (
-        "the seed is a listing page, not a document. Not this job's failure "
-        "class; a stale listing page is covered separately (#462)"
+        "the seed is a listing page, not a document. The re-probe can never "
+        "replace a listing page (probe_urls.should_replace_seed), so these are "
+        "not fed to it. Listing seeds behind the cycle are counted by seed_age "
+        "and listed in the discovery renewal report (#462)"
     ),
     "no_seed": "the school has no discovery seed, so there is nothing to go stale",
 }
