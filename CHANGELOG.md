@@ -14,6 +14,8 @@ History before 0.1.0.0 (2026-08-03), including the June and July 2026 work, is n
   - **What it checks:** of the schools with last year's Common Data Set on file, how many also have this year's. A two-year check also keeps in view schools that already missed a year, and a next-year check runs from March.
   - **Floor:** each number is compared with a floor read off how fast schools usually post.
   - **Below the floor:** it opens one issue per CDS year, assigned to the owner, and posts to Discord #alerts. It updates the issue without commenting, and closes it only when that year recovers.
+  - **A standing alarm doesn't go quiet:** while a year stays below its floor, it is superseded by a new assigned issue every 30 days, and at once when the gap widens by 5 points.
+  - **Arrivals check:** a separate per-year check opens its own issue when almost nothing new arrived for a CDS year in 30 days (60 in winter) compared with how fast schools usually post. That catches a total stop within about a month.
   - **Fails loudly:** a short or empty read, too few schools in the denominator, or a floor that disagrees with the database fails the job; it never reports zero.
   - **First run:** on 2026-11-25 renewal was 373 of 498 (75%) against a floor of 82.5%, so the first scheduled run opens an issue.
 - **Watching the alarm:**
@@ -21,7 +23,7 @@ History before 0.1.0.0 (2026-08-03), including the June and July 2026 work, is n
   - A run that fails day after day says so, and posts every seventh day.
   - An optional outside check-in (`RENEWAL_DEADMAN_URL`) catches GitHub pausing scheduled workflows.
 - **Pipeline board:**
-  - A new first tile, Renewal. It goes red below a floor, on a missed daily run, or while an earlier year's alarm is still open. Until its registry row is applied it shows gray.
+  - A new first tile, Renewal. It goes red below a floor, on a missed daily run, while an earlier year's alarm is still open, or when almost nothing new arrived, naming the year. Until its registry row is applied it shows gray.
   - The Stuck PDFs tile reflects its result: red at 90% or more still stuck, amber above 50%.
 - **The renewal report and the board now also count:**
   - schools with two live documents in one filed year, classified (#467);

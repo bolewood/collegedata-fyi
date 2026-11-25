@@ -298,4 +298,6 @@ The defaults taken, each reversible. The full text, with the alternatives, is in
 | D12 | Flagged documents (`wrong_file`, `blank_template`, `low_coverage`) don't count as renewing |
 | D13 | One alarm issue per breaching CDS year |
 | D14 | Optional outside check-in (`RENEWAL_DEADMAN_URL`) against GitHub's 60-day schedule disable. It needs an account, which is the owner's call |
+| D16 | A standing alarm re-notifies: a new assigned issue every 30 days while still below, and at once on a 5-point worsening |
+| D17 | Arrivals check: per year, its own issue scope (`arrivals:<Y>`), ratio 0.4, a 60-day window in winter, with hysteresis on close |
 | D15 | The first data-quality snapshot PR (#496) is held, because it would publish the ungated `/coverage` tile under the old renewal definition |
