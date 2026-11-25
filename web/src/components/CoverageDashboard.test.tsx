@@ -181,3 +181,15 @@ describe("copy invariants (VOICE.md)", () => {
     expect(readFileSync(resolve(__dirname, "CoverageDashboard.tsx"), "utf8")).not.toMatch(/\u2014|&mdash;|&#8212;|&#x2014;/i);
   });
 });
+
+describe("hydration safety (the server formats in UTC and en-US; a browser elsewhere must match)", () => {
+  // No bare toLocaleString() and no date formatting without a time zone in the launched pages' components: either differs
+  // between the server and a browser in another locale or zone, which is a React hydration mismatch (error #418).
+  it("formats numbers with an explicit locale and dates in UTC", () => {
+    for (const file of ["CoverageDashboard.tsx", "DataQualityView.tsx", "CoverageDownloads.tsx"]) {
+      const src = readFileSync(resolve(__dirname, file), "utf8");
+      expect(src, file).not.toMatch(/toLocaleString\(\)/);
+      for (const m of src.matchAll(/toLocale(?:Date|Time)String\([^)]*\)/g)) expect(m[0], file).toContain("UTC");
+    }
+  });
+});

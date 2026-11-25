@@ -370,7 +370,7 @@ export function CoverageDashboard({
         className="mono"
         style={{ marginBottom: 8, fontSize: 12, color: "var(--ink-3)" }}
       >
-        SHOWING {filteredRows.length.toLocaleString()} OF {total.toLocaleString()} INSTITUTIONS
+        SHOWING {filteredRows.length.toLocaleString("en-US")} OF {total.toLocaleString("en-US")} INSTITUTIONS
       </div>
 
       {/* CSV downloads ship with the Data quality launch gate. */}
@@ -494,7 +494,7 @@ export function CoverageDashboard({
                       style={{ fontSize: 13, color: "var(--ink-2)", textAlign: "right" }}
                     >
                       {r.undergraduate_enrollment != null
-                        ? r.undergraduate_enrollment.toLocaleString()
+                        ? r.undergraduate_enrollment.toLocaleString("en-US")
                         : "\u2013"}
                     </span>
                     <span role="cell" style={{ minWidth: 0 }}>
@@ -603,7 +603,7 @@ function StatCell({
           color: active === false ? "var(--ink-3)" : "var(--ink)",
         }}
       >
-        {typeof value === "number" ? value.toLocaleString() : value}
+        {typeof value === "number" ? value.toLocaleString("en-US") : value}
       </div>
       <div className="mono" style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 4 }}>
         {note}
@@ -712,7 +712,7 @@ function pct(n: number, total: number): string {
 function formatChecked(iso: string | null): string {
   if (!iso) return "Never";
   const d = new Date(iso);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 }
 
 function yearOrDash(year: string | null): string {

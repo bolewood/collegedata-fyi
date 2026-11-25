@@ -19,6 +19,8 @@ import { AID_CANT_CHECK_SAMPLE, FEDERAL_DIFFERS_SAMPLE, type QualitySnapshot } f
 let currentParams = new URLSearchParams();
 const mocks = vi.hoisted(() => ({ loadLatestSnapshot: vi.fn(), earlier: [] as unknown[] }));
 vi.mock("@/lib/data-quality-snapshots", () => ({ loadLatestSnapshot: mocks.loadLatestSnapshot, loadAllSnapshots: () => [...mocks.earlier, mocks.loadLatestSnapshot()], loadReportsFor: () => null }));
+// These tests render the page as the browser shows it after hydration, when ?year= is read.
+vi.mock("@/lib/use-hydrated", () => ({ useHydrated: () => true }));
 vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
