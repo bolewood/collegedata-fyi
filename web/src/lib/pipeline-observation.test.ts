@@ -748,4 +748,52 @@ describe("pipeline observation freshness", () => {
     );
     expect(snapshot.stations[0].detail_line).toContain("unextracted 7");
   });
+
+  it("a 60-day arrivals window uses the 60-day figures in strip and detail", () => {
+    const summary = {
+      below_floor: false,
+      renewed: 400,
+      prev_schools: 479,
+      current_year: "2025-26",
+      arrivals_below_floor: true,
+      arrivals_window_days: 60,
+      arrivals_30d: 9,
+      arrivals_expected_30d: 12,
+      arrivals_60d: 4,
+      arrivals_expected_60d: 30.4,
+    };
+    const snapshot = snapshotFromFacts(
+      healthyFacts().concat(renewalFact({ last_summary: summary, last_scheduled_summary: summary })),
+      NOW,
+    );
+    expect(snapshot.strip.text).toBe(
+      "Renewal: almost nothing new arrived · 4 schools in 60 days (expected 30)",
+    );
+    expect(snapshot.stations[0].detail_line).toContain("arrivals: 4 in 60 days (expected 30)");
+  });
+
+  it("an arrivals breach marked outstanding for the current year shows the arrivals text; an earlier outstanding year wins", () => {
+    const base = {
+      below_floor: false,
+      renewed: 400,
+      prev_schools: 479,
+      current_year: "2026-27",
+      arrivals_below_floor: true,
+      arrivals_30d: 3,
+      arrivals_expected_30d: 25,
+      arrivals_window_days: 30,
+      outstanding_below_floor: true,
+    };
+    const textFor = (summary: Record<string, unknown>) =>
+      snapshotFromFacts(
+        healthyFacts().concat(renewalFact({ last_summary: summary, last_scheduled_summary: summary })),
+        NOW,
+      ).strip.text;
+    expect(textFor({ ...base, outstanding_years: "2026-27" })).toBe(
+      "Renewal: almost nothing new arrived · 3 schools in 30 days (expected 25)",
+    );
+    expect(textFor({ ...base, outstanding_years: "2025-26" })).toBe(
+      "Renewal: 2025-26 still below floor",
+    );
+  });
 });
