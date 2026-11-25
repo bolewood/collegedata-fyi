@@ -136,11 +136,38 @@ describe("gate: page metadata", () => {
 });
 
 describe("gate: the real snapshot loader", () => {
-  it("returns null for the committed directory (README only) before launch and throws after", () => {
+  it("returns null for a directory with only a README before launch and throws after", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dq-snap-"));
+    try {
+      fs.writeFileSync(path.join(dir, "README.md"), "not a snapshot");
+      at(CLOSED);
+      expect(loadLatestSnapshot(dir)).toBeNull();
+      at(OPEN);
+      expect(() => loadLatestSnapshot(dir)).toThrow(/no snapshot/);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("loads the newest committed snapshot from the real directory in both states", () => {
+    for (const when of [CLOSED, OPEN]) {
+      at(when);
+      const snap = loadLatestSnapshot();
+      expect(snap?.snapshot_of.slice(0, 10)).toBe("2026-11-25");
+      expect(snap?.public_format).toBe(1);
+      expect(snap?.renewal.both).toBe(365);
+      expect(snap?.renewal.previous).toBe(479);
+    }
+  });
+
+  it("feeds the /coverage renewal tile from the committed snapshot: 365 of 479 reads 76%", () => {
     at(CLOSED);
-    expect(loadLatestSnapshot()).toBeNull();
-    at(OPEN);
-    expect(() => loadLatestSnapshot()).toThrow(/no snapshot/);
+    const snap = loadLatestSnapshot()!;
+    const html = renderToStaticMarkup(
+      <CoverageDashboard rows={[]} renewal={{ renewal: snap.renewal, snapshotOf: snap.snapshot_of }} />,
+    );
+    const tile = html.slice(html.indexOf('data-testid="renewal-tile"'));
+    expect(tile.slice(0, 1200)).toContain("76%");
   });
 
   it("reads real files, picks the newest, and fails on same-date files in both states", () => {
