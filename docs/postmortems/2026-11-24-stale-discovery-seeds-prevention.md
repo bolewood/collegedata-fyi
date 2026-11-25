@@ -10,7 +10,7 @@ This ledger maps each of the postmortem's ten causes to five things: the control
 
 | Channel | Fires when | Reaches | Live today? |
 |---|---|---|---|
-| **Alarm issue** (label `alarm:discovery-renewal`) | A daily check finds current-year, two-year or next-year renewal below its floor | Assigned to the owner | From the first scheduled run, 2026-11-25 13:41 UTC (the assigned path has not run for real yet). It will open one, because renewal is 74.9% against a floor of 82.5% |
+| **Alarm issue** (label `alarm:discovery-renewal`, one per CDS year) | Checked daily. It opens when current-year, two-year or next-year renewal is below its floor, or when arrivals fall below a quarter of what the curve predicts (D17). While still below, it is superseded by a new assigned issue every 30 days and at once on a 5-point worsening (D16). It closes only when that year recovers; years two or more cycles old are retired | Assigned to the owner | From the first scheduled run, 2026-11-25 13:41 UTC (the assigned path has not run for real yet). It will open one, because renewal is 74.9% against a floor of 82.5% |
 | **Discord #alerts, direct** | The alarm issue opens, is superseded by a new year, or recovers | Channel | Yes. The end-to-end test posted both kinds |
 | **Discord #alerts, `workflow_run`** | The renewal workflow fails (short read, too few schools in the denominator, a floor mismatch, the alarm step failing) | Channel | Yes |
 | **Discord #alerts, hourly scheduled-run check** | The renewal workflow has no scheduled run newer than 36 h (the hand check: 35 days) | Channel | From the first scheduled run; with no scheduled run ever seen it records nothing |
