@@ -148,6 +148,16 @@ class ClassifyTests(unittest.TestCase):
     def test_duplicate(self):
         g = self.one([doc(1), doc(2)])
         self.assertEqual(g.cls, "duplicate")
+        self.assertIn("2 distinct files", g.evidence)
+
+    def test_missing_hashes_are_not_called_different_files(self):
+        for shas in ((None, None), ("a", None), ("", "")):
+            rows = [doc(1, source_sha256=shas[0]), doc(2, source_sha256=shas[1])]
+            g = self.one(rows)
+            self.assertEqual(g.cls, "duplicate")
+            self.assertIn("hashes not compared", g.evidence)
+            self.assertNotIn("different", g.evidence)
+            self.assertNotIn("distinct", g.evidence)
 
     def test_misfiled_wins_over_section_and_same_file(self):
         g = self.one([
@@ -170,12 +180,19 @@ class ClassifyTests(unittest.TestCase):
 
 
 class RenderTests(unittest.TestCase):
-    def test_markdown_lists_groups_and_escapes_pipes(self):
-        report = sd.find_groups([doc(1, url="https://x.edu/a|b.pdf"), doc(2)])
-        text = sd.render_markdown(report)
+    def test_markdown_lists_groups(self):
+        text = sd.render_markdown(sd.find_groups([doc(1), doc(2)]))
         self.assertIn("## Two documents in one year", text)
-        self.assertIn("a-college", text)
+        self.assertIn("| a-college | 2024-25 | duplicate |", text)
         self.assertIn("Undated duplicates (0)", text)
+
+    def test_markdown_escapes_pipes_in_school_label_and_evidence(self):
+        group = sd.Group("s|1", "sub|x", "2024-25", "duplicate", "ev|idence", [doc(1), doc(2)])
+        text = sd.render_markdown(sd.Report(documents_read=2, groups=[group], undated=[]))
+        self.assertIn("| s\\|1 (sub\\|x) | 2024-25 | duplicate |", text)
+        self.assertIn("ev\\|idence |", text)
+        row = [l for l in text.splitlines() if l.startswith("| s")][0]
+        self.assertEqual(row.replace("\\|", "").count("|"), 6)
 
     def test_markdown_empty(self):
         text = sd.render_markdown(sd.find_groups([doc(1)]))

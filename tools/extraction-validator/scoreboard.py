@@ -770,6 +770,7 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
             "document_id": document_id, "school_id": doc["school_id"], "year": year,
             "format": doc.get("source_format") or "unknown", "flag": doc.get("data_quality_flag"),
             "sub_institutional": bool(doc.get("sub_institutional")),
+            "sub_institutional_label": doc.get("sub_institutional"),
             "source_url": doc.get("source_url"), "cds_year": doc.get("cds_year"),
             "detected_year": doc.get("detected_year"),
             "producer": None, "version": None, "schema_version": None, "fields": 0,
@@ -885,7 +886,10 @@ def same_year_duplicates_block(documents: list[dict[str, Any]]) -> dict[str, Any
         has_years = "cds_year" in d
         rows.append({
             "id": d["document_id"], "school_id": d["school_id"],
-            "sub_institutional": "sub-institutional" if d.get("sub_institutional") else None,
+            # The raw label, so two distinct programs of one school are not one group.
+            # A saved run from before the label was kept has only the boolean.
+            "sub_institutional": d.get("sub_institutional_label")
+            or ("sub-institutional" if d.get("sub_institutional") else None),
             "cds_year": d["cds_year"] if has_years else d["year"],
             "detected_year": d.get("detected_year") if has_years else d["year"],
             "source_url": d.get("source_url"), "source_sha256": None,
@@ -1402,7 +1406,7 @@ def render_same_year_duplicates(data: dict[str, Any]) -> str:
         f"{block['same_year_duplicates']} school-years among these served documents have two or more "
         "(" + ", ".join(f"{n} {c}" for c, n in block["same_year_duplicates_by_class"].items())
         + f"; {block['undated_duplicates']} undated). The pipeline page counts every live document, "
-        "so its number is larger.",
+        "so its number is larger. Hashes are not read here, so same-file pairs show as duplicates.",
     ]
     if block["groups"]:
         lines += ["", "| School | Year | Class | Evidence |", "|---|---|---|---|"]

@@ -168,7 +168,11 @@ def classify(docs: list[dict[str, Any]], filed: str) -> tuple[str, str]:
     if same:
         sha, ids = same[0]
         return "same_file", f"{' and '.join(ids)} share sha256 {sha[:12]}"
-    return "duplicate", f"{len(docs)} different files, none misfiled or a section"
+    shas = [d.get("source_sha256") for d in docs]
+    if all(shas) and len(set(shas)) == len(shas):
+        return "duplicate", f"{len(docs)} distinct files, none misfiled or a section"
+    # Without every hash the files may still be the same one.
+    return "duplicate", f"{len(docs)} files (hashes not compared), none misfiled or a section"
 
 
 @dataclass

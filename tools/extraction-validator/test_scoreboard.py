@@ -880,6 +880,29 @@ class SameYearDuplicatesTests(unittest.TestCase):
                for i in (1, 2)]
         self.assertEqual(scoreboard.same_year_duplicates_block(old)["same_year_duplicates"], 1)
 
+    def test_two_programs_of_one_school_are_not_a_duplicate(self) -> None:
+        block = scoreboard.same_year_duplicates_block([
+            self.doc(1, sub_institutional=True, sub_institutional_label="general-studies"),
+            self.doc(2, sub_institutional=True, sub_institutional_label="nursing"),
+        ])
+        self.assertEqual(block["same_year_duplicates"], 0)
+        same = scoreboard.same_year_duplicates_block([
+            self.doc(1, sub_institutional=True, sub_institutional_label="nursing"),
+            self.doc(2, sub_institutional=True, sub_institutional_label="nursing"),
+        ])
+        self.assertEqual(same["same_year_duplicates"], 1)
+        self.assertEqual(same["groups"][0]["sub_institutional"], "nursing")
+
+    def test_gather_keeps_the_raw_sub_institutional_label(self) -> None:
+        source = Path(scoreboard.__file__).read_text()
+        self.assertIn('"sub_institutional_label": doc.get("sub_institutional")', source)
+
+    def test_pairs_without_hashes_are_not_called_different_files(self) -> None:
+        block = scoreboard.same_year_duplicates_block([self.doc(1), self.doc(2)])
+        self.assertIn("hashes not compared", block["groups"][0]["evidence"])
+        text = scoreboard.render_same_year_duplicates({"same_year_duplicates": block})
+        self.assertIn("same-file pairs show as duplicates", text)
+
     def test_render_prints_the_section(self) -> None:
         block = scoreboard.same_year_duplicates_block([self.doc(1), self.doc(2, cds_year="2025-26")])
         text = scoreboard.render_same_year_duplicates({"same_year_duplicates": block})
