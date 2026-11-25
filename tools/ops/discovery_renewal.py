@@ -952,6 +952,7 @@ def arrivals_state(result: Result) -> dict[str, dict[str, Any]]:
             "count_30": y.count_30, "expected_30": round(y.expected_30, 3),
             "count_60": y.count_60, "expected_60": round(y.expected_60, 3),
             "window_days": y.window_days, "checked": y.checked, "below_floor": y.below_floor,
+            "months_since_fall": round(months_since_fall(y.year, result.as_of), 2),
         }
     return out
 

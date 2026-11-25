@@ -775,6 +775,73 @@ class ArrivalsScopeTests(unittest.TestCase):
         self.assertIn("No longer tracked", close[close.index("--comment") + 1])
         self.assertEqual(ra.outstanding(out), (False, ""))
 
+    def test_the_current_years_arrivals_issue_is_retired_when_its_curve_has_run_out(self) -> None:
+        # Feb to Aug the current year expects ~0 a month: not checkable for good,
+        # and "at least 3 arrivals" could never be met. It is closed, once.
+        flat = arr(0, 0.0, expected_60=0.0, window=60, checked=False)
+        flat["months_since_fall"] = 16.0
+        old = issue(8, "2025-26", body=ra.scope_marker("2025-26", "arrivals") + "\n"
+                    + ra.discord_marker(True), title="Almost nothing new arrived for 2025-26: 0 schools")
+        gh, discord = FakeGh([old]), Discord()
+        out = run({"2025-26": HEALTHY}, gh, discord, arrivals={"2025-26": flat})
+        self.assertEqual(actions(out), {"arrivals:2025-26": "retire"})
+        close = gh.calls_for("issue close")[0]
+        self.assertEqual(
+            close[close.index("--comment") + 1],
+            "No longer checked: 2025-26 has passed its posting curve; arrivals:2026-27 and "
+            "renewal:2025-26 keep watching.")
+        self.assertEqual(len(discord.posts), 1)
+        self.assertEqual(ra.outstanding(out), (False, ""))
+        self.assertEqual(ra.arrivals_years(out), "")
+        # Nothing opens for it afterwards, and a still-checkable year is not retired.
+        gh2 = FakeGh()
+        self.assertEqual(run({"2025-26": HEALTHY}, gh2, arrivals={"2025-26": flat}).get("actions"), [])
+        young = arr(0, 0.0, window=60, checked=False)
+        young["months_since_fall"] = 4.0  # e.g. the next year in December: just not started
+        gh3 = FakeGh([issue(9, "2026-27", body=ra.scope_marker("2026-27", "arrivals"))])
+        out3 = run({"2025-26": HEALTHY}, gh3, arrivals={"2026-27": young})
+        self.assertEqual(actions(out3), {"arrivals:2026-27": "update"})  # held, not retired
+        # The current year at its fall (m < 12) that cannot be checked is not retired either.
+        gh4 = FakeGh([issue(10, "2025-26", body=ra.scope_marker("2025-26", "arrivals"))])
+        early = arr(0, 0.0, window=60, checked=False)
+        early["months_since_fall"] = 11.0
+        self.assertEqual(actions(run({"2025-26": HEALTHY}, gh4, arrivals={"2025-26": early})),
+                         {"arrivals:2025-26": "update"})
+
+    def test_a_sixty_day_issue_needs_the_sixty_day_count_back_too(self) -> None:
+        # Opened on the 60-day window with 4 against 25 expected (under 0.4 x 25).
+        gh, discord, _ = self.start({"2025-26": HEALTHY},
+                                    {"2025-26": arr(1, 8.0, count_60=4, expected_60=25.0, window=60, below=True)})
+        (body,) = [i["body"] for i in gh.issues.values()]
+        self.assertIn(ra.WINDOW60_MARKER, body)
+        # 30-day count back (4 of 8, needs max(3, 4)) but the 60-day one is not (11 < 12.5): held.
+        out = self.step(gh, discord, {"2025-26": HEALTHY},
+                        {"2025-26": arr(4, 8.0, count_60=11, expected_60=25.0, window=60, below=False)})
+        self.assertEqual(actions(out), {"arrivals:2025-26": "update"})
+        # Both back: closes.
+        out = self.step(gh, discord, {"2025-26": HEALTHY},
+                        {"2025-26": arr(4, 8.0, count_60=13, expected_60=25.0, window=60, below=False)})
+        self.assertEqual(actions(out), {"arrivals:2025-26": "close"})
+        # Still needs the 30-day condition when the 60-day one is back.
+        gh2, discord2, _ = self.start({"2025-26": HEALTHY},
+                                      {"2025-26": arr(0, 8.0, count_60=4, expected_60=25.0, window=60, below=True)})
+        out = self.step(gh2, discord2, {"2025-26": HEALTHY},
+                        {"2025-26": arr(2, 8.0, count_60=40, expected_60=25.0, window=60, below=False)})
+        self.assertEqual(actions(out), {"arrivals:2025-26": "update"})
+
+    def test_a_count_sitting_on_the_sixty_day_boundary_opens_it_once(self) -> None:
+        gh, discord = SimGh(), Discord()
+        gh.now = datetime(2027, 1, 10, 12, tzinfo=timezone.utc)
+        for day in range(25):
+            count_60 = 9 if day % 2 == 0 else 11  # open under 0.4 x 25 = 10, back at 13
+            self.step(gh, discord, {"2025-26": HEALTHY},
+                      {"2025-26": arr(3, 8.0, count_60=count_60, expected_60=25.0, window=60,
+                                      below=count_60 < 10)})
+        self.assertEqual(gh.created, 1)
+        self.assertEqual(sum(1 for i in gh.issues.values() if i["open"]), 1)
+        self.assertEqual(gh.closed, [])
+        self.assertFalse(any(p["recovered"] for p in discord.posts))
+
     def test_a_frozen_archive_opens_a_distinct_arrivals_issue_beside_the_renewal_issue(self) -> None:
         """500 schools; 300 filed 2025-26 on 2026-10-25 and nothing since. The
         renewal issue is open from the start (60% against its floor)."""
@@ -806,7 +873,9 @@ class ArrivalsScopeTests(unittest.TestCase):
         scopes = sorted({"arrivals" if "alarm-scope: arrivals:" in i["body"] else "renewal"
                          for i in gh.issues.values() if i["open"]})
         self.assertEqual(scopes, ["arrivals", "renewal"])
-        self.assertFalse(any(p["recovered"] for p in discord.posts))
+        # Nothing "recovered"; the only green post is the current year's arrivals
+        # issue being retired once its curve has run out.
+        self.assertFalse(any(p["title"].startswith("Discovery arrivals recovered") for p in discord.posts))
 
 
 HEALTHY_NEXT = ysum("2026-27", one=85.0, one_floor=76.0, two=85.0, two_floor=68.0)

@@ -89,6 +89,12 @@ GAP_RE = re.compile(r"<!-- alarm-gap: (-?\d+(?:\.\d+)?) -->")
 # the boundary cannot open and close the issue every day.
 ARRIVALS_RECOVER_MIN = 3
 ARRIVALS_RECOVER_SHARE = 0.5
+# Marker: this arrivals issue has been judged on the 60-day window. Its recovery
+# then also needs the 60-day count back (the same hysteresis on that window).
+WINDOW60_MARKER = "<!-- alarm-window: 60 -->"
+# A current year whose posting curve has run out cannot be checked any more
+# (expected ~0 a month, so "not checked" for good); its arrivals issue is retired.
+ARRIVALS_CURVE_OVER_MONTHS = 12.0
 # A scope's issue that is still open and still below its floor is replaced by a
 # new one (a new notification) after this many days, or (renewal) when the gap
 # to the floor has grown by this many percentage points since it was opened.
@@ -303,12 +309,27 @@ def discord_recovery(
 # ---------------------------------------------------------------- arrivals scope
 
 
-def arrivals_recovered(a: dict[str, Any]) -> bool:
+def arrivals_recovered(a: dict[str, Any], *, sixty: bool = False) -> bool:
     """True when the year's own 30-day arrivals are back above
-    max(3, ARRIVALS_RECOVER_SHARE x expected_30). The 30-day figures are used
-    whatever window the check judges with, so a window switch or an unchecked
-    window never closes an arrivals issue."""
-    return a["count_30"] >= max(ARRIVALS_RECOVER_MIN, ARRIVALS_RECOVER_SHARE * float(a["expected_30"]))
+    max(3, ARRIVALS_RECOVER_SHARE x expected_30). The 30-day figures are always
+    required, so a window switch or an unchecked window never closes an arrivals
+    issue. When the issue has been judged on the 60-day window (`sixty`), the
+    60-day count must also be back above max(3, ARRIVALS_RECOVER_SHARE x
+    expected_60), so a count sitting on that window's boundary cannot open and
+    close it daily."""
+    back_30 = a["count_30"] >= max(ARRIVALS_RECOVER_MIN, ARRIVALS_RECOVER_SHARE * float(a["expected_30"]))
+    if not sixty:
+        return back_30
+    back_60 = a["count_60"] >= max(ARRIVALS_RECOVER_MIN, ARRIVALS_RECOVER_SHARE * float(a["expected_60"]))
+    return back_30 and back_60
+
+
+def arrivals_passed_its_curve(a: dict[str, Any]) -> bool:
+    """The current year is past its posting curve and can no longer be judged."""
+    return (
+        a.get("checked") is not True
+        and float(a.get("months_since_fall", 0.0)) >= ARRIVALS_CURVE_OVER_MONTHS
+    )
 
 
 def arrivals_figures(a: dict[str, Any], *, holding: bool) -> tuple[int, int, int]:
@@ -361,12 +382,16 @@ def arrivals_recovery(year: str, a: dict[str, Any], issue_url: str | None, *, te
     }
 
 
-def arrivals_hold_note(year: str, a: dict[str, Any]) -> str:
+def arrivals_hold_note(year: str, a: dict[str, Any], *, sixty: bool = False) -> str:
     need = max(ARRIVALS_RECOVER_MIN, ARRIVALS_RECOVER_SHARE * float(a["expected_30"]))
+    extra = (
+        f" and {max(ARRIVALS_RECOVER_MIN, ARRIVALS_RECOVER_SHARE * float(a['expected_60'])):.0f} in "
+        "the last 60 days (it was judged on the 60-day window)" if sixty else ""
+    )
     return (
         f"Arrivals for {year} are not back yet: {a['count_30']} schools in the last 30 days; "
         f"this issue stays open until at least {need:.0f} (the larger of {ARRIVALS_RECOVER_MIN} and "
-        f"{ARRIVALS_RECOVER_SHARE:.0%} of the expected 30-day arrivals), whatever window the "
+        f"{ARRIVALS_RECOVER_SHARE:.0%} of the expected 30-day arrivals){extra}, whatever window the "
         "check is using.\n\n"
     )
 
@@ -429,13 +454,19 @@ def _with_body_file(body: str, fn: Callable[[str], str]) -> str:
 
 
 def build_body(
-    report: str, scope: Scope, posted: bool, gap: float | None = None
+    report: str, scope: Scope, posted: bool, gap: float | None = None, sixty: bool = False
 ) -> str:
     kind, year = scope
     return (
         report.rstrip("\n")
         + f"\n\n{scope_marker(year, kind)}\n{discord_marker(posted)}\n{gap_marker(gap)}"
+        + (f"{WINDOW60_MARKER}\n" if sixty else "")
     )
+
+
+def format_next(year: str) -> str:
+    start = int(year[:4]) + 1
+    return f"{start}-{(start + 1) % 100:02d}"
 
 
 def _retire(scope: Scope, current_start: int) -> bool:
@@ -534,12 +565,22 @@ def act(
         a = arrivals.get(year) if kind == "arrivals" else None
         name = f"{kind}:{year}"
 
-        if open_list and _retire(scope, current_start):
-            comment = (
-                retired_comment(ysum) if kind == "renewal"
-                else f"No longer tracked: arrivals are checked for {current_year} and the next "
-                     "year only."
-            )
+        passed_curve = (
+            kind == "arrivals" and a is not None and year == current_year
+            and arrivals_passed_its_curve(a)
+        )
+        if open_list and (passed_curve or _retire(scope, current_start)):
+            if passed_curve:
+                next_year = format_next(year)
+                comment = (
+                    f"No longer checked: {year} has passed its posting curve; "
+                    f"arrivals:{next_year} and renewal:{year} keep watching."
+                )
+            elif kind == "renewal":
+                comment = retired_comment(ysum)
+            else:
+                comment = (f"No longer tracked: arrivals are checked for {current_year} and the "
+                           "next year only.")
             print(f"{prefix}alarm {name}: retire (no longer tracked)")
             if dry_run:
                 print(f"{prefix}would close #{number} with the comment: {comment}")
@@ -564,11 +605,15 @@ def act(
 
         # What differs between the two scopes, in one place.
         holding = False
+        sixty = False
         if kind == "arrivals":
             below_now = a.get("below_floor") is True
             # Held open by this year's own recovery rule, not by the flag.
-            holding = active is not None and not below_now and not arrivals_recovered(a)
+            sixty = a["window_days"] == 60 or (active is not None and WINDOW60_MARKER in active["body"])
+            holding = active is not None and not below_now and not arrivals_recovered(a, sixty=sixty)
             below = below_now or holding
+            if passed_curve:
+                below = False  # nothing is open for it (retired above) and nothing can open
             title = arrivals_title(year, a, holding=holding, test_mode=test_mode)
             alert = lambda url: arrivals_alert(  # noqa: E731
                 year, a, url, holding=holding, test_mode=test_mode)
@@ -576,7 +621,7 @@ def act(
             recovery = lambda url: arrivals_recovery(year, a, url, test_mode=test_mode)  # noqa: E731
             report = reports.get(f"arrivals:{year}") or fallback_report
             if holding:
-                report = arrivals_hold_note(year, a) + report
+                report = arrivals_hold_note(year, a, sixty=sixty) + report
             gap = None
         else:
             below = lead_check(ysum) is not None
@@ -617,7 +662,7 @@ def act(
                 continue
             ensure_label(repo, label, runner)
             assign = [] if test_mode else ["--assignee", assignee]
-            out = _with_body_file(build_body(report, scope, False, gap), lambda path: _gh(
+            out = _with_body_file(build_body(report, scope, False, gap, sixty), lambda path: _gh(
                 runner, ["issue", "create", "--repo", repo, "--title", title,
                          "--body-file", path, "--label", label, *assign]))
             new_number = parse_issue_number(out)
@@ -628,7 +673,7 @@ def act(
                     close(old["number"], f"Superseded by #{new_number}: {renotify_reason}.")
                     print(f"closed issue #{old['number']} as superseded ({renotify_reason})")
             if send(alert(url)) == "posted":
-                _with_body_file(build_body(report, scope, True, gap), lambda path: _gh(
+                _with_body_file(build_body(report, scope, True, gap, sixty), lambda path: _gh(
                     runner, ["issue", "edit", str(new_number), "--repo", repo,
                              "--body-file", path]))
             record(scope, action, new_number)
@@ -653,7 +698,7 @@ def act(
             if gap_at_open is None:
                 gap_at_open = gap
             _with_body_file(
-                build_body(report, scope, posted, gap_at_open),
+                build_body(report, scope, posted, gap_at_open, sixty),
                 lambda path: _gh(
                     runner, ["issue", "edit", str(number), "--repo", repo, "--title", title,
                              "--body-file", path]))
