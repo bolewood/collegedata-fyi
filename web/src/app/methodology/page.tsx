@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { isDataQualityLaunched } from "@/lib/data-quality";
 
 export const metadata: Metadata = {
   title: "Methodology",
@@ -70,6 +71,14 @@ export default function MethodologyIndexPage() {
           </Link>
         ))}
       </div>
+
+      {/* PRD 040: linked only once the Data quality launch gate opens. */}
+      {isDataQualityLaunched() && (
+        <p className="mt-10 max-w-2xl text-sm leading-relaxed text-[var(--ink-2)]">
+          How well we read the reports behind these cards is on the{" "}
+          <Link href="/data-quality">Data quality</Link> page.
+        </p>
+      )}
     </div>
   );
 }

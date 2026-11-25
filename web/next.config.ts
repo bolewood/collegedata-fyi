@@ -13,6 +13,12 @@ import {
 
 export const nextConfig: NextConfig = {
   trailingSlash: false,
+  // PRD 040: the Data quality snapshots are read with node:fs at build and on
+  // the coverage page's ISR re-render, so make sure the files ship with them.
+  outputFileTracingIncludes: {
+    "/coverage": ["./src/data/data-quality/**/*.json"],
+    "/data-quality": ["./src/data/data-quality/**/*.json"],
+  },
   async redirects() {
     return [
       ...APEX_TO_WWW_REDIRECTS,
