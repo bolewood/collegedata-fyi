@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 import unittest
 import unittest.mock
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from tools.ops import notify_discord
@@ -609,6 +609,13 @@ class RenotifyTests(unittest.TestCase):
                          "Discovery is behind: only 4 schools gained a 2025-26 or later "
                          "document in 60 days (expected about 24)")
 
+    def test_the_gap_boundary_is_exactly_five_points(self) -> None:
+        # Gap at open 8.0. Exactly +5.0 notifies before day 30; +4.9 does not.
+        gh, _ = self.replay(10, lambda d: 72.0 if d < 5 else 67.0)
+        self.assertEqual(gh.created, 2)
+        gh, _ = self.replay(10, lambda d: 72.0 if d < 5 else 67.1)
+        self.assertEqual(gh.created, 1)
+
     def test_the_arrivals_check_alone_renotifies_by_age(self) -> None:
         ys = {**ysum("2025-26", one=90.0, one_floor=80.0, two=90.0, two_floor=70.0),
               "arrivals_30d": 2, "arrivals_expected_30d": 30.0, "arrivals_below_floor": True}
@@ -621,6 +628,132 @@ class RenotifyTests(unittest.TestCase):
                    test_mode=False, dry_run=False, assignee="santhonys", runner=gh,
                    fallback_report="R", discord=discord, now=gh.now)
         self.assertEqual(gh.created, 3)  # days 0, 30, 60
+
+
+class ArrivalsHoldTests(unittest.TestCase):
+    """An arrivals breach that is why an issue is open is cleared only by a real
+    30-day recovery, never by the check changing windows or being unchecked."""
+
+    def arrivals_ysum(self, *, count_30: int, expected_30: float, below: bool,
+                      window: int = 30, checked: bool = True) -> dict:
+        return {
+            **ysum("2025-26", one=95.0, one_floor=82.5, two=95.0, two_floor=74.5),
+            "arrivals_30d": count_30, "arrivals_expected_30d": expected_30,
+            "arrivals_60d": count_30 + 400, "arrivals_expected_60d": 25.0,
+            "arrivals_window_days": window, "arrivals_checked": checked,
+            "arrivals_below_floor": below,
+        }
+
+    def open_with_arrivals(self):
+        gh, discord = SimGh(), Discord()
+        gh.now = datetime(2026, 11, 25, 12, tzinfo=timezone.utc)
+        first = self.arrivals_ysum(count_30=0, expected_30=12.0, below=True)
+        out = ra.act(years={"2025-26": first}, reports={}, current_year="2025-26", repo="o/r",
+                     test_mode=False, dry_run=False, assignee="santhonys", runner=gh,
+                     fallback_report="R", discord=discord, now=gh.now)
+        self.assertEqual(actions(out), {"2025-26": "create"})
+        (body,) = [i["body"] for i in gh.issues.values()]
+        self.assertIn(ra.ARRIVALS_OPEN_MARKER, body)
+        return gh, discord
+
+    def step(self, gh, discord, ys, days: int = 1):
+        gh.now += timedelta(days=days)
+        return ra.act(years={"2025-26": ys}, reports={}, current_year="2025-26", repo="o/r",
+                      test_mode=False, dry_run=False, assignee="santhonys", runner=gh,
+                      fallback_report="R", discord=discord, now=gh.now)
+
+    def test_a_window_switch_that_clears_the_flag_does_not_close_the_issue(self) -> None:
+        gh, discord = self.open_with_arrivals()
+        # December: the 30-day window cannot judge, the 60-day one still holds
+        # October's arrivals, so the flag is off. 30-day arrivals are still 0.
+        out = self.step(gh, discord, self.arrivals_ysum(
+            count_30=0, expected_30=8.0, below=False, window=60))
+        self.assertEqual(actions(out), {"2025-26": "update"})
+        self.assertEqual(gh.closed, [])
+        self.assertEqual(ra.outstanding(out), (True, "2025-26"))
+        (issue_,) = [i for i in gh.issues.values() if i["open"]]
+        self.assertIn(ra.ARRIVALS_OPEN_MARKER, issue_["body"])
+        self.assertIn("Arrivals breach still open", issue_["body"])
+        self.assertIn("only 0 schools gained", issue_["title"])
+
+    def test_an_unchecked_window_holds_the_breach(self) -> None:
+        gh, discord = self.open_with_arrivals()
+        for _ in range(10):
+            out = self.step(gh, discord, self.arrivals_ysum(
+                count_30=1, expected_30=5.0, below=False, window=60, checked=False))
+            self.assertEqual(actions(out), {"2025-26": "update"})
+        self.assertEqual(gh.closed, [])
+
+    def test_the_breach_closes_on_a_real_recovery_only(self) -> None:
+        gh, discord = self.open_with_arrivals()
+        # 2 arrivals against 12 expected: threshold max(3, 3) = 3, not recovered.
+        self.assertEqual(actions(self.step(gh, discord, self.arrivals_ysum(
+            count_30=2, expected_30=12.0, below=False))), {"2025-26": "update"})
+        out = self.step(gh, discord, self.arrivals_ysum(count_30=3, expected_30=12.0, below=False))
+        self.assertEqual(actions(out), {"2025-26": "close"})
+        self.assertEqual(ra.outstanding(out), (False, ""))
+        self.assertTrue(discord.posts[-1]["recovered"])
+        # A quarter of a large expectation can be more than 3.
+        gh2, discord2 = self.open_with_arrivals()
+        self.assertEqual(actions(self.step(gh2, discord2, self.arrivals_ysum(
+            count_30=7, expected_30=40.0, below=False))), {"2025-26": "update"})
+        self.assertEqual(actions(self.step(gh2, discord2, self.arrivals_ysum(
+            count_30=10, expected_30=40.0, below=False))), {"2025-26": "close"})
+
+    def test_no_flapping_when_expected_crosses_ten(self) -> None:
+        gh, discord = self.open_with_arrivals()
+        created = gh.created
+        for day in range(40):
+            expected = 10.4 if day % 2 == 0 else 9.6  # the boundary the window switches at
+            checked = expected >= 10
+            ys = self.arrivals_ysum(count_30=2, expected_30=expected,
+                                    below=checked and 2 < 0.25 * expected,
+                                    window=30 if checked else 60, checked=checked)
+            out = self.step(gh, discord, ys)
+            self.assertIn(actions(out)["2025-26"], ("update", "renotify"))
+        self.assertEqual(sum(1 for a in gh.issues.values() if a["open"]), 1)
+        # Only the 30-day cadence ever replaced it: one extra issue in 40 days.
+        self.assertEqual(gh.created - created, 1)
+        self.assertFalse(any(p["recovered"] for p in discord.posts))
+
+    def test_an_issue_not_opened_for_arrivals_is_not_held_by_them(self) -> None:
+        # A renewal issue (no arrivals marker) closes as soon as it recovers.
+        gh, discord = FakeGh([issue(12)]), Discord()
+        ys = self.arrivals_ysum(count_30=0, expected_30=30.0, below=False)
+        self.assertEqual(actions(run({"2025-26": ys}, gh, discord)), {"2025-26": "close"})
+
+    def test_the_october_stop_stays_open_through_december(self) -> None:
+        """Replay a frozen archive: its last arrivals land on 2026-10-25."""
+        from tools.ops import discovery_renewal as dr
+        rows = []
+        for i in range(400):
+            rows.append(_row(f"s{i}", "2023-24"))
+            rows.append({**_row(f"s{i}", "2024-25"), "discovered_at": "2026-01-10T00:00:00+00:00"})
+            rows.append({**_row(f"s{i}", "2025-26"), "discovered_at": "2026-10-25T12:00:00+00:00"})
+        gh, discord = SimGh(), Discord()
+        opened = None
+        day = date(2026, 10, 25)
+        while day <= date(2026, 12, 31):
+            res = dr.compute(rows, day)
+            years = {dr.format_year(y): dr.year_summary(c, res.arrivals if y == res.current_year else None)
+                     for y, c in res.year_checks.items()}
+            gh.now = datetime(day.year, day.month, day.day, 13, 41, tzinfo=timezone.utc)
+            out = ra.act(years=years, reports={}, current_year="2025-26", repo="o/r",
+                         test_mode=False, dry_run=False, assignee="santhonys", runner=gh,
+                         fallback_report="R", discord=discord, now=gh.now)
+            if opened is None and gh.created:
+                opened = day
+            if opened:
+                self.assertEqual(sum(1 for i in gh.issues.values() if i["open"]), 1, day)
+                self.assertIn("2025-26", ra.outstanding(out)[1], day)
+            day += timedelta(days=1)
+        self.assertIsNotNone(opened)
+        self.assertLessEqual(abs((opened - date(2026, 11, 25)).days), 3)
+        # It never recovered, and 60-day windows opened and closed under it.
+        self.assertFalse(any(p["recovered"] for p in discord.posts))
+        (final,) = [i for i in gh.issues.values() if i["open"]]
+        self.assertIn(ra.ARRIVALS_OPEN_MARKER, final["body"])
+
 
 
 class OutstandingTests(unittest.TestCase):

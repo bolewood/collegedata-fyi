@@ -724,6 +724,14 @@ class ArrivalsTests(unittest.TestCase):
         self.assertEqual(res.arrivals.count, 1)
         self.assertNotIn("s0", res.arrivals.schools)
 
+    def test_a_school_gaining_both_years_in_one_window_counts_once(self) -> None:
+        rows = self.archive("2026-05-01T12:00:00+00:00")
+        recent = "2026-05-28T00:00:00+00:00"
+        rows += [row("s350", "2024-25", discovered=recent), row("s350", "2025-26", discovered=recent)]
+        res = dr.compute(rows, date(2026, 6, 2))
+        self.assertEqual(res.arrivals.count, 1)
+        self.assertEqual(res.arrivals.schools, {"s350"})
+
     def test_flagged_sub_institution_and_undated_documents_are_not_arrivals(self) -> None:
         rows = self.archive("2026-05-01T12:00:00+00:00")
         recent = "2026-05-28T00:00:00+00:00"

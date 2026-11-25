@@ -56,7 +56,11 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from tools.ops import notify_discord  # noqa: E402
-from tools.ops.discovery_renewal import check_descriptor, lead_check  # noqa: E402
+from tools.ops.discovery_renewal import (  # noqa: E402
+    ARRIVALS_FLOOR_SHARE,
+    check_descriptor,
+    lead_check,
+)
 
 ALARM_LABEL = "alarm:discovery-renewal"
 TEST_LABEL = "alarm:discovery-renewal-test"
@@ -68,6 +72,12 @@ LABEL_DESCRIPTION = "Discovery renewal is below its floor (one open issue per CD
 # read as a match on its year.
 SCOPE_RE = re.compile(r"<!-- alarm-scope: ([a-z_]+):(\d{4}-\d{2}) -->")
 DISCORD_RE = re.compile(r"<!-- discord-posted: (true|false) -->")
+# An arrivals breach is not cleared by the check changing windows (30 to 60 days
+# in winter) or by not being checkable: once it is why an issue is open, it
+# recovers only on a real 30-day count of at least this many arrivals or this
+# share of what the curve expects, whichever is larger.
+ARRIVALS_RECOVER_MIN = 3
+ARRIVALS_OPEN_MARKER = "<!-- alarm-arrivals: open -->"
 GAP_RE = re.compile(r"<!-- alarm-gap: (-?\d+(?:\.\d+)?) -->")
 # A year's issue that is still open and still below its floor is replaced by a
 # new one (a new notification) after this many days, or when the gap to the
@@ -112,6 +122,30 @@ def scope_marker(year: str) -> str:
 
 def discord_marker(posted: bool) -> str:
     return f"<!-- discord-posted: {'true' if posted else 'false'} -->"
+
+
+def arrivals_marked(body: str | None) -> bool:
+    return ARRIVALS_OPEN_MARKER in (body or "")
+
+
+def arrivals_recovered(ysum: dict[str, Any]) -> bool:
+    """True when the 30-day arrivals are back: at least max(3, a quarter of the
+    expected 30-day arrivals). A summary with no arrivals figures (not the
+    current year) holds nothing."""
+    count, expected = ysum.get("arrivals_30d"), ysum.get("arrivals_expected_30d")
+    if count is None or expected is None:
+        return True
+    return count >= max(ARRIVALS_RECOVER_MIN, ARRIVALS_FLOOR_SHARE * float(expected))
+
+
+def arrivals_hold_note(ysum: dict[str, Any]) -> str:
+    return (
+        f"Arrivals breach still open: {ysum.get('arrivals_30d')} schools gained a document in the "
+        f"last 30 days; it stays open until at least "
+        f"{max(ARRIVALS_RECOVER_MIN, ARRIVALS_FLOOR_SHARE * float(ysum.get('arrivals_expected_30d') or 0)):.0f} "
+        "(the larger of 3 and a quarter of the expected 30-day arrivals), whatever window the "
+        "check is using.\n\n"
+    )
 
 
 def gap_marker(gap: float | None) -> str:
@@ -327,10 +361,13 @@ def _with_body_file(body: str, fn: Callable[[str], str]) -> str:
         Path(path).unlink(missing_ok=True)
 
 
-def build_body(report: str, year: str, posted: bool, gap: float | None = None) -> str:
+def build_body(
+    report: str, year: str, posted: bool, gap: float | None = None, arrivals_open: bool = False
+) -> str:
     return (
         report.rstrip("\n")
         + f"\n\n{scope_marker(year)}\n{discord_marker(posted)}\n{gap_marker(gap)}"
+        + (f"{ARRIVALS_OPEN_MARKER}\n" if arrivals_open else "")
     )
 
 
@@ -435,6 +472,17 @@ def act(
                 open_after[year] = number
             actions.append({"year": year, "action": "skip", "issue": number})
             continue
+        # An arrivals breach that is why this issue is open is not cleared by the
+        # check changing windows or being unchecked (a stale count re-entering
+        # the 60-day window, expected near 10): only a real 30-day recovery.
+        holds = (
+            active is not None
+            and arrivals_marked(active["body"])
+            and not arrivals_recovered(ysum)
+        )
+        if holds and lead_check(ysum) is None:
+            ysum = {**ysum, "arrivals_below_floor": True, "arrivals_window_days": 30}
+        arrivals_open = ysum.get("arrivals_below_floor") is True
         below = lead_check(ysum) is not None
         action = decide(below, number)
         renotify_reason = None
@@ -445,6 +493,8 @@ def act(
         print(f"{prefix}alarm {year}: {action} (below_floor={below}, open issue={number}, "
               f"label={label})")
         report = reports.get(year) or fallback_report
+        if holds:
+            report = arrivals_hold_note(ysum) + report
 
         if action == "none":
             actions.append({"year": year, "action": action, "issue": None})
@@ -463,7 +513,7 @@ def act(
                 continue
             ensure_label(repo, label, runner)
             assign = [] if test_mode else ["--assignee", assignee]
-            out = _with_body_file(build_body(report, year, False, gap), lambda path: _gh(
+            out = _with_body_file(build_body(report, year, False, gap, arrivals_open), lambda path: _gh(
                 runner, ["issue", "create", "--repo", repo, "--title", title,
                          "--body-file", path, "--label", label, *assign]))
             new_number = parse_issue_number(out)
@@ -475,7 +525,7 @@ def act(
                     print(f"closed issue #{old['number']} as superseded ({renotify_reason})")
             outcome = send(discord_alert(ysum, url, test_mode=test_mode))
             if outcome == "posted":
-                _with_body_file(build_body(report, year, True, gap), lambda path: _gh(
+                _with_body_file(build_body(report, year, True, gap, arrivals_open), lambda path: _gh(
                     runner, ["issue", "edit", str(new_number), "--repo", repo,
                              "--body-file", path]))
             open_after[year] = new_number
@@ -502,7 +552,8 @@ def act(
             gap_at_open = parse_gap(active["body"])
             if gap_at_open is None:
                 gap_at_open = gap_of(ysum)
-            _with_body_file(build_body(report, year, posted, gap_at_open), lambda path: _gh(
+            _with_body_file(
+                build_body(report, year, posted, gap_at_open, arrivals_open), lambda path: _gh(
                 runner, ["issue", "edit", str(number), "--repo", repo, "--title", title,
                          "--body-file", path]))
             print(f"updated issue #{number}")
