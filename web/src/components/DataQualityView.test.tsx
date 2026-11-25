@@ -298,6 +298,12 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
       expect(cells("All formats").slice(4, 7)).toEqual(["89", "53", "36"]);
     });
 
+    it("marks the rendered table as the split one on format 2 and not on format 1", () => {
+      const open = (html: string) => html.match(/<table[^>]*id="dq-table-b"[^>]*>/)![0];
+      expect(open(openHtml("2024-25"))).toContain("dq-table--b-split");
+      expect(open(render("year=2024-25", FIXTURE_SNAPSHOT_V1))).not.toContain("dq-table--b-split");
+    });
+
     it("gives every row the same cell count as the header", () => {
       const html = bText(openHtml("2024-25"));
       const head = (html.match(/<thead>[\s\S]*?<\/thead>/)![0].match(/<th\b/g) ?? []).length;

@@ -270,6 +270,19 @@ describe("gate: the real snapshot loader", () => {
     expect(first.renewal.previous).toBe(498);
   });
 
+  it("pins the committed snapshot's size of federal differences per year", () => {
+    const first = JSON.parse(fs.readFileSync(path.join(SNAPSHOT_DIR, "2026-11-25.json"), "utf8"));
+    const split = Object.fromEntries(
+      first.years.map((y: { cds_year: string; total: { federal: Record<string, number> } }) => [
+        y.cds_year,
+        [y.total.federal.differs, y.total.federal.differs_2_to_10pct, y.total.federal.differs_over_10pct],
+      ]),
+    );
+    // [differs, over 2% to 10%, over 10%], from scoreboard-20261125T140926Z.json. Pinned in two parts so a balanced
+    // transcription error (one part up, the other down) fails here even though the arithmetic checks still pass.
+    expect(split).toEqual({ "2023-24": [116, 70, 46], "2024-25": [120, 61, 59], "2025-26": [0, 0, 0] });
+  });
+
   it("reads real files, picks the newest, and fails on same-date files in both states", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dq-snap-"));
     try {

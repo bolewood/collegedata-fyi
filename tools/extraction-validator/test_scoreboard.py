@@ -755,6 +755,23 @@ class FederalDifferenceSize(unittest.TestCase):
         with self.assertRaises(SystemExit):
             scoreboard.build_public(run, "x.json")
 
+    def test_the_agreement_guard_fires_on_its_own(self) -> None:
+        # Stored outcome "match" but our raw number is missing: federal_values would say "blank". The error must be the
+        # agreement one, not the band-sum one that a wrong count would raise later.
+        run = synthetic_run()
+        target = next(d for d in run["documents"] if d["year"] == "2024-25" and not d["sub_institutional"]
+                      and d["federal"]["applied"] == "match")
+        target["federal_values"]["applied"] = {"ours": None, "federal": "100", "federal_data_year": 2024}
+        with self.assertRaisesRegex(SystemExit, f"{target['document_id']} applied: federal_values say 'blank', the run's outcome is 'match'"):
+            scoreboard.build_public(run, "x.json")
+        # And a stored "blank" against raw numbers that match.
+        run = synthetic_run()
+        target = next(d for d in run["documents"] if d["year"] == "2024-25" and not d["sub_institutional"]
+                      and d["federal"]["admitted"] == "blank")
+        target["federal_values"]["admitted"] = {"ours": 100, "federal": "100", "federal_data_year": 2024}
+        with self.assertRaisesRegex(SystemExit, f"{target['document_id']} admitted: federal_values say 'match', the run's outcome is 'blank'"):
+            scoreboard.build_public(run, "x.json")
+
     def test_refuses_a_run_without_federal_values(self) -> None:
         run = synthetic_run()
         target = next(d for d in run["documents"] if d["federal"]["enrolled"] == "different")
@@ -774,6 +791,16 @@ class FederalDifferenceSize(unittest.TestCase):
             del broken["years"][0]["total"]["federal"][key]
             with self.assertRaises(ValueError):
                 scoreboard.check_public_shape(broken)
+        # Also where the counts are zero (a year with no federal figures): a zero must still be written.
+        zero = next(y for y in pub["years"] if not y["federal_fall_loaded"])
+        for key in ("differs_2_to_10pct", "differs_over_10pct"):
+            for holder in (zero["total"], zero["rows"][0]):
+                self.assertEqual(holder["federal"][key], 0)
+                broken = json.loads(json.dumps(pub))
+                target = next(y for y in broken["years"] if y["cds_year"] == zero["cds_year"])
+                del (target["total"] if holder is zero["total"] else target["rows"][0])["federal"][key]
+                with self.assertRaisesRegex(ValueError, key):
+                    scoreboard.check_public_shape(broken)
         broken = json.loads(json.dumps(pub))
         broken["years"][0]["total"]["federal"]["differs_over_20pct"] = 1
         with self.assertRaises(ValueError):

@@ -67,7 +67,7 @@ shows no deltas for those columns. Format 3 keeps the raw inputs of PRD 040's
 `sections` (stored fields per CDS section letter by `value_status`; the counts
 add up to `fields`) and `federal_extra` (our B1 total undergraduates and G1
 tuition beside IPEDS fall undergraduate enrollment and tuition, unjudged).
-`--public` reads format 2 and 3 runs alike.
+`--public` needs a format 3 run (format 2 has no `federal_values`, so it cannot give the size split).
 
     # public aggregates from one saved run: reads that file only, no database
     tools/extraction_worker/.venv/bin/python \\

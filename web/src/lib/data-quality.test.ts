@@ -41,6 +41,17 @@ describe("size of federal differences (public_format 2)", () => {
     }
   });
 
+  it.each(KEYS)("requires %s even where the count is zero (a no-federal year's row and total)", (key) => {
+    for (const target of ["row", "total"] as const) {
+      const snap = clone();
+      const y = snap.years.find((x) => !x.federal_fall_loaded)!;
+      const r = target === "row" ? y.rows[0] : y.total;
+      expect(r.federal[key]).toBe(0);
+      delete r.federal[key];
+      expect(() => select(snap)).toThrow(new RegExp(`${key} must be a non-negative integer`));
+    }
+  });
+
   it.each(KEYS)("refuses %s on format 1", (key) => {
     const snap = clone1();
     snap.years[0].total.federal[key] = 0;
