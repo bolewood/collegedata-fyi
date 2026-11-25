@@ -422,6 +422,45 @@ describe("stripLamp", () => {
       expect(restored).toBe("ok");
     });
 
+    it("outstanding_below_floor alone is down (September-shaped fixture); absent is unchanged", () => {
+      const sept = {
+        ...GOOD,
+        below_floor: false,
+        next_below_floor: false,
+        two_year_below_floor: false,
+        outstanding_below_floor: true,
+        outstanding_years: "2025-26",
+      };
+      expect(stationLamp(renewal({ lastSummary: sept, lastScheduledSummary: sept }))).toBe("down");
+      expect(stationLamp(renewal())).toBe("ok");
+      const cleared = { ...sept, outstanding_below_floor: false, outstanding_years: "" };
+      expect(stationLamp(renewal({ lastSummary: cleared, lastScheduledSummary: cleared }))).toBe("ok");
+    });
+
+    it("an overridden dispatch cannot turn an outstanding breach green, but can turn it red", () => {
+      const out = { ...GOOD, outstanding_below_floor: true, outstanding_years: "2025-26" };
+      expect(
+        stationLamp(
+          renewal({
+            lastScheduledSummary: out,
+            lastScheduledFinishedAt: hoursAgo(10),
+            lastSummary: { ...GOOD, floor_overridden: true },
+            lastFinishedAt: hoursAgo(2),
+          }),
+        ),
+      ).toBe("down");
+      expect(
+        stationLamp(
+          renewal({
+            lastScheduledSummary: GOOD,
+            lastScheduledFinishedAt: hoursAgo(10),
+            lastSummary: { ...out, floor_overridden: true },
+            lastFinishedAt: hoursAgo(2),
+          }),
+        ),
+      ).toBe("down");
+    });
+
     it("two_year_below_floor is down; absent is ignored", () => {
       const t = { ...GOOD, two_year_below_floor: true };
       expect(stationLamp(renewal({ lastSummary: t, lastScheduledSummary: t }))).toBe("down");
