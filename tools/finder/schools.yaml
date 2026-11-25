@@ -1096,7 +1096,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.alasu.edu/_qa/CDS_2017-2018_1.pdf
+  discovery_seed_url: https://alasu.edu/administration/institutional-effectiveness/institutional-data.php
 - id: alamo-community-college-district-central-office
   name: Alamo Community College District Central Office
   domain: alamo.edu
@@ -1600,7 +1600,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.angelo.edu/live/files/27087-common-data-set-2019-2020
+  discovery_seed_url: https://www.angelo.edu/administrative-support/accountability/research_data.php
 - id: anna-maria-college
   name: Anna Maria College
   domain: annamaria.edu
@@ -2632,7 +2632,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.bellarmine.edu/_migrated-binaries/docs/default-source/institutional-research-effectiveness-docs/cds_2022-2023-for-publication.pdf?sfvrsn=42364480_4
+  discovery_seed_url: https://bellarmine.edu/institutional-research-and-effectiveness/data-resources/common-data-set.php
 - id: bellevue-college
   name: Bellevue College
   domain: bellevuecollege.edu
@@ -3097,7 +3097,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.biola.edu/institutional-research/about
+  discovery_seed_url: https://www.biola.edu/university-analytics/reports
 - id: birmingham-southern-college
   name: Birmingham-Southern College
   domain: bsc.edu
@@ -3991,7 +3991,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.csudh.edu/Assets/csudh-sites/uepa/docs/student-data/CDS_2022-2023%20FINAL.pdf
+  discovery_seed_url: https://www.csudh.edu/uepa/student-data/
 - id: california-state-university-east-bay
   name: California State University-East Bay
   domain: csueastbay.edu
@@ -4688,7 +4688,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.cwu.edu/about/offices/institutional-effectiveness/_documents/cds-final.pdf
+  discovery_seed_url: https://www.cwu.edu/about/offices/institutional-effectiveness/reports/index.php
 - id: central-wyoming-college
   name: Central Wyoming College
   domain: cwc.edu
@@ -5257,7 +5257,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.csuohio.edu/sites/default/files/media/iraa/documents/cds2002.pdf
+  discovery_seed_url: https://www.csuohio.edu/iraa/csu-common-data-sets-cds
 - id: cleveland-university-kansas-city
   name: Cleveland University-Kansas City
   domain: cleveland.edu
@@ -5517,7 +5517,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.coa.edu/wp-content/uploads/2025/11/coa-cds2022-2023-20230428pdf.pdf
+  discovery_seed_url: https://www.coa.edu/about/institutional-research/
 - id: college-of-the-holy-cross
   name: College of the Holy Cross
   domain: holycross.edu
@@ -5752,7 +5752,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.columbusstate.edu/institutional-research/_docs/common-data-set/cds-2020/FinancialAid.pdf
+  discovery_seed_url: https://www.columbusstate.edu/institutional-research/common-data-set.php
 - id: commonwealth-university-of-pennsylvania
   name: Commonwealth University of Pennsylvania
   domain: commonwealthu.edu
@@ -5764,7 +5764,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.commonwealthu.edu/documents/bu-cds-2022-2023
+  discovery_seed_url: https://www.commonwealthu.edu/offices-directory/institutional-effectiveness/institutional-research
 - id: community-college-of-denver
   name: Community College of Denver
   domain: ccd.edu
@@ -5872,7 +5872,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.cuchicago.edu/about-us/consumer-information/
+  discovery_seed_url: https://www.cuchicago.edu/academics/academic-resources/office-of-institutional-planning-and-effectiveness/
 - id: concordia-university-irvine
   name: Concordia University-Irvine
   domain: cui.edu
@@ -8043,7 +8043,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://fhsu.edu/administrative/adminfin/budget-and-planning/common-data-set/index
+  discovery_seed_url: https://www.fhsu.edu/administrative/adminfin/budget-and-planning/common-data-set/
 - id: fort-lewis-college
   name: Fort Lewis College
   domain: fortlewis.edu
@@ -8300,7 +8300,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://gc.edu/about-gc/institutional-effectiveness/documents/CDS_2021-2022-GC.pdf
+  discovery_seed_url: https://gc.edu/about-gc/institutional-effectiveness/facts.php
 - id: gannon-university
   name: Gannon University
   domain: gannon.edu
@@ -9858,7 +9858,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.husson.edu/about/office-of-institutional-research/assets/CDS_2022-2023%20-%20Husson%20University.pdf
+  discovery_seed_url: https://www.husson.edu/about/office-of-institutional-effectiveness/institutional-research/reporting
 - id: huston-tillotson-university
   name: Huston-Tillotson University
   domain: htu.edu
@@ -10564,7 +10564,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.kzoo.edu/about/files/2020/03/CDS_2019-2020-Kalamazoo-College.pdf
+  discovery_seed_url: https://ir.kzoo.edu/data/data-sets/
 - id: kansas-christian-college
   name: Kansas Christian College
   domain: kansaschristian.edu
@@ -11206,7 +11206,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.lamar.edu/data-analytics-reporting-analysis/_files/documents/1617_common-data-set.pdf
+  discovery_seed_url: https://www.lamar.edu/data-analytics-reporting-analysis/data-statistics-dashboards/common-data-set.html
 - id: lancaster-bible-college
   name: Lancaster Bible College
   domain: lbc.edu
@@ -11591,7 +11591,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.lincoln.edu/_files/institutional-assessment/CDS_2019-2020-FINAL.pdf
+  discovery_seed_url: https://www.lincoln.edu/departments/institutional-effectiveness-research-and-planning/institutional-research
 - id: lindenwood-university
   name: Lindenwood University
   domain: lindenwood.edu
@@ -11923,7 +11923,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://academicaffairs.loyno.edu/sites/default/files/cds_all.pdf
+  discovery_seed_url: https://academicaffairs.loyno.edu/research/assessment/common-data-sets
 - id: lubbock-christian-university
   name: Lubbock Christian University
   domain: lcu.edu
@@ -13336,7 +13336,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.mnsu.edu/globalassets/student-success-analytics-and-integrated-planning/cds/cds2021.pdf
+  discovery_seed_url: https://mankato.mnsu.edu/about-the-university/student-success-analytics-and-integrated-planning/institutional-analytics-and-strategic-effectiveness/institutional-data-and-information/common-data-sets/
 - id: minot-state-university
   name: Minot State University
   domain: minotstateu.edu
@@ -13947,7 +13947,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://mvnu.edu/wp-content/uploads/2023/08/common-data-1718.pdf
+  discovery_seed_url: https://mvnu.edu/institutional-effectiveness/
 - id: mt-hood-community-college
   name: Mt Hood Community College
   domain: mhcc.edu
@@ -14605,7 +14605,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://report.isa.ncsu.edu/ir/cds/
+  discovery_seed_url: https://uda.ncsu.edu/institutional-analytics/common-data-set/
 - id: north-carolina-wesleyan-university
   name: North Carolina Wesleyan University
   domain: ncwc.edu
@@ -15257,7 +15257,7 @@ schools:
   domain: oglethorpe.edu
   ipeds_id: '140696'
   scrape_policy: active
-  discovery_seed_url: https://ir.oglethorpe.edu/institutional-research/common-data-set/
+  discovery_seed_url: https://oglethorpe.edu/about/offices-departments/institutional-research-effectiveness/
   probe_state:
     last_probed_at: '2026-04-14T07:18:11Z'
     last_result: found
@@ -18042,7 +18042,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.stmartin.edu/documents/cds-2017-2018
+  discovery_seed_url: https://www.stmartin.edu/directory/offices-departments-directory/institutional-research/reports
 - id: saint-marys-college
   name: Saint Mary's College
   domain: saintmarys.edu
@@ -18158,7 +18158,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.stvincent.edu/assets/docs/meet-saint-vincent/cds.pdf
+  discovery_seed_url: https://www.stvincent.edu/assets/docs/meet-saint-vincent/common-data-set-current-year.pdf
 - id: saint-vincent-de-paul-regional-seminary
   name: Saint Vincent de Paul Regional Seminary
   domain: svdp.edu
@@ -19958,7 +19958,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.stmarytx.edu/wp-content/uploads/2016/06/2015-common-data-set.pdf
+  discovery_seed_url: https://www.stmarytx.edu/compliance/consumer-information/
 - id: st-thomas-aquinas-college
   name: St. Thomas Aquinas College
   domain: stac.edu
@@ -20017,7 +20017,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www2.cortland.edu/dotAsset/134990.pdf
+  discovery_seed_url: https://www2.cortland.edu/offices/institutional-research-and-assessment/institutional-reporting/external-reports/common-data-set/
 - id: state-university-of-new-york-at-new-paltz
   name: State University of New York at New Paltz
   domain: newpaltz.edu
@@ -20029,7 +20029,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.newpaltz.edu/media/institutional-research/cds20102011.pdf
+  discovery_seed_url: https://www.newpaltz.edu/oir/facts_common.html
 - id: state-university-of-new-york-at-oswego
   name: State University of New York at Oswego
   domain: oswego.edu
@@ -20604,7 +20604,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.tarleton.edu/iaea/wp-content/uploads/sites/96/2022/05/TSU-Common-Dataset-Fall-2019.pdf
+  discovery_seed_url: https://www.tarleton.edu/iaea/common-data-set/
 - id: taylor-university
   name: Taylor University
   domain: taylor.edu
@@ -20685,7 +20685,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.tnwesleyan.edu/wp-content/uploads/2024/01/cds2019_final.pdf
+  discovery_seed_url: https://www.tnwesleyan.edu/about/departments/institutional-effectiveness-research/institutional-research/
 - id: texas-a-and-m-international-university
   name: Texas A & M International University
   domain: tamiu.edu
@@ -20824,7 +20824,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://my.tlu.edu/ICS/icsfs/mm/cds_2019-2020.pdf?target=131fce79-e134-4490-af76-8300d47bef53
+  discovery_seed_url: https://my.tlu.edu/ICS/TLU_INFO/IR/
 - id: texas-southern-university
   name: Texas Southern University
   domain: tsu.edu
@@ -21309,7 +21309,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.umt.edu/institutional-research/documents/Common%20Data%20Set.php
+  discovery_seed_url: https://www.umt.edu/institutional-research/data_reports/common_data_set.php
 - id: the-university-of-montana-western
   name: The University of Montana-Western
   domain: umwestern.edu
@@ -22768,7 +22768,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.ucdenver.edu/docs/librariesprovider192/default-document-library/cds2022-2023.pdf
+  discovery_seed_url: https://www.ucdenver.edu/offices/institutional-research-and-effectiveness/data-analysis/institutional-data
 - id: university-of-colorado-system-office
   name: University of Colorado System Office
   domain: cu.edu
@@ -23115,7 +23115,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.uis.edu/institutional-research/common-data-sets
+  discovery_seed_url: https://www.uis.edu/institutionaleffectiveness/institutional-research/data-book/
 - id: university-of-illinois-system-offices
   name: University of Illinois System Offices
   domain: uillinois.edu
@@ -24983,7 +24983,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.uwyo.edu/oia/_files/cds/cds201920c.pdf
+  discovery_seed_url: https://www.uwyo.edu/oia/cds.html
 - id: university-system-of-maryland
   name: University System of Maryland
   domain: usmd.edu
@@ -25123,7 +25123,7 @@ schools:
   domain: utahtech.edu
   ipeds_id: '230171'
   scrape_policy: active
-  discovery_seed_url: https://ir.utahtech.edu/institutional-research/common-data-set/
+  discovery_seed_url: https://ir.utahtech.edu/common-data-set
   probe_state:
     last_probed_at: '2026-04-14T10:35:11Z'
     last_result: found
@@ -25233,7 +25233,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.vanguard.edu/uploaded/Provost/CDS2009_2010.pdf
+  discovery_seed_url: https://www.vanguard.edu/about/disclosures-and-consumer-information
 - id: vassar-college
   name: Vassar College
   domain: vassar.edu
@@ -26063,7 +26063,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://western.edu/wp-content/uploads/CDS2008_2009.pdf
+  discovery_seed_url: https://western.edu/about/mission-campus-profile/
 - id: western-connecticut-state-university
   name: Western Connecticut State University
   domain: wcsu.edu
@@ -26110,7 +26110,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.wku.edu/instres/documents/cds_2022_2023.pdf
+  discovery_seed_url: https://www.wku.edu/instres/publications.php
 - id: western-michigan-university
   name: Western Michigan University
   domain: wmich.edu
@@ -26543,7 +26543,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.wpunj.edu/institutional-effectiveness/commondataset/CDS17.pdf
+  discovery_seed_url: https://www.wpunj.edu/institutional-effectiveness/commondataset/
 - id: william-peace-university
   name: William Peace University
   domain: peace.edu
@@ -26683,7 +26683,7 @@ schools:
   # request from the school). The old seed was the 2021-22 PDF, and the
   # College Transitions mirror supplied Iowa State's files for five other
   # years (hidden 2026-11-14).
-  discovery_seed_url: https://www.winona.edu/about/leadership/institutional-data/
+  discovery_seed_url: https://www.winona.edu/ipar/common-data-set.asp
 - id: winston-salem-state-university
   name: Winston-Salem State University
   domain: wssu.edu
@@ -27467,7 +27467,7 @@ schools:
     last_method: brave
     patterns_tried: 0
     search_fallback_tried: true
-  discovery_seed_url: https://www.yhc.edu/wp-content/uploads/Common-Data-Set-2022-2023.pdf
+  discovery_seed_url: https://www.yhc.edu/about/consumer-information/
 - id: youngstown-state-university
   name: Youngstown State University
   domain: ysu.edu
