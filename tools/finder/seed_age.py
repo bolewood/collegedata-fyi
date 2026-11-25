@@ -66,12 +66,16 @@ from tools.ops.discovery_renewal import (  # noqa: E402
     format_year,
     load_schools,
     parse_year,
+    school_years,
     seed_for,
 )
 
 SEED_KINDS = ("one_file", "listing_page")
 # Fewer live schools than this means the read was not what we think it is.
 MIN_SCHOOLS_WITH_DOCS = 200
+# Schools with a seed (820 on 2026-11-24). A schools.yaml mishap that drops
+# seeds must not read as "few stale seeds".
+MIN_SCHOOLS_WITH_SEED = 500
 
 
 @dataclass
@@ -181,12 +185,21 @@ def check_accounting(summary: dict[str, Any]) -> None:
 def behind_listing_seeds(ages: list[SeedAge]) -> list[SeedAge]:
     """Listing-page seeds behind the cycle, oldest newest-year first."""
     rows = [a for a in ages if a.seed_kind == "listing_page" and a.behind_cycle]
-    rows.sort(key=lambda a: (parse_year(a.newest_year) or -1, a.school_id))
+    # Oldest newest-year first, then earliest first-seen (unknown last).
+    rows.sort(key=lambda a: (
+        parse_year(a.newest_year) or -1, a.newest_year_first_seen or "~", a.school_id))
     return rows
 
 
-def render_section(ages: list[SeedAge], floor: str) -> str:
-    """Markdown section for the renewal report."""
+SECTION_ROW_LIMIT = 50
+
+
+def render_section(ages: list[SeedAge], floor: str, limit: int = SECTION_ROW_LIMIT) -> str:
+    """Markdown section for the renewal report, capped at `limit` rows.
+
+    The full list goes to the `seed_age.json` artifact; the report must stay
+    under the issue-body limit with the worklist beside it.
+    """
     summary = summarize(ages)
     rows = behind_listing_seeds(ages)
     kinds = summary["by_kind"]
@@ -204,10 +217,16 @@ def render_section(ages: list[SeedAge], floor: str) -> str:
         "| school_id | newest year | first seen | seed |",
         "|---|---|---|---|",
     ]
-    for a in rows:
+    for a in rows[:limit]:
         seen = a.newest_year_first_seen[:10] if a.newest_year_first_seen else "unknown"
         url = a.seed_url.replace("|", "\\|")
         lines.append(f"| `{a.school_id}` | {a.newest_year or 'none'} | {seen} | `{url}` |")
+    if len(rows) > limit:
+        lines += [
+            "",
+            f"and {len(rows) - limit} more; full list in the discovery-renewal "
+            "artifact (`seed_age.json`).",
+        ]
     lines.append("")
     return "\n".join(lines)
 
@@ -216,15 +235,19 @@ def run_seed_age(
     schools: dict[str, dict[str, Any]], rows: list[dict[str, Any]], as_of: date
 ) -> tuple[list[SeedAge], dict[str, Any]]:
     """Compute and sanity-check. Raises on an input too small to trust."""
-    with_docs = {r.get("school_id") for r in rows if r.get("school_id")}
+    # Same predicate as the renewal check: live, published, valid year.
+    with_docs = set(school_years(rows))
     if len(with_docs) < MIN_SCHOOLS_WITH_DOCS:
         raise RenewalError(
             f"only {len(with_docs)} schools have live documents "
             f"(expected at least {MIN_SCHOOLS_WITH_DOCS}); refusing to date seeds"
         )
     ages = compute_seed_ages(schools, rows, as_of)
-    if not ages:
-        raise RenewalError("no schools with a seed found in schools.yaml")
+    if len(ages) < MIN_SCHOOLS_WITH_SEED:
+        raise RenewalError(
+            f"only {len(ages)} schools have a seed in schools.yaml "
+            f"(expected at least {MIN_SCHOOLS_WITH_SEED}); refusing to count stale seeds"
+        )
     return ages, summarize(ages)
 
 

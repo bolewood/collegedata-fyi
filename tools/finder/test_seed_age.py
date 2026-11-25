@@ -194,7 +194,7 @@ class EndToEndTests(unittest.TestCase):
             manifest.write_text(json.dumps(_snapshot_rows()))
             argv = ["--manifest-json", str(manifest), "--as-of", "2026-11-24",
                     "--out-summary", str(tmp / "s.json"), "--out-report", str(tmp / "r.md"),
-                    "--out-worklist", str(tmp / "w.json"), "--out-state", str(tmp / "st.json")]
+                    "--out-worklist", str(tmp / "w.json"), "--out-seed-ages", str(tmp / "sa.json"), "--out-state", str(tmp / "st.json")]
             self.assertEqual(dr.main(argv), 0)
             summary = json.loads((tmp / "s.json").read_text())
             self.assertEqual(
@@ -202,7 +202,110 @@ class EndToEndTests(unittest.TestCase):
                 summary["seeds_without_new_year_one_file"]
                 + summary["seeds_without_new_year_listing_page"])
             self.assertGreater(summary["seeds_with_seed"], 0)
+            self.assertEqual(len(json.loads((tmp / "sa.json").read_text())), summary["seeds_with_seed"])
             self.assertIn("## Seeds without a new year", (tmp / "r.md").read_text())
+
+
+class CapAndGuardTests(unittest.TestCase):
+    def _many_behind(self, n):
+        sc = schools(**{f"s{i:03d}": LISTING for i in range(n)})
+        rows = [doc(f"s{i:03d}", "2023-24", f"2026-05-{1 + i % 28:02d}T00:00:00+00:00") for i in range(n)]
+        return sc, rows
+
+    def test_section_is_capped_with_a_more_line(self):
+        sc, rows = self._many_behind(120)
+        md = sa.render_section(sa.compute_seed_ages(sc, rows, AS_OF), "2025-26")
+        self.assertEqual(md.count("| `s"), sa.SECTION_ROW_LIMIT)
+        self.assertIn("and 70 more; full list in the discovery-renewal artifact", md)
+        self.assertLess(len(md), 12000)
+
+    def test_cap_keeps_the_oldest_newest_year_first(self):
+        sc = schools(a=LISTING, b=LISTING)
+        rows = [doc("a", "2024-25"), doc("b", "2019-20")]
+        md = sa.render_section(sa.compute_seed_ages(sc, rows, AS_OF), "2025-26", limit=1)
+        self.assertIn("| `b` |", md)
+        self.assertNotIn("| `a` |", md)
+        self.assertIn("and 1 more", md)
+
+    def _rows(self, n, **kw):
+        return [doc(f"d{i}", "2025-26", **kw) for i in range(n)]
+
+    def test_docs_guard_ignores_removed_unpublished_and_unknown(self):
+        sc = schools(**{f"s{i}": LISTING for i in range(600)})
+        for kw in ({"removed_at": "2026-06-01T00:00:00+00:00"},
+                   {"participation_status": "not_published"},
+                   {"canonical_year": "unknown"}):
+            rows = self._rows(300, **kw)
+            with self.assertRaises(RenewalError, msg=str(kw)):
+                sa.run_seed_age(sc, rows, AS_OF)
+
+    def test_too_few_seeds_is_an_error(self):
+        with self.assertRaises(RenewalError):
+            sa.run_seed_age(schools(a=LISTING), self._rows(300), AS_OF)
+
+    def test_enough_seeds_and_docs_pass(self):
+        sc = schools(**{f"d{i}": LISTING for i in range(600)})
+        ages, summary = sa.run_seed_age(sc, self._rows(300), AS_OF)
+        self.assertEqual(summary["seeds"], 600)
+
+
+class ReportSizeTests(unittest.TestCase):
+    def test_real_fixture_report_fits_and_has_both_sections(self):
+        from tools.ops import discovery_renewal as dr
+
+        rows = _snapshot_rows()
+        result = dr.compute(rows, AS_OF)
+        sc = load_schools(Path(__file__).parent / "schools.yaml")
+        ages, _ = sa.run_seed_age(sc, rows, AS_OF)
+        worklist = dr.missing_worklist(result, sc, "current")
+        report = dr.render_report(
+            result, worklist, seeds_section=sa.render_section(ages, "2025-26"))
+        self.assertLessEqual(len(report), 60000)
+        self.assertIn("## Seeds without a new year", report)
+        self.assertIn("## Schools missing for the", report)
+        self.assertGreater(report.index("## Seeds without a new year"),
+                           report.index("## Schools missing for the"))
+
+    def test_long_worklist_is_cut_not_the_seed_section(self):
+        from tools.ops import discovery_renewal as dr
+
+        rows = [doc(f"s{i}", y) for i in range(400) for y in ("2024-25", "2025-26")]
+        result = dr.compute(rows, AS_OF)
+        worklist = [{"school_id": f"w{i}", "name": "N" * 80, "seed_kind": "listing_page",
+                     "seed_url": "https://x.edu/" + "p" * 80, "newest_year": "2024-25"}
+                    for i in range(2000)]
+        ages = sa.compute_seed_ages(schools(a=LISTING), [doc("a", "2023-24")], AS_OF)
+        report = dr.render_report(result, worklist, seeds_section=sa.render_section(ages, "2025-26"))
+        self.assertLessEqual(len(report), 60000)
+        self.assertIn("List cut to fit", report)
+        self.assertIn("## Seeds without a new year", report)
+        self.assertIn("| `a` |", report)
+
+
+class ScriptErrorPathTests(unittest.TestCase):
+    def test_seed_age_error_is_caught_when_run_as_a_script(self):
+        # As a script the renewal module is __main__; seed_age's RenewalError
+        # must still be the class main() catches (exit 1, no traceback).
+        import subprocess
+        import sys
+        import tempfile
+
+        root = Path(__file__).resolve().parents[2]
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            rows = [doc(f"s{i}", y) for i in range(400) for y in ("2024-25", "2025-26")]
+            (tmp / "m.json").write_text(json.dumps(rows))
+            (tmp / "schools.yaml").write_text(
+                "schools:\n  - id: s1\n    discovery_seed_url: https://x.edu/cds/\n")
+            proc = subprocess.run(
+                [sys.executable, str(root / "tools/ops/discovery_renewal.py"),
+                 "--manifest-json", str(tmp / "m.json"), "--as-of", "2026-11-24",
+                 "--schools-yaml", str(tmp / "schools.yaml")],
+                capture_output=True, text=True, cwd=root)
+        self.assertEqual(proc.returncode, 1, proc.stderr)
+        self.assertIn("::error::discovery renewal:", proc.stderr)
+        self.assertIn("schools have a seed", proc.stderr)
+        self.assertNotIn("Traceback", proc.stderr)
 
 
 class QueryTests(unittest.TestCase):

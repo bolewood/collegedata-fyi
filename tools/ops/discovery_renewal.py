@@ -29,7 +29,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable
@@ -556,8 +556,6 @@ def render_report(
         from tools.ops.same_year_duplicates import render_markdown
 
         lines += [render_markdown(duplicates).rstrip("\n"), ""]
-    if seeds_section:
-        lines += [seeds_section.rstrip("\n"), ""]
     lines += [
         f"## Schools missing for the {d['name']} check ({len(worklist)})",
         "",
@@ -572,14 +570,20 @@ def render_report(
             seed = f" · seed: {w['seed_url']}" if w["seed_url"] else ""
             lines.append(f"- {link} · newest {w['newest_year']}{seed}")
         lines.append("")
+    # The seed section is capped by its renderer and comes after the worklist;
+    # the worklist is what gets cut when the report is too long, never this.
+    tail_lines = [seeds_section.rstrip("\n"), ""] if seeds_section else []
     if run_url:
-        lines += [f"Run: {run_url}", ""]
+        tail_lines += [f"Run: {run_url}", ""]
+    tail = "\n".join(tail_lines)
     text = "\n".join(lines)
-    if len(text) > max_chars:
-        text = text[: max_chars - 200].rsplit("\n", 1)[0] + (
+    budget = max_chars - len(tail) - 1
+    if len(text) > budget:
+        text = text[: budget - 200].rsplit("\n", 1)[0] + (
             "\n\n(List cut to fit the issue size limit. The full list is in the "
             "workflow artifact.)\n"
         )
+    text = text + "\n" + tail if tail else text
     return text
 
 
@@ -807,6 +811,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--out-summary", type=Path)
     parser.add_argument("--out-report", type=Path)
     parser.add_argument("--out-state", type=Path)
+    parser.add_argument("--out-seed-ages", type=Path, help="every seed's age as JSON (artifact)")
     parser.add_argument("--out-worklist", type=Path, help="full worklist as JSON (artifact)")
     return parser
 
@@ -874,6 +879,7 @@ def run(args: argparse.Namespace) -> int:
 
     write_json(args.out_summary, summary)
     write_json(args.out_worklist, worklist)
+    write_json(args.out_seed_ages, [asdict(a) for a in ages])
     if args.out_report:
         args.out_report.parent.mkdir(parents=True, exist_ok=True)
         args.out_report.write_text(report, encoding="utf-8")
@@ -899,4 +905,7 @@ def run(args: argparse.Namespace) -> int:
 
 
 if __name__ == "__main__":
+    # Run as a script this module is `__main__`; seed_age imports it by its
+    # package name. Alias it so both see one RenewalError (main() catches it).
+    sys.modules.setdefault("tools.ops.discovery_renewal", sys.modules[__name__])
     raise SystemExit(main())
