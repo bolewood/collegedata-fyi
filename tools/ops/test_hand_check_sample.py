@@ -73,8 +73,12 @@ class RenderTests(unittest.TestCase):
         self.assertIn("https://alpha.edu/cds", body)
         self.assertIn("site%3Aalpha.edu+%22common+data+set%22", body)
         self.assertIn("Our newest year: undated only", body)
-        self.assertEqual(body.count("- [ ] "), 6)
+        self.assertEqual(body.count("- [ ] "), 8)
         self.assertIn("none on file", body)
+        # newest-year document link only for a school with a dated year
+        self.assertIn("https://www.collegedata.fyi/schools/alpha/2024-25", body)
+        self.assertNotIn("/schools/beta/", body)
+        self.assertIn("not a full CDS", body)
 
     def test_first_hand_check_has_no_miss_line_with_numbers(self):
         self.assertIn("no earlier hand check", h.render_issue(self.PICKS, "2026-11"))
@@ -90,11 +94,11 @@ class MissRateTests(unittest.TestCase):
                 + block("gamma", " ", " ", "x") + block("delta", " ", " ", " "))
 
     def test_counts(self):
-        self.assertEqual(h.count_answers(self.sample()), (1, 2, 2))
+        self.assertEqual(h.count_answers(self.sample()), (1, 2, 2, 0))
 
     def test_line_at_top_of_new_issue(self):
         body = h.render_issue(RenderTests.PICKS, "2026-12", self.sample())
-        self.assertTrue(body.startswith("Last month: 1 misses of 2 answered (2 unanswered)\n"))
+        self.assertTrue(body.startswith("Last month: 1 misses of 2 answered (2 unanswered), 0 false greens\n"))
 
     def test_unreadable_body_raises_instead_of_zero_misses(self):
         with self.assertRaises(ValueError):
@@ -102,9 +106,9 @@ class MissRateTests(unittest.TestCase):
 
     def test_roundtrip_of_our_own_rendering(self):
         body = h.render_issue(RenderTests.PICKS, "2026-11")
-        self.assertEqual(h.count_answers(body), (0, 0, 2))
+        self.assertEqual(h.count_answers(body), (0, 0, 2, 0))
         ticked = body.replace(f"- [ ] {h.LABEL_MISS}", f"- [x] {h.LABEL_MISS}", 1)
-        self.assertEqual(h.count_answers(ticked), (1, 1, 1))
+        self.assertEqual(h.count_answers(ticked), (1, 1, 1, 0))
 
 
 class AnswerParsingTests(unittest.TestCase):
@@ -115,11 +119,22 @@ class AnswerParsingTests(unittest.TestCase):
 
     def test_note_after_label_and_curly_apostrophe_still_count(self):
         b = self.body(("x", h.LABEL_MISS + " \u2014 moved to /ir/cds"), (" ", h.LABEL_NONE))
-        self.assertEqual(h.count_answers(b), (1, 1, 0))
+        self.assertEqual(h.count_answers(b), (1, 1, 0, 0))
         b = self.body((" ", h.LABEL_MISS), ("x", "nothing newer posted, checked twice"), (" ", "couldn\u2019t tell"))
-        self.assertEqual(h.count_answers(b), (0, 1, 0))
+        self.assertEqual(h.count_answers(b), (0, 1, 0, 0))
         b = self.body(("x", "couldn\u2019t tell"))
-        self.assertEqual(h.count_answers(b), (0, 0, 1))
+        self.assertEqual(h.count_answers(b), (0, 0, 1, 0))
+
+    def test_false_green_counts_with_any_answer_and_alone(self):
+        fg = h.LABEL_FALSE_GREEN
+        body = (self.body(("x", h.LABEL_NONE), ("x", fg)) + self.body(("x", fg))
+                + self.body(("x", h.LABEL_NONE)))
+        # same school id three times collapses to one block, so use distinct ids
+        body = (body.replace("school:alpha", "school:a", 1).replace("school:alpha", "school:b", 1)
+                .replace("school:alpha", "school:c", 1))
+        self.assertEqual(h.count_answers(body), (0, 2, 1, 2))
+        top = h.render_issue(RenderTests.PICKS, "2026-12", body).splitlines()[0]
+        self.assertEqual(top, "Last month: 0 misses of 2 answered (1 unanswered), 2 false greens")
 
     def test_ticked_box_matching_no_label_raises(self):
         with self.assertRaises(ValueError):

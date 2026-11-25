@@ -51,6 +51,7 @@ MONTH_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 LABEL_MISS = "newer CDS on the school's site (a miss)"
 LABEL_NONE = "nothing newer posted"
 LABEL_UNSURE = "couldn't tell"
+LABEL_FALSE_GREEN = "our newest-year file is not a full CDS (section only, change sheet, blank, wrong school)"
 MARKER_RE = re.compile(r"<!--\s*hand-check-school:(\S+?)\s*-->")
 MONTH_MARKER_RE = re.compile(r"<!--\s*hand-check-month:(\d{4}-\d{2})\s*-->")
 BOX_RE = re.compile(r"^\s*-\s*\[( |x|X)\]\s*(.+?)\s*$")
@@ -150,6 +151,8 @@ def classify_box(text: str, school_id: str) -> str:
         return "miss"
     if "nothing newer posted" in t:
         return "none"
+    if "not a full cds" in t:
+        return "false_green"
     if "couldn't tell" in t:
         return "unsure"
     raise ValueError(f"school {school_id} has a ticked box that matches no answer: {text!r}")
@@ -181,11 +184,13 @@ def split_issues(issues: list[dict[str, Any]], month: str) -> tuple[bool, str | 
     return exists, prev
 
 
-def count_answers(prev_body: str) -> tuple[int, int, int]:
-    """(misses, answered, unanswered) from last month's issue body.
+def count_answers(prev_body: str) -> tuple[int, int, int, int]:
+    """(misses, answered, unanswered, false_greens) from last month's issue body.
 
     A school is answered when the "nothing newer" or "newer CDS" box is
     checked. "Couldn't tell" and no box at all both count as unanswered.
+    The "not a full CDS" box is a separate tick that can go with any answer;
+    it counts a false green (our newest file is not a full CDS).
     Raises when the body holds no school blocks, so a body the parser cannot
     read never shows up as "0 misses".
     """
@@ -202,17 +207,19 @@ def count_answers(prev_body: str) -> tuple[int, int, int]:
             blocks[current].append((box.group(1).lower() == "x", box.group(2)))
     if not blocks:
         raise ValueError("previous issue body has no school blocks; cannot count answers")
-    misses = answered = 0
+    misses = answered = false_greens = 0
     for sid, boxes in blocks.items():
         kinds = {classify_box(text, sid) for on, text in boxes if on}
         if {"miss", "none"} <= kinds:
             raise ValueError(f"school {sid} has both 'a miss' and 'nothing newer' ticked")
+        if "false_green" in kinds:
+            false_greens += 1
         if "miss" in kinds:
             misses += 1
             answered += 1
         elif "none" in kinds:
             answered += 1
-    return misses, answered, len(blocks) - answered
+    return misses, answered, len(blocks) - answered, false_greens
 
 
 def render_issue(
@@ -222,15 +229,20 @@ def render_issue(
 ) -> str:
     lines: list[str] = []
     if prev_body is not None:
-        misses, answered, unanswered = count_answers(prev_body)
-        lines += [f"Last month: {misses} misses of {answered} answered ({unanswered} unanswered)", ""]
+        misses, answered, unanswered, false_greens = count_answers(prev_body)
+        lines += [
+            f"Last month: {misses} misses of {answered} answered ({unanswered} unanswered), "
+            f"{false_greens} false greens",
+            "",
+        ]
     else:
         lines += ["Last month: no earlier hand check to count.", ""]
     lines += [
         f"Hand check for {month}. For each school below, open the school's own "
         "site (not ours) and look for its Common Data Set page. Answer one "
         "question: has the school posted a CDS newer than our newest year? Tick "
-        "exactly one box per school. A tick on \"a miss\" names a school to fix "
+        "exactly one answer per school, and also open our newest-year document and tick the last box if it "
+        "is not a full CDS. A tick on \"a miss\" names a school to fix "
         "and a failure shape to sweep the rest of the corpus for. This runs "
         "every month of the year because schools post from March to November.",
         "",
@@ -240,6 +252,8 @@ def render_issue(
         lines += [f"### {p['name']}", f"<!-- hand-check-school:{p['school_id']} -->", ""]
         lines.append(f"Our newest year: {newest}")
         lines.append(f"- Our page: {SITE}/schools/{p['school_id']}")
+        if p["newest_year"]:
+            lines.append(f"- Our newest-year document: {SITE}/schools/{p['school_id']}/{p['newest_year']}")
         if p.get("domain"):
             domain = p["domain"]
             query = quote_plus(f'site:{domain} "common data set"')
@@ -248,7 +262,7 @@ def render_issue(
         else:
             lines.append("- School site: no domain on file")
         lines.append(f"- Seed URL: {p.get('seed_url') or 'none on file'}")
-        lines += ["", f"- [ ] {LABEL_MISS}", f"- [ ] {LABEL_NONE}", f"- [ ] {LABEL_UNSURE}", ""]
+        lines += ["", f"- [ ] {LABEL_MISS}", f"- [ ] {LABEL_NONE}", f"- [ ] {LABEL_UNSURE}", f"- [ ] {LABEL_FALSE_GREEN}", ""]
     lines.append(f"<!-- hand-check-month:{month} -->")
     return "\n".join(lines).rstrip() + "\n"
 
