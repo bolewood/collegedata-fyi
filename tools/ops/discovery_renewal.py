@@ -322,7 +322,9 @@ def compute(
     )
 
 
-def summary_dict(result: Result, *, run_url: str | None = None) -> dict[str, Any]:
+def summary_dict(
+    result: Result, *, run_url: str | None = None, same_year_duplicates: int | None = None
+) -> dict[str, Any]:
     """The heartbeat summary. Flat keys, shared with the web and migration work.
     The `below_floor` and `two_year_below_floor` values are always real
     booleans; `next_below_floor` is null while the next year is untracked."""
@@ -348,6 +350,9 @@ def summary_dict(result: Result, *, run_url: str | None = None) -> dict[str, Any
         "two_year_floor_pct": round(result.two_year_floor_pct, 1),
         "two_year_below_floor": result.two_year_below_floor,
         "lapsed_schools": len(result.lapsed),
+        # School-years with two or more live documents (tools/ops/same_year_duplicates.py).
+        # null when the run read a saved manifest and did not look.
+        "same_year_duplicates": same_year_duplicates,
         "floor_overridden": result.floor_overridden,
         "alarm_issue": None,
         "run_url": run_url,
@@ -464,7 +469,9 @@ def render_report(
     run_url: str | None = None,
     max_chars: int = 60000,
     lead: str | None = None,
+    duplicates: Any = None,
 ) -> str:
+    """`duplicates` is a `same_year_duplicates.Report` or None (not computed)."""
     s = summary_dict(result)
     lead = lead or lead_check(s) or "current"
     d = check_descriptor(s, lead)
@@ -519,6 +526,12 @@ def render_report(
         f"document filed under {prev} or {format_year(result.current_year - 2)} but none "
         f"under {cur}.",
         "",
+    ]
+    if duplicates is not None:
+        from tools.ops.same_year_duplicates import render_markdown
+
+        lines += [render_markdown(duplicates).rstrip("\n"), ""]
+    lines += [
         f"## Schools missing for the {d['name']} check ({len(worklist)})",
         "",
     ]
@@ -808,10 +821,23 @@ def run(args: argparse.Namespace) -> int:
 
     result = compute(rows, as_of, floor_override_pct=args.floor_override_pct)
     schools = load_schools(args.schools_yaml)
-    summary = summary_dict(result, run_url=args.run_url or None)
+    duplicates = None
+    if not args.manifest_json:
+        # Imported here: same_year_duplicates imports this module.
+        from tools.ops.same_year_duplicates import run as find_same_year_duplicates
+
+        duplicates = find_same_year_duplicates(args.api_url, args.anon_key)
+        print(f"same-year duplicates: {duplicates.count} ({duplicates.documents_read} live documents)")
+    summary = summary_dict(
+        result,
+        run_url=args.run_url or None,
+        same_year_duplicates=duplicates.count if duplicates is not None else None,
+    )
     lead = lead_check(summary)
     worklist = missing_worklist(result, schools, lead or "current")
-    report = render_report(result, worklist, run_url=args.run_url or None, lead=lead)
+    report = render_report(
+        result, worklist, run_url=args.run_url or None, lead=lead, duplicates=duplicates
+    )
 
     write_json(args.out_summary, summary)
     write_json(args.out_worklist, worklist)
