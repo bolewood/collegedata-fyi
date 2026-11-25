@@ -169,8 +169,12 @@ jobs:
           STEP_OUTCOME: ${{ steps.ingest.outcome }}
         run: |
           mkdir -p ops-summary
+          summary_missing=false
           if [[ ! -f ops-summary/summary.json ]]; then
-            printf '{"schools_attempted":0,"inserted":0,"unchanged":0,"failed":0}\n' > ops-summary/heartbeat.json
+            # No summary means the worker never reported. Do not invent zeros
+            # and record them as a healthy run.
+            summary_missing=true
+            printf '{"summary_missing":true}\n' > ops-summary/heartbeat.json
           else
             python - <<'PY'
           import json
@@ -184,13 +188,18 @@ jobs:
               "crawled": summary.get("crawled", 0),
               "discovered": summary.get("discovered", 0),
               "skipped_known": summary.get("skipped_known", 0),
+              "schools_targeted": summary.get("schools_targeted", 0),
+              "schools_capped": summary.get("schools_capped", 0),
+              "years_capped": summary.get("years_capped", 0),
+              "years_below_min": summary.get("years_below_min", 0),
+              "years_unparseable": summary.get("years_unparseable", 0),
               "dry_run": summary.get("dry_run", False),
           }) + "\n")
           PY
           fi
           status=ok
           error=none
-          if [[ "$STEP_OUTCOME" == "failure" ]]; then
+          if [[ "$STEP_OUTCOME" == "failure" || "$summary_missing" == "true" ]]; then
             status=error
             error=job_failed
           fi

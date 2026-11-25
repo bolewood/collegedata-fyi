@@ -14,6 +14,9 @@ History before 0.1.0.0 (2026-08-03), including the June and July 2026 work, is n
   year as gone, not an undated file that happened to sort first.
 - The resolver now logs and reports how many subpage links it skipped past its
   25-page cap.
+- The monthly finder probe no longer marks a school "not found" when its search never ran (Brave budget gone, a 402 or 429, an unreadable reply, or the per-school time limit). Those schools are recorded as "not searched" with the cause, are not put on the 30-day cooldown, and are counted in the run summary. The summary also counts schools cut by the new-two-year and `--limit` caps.
+- The headless archive worker now reports the years and schools it skipped (over the per-school and per-run caps, or older than the minimum year), exits nonzero when nothing was attempted or every school failed, reads the years it already holds by canonical year with a paged, counted read, and the workflow records a missing summary as an error instead of zeros.
+- The directory repair tool and the top-100 coverage check take their "current year" from the freshness floor instead of hardcoded years, and the published-years check reads canonical years, skips removed documents, and fails on a short read.
 
 ## [0.6.24.0] - 2026-11-18
 

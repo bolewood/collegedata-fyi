@@ -549,9 +549,30 @@ def record_probe(school: dict, result: str, method: str,
     school["probe_state"] = ps
 
 
+def record_not_searched(school: dict, cause: str) -> None:
+    """Note that a search was wanted but did not run, WITHOUT starting the cooldown.
+
+    A school whose Brave query died on an exhausted budget, a 402/429, a parse
+    error or the per-school time budget has not been checked. Stamping
+    `last_probed_at` (what `record_probe` does) would make `should_skip` pass
+    over it for the whole cooldown, so one bad night hides a school for a month
+    with nothing to show it. `last_probed_at` and `last_result` are left as they
+    were; the cause is kept beside them for whoever reads schools.yaml.
+    """
+    ps = school.get("probe_state", {})
+    ps["last_not_searched_at"] = _now_iso()
+    ps["last_not_searched_cause"] = cause
+    school["probe_state"] = ps
+
+
 # ── Pattern ladder ──────────────────────────────────────────────────────────
 
-def probe_school(domain: str, rps: float, max_seconds: float = DEFAULT_SCHOOL_BUDGET_SEC) -> tuple[str | None, int]:
+def probe_school(
+    domain: str,
+    rps: float,
+    max_seconds: float = DEFAULT_SCHOOL_BUDGET_SEC,
+    out: dict | None = None,
+) -> tuple[str | None, int]:
     """Try URL patterns against a domain.
 
     Returns (first_working_url_or_None, patterns_tried_count).
@@ -567,13 +588,21 @@ def probe_school(domain: str, rps: float, max_seconds: float = DEFAULT_SCHOOL_BU
     across ~200 pattern combinations and a single school can wedge a
     worker for ~33 minutes. The deadline check short-circuits pattern
     probing once the budget is exhausted and returns whatever we have.
+
+    When `out` is given, `out["budget_exhausted"]` is set to True if the
+    deadline cut the ladder short, so the caller can tell "tried everything,
+    nothing there" from "ran out of time".
     """
     if not domain:
         return None, 0
 
     start = time.monotonic()
     def deadline_exceeded() -> bool:
-        return (time.monotonic() - start) >= max_seconds
+        if (time.monotonic() - start) >= max_seconds:
+            if out is not None:
+                out["budget_exhausted"] = True
+            return True
+        return False
 
     candidate_bases = [f"https://{domain}"]
     for sub in SUBDOMAINS:
@@ -862,13 +891,21 @@ def _brave_web_results(
     query: str,
     api_key: str,
     tracker: dict | None = None,
+    failure: dict | None = None,
 ) -> list[dict] | None:
-    """Run one Brave web search. None means HTTP/parse failure, not zero hits."""
+    """Run one Brave web search. None means HTTP/parse failure, not zero hits.
+
+    When `failure` is given, the cause is written to `failure["cause"]`
+    (budget_exhausted, http_402, http_429, http_<status>, parse_error) so the
+    caller can report the school as not searched instead of not found.
+    """
     if tracker is not None:
         with tracker["lock"]:
             budget = tracker.get("budget")
             if budget is not None and tracker["calls"] >= budget:
                 print("  [brave] budget exhausted — skipping remaining queries", flush=True)
+                if failure is not None:
+                    failure["cause"] = "budget_exhausted"
                 return None
             tracker["calls"] += 1
     params = urllib.parse.urlencode({"q": query, "count": 10})
@@ -884,10 +921,14 @@ def _brave_web_results(
     if status != 200:
         if status in (402, 429):
             print(f"  [brave] HTTP {status} — quota/rate limit hit", flush=True)
+        if failure is not None:
+            failure["cause"] = f"http_{status}"
         return None
     try:
         data = json.loads(body)
     except json.JSONDecodeError:
+        if failure is not None:
+            failure["cause"] = "parse_error"
         return None
     return data.get("web", {}).get("results", []) or []
 
@@ -921,6 +962,7 @@ def brave_search(
     school_name: str | None = None,
     identity_index: dict | None = None,
     allow_name_query: bool = False,
+    failure: dict | None = None,
 ) -> str | None:
     """Use Brave Search API to find CDS PDFs for a school.
 
@@ -940,7 +982,7 @@ def brave_search(
     # live landing page as result #1. The overnight $5 Brave run burned
     # quota for 0 finds because of this one word.
     site_results = _brave_web_results(
-        f'site:{domain} "Common Data Set"', api_key, tracker,
+        f'site:{domain} "Common Data Set"', api_key, tracker, failure,
     )
     if site_results is None:
         return None
@@ -951,7 +993,7 @@ def brave_search(
     if hit or not allow_name_query or not school_name:
         return hit
     name_results = _brave_web_results(
-        f'"{school_name}" "Common Data Set"', api_key, tracker,
+        f'"{school_name}" "Common Data Set"', api_key, tracker, failure,
     )
     if not name_results:
         return None
@@ -1145,10 +1187,14 @@ def process_school(school: dict, args: argparse.Namespace,
     last_attempted_method = "pattern"
     patterns_tried = 0
     search_tried = False
+    ladder_info: dict = {}
+    search_failure: dict = {}
 
     # Step 1: Pattern ladder
     if not args.search_only:
-        url, patterns_tried = probe_school(domain, args.rps, args.school_budget_sec)
+        url, patterns_tried = probe_school(
+            domain, args.rps, args.school_budget_sec, out=ladder_info,
+        )
 
     # Step 1b: IR hub crawl (homepage / about / well-known IR paths).
     # Free, and it is how Tulsa's /about-tcc/institutional-research is
@@ -1179,6 +1225,7 @@ def process_school(school: dict, args: argparse.Namespace,
             school_name=name,
             identity_index=env.get("identity_index"),
             allow_name_query=is_never_checked(school),
+            failure=search_failure,
         )
         if url:
             method = "brave"
@@ -1201,6 +1248,23 @@ def process_school(school: dict, args: argparse.Namespace,
     if not url and search_tried:
         method = last_attempted_method
 
+    # A miss is only a miss if the search actually ran. When it could not
+    # (budget gone, 402/429, unparseable reply, no API key, or the per-school
+    # time budget cut the pattern ladder short with no search behind it) the
+    # school was not checked, and must not start the cooldown.
+    not_searched_cause: str | None = None
+    if not url:
+        if search_failure.get("cause"):
+            not_searched_cause = f"brave_{search_failure['cause']}"
+        elif (
+            getattr(args, "brave_fallback", False)
+            and not env.get("brave_api_key")
+            and not search_tried
+        ):
+            not_searched_cause = "brave_no_api_key"
+        elif ladder_info.get("budget_exhausted") and not search_tried:
+            not_searched_cause = "school_budget"
+
     replaced = False
     official_records = env.get("official_records")
     if url and not may_mark_active(school, official_records):
@@ -1220,6 +1284,9 @@ def process_school(school: dict, args: argparse.Namespace,
                 school["scrape_policy"] = "active"
         if not args.dry_run:
             record_probe(school, "found", method, patterns_tried, search_tried)
+    elif not_searched_cause:
+        if not args.dry_run:
+            record_not_searched(school, not_searched_cause)
     else:
         if not args.dry_run:
             record_probe(school, "not_found", method, patterns_tried, search_tried)
@@ -1232,6 +1299,7 @@ def process_school(school: dict, args: argparse.Namespace,
         "patterns_tried": patterns_tried,
         "search_tried": search_tried,
         "replaced": replaced,
+        "not_searched_cause": None if url else not_searched_cause,
     }
 
 
@@ -1429,10 +1497,18 @@ def write_probe_summary(
     still_stuck: int | None = None,
     audited: int = 0,
     demoted: int = 0,
+    not_searched: int = 0,
+    not_searched_causes: dict[str, int] | None = None,
+    capped_out: int = 0,
+    capped_out_detail: dict[str, int] | None = None,
 ) -> None:
     if path is None:
         return
     payload = {
+        "not_searched": not_searched,
+        "not_searched_causes": dict(not_searched_causes or {}),
+        "capped_out": capped_out,
+        "capped_out_detail": dict(capped_out_detail or {}),
         "probed": probed,
         "found": found,
         "replaced": replaced,
@@ -1683,13 +1759,24 @@ def main():
 
         candidates.append(school)
 
+    capped_out_detail = {"new_two_year_cap": 0, "limit": 0}
     if not targeted:
+        before_cap = len(candidates)
         candidates = prioritize_probe_candidates(
             candidates,
             new_two_year_cap=args.new_two_year_cap,
         )
+        capped_out_detail["new_two_year_cap"] = before_cap - len(candidates)
     if args.limit:
+        capped_out_detail["limit"] = max(0, len(candidates) - args.limit)
         candidates = candidates[: args.limit]
+    capped_out = sum(capped_out_detail.values())
+    if capped_out:
+        print(
+            f"Capped out (eligible but not probed this run): {capped_out} "
+            f"(new_two_year_cap={capped_out_detail['new_two_year_cap']}, "
+            f"limit={capped_out_detail['limit']})"
+        )
 
     total = len(candidates)
     print(f"Probing {total} schools with {args.workers} workers (rps={args.rps} per worker)")
@@ -1712,6 +1799,8 @@ def main():
             still_stuck=0,
             audited=len(audited_results),
             demoted=len(demoted_ids),
+            capped_out=capped_out,
+            capped_out_detail=capped_out_detail,
         )
         if demoted_ids and not args.dry_run:
             _save_yaml(data)
@@ -1723,6 +1812,8 @@ def main():
     failed = 0
     completed = 0
     replaced = 0
+    not_searched = 0
+    not_searched_causes: dict[str, int] = {}
 
     with ThreadPoolExecutor(max_workers=args.workers) as executor:
         # Submit all schools; keep a mapping so we can attribute results
@@ -1746,6 +1837,17 @@ def main():
                     found += 1
                     tag = f"[{result['method']}] " if result["method"] != "pattern" else ""
                     print(f"{prefix} {result['name']} ({result['domain']}) ... {tag}FOUND: {result['url']}")
+                elif result.get("not_searched_cause"):
+                    # Distinct wording on purpose: apply_probe_log.py replays
+                    # "... not found" lines as probed-and-missed.
+                    failed += 1
+                    not_searched += 1
+                    cause = result["not_searched_cause"]
+                    not_searched_causes[cause] = not_searched_causes.get(cause, 0) + 1
+                    print(
+                        f"{prefix} {result['name']} ({result['domain']}) "
+                        f"... not searched ({cause})"
+                    )
                 else:
                     failed += 1
                     print(f"{prefix} {result['name']} ({result['domain']}) ... not found")
@@ -1771,10 +1873,16 @@ def main():
                 budget_remaining=budget_remaining(),
                 audited=len(audited_results),
                 demoted=len(demoted_ids),
+                not_searched=not_searched,
+                not_searched_causes=not_searched_causes,
+                capped_out=capped_out,
+                capped_out_detail=capped_out_detail,
             )
             return
 
     print(f"\nProbed: {completed}, Found: {found}, Not found: {failed}", end="")
+    if not_searched:
+        print(f" (of which not searched: {not_searched} {not_searched_causes})", end="")
     if skipped:
         print(f", Skipped (cooldown): {skipped}", end="")
     print()
@@ -1795,6 +1903,10 @@ def main():
         budget_remaining=budget_remaining(),
         audited=len(audited_results),
         demoted=len(demoted_ids),
+        not_searched=not_searched,
+        not_searched_causes=not_searched_causes,
+        capped_out=capped_out,
+        capped_out_detail=capped_out_detail,
     )
 
 

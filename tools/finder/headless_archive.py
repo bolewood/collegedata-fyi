@@ -343,12 +343,25 @@ def select_candidates(
     skip_known: bool,
     max_new: int,
     min_year: str | None,
+    counts: dict[str, int] | None = None,
 ) -> tuple[list[ArchiveCandidate], int]:
-    """Newest first. Skip years we already archive unless skip_known is false."""
+    """Newest first. Skip years we already archive unless skip_known is false.
+
+    Everything this drops besides known years is counted into `counts` so the
+    run summary can show it: `years_below_min` (older than --min-year),
+    `years_unparseable` (a year string that is not YYYY-YY; these also fail the
+    min-year test, so they are dropped, but never silently), and `years_capped`
+    (eligible but cut by --max-new-per-school).
+    """
     skipped = 0
     eligible: list[ArchiveCandidate] = []
     for cand in candidates:
+        if cand.year and not YEAR_RE.fullmatch(cand.year.strip()):
+            if counts is not None:
+                counts["years_unparseable"] = counts.get("years_unparseable", 0) + 1
         if not year_at_least(cand.year, min_year):
+            if counts is not None:
+                counts["years_below_min"] = counts.get("years_below_min", 0) + 1
             continue
         if skip_known and cand.year and cand.year in known_years:
             skipped += 1
@@ -356,6 +369,10 @@ def select_candidates(
         eligible.append(cand)
     eligible.sort(key=lambda c: year_sort_key(c.year), reverse=True)
     if max_new > 0:
+        if counts is not None:
+            counts["years_capped"] = (
+                counts.get("years_capped", 0) + max(0, len(eligible) - max_new)
+            )
         eligible = eligible[:max_new]
     return eligible, skipped
 
@@ -375,6 +392,7 @@ def build_targets(
     starting_urls: dict[str, str],
     only: str | list[str] | None,
     max_schools: int,
+    counts: dict[str, int] | None = None,
 ) -> list[SchoolTarget]:
     merged = dict(waf_entries)
     for raw in extra_school_ids:
@@ -410,6 +428,8 @@ def build_targets(
             entry=entry,
         ))
     if max_schools > 0:
+        if counts is not None:
+            counts["schools_capped"] = max(0, len(targets) - max_schools)
         targets = targets[:max_schools]
     return targets
 
@@ -456,25 +476,81 @@ def fetch_bot_challenge_ids(sb, limit: int) -> list[str]:
     return ids
 
 
-def fetch_known_years(sb, school_ids: list[str]) -> dict[str, set[str]]:
+KNOWN_YEARS_ID_CHUNK = 100
+KNOWN_YEARS_PAGE = 1000
+
+
+def fetch_known_years(
+    sb,
+    school_ids: list[str],
+    *,
+    report: dict[str, int] | None = None,
+) -> dict[str, set[str]]:
+    """Years we already archive per school, from live (not removed) documents.
+
+    Counts both `cds_year` and `detected_year` (as the mirror ingest does) so a
+    file filed under one label is not re-archived under the other. Pages with a
+    stable order and checks the rows read against the exact count the server
+    reports, so a short page is an error, not a smaller "known" set. Year
+    values that are not YYYY-YY (`unknown` is the common one) cannot match a
+    candidate; they are counted into `report["years_unparseable_known"]`
+    instead of vanishing. Any failure raises: a silently empty set would make
+    the run treat every year as new.
+    """
     known: dict[str, set[str]] = {sid: set() for sid in school_ids}
     if not school_ids:
         return known
-    try:
-        result = (
-            sb.table("cds_documents")
-            .select("school_id,cds_year")
-            .in_("school_id", school_ids)
-            .execute()
+    unparseable = 0
+    for i in range(0, len(school_ids), KNOWN_YEARS_ID_CHUNK):
+        chunk = school_ids[i:i + KNOWN_YEARS_ID_CHUNK]
+        offset = 0
+        seen = 0
+        while True:
+            result = (
+                sb.table("cds_documents")
+                .select("id,school_id,cds_year,detected_year", count="exact")
+                .in_("school_id", chunk)
+                .is_("removed_at", "null")
+                .order("id")
+                .range(offset, offset + KNOWN_YEARS_PAGE - 1)
+                .execute()
+            )
+            rows = result.data or []
+            total = getattr(result, "count", None)
+            if total is None:
+                raise RuntimeError(
+                    "cds_documents known-years read returned no row count; "
+                    "cannot tell a short page from the whole set"
+                )
+            for row in rows:
+                sid = row.get("school_id")
+                if sid not in known:
+                    continue
+                for key in ("cds_year", "detected_year"):
+                    year = row.get(key)
+                    if not year:
+                        continue
+                    if YEAR_RE.fullmatch(str(year).strip()):
+                        known[sid].add(str(year).strip())
+                    else:
+                        unparseable += 1
+            seen += len(rows)
+            offset += KNOWN_YEARS_PAGE
+            if seen >= total:
+                break
+            if not rows:
+                raise RuntimeError(
+                    f"cds_documents known-years read stopped at {seen} of "
+                    f"{total} rows"
+                )
+    if report is not None:
+        report["years_unparseable_known"] = unparseable
+    if unparseable:
+        print(
+            f"note: {unparseable} known-year value(s) are not YYYY-YY "
+            "(e.g. 'unknown') and cannot suppress a re-archive",
+            file=sys.stderr,
         )
-    except Exception as exc:  # noqa: BLE001
-        print(f"warn: cds_documents year query failed: {exc}", file=sys.stderr)
-        return known
-    for row in result.data or []:
-        sid = row.get("school_id")
-        year = row.get("cds_year")
-        if sid in known and year:
-            known[sid].add(year)
     return known
 
 
@@ -488,6 +564,11 @@ class RunSummary:
     crawled: int = 0
     discovered: int = 0
     skipped_known: int = 0
+    schools_targeted: int = 0
+    schools_capped: int = 0
+    years_capped: int = 0
+    years_below_min: int = 0
+    years_unparseable: int = 0
     dry_run: bool = False
     phase: str = "all"
     schools: list[dict] = field(default_factory=list)
@@ -503,6 +584,11 @@ class RunSummary:
             "crawled": self.crawled,
             "discovered": self.discovered,
             "skipped_known": self.skipped_known,
+            "schools_targeted": self.schools_targeted,
+            "schools_capped": self.schools_capped,
+            "years_capped": self.years_capped,
+            "years_below_min": self.years_below_min,
+            "years_unparseable": self.years_unparseable,
             "dry_run": self.dry_run,
             "phase": self.phase,
         }
@@ -661,12 +747,14 @@ def archive_school(
     yaml_urls = {c.url for c in yaml_cands}
     discovered = [c for c in crawled if c.url not in yaml_urls]
     merged = merge_candidates(yaml_cands, crawled)
+    dropped: dict[str, int] = {}
     selected, skipped = select_candidates(
         merged,
         known_years,
         skip_known=skip_known,
         max_new=max_new,
         min_year=min_year,
+        counts=dropped,
     )
     actions: list[dict[str, Any]] = []
     inserted = unchanged = failed = fetched = 0
@@ -751,6 +839,9 @@ def archive_school(
         "discovered": len(discovered),
         "selected": len(selected),
         "skipped_known": skipped,
+        "years_capped": dropped.get("years_capped", 0),
+        "years_below_min": dropped.get("years_below_min", 0),
+        "years_unparseable": dropped.get("years_unparseable", 0),
         "inserted": inserted,
         "unchanged": unchanged,
         "failed": failed,
@@ -773,6 +864,11 @@ def commit_fetched_files(
     summary.crawled = int(manifest.get("crawled") or 0)
     summary.discovered = int(manifest.get("discovered") or 0)
     summary.skipped_known = int(manifest.get("skipped_known") or 0)
+    summary.schools_targeted = int(manifest.get("schools_targeted") or 0)
+    summary.schools_capped = int(manifest.get("schools_capped") or 0)
+    summary.years_capped = int(manifest.get("years_capped") or 0)
+    summary.years_below_min = int(manifest.get("years_below_min") or 0)
+    summary.years_unparseable = int(manifest.get("years_unparseable") or 0)
     summary.failed = int(manifest.get("failed") or 0)
 
     for rec in manifest.get("files") or []:
@@ -900,8 +996,10 @@ def run(
         extra = list(plan.get("queue_school_ids") or [])
         known = known_years_from_plan(plan)
 
+    target_counts: dict[str, int] = {}
     targets = build_targets(
         waf_entries, extra, seed_by_id, STARTING_URLS, only_ids, max_schools,
+        counts=target_counts,
     )
     if only_ids and not targets:
         raise SystemExit(f"no target for {','.join(only_ids)}")
@@ -915,6 +1013,8 @@ def run(
         write_plan_json(plan_path, known=known, queue_school_ids=extra)
         summary = RunSummary(phase="plan", dry_run=dry_run)
         summary.schools_attempted = len(targets)
+        summary.schools_targeted = len(targets)
+        summary.schools_capped = target_counts.get("schools_capped", 0)
         summary.skipped_known = sum(len(years) for years in known.values())
         if json_out:
             json_out.parent.mkdir(parents=True, exist_ok=True)
@@ -926,6 +1026,14 @@ def run(
         return summary
 
     summary = RunSummary(dry_run=dry_run, phase=phase)
+    summary.schools_targeted = len(targets)
+    summary.schools_capped = target_counts.get("schools_capped", 0)
+    if summary.schools_capped:
+        print(
+            f"note: {summary.schools_capped} school(s) over --max-schools "
+            f"{max_schools} were not attempted this run",
+            file=sys.stderr,
+        )
     files_acc: list[dict[str, Any]] = []
 
     collect = collect_fn or collect_for_school
@@ -1015,13 +1123,18 @@ def run(
             summary.crawled += row["crawled_anchors"]
             summary.discovered += row["discovered"]
             summary.skipped_known += row["skipped_known"]
+            summary.years_capped += row.get("years_capped", 0)
+            summary.years_below_min += row.get("years_below_min", 0)
+            summary.years_unparseable += row.get("years_unparseable", 0)
             summary.schools.append(row)
             print(
                 f"  crawl={row['crawl_status']} anchors={row['crawled_anchors']} "
                 f"discovered={row['discovered']} selected={row['selected']} "
                 f"inserted={row['inserted']} unchanged={row['unchanged']} "
                 f"fetched={row.get('fetched', 0)} "
-                f"failed={row['failed']} skipped_known={row['skipped_known']}",
+                f"failed={row['failed']} skipped_known={row['skipped_known']} "
+                f"years_capped={row.get('years_capped', 0)} "
+                f"years_below_min={row.get('years_below_min', 0)}",
                 file=sys.stderr,
             )
             time.sleep(1.5)
@@ -1044,6 +1157,48 @@ def run(
     print("\n== Summary ==", file=sys.stderr)
     print(json.dumps(summary.as_heartbeat(), indent=2), file=sys.stderr)
     return summary
+
+
+def school_row_failed(row: dict[str, Any]) -> bool:
+    """A school got nothing: errors and no success, or a dead crawl and no file."""
+    succeeded = (
+        row.get("inserted", 0) + row.get("unchanged", 0) + row.get("fetched", 0)
+    )
+    if succeeded:
+        return False
+    if row.get("failed", 0):
+        return True
+    return row.get("crawl_status") in {"nav_error", "waf_captcha"} and not row.get(
+        "selected", 0
+    )
+
+
+def exit_code_for(summary: RunSummary) -> int:
+    """Per-URL misses stay non-fatal (one 403 must not red the daily job and
+    hide the schools that did ingest), but a run that did nothing, or in which
+    every school failed, must not look green."""
+    if summary.phase == "commit":
+        return 0
+    if summary.schools_targeted > 0 and summary.schools_attempted == 0:
+        print(
+            f"error: {summary.schools_targeted} target school(s) but none "
+            "attempted",
+            file=sys.stderr,
+        )
+        return 1
+    if (
+        summary.phase in {"all", "fetch"}
+        and not summary.dry_run
+        and summary.schools
+        and all(school_row_failed(row) for row in summary.schools)
+    ):
+        print(
+            f"error: every one of {len(summary.schools)} attempted school(s) "
+            "failed",
+            file=sys.stderr,
+        )
+        return 1
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -1140,9 +1295,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"error: {exc.code}", file=sys.stderr)
             return 2
         raise
-    # Infrastructure ran. Per-URL misses stay in the summary so a single
-    # 403 does not red the daily job (and hide the schools that did ingest).
-    return 0 if summary.schools_attempted >= 0 else 1
+    return exit_code_for(summary)
 
 
 if __name__ == "__main__":
