@@ -35,6 +35,7 @@ insert into public.pipeline_stations (
     'outstanding_below_floor', 'outstanding_years',
     'arrivals_30d', 'arrivals_expected_30d', 'arrivals_below_floor',
     'arrivals_window_days', 'unextracted_current_docs',
+    'arrivals_checked', 'arrivals_60d', 'arrivals_expected_60d',
     'fetch_failures', 'fetch_failures_blocked', 'fetch_failures_viewer',
     'fetch_failures_section_files', 'fetch_failures_dead_link', 'fetch_failures_other',
     'run_url'
@@ -243,7 +244,8 @@ begin
     'seeds_without_new_year_listing_page', 'flagged_current_docs',
     'sub_institutional_excluded', 'outstanding_below_floor', 'outstanding_years',
     'arrivals_30d', 'arrivals_expected_30d', 'arrivals_below_floor',
-    'arrivals_window_days', 'unextracted_current_docs'
+    'arrivals_window_days', 'unextracted_current_docs',
+    'arrivals_checked', 'arrivals_60d', 'arrivals_expected_60d'
   ]) then
     raise exception 'discovery_renewal allowed_keys missing seed keys: %', keys;
   end if;
