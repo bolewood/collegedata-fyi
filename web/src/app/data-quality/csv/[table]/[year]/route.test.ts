@@ -85,6 +85,22 @@ describe("/data-quality/csv/[table]/[year]", () => {
     expect(text.slice(1).startsWith("section,section_name,questions,reports,")).toBe(true);
   });
 
+  it("has no by-section table for a year whose form has no full field schema, and leaves it out of the static pages", async () => {
+    open();
+    const snap = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT));
+    const y = snap.years.find((x: { cds_year: string }) => x.cds_year === "2024-25");
+    y.form.full_field_schema = false;
+    y.sections = { reports: 0, rows: [] };
+    writeSnapshot(snap);
+    expect((await get("sections", "2024-25")).status).toBe(404);
+    expect((await get("sections", "2023-24")).status).toBe(200);
+    expect((await get("reports", "2024-25")).status).toBe(200);
+    const pairs = generateStaticParams().map((p) => `${p.table}/${p.year}`);
+    expect(pairs).not.toContain("sections/2024-25");
+    expect(pairs).toContain("sections/2023-24");
+    expect(pairs).toContain("reports/2024-25");
+  });
+
   it("has no by-section table for a snapshot written before public_format 3", async () => {
     open();
     writeSnapshot(FIXTURE_SNAPSHOT_V2);

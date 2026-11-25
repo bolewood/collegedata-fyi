@@ -16,6 +16,7 @@ import {
   type QualitySnapshot,
   type QualityYear,
   FEDERAL_DIFFERS_SAMPLE,
+  hasSections,
   aidPoolBounds,
   differsPoolBounds,
   pooledDiffers,
@@ -348,6 +349,23 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
       expect(t).toContain('id="dq-note-sections-small"');
       expect(t).toContain("Fewer than 5 reports, so no share is shown.");
       expect(secHtml(render("year=2024-25"))).not.toContain("dq-note-sections-small");
+    });
+
+    it("is absent, with no CSV link, for a year whose form has no full field schema (sections rows [])", () => {
+      const none = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT)) as QualitySnapshot;
+      const y = none.years.find((x) => x.cds_year === "2024-25")!;
+      y.form.full_field_schema = false;
+      y.sections = { reports: 0, rows: [] };
+      expect(hasSections(y)).toBe(false);
+      expect(render("year=2024-25", none)).not.toContain("dq-sections-heading");
+      expect(render("year=2024-25", none)).not.toContain("dq-table-sections");
+      vi.useFakeTimers();
+      try {
+        vi.setSystemTime(LAUNCH_MS);
+        expect(render("year=2024-25", none)).not.toContain("/data-quality/csv/sections/");
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it("is absent for a snapshot written before public_format 3", () => {
