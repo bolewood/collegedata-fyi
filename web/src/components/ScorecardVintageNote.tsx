@@ -16,7 +16,7 @@ export function ScorecardVintageNote({
         lineHeight: 1.5,
       }}
     >
-      Federal data from the U.S. Department of Education's{" "}
+      Federal data from the U.S. Department of Education&apos;s{" "}
       <a
         href="https://collegescorecard.ed.gov/"
         target="_blank"

@@ -5,7 +5,7 @@ export default function NotFound() {
     <div className="mx-auto max-w-5xl px-4 py-24 text-center">
       <h1 className="text-5xl">404</h1>
       <p className="mt-4 text-lg text-[var(--ink-2)]">
-        Page not found. The school or document you're looking for may not
+        Page not found. The school or document you&apos;re looking for may not
         exist in our archive yet.
       </p>
       <div className="mt-8 flex justify-center gap-4">

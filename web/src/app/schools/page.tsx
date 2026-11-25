@@ -59,7 +59,7 @@ export default async function SchoolsPage() {
             color: "var(--ink-2)",
           }}
         >
-          Every college with an archived annual report on file. Don't see
+          Every college with an archived annual report on file. Don&apos;t see
           a school listed? Use the search bar above or check{" "}
           <Link href="/coverage">Coverage</Link>. Colleges without a published
           Common Data Set still have pages with federal data.

@@ -29,7 +29,7 @@ describe("Wave 4 methodology and API copy", () => {
     expect(page).toContain("score bands describe all enrolled");
     expect(page).toContain("not the full entering class");
     expect(page).toContain("does not score rank");
-    expect(page).toContain("the student's entered GPA");
+    expect(page).toContain("the student&apos;s entered GPA");
     expect(page).not.toMatch(/PRD 016/);
     expect(page).not.toMatch(/your scores/);
     expect(page).not.toMatch(/admitted-class/);
@@ -79,9 +79,9 @@ describe("Wave 4 methodology and API copy", () => {
     expect(page).not.toMatch(/from the repository root/);
     expect(page).not.toMatch(/The MCP server is a single Node file in the repo/);
     expect(page).toContain("When a value is missing");
-    expect(page).toContain("the school's filing leaves the field blank");
+    expect(page).toContain("the school&apos;s filing leaves the field blank");
     expect(page).toContain("Search latest-per-school rows (Compare)");
-    expect(page).toContain("Compare's latest-per-school ranking");
+    expect(page).toContain("Compare&apos;s latest-per-school ranking");
     expect(page).toContain("Fetch the canonical artifact for a document");
     expect(page).toContain("the canonical artifact is the one the site");
     expect(page).toContain("The curated serving layer behind Compare");

@@ -228,7 +228,7 @@ export function YieldDebtBurdenChart({
               lineHeight: 1.5,
             }}
           >
-            Dividers are this sample's medians:{" "}
+            Dividers are this sample&apos;s medians:{" "}
             {formatRatePercent(PRICING_POWER_META.medianYieldB, 1)} yield and{" "}
             {formatBurdenPercent(PRICING_POWER_META.medianBurden)} debt burden among{" "}
             {PRICING_POWER_META.panelBCount.toLocaleString("en-US")} schools.
@@ -257,7 +257,7 @@ export function YieldDebtBurdenChart({
           >
             Hover over any school to see the underlying values. Tooltips also
             show reported instructional spending per student divided by average
-            net price. That ratio is not the share of a college's budget
+            net price. That ratio is not the share of a college&apos;s budget
             spent on teaching. Many schools overlap. Use search to highlight one.
           </p>
         </div>

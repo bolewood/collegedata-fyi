@@ -91,10 +91,10 @@ export default function EndowmentDrawRatePage() {
             <div className="meta">§ What the threshold means</div>
             <h2>How to read the 7% line</h2>
             <p>
-              Typical endowment payout policies often target roughly 4–5%. Some states'
+              Typical endowment payout policies often target roughly 4–5%. Some states&apos;
               versions of UPMIFA include a presumption above 7%. That test uses a multi-year
               average value and applies only in a minority of states. This recipe divides one
-              year's reported spending distribution by that year's beginning value. Crossing
+              year&apos;s reported spending distribution by that year&apos;s beginning value. Crossing
               7% here does not establish a UPMIFA violation.
             </p>
           </div>
@@ -118,7 +118,7 @@ export default function EndowmentDrawRatePage() {
   -H 'Authorization: Bearer <anon key>'`}
         </pre>
         <p>
-          Then compute <code>abs(endowment_spending_distribution) / endowment_value_begin</code>{" "}
+          Then compute <code>abs(endowment_spending_distribution) / endowment_value_begin</code>
           after retaining reported rows with a positive beginning value and verifying the Part H
           component identity.
         </p>

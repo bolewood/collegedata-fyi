@@ -51,7 +51,7 @@ export default async function FeedbackPage({
       <div className="meta">Feedback</div>
       <h1 className="serif mt-3 text-5xl">A note to the maintainer.</h1>
       <p className="mt-5 text-lg leading-relaxed">
-        Tell us what helped, what was confusing, or what you're doing with
+        Tell us what helped, what was confusing, or what you&apos;re doing with
         the data. A sentence is enough. No account needed.
       </p>
       <FeedbackForm

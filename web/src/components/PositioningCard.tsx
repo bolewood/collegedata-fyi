@@ -98,7 +98,7 @@ export function PositioningCard({ school, sourceHref }: PositioningCardProps) {
         <div className="positioning-card__grid">
           <div>
             <h2 id="positioning-title" className="serif positioning-card__title">
-              Where you'd land in this school's admitted class.
+              Where you&apos;d land in this school&apos;s admitted class.
             </h2>
             <div className="positioning-card__ranges">
               <RangeStrip

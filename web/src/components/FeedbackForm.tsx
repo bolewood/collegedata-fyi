@@ -194,7 +194,7 @@ export function FeedbackForm({
         <h2 className="serif text-3xl">Thanks. Your message reached us.</h2>
         <p className="my-4 break-words">
           If you included an email, we may reply there. We read messages, but
-          can't promise a reply to every one.
+          can&apos;t promise a reply to every one.
         </p>
         {savedInterest && (
           <p className="mb-4">
@@ -293,10 +293,10 @@ export function FeedbackForm({
               checked={draft.featureInterest}
               onChange={(e) => edit("featureInterest", e.target.checked)}
             />
-            I'm interested in being featured on the site.
+            I&apos;m interested in being featured on the site.
           </label>
           <p className="mt-2 text-sm">
-            We'll ask you to approve the write-up and how you're
+            We&apos;ll ask you to approve the write-up and how you&apos;re
             credited before anything is published.
           </p>
         </>

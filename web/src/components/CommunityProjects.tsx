@@ -14,8 +14,8 @@ export function CommunityProjects() {
       <h2 id="community-projects">Projects using the data</h2>
       <p className="my-4">
         Some of the ways people are putting the data to work. Public references
-        link to the project's own documentation. Stories shared with us are
-        published with the sender's approval.
+        link to the project&apos;s own documentation. Stories shared with us are
+        published with the sender&apos;s approval.
       </p>
       <h3 className="serif text-xl">Public project references</h3>
       <ul>

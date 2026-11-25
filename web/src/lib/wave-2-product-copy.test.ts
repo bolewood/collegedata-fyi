@@ -21,7 +21,7 @@ describe("Wave 2 product copy", () => {
 
     const browser = src("components/SchoolBrowser.tsx");
     expect(browser).toContain("Building a list? Use Match.");
-    expect(browser).toContain("Couldn't load");
+    expect(browser).toContain("Couldn&apos;t load");
     expect(browser).toContain("Try again in a moment.");
     expect(browser).not.toMatch(/Browser query failed/);
     expect(browser).not.toMatch(/Looking for fit ranking/);

@@ -105,7 +105,7 @@ export default function RecipesPage() {
           margin: 0,
         }}
       >
-        Data analyses & recipes
+        Data analyses &amp; recipes
       </h1>
       <p
         className="serif"
@@ -236,8 +236,8 @@ export default function RecipesPage() {
             Recruited athlete × program strength (Section F × Section J).
           </li>
           <li>
-            “Has this school changed?” — longitudinal view of
-            one school's selectivity, yield, and aid generosity over 5+
+            &ldquo;Has this school changed?&rdquo; — longitudinal view of
+            one school&apos;s selectivity, yield, and aid generosity over 5+
             years.
           </li>
         </ul>

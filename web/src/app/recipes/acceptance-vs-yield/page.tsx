@@ -208,7 +208,7 @@ export default function AcceptanceVsYieldPage() {
         </p>
         <p style={prose}>
           None of these measures, by itself, tells us whether a college is
-          “worth it.” This page does not estimate how enrollment
+          &ldquo;worth it.&rdquo; This page does not estimate how enrollment
           would change if a college changed its price. Together, the numbers
           show how broadly a school admits, how often admitted students enroll,
           what federally aided students pay after grant aid, and how federal
@@ -248,10 +248,10 @@ export default function AcceptanceVsYieldPage() {
           enroll.
         </p>
         <p style={prose}>
-          A school toward the upper-left is below this sample's median
+          A school toward the upper-left is below this sample&apos;s median
           acceptance rate and above its median yield. A school toward the
           lower-right is the reverse. Because the median school admits about{" "}
-          {medianAcceptancePct}{" "}of applicants, “below the median” is
+          {medianAcceptancePct}{" "}of applicants, &ldquo;below the median&rdquo; is
           not another way of saying highly selective.
         </p>
         <p style={prose}>
@@ -340,7 +340,7 @@ export default function AcceptanceVsYieldPage() {
           requires Scorecard debt, earnings, net price, and instructional
           spending. Its yield median is {medianYieldBPct}, not the{" "}
           {medianYieldPct}{" "}used in Figure 1. A school can sit on different
-          sides of “higher yield” in the two charts.
+          sides of &ldquo;higher yield&rdquo; in the two charts.
         </p>
       </section>
 
@@ -413,7 +413,7 @@ export default function AcceptanceVsYieldPage() {
           page.
         </p>
         <p style={prose}>
-          The Wall Street Journal's August 2026 account describes a 1.5%
+          The Wall Street Journal&apos;s August 2026 account describes a 1.5%
           budget shortfall for the academic year that began in August 2026,
           late merit-aid offers for the fall 2025 class, and a published cost
           of attendance of $98,544. The admissions numbers on the charts are
@@ -422,9 +422,9 @@ export default function AcceptanceVsYieldPage() {
         </p>
         <p style={prose}>
           The admissions figures on this page are from the fall 2024 entering
-          class, the most recent IPEDS ADM release. The Journal's account
+          class, the most recent IPEDS ADM release. The Journal&apos;s account
           of late merit-aid offers describes recruiting for the fall 2025 class.
-          The 1.5% budget shortfall, and the chancellor's wait-list
+          The 1.5% budget shortfall, and the chancellor&apos;s wait-list
           remarks, refer to the academic year that began in August 2026. The
           charts do not depict the shortfall year, and the Scorecard debt and
           earnings figures describe earlier cohorts still.
@@ -439,7 +439,7 @@ export default function AcceptanceVsYieldPage() {
         </p>
         <p style={prose}>
           Using the same College Scorecard methodology as the rest of this page,
-          Syracuse's median annual federal-loan payment is about{" "}
+          Syracuse&apos;s median annual federal-loan payment is about{" "}
           <strong>{formatUsd(annualPayment)}</strong> (
           {formatUsdCents(syracuse.monthlyPayment)} × 12), against median 10-year
           earnings of {formatUsd(syracuse.earnings10yr)}. That produces a debt
@@ -474,7 +474,7 @@ export default function AcceptanceVsYieldPage() {
           {formatBurdenPercent(smu.burden)}, {formatUsd(smu.avgNetPrice)}) also
           sit below both Panel B medians on yield and burden while posting
           above-median Title IV net prices. Northeastern, Boston University, and
-          NYU — the Journal's full-pay comparison set — do not: each has a
+          NYU — the Journal&apos;s full-pay comparison set — do not: each has a
           much higher fall 2024 yield.
         </p>
         <p style={prose}>
@@ -489,9 +489,9 @@ export default function AcceptanceVsYieldPage() {
           The Journal describes several forces that can lower enrollment without
           showing up as a federal-loan burden, and this page does not separate
           them: a 2025 drop of about half in international enrollment after visa
-          disruption; Syracuse's location in a snowy, geographically
+          disruption; Syracuse&apos;s location in a snowy, geographically
           isolated city; competition from cheaper public flagships, including
-          Sun Belt campuses; weaker national sports visibility (men's
+          Sun Belt campuses; weaker national sports visibility (men&apos;s
           basketball out of the NCAA tournament for five seasons; football
           mostly losing since 2000); admissions execution (slow
           regular-decision turnaround, little follow-up after the offer, late
@@ -503,7 +503,7 @@ export default function AcceptanceVsYieldPage() {
           lack of demand.
         </p>
         <p style={prose}>
-          Syracuse's chancellor told the Journal that in April 2026 the
+          Syracuse&apos;s chancellor told the Journal that in April 2026 the
           university could have pulled from its wait list and largely decided
           not to, in order to maintain academic standards, and that the
           shortfall was not due to a lack of demand.
@@ -515,7 +515,7 @@ export default function AcceptanceVsYieldPage() {
           What we mean by pricing power
         </h2>
         <p style={proseFirst}>
-          “Pricing power” is a shorthand for a cluster of related
+          &ldquo;Pricing power&rdquo; is a shorthand for a cluster of related
           questions. It is not a number this page computes.
         </p>
         <p style={prose}>
@@ -614,7 +614,7 @@ export default function AcceptanceVsYieldPage() {
           After requiring positive applicant, admitted, and enrolled counts,
           with admitted no greater than applied and enrolled no greater than
           admitted, requiring an entering class of at least 100 students, and
-          after dropping institutions outside the public directory's
+          after dropping institutions outside the public directory&apos;s
           in-scope set, {panelACount} schools remain for Figure 1.{" "}
           {PRICING_POWER_META.exclusions.missingZeroCounts} rows are removed
           for missing or zero counts,{" "}
@@ -713,7 +713,7 @@ export default function AcceptanceVsYieldPage() {
         <p style={{ ...proseFirst, maxWidth: 760, marginBottom: 16 }}>
           The underlying data and calculations are public. The queries below
           reproduce the source rows used for the two panels. Each IPEDS field
-          and the Scorecard table contain more rows than the API's
+          and the Scorecard table contain more rows than the API&apos;s
           1,000-row response limit, so retrieve them in pages. Compute
           acceptance and yield from the raw counts; do not plot the
           integer-rounded <code>admit_rate_total</code> or{" "}
@@ -760,7 +760,7 @@ curl 'https://api.collegedata.fyi/rest/v1/school_browser_rows?select=school_id,i
         <p style={{ color: "var(--ink-2)", fontSize: 14, lineHeight: 1.55, margin: "16px 0 0" }}>
           Keep schools with positive applied, admitted, and enrolled counts;
           drop rows where admitted exceeds applied or enrolled exceeds admitted;
-          keep the public directory's in-scope institutions. For Figure 2,
+          keep the public directory&apos;s in-scope institutions. For Figure 2,
           also require positive{" "}
           <code>median_debt_monthly_payment</code>,{" "}
           <code>earnings_10yr_median</code>, <code>avg_net_price</code>, and{" "}

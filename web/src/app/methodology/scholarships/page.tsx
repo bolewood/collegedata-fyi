@@ -65,17 +65,17 @@ export default function ScholarshipMethodologyPage() {
 
       <Section title="Sourcing rules">
         <p>
-          Every fact comes from the school’s own pages, or from the page of a foundation the school is tied
+          Every fact comes from the school&rsquo;s own pages, or from the page of a foundation the school is tied
           to (named as such). Third-party scholarship lists are used only to find programs, never as a source of
           terms. We read the page, record what it says with a locator, and note the date we read it. We do not
-          copy the school’s text; we paraphrase it and quote at most 25 words.
+          copy the school&rsquo;s text; we paraphrase it and quote at most 25 words.
         </p>
       </Section>
 
       <Section title="Field definitions">
         <Term lead="Program.">A named award or package, kept under one stable id across years and renamings.</Term>
         <Term lead="Entering class.">
-          The class a version of the terms applies to, when the school’s page names it. Many pages give
+          The class a version of the terms applies to, when the school&rsquo;s page names it. Many pages give
           deadlines only, and then we do not guess the class.
         </Term>
         <Term lead="Offer.">
@@ -87,8 +87,8 @@ export default function ScholarshipMethodologyPage() {
           and any cap or condition.
         </Term>
         <Term lead="Considered is not guaranteed.">
-          “Considered” means the program looks at your application. “Automatic” appears
-          only when the school’s page promises the award to everyone who meets the stated requirements.
+          &ldquo;Considered&rdquo; means the program looks at your application. &ldquo;Automatic&rdquo; appears
+          only when the school&rsquo;s page promises the award to everyone who meets the stated requirements.
         </Term>
         <Term lead="A waiver is not a scholarship.">
           A waiver is always named as a waiver. A waiver of the out-of-state differential is never counted as
@@ -96,15 +96,15 @@ export default function ScholarshipMethodologyPage() {
           none.
         </Term>
         <Term lead="We do not add up totals.">
-          We never sum components, multiply a yearly amount, or turn “up to” into a promise. If the
+          We never sum components, multiply a yearly amount, or turn &ldquo;up to&rdquo; into a promise. If the
           school quotes a total, we show it as a quote with the scope the school gave.
         </Term>
         <Term lead="Separate application.">
-          Whether the program needs its own form, as the school describes it. “Not stated” means the
+          Whether the program needs its own form, as the school describes it. &ldquo;Not stated&rdquo; means the
           page does not say.
         </Term>
         <Term lead="Deadlines.">
-          The school’s own dates. A date that recurs each year without a year is shown as recurring and is
+          The school&rsquo;s own dates. A date that recurs each year without a year is shown as recurring and is
           never turned into a dated deadline. Confirm every date on the official page.
         </Term>
         <Term lead="Renewal and stacking.">
@@ -131,10 +131,10 @@ export default function ScholarshipMethodologyPage() {
         </Term>
         <Term lead="Past cycle (amber).">
           The dates or class on the page have passed, or the school marks the program as an earlier cycle. We
-          never carry last year’s dates forward.
+          never carry last year&rsquo;s dates forward.
         </Term>
         <Term lead="Pages disagree (amber).">
-          The school’s own pages give different figures. We say what differs and send you to the official
+          The school&rsquo;s own pages give different figures. We say what differs and send you to the official
           page.
         </Term>
         <Term lead="Not re-read for this cycle.">
@@ -144,9 +144,9 @@ export default function ScholarshipMethodologyPage() {
 
       <Section title="What not to infer">
         <ul className="grid gap-3">
-          <li>A missing field is not a no. “Not stated” means the page did not say.</li>
+          <li>A missing field is not a no. &ldquo;Not stated&rdquo; means the page did not say.</li>
           <li>This is not a list of the best scholarships, and sorting is never by generosity.</li>
-          <li>Award counts are not odds. A program that offers “up to 44” does not tell you your chance of receiving one.</li>
+          <li>Award counts are not odds. A program that offers &ldquo;up to 44&rdquo; does not tell you your chance of receiving one.</li>
           <li>A named award does not explain the CDS merit figures. The two are documented separately, with their own years.</li>
           <li>The list is partial and leans toward selective schools. A school not listed has not been documented yet.</li>
           <li>Nothing here is a personalized estimate of cost or award.</li>
@@ -155,7 +155,7 @@ export default function ScholarshipMethodologyPage() {
 
       <Section title="Report a correction">
         <p>
-          Found a figure that does not match the school’s page? Open a correction. We ask for the official
+          Found a figure that does not match the school&rsquo;s page? Open a correction. We ask for the official
           page URL and what differs. We do not ask for your name, email, or any information about a student.
         </p>
         <p>
@@ -177,7 +177,7 @@ export default function ScholarshipMethodologyPage() {
           the same license. That is the share-alike part: you may adapt the data, and you pass the same terms on.
         </p>
         <p>
-          What the license does not cover: the schools’ own pages, their trademarks, and short quoted
+          What the license does not cover: the schools&rsquo; own pages, their trademarks, and short quoted
           excerpts. Those stay with the schools.
         </p>
         <h3 className="serif text-xl text-[var(--ink)]">Cite this dataset</h3>

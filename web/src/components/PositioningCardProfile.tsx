@@ -124,7 +124,7 @@ export function PositioningCardProfile({ school }: { school: SchoolAcademicProfi
     return (
       <div className="positioning-profile">
         <p className="positioning-profile__lede">
-          Add your GPA and test score to compare against this school's published CDS bands.
+          Add your GPA and test score to compare against this school&apos;s published CDS bands.
         </p>
         <form className="positioning-form" onSubmit={onSubmit}>
           <label>

@@ -115,7 +115,7 @@ curl 'https://www.collegedata.fyi/api/fields'
 curl 'https://www.collegedata.fyi/openapi.json'`}</CodeBlock>
       <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
         <code>GET /api/facts/{"{school_id}"}</code> is deprecated. It is an
-        older flat summary of one school's latest filing. Its counts come
+        older flat summary of one school&apos;s latest filing. Its counts come
         from the same year-aware data as the newer endpoint and are available
         only for 2024-25 and later filings (older filings return null counts);
         its{" "}
@@ -176,7 +176,7 @@ compare <- request("https://www.collegedata.fyi/api/compare") |>
       <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
         The per-school facts endpoint accepts the <code>finance</code> category
         for endowment facts. The fixed-schema compare endpoint does not: a
-        compare request containing <code>finance</code> returns <code>400</code>{" "}
+        compare request containing <code>finance</code> returns <code>400</code>
         instead of substituting unrelated fields. A categories filter with no
         recognized values also returns <code>400</code> on either endpoint.
       </p>
@@ -364,7 +364,7 @@ curl 'https://www.collegedata.fyi/snapshots/latest/field_dictionary.json'`}</Cod
           <h3 className="serif text-lg">5. When a value is missing</h3>
           <p className="mt-1">
             A missing value is usually one of four things: the school has no
-            public CDS, the school's filing leaves the field blank, the field
+            public CDS, the school&apos;s filing leaves the field blank, the field
             is not in the friendly dictionary, or the row failed a sanity check
             and was withheld. The sources endpoint shows the document and the
             federal release behind the page.
@@ -396,7 +396,7 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
         <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
           X-CollegeData-Client
         </code>{" "}
-        don't reach our logs on raw PostgREST and file downloads. To
+        don&apos;t reach our logs on raw PostgREST and file downloads. To
         identify your app there, set a descriptive{" "}
         <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
           User-Agent
@@ -1469,7 +1469,7 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
         <code>fsa_nonpayment_current</code> is the latest workbook vintage,
         already joined to <code>school_id</code>. Keep the as-of date and
         source URL next to the number, and do not label it as the official
-        cohort default rate. Directory <code>opeid</code> / <code>opeid6</code>{" "}
+        cohort default rate. Directory <code>opeid</code> / <code>opeid6</code>
         are Scorecard Title IV keys, not this FSA 6-digit main-campus key.
       </p>
       <CodeBlock>{`curl '${BASE}/rest/v1/fsa_nonpayment_current?school_id=eq.uf&select=school_id,nonpayment_rate,as_of_label,as_of_date,source_url' \\
@@ -1523,7 +1523,7 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
         Search latest-per-school rows (Compare)
       </h3>
       <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
-        Compare's latest-per-school ranking runs through an Edge Function so it
+        Compare&apos;s latest-per-school ranking runs through an Edge Function so it
         can account for required fields and null answerability. Percent and
         rate values are stored as fractions from <code>0</code> to <code>1</code>.
       </p>
@@ -1588,10 +1588,10 @@ curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
       </h3>
       <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
         <code>scholarship_directory</code> holds named merit scholarships as each
-        school published them, with a dated freshness status and the school's
+        school published them, with a dated freshness status and the school&apos;s
         own page as the source. The list is partial: an empty result means the
         school has not been documented yet, not that it has no named scholarships.
-        Every row carries <code>license</code> and <code>attribution</code>{" "}
+        Every row carries <code>license</code> and <code>attribution</code>
         columns. If you display or republish these rows, please show the
         attribution string. Method and reuse terms:{" "}
         <Link href="/methodology/scholarships" className={API_LINK_CLASS}>
@@ -1720,7 +1720,7 @@ const { data } = await supabase
         Original CDS files are hosted on Supabase Storage. Once you have a
         manifest row, build the public URL as{" "}
         <code className="break-all rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
-          {BASE}/storage/v1/object/public/sources/{"<source_storage_path>"}
+          {BASE}/storage/v1/object/public/sources/&lt;source_storage_path&gt;
         </code>
         . Every file is content-addressed by SHA-256.
       </p>
@@ -1730,7 +1730,7 @@ const { data } = await supabase
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
         Field IDs follow the canonical schema derived from the CDS
-        Initiative's XLSX templates: 1,105 fields for 2025-26, and 1,117
+        Initiative&apos;s XLSX templates: 1,105 fields for 2025-26, and 1,117
         for 2026-27, which adds twelve and renumbers none. The full schema is checked
         into the repo at{" "}
         <a
@@ -1758,9 +1758,9 @@ const { data } = await supabase
       </p>
       <CodeBlock>{DATA_ATTRIBUTION}</CodeBlock>
       <p className="mt-2 text-sm leading-relaxed text-[var(--ink-2)]">
-        Where it's practical, please also link the school's page on
+        Where it&apos;s practical, please also link the school&apos;s page on
         this site. Data published before {DATA_LICENSE_EFFECTIVE_DATE} stays
-        reusable under MIT. The full terms and what they don't cover are in{" "}
+        reusable under MIT. The full terms and what they don&apos;t cover are in{" "}
         <a
           className={API_LINK_CLASS}
           href={DATA_LICENSE_DOC_URL}

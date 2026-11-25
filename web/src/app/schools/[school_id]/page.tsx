@@ -524,7 +524,7 @@ export default async function SchoolDetailPage({ params }: {
             </span>
             {earliestYear && latestYear && earliestYear !== latestYear && (
               <span className="cd-school-header__years">
-                {earliestYear}–{latestYear}
+                {earliestYear}&ndash;{latestYear}
               </span>
             )}
           </div>

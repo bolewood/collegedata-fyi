@@ -93,7 +93,7 @@ export default function TestOptionalTrackerPage() {
           >
             C9 SAT submission rate, year by year, for seven well-documented
             schools. ≥85% behaves like test-required; 10–85% is genuinely
-            optional; {"<10%"} behaves like test-blind. Written policy is C8;
+            optional; &lt;10% behaves like test-blind. Written policy is C8;
             this chart is what enrolled first-years actually did. Bands score
             combined SAT + ACT submission, capped at 100%; the lines plot SAT
             only.
@@ -140,9 +140,9 @@ export default function TestOptionalTrackerPage() {
               lineHeight: 1.3,
             }}
           >
-            “Written policy
+            &ldquo;Written policy
             <br />
-            underdetermines practice.”
+            underdetermines practice.&rdquo;
           </div>
         </div>
         <p

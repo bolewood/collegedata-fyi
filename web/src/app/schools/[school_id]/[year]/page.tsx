@@ -459,8 +459,8 @@ async function DocumentVariant({
         <div className="cd-card" style={{ marginTop: 16, padding: "24px 28px" }}>
           <p>
             {sourceDownloadUrl
-              ? "The original file is above. The numbers from this report aren't on the page yet."
-              : "The numbers from this report aren't on the page yet."}
+              ? "The original file is above. The numbers from this report aren&apos;t on the page yet."
+              : "The numbers from this report aren&apos;t on the page yet."}
           </p>
         </div>
       )}

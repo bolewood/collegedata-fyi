@@ -491,7 +491,7 @@ export function SchoolBrowser({
 
       {error && (
         <div className="cd-card" style={{ padding: 16, borderColor: "var(--brick)", marginBottom: 18 }}>
-          <div className="meta" style={{ color: "var(--brick)", marginBottom: 6 }}>Couldn't load</div>
+          <div className="meta" style={{ color: "var(--brick)", marginBottom: 6 }}>Couldn&apos;t load</div>
           <p style={{ margin: 0, color: "var(--ink-2)", fontSize: 14 }}>Try again in a moment.</p>
         </div>
       )}

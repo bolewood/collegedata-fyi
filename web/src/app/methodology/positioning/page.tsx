@@ -56,7 +56,7 @@ export default function PositioningMethodologyPage() {
           lineHeight: 1.55,
         }}
       >
-        Where a student's SAT or ACT would land in the numbers the school
+        Where a student&apos;s SAT or ACT would land in the numbers the school
         published for its enrolled first-years — the entering class, not the
         admitted pool. It is not a chance-me, and it does not predict an
         admissions decision.
@@ -90,7 +90,7 @@ export default function PositioningMethodologyPage() {
           </FieldUse>
           <FieldUse field="C.12" title="High-school GPA">
             C.12 provides average high-school GPA and the percent submitting GPA. The card
-            displays the school average beside the student's entered GPA; GPA never
+            displays the school average beside the student&apos;s entered GPA; GPA never
             contributes to academic fit because weighted and unweighted scales are not
             consistently documented.
           </FieldUse>
@@ -103,7 +103,7 @@ export default function PositioningMethodologyPage() {
       </section>
 
       <section className="mt-10">
-        <h2 className="serif text-3xl">What we don't use</h2>
+        <h2 className="serif text-3xl">What we don&apos;t use</h2>
         <ul className="mt-4 grid gap-3 text-sm leading-relaxed text-[var(--ink-2)]">
           <li>Legacy status, because CDS does not publish it as a score-band adjustment.</li>
           <li>Athletic recruitment, because recruited-athlete admissions pools are not separated in CDS C.9.</li>
@@ -116,9 +116,9 @@ export default function PositioningMethodologyPage() {
       </section>
 
       <section className="mt-10 border-t border-[var(--rule-strong)] pt-6">
-        <h2 className="serif text-3xl">Why this isn't a chance-me</h2>
+        <h2 className="serif text-3xl">Why this isn&apos;t a chance-me</h2>
         <p className="mt-4 text-sm leading-relaxed text-[var(--ink-2)]">
-          A position compares a student's numbers with the bands the school
+          A position compares a student&apos;s numbers with the bands the school
           published for enrolled first-years. A prediction estimates the probability
           that an applicant with many hidden traits will be admitted. The Common Data
           Set supports the first task and does not support the second.
@@ -145,7 +145,7 @@ export default function PositioningMethodologyPage() {
         <p className="mt-4 text-sm leading-relaxed text-[var(--ink-2)]">
           Every card links back to the archived CDS source for that school year. The
           worked example above uses{" "}
-          <Link href="/schools/bowdoin/2025-26">Bowdoin College's 2025-26 archived CDS</Link>
+          <Link href="/schools/bowdoin/2025-26">Bowdoin College&apos;s 2025-26 archived CDS</Link>
           {" "}and the public <code>school_browser_rows</code> serving table.
         </p>
         <CodeBlock>{`curl '${BASE}/rest/v1/school_browser_rows?school_id=eq.bowdoin&select=school_id,school_name,canonical_year,acceptance_rate,sat_submit_rate,act_submit_rate,sat_composite_p25,sat_composite_p50,sat_composite_p75,act_composite_p25,act_composite_p50,act_composite_p75' \\

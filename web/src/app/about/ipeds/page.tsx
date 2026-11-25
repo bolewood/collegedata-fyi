@@ -66,7 +66,7 @@ export default function IpedsPage() {
         identifier called a <code>UNITID</code> (for example,{" "}
         <code>115409</code> for Harvey Mudd and <code>233921</code> for Virginia
         Tech), which is how we reliably match federal records to each
-        school's published reports.
+        school&apos;s published reports.
       </p>
       <p>
         For official definitions and raw downloads, go to{" "}
@@ -78,7 +78,7 @@ export default function IpedsPage() {
           nces.ed.gov/ipeds
         </a>
         . This guide explains how those federal tables appear on collegedata.fyi
-        and where they differ from a college's Common Data Set.
+        and where they differ from a college&apos;s Common Data Set.
       </p>
 
       <h2>How IPEDS data is structured</h2>
@@ -138,10 +138,10 @@ export default function IpedsPage() {
 
       <h2>What IPEDS cannot replace</h2>
       <p>
-        IPEDS is not a substitute for a college's Common Data Set. It does
+        IPEDS is not a substitute for a college&apos;s Common Data Set. It does
         not report current-year waitlist numbers, Early Decision vs. Regular
         Decision outcomes, non-need merit aid counts (Section H2A), or the
-        school's own published PDF. Common Data Sets also tend to appear
+        school&apos;s own published PDF. Common Data Sets also tend to appear
         months before the corresponding IPEDS release. For those school-reported
         details, open a year page such as{" "}
         <Link href="/schools/virginia-tech/2025-26">
@@ -157,7 +157,7 @@ export default function IpedsPage() {
       <h2>Why we include it anyway</h2>
       <ul>
         <li>
-          <strong>Broader coverage:</strong> When a college doesn't publish
+          <strong>Broader coverage:</strong> When a college doesn&apos;t publish
           a Common Data Set, IPEDS still gives you reliable enrollment, cost,
           and admissions context.
         </li>
@@ -168,7 +168,7 @@ export default function IpedsPage() {
         </li>
         <li>
           <strong>Institutional finance:</strong> IPEDS Finance filings include
-          endowment and spending figures that the Common Data Set doesn't
+          endowment and spending figures that the Common Data Set doesn&apos;t
           cover (see our{" "}
           <Link href="/recipes/endowment-draw-rate">
             endowment draw-rate analysis

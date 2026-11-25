@@ -205,13 +205,13 @@ export default function AlignmentGapPage() {
             {Math.round(ALIGNMENT_GAP_MERIT_META.coversShare * 100)}%)
           </strong>{" "}
           with above-median graduate debt burden, the freshman non-need merit
-          aid budget alone is larger than the school's entire annual
+          aid budget alone is larger than the school&apos;s entire annual
           alignment gap.
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
           Many colleges whose graduates leave with heavy federal student debt
           also spend thousands of dollars per freshman on non-need
-          “merit” discounts to recruit students who do not have
+          &ldquo;merit&rdquo; discounts to recruit students who do not have
           financial need. Putting federal debt and earnings data next to
           school-reported merit aid lets us ask a concrete question: how big
           are those merit budgets compared with the debt burden graduates
@@ -221,16 +221,16 @@ export default function AlignmentGapPage() {
           To measure that consistently across schools, we start with{" "}
           <strong>debt burden</strong>: the share of median post-college
           earnings required to cover annual federal loan payments (from College
-          Scorecard). A school's <strong>alignment gap</strong> is roughly
+          Scorecard). A school&apos;s <strong>alignment gap</strong> is roughly
           how much less debt its completers would need to borrow, expressed per
           year of college, to match the {corpusMedianBurden} median debt burden
           across this group.
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
           The gap is a yardstick, not a tuition prescription. Cutting sticker
-          price or redirecting merit grants wouldn't reduce student
+          price or redirecting merit grants wouldn&apos;t reduce student
           borrowing dollar for dollar. What it shows is scale: how a
-          college's debt burden stacks up against its non-need merit
+          college&apos;s debt burden stacks up against its non-need merit
           spending (Common Data Set H2A) and its endowment (IPEDS).
         </p>
       </div>
@@ -496,7 +496,7 @@ export default function AlignmentGapPage() {
           CDS H2A also has limits. It covers full-time first-year students and
           specifically reports non-need aid. Some awards that combine need and
           merit may not appear in the measure. It is best understood as a view
-          of one part of a school's recruiting and tuition-discount strategy,
+          of one part of a school&apos;s recruiting and tuition-discount strategy,
           not its total financial-aid budget.
         </p>
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "14px 0 0" }}>
@@ -555,7 +555,7 @@ export default function AlignmentGapPage() {
         <p style={{ fontSize: 16, lineHeight: 1.65, color: "var(--ink-2)", margin: "0 0 16px", maxWidth: 760 }}>
           The underlying data and calculations are public. The queries below
           reproduce the source rows used for the two panels. Panel B contains
-          more rows than the API's 1,000-row response limit, so retrieve it
+          more rows than the API&apos;s 1,000-row response limit, so retrieve it
           in pages.
         </p>
         <pre

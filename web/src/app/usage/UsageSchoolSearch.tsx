@@ -58,7 +58,7 @@ export function UsageSchoolSearch({
       </ul>
       <p className="usage-search-note">
         Rounded to the nearest 10. Schools are listed for complete months with
-        10 or more downloads; other months show “fewer than 10” (which
+        10 or more downloads; other months show &ldquo;fewer than 10&rdquo; (which
         includes none) and are left out of the total. Counts include browser and
         machine downloads, not bots.
       </p>

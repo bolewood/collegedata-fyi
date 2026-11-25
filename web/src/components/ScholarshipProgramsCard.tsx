@@ -59,7 +59,7 @@ function Offers({ row }: { row: ScholarshipDirectoryRow }) {
                 {summary.benefits.map((b, i) => (
                   <li key={i} className="sch-line">
                     <strong>{b.label}:</strong> {b.text}
-                    {b.quotedLabel ? <> The school calls it “{b.quotedLabel}”.</> : null}
+                    {b.quotedLabel ? <> The school calls it &ldquo;{b.quotedLabel}&rdquo;.</> : null}
                     {b.scope ? <span className="sch-scope"> {b.scope}</span> : null}
                   </li>
                 ))}
@@ -67,7 +67,7 @@ function Offers({ row }: { row: ScholarshipDirectoryRow }) {
             )}
             {summary.quotedTotals.map((t, i) => (
               <p key={i} className="sch-line sch-quote">
-                As the school quotes the total: “{t.quote}”
+                As the school quotes the total: &ldquo;{t.quote}&rdquo;
                 {t.scope ? <> ({t.scope})</> : null}. Not added up by collegedata.fyi.
               </p>
             ))}
@@ -120,7 +120,7 @@ function Program({
       </header>
       {closed ? (
         <p className="sch-line">
-          The school’s page lists this program as closed to new entrants.
+          The school&rsquo;s page lists this program as closed to new entrants.
           {hasTerms ? " Terms below are kept for reference." : ""}
         </p>
       ) : null}
@@ -271,7 +271,7 @@ export function ScholarshipProgramsCard({ programs, names, cdsYear, schoolId, to
         ))}
 
         <div className="sch-card__source card-source-actions rule mono">
-          <span>§ SOURCE: THE SCHOOL’S OWN PAGES</span>
+          <span>§ SOURCE: THE SCHOOL&rsquo;S OWN PAGES</span>
           <span>
             <Link href="/methodology/scholarships">METHOD →</Link>
           </span>

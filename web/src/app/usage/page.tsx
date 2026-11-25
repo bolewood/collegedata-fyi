@@ -135,7 +135,7 @@ export default async function UsagePage() {
       </div>
       <p className="usage-bots-line">
         Self-declared bots and AI crawlers downloaded another <b>{formatCount(headline.bots)}</b> files in{" "}
-        {period.label}. They keep the archive findable, but we don’t count them as use.
+        {period.label}. They keep the archive findable, but we don&rsquo;t count them as use.
       </p>
 
       <CommunityInvitation surface="usage" />
@@ -306,7 +306,7 @@ export default async function UsagePage() {
             </div>
             <p className="usage-chart-note">
               Schools by browser and machine downloads in {period.label}. School
-              counts of 10 or more are rounded to the nearest 10. We don’t
+              counts of 10 or more are rounded to the nearest 10. We don&rsquo;t
               publish a ranked list of schools.
             </p>
           </>
@@ -324,13 +324,13 @@ export default async function UsagePage() {
         <ol className="usage-steps">
           <li>
             <div>
-              Someone opens a school’s 2024–25 report in Chrome at 9:14 a.m. UTC.
+              Someone opens a school&rsquo;s 2024&ndash;25 report in Chrome at 9:14 a.m. UTC.
               The file loads in three range requests, all answered with <code>206</code>.
             </div>
           </li>
           <li>
             <div>
-              We pair the IP address with the browser’s user-agent string to tell one
+              We pair the IP address with the browser&rsquo;s user-agent string to tell one
               visitor from another. The IP address stays inside the log system and is never
               stored.
             </div>
@@ -358,7 +358,7 @@ export default async function UsagePage() {
           </li>
         </ol>
         <p className="usage-copy">
-          Requests from our own pipeline and from this website’s servers are left out
+          Requests from our own pipeline and from this website&rsquo;s servers are left out
           entirely. A day appears here once every hour of it has been counted. School numbers
           are published once a month is complete. A school is listed for a month only if it had
           10 or more downloads, rounded to the nearest 10; for the rest we publish only how many
