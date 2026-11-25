@@ -161,6 +161,38 @@ class PopulationTests(unittest.TestCase):
             cases = self.build([school("a")], queue=queue)
             self.assertEqual(cases[0].cause, ff.NO_FAILURE)
 
+    def test_fresh_unattempted_ready_row_does_not_override_yesterdays_failure(self):
+        failed = {**attempt(error="landing HTTP 403", outcome="transient", enq="2026-11-23T00:00:00+00:00"), "school_id": "a"}
+        fresh = {**attempt(status="ready", enq="2026-11-24T00:00:00+00:00"), "school_id": "a", "processed_at": None}
+        for queue in ([failed, fresh], [fresh, failed]):
+            self.assertEqual(self.build([school("a")], queue=queue)[0].cause, ff.BLOCKED)
+
+    def test_failed_row_without_error_text_is_a_failure_not_clean(self):
+        for status, outcome in (("failed_permanent", None), ("failed_permanent", "no_pdfs_found"),
+                                ("done", "wrong_content_type"), ("done", "permanent_other")):
+            row = {**attempt(status=status, outcome=outcome, error=None), "school_id": "a"}
+            case = self.build([school("a")], queue=[row])[0]
+            self.assertEqual(case.cause, ff.OTHER, (status, outcome))
+        for outcome in ("unchanged_verified", "inserted", None):
+            row = {**attempt(status="done", outcome=outcome, error=None), "school_id": "a"}
+            self.assertEqual(self.build([school("a")], queue=[row])[0].cause, ff.NO_FAILURE)
+
+    def test_all_clean_large_population_warns(self):
+        schools = [school(f"s{i}") for i in range(ff.LARGE_POPULATION)]
+        queue = [{**attempt(status="done", outcome="unchanged_verified"), "school_id": s["id"]} for s in schools]
+        with tempfile.TemporaryDirectory() as tmp:
+            t = Path(tmp)
+            (t / "schools.yaml").write_text(json.dumps({"schools": schools}))
+            (t / "waf.yaml").write_text("schools:\n  not-a-school:\n    school_name: S\n")
+            (t / "m.json").write_text("[]")
+            (t / "q.json").write_text(json.dumps(queue))
+            err = io.StringIO()
+            with redirect_stderr(err), redirect_stdout(io.StringIO()):
+                ff.main(["--schools-yaml", str(t / "schools.yaml"), "--waf-yaml", str(t / "waf.yaml"),
+                         "--manifest-json", str(t / "m.json"), "--queue-json", str(t / "q.json"),
+                         "--as-of", "2026-11-24"])
+            self.assertIn("::warning::fetch failures: all", err.getvalue())
+
     def test_ready_row_with_leftover_error_counts(self):
         row = {**attempt(status="ready", error="attempt 2 TransientError: resolve transient: landing HTTP 403"), "school_id": "a"}
         self.assertEqual(self.build([school("a")], queue=[row])[0].cause, ff.BLOCKED)

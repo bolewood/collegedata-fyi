@@ -76,6 +76,7 @@ from tools.finder.stuck_pdf_seeds import is_section_seed  # noqa: E402
 
 DEFAULT_WAF_YAML = REPO_ROOT / "tools" / "finder" / "waf_blocked_urls.yaml"
 WINDOW_DAYS = 45
+LARGE_POPULATION = 100
 QUEUE_SELECT = "school_id,status,last_outcome,last_error,enqueued_at,processed_at"
 
 BLOCKED = "blocked"
@@ -96,6 +97,8 @@ CAUSE_HEADINGS = {
     NO_FAILURE: "No failure recorded (the school may not have posted yet)",
 }
 
+# Outcomes of an attempt that reached the school's files without a problem.
+CLEAN_OUTCOMES = {"inserted", "refreshed", "unchanged_verified", "unchanged_repaired", "marked_removed"}
 BLOCKED_OUTCOMES = {"bot_challenge"}
 VIEWER_OUTCOMES = {"auth_walled_microsoft", "auth_walled_okta", "auth_walled_google"}
 DEAD_OUTCOMES = {"dead_url"}
@@ -172,6 +175,13 @@ def classify(
 
     if error:
         return OTHER, f"archive outcome {outcome or 'none'}"
+    status = str((attempt or {}).get("status") or "")
+    # A failure with no error text is still a failure. Anything not on the
+    # clean allowlist counts, so a new failure outcome cannot read as success.
+    if attempt is not None and (
+        status.startswith("failed") or (outcome and outcome not in CLEAN_OUTCOMES)
+    ):
+        return OTHER, f"archive status {status or 'none'}, outcome {outcome or 'none'}, no error text"
     if attempt is None:
         return NO_FAILURE, "no archive attempt in the window"
     return NO_FAILURE, f"newest archive attempt {attempt.get('status')} ({outcome or 'no outcome'}), no error"
@@ -247,17 +257,29 @@ def _recency(row: dict[str, Any]) -> tuple[str, str]:
     return (str(row.get("enqueued_at") or ""), str(row.get("processed_at") or ""))
 
 
+def _unattempted(row: dict[str, Any]) -> bool:
+    return (
+        str(row.get("status") or "") in ("ready", "processing")
+        and not row.get("last_error")
+        and not row.get("last_outcome")
+    )
+
+
 def newest_attempts(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     """Newest `archive_queue` row per school (by enqueue time).
 
     The newest row is the one that counts, even when it is still `ready` with
     a transient error left from an earlier attempt: that error is the current
-    state of the school's fetch.
+    state of the school's fetch. A row nobody has attempted (ready or
+    processing, no error, no outcome) says nothing and is ignored, so a stalled
+    worker cannot overwrite yesterday's failure with a blank row.
     """
     newest: dict[str, dict[str, Any]] = {}
     for row in rows:
         sid = row.get("school_id")
         if not sid:
+            continue
+        if _unattempted(row):
             continue
         if sid not in newest or _recency(row) > _recency(newest[sid]):
             newest[sid] = row
@@ -528,6 +550,13 @@ def run(args: argparse.Namespace) -> int:
         raise RenewalError("no schools matched the population; the inputs do not look right")
 
     summary = summary_dict(cases)
+    clean = sum(1 for c in cases if c.cause == NO_FAILURE)
+    if len(cases) >= LARGE_POPULATION and clean == len(cases):
+        print(
+            f"::warning::fetch failures: all {len(cases)} schools read as no_failure_recorded; "
+            "the archive_queue data is probably not what this check assumes",
+            file=sys.stderr,
+        )
     report = render_report(
         cases,
         current_year=current,
