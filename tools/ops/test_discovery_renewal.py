@@ -167,7 +167,10 @@ class ComputeTests(unittest.TestCase):
                 "sub_institutional_excluded", "outstanding_below_floor", "outstanding_years",
                 "arrivals_30d", "arrivals_expected_30d", "arrivals_below_floor",
                 "arrivals_60d", "arrivals_expected_60d", "arrivals_window_days",
-                "arrivals_checked",
+                "arrivals_checked", "unextracted_next_docs", "arrivals_years",
+                *(f"arrivals_{n}_{k}" for n in ("current", "next")
+                  for k in ("30d", "60d", "window_days", "checked", "below_floor")),
+                *(f"arrivals_expected_{n}_{k}" for n in ("current", "next") for k in ("30d", "60d")),
                 "unextracted_current_docs",
                 "floor_overridden", "alarm_issue", "run_url",
                 "seeds_with_seed", "seeds_without_new_year",
@@ -644,8 +647,8 @@ class ArrivalsTests(unittest.TestCase):
         # 40 more schools arrive in the last two weeks before 2026-06-02.
         rows += [row(f"s{i}", "2025-26", discovered="2026-05-25T00:00:00+00:00") for i in range(200, 240)]
         res = dr.compute(rows, date(2026, 6, 2))
-        self.assertEqual(res.arrivals.count, 40)
-        self.assertGreaterEqual(res.arrivals.expected, 10)
+        self.assertEqual(res.arrivals.next.count_30, 40)
+        self.assertGreaterEqual(res.arrivals.next.expected_30, 10)
         self.assertFalse(res.arrivals.below_floor)
 
     def test_it_says_not_checked_when_even_sixty_days_expect_almost_nothing(self) -> None:
@@ -655,21 +658,21 @@ class ArrivalsTests(unittest.TestCase):
         res = dr.compute(self.archive("2026-05-01T12:00:00+00:00", schools=100, renewed=50),
                          date(2027, 1, 5), enforce_min_prev=False)
         self.assertEqual(res.arrivals.window_days, 60)
-        self.assertLess(res.arrivals.expected, dr.ARRIVALS_MIN_EXPECTED)
+        self.assertLess(res.arrivals.expected_60, dr.ARRIVALS_MIN_EXPECTED)
         self.assertFalse(res.arrivals.checked)
         self.assertFalse(res.arrivals.below_floor)
         summary = dr.summary_dict(res)
         self.assertIs(summary["arrivals_checked"], False)
         self.assertIs(summary["arrivals_below_floor"], False)
         text = dr.render_report(res, [])
-        self.assertIn("Arrivals: not checked", text)
+        self.assertIn("not checked. The posting curve expects", text)
         self.assertIn("in 60 days", text)
 
     def test_winter_uses_a_sixty_day_window_and_thirty_otherwise(self) -> None:
         archive = self.archive("2026-12-01T12:00:00+00:00", schools=400, renewed=300)
         winter = dr.compute(archive, date(2027, 1, 10))
         self.assertEqual(winter.arrivals.window_days, 60)
-        self.assertGreaterEqual(winter.arrivals.expected, dr.ARRIVALS_MIN_EXPECTED)
+        self.assertGreaterEqual(winter.arrivals.expected_60, dr.ARRIVALS_MIN_EXPECTED)
         self.assertEqual(dr.summary_dict(winter)["arrivals_window_days"], 60)
         # The 30-day figures stay in the summary beside the 60-day ones.
         summary = dr.summary_dict(winter)
@@ -690,12 +693,9 @@ class ArrivalsTests(unittest.TestCase):
                 break
         self.assertIsNotNone(fired)
         self.assertLessEqual(fired, date(2027, 2, 5))
-        self.assertGreater(fired, date(2027, 1, 5))
-        # Before that the 60-day window still holds December's arrivals.
-        quiet = dr.compute(archive, date(2027, 1, 10))
-        self.assertEqual(quiet.arrivals.window_days, 60)
-        self.assertFalse(quiet.arrivals.below_floor)
-        self.assertEqual(quiet.arrivals.count, 300)
+        # Each year is judged on its own: nothing for 2026-27 has arrived, so
+        # that year trips as soon as its own 60-day window expects 10.
+        self.assertGreater(fired, date(2027, 1, 1))
 
     def test_the_sixty_day_alarm_words_its_own_window(self) -> None:
         archive = self.archive("2026-10-01T12:00:00+00:00", schools=400, renewed=300)
@@ -707,11 +707,12 @@ class ArrivalsTests(unittest.TestCase):
         ys = dr.year_summary(res.year_checks[res.current_year], res.arrivals)
         self.assertEqual(dr.check_descriptor(ys, "arrivals")["window"], 60)
 
-    def test_the_threshold_is_a_quarter_of_expected(self) -> None:
-        for count, below in ((7, True), (8, False)):
-            arrivals = dr.Arrivals(count=count, expected=30.0, schools=set())
-            self.assertEqual(arrivals.below_floor, below, count)
-        self.assertFalse(dr.Arrivals(count=0, expected=9.9, schools=set()).below_floor)
+    def test_the_threshold_is_forty_percent_of_expected(self) -> None:
+        self.assertEqual(dr.ARRIVALS_FLOOR_SHARE, 0.4)
+        for count, below in ((11, True), (12, False)):  # 0.4 x 30 = 12
+            y = dr.YearArrivals(2025, count_30=count, expected_30=30.0)
+            self.assertEqual(y.below_floor, below, count)
+        self.assertFalse(dr.YearArrivals(2025, count_30=0, expected_30=9.9, expected_60=9.9).below_floor)
 
     def test_a_school_counts_once_for_either_year_and_for_a_second_file(self) -> None:
         rows = self.archive("2026-05-01T12:00:00+00:00")
@@ -720,17 +721,82 @@ class ArrivalsTests(unittest.TestCase):
         rows += [row("s300", "2025-26", discovered=recent)]  # same school, next year
         rows += [row("s0", "2025-26", discovered=recent)]  # s0 already had 2025-26 in May
         res = dr.compute(rows, date(2026, 6, 2))
-        self.assertIn("s300", res.arrivals.schools)
-        self.assertEqual(res.arrivals.count, 1)
-        self.assertNotIn("s0", res.arrivals.schools)
+        self.assertIn("s300", res.arrivals.schools_30)
+        self.assertEqual(res.arrivals.count_30, 1)
+        self.assertNotIn("s0", res.arrivals.schools_30)
+
+    def test_hand_archived_current_year_files_do_not_mask_a_stopped_next_year(self) -> None:
+        """Each year is judged on its own: 2025-26 files archived by hand every few
+        weeks must not hide that nothing arrives for the next year."""
+        rows = []
+        for i in range(400):
+            rows.append(row(f"s{i}", "2023-24", discovered="2025-12-01T00:00:00+00:00"))
+            rows.append(row(f"s{i}", "2024-25", discovered="2026-01-10T00:00:00+00:00"))
+            rows.append(row(f"s{i}", "2025-26", discovered="2026-01-15T00:00:00+00:00"))
+        # March 1: 2025-26 is the next year (expected well above 10 a month).
+        res = dr.compute(rows, date(2026, 6, 10))
+        self.assertTrue(res.arrivals.next.checked)
+        self.assertTrue(res.arrivals.next.below_floor)
+        # The pooled number would have been healthy: hand-archived current-year files.
+        rows += [row(f"h{i}", "2024-25", discovered="2026-06-01T00:00:00+00:00") for i in range(50)]
+        rows += [row(f"h{i}", "2023-24") for i in range(50)]
+        res = dr.compute(rows, date(2026, 6, 10))
+        self.assertGreater(res.arrivals.current.count_30, 0)  # by hand, current year
+        self.assertEqual(res.arrivals.next.count_30, 0)
+        self.assertTrue(res.arrivals.below_floor)
+        summary = dr.summary_dict(res)
+        self.assertIs(summary["arrivals_next_below_floor"], True)
+        self.assertEqual(summary["arrivals_next_30d"], 0)
+        self.assertGreater(summary["arrivals_current_30d"], 0)
+        self.assertEqual(summary["arrivals_30d"], res.arrivals.count_30)  # totals kept
+
+    def test_a_current_year_arrival_only_counts_for_a_school_in_the_cohort(self) -> None:
+        rows = self.archive("2026-05-01T12:00:00+00:00")
+        # `fresh` has 2025-26 (the next year) but never had 2024-25: not in its cohort.
+        rows += [row("fresh", "2025-26", discovered="2026-05-28T00:00:00+00:00")]
+        res = dr.compute(rows, date(2026, 6, 2))
+        self.assertNotIn("fresh", res.arrivals.schools_30)
+
+    def test_unextracted_next_year_documents_do_not_make_a_healthy_run_look_short(self) -> None:
+        rows = []
+        for i in range(400):
+            rows.append(row(f"s{i}", "2024-25"))
+            rows.append({**row(f"s{i}", "2025-26", discovered="2026-11-10T00:00:00+00:00"),
+                         "extraction_status": "extracted"})
+        # Next year's first files, filed but not extracted yet.
+        rows += [{**row(f"s{i}", "2026-27", discovered="2026-11-20T00:00:00+00:00"),
+                  "extraction_status": "extraction_pending"} for i in range(12)]
+        res = dr.compute(rows, date(2026, 11, 24))
+        summary = dr.summary_dict(res)
+        self.assertEqual(summary["unextracted_next_docs"], 12)
+        self.assertEqual(summary["unextracted_current_docs"], 0)
+        for flag in ("below_floor", "two_year_below_floor", "arrivals_below_floor",
+                     "outstanding_below_floor"):
+            self.assertIs(summary[flag], False, flag)
+        self.assertIsNot(summary["next_below_floor"], True)
+        self.assertEqual((summary["outstanding_years"], summary["arrivals_years"]), ("", ""))
+        self.assertEqual(dr.outstanding_years(res), [])
+        self.assertIsNone(dr.lead_check(summary))
+        self.assertFalse(any(s["below_floor"] for s in dr.arrivals_state(res).values()))
+
+    def test_unextracted_next_year_documents_are_reported_not_alarmed(self) -> None:
+        rows = many_schools(400, with_current=400)
+        for r in rows:
+            r["extraction_status"] = "extracted"
+        rows += [{**row(f"s{i}", "2026-27"), "extraction_status": "extraction_pending"} for i in range(5)]
+        res = dr.compute(rows, date(2026, 11, 24))
+        self.assertEqual(res.unextracted_next_docs, 5)
+        self.assertEqual(dr.summary_dict(res)["unextracted_next_docs"], 5)
+        self.assertIn("5 next-year documents are filed but not extracted yet", dr.render_report(res, []))
+        self.assertIn("removed rows are not read", dr.render_report(res, []))
 
     def test_a_school_gaining_both_years_in_one_window_counts_once(self) -> None:
         rows = self.archive("2026-05-01T12:00:00+00:00")
         recent = "2026-05-28T00:00:00+00:00"
         rows += [row("s350", "2024-25", discovered=recent), row("s350", "2025-26", discovered=recent)]
         res = dr.compute(rows, date(2026, 6, 2))
-        self.assertEqual(res.arrivals.count, 1)
-        self.assertEqual(res.arrivals.schools, {"s350"})
+        self.assertEqual(res.arrivals.count_30, 1)
+        self.assertEqual(res.arrivals.schools_30, {"s350"})
 
     def test_flagged_sub_institution_and_undated_documents_are_not_arrivals(self) -> None:
         rows = self.archive("2026-05-01T12:00:00+00:00")
@@ -741,7 +807,7 @@ class ArrivalsTests(unittest.TestCase):
         rows += [row("s303", "2025-26", discovered=recent, removed="2026-05-30T00:00:00+00:00")]
         rows += [row("s304", "unknown", discovered=recent)]
         res = dr.compute(rows, date(2026, 6, 2))
-        self.assertEqual(res.arrivals.count, 0)
+        self.assertEqual(res.arrivals.count_30, 0)
 
     def test_the_summary_and_the_lead_check_carry_it(self) -> None:
         res = dr.compute(self.archive("2026-05-01T12:00:00+00:00"), date(2026, 6, 20))
@@ -749,17 +815,20 @@ class ArrivalsTests(unittest.TestCase):
         self.assertIs(summary["arrivals_below_floor"], True)
         self.assertEqual(summary["arrivals_30d"], 0)
         self.assertGreaterEqual(summary["arrivals_expected_30d"], 10)
-        ys = dr.year_summary(res.year_checks[res.current_year], res.arrivals)
-        self.assertEqual(dr.lead_check({**ys, "below_floor": False, "two_year_below_floor": False}),
-                         "arrivals")
-        # It shares the current year's issue: the current year is outstanding.
-        self.assertIn(dr.format_year(res.current_year), dr.outstanding_years(res))
+        # Arrivals are their own alarm scope: they are not a renewal check.
+        ys = dr.year_summary(res.year_checks[res.current_year])
+        self.assertIsNone(dr.lead_check({**ys, "below_floor": False, "two_year_below_floor": False}))
+        self.assertEqual(summary["arrivals_years"], dr.format_year(res.current_year + 1))
+        self.assertIn(dr.format_year(res.current_year + 1), dr.outstanding_years(res))
+        state = dr.arrivals_state(res)
+        self.assertEqual(sorted(state), [dr.format_year(res.current_year), dr.format_year(res.current_year + 1)])
+        self.assertTrue(state[dr.format_year(res.current_year + 1)]["below_floor"])
 
     def test_the_report_leads_with_arrivals_when_nothing_else_is_below(self) -> None:
         res = dr.compute(self.archive("2026-05-01T12:00:00+00:00"), date(2026, 6, 20))
         text = dr.render_report(res, [], lead="arrivals")
         self.assertIn("Only 0 schools gained", text)
-        self.assertIn("- Arrivals: 0 schools gained", text)
+        self.assertIn("Arrivals for 2025-26: 0 schools gained", text)
 
     def test_unextracted_current_year_documents_are_counted_for_the_report_only(self) -> None:
         rows = many_schools(400, with_current=400)
@@ -838,8 +907,10 @@ class YearReportTests(unittest.TestCase):
             self.assertTrue(state["years"]["2026-27"]["below_floor"])
             self.assertEqual(
                 sorted(p.name for p in (tmp / "yr").glob("*.md")),
-                [f"{y}.md" for y in sorted(state["years"])],
+                sorted([f"{y}.md" for y in state["years"]] + ["arrivals-2025-26.md", "arrivals-2026-27.md"]),
             )
+            self.assertEqual(sorted(state["arrivals"]), ["2025-26", "2026-27"])
+            self.assertIn("Discovery arrivals for 2026-27", (tmp / "yr" / "arrivals-2026-27.md").read_text())
             # The next year breaches, so the step summary carries it too.
             self.assertIn("Discovery renewal for 2026-27", (tmp / "report.md").read_text())
 
