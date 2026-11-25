@@ -70,6 +70,43 @@ because 2023-24 is counted differently; see Table A.*
   > includes values from a second reading of the same file. This year counts one
   > reading, so it reads lower partly for that reason.
 
+## Table A, by section: Fields stored and usable answers by section
+
+Under Table A, only for a snapshot in public format 3 and a year whose form has
+a full field schema. One row per CDS section (A General information, B
+Enrollment and persistence, C First-time, first-year admission, D Transfer
+admission, E Academic offerings and policies, F Student life, G Annual
+expenses, H Financial aid, I Instructional faculty and class size, J
+Disciplinary areas of degrees conferred). Columns: questions on the form,
+fields stored (median), usable answers (median), usable as a share of
+questions. The share is blank (a dash) under 5 reports; a year with no reports
+shows dashes for the medians.
+
+> For each part of the {year's} form, how many questions it has and how many
+> fields and usable answers a typical report has, counting the {n} published
+> {year} reports numbered by that form.
+
+- > A usable answer is a value a reader can use. Fields recorded as unreadable,
+  > "not applicable" or empty are stored but not counted as usable. The medians
+  > are per report and per section, so they don't add up to a report's total,
+  > and not every question applies to every school, so a share of 100% isn't
+  > the goal. A low number can mean the school left a section blank, that we
+  > didn't reach it, or both; this table can't say which.
+- {Only when some reports are numbered by another year's form:} 
+  > Left out: {n} reports numbered by a different year's form, whose field
+  > numbers belong to that form.
+- **2023-24 only:**
+  > 2023-24 is counted differently. From 2024-25 on, fields stored also
+  > includes values from a second reading of the same file. This year counts one
+  > reading, so it reads lower partly for that reason.
+
+"Usable" means `value_status` `reported` and nothing else. In the 2026-11-25
+run the stored fields were 666,514 reported, 6,877 parse errors and 3,876 "not
+applicable", so counting "not applicable" would move a section's median by less
+than 1% of fields; it is left out because a reader has nothing to use in it.
+Medians are over reports numbered by the year's own form, so a section's median
+can never exceed its question count.
+
 Shown under each table's download button (after launch): *Download {year} table as CSV.* Then, in
 small normal-case text (not the uppercase label style): *This table is licensed
 CC BY 4.0. Credit collegedata.fyi.* (CC BY 4.0 is a link.)

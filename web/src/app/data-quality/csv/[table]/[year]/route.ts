@@ -3,6 +3,7 @@ import {
   CSV_BOM,
   TABLE_TITLES,
   buildQualityCsv,
+  hasSections,
   isDataQualityLaunched,
   qualityCsvFilename,
   type QualityTableId,
@@ -18,7 +19,7 @@ export function generateStaticParams() {
   const snapshot = isDataQualityLaunched() ? loadLatestSnapshot() : null;
   if (!snapshot) return [];
   return (Object.keys(TABLE_TITLES) as QualityTableId[]).flatMap((table) =>
-    snapshot.years.map((y) => ({ table, year: y.cds_year })),
+    snapshot.years.filter((y) => table !== "sections" || hasSections(y)).map((y) => ({ table, year: y.cds_year })),
   );
 }
 
@@ -29,7 +30,7 @@ export async function GET(
   const { table, year } = await params;
   const snapshot = isDataQualityLaunched() ? loadLatestSnapshot() : null;
   const found = snapshot?.years.find((y) => y.cds_year === year);
-  if (!snapshot || !found || !Object.hasOwn(TABLE_TITLES, table)) {
+  if (!snapshot || !found || !Object.hasOwn(TABLE_TITLES, table) || (table === "sections" && !hasSections(found))) {
     return new Response("Not found", { status: 404 });
   }
   return new Response(CSV_BOM + buildQualityCsv(table as QualityTableId, found), {

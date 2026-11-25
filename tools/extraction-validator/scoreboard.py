@@ -170,7 +170,14 @@ RUN_FORMAT = 3
 PUBLIC_RUN_FORMATS = (3,)
 SUM_CHECK_VERSION = 2
 # Public format 2 adds `federal.differs_2_to_10pct` and `federal.differs_over_10pct`.
-PUBLIC_FORMAT = 2
+# Public format 3 adds `sections` per year (fields stored and usable answers by CDS section A to J).
+PUBLIC_FORMAT = 3
+# `value_status` values the projection writes (project_browser_data.parse_field_value). A usable
+# answer is a `reported` one: a value a reader can use. `parse_error` is a cell we could not read
+# as the kind of value its question takes, `not_applicable` is a school's "N/A" (a real answer,
+# but nothing to use) and `missing` an empty cell. A status outside this list stops `--public`.
+VALUE_STATUSES = ("reported", "not_applicable", "parse_error", "missing")
+USABLE_STATUS = "reported"
 DEFAULT_PUBLIC_DIR = REPO_ROOT / "web" / "src" / "data" / "data-quality"
 SCHEMA_DIR = REPO_ROOT / "schemas"
 # A failing enrollment or admissions sum is a near miss when its gap is under
@@ -1412,6 +1419,9 @@ PUBLIC_SPEC = {
         "federal_left_out": {"single_campus": _COUNT, "no_federal_figures": _COUNT, "not_compared": _Optional(_COUNT)},
         "rows": [{"format": _TEXT, "label": _TEXT, **_ROW_SPEC}],
         "total": _ROW_SPEC,
+        # Empty `rows` for a year whose form has no full field schema.
+        "sections": {"reports": _COUNT,
+                     "rows": [{"section": _TEXT, "questions": _COUNT, "stored_median": _COUNT, "usable_median": _COUNT}]},
     }],
 }
 
@@ -1451,6 +1461,48 @@ def check_public_shape(value: Any, spec: Any = PUBLIC_SPEC, where: str = "public
 
 def public_format_key(source_format: Optional[str]) -> str:
     return source_format if source_format in FORMAT_LABELS else "other"
+
+
+def section_questions(year: str, schema_dir: Path = SCHEMA_DIR) -> dict[str, int]:
+    """{section letter: questions on the year's form}, from its full field schema ({} when it has none).
+    The letter is the question number's prefix before the first `.` (`C.116` -> `C`)."""
+    full = schema_dir / f"cds_schema_{year.replace('-', '_')}.json"
+    if not full.exists():
+        return {}
+    counts = Counter(f["question_number"].split(".", 1)[0] for f in json.loads(full.read_text())["fields"])
+    return dict(sorted(counts.items()))
+
+
+def section_block(year: str, published: list[dict[str, Any]], questions: dict[str, int]) -> dict[str, Any]:
+    """Per CDS section: the form's questions and the median fields stored and usable answers per report.
+    Over published reports numbered by the year's own form (the rest are counted in
+    `other_form_numbering`: their ids come from another form, so a section's count can't be set against
+    this form's question count). Medians of per-report counts, zero for a report with none."""
+    if not questions:
+        return {"reports": 0, "rows": []}   # no full field schema for the year: no section table
+    own = [d for d in published if d["schema_version"] == year]
+    rows = []
+    for d in own:
+        if "sections" not in d:
+            raise SystemExit(f"--public: {d['document_id']} has no `sections`; run the scoreboard again")
+    for letter, total in questions.items():
+        stored, usable = [], []
+        for d in own:
+            statuses = d["sections"].get(letter, {})
+            if set(statuses) - set(VALUE_STATUSES):
+                raise SystemExit(f"--public: {d['document_id']}: unknown value_status {sorted(set(statuses) - set(VALUE_STATUSES))}")
+            stored.append(sum(statuses.values()))
+            usable.append(statuses.get(USABLE_STATUS, 0))
+            if stored[-1] > total:
+                raise SystemExit(f"--public: {d['document_id']}: {stored[-1]} fields stored in section {letter}, "
+                                 f"but the {year} form has {total} questions there")
+        rows.append({"section": letter, "questions": total,
+                     "stored_median": percentile(stored, 50) or 0, "usable_median": percentile(usable, 50) or 0})
+    for d in own:
+        if set(d["sections"]) - set(questions):
+            raise SystemExit(f"--public: {d['document_id']}: fields stored in sections {sorted(set(d['sections']) - set(questions))} "
+                             f"that the {year} form does not have")
+    return {"reports": len(own), "rows": rows}
 
 
 def _row_counts(classes: Counter, published: list[dict[str, Any]], federal_loaded: bool) -> dict[str, Any]:
@@ -1630,6 +1682,7 @@ def build_public(run: dict[str, Any], run_name: str) -> dict[str, Any]:
             "federal_left_out": left_out,
             "rows": rows,
             "total": _row_counts(classes, published_docs, loaded),
+            "sections": section_block(year, published_docs, section_questions(year)),
         })
     renewal = run["renewal"]
     public = {

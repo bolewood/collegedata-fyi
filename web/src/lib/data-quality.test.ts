@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V1, emptyYear } from "./__fixtures__/data-quality-snapshot";
+import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V1, FIXTURE_SNAPSHOT_V2, emptyYear } from "./__fixtures__/data-quality-snapshot";
 import {
   DATA_QUALITY_LAUNCH_DATE,
   MIN_REPORTS_FOR_RATE,
@@ -7,6 +7,8 @@ import {
   buildQualityCsv,
   compareYearsDesc,
   hasDifferenceSplit,
+  hasSections,
+  sectionUsableShare,
   isDataQualityLaunched,
   liveCount,
   publishedTotal,
@@ -18,6 +20,7 @@ import {
   yearGlance,
   yearsNewestFirst,
   type QualityRow,
+  type SectionRow,
   type QualityYear,
   type QualitySnapshot,
 } from "./data-quality";
@@ -89,6 +92,94 @@ describe("size of federal differences (public_format 2)", () => {
   });
 });
 
+describe("fields and usable answers by section (public_format 3)", () => {
+  const select = (snap: QualitySnapshot) => selectSnapshot([{ name: "x.json", json: snap }]);
+  const bad = (mutate: (s: QualitySnapshot) => void, why: RegExp) => {
+    const snap = clone();
+    mutate(snap);
+    expect(() => select(snap)).toThrow(why);
+  };
+  const sec = (s: QualitySnapshot) => s.years[0].sections!;
+  const y2425 = FIXTURE_SNAPSHOT.years.find((y) => y.cds_year === "2024-25")!;
+
+  it("is required on format 3 and refused on formats 1 and 2", () => {
+    bad((s) => delete s.years[0].sections, /sections is missing/);
+    const two = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT_V2)) as QualitySnapshot;
+    two.years[0].sections = sec(clone());
+    expect(() => select(two)).toThrow(/unexpected key sections on public_format 2/);
+    const one = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT_V1)) as QualitySnapshot;
+    one.years[0].sections = sec(clone());
+    expect(() => select(one)).toThrow(/unexpected key sections on public_format 1/);
+    expect(select(FIXTURE_SNAPSHOT_V2).years[0].sections).toBeUndefined();
+  });
+
+  it("has exactly the keys it lists, with counts as integers", () => {
+    bad((s) => ((sec(s) as unknown as Record<string, number>).extra = 1), /unexpected key extra/);
+    bad((s) => ((sec(s).rows[0] as unknown as Record<string, number>).extra = 1), /unexpected key extra/);
+    bad((s) => delete (sec(s).rows[0] as Partial<SectionRow>).usable_median, /usable_median must be a non-negative integer/);
+    bad((s) => (sec(s).rows[0].usable_median = -1), /usable_median must be a non-negative integer/);
+    bad((s) => ((sec(s).rows[0] as unknown as Record<string, unknown>).stored_median = "9"), /stored_median/);
+    bad((s) => ((sec(s) as unknown as Record<string, unknown>).reports = 1.5), /reports/);
+  });
+
+  it("refuses an unknown, repeated or out-of-order section", () => {
+    bad((s) => (sec(s).rows[0].section = "Z"), /unknown section "Z"/);
+    bad((s) => (sec(s).rows[1].section = "A"), /section A is out of order or listed twice/);
+    bad((s) => ([sec(s).rows[0], sec(s).rows[1]] = [sec(s).rows[1], sec(s).rows[0]]), /out of order/);
+  });
+
+  it("holds each median between zero, usable <= stored <= questions", () => {
+    bad((s) => (sec(s).rows[2].stored_median = sec(s).rows[2].questions + 1), /section C stores more fields than the form has questions/);
+    bad((s) => (sec(s).rows[2].usable_median = sec(s).rows[2].stored_median + 1), /section C has more usable answers than fields stored/);
+    bad((s) => (sec(s).rows[2].questions = 0), /section C has no questions/);
+  });
+
+  it("makes the sections' questions add up to the form's, and the reports to published minus other numbering", () => {
+    bad((s) => (sec(s).rows[0].questions += 1), /questions add up to 1054, not the form's 1053/);
+    // 2023-24 has 12 reports numbered by another form: 400 + 4 + 3 + ... published, none of those in sections.
+    bad((s) => (sec(s).reports += 1), /sections\.reports is \d+, not published minus other_form_numbering/);
+    bad((s) => (s.years[0].other_form_numbering += 1), /sections\.reports is/);
+  });
+
+  it("has rows exactly when the form has a full field schema", () => {
+    bad((s) => (sec(s).rows = []), /rows are present exactly when the form has a full field schema/);
+    bad((s) => (s.years[0].form.full_field_schema = false), /rows are present exactly when/);
+  });
+
+  it("reports whether a year has the table, and hides the share under 5 reports", () => {
+    expect(FIXTURE_SNAPSHOT.years.every(hasSections)).toBe(true);
+    expect(FIXTURE_SNAPSHOT_V2.years.some(hasSections)).toBe(false);
+    const row = { section: "B", questions: 200, stored_median: 100, usable_median: 50 };
+    expect(sectionUsableShare(row, MIN_REPORTS_FOR_RATE)).toBe(25);
+    expect(sectionUsableShare(row, MIN_REPORTS_FOR_RATE - 1)).toBeNull();
+    expect(sectionUsableShare(row, 0)).toBeNull();
+  });
+
+  it("writes the by-section CSV from hand-worked cells (2024-25: half the questions stored, usable = stored minus the section's position)", () => {
+    expect(buildQualityCsv("sections", y2425).split("\r\n").filter(Boolean)).toEqual([
+      "section,section_name,questions,reports,fields_stored_median,usable_answers_median,usable_share_of_questions_pct",
+      "A,General information,51,78,25,25,49",
+      "B,Enrollment and persistence,219,78,109,108,49",
+      "C,\"First-time, first-year admission\",278,78,139,137,49",
+      "D,Transfer admission,73,78,36,33,45",
+      "E,Academic offerings and policies,32,78,16,12,38",
+      "F,Student life,60,78,30,25,42",
+      "G,Annual expenses,47,78,23,17,36",
+      "H,Financial aid,154,78,77,70,45",
+      "I,Instructional faculty and class size,49,78,24,16,33",
+      "J,Disciplinary areas of degrees conferred,120,78,60,51,43",
+    ]);
+  });
+
+  it("leaves the medians and share blank, not zero, for a year with no reports, and the share blank under 5", () => {
+    const empty = emptyYear("2026-27");
+    expect(buildQualityCsv("sections", empty).split("\r\n")[1]).toBe("A,General information,51,0,,,");
+    const small = JSON.parse(JSON.stringify(y2425)) as QualityYear;
+    small.sections!.reports = 4;
+    expect(buildQualityCsv("sections", small).split("\r\n")[1]).toBe("A,General information,51,4,25,25,");
+  });
+});
+
 describe("launch gate", () => {
   it("is closed the instant before the launch date and open at it", () => {
     const at = Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`);
@@ -137,13 +228,14 @@ describe("snapshot selection", () => {
   });
 
   it("fails on a public_format the page doesn't know, even before launch", () => {
-    const bad = { ...clone(), public_format: 3 };
+    const bad = { ...clone(), public_format: 4 };
     expect(() => selectSnapshot([{ name: "x.json", json: bad }])).toThrow(/public_format/);
   });
 
-  it("reads public_format 1 and 2", () => {
+  it("reads public_format 1, 2 and 3", () => {
     expect(selectSnapshot([{ name: "one.json", json: FIXTURE_SNAPSHOT_V1 }]).public_format).toBe(1);
-    expect(selectSnapshot([{ name: "two.json", json: FIXTURE_SNAPSHOT }]).public_format).toBe(2);
+    expect(selectSnapshot([{ name: "two.json", json: FIXTURE_SNAPSHOT_V2 }]).public_format).toBe(2);
+    expect(selectSnapshot([{ name: "three.json", json: FIXTURE_SNAPSHOT }]).public_format).toBe(3);
   });
 
   it("fails on a snapshot with no renewal block or an empty renewal denominator", () => {

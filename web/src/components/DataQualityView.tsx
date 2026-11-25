@@ -10,11 +10,13 @@ import { useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
 import {
   MIN_REPORTS_FOR_RATE,
+  SECTION_NAMES,
   TABLE_TITLES,
   fallOf,
   aidCantCheckNote,
   federalDiffersNote,
   hasDifferenceSplit,
+  hasSections,
   isDataQualityLaunched,
   isProjectedYear,
   liveCount,
@@ -22,6 +24,7 @@ import {
   qualityCsvPath,
   resolveYear,
   rowPercent,
+  sectionUsableShare,
   yearGlance,
   yearsNewestFirst,
   type QualityRow,
@@ -61,6 +64,7 @@ export function DataQualityBody({ snapshot, year }: { snapshot: QualitySnapshot;
 
       <Notices year={year} />
       <ReportsTable year={year} snapshot={snapshot} />
+      <SectionsTable year={year} />
       <FederalTable year={year} snapshot={snapshot} />
       <TotalsTable year={year} snapshot={snapshot} />
       <HowToRead />
@@ -357,13 +361,81 @@ function ReportsTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
           ? ` The ${n(year.other_form_numbering)} reports numbered by a different year’s form have field numbers from that form, whose size differs.`
           : ""}
       </Note>
-      {!isProjectedYear(year.cds_year) && (
-        <Note id="dq-note-counting">
-          {year.cds_year} is counted differently. From 2024-25 on, fields stored also includes values from a second
-          reading of the same file. This year counts one reading, so it reads lower partly for that reason.
+      {!isProjectedYear(year.cds_year) && <CountingNote id="dq-note-counting" year={year} />}
+      <CsvButton table="reports" year={year} />
+    </section>
+  );
+}
+
+function CountingNote({ id, year }: { id: string; year: QualityYear }) {
+  return (
+    <Note id={id}>
+      {year.cds_year} is counted differently. From 2024-25 on, fields stored also includes values from a second
+      reading of the same file. This year counts one reading, so it reads lower partly for that reason.
+    </Note>
+  );
+}
+
+// ── Table A, by section ──────────────────────────────────────────
+
+/** Table A's second half: one row per CDS section. Absent for a snapshot without `sections` (public_format 1 and 2). */
+function SectionsTable({ year }: { year: QualityYear }) {
+  if (!hasSections(year)) return null;
+  const block = year.sections!;
+  const none = block.reports === 0;
+  return (
+    <section aria-labelledby="dq-sections-heading" style={sectionStyle}>
+      <SectionHead
+        id="dq-sections-heading"
+        label="§ Table A, by section"
+        title="Fields stored and usable answers by section"
+        sentence={`For each part of the ${year.form.form_year} form, how many questions it has and how many fields and usable answers a typical report has, counting the ${n(block.reports)} published ${year.cds_year} reports numbered by that form.`}
+      />
+      <Scroll label={`Table A by section, ${year.cds_year}`} hint={!none}>
+        <table className="dq-table dq-table--s" style={tableStyle} id="dq-table-sections">
+          <Cols n={5} />
+          <thead>
+            <tr>
+              <th scope="col" style={thLeft}>Section</th>
+              <th scope="col" style={thStyle}>Questions on the form</th>
+              <th scope="col" style={thStyle}>Fields stored: median</th>
+              <th scope="col" style={thStyle}>Usable answers: median</th>
+              <th scope="col" style={thStyle}>Usable, as a share of questions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {block.rows.map((r) => {
+              const share = sectionUsableShare(r, block.reports);
+              return (
+                <tr key={r.section}>
+                  <th scope="row" style={tdLeft}>{r.section} {SECTION_NAMES[r.section]}</th>
+                  <td style={tdStyle}>{n(r.questions)}</td>
+                  <td style={tdStyle}>{none ? DASH : n(r.stored_median)}</td>
+                  <td style={tdStyle}>{none ? DASH : n(r.usable_median)}</td>
+                  <td style={tdStyle} title={!none && share === null ? `Under ${MIN_REPORTS_FOR_RATE} reports: no share` : undefined}>
+                    {none ? DASH : pc(share)}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </Scroll>
+      <Note id="dq-note-usable">
+        A usable answer is a value a reader can use. Fields recorded as unreadable, “not applicable” or empty are
+        stored but not counted as usable. The medians are per report and per section, so they don’t add up to a
+        report’s total, and not every question applies to every school, so a share of 100% isn’t the goal. A low
+        number can mean the school left a section blank, that we didn’t reach it, or both; this table can’t say
+        which.
+      </Note>
+      {year.other_form_numbering > 0 && (
+        <Note id="dq-note-sections-left-out">
+          Left out: {n(year.other_form_numbering)} {year.other_form_numbering === 1 ? "report" : "reports"} numbered by
+          a different year’s form, whose field numbers belong to that form.
         </Note>
       )}
-      <CsvButton table="reports" year={year} />
+      {!isProjectedYear(year.cds_year) && <CountingNote id="dq-note-counting-sections" year={year} />}
+      <CsvButton table="sections" year={year} />
     </section>
   );
 }

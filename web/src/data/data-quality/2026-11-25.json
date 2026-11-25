@@ -1,5 +1,5 @@
 {
- "public_format": 2,
+ "public_format": 3,
  "snapshot_of": "2026-11-25T14:09:26Z",
  "scoreboard_run": "scoreboard-20261125T140926Z.json",
  "renewal": {
@@ -333,6 +333,71 @@
       "cant_check": 224
      }
     }
+   },
+   "sections": {
+    "reports": 366,
+    "rows": [
+     {
+      "section": "A",
+      "questions": 51,
+      "stored_median": 6,
+      "usable_median": 6
+     },
+     {
+      "section": "B",
+      "questions": 196,
+      "stored_median": 143,
+      "usable_median": 143
+     },
+     {
+      "section": "C",
+      "questions": 274,
+      "stored_median": 112,
+      "usable_median": 112
+     },
+     {
+      "section": "D",
+      "questions": 70,
+      "stored_median": 15,
+      "usable_median": 14
+     },
+     {
+      "section": "E",
+      "questions": 32,
+      "stored_median": 0,
+      "usable_median": 0
+     },
+     {
+      "section": "F",
+      "questions": 60,
+      "stored_median": 16,
+      "usable_median": 16
+     },
+     {
+      "section": "G",
+      "questions": 47,
+      "stored_median": 20,
+      "usable_median": 20
+     },
+     {
+      "section": "H",
+      "questions": 154,
+      "stored_median": 52,
+      "usable_median": 52
+     },
+     {
+      "section": "I",
+      "questions": 49,
+      "stored_median": 31,
+      "usable_median": 31
+     },
+     {
+      "section": "J",
+      "questions": 120,
+      "stored_median": 27,
+      "usable_median": 27
+     }
+    ]
    }
   },
   {
@@ -612,6 +677,71 @@
       "cant_check": 86
      }
     }
+   },
+   "sections": {
+    "reports": 491,
+    "rows": [
+     {
+      "section": "A",
+      "questions": 51,
+      "stored_median": 11,
+      "usable_median": 11
+     },
+     {
+      "section": "B",
+      "questions": 219,
+      "stored_median": 158,
+      "usable_median": 156
+     },
+     {
+      "section": "C",
+      "questions": 278,
+      "stored_median": 123,
+      "usable_median": 122
+     },
+     {
+      "section": "D",
+      "questions": 73,
+      "stored_median": 27,
+      "usable_median": 25
+     },
+     {
+      "section": "E",
+      "questions": 32,
+      "stored_median": 19,
+      "usable_median": 19
+     },
+     {
+      "section": "F",
+      "questions": 60,
+      "stored_median": 35,
+      "usable_median": 35
+     },
+     {
+      "section": "G",
+      "questions": 47,
+      "stored_median": 23,
+      "usable_median": 22
+     },
+     {
+      "section": "H",
+      "questions": 154,
+      "stored_median": 92,
+      "usable_median": 91
+     },
+     {
+      "section": "I",
+      "questions": 49,
+      "stored_median": 41,
+      "usable_median": 41
+     },
+     {
+      "section": "J",
+      "questions": 120,
+      "stored_median": 26,
+      "usable_median": 26
+     }
+    ]
    }
   },
   {
@@ -891,6 +1021,71 @@
       "cant_check": 32
      }
     }
+   },
+   "sections": {
+    "reports": 423,
+    "rows": [
+     {
+      "section": "A",
+      "questions": 63,
+      "stored_median": 26,
+      "usable_median": 23
+     },
+     {
+      "section": "B",
+      "questions": 204,
+      "stored_median": 152,
+      "usable_median": 152
+     },
+     {
+      "section": "C",
+      "questions": 278,
+      "stored_median": 142,
+      "usable_median": 141
+     },
+     {
+      "section": "D",
+      "questions": 88,
+      "stored_median": 27,
+      "usable_median": 23
+     },
+     {
+      "section": "E",
+      "questions": 34,
+      "stored_median": 21,
+      "usable_median": 21
+     },
+     {
+      "section": "F",
+      "questions": 58,
+      "stored_median": 37,
+      "usable_median": 37
+     },
+     {
+      "section": "G",
+      "questions": 46,
+      "stored_median": 24,
+      "usable_median": 23
+     },
+     {
+      "section": "H",
+      "questions": 165,
+      "stored_median": 108,
+      "usable_median": 107
+     },
+     {
+      "section": "I",
+      "questions": 49,
+      "stored_median": 42,
+      "usable_median": 42
+     },
+     {
+      "section": "J",
+      "questions": 120,
+      "stored_median": 27,
+      "usable_median": 27
+     }
+    ]
    }
   }
  ]

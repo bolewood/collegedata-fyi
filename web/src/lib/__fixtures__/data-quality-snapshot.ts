@@ -5,6 +5,7 @@
 import type {
   QualityFormatRow,
   QualityRow,
+  QualitySections,
   QualitySnapshot,
   QualityYear,
 } from "../data-quality";
@@ -82,6 +83,27 @@ function sumRows(rows: QualityFormatRow[]): QualityRow {
   return total;
 }
 
+// Questions per CDS section A to J on each form (schemas/cds_schema_<year>.json); they add up to the form's questions.
+const SECTION_QUESTIONS: Record<string, number[]> = {
+  "2023-24": [51, 196, 274, 70, 32, 60, 47, 154, 49, 120],
+  "2024-25": [51, 219, 278, 73, 32, 60, 47, 154, 49, 120],
+  "2025-26": [63, 204, 278, 88, 34, 58, 46, 165, 49, 120],
+};
+
+/**
+ * Invented medians, easy to check by hand: half a section's questions are stored (rounded down), and usable answers
+ * are that many minus the section's position in A to J (A none, B one, ... J nine), never below zero.
+ */
+function sections(cds_year: string, reports: number): QualitySections {
+  return {
+    reports,
+    rows: SECTION_QUESTIONS[cds_year].map((questions, i) => {
+      const stored = Math.floor(questions / 2);
+      return { section: "ABCDEFGHIJ"[i], questions, stored_median: stored, usable_median: Math.max(0, stored - i) };
+    }),
+  };
+}
+
 function year(
   cds_year: string,
   rows: QualityFormatRow[],
@@ -106,6 +128,8 @@ function year(
     },
     federal_left_out: { single_campus: federal ? total.status.published - total.federal.reports : 0, no_federal_figures: 0 },
     ...extra,
+    // The reports numbered by the year's own form: published minus those numbered by another form.
+    sections: sections(cds_year, total.status.published - (extra.other_form_numbering ?? 0)),
   };
 }
 
@@ -133,7 +157,7 @@ const sheets = () =>
   });
 
 export const FIXTURE_SNAPSHOT: QualitySnapshot = {
-  public_format: 2,
+  public_format: 3,
   snapshot_of: "2026-11-24T12:25:03Z",
   scoreboard_run: "scoreboard-20261124T122503Z.json",
   renewal: {
@@ -175,6 +199,7 @@ export const emptyYear = (cds_year: string): QualityYear => {
     set_aside_reasons: { blank_form: 0, too_little_read: 0, wrong_file: 0 },
     federal_left_out: { single_campus: 0, no_federal_figures: 0 },
     rows: [],
+    sections: { reports: 0, rows: SECTION_QUESTIONS["2023-24"].map((questions, i) => ({ section: "ABCDEFGHIJ"[i], questions, stored_median: 0, usable_median: 0 })) },
     total: {
       status: { published: 0, set_aside: 0, couldnt_read: 0, not_read_yet: 0 },
       fields_stored: { median: 0, p10: 0 },
@@ -184,9 +209,17 @@ export const emptyYear = (cds_year: string): QualityYear => {
   };
 };
 
-/** The same snapshot as public_format 1 wrote it: no size split. */
+/** The same snapshot as public_format 2 wrote it: the size split, no sections. */
+export const FIXTURE_SNAPSHOT_V2: QualitySnapshot = (() => {
+  const v2: QualitySnapshot = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT));
+  v2.public_format = 2;
+  for (const y of v2.years) delete y.sections;
+  return v2;
+})();
+
+/** The same snapshot as public_format 1 wrote it: no size split and no sections. */
 export const FIXTURE_SNAPSHOT_V1: QualitySnapshot = (() => {
-  const v1: QualitySnapshot = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT));
+  const v1: QualitySnapshot = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT_V2));
   v1.public_format = 1;
   for (const y of v1.years) {
     for (const r of [...y.rows, y.total]) {

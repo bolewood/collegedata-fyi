@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { FIXTURE_SNAPSHOT } from "@/lib/__fixtures__/data-quality-snapshot";
+import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V2 } from "@/lib/__fixtures__/data-quality-snapshot";
 import { DATA_LICENSE_LINK_HEADER } from "@/lib/data-license";
 import { DATA_QUALITY_LAUNCH_DATE, TABLE_TITLES, buildQualityCsv, qualityCsvPath, type QualityTableId } from "@/lib/data-quality";
 
@@ -26,8 +26,8 @@ afterEach(() => {
   fs.rmSync(dirs.current, { recursive: true, force: true });
 });
 
-function writeSnapshot() {
-  fs.writeFileSync(path.join(dirs.current, "2026-11-24.json"), JSON.stringify(FIXTURE_SNAPSHOT));
+function writeSnapshot(snapshot: unknown = FIXTURE_SNAPSHOT) {
+  fs.writeFileSync(path.join(dirs.current, "2026-11-24.json"), JSON.stringify(snapshot));
 }
 
 function at(ms: number) {
@@ -68,6 +68,31 @@ describe("/data-quality/csv/[table]/[year]", () => {
     expect(text).not.toContain("#");
     const year = FIXTURE_SNAPSHOT.years.find((y) => y.cds_year === "2024-25")!;
     expect(text.slice(1)).toBe(buildQualityCsv("totals", year));
+  });
+
+  it("serves the by-section table with the Link header, a BOM and the filename, one line per section", async () => {
+    open();
+    writeSnapshot();
+    const res = await get("sections", "2024-25");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Link")).toBe(DATA_LICENSE_LINK_HEADER);
+    expect(res.headers.get("Content-Disposition")).toBe(
+      'attachment; filename="collegedata-data-quality-sections-2024-25-2026-11-24.csv"',
+    );
+    const text = await raw(res);
+    expect(text.charCodeAt(0)).toBe(0xfeff);
+    expect(text.slice(1).split("\r\n").filter(Boolean)).toHaveLength(1 + 10);
+    expect(text.slice(1).startsWith("section,section_name,questions,reports,")).toBe(true);
+  });
+
+  it("has no by-section table for a snapshot written before public_format 3", async () => {
+    open();
+    writeSnapshot(FIXTURE_SNAPSHOT_V2);
+    expect((await get("sections", "2024-25")).status).toBe(404);
+    expect((await get("reports", "2024-25")).status).toBe(200);
+    const pairs = generateStaticParams().map((p) => `${p.table}/${p.year}`);
+    expect(pairs.some((p) => p.startsWith("sections/"))).toBe(false);
+    expect(pairs).toContain("reports/2024-25");
   });
 
   it("has one line per format plus the total", async () => {

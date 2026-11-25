@@ -10,7 +10,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/data-quality",
 }));
 
-import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V1, emptyYear } from "@/lib/__fixtures__/data-quality-snapshot";
+import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V1, FIXTURE_SNAPSHOT_V2, emptyYear } from "@/lib/__fixtures__/data-quality-snapshot";
 import { DATA_LICENSE_NAME, DATA_LICENSE_URL } from "@/lib/data-license";
 import {
   type QualitySnapshot,
@@ -280,6 +280,67 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
     expect(loaded).toContain("/data-quality/csv/federal/2024-25");
   });
 
+  describe("by section (Table A, by section)", () => {
+    const secHtml = (html: string) => html.match(/<section aria-labelledby="dq-sections-heading"[\s\S]*?<\/section>/)?.[0] ?? null;
+    const cells = (html: string, name: string) => {
+      const tr = html.match(new RegExp(`<tr[^>]*><th scope="row"[^>]*>${name}</th>([\\s\\S]*?)</tr>`))![1];
+      return [...tr.matchAll(/<td[^>]*>([^<]*)<\/td>/g)].map((m) => m[1]);
+    };
+
+    it("sits after Table A and before Table B, with the section names and hand-worked cells (2024-25)", () => {
+      const html = render("year=2024-25");
+      expect(html.indexOf('id="dq-table-a"')).toBeLessThan(html.indexOf('id="dq-table-sections"'));
+      expect(html.indexOf('id="dq-table-sections"')).toBeLessThan(html.indexOf('id="dq-table-b"'));
+      const s = secHtml(html)!;
+      const heads = [...s.matchAll(/<th scope="col"[^>]*>([^<]*)<\/th>/g)].map((m) => m[1]);
+      expect(heads).toEqual(["Section", "Questions on the form", "Fields stored: median", "Usable answers: median", "Usable, as a share of questions"]);
+      // Fixture: half the questions stored, usable = stored minus the section's position A to J.
+      expect(cells(s, "A General information")).toEqual(["51", "25", "25", "49%"]);
+      expect(cells(s, "B Enrollment and persistence")).toEqual(["219", "109", "108", "49%"]);
+      expect(cells(s, "C First-time, first-year admission")).toEqual(["278", "139", "137", "49%"]);
+      expect(cells(s, "J Disciplinary areas of degrees conferred")).toEqual(["120", "60", "51", "43%"]);
+      expect(s.match(/<tr[^>]*><th scope="row"/g)).toHaveLength(10);
+      expect(s).toContain("counting the 78 published 2024-25 reports numbered by that form");
+    });
+
+    it("says what usable means and that the table can't say why a number is low, without a claim about causes", () => {
+      const note = secHtml(render("year=2024-25"))!.match(/<p id="dq-note-usable"[^>]*>[\s\S]*?<\/p>/)![0];
+      expect(note).toMatch(/A usable answer is a value a reader can use/);
+      expect(note).toMatch(/unreadable, “not applicable” or empty are\s+stored but not counted as usable/);
+      expect(note).toMatch(/a share of 100% isn’t the goal/);
+      expect(note).toMatch(/this table can’t say\s+which/);
+      expect(note).not.toMatch(/\b(most|usually|always|typically)\b/i);
+    });
+
+    it("names the reports left out only when some are numbered by another year's form", () => {
+      expect(secHtml(render("year=2023-24"))).toContain('id="dq-note-sections-left-out"');
+      expect(secHtml(render("year=2023-24"))).toContain("12 reports numbered by");
+      expect(secHtml(render("year=2024-25"))).not.toContain('id="dq-note-sections-left-out"');
+    });
+
+    it("carries the 2023-24 counting note only for a year counted that way", () => {
+      expect(secHtml(render("year=2023-24"))).toContain('id="dq-note-counting-sections"');
+      expect(secHtml(render("year=2024-25"))).not.toContain("dq-note-counting-sections");
+    });
+
+    it("shows dashes for a year with no reports and no share under 5 reports", () => {
+      const none = { ...FIXTURE_SNAPSHOT, years: [emptyYear("2026-27")] };
+      const s = secHtml(render("", none))!;
+      expect(cells(s, "A General information")).toEqual(["51", "–", "–", "–"]);
+      expect(s).not.toContain("dq-scroll-hint");
+      const small = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT)) as QualitySnapshot;
+      small.years.find((y) => y.cds_year === "2024-25")!.sections!.reports = 4;
+      const t = secHtml(render("year=2024-25", small))!;
+      expect(cells(t, "A General information")).toEqual(["51", "25", "25", "–"]);
+      expect(t).toContain("Under 5 reports: no share");
+    });
+
+    it("is absent for a snapshot written before public_format 3", () => {
+      expect(render("year=2024-25", FIXTURE_SNAPSHOT_V2)).not.toContain("dq-table-sections");
+      expect(render("year=2024-25", FIXTURE_SNAPSHOT_V1)).not.toContain("dq-sections-heading");
+    });
+  });
+
   describe("size of federal differences", () => {
     const sizeNote = (html: string) => html.match(/<p id="dq-note-differs-size"[^>]*>[\s\S]*?<\/p>/)?.[0] ?? null;
     const bText = (html: string) => table(html, "dq-table-b");
@@ -376,18 +437,18 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
 
   it("puts a static, aria-hidden hint above each wide table (CSS decides when it shows) and no script-driven cue", () => {
     const html = render("year=2024-25");
-    expect(html.match(/class="dq-scroll-hint acc-table-hint" aria-hidden="true"/g)).toHaveLength(4);
+    expect(html.match(/class="dq-scroll-hint acc-table-hint" aria-hidden="true"/g)).toHaveLength(5);
     expect(html.match(/dq-scroll--wide/g)).toHaveLength(1);
     expect(html).not.toContain("linear-gradient");
     // Every table's scroll region is still focusable and labelled.
-    expect(html.match(/role="region" aria-label="[^"]+" tabindex="0"/g)).toHaveLength(4);
+    expect(html.match(/role="region" aria-label="[^"]+" tabindex="0"/g)).toHaveLength(5);
     const src = readFileSync(resolve(__dirname, "DataQualityView.tsx"), "utf8");
     expect(src).not.toMatch(/useState|useEffect|ResizeObserver|scrollWidth/);
   });
 
   it("leaves out the hint for Table B when the year has no federal figures (a table of dashes)", () => {
     const html = render("year=2025-26");
-    expect(html.match(/dq-scroll-hint/g)).toHaveLength(3);
+    expect(html.match(/dq-scroll-hint/g)).toHaveLength(4);
     const b = html.slice(html.indexOf('aria-label="Table B, 2025-26"') - 400, html.indexOf('aria-label="Table B, 2025-26"'));
     expect(b).not.toContain("dq-scroll-hint");
   });
@@ -448,6 +509,7 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
   it.each([
     ["glance", "dq-glance", "\\.dq-table--glance"],
     ["a", "dq-table-a", "\\.dq-table--a"],
+    ["a, by section", "dq-table-sections", "\\.dq-table--s"],
     ["b (format 2, with the size columns)", "dq-table-b", "\\.dq-table--b-split"],
     ["b (format 1, without them)", "dq-table-b", "\\.dq-table--b", FIXTURE_SNAPSHOT_V1],
     ["c", "dq-table-c", "\\.dq-table--c"],

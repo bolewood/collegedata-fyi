@@ -26,9 +26,10 @@ export const PROJECTED_FROM_YEAR_START = 2024;
 /**
  * Format 1 is the first snapshot shape. Format 2 adds the size of federal differences (`federal.differs_2_to_10pct`
  * and `federal.differs_over_10pct`); those keys are required on 2 and refused on 1. Format 1 files stay readable so a
- * later trend line can use them.
+ * later trend line can use them. Format 3 adds `sections` to each year (fields stored and usable answers by CDS
+ * section): required on 3, refused on 1 and 2.
  */
-export const KNOWN_PUBLIC_FORMATS: readonly number[] = [1, 2];
+export const KNOWN_PUBLIC_FORMATS: readonly number[] = [1, 2, 3];
 
 export type StatusCounts = {
   published: number;
@@ -68,6 +69,22 @@ export type QualityRow = {
 
 export type QualityFormatRow = QualityRow & { format: string; label: string };
 
+/** One CDS section of the year's form: its questions, and the median per report over the reports in `QualitySections`. */
+export type SectionRow = {
+  /** Section letter, A to J. */
+  section: string;
+  questions: number;
+  stored_median: number;
+  /** Median of usable answers (value_status `reported`). Never above stored_median. */
+  usable_median: number;
+};
+export type QualitySections = {
+  /** Published reports numbered by the year's own form: published minus other_form_numbering. 0 with no rows. */
+  reports: number;
+  /** One row per section of the form, A to J; empty for a year whose form has no full field schema. */
+  rows: SectionRow[];
+};
+
 export type QualityYear = {
   cds_year: string;
   form: { form_year: string; full_field_schema: boolean; questions: number };
@@ -79,6 +96,8 @@ export type QualityYear = {
   federal_left_out: { single_campus: number; no_federal_figures: number };
   rows: QualityFormatRow[];
   total: QualityRow;
+  /** public_format 3; absent on 1 and 2. */
+  sections?: QualitySections;
 };
 
 export type Renewal = {
@@ -164,6 +183,58 @@ function rowCountsProblem(row: unknown, format: number): string | null {
     allCounts(totals?.C1, SUM_KEYS) ??
     allCounts(totals?.H1, AID_KEYS)
   );
+}
+
+/** CDS section letters and names, as in the form schemas. A snapshot with another letter is refused. */
+export const SECTION_NAMES: Readonly<Record<string, string>> = {
+  A: "General information",
+  B: "Enrollment and persistence",
+  C: "First-time, first-year admission",
+  D: "Transfer admission",
+  E: "Academic offerings and policies",
+  F: "Student life",
+  G: "Annual expenses",
+  H: "Financial aid",
+  I: "Instructional faculty and class size",
+  J: "Disciplinary areas of degrees conferred",
+};
+
+/** Shape and arithmetic of a year's `sections` block. Returns the first problem or null. */
+function sectionsProblem(year: Record<string, unknown>): string | null {
+  const block = year.sections as Record<string, unknown> | undefined;
+  if (!block || typeof block !== "object" || Array.isArray(block)) return "sections is missing";
+  const bad = allCounts({ reports: block.reports }, ["reports"]);
+  if (bad) return `sections: ${bad}`;
+  const extra = Object.keys(block).filter((k) => k !== "reports" && k !== "rows");
+  if (extra.length) return `sections: unexpected key ${extra[0]}`;
+  const rows = block.rows;
+  if (!Array.isArray(rows)) return "sections.rows is missing";
+  const letters = Object.keys(SECTION_NAMES);
+  let last = -1;
+  let questions = 0;
+  for (const row of rows as Record<string, unknown>[]) {
+    const letter = String(row?.section);
+    const at = letters.indexOf(letter);
+    if (at < 0) return `sections: unknown section ${JSON.stringify(row?.section)}`;
+    if (at <= last) return `sections: section ${letter} is out of order or listed twice`;
+    last = at;
+    // Exactly these four keys; the letter is already known, so the rest are counts (allCounts also refuses extras).
+    const { section: _letter, ...counts } = row;
+    const problem = allCounts(counts, ["questions", "stored_median", "usable_median"]);
+    if (problem) return `sections: section ${letter}: ${problem}`;
+    const r = row as unknown as SectionRow;
+    if (r.questions === 0) return `sections: section ${letter} has no questions`;
+    if (r.stored_median > r.questions) return `sections: section ${letter} stores more fields than the form has questions`;
+    if (r.usable_median > r.stored_median) return `sections: section ${letter} has more usable answers than fields stored`;
+    questions += r.questions;
+  }
+  const form = year.form as { full_field_schema: boolean; questions: number };
+  if (form.full_field_schema !== (rows.length > 0)) return "sections: rows are present exactly when the form has a full field schema";
+  if (rows.length > 0 && questions !== form.questions) return `sections: the sections' questions add up to ${questions}, not the form's ${form.questions}`;
+  const total = year.total as QualityRow;
+  const expected = rows.length > 0 ? total.status.published - (year.other_form_numbering as number) : 0;
+  if (block.reports !== expected) return `sections.reports is ${String(block.reports)}, not published minus other_form_numbering (${expected})`;
+  return null;
 }
 
 type Counts = Record<string, number>;
@@ -333,6 +404,13 @@ export function validateSnapshot(raw: unknown, source: string): QualitySnapshot 
     }
     const arithmetic = arithmeticProblem(y as unknown as QualityYear);
     if (arithmetic) return fail(`${where}: ${arithmetic}`);
+    // Public format 3 adds `sections`; formats 1 and 2 must not carry it.
+    if (s.public_format >= 3) {
+      const sections = sectionsProblem(y);
+      if (sections) return fail(`${where}: ${sections}`);
+    } else if (y.sections !== undefined) {
+      return fail(`${where}: unexpected key sections on public_format ${s.public_format}`);
+    }
   }
   return raw as QualitySnapshot;
 }
@@ -572,19 +650,31 @@ export function csvLine(cells: (string | number | null | undefined)[]): string {
 /** UTF-8 byte order mark. Excel needs it to read non-ASCII text; CSV routes start the body with it. */
 export const CSV_BOM = "\uFEFF";
 
-export type QualityTableId = "reports" | "federal" | "totals";
+export type QualityTableId = "reports" | "sections" | "federal" | "totals";
 
 export const TABLE_TITLES: Record<QualityTableId, string> = {
   reports: "Reports and fields stored",
+  sections: "Fields stored and usable answers by section",
   federal: "Admissions against federal figures",
   totals: "Do the printed totals add up?",
 };
 
 const TABLE_SLUG: Record<QualityTableId, string> = {
   reports: "reports",
+  sections: "sections",
   federal: "federal-match",
   totals: "totals-add-up",
 };
+
+/** True when the year has a by-section table (public_format 3 and a form with a full field schema). */
+export function hasSections(year: QualityYear): boolean {
+  return (year.sections?.rows.length ?? 0) > 0;
+}
+
+/** Usable answers as a whole-number share of the section's questions; null with fewer than 5 reports. */
+export function sectionUsableShare(row: SectionRow, reports: number): number | null {
+  return rowPercent(row.usable_median, row.questions, reports);
+}
 
 /** The route that serves one table for one year. */
 export function qualityCsvPath(table: QualityTableId, year: string): string {
@@ -608,6 +698,15 @@ export function buildQualityCsv(table: QualityTableId, year: QualityYear): strin
       // No published reports: nothing to take a median of. Blank, like the page's dash, not 0.
       const none = row.status.published === 0;
       lines.push(csvLine([name, row.status.published, row.status.set_aside, row.status.couldnt_read, row.status.not_read_yet, none ? "" : row.fields_stored.median, none ? "" : row.fields_stored.p10]));
+    }
+  } else if (table === "sections") {
+    // Only a year with sections is served (the route 404s otherwise), so this is never an empty table.
+    const block = year.sections!;
+    lines.push(csvLine(["section", "section_name", "questions", "reports", "fields_stored_median", "usable_answers_median", "usable_share_of_questions_pct"]));
+    for (const r of block.rows) {
+      // No reports: nothing to take a median of. Blank, like the page's dash, not 0. Under 5 reports: no share.
+      const none = block.reports === 0;
+      lines.push(csvLine([r.section, SECTION_NAMES[r.section], r.questions, block.reports, none ? "" : r.stored_median, none ? "" : r.usable_median, none ? "" : sectionUsableShare(r, block.reports)]));
     }
   } else if (table === "federal") {
     // The size columns exist only for a public_format 2 snapshot.

@@ -330,8 +330,23 @@ path").
   `project_browser_data.py`). Its count is the values in one base extraction,
   and it reads lower partly for that reason. The 2023-24 table carries that
   note, and the all-years table leaves fields stored out.
-- Later work, needing new data: a count of usable answers (by `value_status`),
-  and a breakdown by CDS section (A to J).
+- **By section** (`public_format` 3): under Table A, one row per CDS section (A
+  to J) for the year: questions on the form, median fields stored, median
+  usable answers, and usable as a share of questions. Per year, not per
+  format: per format and section would be 10 times the rows for a question a
+  researcher asks of the whole year.
+  - A **usable answer** is a stored field whose `value_status` is `reported`.
+    Parse errors and empty cells are never usable. "Not applicable" is a real
+    answer from the school but leaves a reader nothing to use, so it is not
+    counted (it is 0.6% of stored fields in the 2026-11-25 run).
+  - Medians are over published reports numbered by the year's own form, so no
+    median can exceed the section's question count. Reports numbered by
+    another year's form (`other_form_numbering`) are left out and named in a
+    note. The share is blank under 5 reports. The 2023-24 counting note
+    applies.
+  - The snapshot checks: the sections' questions add up to the form's;
+    reports = published minus other numbering; 0 <= usable <= stored <=
+    questions in every row. Medians do not sum, so no sum check applies.
 
 ### Table B: Admissions against federal figures
 
@@ -479,7 +494,7 @@ example, two 2023-24 spreadsheets were read by Tier 4.
 
   ```json
   {
-    "public_format": 2,
+    "public_format": 3,
     "snapshot_of": "2026-11-24T12:25:03Z",
     "scoreboard_run": "scoreboard-20261124T122503Z.json",
     "years": [{
@@ -516,6 +531,11 @@ example, two 2023-24 spreadsheets were read by Tier 4.
   file. A run without `federal_values` (`run_format` 2) cannot make format 2,
   and `--public` refuses it instead of writing format 1: a snapshot quietly
   missing the split would look like one that has it.
+
+  `public_format` 3 adds, per year, `"sections": {"reports": 0, "rows":
+  [{"section": "A", "questions": 0, "stored_median": 0, "usable_median": 0}]}`
+  (rows empty for a year whose form has no full field schema). Required on 3,
+  refused on 1 and 2.
 
   The row values are placeholders. The year-level values are from the
   2026-11-24 run.
@@ -690,8 +710,8 @@ UI tests across M1 and M2:
 
 ## Later, needs new data
 
-- **Usable answers,** and **fields by CDS section (A to J),** so a researcher
-  can see that admissions are read far more completely than, say, faculty.
+- **Usable answers,** and **fields by CDS section (A to J):** built
+  (`public_format` 3; see "By section" under Table A).
 - **Size of federal differences:** built (`public_format` 2). Table B splits
   "Differs" into over 2% up to 10% and over 10%, as counts. It may separate
   a different count date from a misread column or a scope mismatch, but size
