@@ -534,14 +534,56 @@ function twoYearPart(summary: Record<string, unknown>): string {
   return `two-year: ${num(summary.two_year_renewed)} of ${num(summary.two_year_prev_schools)}${share ? ` (${share}%)` : ""}${floor ? ` · floor ${floor}%` : ""}`;
 }
 
-/** [arrivals, expected, window days] for the window the producer used (30 or 60). */
-function arrivalsFigures(summary: Record<string, unknown>): [number, number, number] {
-  const days = num(summary.arrivals_window_days) === 60 ? 60 : 30;
-  const n = num(days === 60 ? summary.arrivals_60d : summary.arrivals_30d);
-  const expected = Math.round(
-    num(days === 60 ? summary.arrivals_expected_60d : summary.arrivals_expected_30d),
-  );
-  return [n, expected, days];
+type ArrivalsBreach = { year: string | null; n: number; expected: number; days: number };
+
+function windowFigures(
+  summary: Record<string, unknown>,
+  scope: "" | "current_" | "next_",
+): { n: number; expected: number; days: number } {
+  const days = num(summary[`arrivals_${scope}window_days`]) === 60 ? 60 : 30;
+  const expectedKey = scope
+    ? `arrivals_expected_${scope}${days}d`
+    : `arrivals_expected_${days}d`;
+  return {
+    n: num(summary[`arrivals_${scope}${days}d`]),
+    expected: Math.round(num(summary[expectedKey])),
+    days,
+  };
+}
+
+/**
+ * The arrivals checks that are red, with that year's own numbers and window.
+ * Falls back to the pooled keys only when the summary has no per-year flags
+ * (older summaries) or the per-year flags do not explain the pooled breach.
+ */
+function arrivalsBreaches(summary: Record<string, unknown>): ArrivalsBreach[] {
+  const out: ArrivalsBreach[] = [];
+  if (summary.arrivals_current_below_floor === true) {
+    out.push({
+      year: String(summary.current_year ?? "").trim() || "this year",
+      ...windowFigures(summary, "current_"),
+    });
+  }
+  if (summary.arrivals_next_below_floor === true) {
+    out.push({
+      year: String(summary.next_year ?? "").trim() || "next year",
+      ...windowFigures(summary, "next_"),
+    });
+  }
+  if (out.length === 0 && summary.arrivals_below_floor === true) {
+    out.push({ year: null, ...windowFigures(summary, "") });
+  }
+  return out;
+}
+
+function arrivalsSentence(b: ArrivalsBreach): string {
+  return `almost nothing new arrived${b.year ? ` for ${b.year}` : ""} · ${b.n} school${b.n === 1 ? "" : "s"} in ${b.days} days (expected ${b.expected})`;
+}
+
+function yearList(value: unknown): string[] {
+  return typeof value === "string"
+    ? value.split(",").map((y) => y.trim()).filter(Boolean)
+    : [];
 }
 
 function renewalDetailLine(summary: Record<string, unknown>): string {
@@ -552,12 +594,10 @@ function renewalDetailLine(summary: Record<string, unknown>): string {
   if (typeof summary.outstanding_years === "string" && summary.outstanding_years.trim()) {
     parts.push(`still short: ${summary.outstanding_years.trim()}`);
   }
-  if (
-    summary.arrivals_below_floor === true &&
-    (summary.arrivals_30d != null || summary.arrivals_60d != null)
-  ) {
-    const [n, expected, days] = arrivalsFigures(summary);
-    parts.push(`arrivals: ${n} in ${days} days (expected ${expected})`);
+  for (const breach of arrivalsBreaches(summary)) {
+    parts.push(
+      `arrivals${breach.year ? ` ${breach.year}` : ""}: ${breach.n} in ${breach.days} days (expected ${breach.expected})`,
+    );
   }
   if (summary.unextracted_current_docs != null) {
     parts.push(`unextracted ${num(summary.unextracted_current_docs)}`);
@@ -612,23 +652,30 @@ function failureText(row: PipelineFactRow): string {
     if (summary.two_year_below_floor === true) {
       return `Renewal below floor · ${twoYearPart(summary)}`;
     }
-    const outstandingYears =
-      typeof summary.outstanding_years === "string" ? summary.outstanding_years.trim() : "";
+    const outstandingYears = yearList(summary.outstanding_years);
     const currentYear =
       typeof summary.current_year === "string" ? summary.current_year.trim() : "";
-    // #499 marks every arrivals breach as outstanding. When the outstanding
-    // year is the current one (or unnamed), the specific arrivals text wins.
-    const outstandingIsCurrent = !outstandingYears || outstandingYears === currentYear;
-    if (summary.arrivals_below_floor === true && outstandingIsCurrent) {
-      const [n, expected, days] = arrivalsFigures(summary);
-      return `Renewal: almost nothing new arrived · ${n} school${n === 1 ? "" : "s"} in ${days} days (expected ${expected})`;
+    const nextYear = typeof summary.next_year === "string" ? summary.next_year.trim() : "";
+    const breaches = arrivalsBreaches(summary);
+    // The producer marks every arrivals breach as outstanding. When the
+    // outstanding years are the ones the arrivals check names (or the current
+    // year), the specific arrivals text wins over the generic outstanding text.
+    const arrivalsYears = new Set(
+      breaches.map((b) => b.year).filter((y): y is string => Boolean(y)),
+    );
+    if (currentYear) arrivalsYears.add(currentYear);
+    const outstandingIsArrivals = outstandingYears.every((y) => arrivalsYears.has(y));
+    if (breaches.length > 0 && outstandingIsArrivals) {
+      return `Renewal: ${breaches.map(arrivalsSentence).join("; ")}`;
     }
     if (summary.outstanding_below_floor === true) {
-      return `Renewal: ${outstandingYears || "An earlier year"} still below floor`;
+      const label = outstandingYears.length
+        ? outstandingYears.map((y) => (y === nextYear ? `next year (${y})` : y)).join(", ")
+        : "An earlier year";
+      return `Renewal: ${label} still below floor`;
     }
-    if (summary.arrivals_below_floor === true) {
-      const [n, expected, days] = arrivalsFigures(summary);
-      return `Renewal: almost nothing new arrived · ${n} school${n === 1 ? "" : "s"} in ${days} days (expected ${expected})`;
+    if (breaches.length > 0) {
+      return `Renewal: ${breaches.map(arrivalsSentence).join("; ")}`;
     }
     return "Renewal figures missing from the last run";
   }
