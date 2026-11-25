@@ -7355,6 +7355,255 @@ def _h_layout_h1_rows(block: str) -> dict[str, dict]:
     return out
 
 
+# A dollar amount: with "$", or bare with thousands commas, or a bare 0 (a
+# zero is printed "0" in cells where the other amounts have no "$").
+_H1_AMOUNT_RE = re.compile(
+    r"(?:\$\s*(\d[\d,]*(?:\.\d+)?)"
+    r"|(?<![\w,.$/-])(\d{1,3}(?:,\d{3})+(?:\.\d+)?|0(?:\.0+)?)(?![\w,/-]|\.\d))"
+)
+# Words of a wrapped row label. Those that lead a fragment put the row name
+# after them ("... excludes Federal Work-Study", "... not awarded by"); those
+# that trail it put the row name before them ("Federal Work/Study captured
+# above)", "tuition waivers (which are reported below)"). A row name on the
+# wrong side of its word belongs to the label, not a row.
+_H1_LEADING_WORDS_RE = re.compile(r"excludes|excluding|not awarded by", re.IGNORECASE)
+# "which" counts only as the parenthetical "(which are reported below)" or its
+# first half at the end of a line, never "in which" inside a primary label.
+_H1_TRAILING_WORDS_RE = re.compile(r"captured above|reported below|which are|(?<!\bin )which\s*$", re.IGNORECASE)
+# A line that starts a new page of the document.
+_H1_PAGE_START_RE = re.compile(r"\f|Common Data Set\s+20\d\d|^\s*CDS-H\b|^\s*H\.\s*FINANCIAL AID", re.IGNORECASE)
+
+
+def _h_layout_h1_reading(block: str) -> tuple[dict[str, dict], list[tuple[str, str, set[float]]]]:
+    """H1 dollar amounts from the PDF text layer, placed by column.
+
+    Returns the claims (2025-26 numbering) and, per row label found, the two
+    field ids of that row with every number printed on the row's lines, so the
+    caller can keep a markdown value the text reading did not re-read but the
+    row prints. ({}, []) unless the reading is complete and adds up.
+
+    ``_h_layout_h1_rows`` takes the first two dollar amounts in a six-line
+    window, so a row whose need-based cell is blank puts its non-need-based
+    amount in the need-based field. Here a row is the label that starts it and
+    the amount lines under it up to the next label. A row with two amounts is
+    (need-based, non-need-based) in print order, whatever the cell alignment.
+    A number that ends more than 20 columns left of the need-based column is
+    label text and is not an amount. A lone amount is placed only by column:
+    against the medians of the two-amount rows of its own block (grants,
+    self-help, other aid), only when those medians are 12 or more columns
+    apart. On a row no sum checks (parent loans, tuition waivers, athletic
+    awards) it must also be within 8 columns of the nearer median and not
+    about as near to both (within 6 columns of equal distance); on a row a sum
+    checks it goes to the column it is beyond, or the nearer, since a
+    misplacement breaks the sum.
+    A label wrapped over lines is one row; the wrapped fragments that read
+    like another row ("excluding athletic aid and tuition waivers (which are
+    reported below)") are not row labels.
+
+    Refused whole (so the caller keeps the old reading) when: the amounts do
+    not add up; a total has none of its rows, or rows have no total; the
+    grants or the self-help block is missing; three or more amounts sit under
+    one label; or one row is labelled twice apart from its own wrapped lines.
+    """
+    if "|" in block:
+        return {}, []
+    lines = block.splitlines()
+    markers: list[tuple[int, str, str]] = []  # (line idx, nb_qn, nn_qn)
+    for li, line in enumerate(lines):
+        norm = _normalize_label(line)
+        if not norm:
+            continue
+        # "State (i.e., all states, not only ...)" is the State row too.
+        if re.match(r"state\b", norm) and "all states" in norm and "state and other" not in norm:
+            norm = "state all states"
+        leading = _H1_LEADING_WORDS_RE.search(norm)
+        trailing = _H1_TRAILING_WORDS_RE.search(norm)
+        for substr, nb_qn, nn_qn in _H1_ROWS:
+            at = norm.find(substr)
+            if at < 0:
+                continue
+            # A trailing phrase belongs to the row name right before it
+            # ("Federal Work/Study captured above)"), not to a primary label
+            # that merely ends with one ("State and other ... (Note: Excludes
+            # Federal Work-Study captured above.)", 8 of 974 layouts).
+            if not substr.startswith("total") and (
+                (leading and at >= leading.start())
+                or (trailing and at < trailing.start() and trailing.start() - (at + len(substr)) <= 25)
+            ):
+                continue
+            # The same row named again within three lines is its wrapped label.
+            if markers and markers[-1][1:] == (nb_qn, nn_qn) and li - markers[-1][0] <= 3:
+                break
+            markers.append((li, nb_qn, nn_qn))
+            break
+        else:
+            # A grand "TOTAL" under the last row (Colorado) is a row of its
+            # own with no field; its amounts are not Athletic Awards'.
+            if re.match(r"total\b", norm):
+                markers.append((li, "", ""))
+    if not any(m[1] for m in markers):
+        return {}, []
+    per_row: dict[int, list[tuple[int, str]]] = {}
+    printed: dict[int, set[float]] = {}
+    page_of: dict[int, int] = {}  # marker line -> page number
+    marker_lines = {m[0] for m in markers}
+    row = None
+    page = 0
+    for li, line in enumerate(lines):
+        if _H1_PAGE_START_RE.search(line):
+            page += 1
+        if li in marker_lines:
+            row = li
+            page_of[li] = page
+        if row is None:
+            continue
+        for m in _H1_AMOUNT_RE.finditer(line):
+            per_row.setdefault(row, []).append((m.end(), (m.group(1) or m.group(2)).replace(",", "")))
+        for token in re.findall(r"\d[\d,]*(?:\.\d+)?", line):
+            try:
+                printed.setdefault(row, set()).add(float(token.replace(",", "")))
+            except ValueError:
+                pass
+    # Row names in the section's instructions carry no amounts; two labelled
+    # rows with amounts that name the same row would overwrite each other.
+    named = [m[1:] for m in markers if m[1] and per_row.get(m[0])]
+    if len(set(named)) != len(named):
+        return {}, []
+    two = [m for m in markers if len(per_row.get(m[0], ())) == 2]
+    if len(two) < 3:
+        return {}, []
+
+    def medians(rows: list[tuple[int, str, str]], floor: int | None = None) -> tuple[int, int] | None:
+        pairs = [per_row[m[0]] for m in rows if len(per_row.get(m[0], ())) == 2]
+        # A number in a label ends far left of the need-based column; it must
+        # not set a sparse block's median.
+        pairs = [p for p in pairs if floor is None or p[0][0] >= floor]
+        if not pairs:
+            return None
+        lefts, rights = sorted(p[0][0] for p in pairs), sorted(p[1][0] for p in pairs)
+        return lefts[len(lefts) // 2], rights[len(rights) // 2]
+
+    overall = medians(markers)
+    # Blocks of the table: grants (to Total Scholarships), self-help (to Total
+    # Self-Help), then parent loans, tuition waivers and athletic awards; a
+    # new page starts a new block, since a page's columns can sit elsewhere.
+    blocks: list[list[tuple[int, str, str]]] = [[]]
+    for m in markers:
+        if blocks[-1] and page_of[m[0]] != page_of[blocks[-1][-1][0]]:
+            blocks.append([])
+        blocks[-1].append(m)
+        if m[1] in ("H.109", "H.113"):
+            blocks.append([])
+    floor = overall[0] - 20
+    block_medians = {m[0]: (medians(blk, floor) or overall) for blk in blocks for m in blk}
+    claimed: dict[str, dict] = {}
+    for li, nb_qn, nn_qn in markers:
+        left_med, right_med = block_medians[li]
+        # A number that ends left of the need-based column is label text.
+        amts = [a for a in per_row.get(li, []) if a[0] >= left_med - 20]
+        if len(amts) == 2:
+            pairs = [(nb_qn, amts[0][1]), (nn_qn, amts[1][1])]
+        elif len(amts) == 1:
+            end, val = amts[0]
+            dl, dr = abs(end - left_med), abs(end - right_med)
+            if right_med - left_med < 12:
+                continue
+            if nb_qn in _H1_ROWS_WITH_NO_TOTAL:
+                # No sum checks these rows (parent loans, tuition waivers,
+                # athletic awards): placed only within 8 columns of one
+                # column's median and clearly nearer to it than to the other.
+                # The markdown value, if the row prints it, is kept otherwise.
+                if min(dl, dr) > 8 or abs(dl - dr) < 6:
+                    continue
+                pairs = [(nb_qn, val)] if dl < dr else [(nn_qn, val)]
+            elif end >= right_med:
+                # A sum checks the others: a misplaced amount breaks the sum
+                # of the column it left or the one it entered.
+                pairs = [(nn_qn, val)]
+            elif end <= left_med:
+                pairs = [(nb_qn, val)]
+            elif dl == dr:
+                continue
+            else:
+                # Between the columns the sum checks it, so the nearer wins
+                # (Detroit Mercy's text adds up with the nearer reading).
+                pairs = [(nb_qn, val)] if dl < dr else [(nn_qn, val)]
+        elif len(amts) > 2 and nb_qn:
+            # Three or more amounts under one label: two rows printed as one
+            # (Boston College 2024-25 prints Athletic Awards' amounts above
+            # its label). Which belongs where is not known.
+            return {}, []
+        else:
+            continue
+        for qn, val in pairs:
+            if qn:
+                claimed[qn] = {"value": val, "source": "tier4_cleaner"}
+    if not _h1_amounts_add_up(claimed):
+        return {}, []
+    # The sum does not check a total whose rows were not read, nor rows whose
+    # total was not read. Either means the block was not placed (Lenoir-Rhyne
+    # prints "Total Self-Help" under its amounts).
+    for parts, total_qn in _H1_SUMS:
+        total = claimed.get(total_qn)
+        if total and float(total["value"]) != 0 and not any(qn in claimed for qn in parts):
+            return {}, []
+        if not total and any(qn in claimed for qn in parts):
+            return {}, []
+    # A block of the table that is missing altogether (an unreadable page
+    # break) leaves the sums of the other block to vouch for the reading.
+    if not ({"H.109", "H.121"} & set(claimed) and {"H.113", "H.124"} & set(claimed)):
+        return {}, []
+    # Rows of the table: from the first row that has amounts. Row names in the
+    # instructions above it are not rows, and a row whose page has no text
+    # layer is not here, so the markdown's values for it are left alone.
+    start = min(li for li, nb, _ in markers if nb and per_row.get(li))
+    rows = [(nb, nn, printed.get(li, set())) for li, nb, nn in markers if nb and li >= start]
+    return claimed, rows
+
+
+def _h_layout_h1_rows_by_column(block: str) -> dict[str, dict]:
+    return _h_layout_h1_reading(block)[0]
+
+
+_H1_TEXT_SECTION_END = r"(?:^|\n)[ \t]*H2\.?[ \t]+Number\b"
+
+
+def _h1_text_layer_reading(text: str, schema: SchemaIndex) -> tuple[dict[str, dict], list[tuple[str, str, set[float]]]]:
+    """H1 as read by column from a text layer, numbered by ``schema``, with
+    the rows' printed numbers; ({}, []) when the table is absent or refused.
+
+    The section runs to the H2 heading. The form's own line "Indicate the
+    academic year ... for items H1, H2, H2A, and H6" comes before the table,
+    so ending at the first "H2" left the reader the instructions only.
+    """
+    h_block = _section_between(text, r"(?:H\.\s*FINANCIAL AID|H1\b)", r"(?:I\.\s*INSTRUCTIONAL FACULTY|CDS-I|$)")
+    if not h_block:
+        return {}, []
+    section = _section_between(h_block, r"Aid Awarded", _H1_TEXT_SECTION_END)
+    claims, rows = _h_layout_h1_reading(section)
+    if not claims:
+        return {}, []
+    # The ids of rows follow the claims into the schema's numbering.
+    ids = {qn for _, nb, nn in _H1_ROWS for qn in (nb, nn) if qn}
+    in_schema = _h1_fields_with_same_question_in_schema({qn: {"value": qn} for qn in ids}, schema)
+    moved = {rec["value"]: qn for qn, rec in in_schema.items()}
+    rows = [(moved.get(nb) or "", moved.get(nn) or "", printed) for nb, nn, printed in rows]
+    return _h1_fields_with_same_question_in_schema(claims, schema), rows
+
+
+def _h1_number(record: dict | None) -> float | None:
+    try:
+        return float(str(record["value"]).replace(",", "").replace("$", "").strip())
+    except (TypeError, KeyError, ValueError):
+        return None
+
+
+def _h1_amount_qns(schema: SchemaIndex) -> set[str]:
+    """Every H1 dollar field of ``schema``."""
+    every = {qn: {"value": "0"} for _, nb, nn in _H1_ROWS for qn in (nb, nn) if qn}
+    return set(_h1_fields_with_same_question_in_schema(every, schema))
+
+
 def _h_layout_h2_rows(block: str) -> dict[str, dict]:
     out: dict[str, dict] = {}
     h2 = _section_between(block, r"H2\s+Number of Enrolled Students Awarded Aid", r"H2A\b")
@@ -9014,6 +9263,40 @@ def clean(
             resolve_f_student_life,
         ) and supplemental_text:
             supplemental_new = resolver(tables, supplemental_text, idx)
+            if resolver is resolve_h_financial_aid and (h1_reading := _h1_text_layer_reading(supplemental_text, idx))[0]:
+                # The text layer printed the whole table and its amounts add
+                # up: it replaces the H1 block, from every source (the direct
+                # question-number paths fill `values` before any resolver).
+                # Markdown rows left beside it are another assignment of the
+                # same table and would be summed with it (work-study in H.113
+                # and H.112). A markdown value the text reading did not
+                # re-read stays when its row prints that number and the number
+                # is not already taken by the row's other field.
+                h1_by_column, h1_rows = h1_reading
+                h1_qns = _h1_amount_qns(idx)
+                kept: dict[str, dict] = {}
+                for nb_qn, nn_qn, printed in h1_rows:
+                    taken = {_h1_number(h1_by_column.get(qn)) for qn in (nb_qn, nn_qn)}
+                    for qn in (nb_qn, nn_qn):
+                        if not qn or qn in h1_by_column:
+                            continue
+                        old = values.get(qn) or new.get(qn)
+                        number = _h1_number(old)
+                        if number is not None and number in printed and number not in taken:
+                            kept[qn] = old
+                # Only the rows the text layer has; a row on a page without a
+                # text layer keeps the markdown's values.
+                h1_qns = {qn for nb_qn, nn_qn, _ in h1_rows for qn in (nb_qn, nn_qn) if qn} & h1_qns
+                for qn in h1_qns:
+                    values.pop(qn, None)
+                new = {qn: rec for qn, rec in new.items() if qn not in h1_qns}
+                # The legacy six-line reader's H1 values never stand beside the
+                # column reading, rows the text layer has or not (0 of 974
+                # layouts differ).
+                all_h1 = _h1_amount_qns(idx)
+                supplemental_new = {qn: rec for qn, rec in supplemental_new.items() if qn not in all_h1}
+                supplemental_new.update(kept)
+                supplemental_new.update(h1_by_column)
             if resolver in (resolve_a_general, resolve_b1_enrollment) and supplemental_new:
                 if resolver is resolve_b1_enrollment:
                     # The text-layer reading replaces the markdown one, but a
