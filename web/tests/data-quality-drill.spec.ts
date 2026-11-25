@@ -119,6 +119,28 @@ test.describe("Data quality: list the reports behind a count", () => {
     await expect(page.locator("button.dq-count").first()).toHaveAttribute("aria-expanded", "false");
   });
 
+  test("other controls still work while a list is open: every year chip, a CSV download and Close", async ({ page }) => {
+    const counts = await openPage(page, "2023-24");
+    await counts.first().click();
+    await expect(list(page)).toBeVisible();
+    // The other year chips (tapped one after another, each with a list open for the year just left).
+    for (const year of ["2024-25", "2025-26", "2023-24"]) {
+      await page.getByRole("link", { name: year, exact: true }).first().click();
+      await expect(page).toHaveURL(new RegExp(`year=${year}`));
+      await expect(page.getByRole("link", { name: year, exact: true }).first()).toHaveAttribute("aria-current", "true");
+      await expect(page.getByRole("button", { name: "Close", exact: true })).toHaveCount(0);
+      await page.locator("button.dq-count").first().click();
+      await expect(list(page)).toBeVisible();
+    }
+    // A CSV download from the page while the list is open.
+    const download = page.waitForEvent("download");
+    await page.locator('a[href^="/data-quality/csv/reports/"]').first().click();
+    expect((await download).suggestedFilename()).toMatch(/\.csv$/);
+    // Close.
+    await page.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Close", exact: true })).toHaveCount(0);
+  });
+
   test("shows an error with Try again when the file can't be loaded, then the list once it can", async ({ page }) => {
     const counts = await openPage(page);
     await page.route(REPORTS, (route) => route.abort());

@@ -388,6 +388,18 @@ function TrendLine({ row, points }: { row: TrendRow; points: TrendPoint[] }) {
 
 // ── Year picker ──────────────────────────────────────────────────
 
+/**
+ * The year lives only in the query string and the page is static, so choosing one needs no server round trip. A router
+ * navigation here fetches the page again, and a tap that lands while that is starting can be dropped (seen on phones: the
+ * chip did nothing). pushState keeps useSearchParams in step (Next syncs it), changes the URL at once, and leaves the
+ * link a real link for open-in-new-tab, copy-link and no-JS.
+ */
+function chooseYear(event: React.MouseEvent<HTMLAnchorElement>, year: string) {
+  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  event.preventDefault();
+  window.history.pushState(null, "", `/data-quality?year=${year}`);
+}
+
 export function YearPicker({ years, selected }: { years: QualityYear[]; selected: string }) {
   return (
     <div role="group" aria-label="Choose a year" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -398,6 +410,8 @@ export function YearPicker({ years, selected }: { years: QualityYear[]; selected
             key={y.cds_year}
             href={`/data-quality?year=${y.cds_year}`}
             scroll={false}
+            prefetch={false}
+            onClick={(event) => chooseYear(event, y.cds_year)}
             aria-current={on ? "true" : undefined}
             className="cd-chip"
             style={{
