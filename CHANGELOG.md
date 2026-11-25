@@ -31,7 +31,19 @@ History before 0.1.0.0 (2026-08-03), including the June and July 2026 work, is n
   - schools whose listing is known but whose current-year file couldn't be fetched, by cause (#468).
 - **A monthly hand check:** on the 3rd, an issue lists 20 random schools with links, to record whether each has posted a newer CDS than ours, or whether our newest file isn't a full CDS. The next month's issue reports the miss rate (#461).
 - **`/data-quality`**, behind a launch gate (PRD 040 M1). The scoreboard's run files are now `run_format: 2`, and `--public` writes the page's snapshot (M0).
-- **`/coverage`** gains a renewal tile (shown once the first snapshot is committed; #496 is held), the share of undergraduates with CDS numbers, search, a "Has a CDS" preset and the latest-year columns (M2). CSV downloads wait for the launch gate.
+- **`/coverage`** gains a renewal tile (live since the first snapshot was committed, #524), the share of undergraduates with CDS numbers, search, a "Has a CDS" preset and the latest-year columns (M2). CSV downloads wait for the launch gate.
+- **Data quality page and snapshot (PRD 040), run of 2026-11-25.** The `/data-quality` page, its CSV downloads and the `/coverage` CSV downloads are behind the launch gate and are not public yet. The `/coverage` renewal tile is public.
+  - **First snapshot (#524):** the first Data quality snapshot (the 2026-11-25 14:09 UTC run) is committed. The `/coverage` renewal tile now shows 373 of 498 schools (75%).
+  - **Copy and hand checks (#517):** hand-check results for 2023-24 financial aid and for differing admissions values, a note on files that disagree with themselves, a licence line beside the CSV downloads, and plainer wording throughout. Empty table cells on Archive status now use an en dash (public).
+  - **Snapshot checks and phone tables (#520):** a snapshot whose counts don't add up, or that carries years the page can't show yet, now fails the build. Tables on phones scroll in whole columns.
+  - **CSV downloads (#512):** every file opens with its column names and has no comment lines. Data quality tables are served from their own links with the license in an HTTP `Link` header. The coverage file includes the school name, and the page says which of its columns are federal figures.
+  - **Size of federal differences (#528):** the admissions-against-federal table splits "Differs" into gaps of over 2% to 10% and over 10%, with a note on what the size can and can't say. The federal CSV has matching columns.
+  - **Fields and usable answers by section (#530):** a table under Table A shows, for each part of the CDS form, how many questions it has and how many fields and usable answers a typical report has, with a CSV download.
+  - **Enrollment and tuition against federal figures (#532):** two more federal checks compare each report's total undergraduates and its tuition with the federal figures, with a note on what can differ and a CSV for each.
+  - **Reports behind each count (#535):** each count in the tables is a button that lists the reports behind it, with a link to each school's page for that year.
+- **Extraction scoreboard (tooling).**
+  - **Run format 3 (#510):** keeps, per document, the federal figures beside ours (with the IPEDS year each came from), field-status counts by CDS section, raw B1 and G1 candidates against IPEDS (tuition against the following academic year), and the IPEDS id and file hash. Public output is unchanged.
+  - **Earlier years (#514):** it can be run for years before 2023-24 (`--years`). Those years record status counts and fields stored but no sum checks and no IPEDS comparison; `--public` marks them (`sum_checks_unavailable`, `federal_left_out.not_compared`).
 
 ### Fixed
 
@@ -53,6 +65,7 @@ History before 0.1.0.0 (2026-08-03), including the June and July 2026 work, is n
   - It reads known years by canonical year.
 - **Years:** the directory repair tool, the top-100 coverage check and the published-years readers take the year from the freshness floor or the canonical year, never a hardcoded or text-sorted value.
 - **Renewal counting:** documents with any data-quality flag (today: the wrong file, a blank template or low coverage) don't count as a school having filed the current year, and sub-program files no longer hide a missing main-campus file.
+- **Text spacing (#519):** words no longer run together, and a stray "&apos;" no longer shows, on several pages (for example the "aren't on the page yet" note on a school's report page, the API docs and the usage page).
 
 ### Docs
 
