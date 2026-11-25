@@ -1505,6 +1505,32 @@ def section_block(year: str, published: list[dict[str, Any]], questions: dict[st
     return {"reports": len(own), "rows": rows}
 
 
+def check_public_sections(public: dict[str, Any]) -> None:
+    """The arithmetic of every year's `sections` block (`check_public_shape` only checks its keys and types):
+    A to J in order and not repeated, questions add up to the form's, reports = published minus those numbered by
+    another year's form, rows exactly when the form has a full field schema, 0 <= usable <= stored <= questions,
+    and zero medians when there are no reports."""
+    letters = "ABCDEFGHIJ"
+    for year in public["years"]:
+        where, block = f"--public: {year['cds_year']}: sections", year["sections"]
+        rows = block["rows"]
+        order = [letters.index(r["section"]) if r["section"] in letters else -1 for r in rows]
+        if -1 in order or order != sorted(set(order)):
+            raise SystemExit(f"{where}: sections {[r['section'] for r in rows]} are not A to J in order")
+        if bool(rows) != year["form"]["full_field_schema"]:
+            raise SystemExit(f"{where}: rows are present exactly when the form has a full field schema")
+        expected = year["total"]["status"]["published"] - year["other_form_numbering"] if rows else 0
+        if block["reports"] != expected:
+            raise SystemExit(f"{where}: reports is {block['reports']}, not published minus other_form_numbering ({expected})")
+        if rows and sum(r["questions"] for r in rows) != year["form"]["questions"]:
+            raise SystemExit(f"{where}: the sections' questions do not add up to the form's {year['form']['questions']}")
+        for r in rows:
+            if not 0 <= r["usable_median"] <= r["stored_median"] <= r["questions"]:
+                raise SystemExit(f"{where}: section {r['section']} breaks 0 <= usable <= stored <= questions")
+            if block["reports"] == 0 and (r["stored_median"] or r["usable_median"]):
+                raise SystemExit(f"{where}: section {r['section']} has a median but no reports")
+
+
 def _row_counts(classes: Counter, published: list[dict[str, Any]], federal_loaded: bool) -> dict[str, Any]:
     counts = [d["fields"] for d in published]
     # Reports filed for one campus or unit are left out of the federal comparison
@@ -1693,6 +1719,7 @@ def build_public(run: dict[str, Any], run_name: str) -> dict[str, Any]:
         "years": years_out,
     }
     check_public_shape(public)
+    check_public_sections(public)
     return public
 
 

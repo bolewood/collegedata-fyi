@@ -873,6 +873,36 @@ class SectionsPublic(unittest.TestCase):
                 self.assertLessEqual(r["usable_median"], r["stored_median"])
                 self.assertLessEqual(r["stored_median"], r["questions"])
 
+    def test_zero_reports_give_zero_medians_and_rows_for_the_form(self) -> None:
+        block = self.block([self.d(1, {"A": {"reported": 4}}, schema_version="2025-26")])
+        self.assertEqual(block["reports"], 0)
+        self.assertEqual([r["stored_median"] + r["usable_median"] for r in block["rows"]], [0, 0])
+        self.assertEqual([r["questions"] for r in block["rows"]], [10, 20])
+        self.assertEqual(self.block([]), {"reports": 0, "rows": [{"section": "A", "questions": 10, "stored_median": 0, "usable_median": 0},
+                                                                  {"section": "B", "questions": 20, "stored_median": 0, "usable_median": 0}]})
+
+    def test_the_section_arithmetic_is_enforced_when_the_snapshot_is_written(self) -> None:
+        pub = scoreboard.build_public(synthetic_run(), "x.json")
+        scoreboard.check_public_sections(pub)
+        year = lambda p: p["years"][0]["sections"]  # noqa: E731
+        cases = {
+            "questions sum": lambda p: year(p)["rows"][0].update(questions=year(p)["rows"][0]["questions"] + 1),
+            "reports": lambda p: year(p).update(reports=year(p)["reports"] + 1),
+            "usable above stored": lambda p: year(p)["rows"][2].update(usable_median=year(p)["rows"][2]["stored_median"] + 1),
+            "stored above questions": lambda p: year(p)["rows"][2].update(stored_median=year(p)["rows"][2]["questions"] + 1,
+                                                                        usable_median=0),
+            "order": lambda p: year(p)["rows"].reverse(),
+            "repeat": lambda p: year(p)["rows"].append(dict(year(p)["rows"][0])),
+            "rows without a schema": lambda p: p["years"][0]["form"].update(full_field_schema=False),
+            "no rows with a schema": lambda p: year(p).update(rows=[]),
+            "median without reports": lambda p: (year(p).update(reports=0), p["years"][0].update(other_form_numbering=p["years"][0]["total"]["status"]["published"])),
+        }
+        for name, mutate in cases.items():
+            broken = json.loads(json.dumps(pub))
+            mutate(broken)
+            with self.subTest(name), self.assertRaises(SystemExit):
+                scoreboard.check_public_sections(broken)
+
     def test_the_public_shape_requires_and_limits_the_keys(self) -> None:
         pub = scoreboard.build_public(synthetic_run(), "x.json")
         for mutate in (lambda y: y.pop("sections"), lambda y: y["sections"].pop("reports"),

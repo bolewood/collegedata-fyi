@@ -306,7 +306,9 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
     it("says what usable means and that the table can't say why a number is low, without a claim about causes", () => {
       const note = secHtml(render("year=2024-25"))!.match(/<p id="dq-note-usable"[^>]*>[\s\S]*?<\/p>/)![0];
       expect(note).toMatch(/A usable answer is a value a reader can use/);
-      expect(note).toMatch(/unreadable, “not applicable” or empty are\s+stored but not counted as usable/);
+      expect(note).toMatch(/unreadable or as “not applicable” are stored\s+but not counted as usable/);
+      expect(note).toMatch(/counting “not applicable” would raise some sections, transfer admission especially/);
+      expect(note).not.toMatch(/empty/);
       expect(note).toMatch(/a share of 100% isn’t the goal/);
       expect(note).toMatch(/this table can’t say\s+which/);
       expect(note).not.toMatch(/\b(most|usually|always|typically)\b/i);
@@ -333,6 +335,19 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
       const t = secHtml(render("year=2024-25", small))!;
       expect(cells(t, "A General information")).toEqual(["51", "25", "25", "–"]);
       expect(t).toContain("Under 5 reports: no share");
+    });
+
+    it("links the CSV for the selected year, once launched, and says '1 report' for one", () => {
+      expect(openHtml("2024-25")).toContain('href="/data-quality/csv/sections/2024-25"');
+      expect(render("year=2024-25")).not.toContain("/data-quality/csv/sections/");
+      const one = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT)) as QualitySnapshot;
+      const y = one.years.find((x) => x.cds_year === "2024-25")!;
+      y.sections!.reports = 1;
+      const t = secHtml(render("year=2024-25", one))!;
+      expect(t).toContain("counting the 1 published 2024-25 report numbered by that form");
+      expect(t).toContain('id="dq-note-sections-small"');
+      expect(t).toContain("Fewer than 5 reports, so no share is shown.");
+      expect(secHtml(render("year=2024-25"))).not.toContain("dq-note-sections-small");
     });
 
     it("is absent for a snapshot written before public_format 3", () => {

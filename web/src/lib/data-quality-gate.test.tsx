@@ -283,14 +283,20 @@ describe("gate: the real snapshot loader", () => {
     expect(split).toEqual({ "2023-24": [116, 70, 46], "2024-25": [120, 61, 59], "2025-26": [0, 0, 0] });
   });
 
-  it("pins the committed snapshot's 2024-25 sections (questions, fields stored, usable answers)", () => {
+  it("pins the committed snapshot's sections per year (reports, then section, questions, fields stored, usable answers)", () => {
     const first = JSON.parse(fs.readFileSync(path.join(SNAPSHOT_DIR, "2026-11-25.json"), "utf8"));
-    const y = first.years.find((x: { cds_year: string }) => x.cds_year === "2024-25");
-    expect(y.sections.reports).toBe(491);
-    expect(y.sections.rows.map((r: { section: string; questions: number; stored_median: number; usable_median: number }) => [r.section, r.questions, r.stored_median, r.usable_median])).toEqual([
-      ["A", 51, 11, 11], ["B", 219, 158, 156], ["C", 278, 123, 122], ["D", 73, 27, 25], ["E", 32, 19, 19],
-      ["F", 60, 35, 35], ["G", 47, 23, 22], ["H", 154, 92, 91], ["I", 49, 41, 41], ["J", 120, 26, 26],
-    ]);
+    const got = Object.fromEntries(
+      first.years.map((y: { cds_year: string; sections: { reports: number; rows: { section: string; questions: number; stored_median: number; usable_median: number }[] } }) => [
+        y.cds_year,
+        [y.sections.reports, y.sections.rows.map((r) => [r.section, r.questions, r.stored_median, r.usable_median])],
+      ]),
+    );
+    // From scoreboard-20261125T140926Z.json. Pinned for every year so a balanced transcription error fails here.
+    expect(got).toEqual({
+      "2023-24": [366, [["A", 51, 6, 6], ["B", 196, 143, 143], ["C", 274, 112, 112], ["D", 70, 15, 14], ["E", 32, 0, 0], ["F", 60, 16, 16], ["G", 47, 20, 20], ["H", 154, 52, 52], ["I", 49, 31, 31], ["J", 120, 27, 27]]],
+      "2024-25": [491, [["A", 51, 11, 11], ["B", 219, 158, 156], ["C", 278, 123, 122], ["D", 73, 27, 25], ["E", 32, 19, 19], ["F", 60, 35, 35], ["G", 47, 23, 22], ["H", 154, 92, 91], ["I", 49, 41, 41], ["J", 120, 26, 26]]],
+      "2025-26": [423, [["A", 63, 26, 23], ["B", 204, 152, 152], ["C", 278, 142, 141], ["D", 88, 27, 23], ["E", 34, 21, 21], ["F", 58, 37, 37], ["G", 46, 24, 23], ["H", 165, 108, 107], ["I", 49, 42, 42], ["J", 120, 27, 27]]],
+    });
   });
 
   it("reads real files, picks the newest, and fails on same-date files in both states", () => {

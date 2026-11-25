@@ -213,7 +213,8 @@ function sectionsProblem(year: Record<string, unknown>): string | null {
   let last = -1;
   let questions = 0;
   for (const row of rows as Record<string, unknown>[]) {
-    const letter = String(row?.section);
+    if (typeof row?.section !== "string") return "sections: a section letter must be text";
+    const letter = row.section;
     const at = letters.indexOf(letter);
     if (at < 0) return `sections: unknown section ${JSON.stringify(row?.section)}`;
     if (at <= last) return `sections: section ${letter} is out of order or listed twice`;
@@ -226,6 +227,7 @@ function sectionsProblem(year: Record<string, unknown>): string | null {
     if (r.questions === 0) return `sections: section ${letter} has no questions`;
     if (r.stored_median > r.questions) return `sections: section ${letter} stores more fields than the form has questions`;
     if (r.usable_median > r.stored_median) return `sections: section ${letter} has more usable answers than fields stored`;
+    if (block.reports === 0 && (r.stored_median !== 0 || r.usable_median !== 0)) return `sections: section ${letter} has a median but no reports`;
     questions += r.questions;
   }
   const form = year.form as { full_field_schema: boolean; questions: number };
@@ -671,7 +673,10 @@ export function hasSections(year: QualityYear): boolean {
   return (year.sections?.rows.length ?? 0) > 0;
 }
 
-/** Usable answers as a whole-number share of the section's questions; null with fewer than 5 reports. */
+/**
+ * Usable answers as a whole-number share of the section's questions; null with fewer than 5 reports. Rounds half up
+ * (Math.round): 12 of 32 is 38%. Only the page and its CSV compute the share; the snapshot stores the medians.
+ */
 export function sectionUsableShare(row: SectionRow, reports: number): number | null {
   return rowPercent(row.usable_median, row.questions, reports);
 }

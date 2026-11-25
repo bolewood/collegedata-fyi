@@ -389,7 +389,7 @@ function SectionsTable({ year }: { year: QualityYear }) {
         id="dq-sections-heading"
         label="§ Table A, by section"
         title="Fields stored and usable answers by section"
-        sentence={`For each part of the ${year.form.form_year} form, how many questions it has and how many fields and usable answers a typical report has, counting the ${n(block.reports)} published ${year.cds_year} reports numbered by that form.`}
+        sentence={`For each part of the ${year.form.form_year} form, how many questions it has and how many fields and usable answers a typical report has, counting the ${n(block.reports)} published ${year.cds_year} ${block.reports === 1 ? "report" : "reports"} numbered by that form.`}
       />
       <Scroll label={`Table A by section, ${year.cds_year}`} hint={!none}>
         <table className="dq-table dq-table--s" style={tableStyle} id="dq-table-sections">
@@ -422,12 +422,17 @@ function SectionsTable({ year }: { year: QualityYear }) {
         </table>
       </Scroll>
       <Note id="dq-note-usable">
-        A usable answer is a value a reader can use. Fields recorded as unreadable, “not applicable” or empty are
-        stored but not counted as usable. The medians are per report and per section, so they don’t add up to a
+        A usable answer is a value a reader can use. Fields recorded as unreadable or as “not applicable” are stored
+        but not counted as usable; counting “not applicable” would raise some sections, transfer admission especially. The medians are per report and per section, so they don’t add up to a
         report’s total, and not every question applies to every school, so a share of 100% isn’t the goal. A low
         number can mean the school left a section blank, that we didn’t reach it, or both; this table can’t say
         which.
       </Note>
+      {block.reports > 0 && block.reports < MIN_REPORTS_FOR_RATE && (
+        <Note id="dq-note-sections-small">
+          Fewer than {MIN_REPORTS_FOR_RATE} reports, so no share is shown.
+        </Note>
+      )}
       {year.other_form_numbering > 0 && (
         <Note id="dq-note-sections-left-out">
           Left out: {n(year.other_form_numbering)} {year.other_form_numbering === 1 ? "report" : "reports"} numbered by

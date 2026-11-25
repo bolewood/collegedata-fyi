@@ -336,9 +336,11 @@ path").
   format: per format and section would be 10 times the rows for a question a
   researcher asks of the whole year.
   - A **usable answer** is a stored field whose `value_status` is `reported`.
-    Parse errors and empty cells are never usable. "Not applicable" is a real
-    answer from the school but leaves a reader nothing to use, so it is not
-    counted (it is 0.6% of stored fields in the 2026-11-25 run).
+    Parse errors and empty cells are never usable. "Not applicable" is a school
+    saying a question doesn't apply to it, so a reader has nothing to use and
+    it is not counted. It is 0.6% of stored fields overall but 6% to 9% of
+    section D's, so counting it would raise D's usable median (25 to 27 in
+    2024-25); the deck says so.
   - Medians are over published reports numbered by the year's own form, so no
     median can exceed the section's question count. Reports numbered by
     another year's form (`other_form_numbering`) are left out and named in a
@@ -506,6 +508,8 @@ example, two 2023-24 spreadsheets were read by Tier 4.
       "no_file": 0,
       "set_aside_reasons": {"blank_form": 8, "too_little_read": 16, "wrong_file": 0},
       "federal_left_out": {"single_campus": 1, "no_federal_figures": 17},
+      "sections": {"reports": 0,
+                   "rows": [{"section": "A", "questions": 0, "stored_median": 0, "usable_median": 0}]},
       "rows": [{
         "format": "pdf_flat",
         "label": "standard PDF",

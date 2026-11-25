@@ -86,9 +86,13 @@ shows dashes for the medians.
 > fields and usable answers a typical report has, counting the {n} published
 > {year} reports numbered by that form.
 
-- > A usable answer is a value a reader can use. Fields recorded as unreadable,
-  > "not applicable" or empty are stored but not counted as usable. The medians
-  > are per report and per section, so they don't add up to a report's total,
+("1 report" when there is one.) Under 5 reports no share is shown, and a line
+says so: *Fewer than 5 reports, so no share is shown.*
+
+- > A usable answer is a value a reader can use. Fields recorded as unreadable
+  > or as "not applicable" are stored but not counted as usable; counting "not
+  > applicable" would raise some sections, transfer admission especially. The
+  > medians are per report and per section, so they don't add up to a report's total,
   > and not every question applies to every school, so a share of 100% isn't
   > the goal. A low number can mean the school left a section blank, that we
   > didn't reach it, or both; this table can't say which.
@@ -101,9 +105,16 @@ shows dashes for the medians.
   > reading, so it reads lower partly for that reason.
 
 "Usable" means `value_status` `reported` and nothing else. In the 2026-11-25
-run the stored fields were 666,514 reported, 6,877 parse errors and 3,876 "not
-applicable", so counting "not applicable" would move a section's median by less
-than 1% of fields; it is left out because a reader has nothing to use in it.
+run, over the 1,280 published reports numbered by their year's own form, the
+stored fields were 641,995 reported, 6,594 parse errors and 3,776 "not
+applicable" (0.6% of fields). "Not applicable" is a school saying a question
+doesn't apply to it. It is left out because that is not an answer a reader can
+use, but it is not negligible in one section: counting it would raise transfer
+admission (D)'s usable median from 14 to 15 (2023-24), 25 to 27 (2024-25) and 23
+to 26 (2025-26), because "not applicable" is 6% to 9% of that section's stored
+fields (schools without transfer admission often mark it). It would also move
+financial aid (H) by 1 in 2024-25 and 2025-26 and first-time admission (C) by 1
+in 2025-26. No `missing` (empty) status is stored in the run.
 Medians are over reports numbered by the year's own form, so a section's median
 can never exceed its question count.
 

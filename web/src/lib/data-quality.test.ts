@@ -141,6 +141,26 @@ describe("fields and usable answers by section (public_format 3)", () => {
     bad((s) => (s.years[0].other_form_numbering += 1), /sections\.reports is/);
   });
 
+  it("requires the section letter to be text, and zero medians when there are no reports", () => {
+    bad((s) => ((sec(s).rows[0] as unknown as Record<string, unknown>).section = 7), /a section letter must be text/);
+  });
+
+  it("accepts a year with no full field schema and no rows, and a year with reports 0 and zero medians", () => {
+    const none = clone();
+    const y = none.years[0];
+    y.form.full_field_schema = false;
+    y.sections = { reports: 0, rows: [] };
+    expect(select(none).years[0].sections!.rows).toEqual([]);
+    const empty = clone();
+    empty.years.push(emptyYear("2026-27"));
+    expect(select(empty).years.at(-1)!.sections!.reports).toBe(0);
+    const bad0 = clone();
+    const e = emptyYear("2026-27");
+    e.sections!.rows[0].stored_median = 1;
+    bad0.years.push(e);
+    expect(() => select(bad0)).toThrow(/section A has a median but no reports/);
+  });
+
   it("has rows exactly when the form has a full field schema", () => {
     bad((s) => (sec(s).rows = []), /rows are present exactly when the form has a full field schema/);
     bad((s) => (s.years[0].form.full_field_schema = false), /rows are present exactly when/);
