@@ -5,14 +5,10 @@ import { DATA_QUALITY_LAUNCH_DATE } from "@/lib/data-quality";
 
 const mocks = vi.hoisted(() => ({
   loadLatestSnapshot: vi.fn(),
-  notFound: vi.fn(() => {
-    throw new Error("NEXT_NOT_FOUND");
-  }),
 }));
 
 vi.mock("@/lib/data-quality-snapshots", () => ({ loadLatestSnapshot: mocks.loadLatestSnapshot }));
 vi.mock("next/navigation", () => ({
-  notFound: mocks.notFound,
   useSearchParams: () => new URLSearchParams(),
 }));
 
@@ -76,8 +72,10 @@ describe("/data-quality launch gate", () => {
     expect(html).not.toMatch(/class="meta"[^>]*>\s*Numbers from/);
   });
 
-  it("is a 404, not an empty page, when no snapshot exists", () => {
-    mocks.loadLatestSnapshot.mockReturnValue(null);
-    expect(() => renderToStaticMarkup(<DataQualityPage />)).toThrow("NEXT_NOT_FOUND");
+  it("lets the loader's error through when no snapshot exists, rather than showing an empty page", () => {
+    mocks.loadLatestSnapshot.mockImplementation(() => {
+      throw new Error("no snapshot");
+    });
+    expect(() => renderToStaticMarkup(<DataQualityPage />)).toThrow("no snapshot");
   });
 });

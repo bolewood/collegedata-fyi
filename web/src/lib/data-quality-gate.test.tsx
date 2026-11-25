@@ -154,11 +154,47 @@ describe("gate: page metadata", () => {
 });
 
 describe("gate: the real snapshot loader", () => {
-  it("returns null for the committed directory (README only) before launch and throws after", () => {
+  it("throws on a directory with only a README, in both gate states", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dq-snap-"));
+    try {
+      fs.writeFileSync(path.join(dir, "README.md"), "not a snapshot");
+      for (const when of [CLOSED, OPEN]) {
+        at(when);
+        expect(() => loadLatestSnapshot(dir)).toThrow(/no snapshot/);
+      }
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("throws when the directory does not exist, in both gate states", () => {
+    const dir = path.join(os.tmpdir(), "dq-snap-missing-dir");
+    for (const when of [CLOSED, OPEN]) {
+      at(when);
+      expect(() => loadLatestSnapshot(dir)).toThrow(/no snapshot/);
+    }
+  });
+
+  it("loads the newest committed snapshot from the real directory in both states", () => {
+    for (const when of [CLOSED, OPEN]) {
+      at(when);
+      const snap = loadLatestSnapshot();
+      expect(snap.snapshot_of.slice(0, 10)).toBe("2026-11-25");
+      expect(snap.public_format).toBe(1);
+      expect(snap.scoreboard_run).toBe("scoreboard-20261125T140926Z.json");
+      expect(snap.renewal.both).toBe(373);
+      expect(snap.renewal.previous).toBe(498);
+    }
+  });
+
+  it("feeds the /coverage renewal tile from the committed snapshot: 373 of 498", () => {
     at(CLOSED);
-    expect(loadLatestSnapshot()).toBeNull();
-    at(OPEN);
-    expect(() => loadLatestSnapshot()).toThrow(/no snapshot/);
+    const snap = loadLatestSnapshot();
+    const html = renderToStaticMarkup(
+      <CoverageDashboard rows={[]} renewal={{ renewal: snap.renewal, snapshotOf: snap.snapshot_of }} />,
+    );
+    const tile = html.slice(html.indexOf('data-testid="renewal-tile"'));
+    expect(tile.slice(0, 1200)).toContain(`${Math.round((373 / 498) * 100)}%`);
   });
 
   it("reads real files, picks the newest, and fails on same-date files in both states", () => {
@@ -171,7 +207,7 @@ describe("gate: the real snapshot loader", () => {
       write("2026-11-24.json", "2026-11-24T12:25:03Z");
       for (const when of [CLOSED, OPEN]) {
         at(when);
-        expect(loadLatestSnapshot(dir)?.snapshot_of).toBe("2026-11-24T12:25:03Z");
+        expect(loadLatestSnapshot(dir).snapshot_of).toBe("2026-11-24T12:25:03Z");
       }
       write("dup.json", "2026-11-24T23:00:00Z");
       for (const when of [CLOSED, OPEN]) {

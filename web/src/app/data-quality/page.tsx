@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import "./data-quality.css";
 import { ArchiveStatusHeader } from "@/components/ArchiveStatusHeader";
@@ -22,9 +21,8 @@ export function generateMetadata(): Metadata {
 }
 
 export default function DataQualityPage() {
-  const snapshot: QualitySnapshot | null = loadLatestSnapshot();
-  // No snapshot before launch means nothing to show. After launch the loader throws instead.
-  if (!snapshot) notFound();
+  // The loader throws when no snapshot is committed, so there is always one here.
+  const snapshot: QualitySnapshot = loadLatestSnapshot();
   const lede = qualityLede(snapshot);
 
   return (
