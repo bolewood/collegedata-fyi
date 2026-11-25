@@ -198,7 +198,16 @@ class CoverageContractTests(unittest.TestCase):
     def test_august_2026_years(self) -> None:
         from datetime import date
 
-        self.assertEqual(coverage_bar_years(date(2026, 8, 30)), ["2025-26", "2024-25"])
+        # Before September the floor is still last cycle's year.
+        self.assertEqual(coverage_bar_years(date(2026, 8, 30)), ["2024-25", "2023-24"])
+
+    def test_bar_rolls_forward_each_september_without_an_edit(self) -> None:
+        from datetime import date
+
+        self.assertEqual(coverage_bar_years(date(2026, 11, 24)), ["2025-26", "2024-25"])
+        self.assertEqual(coverage_bar_years(date(2027, 8, 31)), ["2025-26", "2024-25"])
+        self.assertEqual(coverage_bar_years(date(2027, 9, 1)), ["2026-27", "2025-26"])
+        self.assertEqual(coverage_bar_years(date(2028, 9, 1)), ["2027-28", "2026-27"])
 
     def test_summary_counts(self) -> None:
         rows = [

@@ -169,13 +169,27 @@ jobs:
           STEP_OUTCOME: ${{ steps.ingest.outcome }}
         run: |
           mkdir -p ops-summary
+          summary_missing=false
           if [[ ! -f ops-summary/summary.json ]]; then
-            printf '{"schools_attempted":0,"inserted":0,"unchanged":0,"failed":0}\n' > ops-summary/heartbeat.json
+            # No summary means the worker never reported. The required keys
+            # are present (zeros) only so the registry does not relabel this
+            # as heartbeat_summary_malformed; the status below is an explicit
+            # error/job_failed, so the zeros are never recorded as a healthy run.
+            summary_missing=true
+            printf '{"schools_attempted":0,"inserted":0,"unchanged":0,"failed":0,"summary_missing":true}\n' > ops-summary/heartbeat.json
           else
             python - <<'PY'
           import json
           from pathlib import Path
-          summary = json.loads(Path("ops-summary/summary.json").read_text())
+          try:
+              summary = json.loads(Path("ops-summary/summary.json").read_text())
+          except json.JSONDecodeError:
+              # Truncated summary (runner killed mid-write): same as missing.
+              Path("ops-summary/heartbeat.json").write_text(
+                  '{"schools_attempted":0,"inserted":0,"unchanged":0,"failed":0,"summary_missing":true}\n'
+              )
+              Path("ops-summary/summary-truncated").write_text("1")
+              raise SystemExit(0)
           Path("ops-summary/heartbeat.json").write_text(json.dumps({
               "schools_attempted": summary.get("schools_attempted", 0),
               "inserted": summary.get("inserted", 0),
@@ -184,13 +198,22 @@ jobs:
               "crawled": summary.get("crawled", 0),
               "discovered": summary.get("discovered", 0),
               "skipped_known": summary.get("skipped_known", 0),
+              "schools_targeted": summary.get("schools_targeted", 0),
+              "schools_capped": summary.get("schools_capped", 0),
+              "years_capped": summary.get("years_capped", 0),
+              "years_below_min": summary.get("years_below_min", 0),
+              "years_unparseable": summary.get("years_unparseable", 0),
+              "years_unparseable_known": summary.get("years_unparseable_known", 0),
               "dry_run": summary.get("dry_run", False),
           }) + "\n")
           PY
           fi
           status=ok
           error=none
-          if [[ "$STEP_OUTCOME" == "failure" ]]; then
+          if [[ -f ops-summary/summary-truncated ]]; then
+            summary_missing=true
+          fi
+          if [[ "$STEP_OUTCOME" != "success" || "$summary_missing" == "true" ]]; then
             status=error
             error=job_failed
           fi

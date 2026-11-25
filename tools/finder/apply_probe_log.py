@@ -54,6 +54,8 @@ POLICY_RE = re.compile(r"^(  scrape_policy: )(\S+)\s*$")
 PROBED_AT_RE = re.compile(r"^(    last_probed_at: )(.+)$")
 LAST_RESULT_RE = re.compile(r"^(    last_result: )(\S+)\s*$")
 LAST_METHOD_RE = re.compile(r"^(    last_method: )(\S+)\s*$")
+NOT_SEARCHED_AT_RE = re.compile(r"^(    last_not_searched_at: )(.+)$")
+NOT_SEARCHED_CAUSE_RE = re.compile(r"^(    last_not_searched_cause: )(\S+)\s*$")
 
 
 @dataclass(frozen=True)
@@ -222,6 +224,19 @@ def write_school_updates(schools_yaml: Path, schools: list[dict], changed_ids: s
             out.append(
                 f"{result_match.group(1)}{school['probe_state'].get('last_result')}\n"
             )
+            continue
+
+        for pattern, key in (
+            (NOT_SEARCHED_AT_RE, "last_not_searched_at"),
+            (NOT_SEARCHED_CAUSE_RE, "last_not_searched_cause"),
+        ):
+            ns_match = pattern.match(line)
+            if ns_match and (school.get("probe_state") or {}).get(key):
+                out.append(f"{ns_match.group(1)}{school['probe_state'][key]}\n")
+                break
+        else:
+            ns_match = None
+        if ns_match:
             continue
 
         method_match = LAST_METHOD_RE.match(line)

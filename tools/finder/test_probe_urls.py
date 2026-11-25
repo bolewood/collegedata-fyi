@@ -1055,5 +1055,152 @@ class BraveNameQueryAndPriorityTests(unittest.TestCase):
         )
 
 
+class NotSearchedTests(unittest.TestCase):
+    """A search that never ran must not start the 30-day cooldown."""
+
+    def _args(self, **over):
+        base = dict(
+            search_only=True, rps=1, school_budget_sec=1,
+            bing_fallback=False, brave_fallback=True, google_fallback=False,
+            dry_run=False, skip_ir_hubs=True,
+        )
+        base.update(over)
+        return SimpleNamespace(**base)
+
+    def _school(self):
+        return {"id": "s", "name": "S College", "domain": "s.edu",
+                "scrape_policy": "unknown"}
+
+    def _run(self, status, body=b"{}", tracker=None):
+        school = self._school()
+        env = {"brave_api_key": "k", "brave_tracker": tracker}
+        with mock.patch(
+            "tools.finder.probe_urls._get_full",
+            return_value=(status, {}, body),
+        ), mock.patch("tools.finder.probe_urls.time.sleep"):
+            result = process_school(school, self._args(), env)
+        return school, result
+
+    def test_http_429_is_not_searched_and_does_not_stamp_cooldown(self) -> None:
+        school, result = self._run(429)
+        self.assertEqual(result["not_searched_cause"], "brave_http_429")
+        ps = school["probe_state"]
+        self.assertNotIn("last_probed_at", ps)
+        self.assertNotEqual(ps.get("last_result"), "not_found")
+        self.assertFalse(should_skip(school, 30))
+
+    def test_quota_402_parse_error_and_budget_are_not_searched(self) -> None:
+        import threading
+
+        cases = [
+            (402, b"{}", None, "brave_http_402"),
+            (200, b"<html>not json", None, "brave_parse_error"),
+            (200, b"{}", {"calls": 5, "budget": 5, "lock": threading.Lock()},
+             "brave_budget_exhausted"),
+        ]
+        for status, body, tracker, cause in cases:
+            with self.subTest(cause=cause):
+                school, result = self._run(status, body, tracker)
+                self.assertEqual(result["not_searched_cause"], cause)
+                self.assertFalse(should_skip(school, 30))
+
+    def test_clean_empty_search_is_still_not_found_and_stamps(self) -> None:
+        school, result = self._run(200, b'{"web": {"results": []}}')
+        self.assertIsNone(result["not_searched_cause"])
+        self.assertEqual(school["probe_state"]["last_result"], "not_found")
+        self.assertTrue(should_skip(school, 30))
+
+    def test_missing_api_key_is_not_searched(self) -> None:
+        school = self._school()
+        result = process_school(school, self._args(), {"brave_api_key": None})
+        self.assertEqual(result["not_searched_cause"], "brave_no_api_key")
+        self.assertFalse(should_skip(school, 30))
+
+    def test_school_budget_cut_without_search_is_not_searched(self) -> None:
+        def fake_ladder(domain, rps, max_seconds, out=None):
+            out["budget_exhausted"] = True
+            return None, 3
+
+        school = self._school()
+        args = self._args(search_only=False, brave_fallback=False)
+        with mock.patch("tools.finder.probe_urls.probe_school", side_effect=fake_ladder):
+            result = process_school(school, args, {})
+        self.assertEqual(result["not_searched_cause"], "school_budget")
+        self.assertFalse(should_skip(school, 30))
+
+    def _run_main(self, results, extra_args=()):
+        import tempfile
+        from pathlib import Path
+
+        from tools.finder import probe_urls
+
+        with tempfile.TemporaryDirectory() as tmp:
+            yml = Path(tmp) / "schools.yaml"
+            yml.write_text(yaml.safe_dump({"schools": [
+                {"id": f"s{i}", "name": f"School {i}", "domain": f"s{i}.edu",
+                 "scrape_policy": "unknown"} for i in range(len(results))
+            ]}))
+            out = Path(tmp) / "sum.json"
+            it = iter(results)
+
+            def fake_process(school, args, env):
+                cause = next(it)
+                return {"name": school["name"], "domain": school["domain"],
+                        "url": None, "method": "brave", "patterns_tried": 0,
+                        "search_tried": True, "replaced": False,
+                        "not_searched_cause": cause}
+
+            argv = ["probe_urls.py", "--dry-run", "--workers", "1",
+                    "--summary-json", str(out), *extra_args]
+            code = 0
+            with mock.patch.object(probe_urls, "SCHOOLS_YAML", yml), \
+                    mock.patch.object(probe_urls, "process_school", fake_process), \
+                    mock.patch.object(sys, "argv", argv):
+                try:
+                    probe_urls.main()
+                except SystemExit as exc:
+                    code = exc.code
+            return code, json.loads(out.read_text())
+
+    def test_all_not_searched_exits_nonzero_and_probed_excludes_them(self) -> None:
+        code, payload = self._run_main(["brave_http_402", "brave_http_402"])
+        self.assertEqual(code, 1)
+        self.assertEqual(payload["probed"], 0)
+        self.assertEqual(payload["attempted"], 2)
+        self.assertEqual(payload["not_searched"], 2)
+
+    def test_partial_budget_exhaustion_still_exits_zero(self) -> None:
+        code, payload = self._run_main([None, "brave_budget_exhausted"])
+        self.assertEqual(code, 0)
+        self.assertEqual(payload["probed"], 1)
+        self.assertEqual(payload["attempted"], 2)
+
+    def test_record_probe_helpers_tolerate_null_probe_state(self) -> None:
+        from tools.finder.probe_urls import record_not_searched, record_probe
+
+        school = {"probe_state": None}
+        record_not_searched(school, "x")
+        school = {"probe_state": None}
+        record_probe(school, "not_found", "pattern")
+        self.assertEqual(school["probe_state"]["last_result"], "not_found")
+
+    def test_summary_carries_not_searched_and_capped_out(self) -> None:
+        import tempfile
+        from pathlib import Path
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "s.json"
+            write_probe_summary(
+                path, probed=4, found=1, replaced=0, budget_remaining=0,
+                not_searched=2, not_searched_causes={"brave_http_429": 2},
+                capped_out=7, capped_out_detail={"new_two_year_cap": 5, "limit": 2},
+            )
+            payload = json.loads(path.read_text())
+        self.assertEqual(payload["not_searched"], 2)
+        self.assertEqual(payload["not_searched_causes"], {"brave_http_429": 2})
+        self.assertEqual(payload["capped_out"], 7)
+        self.assertEqual(payload["probed"], 4)
+
+
 if __name__ == "__main__":
     unittest.main()

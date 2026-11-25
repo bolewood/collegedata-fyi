@@ -31,6 +31,15 @@ import yaml
 from dotenv import load_dotenv
 from supabase import create_client
 
+try:
+    from tools.data_quality.published_years import (
+        fetch_published_years as shared_fetch_published_years,
+    )
+except ImportError:  # run as a script from tools/data_quality
+    from published_years import (
+        fetch_published_years as shared_fetch_published_years,
+    )
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCHOOLS_YAML = REPO_ROOT / "tools" / "finder" / "schools.yaml"
 DEFAULT_YEARS = ["2022-23", "2023-24", "2024-25", "2025-26"]
@@ -56,21 +65,7 @@ def load_active_schools_with_hints() -> list[dict]:
 
 
 def fetch_published_years(sb, school_ids: list[str], years: list[str]) -> dict[str, set[str]]:
-    have: dict[str, set[str]] = {sid: set() for sid in school_ids}
-    page_size = 1000
-    offset = 0
-    while True:
-        batch = sb.table("cds_documents").select(
-            "school_id, cds_year, participation_status"
-        ).in_("cds_year", years).range(offset, offset + page_size - 1).execute().data or []
-        for row in batch:
-            sid = row["school_id"]
-            if sid in have and row.get("participation_status") == "published":
-                have[sid].add(row["cds_year"])
-        if len(batch) < page_size:
-            break
-        offset += page_size
-    return have
+    return shared_fetch_published_years(sb, school_ids, years)
 
 
 def call_force_school(base_url: str, key: str, school_id: str, timeout: int) -> dict:

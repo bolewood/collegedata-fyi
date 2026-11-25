@@ -48,7 +48,13 @@ def probe_state_signature(school: dict | None) -> tuple:
     if not school:
         return ()
     ps = school.get("probe_state") or {}
-    return (ps.get("last_result"), ps.get("last_probed_at"), ps.get("last_method"))
+    return (
+        ps.get("last_result"),
+        ps.get("last_probed_at"),
+        ps.get("last_method"),
+        ps.get("last_not_searched_at"),
+        ps.get("last_not_searched_cause"),
+    )
 
 
 def seed_signature(school: dict | None) -> tuple:

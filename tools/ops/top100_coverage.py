@@ -32,7 +32,6 @@ DEFAULT_COHORT = REPO_ROOT / "data" / "watchlists" / "priority_coverage.yaml"
 DEFAULT_ALLOWLIST = REPO_ROOT / "data" / "watchlists" / "residential_allowlist.yaml"
 SCHOOLS_YAML = REPO_ROOT / "tools" / "finder" / "schools.yaml"
 WAF_YAML = REPO_ROOT / "tools" / "finder" / "waf_blocked_urls.yaml"
-DEFAULT_YEARS = ["2025-26", "2024-25"]
 RESIDENTIAL_CAP = 5
 SSO_HOST_MARKERS = ("tableau.com", "powerbi.com", "okta.com", "login.microsoftonline.com")
 DRIVE_HOST_MARKERS = (
@@ -45,7 +44,10 @@ DRIVE_HOST_MARKERS = (
 
 sys.path.insert(0, str(REPO_ROOT))
 
-from tools.finder.stuck_pdf_seeds import is_direct_doc_seed  # noqa: E402
+from tools.finder.stuck_pdf_seeds import (  # noqa: E402
+    default_min_fresh_year,
+    is_direct_doc_seed,
+)
 from tools.finder.waf_school_ids import (  # noqa: E402
     canonical_waf_school_id,
     parse_only_ids,
@@ -53,15 +55,16 @@ from tools.finder.waf_school_ids import (  # noqa: E402
 
 
 def coverage_bar_years(today: date | None = None) -> list[str]:
-    """Current and prior CDS year until an operator bumps DEFAULT_YEARS.
+    """The freshness floor and the year before it.
 
-    August 2026 → 2025-26 + 2024-25. Do not auto-roll to 2026-27 in
-    September; wait until that cycle is actually publishing.
+    Derived from `default_min_fresh_year` (the one definition of "the CDS year
+    that should already be on a listing"), so the bar rolls forward by itself
+    each September instead of waiting for someone to edit a constant.
+    November 2026 -> 2025-26 + 2024-25; September 2027 -> 2026-27 + 2025-26.
     """
-    today = today or date.today()
-    if today >= date(2027, 9, 1):
-        return ["2026-27", "2025-26"]
-    return list(DEFAULT_YEARS)
+    floor = default_min_fresh_year(today)
+    start = int(floor[:4])
+    return [floor, f"{start - 1}-{str(start)[2:]}"]
 
 
 def load_yaml_map(path: Path) -> dict[str, Any]:
@@ -332,7 +335,7 @@ def fetch_queue_outcomes(sb, school_ids: list[str]) -> dict[str, str]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--env", default=".env")
-    parser.add_argument("--years", default=",".join(DEFAULT_YEARS))
+    parser.add_argument("--years", default=",".join(coverage_bar_years()))
     parser.add_argument("--cohort", type=Path, default=DEFAULT_COHORT)
     parser.add_argument("--allowlist", type=Path, default=DEFAULT_ALLOWLIST)
     parser.add_argument("--json-out", type=Path)

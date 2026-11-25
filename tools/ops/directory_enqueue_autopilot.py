@@ -22,6 +22,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -30,6 +31,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from tools.finder import probe_urls
+from tools.finder.stuck_pdf_seeds import default_min_fresh_year
 from tools.ops import directory_enqueue_batches as batches
 from tools.ops import extraction_backlog_audit
 
@@ -44,7 +46,19 @@ BAD_DOC_KEYWORDS = (
     "blank",
     "glossary",
 )
-CURRENT_YEAR_RE = re.compile(r"20(24|25)[-_ /]?(20)?(25|26)|2024-25|2025-26", re.I)
+
+
+def current_year_re(today: date | None = None) -> re.Pattern[str]:
+    """Match the freshness-floor CDS year and the one after it, in any spelling
+    (2025-26, 2025_2026, 2025 26, 20252026). Derived from the same floor the
+    finder uses, so it moves on its own each September."""
+    start = int(default_min_fresh_year(today)[:4])
+    shapes = [
+        rf"{y}[-_ /]?(?:{y + 1}|{(y + 1) % 100:02d})(?!\d)" for y in (start, start + 1)
+    ]
+    return re.compile("|".join(shapes), re.I)
+
+
 ANY_YEAR_RE = re.compile(r"(20\d{2})[-_/ ]?(?:20)?(\d{2})")
 
 
@@ -201,7 +215,22 @@ def classify_url(url: str) -> str:
     return "other"
 
 
-def extract_document_candidates(landing_url: str, root_domain: str, *, max_docs: int = 1) -> list[RepairCandidate]:
+def _year_start(year: str | None) -> int:
+    match = re.match(r"^(\d{4})-\d{2}$", year or "")
+    return int(match.group(1)) if match else 0
+
+
+def extract_document_candidates(
+    landing_url: str,
+    root_domain: str,
+    *,
+    max_docs: int = 1,
+    dropped: dict[str, int] | None = None,
+) -> list[RepairCandidate]:
+    """Best document links on a landing page, newest-looking first.
+
+    `dropped["docs_capped"]` receives how many scored candidates the
+    `max_docs` cap cut, so the repair report shows what it left behind."""
     status, headers, body = fetch_bytes(landing_url)
     if status != 200:
         return []
@@ -212,6 +241,7 @@ def extract_document_candidates(landing_url: str, root_domain: str, *, max_docs:
     parser = LinkParser()
     parser.feed(body.decode("utf-8", errors="replace"))
     scored: list[tuple[int, RepairCandidate]] = []
+    year_re = current_year_re()
     for link in parser.links:
         href = link.get("href") or ""
         if not href:
@@ -231,7 +261,7 @@ def extract_document_candidates(landing_url: str, root_domain: str, *, max_docs:
             continue
 
         score = 0
-        if CURRENT_YEAR_RE.search(evidence):
+        if year_re.search(evidence):
             score += 100
         if url.lower().endswith(".pdf"):
             score += 20
@@ -239,7 +269,10 @@ def extract_document_candidates(landing_url: str, root_domain: str, *, max_docs:
             score += 10
         scored.append((score, RepairCandidate(url=url, year=infer_year(evidence), evidence=text or url)))
 
-    scored.sort(key=lambda item: item[0], reverse=True)
+    # Score first; among equals the newer year wins (page order is not a rule).
+    scored.sort(key=lambda item: (item[0], _year_start(item[1].year)), reverse=True)
+    if dropped is not None:
+        dropped["docs_capped"] = dropped.get("docs_capped", 0) + max(0, len(scored) - max_docs)
     return [candidate for _, candidate in scored[:max_docs]]
 
 
@@ -256,6 +289,7 @@ def discover_repair_candidate(
 
     attempts: list[dict[str, Any]] = []
     urls: list[tuple[str, str]] = []
+    docs_capped = 0
     pattern_url, patterns_tried = probe_urls.probe_school(
         root_domain,
         options.rps,
@@ -289,14 +323,22 @@ def discover_repair_candidate(
                 "attempts": attempts,
             }
         if kind == "landing":
-            docs = extract_document_candidates(found_url, root_domain)
+            dropped: dict[str, int] = {}
+            docs = extract_document_candidates(found_url, root_domain, dropped=dropped)
+            docs_capped += dropped.get("docs_capped", 0)
             if docs:
-                return docs[0], {"domain": root_domain, "attempts": attempts, "landing_url": found_url}
+                return docs[0], {
+                    "domain": root_domain,
+                    "attempts": attempts,
+                    "landing_url": found_url,
+                    "docs_capped": docs_capped,
+                }
 
     return None, {
         "domain": root_domain,
         "school_name": school_name,
         "attempts": attempts,
+        "docs_capped": docs_capped,
         "reason": "no_unambiguous_document",
     }
 
@@ -389,16 +431,21 @@ def repair_high_signal_failures(
         for row in failed
         if str(row["school_id"]) in metadata
     ]
-    high_signal = [
+    ranked_high_signal = [
         row
         for score, row in sorted(scored_high_signal, key=lambda item: item[0], reverse=True)
         if score > 0
-    ][: options.max_per_batch]
+    ]
+    high_signal = ranked_high_signal[: options.max_per_batch]
+    high_signal_capped = len(ranked_high_signal) - len(high_signal)
+    if high_signal_capped:
+        logger.write("repair_capped", high_signal_capped=high_signal_capped)
 
     brave_api_key = os.environ.get("BRAVE_API_KEY")
     repaired: list[dict[str, Any]] = []
     skipped: list[dict[str, Any]] = []
     extraction: list[dict[str, Any]] = []
+    docs_capped_total = 0
 
     for school in high_signal:
         candidate, evidence = discover_repair_candidate(
@@ -407,6 +454,7 @@ def repair_high_signal_failures(
             options=options,
             brave_api_key=brave_api_key,
         )
+        docs_capped_total += int(evidence.get("docs_capped") or 0)
         if not candidate:
             record = {"school_id": school["school_id"], "school_name": school.get("school_name"), **evidence}
             skipped.append(record)
@@ -454,6 +502,8 @@ def repair_high_signal_failures(
     return {
         "considered_failed": len(failed),
         "high_signal": len(high_signal),
+        "high_signal_capped": high_signal_capped,
+        "docs_capped": docs_capped_total,
         "repaired": repaired,
         "skipped": skipped,
         "extraction": extraction,

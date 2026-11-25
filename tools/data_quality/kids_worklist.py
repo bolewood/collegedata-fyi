@@ -49,6 +49,15 @@ import yaml
 from dotenv import load_dotenv
 from supabase import ClientOptions, create_client
 
+try:
+    from tools.data_quality.published_years import (
+        fetch_published_years as shared_fetch_published_years,
+    )
+except ImportError:  # run as a script from tools/data_quality
+    from published_years import (
+        fetch_published_years as shared_fetch_published_years,
+    )
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCHOOLS_YAML = REPO_ROOT / "tools" / "finder" / "schools.yaml"
 SCHOOL_OVERRIDES_YAML = REPO_ROOT / "tools" / "finder" / "school_overrides.yaml"
@@ -119,21 +128,7 @@ def load_overrides() -> dict[str, dict]:
 
 
 def fetch_published_years(sb, school_ids: list[str], years: list[str]) -> dict[str, set[str]]:
-    have: dict[str, set[str]] = {sid: set() for sid in school_ids}
-    page_size = 1000
-    offset = 0
-    while True:
-        batch = sb.table("cds_documents").select(
-            "school_id, cds_year, participation_status"
-        ).in_("cds_year", years).range(offset, offset + page_size - 1).execute().data or []
-        for row in batch:
-            sid = row["school_id"]
-            if sid in have and row.get("participation_status") == "published":
-                have[sid].add(row["cds_year"])
-        if len(batch) < page_size:
-            break
-        offset += page_size
-    return have
+    return shared_fetch_published_years(sb, school_ids, years)
 
 
 def fetch_latest_hosting(sb, school_ids: list[str]) -> dict[str, dict]:
