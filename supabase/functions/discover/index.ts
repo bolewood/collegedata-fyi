@@ -87,7 +87,7 @@ Deno.serve(async (req: Request) => {
   const results: unknown[] = [];
   for (const s of targets) {
     try {
-      const result = await resolveCdsForSchool(s.discovery_seed_url);
+      const result = await resolveCdsForSchool(s.discovery_seed_url, s.id);
       results.push({
         school_id: s.id,
         school_name: s.name,

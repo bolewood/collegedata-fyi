@@ -162,6 +162,10 @@ Deno.test("fetchMostRecentDocumentForSchool: skips removed rows and picks newest
     { id: "u", school_id: "s", cds_year: "unknown", removed_at: null, sub_institutional: null },
     { id: "old", school_id: "s", cds_year: "2023-24", removed_at: null, sub_institutional: null },
     { id: "taken", school_id: "s", cds_year: "2025-26", removed_at: "2026-01-01", sub_institutional: null },
+    { id: "other", school_id: "other-school", cds_year: "2026-27", removed_at: null, sub_institutional: null },
+    { id: "sub", school_id: "s", cds_year: "2026-27", removed_at: null, sub_institutional: "law" },
+    { id: "bad1", school_id: "s", cds_year: "5024-25", removed_at: null, sub_institutional: null },
+    { id: "bad2", school_id: "s", cds_year: "2025-27", removed_at: null, sub_institutional: null },
   ];
   const client = {
     from() {
@@ -170,6 +174,7 @@ Deno.test("fetchMostRecentDocumentForSchool: skips removed rows and picks newest
         select: () => q,
         eq: (c: string, v: unknown) => (filters.push((r) => r[c] === v), q),
         is: (c: string, v: unknown) => (filters.push((r) => r[c] === v), q),
+        order: () => q,
         then: (res: (v: unknown) => void) =>
           res({ data: rows.filter((r) => filters.every((f) => f(r))), error: null }),
       };
@@ -177,4 +182,13 @@ Deno.test("fetchMostRecentDocumentForSchool: skips removed rows and picks newest
     },
   } as unknown as SupabaseClient;
   assertEquals((await fetchMostRecentDocumentForSchool(client, "s"))?.id, "old");
+});
+
+Deno.test("pickMostRecentDocument: malformed years are ignored", () => {
+  const rows = [
+    { id: "a", cds_year: "5024-25" },
+    { id: "b", cds_year: "2025-27" },
+    { id: "c", cds_year: "2023-24" },
+  ];
+  assertEquals(pickMostRecentDocument(rows)?.id, "c");
 });

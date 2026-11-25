@@ -1516,6 +1516,7 @@ export function mergeHintWithPageDocs(
 
 export async function resolveCdsForSchool(
   hint: string,
+  schoolId?: string, // only used to label the subpages_capped log line
 ): Promise<ResolveResult> {
   if (!isSafeUrl(hint)) {
     return { kind: "blocked_url", reason: "hint URL failed safety check" };
@@ -1669,6 +1670,7 @@ export async function resolveCdsForSchool(
   if (subpagesDropped > 0) {
     console.warn(JSON.stringify({
       event: "subpages_capped",
+      school_id: schoolId ?? null,
       url: landing.finalUrl,
       followed: subpages.length,
       dropped: subpagesDropped,

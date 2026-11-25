@@ -59,7 +59,6 @@ import {
   DirectoryRow,
   LatestTerminal,
   normalizeSeedUrl,
-  schoolIdsBlockedFromSeeding,
   selectCandidates,
 } from "./select.ts";
 import { ProbeOutcome } from "../_shared/probe_outcome.ts";
@@ -388,21 +387,15 @@ async function loadSchoolsWithCds(
   // cds_documents holds one row per (school, sub-institutional, year).
   // We just need the distinct school_ids; PostgREST has no DISTINCT but
   // dedup'ing in JS over a few thousand rows is trivial.
-  // Reads hidden rows too: an operator takedown must keep the school out of
-  // seeding (see schoolIdsBlockedFromSeeding). fetchPaged is exhaustive and
-  // errors at HARD_CAP, so a short read can't pass silently.
-  const result = await fetchPaged<
-    { school_id: string; cds_year: string; removed_at: string | null }
-  >((start, end) =>
+  const result = await fetchPaged<{ school_id: string }>((start, end) =>
     supabase
       .from("cds_documents")
-      .select("school_id, cds_year, removed_at")
+      .select("school_id")
       .order("school_id", { ascending: true })
-      .order("id", { ascending: true })
       .range(start, end)
   );
   if ("error" in result) return result;
-  return { schoolIds: schoolIdsBlockedFromSeeding(result.rows) };
+  return { schoolIds: new Set(result.rows.map((r) => r.school_id)) };
 }
 
 async function loadInFlightSchools(

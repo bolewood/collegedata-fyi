@@ -309,7 +309,7 @@ export async function archiveOneSchool(
   // 1. Resolve the hint. Post-Stage-B the resolver returns docs[] —
   //    one CDS-ish anchor per historical year for schools that expose
   //    a multi-year landing page, one row for the direct-doc case.
-  const result = await resolveCdsForSchool(school.discovery_seed_url);
+  const result = await resolveCdsForSchool(school.discovery_seed_url, school.school_id);
 
   // Branch on the resolver's discriminated union. Each non-resolved
   // kind triggers an observation write before throwing so failure

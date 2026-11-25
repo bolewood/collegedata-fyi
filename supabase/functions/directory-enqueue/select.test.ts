@@ -6,7 +6,6 @@ import {
   DirectoryRow,
   LatestTerminal,
   normalizeSeedUrl,
-  schoolIdsBlockedFromSeeding,
   selectCandidates,
   SelectionInputs,
   SkipReason,
@@ -111,7 +110,7 @@ Deno.test("selectCandidates: schools.yaml-covered IPEDS excluded", () => {
   assertEquals(skip(result.skipped, "schools_yaml_covered"), 1);
 });
 
-Deno.test("selectCandidates: schools in schoolsWithCds (blocked from seeding) excluded", () => {
+Deno.test("selectCandidates: schools with cds_documents row excluded", () => {
   const result = selectCandidates(inputs({
     rows: [
       row({ school_id: "has-cds" }),
@@ -319,23 +318,4 @@ Deno.test("normalizeSeedUrl: invalid https URL returns null", () => {
   // Existing https-prefixed input that does not parse as a URL is
   // rejected rather than silently passed through.
   assertEquals(normalizeSeedUrl("https://"), null);
-});
-
-Deno.test("seeding eligibility: live-dated and hidden block, unknown-only live stays eligible", () => {
-  const cdsRows = [
-    { school_id: "live-dated", cds_year: "2025-26", removed_at: null },
-    { school_id: "unknown-only", cds_year: "unknown", removed_at: null },
-    { school_id: "hidden-only", cds_year: "2024-25", removed_at: "2026-01-01T00:00:00Z" },
-    { school_id: "hidden-unknown", cds_year: "unknown", removed_at: "2026-01-01T00:00:00Z" },
-    { school_id: "mixed", cds_year: "unknown", removed_at: null },
-    { school_id: "mixed", cds_year: "2023-24", removed_at: "2026-01-01T00:00:00Z" },
-  ];
-  const result = selectCandidates(inputs({
-    rows: ["live-dated", "unknown-only", "hidden-only", "hidden-unknown", "mixed", "none"].map(
-      (id, i) => row({ ipeds_id: String(100000 + i), school_id: id }),
-    ),
-    schoolsWithCds: schoolIdsBlockedFromSeeding(cdsRows),
-  }));
-  assertEquals(result.selected.map((r) => r.school_id).sort(), ["none", "unknown-only"]);
-  assertEquals(skip(result.skipped, "already_has_cds"), 4);
 });

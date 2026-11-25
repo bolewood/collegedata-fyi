@@ -4,6 +4,7 @@
 // layer.
 
 import { SupabaseClient } from "jsr:@supabase/supabase-js@2";
+import { parseCdsStartYear } from "./year.ts";
 import {
   chooseDocumentIpedsId,
   fetchSlugEntries,
@@ -65,8 +66,6 @@ export async function fetchDocumentForSchoolYear(
   return (data as CdsDocumentRow | null) ?? null;
 }
 
-const REAL_CDS_YEAR_RE = /^(\d{4})-\d{2}$/;
-
 // Newest document by integer start year among rows with a real "YYYY-YY"
 // year. The `unknown` sentinel (and any other non-year value) sorts ABOVE
 // every real year as text, so a text sort picks the undated row as "most
@@ -78,9 +77,8 @@ export function pickMostRecentDocument<T extends { cds_year: string }>(
   let best: T | null = null;
   let bestStart = -Infinity;
   for (const row of rows) {
-    const m = REAL_CDS_YEAR_RE.exec(row.cds_year ?? "");
-    if (!m) continue;
-    const start = Number(m[1]);
+    const start = parseCdsStartYear(row.cds_year);
+    if (start === null) continue;
     if (start > bestStart) {
       best = row;
       bestStart = start;
@@ -97,6 +95,10 @@ export function pickMostRecentDocument<T extends { cds_year: string }>(
 // historical year the school has ever published. The failing URL is the
 // school's landing hint, which is not tied to one document, so "newest
 // dated year" is the right target. Returns null if nothing live exists.
+// Skipping removed_at rows is safe only because recordRemoval writes
+// source_gone_at and never removed_at: a doc marked gone here stays live and
+// is picked again on the next run (idempotent), instead of cascading to an
+// older year.
 export async function fetchMostRecentDocumentForSchool(
   client: SupabaseClient,
   schoolId: string,
@@ -106,7 +108,8 @@ export async function fetchMostRecentDocumentForSchool(
     .select("*")
     .eq("school_id", schoolId)
     .is("sub_institutional", null)
-    .is("removed_at", null);
+    .is("removed_at", null)
+    .order("id", { ascending: true }); // deterministic tie-break for same-year rows
   if (error) throw new Error(`fetchMostRecentDocumentForSchool: ${error.message}`);
   return pickMostRecentDocument((data ?? []) as CdsDocumentRow[]);
 }
@@ -372,6 +375,8 @@ export async function recordRepair(
 // because a single failed hint fetch is not the same as a school publicly
 // refusing to publish; operators can promote rows to 'withdrawn' via a
 // separate review process after observing sustained removal.
+// INVARIANT: this writes source_gone_at only, never removed_at.
+// fetchMostRecentDocumentForSchool skips removed_at rows and relies on this.
 export async function recordRemoval(
   client: SupabaseClient,
   documentId: string,
