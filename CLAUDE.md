@@ -48,6 +48,17 @@ whole corpus, not a one-off.
   slug to another institution.
 - Close the loop across current state, prior-year baseline, future discovery, and
   similar files before calling the issue handled.
+- Count the reach of any corpus-wide fix before calling it done. Compare what it
+  caught plus what it skipped with the total that has the problem, and say why
+  each skip rule is safe. A sweep that reports only what it caught looks the same
+  whether it found every case or a third of them.
+- Fix the mechanism, not the shape of the first case. A seed that is one file
+  can never find a new year, however many years are archived; a rule copied from
+  the first school's details ("few archived years") misses most of the others.
+- A green job means it ran, not that it worked. For discovery, the outcome is
+  current-year freshness: schools with this CDS year as a share of schools with
+  last year's. Check it a month after any discovery fix. See
+  `docs/postmortems/2026-11-24-stale-discovery-seeds.md`.
 
 ## Migrations
 

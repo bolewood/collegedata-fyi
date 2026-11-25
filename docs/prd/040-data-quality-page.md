@@ -1,6 +1,6 @@
 # PRD 040: Archive status — coverage and data quality
 
-**Status:** Final draft rev 4 (2026-11-24). Not started.
+**Status:** Final draft rev 4 (2026-11-24), amended the same day for the [stale-seeds postmortem](../postmortems/2026-11-24-stale-discovery-seeds.md) (see [Amendment](#amendment-2026-11-24-current-year-freshness)). Not started.
 **Author:** Anthony Showalter (with Claude)
 **URLs (planned):** `https://www.collegedata.fyi/coverage` (existing, reworked) and `https://www.collegedata.fyi/data-quality` (new)
 **Related:** [scoreboard script](../../tools/extraction-validator/scoreboard.py) (#432, #447, the data source), extraction scoreboard issue #431, [PRD 015](015-institution-directory-and-cds-coverage.md) (institution directory and coverage), [PRD 033](033-public-usage-page.md) (public usage page: the launch-gate pattern), [PRD 030](030-pipeline-observation.md) (pipeline board, which stays), [design system](../../web/DESIGN_SYSTEM.md), [voice](../../web/VOICE.md)
@@ -172,6 +172,12 @@ uses fields already selected into the client rows by both query paths in
 
 1. **Summary strip.**
    - **Colleges tracked**, and the status tiles.
+   - **This year's reports arrived** (added by the amendment): of the
+     schools with a report on file for the previous CDS year, how many also
+     have one for the current year. For example, "Of the schools with a
+     2024-25 report on file, N have a 2025-26 report on file." The count is
+     what we hold, not what schools have posted. A smaller line gives the
+     share at the same date last year, once a snapshot from last year exists.
    - **Share of undergraduates at tracked colleges with CDS numbers on file.**
      - Numerator: the summed `undergraduate_enrollment` of rows with a
        `latest_available_cds_year`.
@@ -595,6 +601,11 @@ both states. M2's improvements to `/coverage` don't depend on the gate.
   - Run changes (`run_format: 2`), `--public`, the tests, and a first
     committed snapshot.
   - Size the earlier-years job.
+  - **Current-year freshness** (amendment). Add `freshness` to the run and to
+    the public snapshot: for the current CDS year and the one before, the
+    number of schools with a live document, and the number with both. Count
+    only dated documents (`unknown` is not a year). Record the count in every
+    snapshot so later snapshots give a curve by date.
 - **M1, Data quality tab.** `/data-quality` with the page order above, the
   shared format-label map, and `ArchiveStatusHeader`, all behind the gate.
 - **M2, Coverage tab.** In order:
@@ -650,6 +661,8 @@ UI tests across M1 and M2:
 - A researcher can get from either tab to the other in one click, and from
   Data quality to the list of colleges we have a CDS for in one click.
 - A new snapshot reaches the site within one PR of a scoreboard run.
+- The Coverage tab's first number answers "are this year's reports arriving?"
+  and equals the snapshot's `freshness` count.
 
 ## Decisions (owner, 2026-11-24)
 
@@ -662,7 +675,31 @@ UI tests across M1 and M2:
   "XLSX", "DOCX" and "HTML" become "spreadsheet", "Word" and "web page" there
   too.
 
+## Amendment (2026-11-24): current-year freshness
+
+The [stale-seeds postmortem](../postmortems/2026-11-24-stale-discovery-seeds.md)
+found that the archive had stopped collecting new years for over 100
+schools, and that no page or alarm showed it. The coverage page labeled each
+school "Older CDS available" but never added the labels up.
+
+This PRD is the public view of the archive's health, so it takes the
+postmortem's headline number:
+
+- **Coverage tab:** the "This year's reports arrived" tile, first in the
+  summary strip.
+- **M0:** a `freshness` block in the run and the public snapshot.
+- **Success criteria:** one line for it.
+
+The alarm itself is not part of this PRD. A scheduled workflow that opens a
+GitHub issue when the share falls behind is postmortem action 1, tracked in
+#460, because a page nobody is prompted to open doesn't warn anyone.
+
+Last year's curve can't be rebuilt from `discovered_at`. The archive began
+in April 2026, after most schools had posted 2024-25: 348 of the 471 live
+2024-25 documents were first seen that month, and 105 came from a mirror
+import. Their dates record when we first looked, not when schools posted. Until a year of snapshots exists,
+the tile shows the current count only, and the alarm uses a fixed floor.
+
 ## Open questions
 
-None at rev 3. The M0 sample may raise copy questions for 2023-24 financial
-aid.
+None. The M0 sample may raise copy questions for 2023-24 financial aid.
