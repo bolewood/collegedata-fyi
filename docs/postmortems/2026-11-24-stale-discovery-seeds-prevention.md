@@ -209,7 +209,6 @@ Each original bug was put back in a throwaway worktree at `origin/main` 054b2b7 
 | 45551072276 | dry run (default) | It read 5,836 live rows and the floor 2025-26 agrees with SQL. 364/479 = 76.0% against a floor of 82.5%. It printed the issue it would open, unassigned for a test. No heartbeat |
 | 45551257009 | test mode, floor override 99 | It opened `[test]` #489, unassigned, and posted to #alerts. The heartbeat was rejected with a warning (the station is unregistered until #469) |
 | 45551423155 | test mode, floor override 10 | It closed #489 with one comment ("Recovered: … 365 of 479 (76.2%) … Closing.") and posted the recovery to #alerts |
-
 | 45580532234 | final code (after #502), test mode, override 99 | `alarm renewal:2025-26: create`. It opened `[test]` #504, unassigned, and posted to #alerts |
 | 45580731560 | final code, test mode, override 10 | `alarm renewal:2025-26: close`. It closed #504 and posted "[test] Discovery renewal recovered: one-year 74.9%…" |
 
