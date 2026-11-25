@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import json
+import re
 import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
@@ -204,11 +205,13 @@ class FetchQueueTests(unittest.TestCase):
 
     def getter(self, pages, totals):
         calls = iter(zip(pages, totals))
+        self.offsets = []
 
         def get(url, headers, *a, **k):
             page, total = next(calls)
             self.assertIn("archive_queue?select=", url)
             self.assertIn("enqueued_at=gte.2026-10-10T00%3A00%3A00Z", url)
+            self.offsets.append(int(re.search(r"offset=(\d+)", url).group(1)))
             return page, {"content-range": f"0-0/{total}"}
 
         return get
@@ -220,6 +223,19 @@ class FetchQueueTests(unittest.TestCase):
                 get=self.getter([[{"school_id": "a"}, {"school_id": "b"}], [{"school_id": "c"}]], [3, 3]),
             )
         self.assertEqual(len(rows), 3)
+        self.assertEqual(self.offsets, [0, 2])
+
+    def test_pages_are_read_at_the_offset_requested(self):
+        data = [{"school_id": f"s{i}"} for i in range(5)]
+
+        def get(url, headers, *a, **k):
+            offset = int(re.search(r"offset=(\d+)", url).group(1))
+            limit = int(re.search(r"limit=(\d+)", url).group(1))
+            return data[offset:offset + limit], {"content-range": f"0-0/{len(data)}"}
+
+        with patch.object(ff, "PAGE_SIZE", 2):
+            rows = ff.fetch_queue_rows("https://x.supabase.co", "k", since=self.SINCE, get=get)
+        self.assertEqual([r["school_id"] for r in rows], ["s0", "s1", "s2", "s3", "s4"])
 
     def test_empty_queue_is_an_error(self):
         with self.assertRaises(RenewalError):

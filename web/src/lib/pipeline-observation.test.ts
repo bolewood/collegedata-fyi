@@ -532,7 +532,12 @@ describe("pipeline observation freshness", () => {
       next_floor_pct: 5,
       same_year_duplicates: 3,
       seeds_without_new_year: 12,
-      fetch_failures: 5,
+      fetch_failures: 158,
+      fetch_failures_blocked: 28,
+      fetch_failures_viewer: 7,
+      fetch_failures_section_files: 0,
+      fetch_failures_dead_link: 17,
+      fetch_failures_other: 106,
     };
     const snapshot = snapshotFromFacts(
       healthyFacts().concat(renewalFact({ last_summary: summary, last_scheduled_summary: summary })),
@@ -542,7 +547,7 @@ describe("pipeline observation freshness", () => {
     expect(station.lamp).toBe("down");
     expect(station.result_line).toBe("364 of 479 renewed (76%) · floor 82% · 2025-26");
     expect(station.detail_line).toBe(
-      "2026-27: 10 of 400 (3%) · floor 5% · 3 same-year duplicates · 12 seeds without the new year · 5 fetch failures",
+      "2026-27: 10 of 400 (3%) · floor 5% · 3 same-year duplicates · 12 seeds without the new year · 158 fetch failures (blocked 28 · viewer 7 · dead link 17 · other 106)",
     );
     expect(snapshot.strip.lamp).toBe("down");
     expect(snapshot.strip.text).toBe(
@@ -551,6 +556,24 @@ describe("pipeline observation freshness", () => {
     expect(snapshot.strip.text).not.toMatch(/overdue/);
     const json = toPublicJson(snapshot);
     expect(json.stations[0].summary).toMatchObject({ renewed: 364, below_floor: true });
+  });
+
+  it("fetch failures show per-cause counts when present, the total alone when not", () => {
+    const withCauses = {
+      renewed: 1, prev_schools: 2, floor_pct: 1,
+      fetch_failures: 4, fetch_failures_blocked: 1, fetch_failures_viewer: 1,
+      fetch_failures_section_files: 1, fetch_failures_dead_link: 1, fetch_failures_other: 0,
+    };
+    const totalOnly = { renewed: 1, prev_schools: 2, floor_pct: 1, fetch_failures: 4 };
+    const line = (summary: Record<string, unknown>) =>
+      snapshotFromFacts(
+        [renewalFact({ last_summary: summary, last_scheduled_summary: summary })],
+        NOW,
+      ).stations[0].detail_line;
+    expect(line(withCauses)).toBe(
+      "4 fetch failures (blocked 1 · viewer 1 · section files 1 · dead link 1)",
+    );
+    expect(line(totalOnly)).toBe("4 fetch failures");
   });
 
   it("a floor miss is not rounded away", () => {
