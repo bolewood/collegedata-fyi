@@ -55,10 +55,12 @@ describe("/data-quality launch gate", () => {
       vi.setSystemTime(t);
       const meta = generateMetadata();
       const page = renderToStaticMarkup(<DataQualityPage />);
-      // The source line names the run's file (PRD: the numbers equal the run named on the page): the one place "scoreboard" may appear.
-      const withoutSource = page.replace(/<p id="dq-source"[\s\S]*?<\/p>/, "");
-      expect(withoutSource).not.toBe(page);
-      const text = (withoutSource + String(meta.title) + String(meta.description)).replace(/<[^>]*>/g, " ");
+      // The source line names the run's file (PRD: the numbers equal the run named on the page). It is the one element
+      // allowed to say "scoreboard", and nothing else about it is exempt: every other banned word is checked in it too.
+      const source = page.match(/<p id="dq-source"[\s\S]*?<\/p>/)![0];
+      const rest = page.replace(source, "");
+      expect(source.replace(/<[^>]*>/g, " ").replace(/scoreboard/gi, "")).not.toMatch(banned);
+      const text = (rest + String(meta.title) + String(meta.description)).replace(/<[^>]*>/g, " ");
       expect(text).not.toMatch(banned);
       expect(((page + String(meta.title) + String(meta.description)).match(em) ?? []).length).toBeLessThanOrEqual(1);
     }

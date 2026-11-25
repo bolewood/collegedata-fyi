@@ -72,8 +72,9 @@ Shown under each table's download button (after launch): *Download {year} table 
 small normal-case text (not the uppercase label style): *This table is licensed
 CC BY 4.0. Credit collegedata.fyi.* (CC BY 4.0 is a link.)
 
-Wide tables scroll sideways on a phone. While there is more to the right, a
-right-edge fade and a small "Scroll sideways" label show above the table.
+Wide tables scroll sideways on a phone. Above each table, in small normal-case
+text, only while the table is narrower than it needs (CSS only, no script):
+*Scroll sideways to see every column.*
 
 ## Table B: Admissions against federal figures
 
@@ -86,7 +87,10 @@ dashes, and the two notes about "No value" and "Differs", the left-out note and
 the CSV button are hidden.
 
 The three notes below show only when the year has federal figures. The
-hand-check sentence also needs a covered year and at least one differing value.
+hand-check sentence also needs a covered year, at least one differing value, and
+the two covered years together holding 198 to 240 differing values (90% to 110%
+of the 219 in the run the sample was drawn from; the snapshot counts values,
+not reports).
 
 - > A value is compared only when the federal data has a positive figure for
   > it, and matches means within 2%. Left out: {n} reports we've marked as
@@ -141,8 +145,9 @@ unexplained, not cleared.
   > filled in and we hadn't stored it in full.
 
   The sample was drawn from the 217 can't-check reports in the 2026-11-25 run.
-  The sentence shows only while the snapshot's 2023-24 count is at least 90% of
-  217 (196), so it disappears once a fix shrinks the pool instead of going false.
+  The sentence shows only while the snapshot's 2023-24 count is within 90% to
+  110% of 217 (196 to 238), so it disappears once a fix shrinks the pool, or a
+  regression grows it, instead of going false.
   There is no sentence about a fix: none is merged.
 
 ## How to read this

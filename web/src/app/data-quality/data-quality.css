@@ -1,0 +1,7 @@
+/* PRD 040: the tables on /data-quality scroll sideways when their box is narrower than their minimum width.
+   The hint is static CSS: a container query on the wrapper, no script and no measuring. The numbers are
+   TABLE_MIN_WIDTH - 1 and WIDE_TABLE_MIN_WIDTH - 1 in DataQualityView.tsx; a test keeps them in step. */
+.dq-scroll { container-type: inline-size; }
+.dq-scroll-hint { display: none; margin: 0 0 6px; font-size: 13px; line-height: 1.4; color: var(--ink-3); }
+@container (max-width: 639px) { .dq-scroll .dq-scroll-hint { display: block; } }
+@container (max-width: 819px) { .dq-scroll--wide .dq-scroll-hint { display: block; } }

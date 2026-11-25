@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import "./data-quality.css";
 import { ArchiveStatusHeader } from "@/components/ArchiveStatusHeader";
 import { DataQualityView } from "@/components/DataQualityView";
 import { formatSnapshotDate, formatSnapshotTime, isDataQualityLaunched, qualityLede, type QualitySnapshot } from "@/lib/data-quality";

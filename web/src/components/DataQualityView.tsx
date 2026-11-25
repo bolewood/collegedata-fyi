@@ -7,7 +7,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
   MIN_REPORTS_FOR_RATE,
   TABLE_TITLES,
@@ -85,47 +85,21 @@ function SectionHead({ id, label, title, sentence }: { id: string; label: string
   );
 }
 
-/** Horizontal scroller for a wide table. Shows a right-edge fade and a hint while there is more to the right. */
-function Scroll({ children, label }: { children: ReactNode; label: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [more, setMore] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const update = () => setMore(el.scrollWidth - el.clientWidth - el.scrollLeft > 2);
-    update();
-    el.addEventListener("scroll", update, { passive: true });
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => {
-      el.removeEventListener("scroll", update);
-      ro.disconnect();
-    };
-  }, []);
+/**
+ * Narrowest widths the tables can shrink to before they scroll sideways. The hint above each table is CSS only
+ * (data-quality.css, a container query on these numbers minus one), so it needs no script and no measuring.
+ */
+export const TABLE_MIN_WIDTH = 640;
+export const WIDE_TABLE_MIN_WIDTH = 820;
+
+/** Horizontal scroller for a wide table: a labelled, focusable region with a hint that shows only when the table is narrower than it needs. */
+function Scroll({ children, label, wide = false }: { children: ReactNode; label: string; wide?: boolean }) {
   return (
-    <div style={{ position: "relative" }}>
-      {more && (
-        <div className="meta" aria-hidden="true" style={{ textAlign: "right", marginBottom: 6 }}>
-          Scroll sideways
-        </div>
-      )}
-      <div ref={ref} style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }} role="region" aria-label={label} tabIndex={0}>
+    <div className={wide ? "dq-scroll dq-scroll--wide" : "dq-scroll"}>
+      <p className="dq-scroll-hint">Scroll sideways to see every column.</p>
+      <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }} role="region" aria-label={label} tabIndex={0}>
         {children}
       </div>
-      {more && (
-        <div
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            bottom: 0,
-            width: 36,
-            pointerEvents: "none",
-            background: "linear-gradient(to left, var(--paper) 10%, transparent)",
-          }}
-        />
-      )}
     </div>
   );
 }
@@ -134,7 +108,7 @@ const tableStyle: React.CSSProperties = {
   width: "100%",
   borderCollapse: "collapse",
   fontSize: 14,
-  minWidth: 640,
+  minWidth: TABLE_MIN_WIDTH,
 };
 const thStyle: React.CSSProperties = {
   textAlign: "right",
@@ -457,7 +431,7 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
           <strong>Differs</strong> isn’t always ours. Schools sometimes report different figures to the federal
           government than in their CDS, for example from a different count date. A differing value may be our
           misreading or a real difference between the two filings.
-          {federalDiffersNote(year) && <span id="dq-differs-sample"> {federalDiffersNote(year)}</span>}
+          {federalDiffersNote(year, snapshot) && <span id="dq-differs-sample"> {federalDiffersNote(year, snapshot)}</span>}
         </Note>
         </>
       )}
@@ -509,8 +483,8 @@ function TotalsTable({ year, snapshot }: { year: QualityYear; snapshot: QualityS
         title="Do the printed totals add up?"
         sentence="Whether the totals printed in each published report equal the sum of their own rows. The three tables are never averaged together."
       />
-      <Scroll label={`Table C, ${year.cds_year}`}>
-        <table style={{ ...tableStyle, minWidth: 820 }} id="dq-table-c">
+      <Scroll label={`Table C, ${year.cds_year}`} wide>
+        <table style={{ ...tableStyle, minWidth: WIDE_TABLE_MIN_WIDTH }} id="dq-table-c">
           <thead>
             <tr>
               <th scope="col" style={thLeft}>Format</th>

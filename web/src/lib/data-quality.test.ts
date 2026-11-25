@@ -273,10 +273,10 @@ describe("data quality CSV", () => {
     it("federal", () => {
       expect(lines("federal")).toEqual([
         "format,reports_checked,values_up_to_3_per_report,matches,no_value,differs",
-        "standard PDF,49,147,135,6,6",
-        "fillable PDF,25,75,72,2,1",
+        "standard PDF,49,120,50,10,60",
+        "fillable PDF,25,64,30,5,29",
         "spreadsheet,3,9,8,1,0",
-        "All formats,77,231,215,9,7",
+        "All formats,77,193,88,16,89",
       ]);
     });
 

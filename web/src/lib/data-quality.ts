@@ -311,35 +311,76 @@ export const HAND_CHECK_DATE = formatSnapshotDate(`${HAND_CHECK_ISO}T00:00:00Z`)
  * against the schools' files: 19 had the table filled in and we hadn't stored it in full.
  *
  * The note describes that pool of 217. Once the fix lands the pool shrinks and the note would be false, so it shows
- * only while the snapshot's 2023-24 count is at least `keepShare` of 217 (the pool the sample described is still
- * mostly there). Below that it hides, and a new sample is needed to say anything about what is left.
+ * only while the snapshot's 2023-24 count is within 90% to 110% of 217: below that the pool the sample described has
+ * mostly gone, above it the pool has grown a lot (a regression), and either way the sample no longer describes it.
+ * A new sample is needed to say anything about what is left.
  */
 export const AID_CANT_CHECK_SAMPLE = {
   years: ["2023-24"],
   checked: 20,
   ours: 19,
   population: 217,
-  keepShare: 0.9,
+  /** The note shows while the snapshot's count is within this share of the population, both ways. */
+  keepRange: [0.9, 1.1],
 } as const;
 
 /**
  * 10 admissions "differs" reports from 2023-24 and 2024-25. In 8 the file had the number we compared. 2 were on our
  * side: one misread and one report filed for a different scope than the federal record.
  */
-export const FEDERAL_DIFFERS_SAMPLE = { years: ["2023-24", "2024-25"], checked: 10, sameInFile: 8, ours: 2 } as const;
+export const FEDERAL_DIFFERS_SAMPLE = {
+  years: ["2023-24", "2024-25"],
+  checked: 10,
+  sameInFile: 8,
+  ours: 2,
+  /**
+   * The pool the 10 were drawn from, in the 2026-11-25 run: 140 published reports with at least one differing value,
+   * pooled over the two years. The snapshot counts differing VALUES (up to 3 per report), not reports, so the guard
+   * is on values: 219 in that run. The note shows while the two years together are within `keepRange` of 219.
+   */
+  populationReports: 140,
+  populationValues: 219,
+  keepRange: [0.9, 1.1],
+} as const;
+
+/** Differing values pooled over the years the sample covered, from the snapshot. */
+export function pooledDiffers(snapshot: QualitySnapshot): number {
+  return snapshot.years
+    .filter((y) => (FEDERAL_DIFFERS_SAMPLE.years as readonly string[]).includes(y.cds_year))
+    .reduce((n, y) => n + y.total.federal.differs, 0);
+}
+
+/** The pooled count of differing values between which the note shows: 198 to 240 for a pool of 219. */
+export function differsPoolBounds(): { low: number; high: number } {
+  const s = FEDERAL_DIFFERS_SAMPLE;
+  return { low: Math.ceil(s.populationValues * s.keepRange[0]), high: Math.floor(s.populationValues * s.keepRange[1]) };
+}
+
+/** The counts of can't-check reports between which the 2023-24 note shows: 196 to 238 for a pool of 217. */
+export function aidPoolBounds(): { low: number; high: number } {
+  const s = AID_CANT_CHECK_SAMPLE;
+  return { low: Math.ceil(s.population * s.keepRange[0]), high: Math.floor(s.population * s.keepRange[1]) };
+}
 
 /** The 2023-24 financial aid sample. Null for a year it didn't cover, or once the pool it described has mostly gone (see above). */
 export function aidCantCheckNote(year: QualityYear): string | null {
   const s = AID_CANT_CHECK_SAMPLE;
-  const stillThere = year.total.totals.H1.cant_check >= Math.ceil(s.population * s.keepShare);
+  const count = year.total.totals.H1.cant_check;
+  const stillThere = count >= aidPoolBounds().low && count <= aidPoolBounds().high;
   if (!(s.years as readonly string[]).includes(year.cds_year) || !stillThere) return null;
   return `For financial aid in ${year.cds_year}: in a hand check of ${s.checked} of the reports we couldn’t check, sampled on ${HAND_CHECK_DATE}, ${s.ours} had the financial aid table filled in and we hadn’t stored it in full.`;
 }
 
-/** The admissions "differs" sample. Null for a year it didn't cover, one with no federal figures, or one with no differing values. */
-export function federalDiffersNote(year: QualityYear): string | null {
+/**
+ * The admissions "differs" sample. Null for a year it didn't cover, one with no federal figures, one with no differing
+ * values, or once the two covered years together have moved out of 90% to 110% of the pool the sample was drawn from.
+ */
+export function federalDiffersNote(year: QualityYear, snapshot: QualitySnapshot): string | null {
   const s = FEDERAL_DIFFERS_SAMPLE;
+  const pooled = pooledDiffers(snapshot);
+  const { low, high } = differsPoolBounds();
   if (!(s.years as readonly string[]).includes(year.cds_year) || !year.federal_fall_loaded || year.total.federal.differs === 0) return null;
+  if (pooled < low || pooled > high) return null;
   return `In a hand check of ${s.checked} differing reports (${s.years.join(" and ")}, sampled on ${HAND_CHECK_DATE}), ${s.sameInFile} had the number we compared in the school’s file, so the difference came from the federal side or from how the two filings were matched, which can include our matching. ${s.ours} were on our side: one misread and one report filed for a different scope than the federal record.`;
 }
 
@@ -378,9 +419,11 @@ export function renewalTile(renewal: Renewal): RenewalTile {
   };
 }
 
-/** "12:25 UTC" for a snapshot timestamp. */
+/** "12:25 UTC" for a snapshot timestamp. Built by hand from the UTC fields: a locale formatter can print midnight as 24:05. */
 export function formatSnapshotTime(iso: string): string {
-  return `${new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC" })} UTC`;
+  const d = new Date(iso);
+  const two = (n: number) => String(n).padStart(2, "0");
+  return `${two(d.getUTCHours())}:${two(d.getUTCMinutes())} UTC`;
 }
 
 export function formatSnapshotDate(iso: string): string {

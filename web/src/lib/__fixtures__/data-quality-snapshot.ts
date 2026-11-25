@@ -141,8 +141,9 @@ export const FIXTURE_SNAPSHOT: QualitySnapshot = {
     both: 364,
   },
   years: [
-    // 2023-24 is sized like the 2026-11-25 run's pool: 217 financial aid "can't check" reports in all.
-    year("2023-24", [flat(300, { set_aside: 3, couldnt_read: 4, h1: [75, 35, 190] }), fillable(100, { h1: [60, 13, 27] }), sheets()], {
+    // 2023-24 is sized like the 2026-11-25 run's pools: 217 financial aid "can't check" reports, and with 2024-25 219
+    // differing admissions values (130 + 89).
+    year("2023-24", [flat(300, { set_aside: 3, couldnt_read: 4, h1: [75, 35, 190], federal: [299, 700, 60, 100] }), fillable(100, { h1: [60, 13, 27], federal: [100, 250, 20, 30] }), sheets()], {
       form: { form_year: "2023-24", full_field_schema: true, questions: 1053 },
       other_form_numbering: 12,
       removed: 4,
@@ -151,7 +152,7 @@ export const FIXTURE_SNAPSHOT: QualitySnapshot = {
       form: { form_year: "2025-26", full_field_schema: true, questions: 1105 },
       federal_fall_loaded: false,
     }),
-    year("2024-25", [flat(50, { set_aside: 2 }), fillable(25), sheets()], {
+    year("2024-25", [flat(50, { set_aside: 2, federal: [49, 50, 10, 60] }), fillable(25, { federal: [25, 30, 5, 29] }), sheets()], {
       form: { form_year: "2024-25", full_field_schema: true, questions: 1083 },
     }),
   ],

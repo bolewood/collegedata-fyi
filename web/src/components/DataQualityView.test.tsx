@@ -13,7 +13,12 @@ vi.mock("next/navigation", () => ({
 import { FIXTURE_SNAPSHOT } from "@/lib/__fixtures__/data-quality-snapshot";
 import { DATA_LICENSE_NAME, DATA_LICENSE_URL } from "@/lib/data-license";
 import {
+  type QualitySnapshot,
   type QualityYear,
+  FEDERAL_DIFFERS_SAMPLE,
+  aidPoolBounds,
+  differsPoolBounds,
+  pooledDiffers,
   AID_CANT_CHECK_SAMPLE,
   DATA_QUALITY_LAUNCH_DATE,
   aidCantCheckNote,
@@ -21,7 +26,7 @@ import {
 } from "@/lib/data-quality";
 import { secondaryNavLinks, isActive } from "@/lib/nav-links";
 import { ArchiveStatusHeader, visibleArchiveTabs } from "./ArchiveStatusHeader";
-import { DataQualityView, yearNotices } from "./DataQualityView";
+import { DataQualityView, TABLE_MIN_WIDTH, WIDE_TABLE_MIN_WIDTH, yearNotices } from "./DataQualityView";
 
 function render(search = "") {
   currentParams = new URLSearchParams(search);
@@ -205,7 +210,7 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
     for (const f of ["\u2014", "&mdash;", "&#8212;", "&#x2014;", "&MDASH;"]) expect(f.match(EM_DASH)).not.toBeNull();
   });
 
-  it("shows the 2023-24 financial aid sample only for the year it covered, and only while its pool is still there", () => {
+  it("shows the 2023-24 financial aid sample only for the year it covered, and only while its pool is still about that size", () => {
     const pool = AID_CANT_CHECK_SAMPLE.population;
     expect(Y("2023-24").total.totals.H1.cant_check).toBe(pool);
     expect(render("year=2023-24")).toContain('id="dq-note-aid-sample"');
@@ -213,30 +218,46 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
     expect(render("year=2025-26")).not.toContain('id="dq-note-aid-sample"');
     expect(aidCantCheckNote(Y("2024-25"))).toBeNull();
 
-    // The pool the sample described (217) shows it; after a fix (~67) it hides; the edge is 90% of the pool.
-    const keep = Math.ceil(pool * AID_CANT_CHECK_SAMPLE.keepShare);
-    expect(aidCantCheckNote(withCantCheck(Y("2023-24"), pool))).not.toBeNull();
-    expect(aidCantCheckNote(withCantCheck(Y("2023-24"), keep))).not.toBeNull();
-    expect(aidCantCheckNote(withCantCheck(Y("2023-24"), keep - 1))).toBeNull();
-    expect(aidCantCheckNote(withCantCheck(Y("2023-24"), 67))).toBeNull();
-    expect(aidCantCheckNote(withCantCheck(Y("2023-24"), 0))).toBeNull();
+    // The pool the sample described (217) shows it; so do both edges of 90% to 110% (196 and 238); a fix (~67) or a
+    // pool that grew a lot (a regression) hides it.
+    expect(aidPoolBounds()).toEqual({ low: 196, high: 238 });
+    for (const n of [196, pool, 238]) expect(aidCantCheckNote(withCantCheck(Y("2023-24"), n))).not.toBeNull();
+    for (const n of [0, 67, 195, 239, 500]) expect(aidCantCheckNote(withCantCheck(Y("2023-24"), n))).toBeNull();
     // The year guard on its own: a year the sample didn't cover stays hidden even with 217 can't-check reports.
     expect(aidCantCheckNote(withCantCheck(Y("2024-25"), pool))).toBeNull();
   });
+
+  /** The fixture with 2024-25's differing values changed so the two covered years together hold n. */
+  const withPooled = (n: number): QualitySnapshot => {
+    const base = pooledDiffers(FIXTURE_SNAPSHOT);
+    return {
+      ...FIXTURE_SNAPSHOT,
+      years: FIXTURE_SNAPSHOT.years.map((y) => (y.cds_year === "2024-25" ? withDiffers(y, y.total.federal.differs + (n - base)) : y)),
+    };
+  };
+  const noteFor = (snap: QualitySnapshot, y: string) => federalDiffersNote(snap.years.find((x) => x.cds_year === y)!, snap);
 
   it("shows the admissions 'differs' sample only for the years it covered, with federal figures and differing values", () => {
     expect(render("year=2023-24")).toContain('id="dq-differs-sample"');
     expect(render("year=2024-25")).toContain('id="dq-differs-sample"');
     expect(render("year=2025-26")).not.toContain('id="dq-differs-sample"');
-    expect(federalDiffersNote(Y("2024-25"))).not.toBeNull();
-    // No differing values left: nothing to describe.
-    expect(federalDiffersNote(withDiffers(Y("2024-25"), 0))).toBeNull();
+    expect(noteFor(FIXTURE_SNAPSHOT, "2024-25")).not.toBeNull();
+    // No differing values left in the year: nothing to describe.
+    expect(federalDiffersNote(withDiffers(Y("2024-25"), 0), withPooled(219))).toBeNull();
     // Year guard on its own: an uncovered year with federal figures and differing values stays hidden.
     const uncovered = { ...withDiffers(Y("2025-26"), 5), federal_fall_loaded: true };
-    expect(federalDiffersNote(uncovered)).toBeNull();
+    expect(federalDiffersNote(uncovered, FIXTURE_SNAPSHOT)).toBeNull();
     // Loaded guard on its own: a covered year with no federal figures but differing values stays hidden.
     const unloaded = { ...withDiffers(Y("2024-25"), 5), federal_fall_loaded: false };
-    expect(federalDiffersNote(unloaded)).toBeNull();
+    expect(federalDiffersNote(unloaded, FIXTURE_SNAPSHOT)).toBeNull();
+  });
+
+  it("hides the 'differs' sample once the two covered years together leave 90% to 110% of the 219 values it was drawn from", () => {
+    expect(pooledDiffers(FIXTURE_SNAPSHOT)).toBe(FEDERAL_DIFFERS_SAMPLE.populationValues);
+    expect(differsPoolBounds()).toEqual({ low: 198, high: 240 });
+    for (const n of [198, 219, 240]) expect(noteFor(withPooled(n), "2024-25")).not.toBeNull();
+    for (const n of [197, 241, 60, 500]) expect(noteFor(withPooled(n), "2024-25")).toBeNull();
+    expect(noteFor(withPooled(219), "2023-24")).not.toBeNull();
   });
 
   it("with no federal figures, Table B says so under its heading and has no 'No value' or 'Differs' notes or download", () => {
@@ -277,13 +298,34 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
     expect(text).not.toMatch(/We use the table by sex\./);
   });
 
+  it("puts a static hint above each wide table (CSS decides when it shows) and no script-driven cue", () => {
+    const html = render("year=2024-25");
+    expect(html.match(/class="dq-scroll-hint"/g)).toHaveLength(4);
+    expect(html.match(/dq-scroll--wide/g)).toHaveLength(1);
+    expect(html).not.toContain("linear-gradient");
+    // Every table's scroll region is still focusable and labelled.
+    expect(html.match(/role="region" aria-label="[^"]+" tabindex="0"/g)).toHaveLength(4);
+    const src = readFileSync(resolve(__dirname, "DataQualityView.tsx"), "utf8");
+    expect(src).not.toMatch(/useState|useEffect|ResizeObserver|scrollWidth/);
+  });
+
+  it("keeps the CSS hint's breakpoints one pixel under the tables' minimum widths", () => {
+    const css = readFileSync(resolve(__dirname, "../app/data-quality/data-quality.css"), "utf8");
+    expect(css).toContain("container-type: inline-size");
+    expect(css).toContain(`@container (max-width: ${TABLE_MIN_WIDTH - 1}px)`);
+    expect(css).toContain(`@container (max-width: ${WIDE_TABLE_MIN_WIDTH - 1}px)`);
+  });
+
   // Seen under `next dev` and in the production build: the space before a text run containing an HTML entity is
   // dropped after an inline element or a {expression} ("No value</strong>means"). Vitest compiles differently and
   // can't see it, so keep every entity out of this file and write the character (curly quotes, en dashes, &).
-  it("uses no HTML entity of any kind in the view's source", () => {
-    const hits = readFileSync(resolve(__dirname, "DataQualityView.tsx"), "utf8")
-      .split("\n")
-      .filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l) && /&(?:[a-zA-Z]+|#x?[0-9a-fA-F]+);/.test(l));
-    expect(hits).toEqual([]);
+  it("uses no HTML entity of any kind in the view's or the two pages' source", () => {
+    // The view and the two page files this work owns.
+    for (const file of ["DataQualityView.tsx", "../app/data-quality/page.tsx", "../app/coverage/page.tsx"]) {
+      const hits = readFileSync(resolve(__dirname, file), "utf8")
+        .split("\n")
+        .filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l) && /&(?:[a-zA-Z]+|#x?[0-9a-fA-F]+);/.test(l));
+      expect(hits, file).toEqual([]);
+    }
   });
 });
