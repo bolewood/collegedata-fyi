@@ -2,9 +2,12 @@ import io
 import json
 import tempfile
 import unittest
+from datetime import date
+from unittest import mock
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
+from tools.ops import discovery_renewal as dr
 from tools.ops import same_year_duplicates as sd
 
 
@@ -96,10 +99,29 @@ class ClassifyTests(unittest.TestCase):
         self.assertIsNone(sd.url_year("https://x.edu/cds.pdf"))
         self.assertIsNone(sd.url_year(None))
 
-    def test_misfiled_by_detected_vs_cds_year(self):
+    def test_year_conflict_when_content_and_resolver_differ(self):
         g = self.one([doc(1), doc(2, cds_year="2025-26", detected_year="2024-25")])
-        self.assertEqual(g.cls, "misfiled_year")
-        self.assertIn("detected_year", g.evidence)
+        self.assertEqual(g.cls, "year_conflict")
+        self.assertIn("content says 2024-25 but its URL/resolver says 2025-26", g.evidence)
+        self.assertIn("#455", g.evidence)
+
+    def test_year_conflict_in_the_other_direction_has_no_stale_title_note(self):
+        g = self.one([doc(1), doc(2, cds_year="2023-24", detected_year="2024-25")])
+        self.assertEqual(g.cls, "year_conflict")
+        self.assertNotIn("#455", g.evidence)
+
+    def test_content_override_is_not_called_misfiled_even_if_url_names_the_resolver_year(self):
+        g = self.one([
+            doc(1),
+            doc(2, cds_year="2025-26", detected_year="2024-25", url="https://x.edu/CDS_2025-26.pdf"),
+        ])
+        self.assertEqual(g.cls, "year_conflict")
+
+    def test_refiled_document_is_not_flagged_when_it_is_the_only_one_in_its_year(self):
+        # A #455 re-filed document: detected 2025-26, resolver said 2024-25.
+        # Its school's other 2024-25 document is not a collision.
+        rows = [doc(1, year="2024-25"), doc(2, cds_year="2024-25", detected_year="2025-26")]
+        self.assertEqual(sd.find_groups(rows).count, 0)
 
     def test_unknown_cds_year_with_detected_year_is_not_misfiled(self):
         g = self.one([doc(1, sha="s1"), doc(2, cds_year="unknown", detected_year="2024-25", sha="s2")])
@@ -143,7 +165,7 @@ class ClassifyTests(unittest.TestCase):
         ]
         self.assertEqual(
             sd.find_groups(rows).by_class,
-            {"misfiled_year": 1, "section_split": 1, "same_file": 1, "duplicate": 1},
+            {"misfiled_year": 1, "year_conflict": 0, "section_split": 1, "same_file": 1, "duplicate": 1},
         )
 
 
@@ -243,6 +265,60 @@ class CliTests(unittest.TestCase):
         with redirect_stderr(err), redirect_stdout(io.StringIO()):
             code = sd.main(["--anon-key", ""])
         self.assertEqual(code, 1)
+
+
+def renewal_rows():
+    rows = []
+    for i in range(400):
+        rows.append({"school_id": f"s{i}", "canonical_year": "2024-25",
+                     "participation_status": "published", "removed_at": None,
+                     "discovered_at": "2026-01-01T00:00:00+00:00"})
+    return rows
+
+
+class RenewalWiringTests(unittest.TestCase):
+    """The renewal job reports the same classifier's count."""
+
+    def report(self):
+        return sd.find_groups([doc(1), doc(2), doc(3, school="b", cds_year="2023-24", detected_year="2023-24")])
+
+    def test_summary_carries_the_count_and_is_null_when_not_computed(self):
+        result = dr.compute(renewal_rows(), date(2026, 11, 24))
+        self.assertEqual(dr.summary_dict(result, same_year_duplicates=3)["same_year_duplicates"], 3)
+        self.assertIsNone(dr.summary_dict(result)["same_year_duplicates"])
+
+    def test_report_has_the_section_only_when_computed(self):
+        result = dr.compute(renewal_rows(), date(2026, 11, 24))
+        with_it = dr.render_report(result, [], duplicates=self.report())
+        self.assertIn("## Two documents in one year", with_it)
+        self.assertIn("a-college", with_it)
+        self.assertNotIn("Two documents in one year", dr.render_report(result, []))
+
+    def run_main(self, dup_run):
+        with tempfile.TemporaryDirectory() as tmp, \
+                mock.patch.object(dr, "fetch_live_manifest", return_value=renewal_rows()), \
+                mock.patch.object(dr, "fetch_sql_floor", return_value="2025-26"), \
+                mock.patch.object(sd, "run", dup_run), \
+                redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            out = Path(tmp) / "summary.json"
+            code = dr.main([
+                "--anon-key", "k", "--as-of", "2026-11-24", "--test-mode",
+                "--out-summary", str(out), "--out-report", str(Path(tmp) / "r.md"),
+            ])
+            return code, (json.loads(out.read_text()) if out.exists() else None)
+
+    def test_job_writes_the_count_to_the_summary(self):
+        code, summary = self.run_main(lambda api, key: self.report())
+        self.assertEqual(code, 0)
+        self.assertEqual(summary["same_year_duplicates"], 1)
+
+    def test_a_data_error_in_the_duplicate_check_fails_the_job(self):
+        def boom(api, key):
+            raise sd.DuplicatesError("short read")
+
+        code, summary = self.run_main(boom)
+        self.assertEqual(code, 1)
+        self.assertIsNone(summary)
 
 
 if __name__ == "__main__":

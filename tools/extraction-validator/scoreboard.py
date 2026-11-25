@@ -460,7 +460,8 @@ def chunks(items: list[str], size: int) -> Iterable[list[str]]:
 def fetch_documents(api: Api, years: tuple[str, ...]) -> list[dict[str, Any]]:
     return api.get("cds_manifest", {
         "select": "document_id,school_id,school_name,ipeds_id,sub_institutional,canonical_year,"
-                  "source_format,extraction_status,data_quality_flag,removed_at",
+                  "source_format,extraction_status,data_quality_flag,removed_at,"
+                  "source_url,cds_year,detected_year",
         "canonical_year": f"in.({','.join(years)})",
         "order": "document_id",
     })
@@ -769,6 +770,8 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
             "document_id": document_id, "school_id": doc["school_id"], "year": year,
             "format": doc.get("source_format") or "unknown", "flag": doc.get("data_quality_flag"),
             "sub_institutional": bool(doc.get("sub_institutional")),
+            "source_url": doc.get("source_url"), "cds_year": doc.get("cds_year"),
+            "detected_year": doc.get("detected_year"),
             "producer": None, "version": None, "schema_version": None, "fields": 0,
             "newest_producer": newest.get("producer") if newest else None,
             "newest_version": newest.get("producer_version") if newest else None,
@@ -859,7 +862,35 @@ def gather(api: Api, years: tuple[str, ...], out_dir: Path, artifact_interval: f
         "hold_summaries_read": len(glob.glob(summaries)),
         "not_served": {f"{year} {status}": count for (year, status), count in sorted(not_served.items())},
         "documents": documents,
+        "same_year_duplicates": same_year_duplicates_block(documents),
     }
+
+
+def same_year_duplicates_block(documents: list[dict[str, Any]]) -> dict[str, Any]:
+    """School-years with two or more served documents, by the same classifier
+    the discovery renewal job uses (tools/ops/same_year_duplicates.py).
+
+    Only the served, extracted documents of the scoreboard's years are here,
+    so this is a subset of what the pipeline page counts. The scoreboard does
+    not read `source_sha256`, so a same-file pair shows as a duplicate.
+    """
+    if str(REPO_ROOT) not in sys.path:
+        sys.path.insert(0, str(REPO_ROOT))
+    from tools.ops.same_year_duplicates import find_groups
+
+    rows = []
+    for d in documents:
+        # `year` is the filed (canonical) year. A saved run from before the
+        # URL and year columns were kept has neither: file it under `year`.
+        has_years = "cds_year" in d
+        rows.append({
+            "id": d["document_id"], "school_id": d["school_id"],
+            "sub_institutional": "sub-institutional" if d.get("sub_institutional") else None,
+            "cds_year": d["cds_year"] if has_years else d["year"],
+            "detected_year": d.get("detected_year") if has_years else d["year"],
+            "source_url": d.get("source_url"), "source_sha256": None,
+        })
+    return find_groups(rows).as_dict()
 
 
 # ---------------------------------------------------------------------------
@@ -1060,6 +1091,7 @@ def render(data: dict[str, Any], previous: Optional[dict[str, Any]] = None) -> s
     if unread:
         lines.append(f"\n{unread} documents before the projected years have an LLM gap-fill artifact that this "
                      "script does not merge; their field counts are of the base extraction only.")
+    lines.append(render_same_year_duplicates(data))
     if data["not_served"]:
         lines.append("\nNot counted above: " + "; ".join(f"{k} {v}" for k, v in data["not_served"].items()) + ".")
     return "\n".join(lines) + "\n"
@@ -1359,6 +1391,24 @@ def write_public(run_path: Path, out_dir: Path) -> Path:
     target = out_dir / f"{public['snapshot_of'][:10]}.json"
     target.write_text(json.dumps(public, indent=1) + "\n")
     return target
+
+
+def render_same_year_duplicates(data: dict[str, Any]) -> str:
+    block = data.get("same_year_duplicates")
+    if block is None:
+        return "\n## Two documents in one year\n\nThis saved run has no duplicate check; run the scoreboard again."
+    lines = [
+        "\n## Two documents in one year\n",
+        f"{block['same_year_duplicates']} school-years among these served documents have two or more "
+        "(" + ", ".join(f"{n} {c}" for c, n in block["same_year_duplicates_by_class"].items())
+        + f"; {block['undated_duplicates']} undated). The pipeline page counts every live document, "
+        "so its number is larger.",
+    ]
+    if block["groups"]:
+        lines += ["", "| School | Year | Class | Evidence |", "|---|---|---|---|"]
+        for g in block["groups"]:
+            lines.append(f"| {g['school_id']} | {g['year']} | {g['class']} | {g['evidence'].replace('|', '/')} |")
+    return "\n".join(lines)
 
 
 def main() -> int:

@@ -11,7 +11,10 @@ This module reads the live published documents and reports every
 classified, best effort, with the evidence that decided it:
 
   misfiled_year  a document's source URL names a different CDS year than the
-                 year it is filed under, or detected_year != cds_year
+                 year it is filed under, and nothing corrected the filing
+  year_conflict  the content-detected year and the resolver's cds_year differ;
+                 the site follows the content, so one document may belong to
+                 the other year (see year_evidence)
   section_split  at least one document is a single-section file
   same_file      two documents have the same source_sha256
   duplicate      none of the above
@@ -33,11 +36,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import re
 import sys
-import urllib.error
-import urllib.parse
-import urllib.request
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -51,63 +50,14 @@ if str(REPO_ROOT) not in sys.path:
 from tools.finder.academic_year import normalize_academic_year  # noqa: E402
 from tools.finder.stuck_pdf_seeds import is_section_seed  # noqa: E402
 
-# TODO(#474): once tools/ops/discovery_renewal.py is on main, import
-# parse_year, parse_content_range_total, http_json, _headers and RenewalError
-# from it and delete this fallback block (one copy of the mechanism). The
-# fallback matches those functions line for line.
-try:  # pragma: no cover - exercised only after #474 lands
-    from tools.ops.discovery_renewal import (  # type: ignore  # noqa: E402
-        PAGE_SIZE,
-        RenewalError as DuplicatesError,
-        _headers,
-        http_json,
-        parse_content_range_total,
-        parse_year,
-    )
-except ImportError:
-    PAGE_SIZE = 1000
-    HTTP_TIMEOUT_SEC = 60
-    YEAR_RE = re.compile(r"^(\d{4})-(\d{2})$")
-
-    class DuplicatesError(RuntimeError):  # type: ignore[no-redef]
-        """The check could not be trusted. Exit nonzero."""
-
-    def parse_year(value: Any) -> int | None:  # type: ignore[no-redef]
-        """Start year of a valid CDS year string, else None (`unknown` is None)."""
-        if not isinstance(value, str):
-            return None
-        match = YEAR_RE.match(value)
-        if not match:
-            return None
-        start = int(match.group(1))
-        if int(match.group(2)) != (start + 1) % 100:
-            return None
-        return start
-
-    def parse_content_range_total(value: str | None) -> int:  # type: ignore[no-redef]
-        if not value or "/" not in value:
-            raise DuplicatesError(f"missing Content-Range total (got {value!r})")
-        total = value.rsplit("/", 1)[1]
-        if not total.isdigit():
-            raise DuplicatesError(f"Content-Range has no exact total (got {value!r})")
-        return int(total)
-
-    def _headers(anon_key: str, **extra: str) -> dict[str, str]:  # type: ignore[no-redef]
-        return {"apikey": anon_key, "Authorization": f"Bearer {anon_key}", "Accept": "application/json", **extra}
-
-    def http_json(url: str, headers: dict[str, str]) -> tuple[Any, dict[str, str]]:  # type: ignore[no-redef]
-        request = urllib.request.Request(url, headers=headers)
-        try:
-            with urllib.request.urlopen(request, timeout=HTTP_TIMEOUT_SEC) as response:
-                payload = json.loads(response.read().decode("utf-8"))
-                return payload, {k.lower(): v for k, v in response.headers.items()}
-        except urllib.error.HTTPError as exc:
-            raise DuplicatesError(f"HTTP {exc.code} from {urllib.parse.urlsplit(url).path}") from None
-        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
-            raise DuplicatesError(
-                f"request to {urllib.parse.urlsplit(url).path} failed: {type(exc).__name__}"
-            ) from None
-
+from tools.ops.discovery_renewal import (  # noqa: E402
+    PAGE_SIZE,
+    RenewalError as DuplicatesError,
+    _headers,
+    http_json,
+    parse_content_range_total,
+    parse_year,
+)
 
 DEFAULT_API = "https://api.collegedata.fyi"
 DOCUMENT_COLUMNS = (
@@ -123,7 +73,7 @@ REQUIRED_KEYS = ("id", "school_id", "cds_year", "detected_year", "source_url", "
 # (an empty page, a filter that dropped rows). 5,835 on 2026-11-25.
 MIN_DOCUMENTS = 1000
 
-CLASSES = ("misfiled_year", "section_split", "same_file", "duplicate")
+CLASSES = ("misfiled_year", "year_conflict", "section_split", "same_file", "duplicate")
 
 
 # ---------------------------------------------------------------- classifying
@@ -145,16 +95,34 @@ def url_year(url: str | None) -> str | None:
     return normalize_academic_year(filename) or normalize_academic_year(path)
 
 
-def misfiled_evidence(doc: dict[str, Any], filed: str) -> str | None:
-    """Why this document looks filed under the wrong year, or None."""
+def year_evidence(doc: dict[str, Any], filed: str) -> tuple[str, str] | None:
+    """(class, evidence) when this document's filed year looks wrong, else None.
+
+    `year_conflict`: the content-detected year and the resolver's `cds_year`
+    are both valid and differ. The site follows the content (ADR 0007), so
+    the document is filed under `detected_year`; the group exists because
+    another document has that year too. A detected 2024-25 under a
+    `cds_year` of 2025-26 is the stale-title pattern of #455 (the 2025-26
+    form prints 2024-25), so that document is probably 2025-26.
+
+    `misfiled_year`: nothing corrected the filing and the source URL still
+    names a different year than the one the document is filed under.
+
+    A `cds_year` of `unknown` means the detector filled in a missing year.
+    That is a dated document, not a misfiled one.
+    """
+    ident = doc["id"][:8]
+    detected, cds = doc.get("detected_year"), doc.get("cds_year")
+    d, c = parse_year(detected), parse_year(cds)
+    if d is not None and c is not None and d != c:
+        note = "; likely the stale-title pattern of #455" if (d, c) == (2024, 2025) else ""
+        return (
+            "year_conflict",
+            f"{ident} content says {detected} but its URL/resolver says {cds}{note}",
+        )
     named = url_year(doc.get("source_url"))
     if named and named != filed:
-        return f"{doc['id'][:8]} is filed {filed} but its URL names {named}"
-    detected, cds = doc.get("detected_year"), doc.get("cds_year")
-    # `cds_year` of `unknown` means the resolver found no year and the detector
-    # filled it in. That is a dated document, not a misfiled one.
-    if parse_year(detected) is not None and parse_year(cds) is not None and detected != cds:
-        return f"{doc['id'][:8]} has detected_year {detected} but cds_year {cds}"
+        return "misfiled_year", f"{ident} is filed {filed} but its URL names {named}"
     return None
 
 
@@ -181,9 +149,11 @@ class Group:
 
 def classify(docs: list[dict[str, Any]], filed: str) -> tuple[str, str]:
     """(class, evidence) for one group of two or more documents."""
-    misfiled = [e for e in (misfiled_evidence(d, filed) for d in docs) if e]
-    if misfiled:
-        return "misfiled_year", "; ".join(misfiled)
+    found = [e for e in (year_evidence(d, filed) for d in docs) if e]
+    for cls in ("misfiled_year", "year_conflict"):
+        texts = [text for kind, text in found if kind == cls]
+        if texts:
+            return cls, "; ".join(texts)
     sections = [d for d in docs if is_section_seed(d.get("source_url"))]
     if sections:
         names = ", ".join(
@@ -369,7 +339,7 @@ def run(api_url: str, anon_key: str, *, get: Callable[..., Any] = http_json) -> 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("--api-url", default=os.environ.get("SUPABASE_URL", DEFAULT_API))
+    parser.add_argument("--api-url", default=os.environ.get("CDS_API_URL", DEFAULT_API))
     parser.add_argument("--anon-key", default=os.environ.get("SUPABASE_ANON_KEY", ""))
     parser.add_argument("--from-json", type=Path, help="Classify a saved list of document rows instead of reading the API.")
     parser.add_argument("--json-out", type=Path)

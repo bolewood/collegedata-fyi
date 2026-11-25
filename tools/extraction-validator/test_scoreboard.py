@@ -852,5 +852,53 @@ class CompareAcrossSumCheckVersions(unittest.TestCase):
         self.assertIn("(-1)", text)
 
 
+class SameYearDuplicatesTests(unittest.TestCase):
+    """The scoreboard reports two served documents in one filed year."""
+
+    def doc(self, number: int, school: str = "a-college", year: str = "2024-25", **extra) -> dict:
+        row = {
+            "document_id": f"{number:08d}-0000-0000-0000-000000000000", "school_id": school, "year": year,
+            "sub_institutional": False, "source_url": f"https://x.edu/f{number}.pdf",
+            "cds_year": year, "detected_year": year,
+        }
+        return {**row, **extra}
+
+    def test_a_pair_in_one_year_is_found_and_classified(self) -> None:
+        block = scoreboard.same_year_duplicates_block([
+            self.doc(1), self.doc(2, cds_year="2025-26"), self.doc(3, school="b-college"),
+        ])
+        self.assertEqual(block["same_year_duplicates"], 1)
+        self.assertEqual(block["groups"][0]["class"], "year_conflict")
+        self.assertEqual(block["same_year_duplicates_by_class"]["year_conflict"], 1)
+
+    def test_one_document_per_year_is_not_a_group(self) -> None:
+        block = scoreboard.same_year_duplicates_block([self.doc(1, year="2023-24"), self.doc(2)])
+        self.assertEqual(block["same_year_duplicates"], 0)
+
+    def test_a_saved_run_without_the_new_columns_still_counts_pairs(self) -> None:
+        old = [{k: v for k, v in self.doc(i).items() if k not in ("source_url", "cds_year", "detected_year")}
+               for i in (1, 2)]
+        self.assertEqual(scoreboard.same_year_duplicates_block(old)["same_year_duplicates"], 1)
+
+    def test_render_prints_the_section(self) -> None:
+        block = scoreboard.same_year_duplicates_block([self.doc(1), self.doc(2, cds_year="2025-26")])
+        text = scoreboard.render_same_year_duplicates({"same_year_duplicates": block})
+        self.assertIn("## Two documents in one year", text)
+        self.assertIn("| a-college | 2024-25 | year_conflict |", text)
+        self.assertIn("no duplicate check", scoreboard.render_same_year_duplicates({}))
+
+    def test_fetch_asks_for_the_columns_the_check_reads(self) -> None:
+        seen = {}
+
+        class Api:
+            def get(self, table, params, pause=0.0):
+                seen.update(params)
+                return []
+
+        scoreboard.fetch_documents(Api(), ("2024-25",))
+        for column in ("source_url", "cds_year", "detected_year"):
+            self.assertIn(column, seen["select"])
+
+
 if __name__ == "__main__":
     unittest.main()
