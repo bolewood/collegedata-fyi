@@ -50,7 +50,8 @@ SCHOOL_PAGE_URL = "https://www.collegedata.fyi/schools/{school_id}"
 PAGE_SIZE = 1000
 HTTP_TIMEOUT_SEC = 60
 MANIFEST_QUERY = (
-    "select=school_id,canonical_year,discovered_at,removed_at,participation_status"
+    "select=school_id,canonical_year,discovered_at,removed_at,participation_status,"
+    "data_quality_flag,sub_institutional"
     "&removed_at=is.null&order=document_id.asc"
 )
 
@@ -93,6 +94,11 @@ NEXT_YEAR_FLOOR_FACTOR = 0.75
 TWO_YEAR_MARGIN_PTS = 8.0
 
 VALID_PARTICIPATION = "published"
+# A current-year document with one of these flags is not a usable renewal: the
+# file is the wrong school's, an empty template, or mostly unread. It does not
+# count in the numerator (it still counts as having filed that year in a
+# denominator, so a school is not dropped for posting a bad file).
+UNCOUNTED_FLAGS = frozenset({"wrong_file", "blank_template", "low_coverage"})
 YEAR_RE = re.compile(r"^(\d{4})-(\d{2})$")
 
 
@@ -171,8 +177,14 @@ def next_year_floor_pct(months_next: float) -> float:
 # ---------------------------------------------------------------- computing
 
 
-def school_years(rows: Iterable[dict[str, Any]]) -> dict[str, set[int]]:
-    """Valid filed start years per school from live published documents."""
+def school_years(
+    rows: Iterable[dict[str, Any]], *, exclude_flagged: bool = False
+) -> dict[str, set[int]]:
+    """Valid filed start years per school from live published documents.
+
+    With `exclude_flagged`, documents whose `data_quality_flag` is in
+    UNCOUNTED_FLAGS are left out: the years a school usefully renewed.
+    """
     out: dict[str, set[int]] = defaultdict(set)
     for row in rows:
         if row.get("removed_at"):
@@ -182,8 +194,14 @@ def school_years(rows: Iterable[dict[str, Any]]) -> dict[str, set[int]]:
         school_id = row.get("school_id")
         if not school_id:
             continue
+        if row.get("sub_institutional"):
+            # A sub-program's filing (a college within a university) must not
+            # mask a missing main-campus CDS.
+            continue
         year = parse_year(row.get("canonical_year"))
         if year is None:
+            continue
+        if exclude_flagged and row.get("data_quality_flag") in UNCOUNTED_FLAGS:
             continue
         out[school_id].add(year)
     return dict(out)
@@ -206,13 +224,19 @@ class Renewal:
         return self.prev_schools - self.renewed
 
 
-def renewal(years_by_school: dict[str, set[int]], year: int) -> Renewal:
+def renewal(
+    years_by_school: dict[str, set[int]],
+    year: int,
+    good_years: dict[str, set[int]] | None = None,
+) -> Renewal:
     """Schools with `year - 1` (denominator) that also have `year`.
 
-    A school with only `year` is not in the denominator.
+    A school with only `year` is not in the denominator. `good_years` (the
+    years without a flagged document) decides the numerator when given.
     """
+    good = years_by_school if good_years is None else good_years
     prev = {s for s, ys in years_by_school.items() if (year - 1) in ys}
-    renewed = {s for s in prev if year in years_by_school[s]}
+    renewed = {s for s in prev if year in good.get(s, ())}
     return Renewal(year=year, prev_schools=prev, renewed=renewed)
 
 
@@ -242,6 +266,9 @@ class Result:
     two_year_floor_pct: float
     lapsed: set[str]
     years_by_school: dict[str, set[int]]
+    year_checks: dict[int, "YearCheck"]
+    flagged_docs: list[dict[str, str]]
+    sub_institutional_excluded: int = 0
 
     @property
     def below_floor(self) -> bool:
@@ -261,16 +288,126 @@ class Result:
         return pct is not None and pct < round(self.two_year_floor_pct, 1)
 
 
-def two_year_renewal(years_by_school: dict[str, set[int]], year: int) -> Renewal:
+@dataclass
+class YearCheck:
+    """Both checks for one CDS year, with the floors that apply to it today.
+
+    A floor of None means the check is not tracked (the next year before
+    March; the next year's two-year check, which is too noisy to alarm on)."""
+
+    year: int
+    one: Renewal
+    one_floor: float | None
+    two: Renewal
+    two_floor: float | None
+    is_next: bool
+
+    @staticmethod
+    def _below(renewal_: Renewal, floor: float | None) -> bool:
+        pct = renewal_.pct
+        return floor is not None and pct is not None and pct < round(floor, 1)
+
+    @property
+    def one_below(self) -> bool:
+        return self._below(self.one, self.one_floor)
+
+    @property
+    def two_below(self) -> bool:
+        return self._below(self.two, self.two_floor)
+
+
+YEARS_BACK = 3  # years before the current one that still get evaluated
+
+
+def year_checks(
+    by_school: dict[str, set[int]],
+    good: dict[str, set[int]],
+    current: int,
+    as_of: date,
+    floor_override_pct: float | None = None,
+) -> dict[int, YearCheck]:
+    """Checks for every year an alarm issue could be about: from `current - 3`
+    to the next year. A year past the September switch is judged by its own
+    months since fall, which is the curve's flat end (88% less the margin)."""
+    out: dict[int, YearCheck] = {}
+    for y in range(current - YEARS_BACK, current + 2):
+        months = months_since_fall(y, as_of)
+        one = renewal(by_school, y, good)
+        two = two_year_renewal(by_school, y, good)
+        if y == current + 1:
+            floor = next_year_floor_pct(months) if next_year_is_active(months) else None
+            out[y] = YearCheck(y, one, floor, two, None, True)
+            continue
+        floor = current_year_floor_pct(months)
+        if y == current and floor_override_pct is not None:
+            floor = float(floor_override_pct)
+        out[y] = YearCheck(y, one, floor, two, max(0.0, floor - TWO_YEAR_MARGIN_PTS), False)
+    return out
+
+
+def year_summary(check: YearCheck) -> dict[str, Any]:
+    """One year's checks in the shape of the heartbeat summary (as the
+    "current" year), so titles and descriptors work for any year."""
+    return {
+        "current_year": format_year(check.year),
+        "is_next_year": check.is_next,
+        "renewed": len(check.one.renewed),
+        "prev_schools": len(check.one.prev_schools),
+        "renewal_pct": check.one.pct,
+        "floor_pct": None if check.one_floor is None else round(check.one_floor, 1),
+        "below_floor": check.one_below,
+        "two_year_renewed": len(check.two.renewed),
+        "two_year_prev_schools": len(check.two.prev_schools),
+        "two_year_renewal_pct": check.two.pct,
+        "two_year_floor_pct": None if check.two_floor is None else round(check.two_floor, 1),
+        "two_year_below_floor": check.two_below,
+    }
+
+
+def two_year_renewal(
+    years_by_school: dict[str, set[int]],
+    year: int,
+    good_years: dict[str, set[int]] | None = None,
+) -> Renewal:
     """Schools with `year - 1` or `year - 2` (denominator) that also have `year`.
 
     The one-year check's denominator shrinks as schools miss a year: a school
     that missed `year - 1` is gone from it, so a permanent loss looks like
     recovery. This check keeps those schools for one more year.
     """
+    good = years_by_school if good_years is None else good_years
     prev = {s for s, ys in years_by_school.items() if (year - 1) in ys or (year - 2) in ys}
-    renewed = {s for s in prev if year in years_by_school[s]}
+    renewed = {s for s in prev if year in good.get(s, ())}
     return Renewal(year=year, prev_schools=prev, renewed=renewed)
+
+
+def count_sub_institutional(rows: Iterable[dict[str, Any]]) -> int:
+    """Live published rows left out of every check because they belong to a
+    sub-institution."""
+    return sum(
+        1
+        for row in rows
+        if row.get("sub_institutional")
+        and not row.get("removed_at")
+        and row.get("participation_status") == VALID_PARTICIPATION
+    )
+
+
+def flagged_current_docs(rows: Iterable[dict[str, Any]], year: int) -> list[dict[str, str]]:
+    """Live published documents filed under `year` that carry an uncounted
+    flag: they do not count as renewing."""
+    out = []
+    for row in rows:
+        if row.get("removed_at") or row.get("participation_status") != VALID_PARTICIPATION:
+            continue
+        if row.get("sub_institutional"):
+            continue
+        if parse_year(row.get("canonical_year")) != year:
+            continue
+        flag = row.get("data_quality_flag")
+        if flag in UNCOUNTED_FLAGS and row.get("school_id"):
+            out.append({"school_id": row["school_id"], "flag": flag})
+    return sorted(out, key=lambda d: (d["school_id"], d["flag"]))
 
 
 def compute(
@@ -281,10 +418,12 @@ def compute(
     enforce_min_prev: bool = True,
 ) -> Result:
     by_school = school_years(rows)
+    good = school_years(rows, exclude_flagged=True)
     year = parse_year(cds_freshness_floor(as_of))
     assert year is not None
-    cur = renewal(by_school, year)
-    two = two_year_renewal(by_school, year)
+    checks = year_checks(by_school, good, year, as_of, floor_override_pct)
+    cur = checks[year].one
+    two = checks[year].two
     if enforce_min_prev:
         for label, count in (("one-year", len(cur.prev_schools)), ("two-year", len(two.prev_schools))):
             if count < MIN_PREV_SCHOOLS:
@@ -297,7 +436,7 @@ def compute(
     overridden = floor_override_pct is not None
     if overridden:
         floor = float(floor_override_pct)  # type: ignore[arg-type]
-    nxt = renewal(by_school, year + 1)
+    nxt = checks[year + 1].one
     months_next = months_since_fall(year + 1, as_of)
     active = next_year_is_active(months_next)
     if active and enforce_min_prev and len(nxt.prev_schools) < MIN_PREV_SCHOOLS:
@@ -319,7 +458,21 @@ def compute(
         two_year_floor_pct=max(0.0, floor - TWO_YEAR_MARGIN_PTS),
         lapsed=lapsed_schools(by_school, year),
         years_by_school=by_school,
+        year_checks=checks,
+        flagged_docs=flagged_current_docs(rows, year),
+        sub_institutional_excluded=count_sub_institutional(rows),
     )
+
+
+def outstanding_years(result: Result) -> list[str]:
+    """The CDS years, current or next, with a check below its floor now. The
+    alarm step replaces this with the years that have an open alarm issue,
+    which also covers an earlier year that is still short."""
+    return [
+        format_year(y)
+        for y, c in sorted(result.year_checks.items())
+        if y >= result.current_year and (c.one_below or c.two_below)
+    ]
 
 
 def summary_dict(
@@ -359,6 +512,10 @@ def summary_dict(
         # School-years with two or more live documents (tools/ops/same_year_duplicates.py).
         # null when the run read a saved manifest and did not look.
         "same_year_duplicates": same_year_duplicates,
+        "outstanding_below_floor": bool(outstanding_years(result)),
+        "outstanding_years": ",".join(outstanding_years(result)),
+        "flagged_current_docs": len(result.flagged_docs),
+        "sub_institutional_excluded": result.sub_institutional_excluded,
         "floor_overridden": result.floor_overridden,
         "alarm_issue": None,
         "run_url": run_url,
@@ -450,10 +607,19 @@ SEED_KIND_HEADINGS = {
 
 
 def missing_worklist(
-    result: Result, schools: dict[str, dict[str, Any]], kind: str = "current"
+    result: Result,
+    schools: dict[str, dict[str, Any]],
+    kind: str = "current",
+    year: int | None = None,
 ) -> list[dict[str, Any]]:
-    """Schools missing for the given check: one-year, two-year or next-year."""
-    renewal_for = {"current": result.current, "two_year": result.two_year, "next": result.next}[kind]
+    """Schools missing for the given check: one-year, two-year or next-year.
+    With `year`, that year's own check (`kind` is then "current" or
+    "two_year"); the default is the current year."""
+    if year is not None and year != result.current_year:
+        yc = result.year_checks[year]
+        renewal_for = yc.two if kind == "two_year" else yc.one
+    else:
+        renewal_for = {"current": result.current, "two_year": result.two_year, "next": result.next}[kind]
     out = []
     for school_id in sorted(renewal_for.missing):
         school = schools.get(school_id)
@@ -486,6 +652,104 @@ def _check_line(d: dict[str, Any], below: bool | None) -> str:
     )
 
 
+def _notes_lines(result: Result, schools: dict[str, dict[str, Any]] | None) -> list[str]:
+    """What the count left out: flagged current-year documents and
+    sub-institution rows."""
+    lines: list[str] = []
+    if result.flagged_docs:
+        names = []
+        for doc in result.flagged_docs:
+            school = (schools or {}).get(doc["school_id"]) or {}
+            link = f"[{school.get('name') or doc['school_id']}]({SCHOOL_PAGE_URL.format(school_id=doc['school_id'])})"
+            names.append(f"{link} ({doc['flag']})")
+        lines += [
+            f"{len(result.flagged_docs)} current-year documents not counted (flagged): "
+            + ", ".join(names) + ".",
+            "",
+        ]
+    if result.sub_institutional_excluded:
+        lines += [
+            f"{result.sub_institutional_excluded} sub-institution documents are left out of "
+            "every check, so a sub-program's filing cannot hide a missing main-campus file.",
+            "",
+        ]
+    return lines
+
+
+def _worklist_lines(worklist: list[dict[str, Any]]) -> list[str]:
+    lines: list[str] = []
+    for kind in SEED_KIND_ORDER:
+        group = [w for w in worklist if w["seed_kind"] == kind]
+        if not group:
+            continue
+        lines += [f"### {SEED_KIND_HEADINGS[kind]} ({len(group)})", ""]
+        for w in group:
+            link = f"[{w['name']}]({SCHOOL_PAGE_URL.format(school_id=w['school_id'])})"
+            seed = f" · seed: {w['seed_url']}" if w["seed_url"] else ""
+            lines.append(f"- {link} · newest {w['newest_year']}{seed}")
+        lines.append("")
+    return lines
+
+
+def _cap(text: str, max_chars: int) -> str:
+    if len(text) <= max_chars:
+        return text
+    return text[: max_chars - 200].rsplit("\n", 1)[0] + (
+        "\n\n(List cut to fit the issue size limit. The full list is in the "
+        "workflow artifact.)\n"
+    )
+
+
+def render_year_report(
+    result: Result,
+    year: int,
+    worklist: list[dict[str, Any]],
+    *,
+    schools: dict[str, dict[str, Any]] | None = None,
+    run_url: str | None = None,
+    max_chars: int = 60000,
+) -> str:
+    """The issue body for a CDS year other than today's current one: the next
+    year (early curve) or an earlier year (flat mature floor)."""
+    yc = result.year_checks[year]
+    ys = year_summary(yc)
+    lead = lead_check(ys) or "current"
+    d = check_descriptor(ys, lead)
+    below = {"current": ys["below_floor"], "two_year": ys["two_year_below_floor"]}
+    ystr = format_year(year)
+    if yc.is_next:
+        context = (
+            f"{ystr} is the next CDS year. Its floor is {NEXT_YEAR_FLOOR_FACTOR:.0%} of the share "
+            "of files the posting curve expects by now, because the early curve is noisy."
+        )
+    else:
+        context = (
+            f"{ystr} is an earlier CDS year. Its floor is the flat end of the posting curve "
+            f"({expected_pct(99):.0f}%) less {CURRENT_YEAR_MARGIN_PTS:.0f} points "
+            f"(two-year: less {TWO_YEAR_MARGIN_PTS:.0f} more)."
+        )
+    lines = [
+        f"# Discovery renewal for {ystr}, {result.as_of.isoformat()}",
+        "",
+        f"**{d['renewed']} of {d['total']} schools ({_pct(d['pct'])}) that have {d['prev']} also "
+        f"have {d['year']}.** The {d['name']} floor today is {_pct(d['floor'])}. "
+        + ("It is below the floor." if below[lead] else "It is above the floor."),
+        "",
+        context,
+        "",
+        f"- One-year: {_check_line(check_descriptor(ys, 'current'), below['current'])}.",
+        f"- Two-year: {_check_line(check_descriptor(ys, 'two_year'), below['two_year'] if yc.two_floor is not None else None)}.",
+        "",
+        *(_notes_lines(result, schools) if year == result.current_year else []),
+        f"## Schools missing for the {d['name']} check ({len(worklist)})",
+        "",
+        *_worklist_lines(worklist),
+    ]
+    if run_url:
+        lines += [f"Run: {run_url}", ""]
+    return _cap("\n".join(lines), max_chars)
+
+
 def render_report(
     result: Result,
     worklist: list[dict[str, Any]],
@@ -495,6 +759,7 @@ def render_report(
     lead: str | None = None,
     duplicates: Any = None,
     seeds_section: str | None = None,
+    schools: dict[str, dict[str, Any]] | None = None,
 ) -> str:
     """`duplicates` is a `same_year_duplicates.Report` or None (not computed)."""
     s = summary_dict(result)
@@ -551,6 +816,7 @@ def render_report(
         f"document filed under {prev} or {format_year(result.current_year - 2)} but none "
         f"under {cur}.",
         "",
+        *_notes_lines(result, schools),
     ]
     if duplicates is not None:
         from tools.ops.same_year_duplicates import render_markdown
@@ -813,6 +1079,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--out-state", type=Path)
     parser.add_argument("--out-seed-ages", type=Path, help="every seed's age as JSON (artifact)")
     parser.add_argument("--out-worklist", type=Path, help="full worklist as JSON (artifact)")
+    parser.add_argument("--out-year-reports", type=Path,
+                        help="directory for one issue body per CDS year, <year>.md")
     return parser
 
 
@@ -871,11 +1139,30 @@ def run(args: argparse.Namespace) -> int:
         seed_summary=seed_summary,
     )
     lead = lead_check(summary)
-    worklist = missing_worklist(result, schools, lead or "current")
-    report = render_report(
-        result, worklist, run_url=args.run_url or None, lead=lead, duplicates=duplicates,
-        seeds_section=seed_age.render_section(ages, cds_freshness_floor(as_of)),
-    )
+    years = {format_year(y): year_summary(c) for y, c in sorted(result.year_checks.items())}
+    year_reports: dict[str, str] = {}
+    for y, check in sorted(result.year_checks.items()):
+        ys = year_summary(check)
+        kind = lead_check(ys) or "current"
+        wl = missing_worklist(result, schools, kind, y)
+        if y == result.current_year:
+            year_reports[format_year(y)] = render_report(
+                result, wl, run_url=args.run_url or None, lead=kind, schools=schools,
+                duplicates=duplicates,
+                seeds_section=seed_age.render_section(ages, cds_freshness_floor(as_of)))
+        else:
+            year_reports[format_year(y)] = render_year_report(
+                result, y, wl, schools=schools, run_url=args.run_url or None)
+    cur_str = format_year(result.current_year)
+    next_str = format_year(result.current_year + 1)
+    worklist = missing_worklist(result, schools, lead_check(years[cur_str]) or "current")
+    report = year_reports[cur_str]
+    if years[next_str]["below_floor"]:
+        report += "\n\n---\n\n" + year_reports[next_str]
+    if args.out_year_reports:
+        args.out_year_reports.mkdir(parents=True, exist_ok=True)
+        for ystr, text in year_reports.items():
+            (args.out_year_reports / f"{ystr}.md").write_text(text, encoding="utf-8")
 
     write_json(args.out_summary, summary)
     write_json(args.out_worklist, worklist)
@@ -891,6 +1178,8 @@ def run(args: argparse.Namespace) -> int:
             "current_below_floor": summary["below_floor"],
             "next_below_floor": summary["next_below_floor"],
             "two_year_below_floor": summary["two_year_below_floor"],
+            "years": years,
+            "current_year": cur_str,
             "summary": summary,
         },
     )

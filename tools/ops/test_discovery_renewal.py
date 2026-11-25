@@ -163,8 +163,9 @@ class ComputeTests(unittest.TestCase):
                 "next_prev_schools", "next_renewal_pct", "next_floor_pct",
                 "next_below_floor", "two_year_renewed", "two_year_prev_schools",
                 "two_year_renewal_pct", "two_year_floor_pct", "two_year_below_floor",
-                "lapsed_schools", "same_year_duplicates", "floor_overridden", "alarm_issue",
-                "run_url",
+                "lapsed_schools", "same_year_duplicates", "flagged_current_docs",
+                "sub_institutional_excluded", "outstanding_below_floor", "outstanding_years",
+                "floor_overridden", "alarm_issue", "run_url",
                 "seeds_with_seed", "seeds_without_new_year",
                 "seeds_without_new_year_one_file", "seeds_without_new_year_listing_page",
             },
@@ -453,6 +454,204 @@ class SnapshotTests(unittest.TestCase):
         )
         self.assertEqual(result.two_year.pct, 70.3)
         self.assertTrue(result.two_year_below_floor)
+
+
+ARCHIVE_YEARS = Path(__file__).resolve().parents[1] / "finder" / "testdata" / "archive_years_snapshot.json"
+ROOT = Path(__file__).resolve().parents[2]
+
+
+class CommittedSnapshotTests(unittest.TestCase):
+    """Runs in CI: the years-per-school snapshot of 2026-11-24 is committed."""
+
+    def rows(self) -> list[dict]:
+        years = json.loads(ARCHIVE_YEARS.read_text())
+        return [row(school, year) for school, ys in years.items() for year in ys]
+
+    def test_the_committed_snapshot_gives_364_of_479_and_377_of_536(self) -> None:
+        result = dr.compute(self.rows(), date(2026, 11, 24))
+        self.assertEqual((len(result.current.renewed), len(result.current.prev_schools)), (364, 479))
+        self.assertEqual(result.current.pct, 76.0)
+        self.assertEqual((len(result.two_year.renewed), len(result.two_year.prev_schools)), (377, 536))
+        self.assertEqual(result.two_year.pct, 70.3)
+        self.assertTrue(result.below_floor)
+        self.assertTrue(result.two_year_below_floor)
+
+    def test_the_same_snapshot_a_year_on_is_judged_by_the_flat_floor(self) -> None:
+        # 2027-06-30: 2025-26 is still the current year, 2026-27 is next, at
+        # 50.7% of the curve's 67.6 x 0.75.
+        result = dr.compute(self.rows(), date(2027, 6, 30))
+        self.assertEqual(format_ys(result.current_year), "2025-26")
+        self.assertAlmostEqual(result.floor_pct, 83.0)
+        nxt = result.year_checks[result.current_year + 1]
+        self.assertTrue(nxt.is_next)
+        self.assertAlmostEqual(nxt.one_floor, 50.7, places=1)
+        self.assertTrue(nxt.one_below)  # 4 of 417
+
+    def test_summary_carries_two_year_below_floor_and_the_web_reads_it(self) -> None:
+        summary = dr.summary_dict(dr.compute(self.rows(), date(2026, 11, 24)))
+        self.assertIs(summary["two_year_below_floor"], True)
+        lamps = (ROOT / "web" / "src" / "lib" / "pipeline-lamps.ts").read_text(encoding="utf-8")
+        self.assertIn("two_year_below_floor", lamps)
+
+
+def format_ys(start: int) -> str:
+    return dr.format_year(start)
+
+
+class FlaggedAndSubInstitutionTests(unittest.TestCase):
+    def base(self) -> list[dict]:
+        return many_schools(400, with_current=300)
+
+    def test_a_flagged_current_year_document_does_not_count_as_renewing(self) -> None:
+        rows = self.base()
+        for r in rows:
+            if r["school_id"] in {"s0", "s1", "s2"} and r["canonical_year"] == "2025-26":
+                r["data_quality_flag"] = "blank_template"
+        result = dr.compute(rows, date(2026, 11, 24))
+        counted = len(result.current.renewed)
+        plain = len(dr.compute(self.base(), date(2026, 11, 24)).current.renewed)
+        self.assertEqual(plain - counted, 3)
+        self.assertEqual({d["school_id"] for d in result.flagged_docs}, {"s0", "s1", "s2"})
+        self.assertEqual(dr.summary_dict(result)["flagged_current_docs"], 3)
+        self.assertIn("s0", result.current.missing)
+
+    def test_each_uncounted_flag_is_uncounted_and_other_flags_are_not(self) -> None:
+        for flag, counts in (("wrong_file", False), ("blank_template", False),
+                             ("low_coverage", False), ("some_other_flag", True), (None, True)):
+            rows = self.base()
+            for r in rows:
+                if r["school_id"] == "s0" and r["canonical_year"] == "2025-26":
+                    r["data_quality_flag"] = flag
+            result = dr.compute(rows, date(2026, 11, 24))
+            self.assertEqual("s0" in result.current.renewed, counts, flag)
+
+    def test_flagged_documents_do_not_count_in_the_two_year_numerator_either(self) -> None:
+        rows = self.base()
+        # s0 filed 2024-25 and a flagged 2025-26; s390 filed only 2023-24 (two-year denominator).
+        for r in rows:
+            if r["school_id"] == "s0" and r["canonical_year"] == "2025-26":
+                r["data_quality_flag"] = "blank_template"
+        rows.append(row("old", "2023-24"))
+        rows.append({**row("old", "2025-26"), "data_quality_flag": "wrong_file"})
+        result = dr.compute(rows, date(2026, 11, 24))
+        self.assertNotIn("s0", result.two_year.renewed)
+        self.assertIn("old", result.two_year.prev_schools)
+        self.assertNotIn("old", result.two_year.renewed)
+
+    def test_flagged_documents_do_not_count_in_the_next_year_numerator(self) -> None:
+        rows = many_schools(400, with_current=400)
+        rows += [row(f"s{i}", "2026-27") for i in range(30)]
+        for r in rows:
+            if r["school_id"] in {"s0", "s1"} and r["canonical_year"] == "2026-27":
+                r["data_quality_flag"] = "low_coverage"
+        result = dr.compute(rows, date(2027, 4, 30))
+        self.assertEqual(len(result.next.renewed), 28)
+        self.assertEqual(len(result.next.prev_schools), 400)  # flagged-only still files the year
+
+    def test_a_second_unflagged_document_still_renews_the_school(self) -> None:
+        rows = self.base()
+        for r in rows:
+            if r["school_id"] == "s0" and r["canonical_year"] == "2025-26":
+                r["data_quality_flag"] = "wrong_file"
+        rows.append(row("s0", "2025-26"))
+        self.assertIn("s0", dr.compute(rows, date(2026, 11, 24)).current.renewed)
+
+    def test_a_flagged_previous_year_document_stays_in_the_denominator(self) -> None:
+        rows = self.base()
+        for r in rows:
+            if r["school_id"] == "s350" and r["canonical_year"] == "2024-25":
+                r["data_quality_flag"] = "low_coverage"
+        self.assertIn("s350", dr.compute(rows, date(2026, 11, 24)).current.prev_schools)
+
+    def test_the_report_names_flagged_documents(self) -> None:
+        rows = self.base()
+        for r in rows:
+            if r["school_id"] == "s0" and r["canonical_year"] == "2025-26":
+                r["data_quality_flag"] = "blank_template"
+        result = dr.compute(rows, date(2026, 11, 24))
+        text = dr.render_report(result, [], schools={"s0": {"id": "s0", "name": "Zero U"}})
+        self.assertIn("1 current-year documents not counted (flagged)", text)
+        self.assertIn("[Zero U](https://www.collegedata.fyi/schools/s0) (blank_template)", text)
+
+    def test_sub_institution_rows_do_not_mask_a_missing_main_campus_file(self) -> None:
+        rows = self.base()
+        # s399 never filed 2025-26 itself; only a sub-program did.
+        rows.append({**row("s399", "2025-26"), "sub_institutional": "general-studies"})
+        result = dr.compute(rows, date(2026, 11, 24))
+        self.assertNotIn("s399", result.current.renewed)
+        self.assertIn("s399", result.current.prev_schools)
+        self.assertEqual(result.sub_institutional_excluded, 1)
+        # A school whose only document is a sub-program's is not a school.
+        rows.append({**row("only-sub", "2024-25"), "sub_institutional": "x"})
+        self.assertNotIn("only-sub", dr.compute(rows, date(2026, 11, 24)).current.prev_schools)
+        text = dr.render_report(result, [])
+        self.assertIn("1 sub-institution documents are left out", text)
+
+    def test_the_manifest_query_asks_for_both_columns(self) -> None:
+        self.assertIn("data_quality_flag", dr.MANIFEST_QUERY)
+        self.assertIn("sub_institutional", dr.MANIFEST_QUERY)
+
+
+class YearReportTests(unittest.TestCase):
+    def test_every_evaluated_year_has_checks_and_a_report(self) -> None:
+        rows = many_schools(400, with_current=400)
+        result = dr.compute(rows, date(2027, 6, 30))
+        self.assertEqual(sorted(result.year_checks), list(range(2022, 2027)))
+        nxt = result.year_checks[2026]
+        self.assertTrue(nxt.is_next)
+        text = dr.render_year_report(result, 2026, dr.missing_worklist(result, {}, "current", 2026))
+        self.assertIn("Discovery renewal for 2026-27", text)
+        self.assertIn("next CDS year", text)
+        old = dr.render_year_report(result, 2023, [])
+        self.assertIn("earlier CDS year", old)
+
+    def test_an_earlier_year_uses_the_flat_mature_floor(self) -> None:
+        rows = many_schools(400, with_current=300)
+        # 2026-11-24: 2024-25 is an earlier year, 15+ months past its fall.
+        result = dr.compute(rows, date(2026, 11, 24))
+        yc = result.year_checks[2024]
+        self.assertAlmostEqual(yc.one_floor, 88.0 - dr.CURRENT_YEAR_MARGIN_PTS)
+        self.assertAlmostEqual(yc.two_floor, 88.0 - dr.CURRENT_YEAR_MARGIN_PTS - dr.TWO_YEAR_MARGIN_PTS)
+
+    def test_the_next_year_is_untracked_before_march(self) -> None:
+        result = dr.compute(many_schools(400, with_current=300), date(2026, 11, 24))
+        yc = result.year_checks[2026]
+        self.assertIsNone(yc.one_floor)
+        self.assertFalse(yc.one_below)
+        self.assertFalse(yc.two_below)
+
+    def test_year_summary_matches_the_summary_shape_for_the_current_year(self) -> None:
+        result = dr.compute(many_schools(400, with_current=300), date(2026, 11, 24))
+        ys = dr.year_summary(result.year_checks[2025])
+        full = dr.summary_dict(result)
+        for key in ("current_year", "renewed", "prev_schools", "renewal_pct", "floor_pct",
+                    "below_floor", "two_year_renewed", "two_year_prev_schools",
+                    "two_year_renewal_pct", "two_year_floor_pct", "two_year_below_floor"):
+            self.assertEqual(ys[key], full[key], key)
+        self.assertIs(type(ys["below_floor"]), bool)
+
+    def test_the_cli_writes_one_report_per_year_and_per_year_state(self) -> None:
+        import tempfile
+        rows = [row(s, y) for s, ys in json.loads(ARCHIVE_YEARS.read_text()).items() for y in ys]
+        with tempfile.TemporaryDirectory() as d:
+            tmp = Path(d)
+            (tmp / "m.json").write_text(json.dumps(rows))
+            code = dr.main(["--manifest-json", str(tmp / "m.json"), "--as-of", "2027-06-30",
+                            "--out-state", str(tmp / "state.json"),
+                            "--out-summary", str(tmp / "summary.json"),
+                            "--out-report", str(tmp / "report.md"),
+                            "--out-year-reports", str(tmp / "yr")])
+            self.assertEqual(code, 0)
+            state = json.loads((tmp / "state.json").read_text())
+            self.assertEqual(state["current_year"], "2025-26")
+            self.assertEqual(sorted(state["years"]), ["2022-23", "2023-24", "2024-25", "2025-26", "2026-27"])
+            self.assertTrue(state["years"]["2026-27"]["below_floor"])
+            self.assertEqual(
+                sorted(p.name for p in (tmp / "yr").glob("*.md")),
+                [f"{y}.md" for y in sorted(state["years"])],
+            )
+            # The next year breaches, so the step summary carries it too.
+            self.assertIn("Discovery renewal for 2026-27", (tmp / "report.md").read_text())
 
 
 if __name__ == "__main__":

@@ -125,7 +125,7 @@ jobs:
       - name: Lint GHA run-script heredocs
         run: python tools/ops/lint_gha_heredocs.py
       - name: Run ops tests
-        run: python -m unittest tools.ops.test_automation_health tools.ops.test_record_heartbeat tools.ops.test_pipeline_writers tools.ops.test_collegedata_ops_bundle tools.ops.test_directory_enqueue_autopilot tools.ops.test_directory_enqueue_batches tools.ops.test_extraction_backlog_audit tools.ops.test_enqueue_changed_seeds tools.ops.test_upsert_pipeline_alert_issue tools.ops.test_notify_discord tools.ops.test_top100_coverage tools.ops.test_lint_gha_heredocs tools.ops.test_revalidate_pages tools.ops.test_discovery_renewal tools.ops.test_renewal_alarm tools.ops.test_fetch_failures tools.ops.test_same_year_duplicates tools.ops.test_hand_check_sample
+        run: python -m unittest tools.ops.test_automation_health tools.ops.test_record_heartbeat tools.ops.test_pipeline_writers tools.ops.test_collegedata_ops_bundle tools.ops.test_directory_enqueue_autopilot tools.ops.test_directory_enqueue_batches tools.ops.test_extraction_backlog_audit tools.ops.test_enqueue_changed_seeds tools.ops.test_upsert_pipeline_alert_issue tools.ops.test_notify_discord tools.ops.test_top100_coverage tools.ops.test_lint_gha_heredocs tools.ops.test_revalidate_pages tools.ops.test_discovery_renewal tools.ops.test_renewal_alarm tools.ops.test_fetch_failures tools.ops.test_same_year_duplicates tools.ops.test_hand_check_sample tools.ops.test_consecutive_failures
       - name: Run community usage exclusion tests
         run: python -m unittest tools.community.test_usage_exclusion
       - name: Run API usage ingest tests

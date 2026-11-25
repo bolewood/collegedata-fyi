@@ -441,6 +441,67 @@ class NotifyDiscordTests(unittest.TestCase):
         state: dict = {"stations": {station["station_id"]: previous}}
         return nd.pipeline_observation_messages(snapshot, state, NOW)
 
+    def test_down_to_late_is_not_a_recovery(self) -> None:
+        state: dict = {"stations": {"finder_stuck_pdf": "down"}}
+
+        def poll(lamp: str) -> list:
+            station = self._station(station_id="finder_stuck_pdf", lamp=lamp, summary={"stuck": 78, "still_stuck": 70},
+                                    finished=NOW - timedelta(days=3))
+            snapshot = {"as_of": NOW.isoformat(), "strip": {}, "stations": [station]}
+            return nd.pipeline_observation_messages(snapshot, state, NOW)
+
+        self.assertEqual(poll("late"), [])  # not "recovered"
+        self.assertEqual(poll("capped"), [])
+        self.assertEqual(state["stations"]["finder_stuck_pdf"], "down")
+        self.assertEqual(poll("down"), [])  # still the same outage: no second alert
+        self.assertEqual(poll("run"), [])  # a restarted job may fail again: not recovered
+        back = poll("ok")
+        self.assertEqual(len(back), 1)
+        self.assertEqual(back[0][1]["color"], nd.COLOR_SUCCESS)
+        self.assertEqual(poll("late"), [])  # a healthy station going late is not announced
+        self.assertEqual(poll("run"), [])
+
+    def _renewal_down(self, summary: dict) -> dict:
+        out = self._poll(self._station(summary=summary))
+        return {"title": out[0][1]["title"],
+                "fields": {f["name"]: f["value"] for f in out[0][1]["fields"]}}
+
+    def test_every_renewal_check_counts_as_a_result_failure_with_its_own_figures(self) -> None:
+        healthy = {"below_floor": False, "two_year_below_floor": False, "next_below_floor": None,
+                   "outstanding_below_floor": False}
+        next_only = self._renewal_down({
+            **healthy, "next_below_floor": True, "next_renewed": 40, "next_prev_schools": 417,
+            "next_renewal_pct": 9.6, "next_floor_pct": 50.7})
+        self.assertEqual(next_only["title"], "Discovery renewal below floor")
+        self.assertEqual(next_only["fields"]["Result"], "next-year: 40 of 417 renewed (9.6%) · floor 50.7%")
+        two_only = self._renewal_down({
+            **healthy, "two_year_below_floor": True, "two_year_renewed": 377,
+            "two_year_prev_schools": 536, "two_year_renewal_pct": 70.3, "two_year_floor_pct": 74.5,
+            "renewed": 410, "prev_schools": 479})
+        self.assertEqual(two_only["title"], "Discovery renewal below floor")
+        self.assertEqual(two_only["fields"]["Result"], "two-year: 377 of 536 renewed (70.3%) · floor 74.5%")
+        outstanding = self._renewal_down({
+            **healthy, "outstanding_below_floor": True, "outstanding_years": "2025-26"})
+        self.assertEqual(outstanding["title"], "Discovery renewal below floor")
+        self.assertEqual(outstanding["fields"]["Result"], "still short: 2025-26")
+
+    def test_the_first_failing_check_leads_and_healthy_summaries_show_the_headline(self) -> None:
+        both = self._renewal_down({"below_floor": True, "renewed": 364, "prev_schools": 479,
+                                   "two_year_below_floor": True, "two_year_renewed": 377,
+                                   "two_year_prev_schools": 536})
+        self.assertTrue(both["fields"]["Result"].startswith("one-year: 364 of 479"))
+        self.assertFalse(nd.station_shows_failure(self._station(summary={"below_floor": False})))
+        text = nd.station_result_text(self._station(summary={
+            "below_floor": False, "renewed": 410, "prev_schools": 479, "renewal_pct": 85.6, "floor_pct": 82.5}))
+        self.assertEqual(text, "one-year: 410 of 479 renewed (85.6%) · floor 82.5%")
+
+    def test_down_to_ok_still_recovers(self) -> None:
+        state: dict = {"stations": {"finder_brave": "down"}}
+        station = self._station(station_id="finder_brave", lamp="ok")
+        snapshot = {"as_of": NOW.isoformat(), "strip": {}, "stations": [station]}
+        out = nd.pipeline_observation_messages(snapshot, state, NOW)
+        self.assertEqual(out[0][1]["title"], "Scheduled pipeline heartbeat recovered")
+
     def test_result_title_with_text_derived_from_the_public_summary(self) -> None:
         down = self._poll(self._station())
         self.assertEqual(down[0][1]["title"], "Discovery renewal below floor")
@@ -448,7 +509,7 @@ class NotifyDiscordTests(unittest.TestCase):
         self.assertEqual(len(names), len(set(names)))
         self.assertIn("Last success", names)
         fields = {f["name"]: f["value"] for f in down[0][1]["fields"]}
-        self.assertEqual(fields["Result"], "364 of 479 renewed (76%) · floor 82.5%")
+        self.assertEqual(fields["Result"], "one-year: 364 of 479 renewed (76%) · floor 82.5%")
         self.assertIn("/ 36h", fields["Age vs limit"])
         self.assertEqual(names[:2], ["Station", "Result"])
 
