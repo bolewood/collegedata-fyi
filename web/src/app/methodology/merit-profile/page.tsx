@@ -58,7 +58,7 @@ export default function MeritProfileMethodologyPage() {
       >
         The merit profile combines source-reported CDS Section H aid facts with
         federal College Scorecard affordability and outcome context. It is built
-        to answer what a school says it awarded, not to predict any applicant&apos;s
+        to answer what a school says it awarded, not to predict any applicant's
         financial-aid package.
       </p>
 
@@ -87,7 +87,7 @@ export default function MeritProfileMethodologyPage() {
             H.14 is a checkbox list of the criteria a school uses to award its
             own scholarships and grants, asked separately for non-need-based aid
             (H.1401 to H.1410) and need-based aid (H.1411 to H.1419). We show
-            &ldquo;Academic merit aid checked&rdquo; only when the school checks
+            “Academic merit aid checked” only when the school checks
             academics for non-need aid (H.1401). Academics as a criterion for
             need-based aid (H.1411) is served separately in the API.
           </FieldUse>

@@ -48,9 +48,9 @@ export default async function ScholarshipsPage() {
           style={{ marginTop: 18, fontSize: 18, fontStyle: "italic", lineHeight: 1.55, color: "var(--ink-2)", maxWidth: 720 }}
         >
           Award amounts, eligibility rules, and deadlines for named merit
-          scholarships, each linked directly to the college&rsquo;s own page.
-          We&rsquo;re building this index by hand, so a school missing from this
-          list simply hasn&rsquo;t been added yet.
+          scholarships, each linked directly to the college’s own page.
+          We’re building this index by hand, so a school missing from this
+          list simply hasn’t been added yet.
         </p>
         <p className="mono" style={{ marginTop: 14, fontSize: 12, color: "var(--ink-3)" }}>
           {programCount > 0 ? (

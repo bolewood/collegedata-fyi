@@ -65,7 +65,7 @@ export default function CollegeScorecardPage() {
 
       <h2>What goes into it</h2>
       <p>
-        Each institution&apos;s Scorecard record combines several federal
+        Each institution's Scorecard record combines several federal
         systems: IPEDS institutional surveys, federal student-aid records
         (NSLDS), Treasury/IRS earnings data, Federal Student Aid operating
         flags, and Census/OPE reference fields. We document the field-level
@@ -129,11 +129,11 @@ export default function CollegeScorecardPage() {
         hrefLabel="Browse schools"
       />
 
-      <h2>Why Scorecard dates lag a school&apos;s own report</h2>
+      <h2>Why Scorecard dates lag a school's own report</h2>
       <p>
         On pages like <Link href="/schools/harvey-mudd">Harvey Mudd</Link> and{" "}
         <Link href="/schools/virginia-tech">Virginia Tech</Link>, admissions and
-        test-score cards come from the college&apos;s latest archived Common
+        test-score cards come from the college's latest archived Common
         Data Set, while federal outcomes sit in their own section with a vintage
         note. Earnings and repayment figures naturally reflect earlier cohorts
         (often students who enrolled a decade earlier), so they will never match
@@ -149,7 +149,7 @@ export default function CollegeScorecardPage() {
 
       <h2>How we use it alongside the Common Data Set</h2>
       <p>
-        Families need both kinds of information: this year&apos;s admissions and
+        Families need both kinds of information: this year's admissions and
         merit-aid picture from the college, and long-term net price, debt, and
         earnings from federal records. Showing both on one page, with each
         section labeled by source and year, lets you read them together without
@@ -170,8 +170,8 @@ export default function CollegeScorecardPage() {
         >
           collegescorecard.ed.gov
         </a>
-        . We bring Scorecard&apos;s institutional metrics onto each school page
-        so you can read them alongside a college&apos;s Common Data Set and{" "}
+        . We bring Scorecard's institutional metrics onto each school page
+        so you can read them alongside a college's Common Data Set and{" "}
         <Link href="/about/ipeds">IPEDS baseline</Link> without juggling three
         different sites.
       </p>

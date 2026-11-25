@@ -47,7 +47,7 @@ export default function CommonDataSetPage() {
       <h2>What it is</h2>
       <p>
         In the late 1990s, schools and guidebook publishers agreed on one form
-        so every college wasn&apos;t answering the same questions fifteen ways.
+        so every college wasn't answering the same questions fifteen ways.
         The{" "}
         <a href="https://commondataset.org/" target="_blank" rel="noopener noreferrer">
           Common Data Set Initiative
@@ -57,7 +57,7 @@ export default function CommonDataSetPage() {
         post its own file.
       </p>
 
-      <h2>What&apos;s in it</h2>
+      <h2>What's in it</h2>
       <p>
         About a thousand comparable facts, in sections A through J.
       </p>
@@ -82,16 +82,16 @@ export default function CommonDataSetPage() {
       <ul>
         <li>
           Families and students: search a school to see its latest admissions,
-          test-score, and aid numbers, with the college&apos;s original file
+          test-score, and aid numbers, with the college's original file
           linked on the same page.
         </li>
         <li>
           Counselors: send the year page, not a 47-page PDF. The official file
-          is on the same page, so you aren&apos;t asking a family to trust a
+          is on the same page, so you aren't asking a family to trust a
           scrape.
         </li>
         <li>
-          IR / researchers: the dataset preserves the template&apos;s official
+          IR / researchers: the dataset preserves the template's official
           field IDs; the <Link href="/api">API</Link> and{" "}
           <a
             href="https://github.com/bolewood/collegedata-fyi"
