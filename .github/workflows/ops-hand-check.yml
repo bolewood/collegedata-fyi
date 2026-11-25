@@ -1,0 +1,103 @@
+name: Ops monthly hand check
+
+# Opens one issue a month listing 20 random schools that have a document on
+# file, so a person can check each school's own site for a CDS newer than ours
+# (#461). The pipeline cannot report what it never looks for; this measures the
+# miss rate from outside it. Year-round on purpose: files appear from March to
+# November. No heartbeat station: there is no registry row for it.
+#
+# Manual runs default to a dry run (print the issue, send nothing) and, when
+# not a dry run, to test mode (title prefix "[test] ", label hand-check-test).
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Print the issue and send nothing
+        type: boolean
+        default: true
+      test_mode:
+        description: Title prefix "[test] " and label hand-check-test
+        type: boolean
+        default: true
+  schedule:
+    # Monthly on the 3rd at 15:07 UTC.
+    - cron: "7 15 3 * *"
+
+concurrency:
+  group: ops-hand-check
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  hand-check:
+    name: Open the hand check issue
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+      SUPABASE_URL: https://api.collegedata.fyi
+      SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzZHV3bXlndm1kb3pocHZ6YWl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDk3NTksImV4cCI6MjA5MTY4NTc1OX0.fYZOIHyrOWzidgc-CVxWCY5Fe9pQk12-6YjDIS6y9qs
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
+      TEST_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.test_mode || 'false' }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/ci-requirements.txt
+
+      - name: Install Python dependencies
+        run: python -m pip install -r tools/ci-requirements.txt
+
+      - name: Build and open the issue
+        run: |
+          set -euo pipefail
+          month="$(date -u +%Y-%m)"
+          label=hand-check
+          prefix=""
+          if [[ "${TEST_MODE}" == "true" ]]; then
+            label=hand-check-test
+            prefix="[test] "
+          fi
+          title="${prefix}Hand check ${month}: 20 random schools — any newer CDS than ours?"
+
+          # hand_check_sample.py picks the newest earlier hand-check issue
+          # (by its month marker) for last month's answers, and says whether
+          # this month's issue already exists.
+          gh issue list --repo "${REPO}" --label "${label}" --state all --limit 30 \
+            --json number,title,body > hand-check-existing.json
+          python tools/ops/hand_check_sample.py --month "${month}" \
+            --issues-json hand-check-existing.json --exists-out hand-check-exists.txt \
+            --out hand-check-issue.md
+          exists="$(cat hand-check-exists.txt)"
+          echo "Title: ${title}" | tee -a "$GITHUB_STEP_SUMMARY"
+          tee -a "$GITHUB_STEP_SUMMARY" < hand-check-issue.md
+
+          if [[ "${DRY_RUN}" == "true" ]]; then
+            if [[ "${exists}" == "true" ]]; then
+              echo "Dry run: this month's issue already exists, so a real run would skip."
+            else
+              echo "Dry run: nothing sent."
+            fi
+            exit 0
+          fi
+          if [[ "${exists}" == "true" ]]; then
+            echo "::notice::this month's hand check issue already exists; not opening another"
+            exit 0
+          fi
+
+          gh label create "${label}" --repo "${REPO}" --force --color 0e8a16 \
+            --description "Monthly hand check of 20 random schools"
+          assignee_args=()
+          if [[ "${TEST_MODE}" != "true" ]]; then
+            assignee_args=(--assignee santhonys)
+          fi
+          gh issue create --repo "${REPO}" --title "${title}" --label "${label}" \
+            "${assignee_args[@]}" --body-file hand-check-issue.md

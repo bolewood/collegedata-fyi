@@ -19,6 +19,7 @@ on:
       - Ops corpus audit
       - Ops discovery renewal
       - Page refresh sweep
+      - Ops monthly hand check
     types:
       - completed
   deployment_status:

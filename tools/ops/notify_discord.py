@@ -39,6 +39,7 @@ WATCHED_WORKFLOWS = {
     "Ops corpus audit": "ops-corpus-audit.yml",
     "Page refresh sweep": "ops-page-refresh.yml",
     "Ops discovery renewal": "ops-discovery-renewal.yml",
+    "Ops monthly hand check": "ops-hand-check.yml",
 }
 DEPLOY_SUCCESS_WORKFLOWS = frozenset({"CI", "Deploy Edge Functions"})
 SELF_WORKFLOW_FILE = "ops-discord-notify.yml"
