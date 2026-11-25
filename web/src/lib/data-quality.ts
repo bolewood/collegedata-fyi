@@ -733,7 +733,7 @@ export type RenewalTile = {
 };
 
 /** What "on file" counts in the renewal figure, said wherever the figure is shown. */
-export const ON_FILE_NOTE = "The earlier-year count includes any report we hold for that year, including ones we set aside or couldn’t read. A school counts as renewed only if its current-year report is one we have not set aside; a report we couldn’t read still counts.";
+export const ON_FILE_NOTE = "The earlier-year count includes any report we hold for that year except ones filed for a single campus or unit, including ones we set aside or couldn’t read. A school counts as renewed only if its current-year report is one we have not set aside; a report we couldn’t read still counts.";
 
 export function renewalTile(renewal: Renewal): RenewalTile {
   const share = renewal.both / renewal.previous;

@@ -859,7 +859,9 @@ postmortem's headline number. "Freshness" already means refresh timing here
 
 The rule is asymmetric (`scoreboard.py` calls the alarm's `school_years`
 twice). The previous-year count (`renewal.previous`) takes any live report for
-that year, including ones we set aside (flagged) or couldn't read. The
+that year except one filed for a single campus or unit (`school_years` in
+`tools/ops/discovery_renewal.py` skips `sub_institutional` rows), including ones
+we set aside (flagged) or couldn't read. The
 renewed count (`renewal.both`, and `two_year_both`) excludes a school whose
 current-year report is flagged (wrong file, blank template, low coverage): a
 flagged report is not a renewal. A report we couldn't read still counts.
