@@ -521,7 +521,7 @@ export function selectSnapshot(files: { name: string; json: unknown }[]): Qualit
   const parsed = files.map((f) => validateSnapshot(f.json, f.name));
   const days = new Map<string, string>();
   parsed.forEach((snap, i) => {
-    const day = new Date(snap.snapshot_of).toISOString().slice(0, 10);
+    const day = snapshotDay(snap);
     const seen = days.get(day);
     if (seen) {
       throw new SnapshotError(`data-quality snapshots ${seen} and ${files[i].name} have the same date ${day}`);
@@ -719,6 +719,11 @@ export function formatSnapshotTime(iso: string): string {
   const d = new Date(iso);
   const two = (n: number) => String(n).padStart(2, "0");
   return `${two(d.getUTCHours())}:${two(d.getUTCMinutes())} UTC`;
+}
+
+/** The snapshot's date as `YYYY-MM-DD` (UTC): the name of its file and of its reports file, and the reports URL. */
+export function snapshotDay(snapshot: { snapshot_of: string }): string {
+  return new Date(snapshot.snapshot_of).toISOString().slice(0, 10);
 }
 
 export function formatSnapshotDate(iso: string): string {

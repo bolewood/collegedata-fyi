@@ -39,23 +39,25 @@ import {
 import { DATA_LICENSE_NAME, DATA_LICENSE_URL } from "@/lib/data-license";
 import { HAS_CDS_HREF } from "@/lib/coverage-model";
 import { formatLabel } from "@/lib/format-labels";
+import { Count, DrillPanel, DrillProvider } from "./DataQualityDrill";
+import type { CellTable } from "@/lib/data-quality-reports";
 
 const DASH = "–";
 
 const n = (v: number) => v.toLocaleString("en-US");
 const pc = (v: number | null) => (v === null ? DASH : `${v}%`);
 
-export function DataQualityView({ snapshot }: { snapshot: QualitySnapshot }) {
+export function DataQualityView({ snapshot, reportsUrl = null }: { snapshot: QualitySnapshot; reportsUrl?: string | null }) {
   const searchParams = useSearchParams();
   const year = resolveYear(snapshot, searchParams.get("year"));
-  return <DataQualityBody snapshot={snapshot} year={year} />;
+  return <DataQualityBody snapshot={snapshot} year={year} reportsUrl={reportsUrl} />;
 }
 
 /** Split out so tests can render a chosen year without a router. */
-export function DataQualityBody({ snapshot, year }: { snapshot: QualitySnapshot; year: QualityYear }) {
+export function DataQualityBody({ snapshot, year, reportsUrl = null }: { snapshot: QualitySnapshot; year: QualityYear; reportsUrl?: string | null }) {
   const years = yearsNewestFirst(snapshot);
   return (
-    <>
+    <DrillProvider reportsUrl={reportsUrl} year={year.cds_year}>
       <GlanceTable years={years} />
 
       <section aria-labelledby="dq-year-heading" style={sectionStyle}>
@@ -72,7 +74,7 @@ export function DataQualityBody({ snapshot, year }: { snapshot: QualitySnapshot;
       <FederalChecks year={year} />
       <TotalsTable year={year} snapshot={snapshot} />
       <HowToRead />
-    </>
+    </DrillProvider>
   );
 }
 
@@ -312,6 +314,11 @@ function allRows(year: QualityYear): { key: string; name: string; row: QualityRo
   ];
 }
 
+/** A count that lists its reports when clicked. `rowKey` is a format key or "__total" (the All formats row). */
+function K({ year, table, rowKey, column, value }: { year: QualityYear; table: CellTable; rowKey: string; column: string; value: number }) {
+  return <Count cell={{ table, row: rowKey === "__total" ? "total" : rowKey, column }} year={year.cds_year} value={value} text={n(value)} />;
+}
+
 function ReportsTable({ year, snapshot }: { year: QualityYear; snapshot: QualitySnapshot }) {
   const reasons = year.set_aside_reasons;
   return (
@@ -340,10 +347,10 @@ function ReportsTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
             {allRows(year).map(({ key, name, row, total }) => (
               <tr key={key} style={total ? totalRow : undefined}>
                 <th scope="row" style={{ ...tdLeft, fontWeight: total ? 600 : 400 }}>{name}</th>
-                <td style={tdStyle}>{n(row.status.published)}</td>
-                <td style={tdStyle}>{n(row.status.set_aside)}</td>
-                <td style={tdStyle}>{n(row.status.couldnt_read)}</td>
-                <td style={tdStyle}>{n(row.status.not_read_yet)}</td>
+                <td style={tdStyle}><K year={year} table="status" rowKey={key} column="published" value={row.status.published} /></td>
+                <td style={tdStyle}><K year={year} table="status" rowKey={key} column="set_aside" value={row.status.set_aside} /></td>
+                <td style={tdStyle}><K year={year} table="status" rowKey={key} column="couldnt_read" value={row.status.couldnt_read} /></td>
+                <td style={tdStyle}><K year={year} table="status" rowKey={key} column="not_read_yet" value={row.status.not_read_yet} /></td>
                 <td style={tdStyle}>{row.status.published > 0 ? n(row.fields_stored.median) : DASH}</td>
                 <td style={tdStyle}>{row.status.published > 0 ? n(row.fields_stored.p10) : DASH}</td>
               </tr>
@@ -351,6 +358,7 @@ function ReportsTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
           </tbody>
         </table>
       </Scroll>
+      <DrillPanel table="status" year={year.cds_year} />
       <Note>
         {n(liveCount(year.total.status))} reports counted. Set aside:{" "}
         {n(reasons.blank_form)} blank form, {n(reasons.too_little_read)} too little read, {n(reasons.wrong_file)} wrong
@@ -497,13 +505,13 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
               return (
                 <tr key={key} style={total ? totalRow : undefined}>
                   <th scope="row" style={{ ...tdLeft, fontWeight: total ? 600 : 400 }}>{name}</th>
-                  <td style={tdStyle}>{loaded ? n(f.reports) : DASH}</td>
-                  <td style={tdStyle}>{loaded ? n(f.values) : DASH}</td>
-                  <td style={tdStyle}>{loaded ? n(f.matches) : DASH}</td>
-                  <td style={tdStyle}>{loaded ? n(f.no_value) : DASH}</td>
-                  <td style={tdStyle}>{loaded ? n(f.differs) : DASH}</td>
-                  {split && <td style={tdStyle}>{loaded ? n(f.differs_2_to_10pct!) : DASH}</td>}
-                  {split && <td style={tdStyle}>{loaded ? n(f.differs_over_10pct!) : DASH}</td>}
+                  <td style={tdStyle}>{loaded ? <K year={year} table="federal" rowKey={key} column="reports" value={f.reports} /> : DASH}</td>
+                  <td style={tdStyle}>{loaded ? <K year={year} table="federal" rowKey={key} column="values" value={f.values} /> : DASH}</td>
+                  <td style={tdStyle}>{loaded ? <K year={year} table="federal" rowKey={key} column="matches" value={f.matches} /> : DASH}</td>
+                  <td style={tdStyle}>{loaded ? <K year={year} table="federal" rowKey={key} column="no_value" value={f.no_value} /> : DASH}</td>
+                  <td style={tdStyle}>{loaded ? <K year={year} table="federal" rowKey={key} column="differs" value={f.differs} /> : DASH}</td>
+                  {split && <td style={tdStyle}>{loaded ? <K year={year} table="federal" rowKey={key} column="differs_2_to_10pct" value={f.differs_2_to_10pct!} /> : DASH}</td>}
+                  {split && <td style={tdStyle}>{loaded ? <K year={year} table="federal" rowKey={key} column="differs_over_10pct" value={f.differs_over_10pct!} /> : DASH}</td>}
                   <td style={tdStyle} title={small ? `Under ${MIN_REPORTS_FOR_RATE} reports: no rate` : undefined}>
                     {pc(rate)}
                   </td>
@@ -513,6 +521,7 @@ function FederalTable({ year, snapshot }: { year: QualityYear; snapshot: Quality
           </tbody>
         </table>
       </Scroll>
+      <DrillPanel table="federal" year={year.cds_year} />
       {loaded && (
         <Note id="dq-note-left-out">
           A value is compared only when the federal data has a positive figure for it, and matches means within 2%.
@@ -656,12 +665,12 @@ function CheckTable({ year, check }: { year: QualityYear; check: CheckName }) {
               return (
                 <tr key={key} style={total ? totalRow : undefined}>
                   <th scope="row" style={{ ...tdLeft, fontWeight: total ? 600 : 400 }}>{name}</th>
-                  <td style={tdStyle}>{loaded ? n(c.reports) : DASH}</td>
-                  <td style={tdStyle}>{loaded ? n(c.matches) : DASH}</td>
-                  <td style={tdStyle}>{loaded ? n(c.no_value) : DASH}</td>
-                  <td style={tdStyle}>{loaded ? n(c.differs) : DASH}</td>
-                  <td style={tdStyle}>{loaded ? n(c.differs_2_to_10pct) : DASH}</td>
-                  <td style={tdStyle}>{loaded ? n(c.differs_over_10pct) : DASH}</td>
+                  <td style={tdStyle}>{loaded ? <K year={year} table={check} rowKey={key} column="reports" value={c.reports} /> : DASH}</td>
+                  <td style={tdStyle}>{loaded ? <K year={year} table={check} rowKey={key} column="matches" value={c.matches} /> : DASH}</td>
+                  <td style={tdStyle}>{loaded ? <K year={year} table={check} rowKey={key} column="no_value" value={c.no_value} /> : DASH}</td>
+                  <td style={tdStyle}>{loaded ? <K year={year} table={check} rowKey={key} column="differs" value={c.differs} /> : DASH}</td>
+                  <td style={tdStyle}>{loaded ? <K year={year} table={check} rowKey={key} column="differs_2_to_10pct" value={c.differs_2_to_10pct} /> : DASH}</td>
+                  <td style={tdStyle}>{loaded ? <K year={year} table={check} rowKey={key} column="differs_over_10pct" value={c.differs_over_10pct} /> : DASH}</td>
                   <td style={tdStyle} title={small ? `Under ${MIN_REPORTS_FOR_RATE} reports: no rate` : undefined}>
                     {pc(rate)}
                   </td>
@@ -671,6 +680,7 @@ function CheckTable({ year, check }: { year: QualityYear; check: CheckName }) {
           </tbody>
         </table>
       </Scroll>
+      <DrillPanel table={check} year={year.cds_year} />
       {loaded && (
         <>
           <Note id={`dq-note-${check}`}>{copy.note}</Note>
@@ -693,10 +703,14 @@ function OutcomeLines({
   lines,
   reports,
   force,
+  year,
+  rowKey,
 }: {
-  lines: { label: string; count: number }[];
+  lines: { label: string; count: number; column: string }[];
   reports: number;
   force: boolean;
+  year: QualityYear;
+  rowKey: string;
 }) {
   const showRate = force || reports >= MIN_REPORTS_FOR_RATE;
   return (
@@ -705,7 +719,7 @@ function OutcomeLines({
         <div key={l.label} style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
           <span style={{ fontFamily: "var(--sans)", color: "var(--ink-3)", fontSize: 12.5 }}>{l.label}</span>
           <span>
-            {n(l.count)}
+            <K year={year} table="totals" rowKey={rowKey} column={l.column} value={l.count} />
             {showRate ? ` (${pc(percent(l.count, reports))})` : ""}
           </span>
         </div>
@@ -714,11 +728,11 @@ function OutcomeLines({
   );
 }
 
-const sumLines = (o: SumOutcomes) => [
-  { label: "adds up", count: o.adds_up },
-  { label: "off by under 2%", count: o.under_2pct },
-  { label: "off by more", count: o.off_more },
-  { label: "can’t check", count: o.cant_check },
+const sumLines = (table: "B1" | "C1", o: SumOutcomes) => [
+  { label: "adds up", count: o.adds_up, column: `${table}.adds_up` },
+  { label: "off by under 2%", count: o.under_2pct, column: `${table}.under_2pct` },
+  { label: "off by more", count: o.off_more, column: `${table}.off_more` },
+  { label: "can’t check", count: o.cant_check, column: `${table}.cant_check` },
 ];
 
 function TotalsTable({ year, snapshot }: { year: QualityYear; snapshot: QualitySnapshot }) {
@@ -748,22 +762,24 @@ function TotalsTable({ year, snapshot }: { year: QualityYear; snapshot: QualityS
               return (
                 <tr key={key} style={total ? totalRow : undefined}>
                   <th scope="row" style={{ ...tdLeft, fontWeight: total ? 600 : 400 }}>{name}</th>
-                  <td style={tdStyle}>{n(t.reports)}</td>
+                  <td style={tdStyle}><K year={year} table="totals" rowKey={key} column="reports" value={t.reports} /></td>
                   <td style={{ ...tdStyle, textAlign: "left", paddingLeft: 12 }}>
-                    <OutcomeLines lines={sumLines(t.B1)} reports={t.reports} force={total} />
+                    <OutcomeLines lines={sumLines("B1", t.B1)} reports={t.reports} force={total} year={year} rowKey={key} />
                   </td>
                   <td style={{ ...tdStyle, textAlign: "left" }}>
-                    <OutcomeLines lines={sumLines(t.C1)} reports={t.reports} force={total} />
+                    <OutcomeLines lines={sumLines("C1", t.C1)} reports={t.reports} force={total} year={year} rowKey={key} />
                   </td>
                   <td style={{ ...tdStyle, textAlign: "left" }}>
                     <OutcomeLines
                       lines={[
-                        { label: "adds up", count: t.H1.adds_up },
-                        { label: "doesn’t add up", count: t.H1.doesnt },
-                        { label: "can’t check", count: t.H1.cant_check },
+                        { label: "adds up", count: t.H1.adds_up, column: "H1.adds_up" },
+                        { label: "doesn’t add up", count: t.H1.doesnt, column: "H1.doesnt" },
+                        { label: "can’t check", count: t.H1.cant_check, column: "H1.cant_check" },
                       ]}
                       reports={t.reports}
                       force={total}
+                      year={year}
+                      rowKey={key}
                     />
                   </td>
                 </tr>
@@ -772,6 +788,7 @@ function TotalsTable({ year, snapshot }: { year: QualityYear; snapshot: QualityS
           </tbody>
         </table>
       </Scroll>
+      <DrillPanel table="totals" year={year.cds_year} />
       <Note>
         <strong>Enrollment</strong> checks that undergraduates by sex sum to the total, and that undergraduate plus
         graduate sum to the grand total. <strong>Admissions</strong> checks that applicants, admits and enrolled by

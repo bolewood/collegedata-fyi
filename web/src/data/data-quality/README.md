@@ -17,3 +17,26 @@ the file with the newest `snapshot_of`. The build fails when:
 An empty directory is an error, never "no data, ok": `/coverage` reads the
 newest snapshot for its renewal tile whether or not the gate is open. Keep old
 snapshots here: they feed a later trend line.
+
+## `reports/<date>.json`
+
+Written with each snapshot by the same `scoreboard.py --public` run: one row per
+report that a count in the snapshot counts (document id, school, format, status,
+and the outcome in each table; no values), so a count on `/data-quality` can list
+the reports behind it. It lives in a subdirectory so the snapshot loader, which
+reads only `*.json` files here, never mistakes it for a snapshot. `--public`
+refuses to write it unless every count in the snapshot equals the rows it lists,
+and the build checks the same thing (`loadReportsFor`). The page fetches it on the
+first click, from `/data-quality/reports/<date>`; it is not part of the page's
+bundle. School names come from `tools/finder/schools.yaml`, not from the
+database. A row carries `nopage: true` when its school has no page for that year
+(only a blank template that year), and a row whose school the run did not record
+has `school: null`; the page lists both without a link. A snapshot written before this has no file and its counts are not
+buttons.
+
+Only the newest snapshot's reports file is ever read or served, so **keep one:
+when you add a snapshot with its reports file, delete the older reports files**
+in the same PR (a test fails if more than one is left). The aggregate snapshots
+stay for the trend, and git history keeps the old reports files. This is also
+why `next.config.ts` traces `reports/` only for `/data-quality` and its reports
+route, and not for `/coverage`.

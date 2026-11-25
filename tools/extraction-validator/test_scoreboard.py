@@ -7,6 +7,7 @@ import datetime as dt
 import io
 import json
 import random
+import re
 import socket
 import sys
 import tempfile
@@ -1207,6 +1208,163 @@ class FederalExtraChecks(unittest.TestCase):
                 scoreboard.check_public_shape(broken)
 
 
+
+def richer_run() -> dict:
+    """The synthetic run with every federal band, a no-number value, all three sum outcomes, extra checks of every
+    class and a single-campus report, so each kind of cell has reports behind it."""
+    run = synthetic_run()
+    published = [d for d in run["documents"] if d["year"] == "2024-25" and d["producer"] and not d["flag"]]
+    fed = [d for d in published if not d["sub_institutional"]]
+    ratios = ["100", None, "103", "111", "1000"]   # ours against IPEDS 100: match, blank, 2-10%, over 10%
+    for i, d in enumerate(fed[:5]):
+        outcome = {"100": "match", None: "blank", "103": "different", "111": "different", "1000": "different"}[ratios[i]]
+        d["federal"] = {"applied": outcome, "admitted": "match", "enrolled": None}
+        d["federal_values"] = {"applied": {"ours": None if ratios[i] is None else int(ratios[i]), "federal": "100", "federal_data_year": 2024},
+                               "admitted": {"ours": 100, "federal": "100", "federal_data_year": 2024},
+                               "enrolled": {"ours": 5, "federal": None, "federal_data_year": 2024}}
+        d["federal_extra"] = extra_for("2024-25", enrollment=(("1000" if i % 2 else "1200"), "1000"))
+        d["sums"] = {"B1": "pass", "C1": "near" if i % 2 else "fail", "H1": "nc"}
+    return run
+
+
+class ReportRows(unittest.TestCase):
+    """The rows behind each count: every cell of the snapshot equals the number of rows it lists."""
+
+    def setUp(self) -> None:
+        self.run = richer_run()
+        self.public = scoreboard.build_public(self.run, "x.json")
+        self.names = {d["school_id"]: d["school_id"].title() for d in self.run["documents"]}
+        self.reports = scoreboard.build_reports(self.run, self.public, self.names)
+
+    def test_every_cell_equals_the_rows_it_lists_in_every_year_and_table(self) -> None:
+        scoreboard.check_reports_agree(self.public, self.reports)
+        have = scoreboard.cells_from_reports(self.reports)
+        want = scoreboard.cells_from_public(self.public)
+        self.assertEqual({k: v for k, v in have.items() if v}, want)
+        # The comparison is not empty: every table and every year has cells, and the status classes are all present.
+        self.assertEqual({k[3] for k in want if k[2] == "status"}, set(scoreboard.LISTED_STATUSES))
+        self.assertEqual({k[2] for k in want}, {"status", "totals", "federal", "enrollment", "tuition"})
+        self.assertEqual({k[0] for k in want}, {"2023-24", "2024-25", "2025-26"})
+        self.assertTrue(any(k[3] == "differs_over_10pct" and k[2] == "federal" for k in want))
+        self.assertTrue(any(k[3].endswith(".under_2pct") for k in want))
+
+    def test_a_row_per_listed_report_with_no_values_and_only_what_a_cell_needs(self) -> None:
+        for year, rows in self.reports["years"].items():
+            published = sum(1 for r in rows if r["status"] == "published")
+            self.assertEqual(published, next(y for y in self.public["years"] if y["cds_year"] == year)["total"]["status"]["published"])
+            for r in rows:
+                self.assertLessEqual(set(r), {"id", "school", "format", "status", "fed", "sums", "checks", "nopage"})
+                self.assertEqual(r["status"] == "published", "fed" in r)
+        self.assertEqual(set(self.reports["schools"]), {r["school"] for rows in self.reports["years"].values() for r in rows if r["school"]})
+        self.assertNotIn("removed", {r["status"] for rows in self.reports["years"].values() for r in rows})
+
+    def test_the_agreement_check_fails_for_a_wrong_cell_or_a_missing_row(self) -> None:
+        for mutate in (lambda r: r["years"]["2024-25"][0].update(status="set_aside" if r["years"]["2024-25"][0]["status"] != "set_aside" else "published"),
+                       lambda r: r["years"]["2024-25"].pop(),
+                       lambda r: r["years"]["2024-25"].append(dict(r["years"]["2024-25"][0], id="extra")),
+                       lambda r: next(x for x in r["years"]["2024-25"] if x["status"] == "published" and x["fed"][0]).update(fed=[None, None, None]),
+                       lambda r: next(x for x in r["years"]["2024-25"] if x["status"] == "published").update(sums=["cant_check"] * 3)):
+            broken = json.loads(json.dumps(self.reports))
+            mutate(broken)
+            with self.subTest(), self.assertRaisesRegex(SystemExit, "disagrees with the snapshot"):
+                scoreboard.check_reports_agree(self.public, broken)
+        wrong = dict(self.reports, scoreboard_run="other.json")
+        with self.assertRaisesRegex(SystemExit, "not from the same run"):
+            scoreboard.check_reports_agree(self.public, wrong)
+
+    def test_the_codes_are_the_outcome_and_the_band(self) -> None:
+        code = scoreboard.federal_code
+        self.assertEqual([code(100, Decimal(100)), code(None, Decimal(100)), code(103, Decimal(100)), code(110, Decimal(100)),
+                          code(111, Decimal(100)), code(5, None), code(5, Decimal(0))], ["m", "n", "s", "s", "l", None, None])
+
+    def test_names_come_from_the_school_list_and_an_unknown_school_is_refused(self) -> None:
+        self.assertEqual(self.reports["schools"]["school-d0"], "School-D0")
+        with self.assertRaisesRegex(SystemExit, "is not in the school list"):
+            scoreboard.build_reports(self.run, self.public, {})
+
+    def test_a_document_with_no_served_extraction_takes_its_school_from_the_manifest(self) -> None:
+        run = richer_run()
+        entry = next(m for m in run["manifest"] if m["extraction_status"] == "failed")
+        entry["school_id"] = "school-failed"
+        names = {**self.names, "school-failed": "Failed College"}
+        reports = scoreboard.build_reports(run, scoreboard.build_public(run, "x.json"), names)
+        row = next(r for rows in reports["years"].values() for r in rows if r["id"] == entry["document_id"])
+        self.assertEqual(row["school"], "school-failed")
+        # A run made before manifests carried the school has none to give: listed, not linked.
+        other = next(m for m in run["manifest"] if m["extraction_status"] == "failed" and m is not entry)
+        self.assertNotIn("school_id", other)
+        row = next(r for rows in reports["years"].values() for r in rows if r["id"] == other["document_id"])
+        self.assertIsNone(row["school"])
+
+    def rows_by_school(self, reports: dict, year: str = "2024-25") -> dict:
+        return {r["school"]: r for r in reports["years"][year] if r["school"]}
+
+    def test_a_row_is_unlinked_when_its_school_year_page_would_404(self) -> None:
+        # The year page needs a publicly listed document that year: not removed, and not a blank template.
+        run = richer_run()
+        sets = [d for d in run["documents"] if d["year"] == "2024-25" and d["flag"] in ("blank_template", "low_coverage")]
+        blank = next(d for d in sets if d["flag"] == "blank_template")
+        low = next(d for d in sets if d["flag"] == "low_coverage")
+        names = {d["school_id"]: d["school_id"] for d in run["documents"]}
+        rows = self.rows_by_school(scoreboard.build_reports(run, scoreboard.build_public(run, "x.json"), names))
+        self.assertTrue(rows[blank["school_id"]].get("nopage"))              # blank template alone: no page
+        self.assertNotIn("nopage", rows[low["school_id"]])                    # a low-coverage report is still listed
+        self.assertTrue(all("nopage" not in r for r in rows.values() if r["status"] == "published"))
+        # A second document of the same school and year that is listed gives the page back.
+        other = next(d for d in run["documents"] if d["year"] == "2024-25" and d["flag"] is None and d["producer"])
+        other["school_id"] = blank["school_id"]
+        rows = self.rows_by_school(scoreboard.build_reports(run, scoreboard.build_public(run, "x.json"), names))
+        self.assertNotIn("nopage", rows[blank["school_id"]])
+        # A removed document does not vouch for the page.
+        removed = next(m for m in run["manifest"] if m["removed"] and m["year"] == "2024-25")
+        removed["school_id"] = low["school_id"]
+        low_entry = next(m for m in run["manifest"] if m["document_id"] == low["document_id"])
+        low_entry["data_quality_flag"] = "blank_template"
+        low["flag"] = "blank_template"
+        rows = self.rows_by_school(scoreboard.build_reports(run, scoreboard.build_public(run, "x.json"), names))
+        self.assertTrue(rows[low["school_id"]].get("nopage"))
+
+    def test_a_document_with_no_extraction_still_has_its_school_page(self) -> None:
+        # The year page renders any listed document, extracted or not, so a failed document of a school with a school id
+        # gives the school-year its page; a failed blank template does not.
+        run = richer_run()
+        failed = next(m for m in run["manifest"] if m["extraction_status"] == "failed" and m["year"] == "2024-25")
+        failed["school_id"] = "school-failed"
+        self.assertNotIn(failed["document_id"], {d["document_id"] for d in run["documents"]})
+        names = {d["school_id"]: d["school_id"] for d in run["documents"]}
+        names["school-failed"] = "Failed College"
+        row = lambda: next(r for r in scoreboard.build_reports(run, scoreboard.build_public(run, "x.json"), names)["years"]["2024-25"]  # noqa: E731
+                           if r["id"] == failed["document_id"])
+        self.assertEqual(row()["school"], "school-failed")
+        self.assertNotIn("nopage", row())
+        failed["data_quality_flag"] = "blank_template"
+        self.assertTrue(row().get("nopage"))
+        # A failed document the run has no school for is listed with no school and nothing to link.
+        failed["school_id"] = None
+        self.assertIsNone(row()["school"])
+        self.assertNotIn("nopage", row())
+
+    def test_rows_are_sorted_by_school_name_ignoring_case(self) -> None:
+        run = richer_run()
+        names = {d["school_id"]: d["school_id"] for d in run["documents"]}
+        names["school-d0"] = "zeta University"        # lower-case first letter: after "Alpha" under casefold, before it under plain sort
+        names["school-d1"] = "Alpha College"
+        names["school-d2"] = "beta College"
+        rows = scoreboard.build_reports(run, scoreboard.build_public(run, "x.json"), names)["years"]["2023-24"]
+        order = [names[r["school"]] for r in rows if r["school"] in ("school-d0", "school-d1", "school-d2")]
+        self.assertEqual(order, sorted(order, key=str.casefold))
+        self.assertEqual(order.index("Alpha College") < order.index("beta College") < order.index("zeta University"), True)
+
+    def test_the_hidden_flags_are_the_ones_the_web_hides(self) -> None:
+        web = (Path(scoreboard.__file__).resolve().parents[2] / "web" / "src" / "lib" / "public-documents.ts").read_text()
+        listed = re.search(r"PUBLIC_HIDDEN_QUALITY_FLAGS = \[([^\]]*)\]", web).group(1)
+        self.assertEqual(tuple(re.findall(r'"([^"]+)"', listed)), scoreboard.PUBLIC_HIDDEN_QUALITY_FLAGS)
+
+    def test_the_manifest_carries_the_school(self) -> None:
+        self.assertEqual(scoreboard.manifest_entry({"document_id": "d", "canonical_year": "2024-25", "extraction_status": "failed",
+                                                    "school_id": "s"})["school_id"], "s")
+
+
 class PublicInputs(unittest.TestCase):
     def refuses(self, run: dict) -> None:
         with blocked_network(), self.assertRaises(SystemExit):
@@ -1277,9 +1435,12 @@ class PublicInputs(unittest.TestCase):
             run_path.write_text(json.dumps(synthetic_run()))
             out = Path(folder, "out")
             argv = ["scoreboard.py", "--public", str(run_path), "--public-out-dir", str(out)]
-            with blocked_network(), mock.patch.object(sys, "argv", argv), contextlib.redirect_stderr(io.StringIO()):
+            names = {d["school_id"]: d["school_id"].title() for d in synthetic_run()["documents"]}
+            with blocked_network(), mock.patch.object(sys, "argv", argv), contextlib.redirect_stderr(io.StringIO()), \
+                    mock.patch.object(scoreboard, "load_school_names", lambda: names):
                 self.assertEqual(scoreboard.main(), 0)
-            self.assertEqual([p.name for p in out.iterdir()], ["2026-11-25.json"])
+            self.assertEqual(sorted(p.name for p in out.iterdir()), ["2026-11-25.json", "reports"])
+            self.assertEqual([p.name for p in (out / "reports").iterdir()], ["2026-11-25.json"])
             written = json.loads((out / "2026-11-25.json").read_text())
             self.assertEqual(written["scoreboard_run"], run_path.name)
             scoreboard.check_public_shape(written)
@@ -1673,6 +1834,8 @@ class GatherOnAFakeApi(unittest.TestCase):
         self.assertEqual({k: v for k, v in by_table["cds_documents"].items()},
                          {"select": "id,source_sha256", "removed_at": "is.null", "order": "id"})
         self.assertIn("ipeds_id", by_table["cds_manifest"]["select"].split(","))
+        # The manifest query selects school_id, which the reports file needs to place a document that has no extraction.
+        self.assertIn("school_id", by_table["cds_manifest"]["select"].split(","))
 
     def test_each_document_keeps_its_ipeds_id_and_file_hash(self) -> None:
         self.assertEqual({k: (d["ipeds_id"], d["source_sha256"]) for k, d in self.by_id.items()},

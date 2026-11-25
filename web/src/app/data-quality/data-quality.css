@@ -52,3 +52,34 @@
   .dq-table--c col:nth-child(2) { width: 45cqw; }
   .dq-table--c col:nth-child(n + 3) { width: 180px; }
 }
+
+/* PRD 040: a count that lists its reports. A real button that reads as the number, underlined so it shows it can be pressed. */
+.dq-count {
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 6px 4px;
+  margin: -6px -4px;
+  min-width: 28px;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+.dq-count:hover,
+.dq-count[aria-expanded="true"] { text-decoration-style: solid; color: var(--forest); }
+.dq-count:focus-visible,
+.dq-drill:focus-visible,
+.dq-drill-list:focus-visible,
+.dq-drill-link:focus-visible { outline: 2px solid var(--forest); outline-offset: 2px; }
+.dq-drill { margin-top: 16px; padding: 16px 18px; }
+.dq-drill-head { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; }
+.dq-drill-title { margin: 0; font-size: 16px; font-weight: 600; line-height: 1.4; }
+.dq-drill-close { flex: none; }
+.dq-drill-note { margin: 8px 0 0; font-size: 13.5px; line-height: 1.6; color: var(--ink-2); }
+.dq-drill-list { margin: 10px 0 0; padding: 0; list-style: none; max-height: 360px; overflow-y: auto; font-size: 14px; line-height: 1.5; }
+.dq-drill-list li { padding: 6px 0; border-top: 1px solid var(--rule); overflow-wrap: anywhere; }
+.dq-drill-list a { text-decoration: underline; }
+.dq-drill-meta { color: var(--ink-3); }
+.dq-drill-link { font: inherit; background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; }

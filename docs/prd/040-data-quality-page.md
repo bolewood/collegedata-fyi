@@ -514,7 +514,10 @@ example, two 2023-24 spreadsheets were read by Tier 4.
   It rejects a run without `run_format: 3` (2 before the size of federal
   differences) rather than inventing per-format
   zeros. The test runs it with network access blocked.
-- **Writes only aggregates and labels.** It never writes per-document rows,
+- **Writes only aggregates and labels.** (Except the reports file, see "Click a cell
+  to list its reports", which lists the reports behind each count and nothing else,
+  and which reads the school list `tools/finder/schools.yaml` for display names as
+  well as the run JSON: a file in the repo, not the database.) It never writes per-document rows,
   reader versions, or anything from the local worker summaries. This is to
   keep the file small and stable, not for privacy. The fix-reach columns stay
   internal because they depend on files that exist only on the Mac.
@@ -760,8 +763,20 @@ UI tests across M1 and M2:
   checks"): undergraduate enrollment (B1) against IPEDS fall undergraduate
   enrollment, and tuition (G1) against IPEDS in-state tuition, each with a
   definition-alignment note.
-- **Click a cell to list its reports,** with links to each school's page.
-  There's no privacy bar. It needs per-report rows in the public snapshot.
+- **Click a cell to list its reports:** built. Every count above zero in
+  Tables A, B, B2 and C is a button that opens the list of the reports it
+  counts, each linked to the school's page for that year (`/schools/<id>/<year>`).
+  There's no privacy bar. The rows are in a separate file written with the
+  snapshot (`reports/<date>.json`, about 320 KB, 60 KB gzipped), so the aggregate
+  snapshot stays small, and the page fetches it on the first click from a static
+  route (`/data-quality/reports/<date>`, gated like the page), never in its own
+  bundle. Rows hold only what a count needs: document id, school, format,
+  status, the outcome in each table (no values), and `nopage` when the school's
+  page for that year would not exist. The build fails if any
+  count in the snapshot differs from the number of rows it lists. Federal
+  counts count values, so a report can hold up to three: the list says so.
+  A report whose school the run did not record, or whose school has no page for
+  that year (only a blank template that year), is listed without a link.
 - **Earlier years,** a **trend line** across snapshots, and **per-school
   formats and gap years** on the Coverage tab.
 

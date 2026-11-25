@@ -18,7 +18,7 @@ import { AID_CANT_CHECK_SAMPLE, FEDERAL_DIFFERS_SAMPLE, type QualitySnapshot } f
 
 let currentParams = new URLSearchParams();
 const mocks = vi.hoisted(() => ({ loadLatestSnapshot: vi.fn() }));
-vi.mock("@/lib/data-quality-snapshots", () => ({ loadLatestSnapshot: mocks.loadLatestSnapshot }));
+vi.mock("@/lib/data-quality-snapshots", () => ({ loadLatestSnapshot: mocks.loadLatestSnapshot, loadReportsFor: () => null }));
 vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
