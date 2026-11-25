@@ -796,4 +796,78 @@ describe("pipeline observation freshness", () => {
       "Renewal: 2025-26 still below floor",
     );
   });
+
+  it("a per-year arrivals breach names the year and uses that year's numbers and window", () => {
+    const summary = {
+      below_floor: false,
+      renewed: 400,
+      prev_schools: 479,
+      current_year: "2025-26",
+      next_year: "2026-27",
+      arrivals_below_floor: true,
+      arrivals_30d: 50,
+      arrivals_expected_30d: 49.5,
+      arrivals_window_days: 60,
+      arrivals_current_below_floor: false,
+      arrivals_current_30d: 50,
+      arrivals_expected_current_30d: 49.5,
+      arrivals_current_window_days: 30,
+      arrivals_next_below_floor: true,
+      arrivals_next_30d: 2,
+      arrivals_next_60d: 0,
+      arrivals_expected_next_30d: 20,
+      arrivals_expected_next_60d: 49.2,
+      arrivals_next_window_days: 60,
+      arrivals_years: "2026-27",
+      outstanding_below_floor: true,
+      outstanding_years: "2026-27",
+    };
+    const snapshot = snapshotFromFacts(
+      healthyFacts().concat(renewalFact({ last_summary: summary, last_scheduled_summary: summary })),
+      NOW,
+    );
+    expect(snapshot.strip.text).toBe(
+      "Renewal: almost nothing new arrived for 2026-27 · 0 schools in 60 days (expected 49)",
+    );
+    expect(snapshot.stations[0].detail_line).toContain(
+      "arrivals 2026-27: 0 in 60 days (expected 49)",
+    );
+    expect(snapshot.stations[0].detail_line).not.toContain("50");
+  });
+
+  it("pooled keys are used only when per-year keys are absent", () => {
+    const summary = {
+      below_floor: false,
+      renewed: 400,
+      prev_schools: 479,
+      arrivals_below_floor: true,
+      arrivals_30d: 3,
+      arrivals_expected_30d: 25,
+      arrivals_window_days: 30,
+    };
+    const snapshot = snapshotFromFacts(
+      healthyFacts().concat(renewalFact({ last_summary: summary, last_scheduled_summary: summary })),
+      NOW,
+    );
+    expect(snapshot.strip.text).toBe(
+      "Renewal: almost nothing new arrived · 3 schools in 30 days (expected 25)",
+    );
+  });
+
+  it("an outstanding next-year scope without an arrivals breach reads as next year", () => {
+    const summary = {
+      below_floor: false,
+      renewed: 400,
+      prev_schools: 479,
+      current_year: "2025-26",
+      next_year: "2026-27",
+      outstanding_below_floor: true,
+      outstanding_years: "2026-27",
+    };
+    const snapshot = snapshotFromFacts(
+      healthyFacts().concat(renewalFact({ last_summary: summary, last_scheduled_summary: summary })),
+      NOW,
+    );
+    expect(snapshot.strip.text).toBe("Renewal: next year (2026-27) still below floor");
+  });
 });
