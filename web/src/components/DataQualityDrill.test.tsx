@@ -9,6 +9,8 @@ import { cellLabel, snapshotCells, type CellRef, type ReportsFile } from "@/lib/
 import { DrillPanelView, cachedReports, loadReports } from "./DataQualityDrill";
 
 let currentParams = new URLSearchParams();
+// These tests render the page as the browser shows it after hydration, when ?year= is read.
+vi.mock("@/lib/use-hydrated", () => ({ useHydrated: () => true }));
 vi.mock("next/navigation", () => ({
   useSearchParams: () => currentParams,
   useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),

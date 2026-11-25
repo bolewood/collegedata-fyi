@@ -476,14 +476,14 @@ export function SchoolBrowser({
           }}
           className="browser-meta-grid"
         >
-          <MetaStat label="Schools" value={metadata ? metadata.schools_in_scope.toLocaleString() : "..."} />
-          <MetaStat label="Match your filters" value={metadata ? metadata.total_rows.toLocaleString() : "..."} />
-          <MetaStat label="Have every number" value={metadata ? metadata.schools_with_required_fields.toLocaleString() : "..."} />
-          <MetaStat label="Missing a number" value={metadata ? metadata.schools_missing_required_fields.toLocaleString() : "..."} />
+          <MetaStat label="Schools" value={metadata ? metadata.schools_in_scope.toLocaleString("en-US") : "..."} />
+          <MetaStat label="Match your filters" value={metadata ? metadata.total_rows.toLocaleString("en-US") : "..."} />
+          <MetaStat label="Have every number" value={metadata ? metadata.schools_with_required_fields.toLocaleString("en-US") : "..."} />
+          <MetaStat label="Missing a number" value={metadata ? metadata.schools_missing_required_fields.toLocaleString("en-US") : "..."} />
         </div>
         <p className="meta" style={{ marginTop: 14, lineHeight: 1.55 }}>
           Latest reports, 2024-25+. Schools missing a number your filters need are counted above. Fields needed: {requiredLabels}.{" "}
-          {metadata ? ` Filtered out by your criteria: ${metadata.schools_failing_filters.toLocaleString()}.` : ""}
+          {metadata ? ` Filtered out by your criteria: ${metadata.schools_failing_filters.toLocaleString("en-US")}.` : ""}
           {" "}
           <Link href="/match">Building a list? Use Match.</Link>
         </p>
@@ -739,7 +739,7 @@ export function SchoolBrowser({
                       <div>{formatPercent(row.acceptance_rate, 1) || "-"}</div>
                       {!isCompact && row.applied != null && row.admitted != null && (
                         <div className="mono" style={{ fontSize: 10, color: "var(--ink-3)", marginTop: 2 }}>
-                          {Math.round(row.admitted).toLocaleString()}/{Math.round(row.applied).toLocaleString()}
+                          {Math.round(row.admitted).toLocaleString("en-US")}/{Math.round(row.applied).toLocaleString("en-US")}
                         </div>
                       )}
                     </td>
@@ -919,7 +919,7 @@ export function SchoolBrowser({
         }}
       >
         <p className="meta" style={{ margin: 0 }}>
-          Showing {visibleStart.toLocaleString()}-{visibleEnd.toLocaleString()} of {totalRows.toLocaleString()}
+          Showing {visibleStart.toLocaleString("en-US")}-{visibleEnd.toLocaleString("en-US")} of {totalRows.toLocaleString("en-US")}
         </p>
         <div style={{ display: "flex", gap: 8 }}>
           <button
@@ -1106,9 +1106,9 @@ function BrowserInspectionDrawer({
         <div className="cd-browser-drawer__grid">
           <DrawerStat label="Accept rate" value={formatPercent(row.acceptance_rate, 1) || "—"} />
           <DrawerStat label="Yield" value={formatPercent(row.yield_rate, 1) || "—"} />
-          <DrawerStat label="Applied" value={row.applied != null ? Math.round(row.applied).toLocaleString() : "—"} />
-          <DrawerStat label="Admitted" value={row.admitted != null ? Math.round(row.admitted).toLocaleString() : "—"} />
-          <DrawerStat label="Enrolled 1st-yr" value={row.enrolled_first_year != null ? Math.round(row.enrolled_first_year).toLocaleString() : "—"} />
+          <DrawerStat label="Applied" value={row.applied != null ? Math.round(row.applied).toLocaleString("en-US") : "—"} />
+          <DrawerStat label="Admitted" value={row.admitted != null ? Math.round(row.admitted).toLocaleString("en-US") : "—"} />
+          <DrawerStat label="Enrolled 1st-yr" value={row.enrolled_first_year != null ? Math.round(row.enrolled_first_year).toLocaleString("en-US") : "—"} />
           <DrawerStat label="Retention" value={formatPercent(row.retention_rate, 0) || "—"} />
         </div>
       </div>
@@ -1148,7 +1148,7 @@ function BrowserInspectionDrawer({
             label="Undergrad enroll"
             value={
               row.undergrad_enrollment_scorecard != null
-                ? Math.round(row.undergrad_enrollment_scorecard).toLocaleString()
+                ? Math.round(row.undergrad_enrollment_scorecard).toLocaleString("en-US")
                 : "—"
             }
           />
@@ -1251,7 +1251,7 @@ function BrowserResultCard({
           marginTop: 14,
         }}
       >
-        <CardMetric label="Enrollment" value={row.undergrad_enrollment_scorecard == null ? "-" : Math.round(row.undergrad_enrollment_scorecard).toLocaleString()} />
+        <CardMetric label="Enrollment" value={row.undergrad_enrollment_scorecard == null ? "-" : Math.round(row.undergrad_enrollment_scorecard).toLocaleString("en-US")} />
         <CardMetric label="Accept" value={formatPercent(row.acceptance_rate, 1) || "-"} />
         <CardMetric label="Yield" value={formatPercent(row.yield_rate, 1) || "-"} />
         <CardMetric label="Retention" value={formatPercent(row.retention_rate, 0) || "-"} />
@@ -1353,7 +1353,7 @@ function NumberCell({
       data-sorted={sorted ? "true" : undefined}
       style={{ padding, textAlign: "right", whiteSpace: "nowrap" }}
     >
-      {value == null ? "-" : Math.round(value).toLocaleString()}
+      {value == null ? "-" : Math.round(value).toLocaleString("en-US")}
     </td>
   );
 }

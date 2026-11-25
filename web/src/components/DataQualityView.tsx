@@ -7,6 +7,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useHydrated } from "@/lib/use-hydrated";
 import type { ReactNode } from "react";
 import {
   MIN_REPORTS_FOR_RATE,
@@ -40,6 +41,7 @@ import {
 import { DATA_LICENSE_NAME, DATA_LICENSE_URL } from "@/lib/data-license";
 import { HAS_CDS_HREF } from "@/lib/coverage-model";
 import { formatLabel } from "@/lib/format-labels";
+import { YearStatus } from "./YearStatus";
 import { Count, DrillPanel, DrillProvider } from "./DataQualityDrill";
 import { cohortChanges, lineRuns, pointLabel, renewalRow, seriesStarts, trendRows, type TrendPoint, type TrendRow } from "@/lib/data-quality-trend";
 import type { CellTable } from "@/lib/data-quality-reports";
@@ -51,8 +53,16 @@ const pc = (v: number | null) => (v === null ? DASH : `${v}%`);
 
 export function DataQualityView({ snapshot, reportsUrl = null, trend }: { snapshot: QualitySnapshot; reportsUrl?: string | null; trend: TrendPoint[] }) {
   const searchParams = useSearchParams();
-  const year = resolveYear(snapshot, searchParams.get("year"));
-  return <DataQualityBody snapshot={snapshot} year={year} reportsUrl={reportsUrl} trend={trend} />;
+  // The page is static, so its HTML is the default year. The browser must hydrate that same markup before it shows the
+  // year in the query string; reading ?year= on the first render is a hydration mismatch (React error #418).
+  const hydrated = useHydrated();
+  const year = resolveYear(snapshot, hydrated ? searchParams.get("year") : null);
+  return (
+    <>
+      <YearStatus year={year.cds_year} hydrated={hydrated} />
+      <DataQualityBody snapshot={snapshot} year={year} reportsUrl={reportsUrl} trend={trend} />
+    </>
+  );
 }
 
 /** Split out so tests can render a chosen year without a router. */

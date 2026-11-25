@@ -4,6 +4,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 let currentParams = new URLSearchParams();
+// These tests render the page as the browser shows it after hydration, when ?year= is read.
+vi.mock("@/lib/use-hydrated", () => ({ useHydrated: () => true }));
 vi.mock("next/navigation", () => ({
   useSearchParams: () => currentParams,
   useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
