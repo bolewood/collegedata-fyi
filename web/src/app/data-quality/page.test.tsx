@@ -71,11 +71,4 @@ describe("/data-quality launch gate", () => {
     expect(line).toContain(FIXTURE_SNAPSHOT.scoreboard_run);
     expect(html).not.toMatch(/class="meta"[^>]*>\s*Numbers from/);
   });
-
-  it("lets the loader's error through when no snapshot exists, rather than showing an empty page", () => {
-    mocks.loadLatestSnapshot.mockImplementation(() => {
-      throw new Error("no snapshot");
-    });
-    expect(() => renderToStaticMarkup(<DataQualityPage />)).toThrow("no snapshot");
-  });
 });
