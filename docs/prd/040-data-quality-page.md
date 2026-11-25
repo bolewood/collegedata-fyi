@@ -721,7 +721,7 @@ current year switches in September) until a year of snapshots exists.
 
 ## Open questions
 
-None. The M0 sample may raise copy questions for 2023-24 financial aid.
+Five copy questions came out of the M0 samples; see "Copy questions for the owner" at the end of "M0 samples (2026-11-25)". None is decided.
 
 ## M0 samples (2026-11-25)
 
@@ -741,31 +741,43 @@ reports, pooling 2023-24 and 2024-25 (2025-26 has no federal comparison).
 "Off by more" in the brief was read as Table B's "Differs", which is a 2%
 test per value. So this sample says nothing per year.
 
-I did not fetch the IPEDS figure (to stay inside the request budget). The
-question answered is narrower: is the number we compared the number in the
-school's file? When it is, the difference is between the two filings, and
-the sample does not say why (count date, cohort or something else).
+The unit is a report, not a value: a report can differ on one, two or three
+metrics, listed in the "Differs on" column. I did not fetch the IPEDS figures
+or check the join to the federal record (to stay inside the request budget).
+The question answered is narrower: is the number we compared the number in the
+school's file? Where it is, a CDS extraction error is ruled out for that
+report. That is all. It does not show that the two filings differ, because the
+federal side, the join and the scope (campus or whole institution) were not
+checked.
 
-| School | Year | What we read (applied / admitted / enrolled) | What the file says | Verdict | Evidence |
-|---|---|---|---|---|---|
-| Chatham University | 2023-24 | 3,611 / 2,923 / 332 | Same. Rows by sex sum to the same totals. | File matches our reading | p. 11 |
-| Southeast Missouri State University | 2024-25 | 11,262 / 7,767 / 1,381 | Same. The 2024-25 form has no printed total; the rows by sex sum to ours. | File matches our reading | p. 9 |
-| Virginia Commonwealth University | 2024-25 | 21,201 / 19,572 / 4,275 | The rows by sex sum to ours. The residency table in the same file prints 24,804 / 20,769 / 4,449 for the same cohort. | File matches our reading; the file disagrees with itself | p. 11 (by sex), p. 12 (residency totals) |
-| Louisiana Tech University | 2024-25 | 8,242 / 7,478 / 2,453 | Same printed totals (workbook, sheet CDS-C, rows C117 to C119). The residency rows beside them do not add to them (in-state 7,062, out-of-state blank, nonresident 1,464). | File matches our reading | Sheet CDS-C, rows C101 to C131 |
-| Arkansas State University | 2024-25 | 11,568 / 9,207 / 1,977 | Same. Rows by sex sum to ours. | File matches our reading | p. 13 |
-| Albion College | 2023-24 | 5,438 / 4,522 / 353 | Applied and admitted the same. Enrolled is 363: men 173, women 180, another gender 10. The run stored the total (363) but not the third row (10); `printed_admissions` prefers the rows by sex over the total, so it gave 353. | Our error (enrolled; the by-sex rows are preferred over the stored total, and the another-gender row was not read) | p. 13 |
-| University of Northern Colorado | 2023-24 | 9,479 / 8,880 / 1,229 | Same. Rows by sex sum to ours. | File matches our reading | p. 11 |
-| Fairleigh Dickinson University, Metropolitan Campus | 2024-25 | 11,478 / 10,665 / 1,188 | Same. The file carries a residency total that is also the same. | File matches our reading. The file is one campus; IPEDS reports the institution (see questions). | p. 8 |
-| Texas A&M University-Commerce | 2023-24 | 8,856 / 6,865 / 1,294 | Rows by sex sum to ours. The residency table's printed "Total" column reads 1,282 / 992 / 48, which is the total with the in-state column left out. | File matches our reading; the school's printed totals are wrong | p. 7 |
-| University of Scranton | 2023-24 | 9,866 / 8,011 / 1,037 | Same. Rows by sex sum to ours. | File matches our reading | p. 19 |
+| School | Year | What we read (applied / admitted / enrolled) | What the file says | Verdict | Evidence | Differs on | Document |
+|---|---|---|---|---|---|---|---|
+| Chatham University | 2023-24 | 3,611 / 2,923 / 332 | Same. Rows by sex sum to the same totals. | File matches our reading | p. 11 | applied | `d8993473-97fa-4589-870b-2356a7ff004e` |
+| Southeast Missouri State University | 2024-25 | 11,262 / 7,767 / 1,381 | Same. The 2024-25 form has no printed total; the rows by sex sum to ours. | File matches our reading | p. 9 | applied | `f47fea08-1c6b-4b99-83dd-19341912ec38` |
+| Virginia Commonwealth University | 2024-25 | 21,201 / 19,572 / 4,275 | The rows by sex sum to ours. The residency table in the same file prints 24,804 / 20,769 / 4,449 for the same cohort. | File matches our reading; the file disagrees with itself | p. 11 (by sex), p. 12 (residency totals) | enrolled | `12bd5c43-e83c-42e5-bf3f-e72a5f17111c` |
+| Louisiana Tech University | 2024-25 | 8,242 / 7,478 / 2,453 | Same printed totals (workbook, sheet CDS-C, rows C117 to C119). The residency rows beside them do not add to them (in-state 7,062, out-of-state blank, nonresident 1,464). | File matches our reading | Sheet CDS-C, rows C101 to C131 | applied | `70e42e60-ac4f-4fb6-82c0-afab9863b447` |
+| Arkansas State University | 2024-25 | 11,568 / 9,207 / 1,977 | Same. Rows by sex sum to ours. | File matches our reading | p. 13 | applied, admitted | `7c31617c-ef1b-4c4a-bc3b-d8c3458b0212` |
+| Albion College | 2023-24 | 5,438 / 4,522 / 353 | Applied and admitted the same. Enrolled is 363: men 173, women 180, another gender 10. The run stored the total (363) but not the third row (10); `printed_admissions` prefers the rows by sex over the total, so it gave 353. | Our error (enrolled; the by-sex rows are preferred over the stored total, and the another-gender row was not read; related to #435, which covers another-gender cells not read from 2024-25 fillable PDFs) | p. 13 | enrolled | `564d6790-a3b8-4e3b-90c1-662d9eaa0278` |
+| University of Northern Colorado | 2023-24 | 9,479 / 8,880 / 1,229 | Same. Rows by sex sum to ours. | File matches our reading | p. 11 | applied | `2ecd118f-d64d-43af-bb26-973e6c19b6fc` |
+| Fairleigh Dickinson University, Metropolitan Campus | 2024-25 | 11,478 / 10,665 / 1,188 | Same. The file carries a residency total that is also the same. | File matches our reading. Scope gap on our side: the file is one campus, IPEDS reports the whole institution, and the report is not marked as a single unit (see questions). | p. 8 | applied, admitted, enrolled | `9ece97f5-8807-4579-8f33-234648ee1c95` |
+| Texas A&M University-Commerce | 2023-24 | 8,856 / 6,865 / 1,294 | Rows by sex sum to ours. The residency table's printed "Total" column reads 1,282 / 992 / 48, which is the total with the in-state column left out. | File matches our reading; the school's printed totals are wrong | p. 7 | applied, admitted, enrolled | `7b54793e-2ad7-4fee-a95a-86371a65cad2` |
+| University of Scranton | 2023-24 | 9,866 / 8,011 / 1,037 | Same. Rows by sex sum to ours. | File matches our reading | p. 19 | applied | `d1661d03-dc18-4cef-9249-7c84303f71bd` |
 
-Totals: 10 reports, 9 where the file matches what we compared, 1 where our
-reading was wrong (10%). With so few, the plausible range for our-error is
-roughly 2% to 40%. Three of the nine (Virginia Commonwealth, Louisiana Tech,
-Texas A&M-Commerce) have a printed total in the file that disagrees with the
-rows beside it, so which figure counts as "the school's number" there is a
-method choice. We compare the rows by sex when both were read, else the
-printed total (`printed_admissions`).
+Totals, 10 reports:
+
+| Result | Reports |
+|---|---:|
+| File matches our reading (CDS extraction error ruled out) | 8 |
+| Our reading error (Albion) | 1 |
+| Our scope or metadata gap (Fairleigh Dickinson, Metropolitan Campus; file matches our reading) | 1 |
+
+So 2 of 10 are on our side (Albion's reading, Fairleigh Dickinson's scope), and
+for the other 8 the sample rules out a CDS extraction error but does not
+explain the difference. With so few, the plausible range for the share on our
+side is roughly 6% to 51%. Three reports have conflicts inside the school's own
+file, each different, and are described one by one under question 3. We take
+the rows by sex when both men and women were read, else the printed total
+(`printed_admissions`).
 
 ### Sample 2: 2023-24 financial aid "can't check" (Table C, H1), 20 reports
 
@@ -780,28 +792,28 @@ I read the H1 page and checked whether the dollar rows and the total rows
 were filled. Two files (UT Tyler, Cal Poly) have no text on the H1 table, so
 I rendered the page and read it as an image.
 
-| School | Year | What we read | What the file says | Cause | Evidence |
-|---|---|---|---|---|---|
-| Stanford University | 2023-24 | Nothing for H1 (164 fields in all; stored under the 2025-26 form) | Filled; total grants $247,998,976 need-based, $7,400,358 non-need-based; the form states 2022-2023 final figures | Our miss. The 2025-26 label may also play a part. | p. 30 |
-| UC Santa Barbara | 2023-24 | Nothing for H1 | Filled; total grants $250,339,948 / $16,299,808; total self-help $20,739,207 / $15,650,948 | Our miss | p. 23 |
-| New Mexico Institute of Mining and Technology | 2023-24 | Nothing for H1 | Cells empty. The page says "2023-2024 Financial Aid Data not available at this time"; the document is stamped "DRAFT - incomplete". | Blank in the school's file | p. 17 |
-| Bucknell University | 2023-24 | Nothing for H1 | Filled; total grants $65,991,532 / $8,410,335; total self-help $8,681,074 / $6,866,527 | Our miss | p. 25 |
-| University of Iowa | 2023-24 | Nothing for H1 | Filled; total grants $83,780,996 / $48,007,220; total self-help $63,628,162 / $64,291,063. The table runs across a page break. | Our miss | pp. 20 to 21 |
-| University of Wisconsin-Green Bay | 2023-24 | 4 of the H1 values (federal and state rows only) | Filled on two pages; total grants $61,867,041 / $13,994,769. The table is split between the pages. | Our miss (the second page's rows not read) | pp. 39 to 40 |
-| Virginia Commonwealth University | 2023-24 | Nothing for H1 | Filled; total grants $127,424,448 / $34,294,341; total self-help $2,082,634 / $0 | Our miss | p. 32 |
-| Bentley University | 2023-24 | Nothing for H1 | Filled; total grants $71,079,573 / $29,286,995 | Our miss | p. 19 |
-| Tulane University | 2023-24 | Nothing for H1 | Filled; total grants $98,726,078 / $56,763,488; total self-help $14,906,734 / $18,193,003 | Our miss | p. 25 |
-| College of Coastal Georgia | 2023-24 | Nothing for H1 | Filled; total grants $6,576,435 / $2,161,845; total self-help $5,617,884 / $635,520 | Our miss | p. 24 |
-| Xavier University | 2023-24 | Nothing for H1 | Filled; total grants $39,860,858 / $75,031,663; total self-help $18,983,977 / $16,155,600 | Our miss | p. 24 |
-| Samford University | 2023-24 | Nothing for H1 | Filled; total grants $27,105,079 / $39,112,091; total self-help $7,633,487 / $9,547,203 | Our miss | p. 47 |
-| University of Texas at Tyler | 2023-24 | Nothing for H1 | Filled (e.g. total grants $31,178,810 / $2,275,443). The PDF has no form fields (0 widgets); the values are flattened drawings missing from the page's text layer, so a text read sees an empty table. Read from the rendered page. | Our miss (values not in the text layer; needs the page-image path) | p. 32 |
-| Beloit College | 2023-24 | Nothing for H1 | Filled; total grants $27,579,901 / $12,181,462; total self-help $4,671,771 / $3,160,616 | Our miss | p. 24 |
-| Illinois Wesleyan University | 2023-24 | Nothing for H1 | Filled; total grants $43,035,172 / $15,977,251; total self-help $5,431,748 / $7,099,457 | Our miss | p. 45 |
-| Gettysburg College | 2023-24 | Nothing for H1 | Filled; total grants $96,243,345 / $6,540,297; total self-help $9,102,792 / $4,728,131 | Our miss | p. 24 |
-| California Polytechnic State University, San Luis Obispo | 2023-24 | Nothing for H1 | Filled (e.g. total grants $94,032,998 / $15,113,702). 0 widgets; same flattened-drawing text-layer problem as UT Tyler. | Our miss (values not in the text layer; needs the page-image path) | p. 32 |
-| Macalester College | 2023-24 | Nothing for H1 | Filled; total grants $69,834,505 / $11,145,250; total self-help $10,313,347 / $809,152 | Our miss | p. 45 |
-| Oakland University | 2023-24 | Nothing for H1 | Filled; total grants $35,666,720 / $28,281,145; total self-help $15,745,449 / $17,822,383 | Our miss | p. 20 |
-| Northern Kentucky University | 2023-24 | Nothing for H1 | Filled; total grants $23,806,065 / $40,639,987; total self-help $16,589,935 / $29,055,105 | Our miss | p. 20 |
+| School | Year | What we read | What the file says | Cause | Evidence | Document |
+|---|---|---|---|---|---|---|
+| Stanford University | 2023-24 | Nothing for H1 (164 fields in all; stored under the 2025-26 form) | Filled; total grants $247,998,976 need-based, $7,400,358 non-need-based; the form states 2022-2023 final figures | Our miss. The 2025-26 label may also play a part. | p. 30 | `83ff8a43-8291-4f57-822a-6a9b1c70a9e4` |
+| UC Santa Barbara | 2023-24 | Nothing for H1 | Filled; total grants $250,339,948 / $16,299,808; total self-help $20,739,207 / $15,650,948 | Our miss | p. 23 | `b0f62a00-b542-4645-8167-a63fe90007a4` |
+| New Mexico Institute of Mining and Technology | 2023-24 | Nothing for H1 | Cells empty. The page says "2023-2024 Financial Aid Data not available at this time"; the document is stamped "DRAFT - incomplete". | Blank in the school's file | p. 17 | `9c03102c-d57e-4ca6-ab8a-6f2a3c7a3b91` |
+| Bucknell University | 2023-24 | Nothing for H1 | Filled; total grants $65,991,532 / $8,410,335; total self-help $8,681,074 / $6,866,527 | Our miss | p. 25 | `0ae27762-7353-44d9-9ff9-6f126d93a2e1` |
+| University of Iowa | 2023-24 | Nothing for H1 | Filled; total grants $83,780,996 / $48,007,220; total self-help $63,628,162 / $64,291,063. The table runs across a page break. | Our miss | pp. 20 to 21 | `476f9765-d9f8-4fff-a284-4a5f5f54a581` |
+| University of Wisconsin-Green Bay | 2023-24 | 4 of the H1 values (federal and state rows only) | Filled on two pages; total grants $61,867,041 / $13,994,769. The table is split between the pages. | Our miss (the second page's rows not read) | pp. 39 to 40 | `51a07dd2-ab50-4e05-b55c-f4ba48577ac1` |
+| Virginia Commonwealth University | 2023-24 | Nothing for H1 | Filled; total grants $127,424,448 / $34,294,341; total self-help $2,082,634 / $0 | Our miss | p. 32 | `cf82d031-4076-4eb4-ae37-494ddb194a26` |
+| Bentley University | 2023-24 | Nothing for H1 | Filled; total grants $71,079,573 / $29,286,995 | Our miss | p. 19 | `c955dda0-174a-47c7-9d5c-d71f1219ad69` |
+| Tulane University | 2023-24 | Nothing for H1 | Filled; total grants $98,726,078 / $56,763,488; total self-help $14,906,734 / $18,193,003 | Our miss | p. 25 | `3cc47c6c-a829-41d3-b702-e71c4b4bbf7d` |
+| College of Coastal Georgia | 2023-24 | Nothing for H1 | Filled; total grants $6,576,435 / $2,161,845; total self-help $5,617,884 / $635,520 | Our miss | p. 24 | `21802c5c-b095-450c-a3a8-201fe17220a2` |
+| Xavier University | 2023-24 | Nothing for H1 | Filled; total grants $39,860,858 / $75,031,663; total self-help $18,983,977 / $16,155,600 | Our miss | p. 24 | `e8f650d6-7d9e-41d9-97ba-9deb4654f7fe` |
+| Samford University | 2023-24 | Nothing for H1 | Filled; total grants $27,105,079 / $39,112,091; total self-help $7,633,487 / $9,547,203 | Our miss | p. 47 | `64ffa98e-3dd9-4763-a04f-e58830c8b39e` |
+| University of Texas at Tyler | 2023-24 | Nothing for H1 | Filled (e.g. total grants $31,178,810 / $2,275,443). The PDF has no form fields (0 widgets); the values are flattened drawings missing from the page's text layer, so a text read sees an empty table. Read from the rendered page. | Our miss (values not in the text layer; needs the page-image path) | p. 32 | `510d4578-7b0a-42f0-a7e6-b36466f53026` |
+| Beloit College | 2023-24 | Nothing for H1 | Filled; total grants $27,579,901 / $12,181,462; total self-help $4,671,771 / $3,160,616 | Our miss | p. 24 | `e21918e3-c8be-453c-9441-3cd526715d25` |
+| Illinois Wesleyan University | 2023-24 | Nothing for H1 | Filled; total grants $43,035,172 / $15,977,251; total self-help $5,431,748 / $7,099,457 | Our miss | p. 45 | `803c606c-383b-44ca-ba9e-f391da00545d` |
+| Gettysburg College | 2023-24 | Nothing for H1 | Filled; total grants $96,243,345 / $6,540,297; total self-help $9,102,792 / $4,728,131 | Our miss | p. 24 | `f5902dae-11e6-4763-9107-f0592fbc10b3` |
+| California Polytechnic State University, San Luis Obispo | 2023-24 | Nothing for H1 | Filled (e.g. total grants $94,032,998 / $15,113,702). 0 widgets; same flattened-drawing text-layer problem as UT Tyler. | Our miss (values not in the text layer; needs the page-image path) | p. 32 | `0a0772f2-eaeb-4119-b94e-67b8853f70f2` |
+| Macalester College | 2023-24 | Nothing for H1 | Filled; total grants $69,834,505 / $11,145,250; total self-help $10,313,347 / $809,152 | Our miss | p. 45 | `9c7c73f8-a46c-4cf6-9124-eff4ae67c127` |
+| Oakland University | 2023-24 | Nothing for H1 | Filled; total grants $35,666,720 / $28,281,145; total self-help $15,745,449 / $17,822,383 | Our miss | p. 20 | `dfd83b3d-b055-4cc7-91a6-173c3d52d49e` |
+| Northern Kentucky University | 2023-24 | Nothing for H1 | Filled; total grants $23,806,065 / $40,639,987; total self-help $16,589,935 / $29,055,105 | Our miss | p. 20 | `226e7cce-6e94-4599-92ea-ae36ffde383c` |
 
 Totals, 20 reports:
 
@@ -832,15 +844,26 @@ These depend on the results. None is decided here.
    financial aid keep the neutral four-cause sentence, say that most are our
    misses, or stay off the page for 2023-24 until the fix lands (see fix
    issue #486)?
-2. **Table B, "Differs" copy.** In 9 of 10 the file matched our reading, and
-   the difference was between the two filings (and in three, between the
-   school's own rows and totals). Should the note under Table B say that most
-   "differs" values in a hand check were the school's figures, and with what
-   sample size? The sample does not show why the filings differ.
-3. **Which figure is "the school's".** Where a file's rows by sex and printed
-   totals disagree (VCU, Texas A&M-Commerce, Louisiana Tech), we use the rows.
-   Should the page say which, and should these count as "differs" or be
-   separated?
+2. **Table B, "Differs" copy.** In 8 of 10 reports the file matched our
+   reading, in 1 our reading was wrong and in 1 our scope was wrong. The
+   sample rules out an extraction error for those 8 but does not show why
+   they differ from IPEDS (the federal side and the join were not checked). Is
+   the note under Table B's "Differs" still "may be our misreading or a real
+   difference", with this sample's size, or does it say more?
+3. **Files that disagree with themselves.** Three reports, three different
+   conflicts:
+   - Virginia Commonwealth (2024-25): the by-sex table (p. 11) sums to
+     21,201 / 19,572 / 4,275, which is what we used. The residency table
+     (p. 12) prints 24,804 / 20,769 / 4,449 for the same cohort.
+   - Texas A&M-Commerce (2023-24): the by-sex rows sum to
+     8,856 / 6,865 / 1,294, which is what we used. The residency table's
+     printed "Total" column reads 1,282 / 992 / 48, which leaves out the
+     in-state column.
+   - Louisiana Tech (2024-25, workbook): the printed totals (C117 to C119,
+     8,242 / 7,478 / 2,453) are what we used. The residency rows beside them
+     do not add to those totals.
+   Should the page say anything about files like these, and should they be
+   counted separately from "differs"?
 4. **One-unit filings not marked as such.** Fairleigh Dickinson, Metropolitan
    Campus is one campus filed on its own; IPEDS reports the whole institution.
    It is not in the sub-institutional list, so it sits in Table B. Is that a
