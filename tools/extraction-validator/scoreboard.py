@@ -63,8 +63,7 @@ and off by more. `--compare` against an earlier version notes the switch and
 shows no deltas for those columns. Format 3 keeps the raw inputs of PRD 040's
 "Later" items on every document and changes no table: `ipeds_id` and
 `source_sha256` (so a file filed under two federal records can be found),
-`federal_values` (our
-number and the exact IPEDS figure for applied, admitted, enrolled),
+`federal_values` (our number and the exact IPEDS figure for applied, admitted, enrolled),
 `sections` (stored fields per CDS section letter by `value_status`; the counts
 add up to `fields`) and `federal_extra` (our B1 total undergraduates and G1
 tuition beside IPEDS fall undergraduate enrollment and tuition, unjudged).
@@ -510,8 +509,8 @@ def fetch_documents(api: Api, years: tuple[str, ...]) -> list[dict[str, Any]]:
 
 def fetch_source_hashes(api: Api) -> dict[str, Optional[str]]:
     """`source_sha256` per live document. `cds_manifest` does not expose it,
-    so this reads two narrow columns of `cds_documents`, as
-    `tools/ops/same_year_duplicates.py` does (about six pages)."""
+    so this reads two columns (`id`, `source_sha256`) of every live
+    `cds_documents` row (about six pages)."""
     return {
         row["id"]: row.get("source_sha256")
         for row in api.get("cds_documents", {
