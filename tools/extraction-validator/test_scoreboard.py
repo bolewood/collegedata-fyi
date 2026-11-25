@@ -522,6 +522,13 @@ class PublicSnapshot(unittest.TestCase):
         self.assertEqual(self.public["renewal"], self.run["renewal"])
         self.assertEqual([y["cds_year"] for y in self.public["years"]], YEARS)
 
+    def test_the_duplicate_block_stays_in_the_run_and_out_of_the_public_snapshot(self) -> None:
+        run = {**self.run, "same_year_duplicates": scoreboard.same_year_duplicates_block(self.run["documents"])}
+        with blocked_network():
+            public = scoreboard.build_public(run, "x.json")
+        self.assertNotIn("same_year_duplicates", json.dumps(public))
+        self.assertNotIn("source_url", json.dumps(public))
+
     def test_statuses_sum_to_live_and_live_plus_removed_plus_no_file_to_the_manifest(self) -> None:
         for year in self.public["years"]:
             name = year["cds_year"]
