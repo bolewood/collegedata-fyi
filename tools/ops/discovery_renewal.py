@@ -102,7 +102,15 @@ ARRIVALS_WINDOW_DAYS = 30
 # so a 30-day window cannot judge. It then looks over 60 days (still needing
 # 10 expected; otherwise the check says it was not made, and why).
 ARRIVALS_LONG_WINDOW_DAYS = 60
-ARRIVALS_MIN_EXPECTED = 10.0  # below this the curve says too little arrives to judge
+ARRIVALS_MIN_EXPECTED = 10.0  # 60-day window: below this the curve says too little arrives to judge
+# The 30-day window is judged from a slightly lower expectation, and BOTH windows
+# are judged every day: a stop must not hide behind the 60-day window, which
+# still holds a month of arrivals from before it. (Fable and Gemini: with a
+# cohort of 417 the 30-day window expects under 10 from October on.)
+# 6, not 8: on Gemini's three stop scenarios 8 fires at 22, 49 and 20 days (a Nov 18
+# stop with a cohort of 480 waited 49), and 6 fires all three within 22 days. The
+# healthy-control noise did not move between 8 and 6 (see the PR).
+ARRIVALS_MIN_EXPECTED_30 = 6.0
 # Alarm when a year's arrivals fall under this share of what the curve expects.
 # 0.25 let a loss of 50 to 70% of arrivals go unseen for months. On the 2026
 # replay (Sep 1 to Nov 24, each year judged on its own) 0.4 never fired and 0.5
@@ -331,8 +339,29 @@ class YearArrivals:
     expected_60: float = 0.0
 
     @property
+    def checked_30(self) -> bool:
+        return self.expected_30 >= ARRIVALS_MIN_EXPECTED_30
+
+    @property
+    def checked_60(self) -> bool:
+        return self.expected_60 >= ARRIVALS_MIN_EXPECTED
+
+    @property
+    def below_30(self) -> bool:
+        return self.checked_30 and self.count_30 < ARRIVALS_FLOOR_SHARE * self.expected_30
+
+    @property
+    def below_60(self) -> bool:
+        return self.checked_60 and self.count_60 < ARRIVALS_FLOOR_SHARE * self.expected_60
+
+    @property
     def window_days(self) -> int:
-        return ARRIVALS_WINDOW_DAYS if self.expected_30 >= ARRIVALS_MIN_EXPECTED else ARRIVALS_LONG_WINDOW_DAYS
+        """The window that is short, else the one that can be judged (30 first)."""
+        if self.below_30:
+            return ARRIVALS_WINDOW_DAYS
+        if self.below_60:
+            return ARRIVALS_LONG_WINDOW_DAYS
+        return ARRIVALS_WINDOW_DAYS if self.checked_30 else ARRIVALS_LONG_WINDOW_DAYS
 
     @property
     def count(self) -> int:
@@ -344,12 +373,13 @@ class YearArrivals:
 
     @property
     def checked(self) -> bool:
-        """False when even the longest window expects too few to judge."""
-        return self.expected >= ARRIVALS_MIN_EXPECTED
+        """False when neither window expects enough to judge."""
+        return self.checked_30 or self.checked_60
 
     @property
     def below_floor(self) -> bool:
-        return self.checked and self.count < ARRIVALS_FLOOR_SHARE * self.expected
+        """Short in ANY window that can be judged."""
+        return self.below_30 or self.below_60
 
 
 @dataclass
@@ -385,7 +415,7 @@ class Arrivals:
 
     @property
     def window_days(self) -> int:
-        return ARRIVALS_WINDOW_DAYS if self.expected_30 >= ARRIVALS_MIN_EXPECTED else ARRIVALS_LONG_WINDOW_DAYS
+        return ARRIVALS_WINDOW_DAYS if self.expected_30 >= ARRIVALS_MIN_EXPECTED_30 else ARRIVALS_LONG_WINDOW_DAYS
 
     @property
     def checked(self) -> bool:
@@ -507,6 +537,8 @@ def arrivals_keys(arrivals: Arrivals) -> dict[str, Any]:
             f"arrivals_expected_{name}_60d": round(y.expected_60, 1),
             f"arrivals_{name}_window_days": y.window_days,
             f"arrivals_{name}_checked": y.checked,
+            f"arrivals_{name}_checked_30": y.checked_30,
+            f"arrivals_{name}_checked_60": y.checked_60,
             f"arrivals_{name}_below_floor": y.below_floor,
         })
     return out
@@ -952,6 +984,7 @@ def arrivals_state(result: Result) -> dict[str, dict[str, Any]]:
             "count_30": y.count_30, "expected_30": round(y.expected_30, 3),
             "count_60": y.count_60, "expected_60": round(y.expected_60, 3),
             "window_days": y.window_days, "checked": y.checked, "below_floor": y.below_floor,
+            "checked_30": y.checked_30, "checked_60": y.checked_60,
             "months_since_fall": round(months_since_fall(y.year, result.as_of), 2),
         }
     return out
@@ -1000,24 +1033,25 @@ def render_arrivals_report(
 
 
 def _arrivals_lines(s: dict[str, Any], cur: str, nxt: str) -> list[str]:
-    """One line per year: each is judged against its own expectation."""
+    """One line per year; both windows are judged, each from its own expectation."""
     out = []
     for name, label in (("current", cur), ("next", nxt)):
-        window = s[f"arrivals_{name}_window_days"]
-        got = s[f"arrivals_{name}_{window}d"]
-        expected = s[f"arrivals_expected_{name}_{window}d"]
-        if not s[f"arrivals_{name}_checked"]:
-            out.append(
-                f"- Arrivals for {label}: not checked. The posting curve expects about "
-                f"{expected:.0f} new {label} documents in {window} days, under the "
-                f"{ARRIVALS_MIN_EXPECTED:.0f} needed to judge."
+        parts = []
+        for window, key_checked in ((30, f"arrivals_{name}_checked_30"), (60, f"arrivals_{name}_checked_60")):
+            got = s[f"arrivals_{name}_{window}d"]
+            expected = s[f"arrivals_expected_{name}_{window}d"]
+            if not s[key_checked]:
+                parts.append(f"{window} days: {got} against about {expected:.0f} expected, too few to judge")
+                continue
+            short = got < ARRIVALS_FLOOR_SHARE * expected
+            parts.append(
+                f"{window} days: {got} against about {expected:.0f} expected, "
+                + ("below its floor" if short else "above its floor")
             )
-            continue
-        verdict = "below its floor" if s[f"arrivals_{name}_below_floor"] else "above its floor"
-        out.append(
-            f"- Arrivals for {label}: {got} schools gained a {label} document in the last "
-            f"{window} days; the curve expects about {expected:.0f}, {verdict}."
-        )
+        if not (s[f"arrivals_{name}_checked_30"] or s[f"arrivals_{name}_checked_60"]):
+            out.append(f"- Arrivals for {label}: not checked. " + "; ".join(parts) + ".")
+        else:
+            out.append(f"- Arrivals for {label} (schools that gained a {label} document): " + "; ".join(parts) + ".")
     return out
 
 

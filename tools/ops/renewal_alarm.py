@@ -617,7 +617,9 @@ def act(
         if kind == "arrivals":
             below_now = a.get("below_floor") is True
             # Held open by this year's own recovery rule, not by the flag.
-            sixty = a["window_days"] == 60 or (active is not None and WINDOW60_MARKER in active["body"])
+            # Both windows are judged; the 60-day one must also be back once it has been
+            # judged for this issue (it can be checked now, or have been before).
+            sixty = bool(a.get("checked_60")) or (active is not None and WINDOW60_MARKER in active["body"])
             holding = active is not None and not below_now and not arrivals_recovered(a, sixty=sixty)
             below = below_now or holding
             if passed_curve:

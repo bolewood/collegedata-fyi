@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import unittest
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from tools.finder.stuck_pdf_seeds import default_min_fresh_year
@@ -168,6 +168,7 @@ class ComputeTests(unittest.TestCase):
                 "arrivals_30d", "arrivals_expected_30d", "arrivals_below_floor",
                 "arrivals_60d", "arrivals_expected_60d", "arrivals_window_days",
                 "arrivals_checked", "unextracted_next_docs", "arrivals_years",
+                *(f"arrivals_{n}_checked_{w}" for n in ("current", "next") for w in (30, 60)),
                 *(f"arrivals_{n}_{k}" for n in ("current", "next")
                   for k in ("30d", "60d", "window_days", "checked", "below_floor")),
                 *(f"arrivals_expected_{n}_{k}" for n in ("current", "next") for k in ("30d", "60d")),
@@ -665,21 +666,92 @@ class ArrivalsTests(unittest.TestCase):
         self.assertIs(summary["arrivals_checked"], False)
         self.assertIs(summary["arrivals_below_floor"], False)
         text = dr.render_report(res, [])
-        self.assertIn("not checked. The posting curve expects", text)
-        self.assertIn("in 60 days", text)
+        self.assertIn("not checked.", text)
+        self.assertIn("60 days:", text)
 
-    def test_winter_uses_a_sixty_day_window_and_thirty_otherwise(self) -> None:
+    def test_both_windows_are_judged_and_each_is_checked_from_its_own_expectation(self) -> None:
         archive = self.archive("2026-12-01T12:00:00+00:00", schools=400, renewed=300)
         winter = dr.compute(archive, date(2027, 1, 10))
-        self.assertEqual(winter.arrivals.window_days, 60)
-        self.assertGreaterEqual(winter.arrivals.expected_60, dr.ARRIVALS_MIN_EXPECTED)
-        self.assertEqual(dr.summary_dict(winter)["arrivals_window_days"], 60)
-        # The 30-day figures stay in the summary beside the 60-day ones.
         summary = dr.summary_dict(winter)
-        self.assertLess(summary["arrivals_expected_30d"], dr.ARRIVALS_MIN_EXPECTED)
-        self.assertGreaterEqual(summary["arrivals_expected_60d"], dr.ARRIVALS_MIN_EXPECTED)
+        self.assertGreaterEqual(summary["arrivals_expected_next_60d"], dr.ARRIVALS_MIN_EXPECTED)
+        self.assertIs(summary["arrivals_next_checked_60"], True)
+        self.assertEqual(summary["arrivals_next_checked_30"],
+                         summary["arrivals_expected_next_30d"] >= dr.ARRIVALS_MIN_EXPECTED_30)
+        self.assertEqual(dr.ARRIVALS_MIN_EXPECTED_30, 6.0)
+        # A year whose current-year curve has flattened is not judged in either window.
+        self.assertIs(summary["arrivals_current_checked_30"], False)
+        self.assertIs(summary["arrivals_current_checked_60"], False)
         spring = dr.compute(self.archive("2026-05-01T12:00:00+00:00"), date(2026, 6, 2))
         self.assertEqual(spring.arrivals.window_days, 30)
+
+    def stopped_archive(self, cohort: int, stop: date) -> list[dict]:
+        """`cohort` schools filing the current and the next year on the curve's
+        timing (87% of them), with nothing arriving after `stop`."""
+        def when(year: int, u: float):
+            lo, hi = 0.0, 40.0
+            for _ in range(60):
+                mid = (lo + hi) / 2
+                if dr.expected_pct(mid) / 100.0 < u:
+                    lo = mid
+                else:
+                    hi = mid
+            return datetime.combine(date(year, 9, 1), datetime.min.time(), tzinfo=timezone.utc) + timedelta(days=hi * 30.4375)
+
+        cutoff = datetime.combine(stop, datetime.max.time(), tzinfo=timezone.utc)
+        rows = []
+        for i in range(cohort):
+            u = (i + 0.5) / cohort
+            rows.append(row(f"s{i}", "2023-24", discovered=None))
+            rows.append(row(f"s{i}", "2024-25", discovered="2025-06-01T00:00:00+00:00"))
+            for year, scale in ((2025, 0.87 / 0.88), (2026, 0.9)):
+                if u <= scale * 0.88:
+                    filed = when(year, u / scale)
+                    if filed <= cutoff:
+                        rows.append(row(f"s{i}", dr.format_year(year), discovered=filed.isoformat()))
+        return rows
+
+    def first_alarm_day(self, rows, stop: date) -> int | None:
+        for offset in range(1, 75):
+            day = stop + timedelta(days=offset)
+            res = dr.compute(dr.rows_as_of(rows, day), day, enforce_min_prev=False)
+            if res.arrivals.below_floor:
+                return offset
+        return None
+
+    def test_a_total_stop_is_seen_within_a_month_whichever_window_is_in_use(self) -> None:
+        # Gemini's three scenarios. With a cohort of 417 the 30-day window expects
+        # under 10 from October, so the 60-day window alone would hide a stop for
+        # 37 to 53 days (an Oct 1 stop would not fire until Nov 7).
+        for cohort, stop in ((417, date(2026, 10, 1)), (480, date(2026, 11, 18)),
+                             (417, date(2026, 9, 14))):
+            delay = self.first_alarm_day(self.stopped_archive(cohort, stop), stop)
+            self.assertIsNotNone(delay, (cohort, stop))
+            self.assertLessEqual(delay, 31, (cohort, stop, delay))
+
+    def test_the_sixty_day_window_alone_would_have_been_too_slow(self) -> None:
+        stop = date(2026, 10, 1)
+        rows = self.stopped_archive(417, stop)
+        slow = None
+        for offset in range(1, 75):
+            day = stop + timedelta(days=offset)
+            res = dr.compute(dr.rows_as_of(rows, day), day, enforce_min_prev=False)
+            if any(y.below_60 for y in res.arrivals.years):
+                slow = offset
+                break
+        fast = self.first_alarm_day(rows, stop)
+        self.assertGreater(slow, 31)  # the 60-day window alone
+        self.assertLessEqual(fast, 31)  # with the 30-day window judged too
+
+    def test_either_window_below_its_floor_is_a_breach(self) -> None:
+        only_30 = dr.YearArrivals(2025, count_30=1, expected_30=20.0, count_60=40, expected_60=40.0)
+        self.assertTrue(only_30.below_30 and not only_30.below_60 and only_30.below_floor)
+        self.assertEqual(only_30.window_days, 30)
+        only_60 = dr.YearArrivals(2025, count_30=20, expected_30=20.0, count_60=3, expected_60=40.0)
+        self.assertTrue(only_60.below_60 and not only_60.below_30 and only_60.below_floor)
+        self.assertEqual(only_60.window_days, 60)
+        fine = dr.YearArrivals(2025, count_30=20, expected_30=20.0, count_60=40, expected_60=40.0)
+        self.assertFalse(fine.below_floor)
+        self.assertEqual(fine.window_days, 30)
 
     def test_a_frozen_archive_from_december_first_fires_by_early_february(self) -> None:
         # 300 schools arrive on 2026-12-01 and then nothing does.
@@ -712,7 +784,10 @@ class ArrivalsTests(unittest.TestCase):
         for count, below in ((11, True), (12, False)):  # 0.4 x 30 = 12
             y = dr.YearArrivals(2025, count_30=count, expected_30=30.0)
             self.assertEqual(y.below_floor, below, count)
-        self.assertFalse(dr.YearArrivals(2025, count_30=0, expected_30=9.9, expected_60=9.9).below_floor)
+        # The 30-day window is judged from 6 expected, the 60-day one from 10.
+        self.assertTrue(dr.YearArrivals(2025, count_30=0, expected_30=6.0).below_floor)
+        self.assertFalse(dr.YearArrivals(2025, count_30=0, expected_30=5.9, expected_60=9.9).below_floor)
+        self.assertTrue(dr.YearArrivals(2025, count_30=20, expected_30=5.9, count_60=0, expected_60=10.0).below_floor)
 
     def test_a_school_counts_once_for_either_year_and_for_a_second_file(self) -> None:
         rows = self.archive("2026-05-01T12:00:00+00:00")
@@ -828,7 +903,7 @@ class ArrivalsTests(unittest.TestCase):
         res = dr.compute(self.archive("2026-05-01T12:00:00+00:00"), date(2026, 6, 20))
         text = dr.render_report(res, [], lead="arrivals")
         self.assertIn("Only 0 schools gained", text)
-        self.assertIn("Arrivals for 2025-26: 0 schools gained", text)
+        self.assertIn("30 days: 0 against about", text)
 
     def test_unextracted_current_year_documents_are_counted_for_the_report_only(self) -> None:
         rows = many_schools(400, with_current=400)

@@ -42,6 +42,7 @@ def arr(count_30: int, expected_30: float, *, count_60: int | None = None,
         "count_30": count_30, "expected_30": expected_30,
         "count_60": count_30 + 400 if count_60 is None else count_60, "expected_60": expected_60,
         "window_days": window, "checked": checked, "below_floor": below,
+        "checked_30": checked and expected_30 >= 6.0, "checked_60": checked and expected_60 >= 10.0,
     }
 
 
