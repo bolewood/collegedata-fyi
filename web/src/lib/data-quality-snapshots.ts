@@ -20,10 +20,10 @@ export const SNAPSHOT_DIR = path.join(process.cwd(), "src", "data", "data-qualit
  * returns null so the repo can build while the lead hasn't committed the
  * first snapshot yet. A null result means "no data", never "zero".
  */
-export function loadLatestSnapshot(): QualitySnapshot | null {
+export function loadLatestSnapshot(dir: string = SNAPSHOT_DIR): QualitySnapshot | null {
   let names: string[];
   try {
-    names = fs.readdirSync(SNAPSHOT_DIR).filter((n) => n.endsWith(".json")).sort();
+    names = fs.readdirSync(dir).filter((n) => n.endsWith(".json")).sort();
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       names = [];
@@ -33,7 +33,7 @@ export function loadLatestSnapshot(): QualitySnapshot | null {
   }
   const files = names.map((name) => {
     try {
-      return { name, json: JSON.parse(fs.readFileSync(path.join(SNAPSHOT_DIR, name), "utf8")) as unknown };
+      return { name, json: JSON.parse(fs.readFileSync(path.join(dir, name), "utf8")) as unknown };
     } catch (error) {
       throw new SnapshotError(`data-quality snapshot ${name} is not valid JSON: ${(error as Error).message}`);
     }

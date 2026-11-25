@@ -92,6 +92,7 @@ describe("summary strip", () => {
     const html = render();
     expect(html).toContain("Latest year with numbers");
     expect(html).toMatch(/2025-26 <strong[^>]*>1</);
+    expect(html).toMatch(/2024-25 <strong[^>]*>0</);
     expect(html).toMatch(/None <strong[^>]*>2</);
   });
 });

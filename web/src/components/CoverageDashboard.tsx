@@ -33,6 +33,7 @@ import {
   RECENCY_OPTIONS,
   STATUS_ORDER,
   buildCoverageCsv,
+  currentCdsYear,
   filterCoverageRows,
   latestYearBuckets,
   parseCoverageView,
@@ -99,7 +100,8 @@ export function CoverageDashboard({
 
   const total = rows.length;
   const share = useMemo(() => weightedShare(rows), [rows]);
-  const yearBuckets = useMemo(() => latestYearBuckets(rows), [rows]);
+  const currentYear = renewal?.renewal.current_year;
+  const yearBuckets = useMemo(() => latestYearBuckets(rows, currentCdsYear(currentYear)), [rows, currentYear]);
   const tile = renewal ? renewalTile(renewal.renewal) : null;
 
   const [sortKey, setSortKey] = useState<SortKey>("name");

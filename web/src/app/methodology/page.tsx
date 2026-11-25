@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { isDataQualityLaunched } from "@/lib/data-quality";
+import { HAS_CDS_HREF } from "@/lib/coverage-model";
 
 export const metadata: Metadata = {
   title: "Methodology",
@@ -72,9 +73,14 @@ export default function MethodologyIndexPage() {
         ))}
       </div>
 
+      <p className="mt-10 max-w-2xl text-sm leading-relaxed text-[var(--ink-2)]">
+        Looking for which colleges we have a report for? See the{" "}
+        <Link href={HAS_CDS_HREF}>colleges with a CDS on file</Link>.
+      </p>
+
       {/* PRD 040: linked only once the Data quality launch gate opens. */}
       {isDataQualityLaunched() && (
-        <p className="mt-10 max-w-2xl text-sm leading-relaxed text-[var(--ink-2)]">
+        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[var(--ink-2)]">
           How well we read the reports behind these cards is on the{" "}
           <Link href="/data-quality">Data quality</Link> page.
         </p>

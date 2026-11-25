@@ -5,6 +5,7 @@ import {
   DEFAULT_MISSING,
   HAS_CDS_HREF,
   buildCoverageCsv,
+  currentCdsYear,
   filterCoverageRows,
   latestYearBuckets,
   matchesSearch,
@@ -133,22 +134,37 @@ describe("weighted share of undergraduates", () => {
 });
 
 describe("latest year with numbers", () => {
-  it("names the three newest years, then older and none, and always adds up to the row count", () => {
-    const buckets = latestYearBuckets(ROWS);
+  it("uses a fixed window anchored on the current year, and a missing year shows as 0", () => {
+    // ROWS has 2025-26, 2023-24 and 2021-22: nobody sits at 2024-25.
+    const buckets = latestYearBuckets(ROWS, "2025-26");
     expect(buckets.map((b) => [b.label, b.count])).toEqual([
       ["2025-26", 1],
+      ["2024-25", 0],
       ["2023-24", 1],
-      ["2021-22", 1],
-      ["Older", 0],
+      ["Older", 1],
       ["None", 2],
     ]);
     expect(buckets.reduce((n, b) => n + b.count, 0)).toBe(ROWS.length);
   });
 
-  it("puts `unknown` in none, never above a real year", () => {
-    const buckets = latestYearBuckets([row({ school_id: "u", latest_available_cds_year: "unknown" })]);
+  it("moves with the anchor, not with the data", () => {
+    expect(latestYearBuckets(ROWS, "2026-27").map((b) => b.label).slice(0, 3)).toEqual(["2026-27", "2025-26", "2024-25"]);
+  });
+
+  it("puts `unknown` in none, never above a real year, and a newer year in current", () => {
+    const buckets = latestYearBuckets(
+      [row({ school_id: "u", latest_available_cds_year: "unknown" }), row({ school_id: "n", latest_available_cds_year: "2026-27" })],
+      "2025-26",
+    );
     expect(buckets.find((b) => b.id === "none")?.count).toBe(1);
-    expect(buckets[0].id).not.toBe("unknown");
+    expect(buckets[0].count).toBe(1);
+  });
+
+  it("anchors on the snapshot's current year, else the September-switch floor", () => {
+    expect(currentCdsYear("2025-26", new Date("2026-01-01T00:00:00Z"))).toBe("2025-26");
+    expect(currentCdsYear(undefined, new Date("2026-08-31T00:00:00Z"))).toBe("2024-25");
+    expect(currentCdsYear(null, new Date("2026-09-01T00:00:00Z"))).toBe("2025-26");
+    expect(currentCdsYear("unknown", new Date("2026-11-24T00:00:00Z"))).toBe("2025-26");
   });
 });
 

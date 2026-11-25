@@ -5,7 +5,8 @@
 
 import { isCanonicalCdsYear } from "./format";
 import { DATA_LICENSE_NAME, DATA_LICENSE_URL } from "./data-license";
-import { compareYearsDesc, csvLine } from "./data-quality";
+import { csvLine } from "./data-quality";
+import { cdsFreshnessFloor } from "./freshness";
 import type { CoverageStatus, InstitutionCoverage } from "./types";
 
 // Display order for the status tiles and the filter chips: most positive to
@@ -179,26 +180,44 @@ export function weightedShare(rows: InstitutionCoverage[]): WeightedShare {
 
 export type YearBucket = { id: string; label: string; count: number };
 
+/** The year to anchor the breakdown on: the snapshot's current year if there is one, else the freshness floor. */
+export function currentCdsYear(snapshotCurrentYear: string | null | undefined, now: Date = new Date()): string {
+  return isCanonicalCdsYear(snapshotCurrentYear) ? snapshotCurrentYear : cdsFreshnessFloor(now);
+}
+
+/** Academic year `back` years before `year` ("2025-26", 1 gives "2024-25"). */
+function yearBefore(year: string, back: number): string {
+  const start = Number(year.slice(0, 4)) - back;
+  return `${start}-${String((start + 1) % 100).padStart(2, "0")}`;
+}
+
 /**
- * Latest year with numbers: the three newest years present, then older, then
- * none. A row whose value isn't a real year (`unknown`) counts as none, so the
- * buckets always add up to the row count.
+ * Latest year with numbers, in a fixed window anchored on the current CDS year:
+ * current, previous, the one before, older, none. A year nobody has shows as 0
+ * rather than vanishing. A value that isn't a real year (`unknown`) counts as
+ * none, and a year newer than the anchor counts as current, so the buckets
+ * always add up to the row count.
  */
-export function latestYearBuckets(rows: InstitutionCoverage[]): YearBucket[] {
-  const counts = new Map<string, number>();
+export function latestYearBuckets(rows: InstitutionCoverage[], currentYear: string): YearBucket[] {
+  const window = [0, 1, 2].map((back) => yearBefore(currentYear, back));
+  const counts = new Map(window.map((y) => [y, 0]));
+  const anchorStart = Number(currentYear.slice(0, 4));
+  let older = 0;
   let none = 0;
   for (const r of rows) {
-    if (hasYearWithNumbers(r)) {
-      counts.set(r.latest_available_cds_year as string, (counts.get(r.latest_available_cds_year as string) ?? 0) + 1);
-    } else {
+    const y = r.latest_available_cds_year;
+    if (!hasYearWithNumbers(r)) {
       none += 1;
+    } else if (Number((y as string).slice(0, 4)) >= anchorStart) {
+      counts.set(currentYear, (counts.get(currentYear) ?? 0) + 1);
+    } else if (counts.has(y as string)) {
+      counts.set(y as string, (counts.get(y as string) ?? 0) + 1);
+    } else {
+      older += 1;
     }
   }
-  const years = [...counts.keys()].sort(compareYearsDesc);
-  const named = years.slice(0, 3);
-  const older = years.slice(3).reduce((n, y) => n + (counts.get(y) ?? 0), 0);
   return [
-    ...named.map((y) => ({ id: y, label: y, count: counts.get(y) ?? 0 })),
+    ...window.map((y) => ({ id: y, label: y, count: counts.get(y) ?? 0 })),
     { id: "older", label: "Older", count: older },
     { id: "none", label: "None", count: none },
   ];
