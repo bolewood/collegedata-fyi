@@ -455,4 +455,233 @@ describe("pipeline observation freshness", () => {
     }
     expect(headers.some((entry) => entry.source === "/coverage")).toBe(false);
   });
+
+  const healthyFacts = (): PipelineFactRow[] =>
+    [
+      ["archive_enqueue", "Enqueue", "daily_sla"],
+      ["archive_process", "Process", "continuous_sla"],
+      ["headless_archive", "Headless archive", "daily_sla"],
+      ["coverage_refresh", "Coverage", "hourly_sla"],
+      ["serving_cache_refresh", "Serving caches", "hourly_sla"],
+      ["corpus_audit", "Data audit", "daily_sla"],
+      ["finder_brave", "Finder", "monthly_sla"],
+      ["finder_landing_hints", "Landing hints", "monthly_sla"],
+      ["ipeds_release_probe", "IPEDS probe", "monthly_sla"],
+      ["finder_stuck_pdf", "Stuck PDFs", "monthly_sla"],
+    ].map(([id, name, cls]) =>
+      fact({
+        station_id: id,
+        display_name: name,
+        class: cls as PipelineFactRow["class"],
+        last_status: "ok",
+        last_scheduled_status: "ok",
+        last_finished_at: "2026-08-21T19:59:00.000Z",
+        last_scheduled_finished_at: "2026-08-21T19:59:30.000Z",
+        queue_unfinished: id === "archive_process" ? 0 : null,
+        last_scheduled_summary: id === "finder_stuck_pdf" ? { stuck: 78, reprobed: 78, still_stuck: 30 } : {},
+      }),
+    ).concat([
+      fact({
+        station_id: "extraction_worker",
+        display_name: "Extract",
+        class: "daily_sla",
+        last_status: "ok",
+        last_scheduled_status: "ok",
+        last_scheduled_finished_at: "2026-08-21T10:00:00.000Z",
+        last_scheduled_summary: { extracted: 5, stopped_reason: "empty" },
+        extraction_pending: 0,
+      }),
+      fact({ station_id: "schema_build", display_name: "Schema", class: "yearly" }),
+      fact({ station_id: "scorecard_load", display_name: "Scorecard", class: "yearly" }),
+    ]);
+
+  it("renewal station absent from facts is slate and keeps the strip green", () => {
+    const snapshot = snapshotFromFacts(healthyFacts(), NOW);
+    const renewal = snapshot.stations.find((s) => s.station_id === "discovery_renewal")!;
+    expect(snapshot.stations[0].station_id).toBe("discovery_renewal");
+    expect(renewal.lamp).toBe("slate");
+    expect(renewal.result_line).toBe("Waiting for its registry row");
+    expect(snapshot.stations.filter((s) => s.lamp === "down")).toEqual([]);
+    expect(snapshot.strip.lamp).toBe("ok");
+    const json = toPublicJson(snapshot);
+    expect(json.stations.find((s) => s.station_id === "discovery_renewal")?.lamp).toBe("slate");
+  });
+
+  const renewalFact = (over: Partial<PipelineFactRow>) =>
+    fact({
+      station_id: "discovery_renewal",
+      display_name: "Renewal",
+      class: "daily_sla",
+      last_status: "ok",
+      last_finished_at: "2026-08-21T18:00:00.000Z",
+      last_scheduled_status: "ok",
+      last_scheduled_finished_at: "2026-08-21T18:00:00.000Z",
+      ...over,
+    });
+
+  it("renewal result line, detail and public summary; strip names the failure, not 'overdue'", () => {
+    const summary = {
+      current_year: "2025-26",
+      renewed: 364,
+      prev_schools: 479,
+      floor_pct: 82,
+      below_floor: true,
+      next_year: "2026-27",
+      next_renewed: 10,
+      next_prev_schools: 400,
+      next_floor_pct: 5,
+      same_year_duplicates: 3,
+      seeds_without_new_year: 12,
+      fetch_failures: 5,
+    };
+    const snapshot = snapshotFromFacts(
+      healthyFacts().concat(renewalFact({ last_summary: summary, last_scheduled_summary: summary })),
+      NOW,
+    );
+    const station = snapshot.stations[0];
+    expect(station.lamp).toBe("down");
+    expect(station.result_line).toBe("364 of 479 renewed (76%) · floor 82% · 2025-26");
+    expect(station.detail_line).toBe(
+      "2026-27: 10 of 400 (3%) · floor 5% · 3 same-year duplicates · 12 seeds without the new year · 5 fetch failures",
+    );
+    expect(snapshot.strip.lamp).toBe("down");
+    expect(snapshot.strip.text).toBe(
+      "Renewal below floor · 364 of 479 renewed (76%) · floor 82% · 2025-26",
+    );
+    expect(snapshot.strip.text).not.toMatch(/overdue/);
+    const json = toPublicJson(snapshot);
+    expect(json.stations[0].summary).toMatchObject({ renewed: 364, below_floor: true });
+  });
+
+  it("a floor miss is not rounded away", () => {
+    const summary = { renewed: 3276, prev_schools: 4000, floor_pct: 82, below_floor: true };
+    const snapshot = snapshotFromFacts(
+      [renewalFact({ last_scheduled_summary: summary, last_summary: summary })],
+      NOW,
+    );
+    expect(snapshot.stations[0].result_line).toBe("3276 of 4000 renewed (81.9%) · floor 82.0%");
+  });
+
+  it("a stale dispatch error code does not hide the renewal figures", () => {
+    const summary = { renewed: 364, prev_schools: 479, floor_pct: 82, below_floor: true };
+    const snapshot = snapshotFromFacts(
+      [
+        renewalFact({
+          last_summary: summary,
+          last_scheduled_summary: summary,
+          last_error_code: "job_failed",
+          last_scheduled_error_code: "none",
+        }),
+      ],
+      NOW,
+    );
+    expect(snapshot.stations[0].result_line).toContain("364 of 479");
+  });
+
+  it("an overdue clock still reads as overdue in the strip", () => {
+    const snapshot = snapshotFromFacts(
+      healthyFacts().concat(
+        renewalFact({
+          last_scheduled_finished_at: "2026-08-19T00:00:00.000Z",
+          last_scheduled_summary: { below_floor: false, renewed: 400, prev_schools: 479 },
+        }),
+      ),
+      NOW,
+    );
+    expect(snapshot.strip.text).toMatch(/1 station overdue/);
+  });
+
+  it("stuck-PDF line shows the share and the strip names the result", () => {
+    const snapshot = snapshotFromFacts(
+      [
+        fact({
+          station_id: "finder_stuck_pdf",
+          display_name: "Stuck PDFs",
+          class: "monthly_sla",
+          last_scheduled_status: "ok",
+          last_scheduled_finished_at: "2026-08-20T09:00:00.000Z",
+          last_scheduled_summary: { stuck: 78, reprobed: 78, still_stuck: 71 },
+        }),
+      ],
+      NOW,
+    );
+    const s = snapshot.stations.find((x) => x.station_id === "finder_stuck_pdf")!;
+    expect(s.lamp).toBe("down");
+    expect(s.result_line).toBe("78 stuck · 78 reprobed · 71 still stuck (91%)");
+    expect(s.failure_text).toBe("Stuck PDFs: 71 of 78 still stuck");
+  });
+
+  it("stuck-PDF line ignores a stale dispatch error code", () => {
+    const snapshot = snapshotFromFacts(
+      [
+        fact({
+          station_id: "finder_stuck_pdf",
+          display_name: "Stuck PDFs",
+          class: "monthly_sla",
+          last_scheduled_status: "ok",
+          last_scheduled_finished_at: "2026-08-20T09:00:00.000Z",
+          last_scheduled_summary: { stuck: 78, reprobed: 78, still_stuck: 71 },
+          last_scheduled_error_code: null as unknown as string,
+          last_error_code: "job_failed",
+        }),
+      ],
+      NOW,
+    );
+    const s = snapshot.stations.find((x) => x.station_id === "finder_stuck_pdf")!;
+    expect(s.result_line).toContain("71 still stuck");
+  });
+
+  it("next-year floor miss shows the next-year figures in the strip", () => {
+    const summary = {
+      below_floor: false,
+      renewed: 400,
+      prev_schools: 479,
+      next_below_floor: true,
+      next_year: "2026-27",
+      next_renewed: 10,
+      next_prev_schools: 400,
+      next_floor_pct: 5,
+    };
+    const snapshot = snapshotFromFacts(
+      healthyFacts().concat(renewalFact({ last_summary: summary, last_scheduled_summary: summary })),
+      NOW,
+    );
+    expect(snapshot.strip.text).toBe("Renewal below floor · 2026-27: 10 of 400 (3%) · floor 5%");
+  });
+
+  it("public JSON carries result_line and failure_text for every station", () => {
+    const summary = { renewed: 364, prev_schools: 479, floor_pct: 82, below_floor: true };
+    const snapshot = snapshotFromFacts(
+      healthyFacts().concat(renewalFact({ last_summary: summary, last_scheduled_summary: summary })),
+      NOW,
+    );
+    const json = toPublicJson(snapshot);
+    for (const station of json.stations) {
+      expect(station).toHaveProperty("result_line");
+      expect(station).toHaveProperty("failure_text");
+    }
+    const renewal = json.stations.find((s) => s.station_id === "discovery_renewal")!;
+    expect(renewal.result_line).toContain("364 of 479");
+    expect(renewal.failure_text).toContain("Renewal below floor");
+  });
+
+  it("two-year breach is named in the strip and shown in the detail line", () => {
+    const summary = {
+      below_floor: false,
+      renewed: 400,
+      prev_schools: 479,
+      two_year_renewed: 377,
+      two_year_prev_schools: 536,
+      two_year_floor_pct: 74.5,
+      two_year_below_floor: true,
+    };
+    const snapshot = snapshotFromFacts(
+      healthyFacts().concat(renewalFact({ last_summary: summary, last_scheduled_summary: summary })),
+      NOW,
+    );
+    expect(snapshot.strip.text).toBe(
+      "Renewal below floor · two-year: 377 of 536 (70%) · floor 74.5%",
+    );
+    expect(snapshot.stations[0].detail_line).toContain("two-year: 377 of 536 (70%) · floor 74.5%");
+  });
 });

@@ -26,6 +26,7 @@ export const LAMP_HEX = {
 } as const;
 
 export const BOARD_STATION_IDS = [
+  "discovery_renewal",
   "finder_brave",
   "finder_stuck_pdf",
   "finder_landing_hints",
@@ -68,6 +69,9 @@ export type StationLampInput = {
   lastScheduledStatus: HeartbeatStatus | null;
   lastScheduledFinishedAt: string | null;
   lastScheduledSummary?: Record<string, unknown> | null;
+  lastSummary?: Record<string, unknown> | null;
+  /** False when the station is absent from the facts RPC although facts loaded. */
+  registered?: boolean;
   queueUnfinished?: number | null;
   extractionPending?: number | null;
   now: Date;
@@ -136,10 +140,110 @@ function slaLamp(input: StationLampInput, windowMs: number): Lamp {
   return "down";
 }
 
+const STUCK_MIN_SAMPLE = 10;
+const STUCK_DOWN_SHARE = 0.9;
+const STUCK_LATE_SHARE = 0.5;
+
+function strictCount(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
+}
+
+/**
+ * Share of stuck PDFs the sweep failed to move. "malformed" when either count
+ * is missing, null, non-numeric or negative; null when the sample is under the floor.
+ */
+export function stuckShare(
+  summary: Record<string, unknown> | null | undefined,
+): number | null | "malformed" {
+  const stuck = strictCount(summary?.stuck);
+  const still = strictCount(summary?.still_stuck);
+  if (stuck === null || still === null) return "malformed";
+  if (stuck < STUCK_MIN_SAMPLE) return null;
+  return still / stuck;
+}
+
+function stuckPdfLamp(input: StationLampInput): Lamp {
+  const base = slaLamp(input, FORTY_DAYS_MS);
+  if (base !== "ok") return base;
+  const share = stuckShare(input.lastScheduledSummary);
+  if (share === "malformed") return "down";
+  if (share === null) return "ok";
+  if (share >= STUCK_DOWN_SHARE) return "down";
+  if (share > STUCK_LATE_SHARE) return "late";
+  return "ok";
+}
+
+/**
+ * Summary of the most recent finish. A dispatched run wins only when it
+ * finished ok and is newer than the last scheduled finish; a running or failed
+ * dispatch (whose summary is empty) never replaces a scheduled result.
+ */
+export function renewalOutcomeSummary(
+  input: Pick<
+    StationLampInput,
+    "lastStatus" | "lastFinishedAt" | "lastScheduledFinishedAt" | "lastSummary" | "lastScheduledSummary"
+  >,
+): Record<string, unknown> {
+  const any = input.lastFinishedAt ? new Date(input.lastFinishedAt).getTime() : NaN;
+  const sched = input.lastScheduledFinishedAt
+    ? new Date(input.lastScheduledFinishedAt).getTime()
+    : NaN;
+  const dispatchWins =
+    input.lastStatus === "ok" &&
+    Number.isFinite(any) &&
+    (!Number.isFinite(sched) || any > sched);
+  if (dispatchWins) {
+    const dispatch = input.lastSummary ?? {};
+    // A floor override may turn the lamp red but never green.
+    if (
+      dispatch.floor_overridden !== true ||
+      dispatch.below_floor === true ||
+      dispatch.next_below_floor === true ||
+      dispatch.two_year_below_floor === true
+    ) {
+      return dispatch;
+    }
+  }
+  return input.lastScheduledSummary ?? {};
+}
+
+/** True when the renewal outcome proves the share is at or above the floor. */
+export function renewalOutcomeHealthy(outcome: Record<string, unknown>): boolean {
+  return (
+    outcome.below_floor === false &&
+    strictCount(outcome.renewed) !== null &&
+    (strictCount(outcome.prev_schools) ?? 0) > 0 &&
+    outcome.next_below_floor !== true &&
+    outcome.two_year_below_floor !== true
+  );
+}
+
+function renewalLamp(input: StationLampInput): Lamp {
+  if (input.registered === false) return "slate";
+  if (slaLamp(input, THIRTY_SIX_HOURS_MS) !== "ok") return "down";
+  return renewalOutcomeHealthy(renewalOutcomeSummary(input)) ? "ok" : "down";
+}
+
+/** Down for a failed result while the clock is fresh (not an overdue clock). */
+export function isResultFailure(input: StationLampInput, lamp: Lamp): boolean {
+  if (lamp !== "down" && lamp !== "late") return false;
+  if (runningState(input) === "stale") return false;
+  if (input.stationId === "discovery_renewal") {
+    return input.registered !== false && scheduledOkWithin(input, THIRTY_SIX_HOURS_MS);
+  }
+  if (input.stationId === "finder_stuck_pdf") {
+    return scheduledOkWithin(input, FORTY_DAYS_MS);
+  }
+  return false;
+}
+
 export function stationLamp(input: StationLampInput): Lamp {
+  if (input.stationId === "discovery_renewal" && input.registered === false) return "slate";
   const running = runningState(input);
   if (running === "stale") return "down";
   if (running === "fresh" && RUN_STATION_IDS.has(input.stationId)) return "run";
+  if (input.stationId === "discovery_renewal") return renewalLamp(input);
+  if (input.stationId === "finder_stuck_pdf") return stuckPdfLamp(input);
 
   switch (input.class) {
     case "yearly":

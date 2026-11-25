@@ -122,6 +122,9 @@ export default async function PipelineObservationPage() {
                 <div className="po-tile-lamp">{LAMP_WORD[station.lamp]}</div>
                 <div className="po-tile-ago">{station.ago_label}</div>
                 <div className="po-tile-result">{station.result_line}</div>
+                {station.detail_line ? (
+                  <div className="po-tile-result">{station.detail_line}</div>
+                ) : null}
               </div>
               <p
                 id={`po-tip-${station.station_id}`}
