@@ -48,6 +48,20 @@ whole corpus, not a one-off.
   slug to another institution.
 - Close the loop across current state, prior-year baseline, future discovery, and
   similar files before calling the issue handled.
+- Count the reach of any corpus-wide fix before calling it done. Compare what it
+  caught plus what it skipped with the total that has the problem, and say why
+  each skip rule is safe. A sweep that reports only what it caught looks the same
+  whether it found every case or a third of them.
+- Fix the mechanism, not the shape of the first case, and fix every copy of it.
+  The August stuck-seed job copied the first school's details ("few archived
+  years") and missed 115 of 190 schools; the `unknown`-year sort was fixed in the
+  coverage SQL while the same comparison lived on in Python for three months.
+  When fixing a bug, search for other code that makes the same comparison.
+- A green job means it ran, not that it worked. For discovery, the outcome is
+  current-year renewal: of schools with a live document filed under the
+  previous CDS year, the share that also have one for the current year
+  (`cds_freshness_floor()`; `unknown` years don't count). Check it a month after
+  any discovery fix. See `docs/postmortems/2026-11-24-stale-discovery-seeds.md`.
 
 ## Migrations
 
