@@ -65,14 +65,27 @@ describe("renewal tile", () => {
     expect(body).toContain(`${tile.percent}%`);
     expect(body).toContain("Of the 479 schools with a 2024-25 report on file, 364 also have a 2025-26 report on file.");
     expect(body).toContain("Snapshot of November 24, 2026");
-    // The label names the year the tile counts (this tile is public), and the note says what "on file" counts.
+    // The label names the year the tile counts (this tile is public). The tile stays short: the definition of "on file" is not in it.
     expect(body).toContain("2025-26 reports on file");
     expect(body).not.toContain("This year");
-    expect(body).toContain("The earlier-year count includes any report we hold for that year, including ones we set aside or couldn’t read. A school counts as renewed only if its current-year report is one we have not set aside; a report we couldn’t read still counts.");
+    expect(body).not.toContain("The earlier-year count");
+    expect(body.length).toBeLessThan(900);
+    // It is a short note directly under the strip, in normal-case small text.
+    const strip = html.indexOf('aria-label="Coverage summary"');
+    const note = html.indexOf('data-testid="renewal-definition"');
+    expect(note).toBeGreaterThan(html.indexOf('</section>', strip));
+    expect(html.slice(note, note + 700).replace(/<[^>]*>/g, "")).toContain(
+      "2025-26 reports on file: The earlier-year count includes any report we hold for that year, including ones we set aside or couldn’t read. A school counts as renewed only if its current-year report is one we have not set aside; a report we couldn’t read still counts.",
+    );
+    // The opening tag of the note itself: normal-case small text, never the `.meta` label style.
+    const tag = html.slice(html.lastIndexOf("<p", note), html.indexOf(">", note) + 1);
+    expect(tag.startsWith("<p ")).toBe(true);
+    expect(tag).not.toMatch(/class(Name)?="[^"]*\bmeta\b/);
   });
 
   it("is left out, not shown as zero, when the dashboard is given no renewal block", () => {
     expect(render("", null)).not.toContain("renewal-tile");
+    expect(render("", null)).not.toContain("renewal-definition");
   });
 });
 
@@ -84,6 +97,26 @@ describe("summary strip", () => {
     // a has numbers: 3000 of (3000 + 1000) known enrollment = 75%
     expect(tile).toContain("75%");
     expect(tile).toContain("1 college has no enrollment figure");
+  });
+
+  it("says nothing about colleges with no enrollment figure when there are none", () => {
+    currentParams = new URLSearchParams();
+    const html = renderToStaticMarkup(<CoverageDashboard rows={ROWS.filter((r) => r.undergraduate_enrollment !== null)} renewal={RENEWAL} />);
+    const at = html.indexOf('data-testid="weighted-share-tile"');
+    const tile = html.slice(at, at + 900);
+    expect(tile).toContain("with CDS numbers on file.");
+    expect(tile).not.toContain("no enrollment figure");
+    expect(tile).not.toContain("0 colleges");
+    expect(render()).toContain("1 college has no enrollment figure and is left out of both sums.");
+  });
+
+  it("puts every tile at the top of its row (a stretched button would centre its content and drop its label)", () => {
+    const html = render();
+    const at = html.indexOf('aria-label="Coverage summary"');
+    const tag = html.slice(html.lastIndexOf("<section", at), html.indexOf(">", at) + 1);
+    expect(tag.startsWith("<section")).toBe(true);
+    expect(tag).toMatch(/align-items:\s*start/);
+    expect(tag).toMatch(/display:\s*grid/);
   });
 
   it("uses 'Colleges tracked' and plain status words", () => {

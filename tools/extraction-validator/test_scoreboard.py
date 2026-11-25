@@ -130,6 +130,16 @@ class Admissions(unittest.TestCase):
         self.assertEqual(scoreboard.classify_federal(None, Decimal(1000)), "blank")
         self.assertIsNone(scoreboard.classify_federal(5, None))
 
+    def test_the_median_is_the_lower_middle_rank_of_an_even_list_not_their_average(self) -> None:
+        # The page says (Table A's note): "The median is the middle report by rank: with an even number of reports it is the
+        # lower of the two middle values, not their average, and the lowest 10% is taken the same way." A switch to
+        # interpolation would make that sentence false, so it fails here.
+        values = [900, 100, 400, 300]                      # sorted: 100 300 400 900; the conventional median is 350
+        self.assertEqual(scoreboard.percentile(values, 50), 300)
+        self.assertEqual(scoreboard.percentile([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 50), 5)
+        self.assertEqual(scoreboard.percentile([7, 3, 5], 50), 5)              # odd: the middle one
+        self.assertEqual(scoreboard.percentile(list(range(1, 21)), 10), 2)     # 10%: rank ceil(20 x 0.1) = 2
+
     def test_percentile_is_nearest_rank(self) -> None:
         self.assertEqual(scoreboard.percentile(list(range(1, 11)), 10), 1)
         self.assertEqual(scoreboard.percentile(list(range(1, 11)), 50), 5)

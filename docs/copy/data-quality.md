@@ -16,13 +16,13 @@ Awaiting Anthony's read.
 
 **Data quality**
 
-> Snapshot of {November 24, 2026}: {1,163} reports published with numbers
+> Snapshot of {November 25, 2026}: {1,338} reports published with numbers
 > across {three} years, checked against their own printed totals{ and, for 2023-24 and 2024-25, against federal figures}. Data quality here means the quality of what this archive
 > publishes, not the quality of any school's own data.
 
 Small normal-case line under it (the PRD wants the run named on the page, so the file name stays):
 
-> Numbers from the archive's scoreboard run of {November 24, 2026}, {12:25 UTC} (file {scoreboard-20261124T122503Z.json}).
+> Numbers from the archive's scoreboard run of {November 25, 2026}, {14:09 UTC} (file {scoreboard-20261125T140926Z.json}).
 
 ## All years at a glance
 
@@ -63,7 +63,7 @@ With several:
 
 ## Notices (only when they apply)
 
-- > {71} of the {404} published 2023-24 reports are numbered by a different
+- > {65} of the {430} published 2023-24 reports are numbered by a different
   > year's form. These are our older readings, stored under another year's
   > numbering, not the school's choice. Some question numbers in them point at
   > a different question than the 2023-24 form's.
@@ -88,7 +88,7 @@ With several:
   file to read.
 - > Fields stored counts the fields stored for the report as we publish it,
   > including fields recorded as unreadable or "not applicable". It measures
-  > how much of the form we reached, not how many usable answers we have. The
+  > how much of the form we reached, not how many usable answers we have. The median is the middle report by rank: with an even number of reports it is the lower of the two middle values, not their average, and the lowest 10% is taken the same way. The
   > {year} form has {n} questions. {For years with another form's numbering: The
   > {n} reports numbered by a different year's form have field numbers from that
   > form, whose size differs.}
@@ -99,7 +99,7 @@ With several:
 
 ## Table A, by section: Fields stored and usable answers by section
 
-Under Table A, only for a snapshot in public format 3 and a year whose form has
+Under Table A, only for a snapshot in public format 3 or later and a year whose form has
 a full field schema. One row per CDS section (A General information, B
 Enrollment and persistence, C First-time, first-year admission, D Transfer
 admission, E Academic offerings and policies, F Student life, G Annual
@@ -137,8 +137,8 @@ says so: *Fewer than 5 reports, so no share is shown.*
   > reading of the same file, so this year reads lower partly for that reason.
 
 "Usable" means `value_status` `reported` and nothing else. In the 2026-11-25
-run, over the 1,280 published reports numbered by their year's own form, the
-stored fields were 641,995 reported, 6,594 parse errors and 3,776 "not
+run, over the 1,273 published reports numbered by their year's own form, the
+stored fields were 637,851 reported, 6,581 parse errors and 3,751 "not
 applicable" (0.6% of fields). "Not applicable" is a school saying a question
 doesn't apply to it. It is left out because that is not an answer a reader can
 use, but it is not negligible in one section: counting it would raise transfer
@@ -180,8 +180,7 @@ not reports).
 
 - > A value is compared only when the federal data has a positive figure for
   > it, and matches means within 2%. Left out: {n} reports we've marked as
-  > filed for one campus or unit (federal data reports the whole institution){, {n} reports with a file filed under more than one federal record, which we can't compare to either record alone,}
-  > and {n} whose school has no federal admissions figures.
+  > filed for one campus or unit (federal data reports the whole institution){ and/, then {n} reports with a file filed under more than one federal record, which we can't compare to either record alone, only when n is above 0}{ and/, and {n} whose school has no federal admissions figures, only when n is above 0}.
 - > This snapshot doesn't record which IPEDS release (final or provisional), release date or imputation flag each figure came from. Where a final and a provisional release both have a figure, the final one is used. A school's page shows the release and imputation for its latest federal figures, which can be a later year than the one compared here.
 - > **No value** means no usable CDS number was available to compare. The
   > school may have left it blank. We may have missed it, read it under a
@@ -243,7 +242,7 @@ the All formats row too.
   > have no value:} {n} published {report is or reports are} numbered by a
   > different year's form, where the B1 total can be harder for us to find.
 - > Left out: {n} {report or reports} we've marked as filed for one campus or
-  > unit{, {n} reports with a file filed under more than one federal record, which we can't compare to either record alone,} and {n} whose school has no federal undergraduate enrollment figure.
+  > unit{ and/, then {n} reports with a file filed under more than one federal record, which we can't compare to either record alone, only when n is above 0}{ and/, and {n} whose school has no federal undergraduate enrollment figure, only when n is above 0}.
   > **No value** means no usable CDS number was available to compare: the
   > school may have left it blank, or we may have missed it or set it aside.
   > **Differs** isn't always ours. The match rate is matches over all the
@@ -285,11 +284,11 @@ in-state 7,716). Likewise a B1 total of 0 is no value.
 > one compared here.
 
 Why these two pairings: enrollment lines up well. Of the reports with both a B1
-total and a federal figure (so leaving out "no value"), 91% in 2023-24 (317 of 349) and 90% in 2024-25 (378 of 420) are
+total and a federal figure (so leaving out "no value"), 91% in 2023-24 (315 of 347) and 91% in 2024-25 (375 of 414) are
 within 2%, with a median ratio of 1.00; the table's own match rate is lower
-(74% in 2023-24, 77% in 2024-25) because it counts "no value" reports too.
+(73% in 2023-24, 77% in 2024-25) because it counts "no value" reports too.
 Tuition is noisier: 68% of the reports with both numbers match in 2023-24
-(212 of 313), with differences on both sides, and the table's match rate is 49%
+(210 of 311), with differences on both sides, and the table's match rate is 49%
 with "no value" counted. So the page says what can differ and does not call a
 difference an error.
 
@@ -321,7 +320,7 @@ difference an error.
   > couldn't check, sampled on November 25, 2026, 19 had the financial aid table
   > filled in and we hadn't stored it in full.
 
-  The sample was drawn from the 217 can't-check reports in the 2026-11-25 run.
+  The sample was drawn from the 217 can't-check reports in the 2026-11-25 run `scoreboard-20261125T011508Z.json` (the committed snapshot's run, `scoreboard-20261125T140926Z.json`, has 223).
   The sentence shows only while the snapshot's 2023-24 count is within 90% to
   110% of 217 (196 to 238), so it disappears once a fix shrinks the pool, or a
   regression grows it, instead of going false.
@@ -352,10 +351,10 @@ difference an error.
 ## /coverage strings added by PRD 040
 
 - Tile: **{current year} reports on file** (it read "This year's reports on file" until the launch review; this tile is public), "Of the {n} schools with a {previous}
-  report on file, {n} also have a {current} report on file. The earlier-year count includes any report we hold for that year, including ones we set aside or couldn't read. A school counts as renewed only if its current-year report is one we have not set aside; a report we couldn't read still counts. Snapshot of {date}."
+  report on file, {n} also have a {current} report on file. Snapshot of {date}." Kept short: the definition is a small normal-case note directly under the strip: "{current year} reports on file: The earlier-year count includes any report we hold for that year, including ones we set aside or couldn't read. A school counts as renewed only if its current-year report is one we have not set aside; a report we couldn't read still counts."
 - Tile: **Colleges tracked**: "Accept federal aid and enroll undergraduates".
 - Tile: **Undergrads with CDS numbers**: "Share of undergraduates at tracked
-  colleges with CDS numbers on file. {n} colleges have no enrollment figure and
+  colleges with CDS numbers on file. {When n is 0 the sentence is left out:} {n} colleges have no enrollment figure and
   are left out of both sums."
 - Columns: With numbers, Found. Empty cells show an en dash (they showed em
   dashes before this review, one per row).

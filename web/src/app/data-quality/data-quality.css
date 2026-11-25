@@ -4,9 +4,10 @@
 
    A phone scroll must never cut a number in half ("30" read as "3"). So below the minimum width the leading
    columns are sized in cqw (the box's own width) to add up to exactly one box, and the rest are fixed pixels:
-   the cut then falls on a column edge at any phone width. The leading columns are few enough to hold their
-   widest content down to a 320px screen (checked: no cell's text overflows its cell). The hint's breakpoints
-   are the minimum widths minus one; a test keeps them in step. */
+   the cut then falls on a column edge at any phone width. Row labels wrap (they are never nowrap, or a long
+   label such as "C First-time, first-year admission" prints over the number beside it); every table was checked
+   at 320 and 375 px for text running out of its cell. The hint's breakpoints are the minimum widths minus one;
+   a test keeps them in step. */
 .dq-scroll { container-type: inline-size; }
 /* The width lives here, not inline, so the container rules below can override it. */
 .dq-table { width: 100%; min-width: 640px; }
