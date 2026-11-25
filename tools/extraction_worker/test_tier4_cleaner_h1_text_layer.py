@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import unittest
 
-from tier4_cleaner import SchemaIndex, _h_layout_h1_rows_by_column, clean, schema_path_for_year
+from tier4_cleaner import _h_layout_h1_rows_by_column, clean
 
 NEED_END, NON_NEED_END = 110, 140
 
@@ -28,9 +28,9 @@ HEADER = (
 AFTER = "\nH2. Number of Enrolled Students Awarded Aid\nList the number of degree-seeking students.\n"
 
 
-def line(label: str, need: str = "", non_need: str = "", at: int = 38) -> str:
+def line(label: str, need: str = "", non_need: str = "", at: int = 38, ends: tuple[int, int] = (NEED_END, NON_NEED_END)) -> str:
     out = " " * at + label
-    for amount, end in ((need, NEED_END), (non_need, NON_NEED_END)):
+    for amount, end in ((need, ends[0]), (non_need, ends[1])):
         if amount:
             out = out.ljust(end - len(amount)) + amount
     return out + "\n"
@@ -62,15 +62,12 @@ TRINITY_ROWS = (
     + line("Athletic Awards", "$0", "$0")
 )
 
-SCHEMA = SchemaIndex(schema_path_for_year("2023-24"))
-
-
-def read(text: str, markdown: str = "") -> dict[str, str]:
-    return {qn: rec["value"] for qn, rec in clean(markdown, supplemental_text=text, canonical_year="2023-24").items()}
+def read(text: str, markdown: str = "", year: str = "2023-24") -> dict[str, str]:
+    return {qn: rec["value"] for qn, rec in clean(markdown, supplemental_text=text, canonical_year=year).items()}
 
 
 def h1(values: dict[str, str]) -> dict[str, str]:
-    return {qn: v for qn, v in values.items() if qn.startswith("H.") and qn[2:].isdigit() and 106 <= int(qn[2:]) <= 126}
+    return {qn: v for qn, v in values.items() if qn.startswith("H.") and qn[2:].isdigit() and 105 <= int(qn[2:]) <= 128}
 
 
 class H1TextLayerTest(unittest.TestCase):
@@ -109,12 +106,11 @@ class H1TextLayerTest(unittest.TestCase):
         self.assertEqual(_h_layout_h1_rows_by_column(section.split("Aid Awarded", 1)[1].split("H2. Number")[0]), {})
 
     def test_a_total_with_none_of_its_rows_read_is_refused(self) -> None:
-        # Michigan: the Federal and State rows print as one line of four
-        # amounts, so none of the grant rows is read. The self-help rows add
-        # up on their own, which must not replace the markdown reading.
+        # The grants rows are missing from the layout (an unreadable page);
+        # only their total prints. The self-help block adds up on its own,
+        # which must not replace the markdown reading.
         rows = (
-            line("Federal  State", "$1,973,493 $141,723", "$265,723 $0")
-            + line("Total Scholarships/Grants", "$79,257,874", "$5,221,708", at=60)
+            line("Total Scholarships/Grants", "$79,257,874", "$5,221,708", at=60)
             + line("Student loans from all sources", "$2,308,770", "$7,214,427")
             + line("Federal Work-Study", "$735,526")
             + line("Total Self-Help", "$3,044,296", "$7,214,427", at=70)
@@ -123,7 +119,6 @@ class H1TextLayerTest(unittest.TestCase):
             + line("Athletic Awards", "$0", "$0")
         )
         self.assertEqual(_h_layout_h1_rows_by_column(HEADER + rows), {})
-
     def test_state_row_worded_with_an_example_is_still_the_state_row(self) -> None:
         text = INSTRUCTIONS + HEADER + TRINITY_ROWS.replace(
             "State - all states, not only the state in which", "State (i.e., all states, not only the state in which"
@@ -191,6 +186,97 @@ class H1TextLayerTest(unittest.TestCase):
         self.assertIn("Total Self-Help", TRINITY_ROWS)
         self.assertNotIn("Total Self-Help", rows)
         self.assertEqual(_h_layout_h1_rows_by_column(HEADER + rows), {})
+
+    def test_text_layer_clears_h1_ids_the_direct_question_number_path_filled(self) -> None:
+        # A markdown Question/Value table fills H.113 before any resolver runs.
+        markdown = "| Question | Value |\n|---|---|\n| H.113 | 735526 |\n"
+        self.assertEqual(h1(read("", markdown))["H.113"], "735526")
+        both = h1(read(INSTRUCTIONS + HEADER + TRINITY_ROWS + AFTER, markdown))
+        self.assertNotIn("H.113", both)
+        self.assertEqual(both["H.112"], "735526")
+
+    def test_a_markdown_value_the_row_prints_but_the_text_did_not_read_is_kept(self) -> None:
+        # Bare amounts below 1,000 are not read as amounts; the markdown's
+        # 320 and 400 stand because the Tuition Waivers row prints them.
+        markdown = "| Question | Value |\n|---|---|\n| H.116 | 320 |\n| H.127 | 400 |\n"
+        rows = TRINITY_ROWS.replace(line("Tuition Waivers", "$320,758", "$426,282"), line("Tuition Waivers", "320", "400"))
+        values = h1(read(INSTRUCTIONS + HEADER + rows + AFTER, markdown))
+        self.assertEqual((values["H.116"], values["H.127"]), ("320", "400"))
+        self.assertEqual(values["H.110"], "79257874")  # the text reading was accepted
+        # A markdown value the row does not print is not kept.
+        wrong = "| Question | Value |\n|---|---|\n| H.116 | 999 |\n"
+        self.assertNotIn("H.116", h1(read(INSTRUCTIONS + HEADER + rows + AFTER, wrong)))
+
+    def test_a_row_name_after_excludes_does_not_hide_the_row_name_before_it(self) -> None:
+        rows = TRINITY_ROWS.replace(
+            line("Federal Work-Study", "$735,526"),
+            line("Federal Work-Study (excludes state and other)", "$735,526"),
+        )
+        self.assertEqual(h1(read(INSTRUCTIONS + HEADER + rows + AFTER))["H.112"], "735526")
+
+    def test_lone_amounts_need_separated_columns(self) -> None:
+        narrow = (NEED_END, NEED_END + 6)
+        rows = "".join(
+            line(label, need, non, ends=narrow) if non else line(label, need, ends=narrow)
+            for label, need, non in (
+                ("Federal", "$1,973,493", "$265,723"),
+                ("State - all states, not only the state in which", "$141,723", "$0"),
+                ("Instititutional - Endowed scholarships, annual", "$75,746,654", "$4,204,069"),
+                ("Scholarships/grants from external sources", "$1,396,004", "$751,916"),
+            )
+        )
+        rows += line("Total Scholarships/Grants", "$79,257,874", "$5,221,708", at=60, ends=narrow)
+        rows += line("Student loans from all sources", "$2,308,770", "$7,214,427", ends=narrow)
+        rows += line("Federal Work-Study", "$735,526", ends=narrow)
+        rows += line("Total Self-Help", "$3,044,296", "$7,214,427", at=70, ends=narrow)
+        rows += line("Parent Loans", "", "$3,104,361", ends=narrow)
+        values = h1(read(INSTRUCTIONS + HEADER + rows + AFTER))
+        self.assertNotIn("H.126", values)  # the lone amount cannot be placed
+        self.assertNotIn("H.112", values)  # nor the work-study amount; the sums still refuse or hold
+        # Same layout with the columns apart: both are placed.
+        apart = h1(read(INSTRUCTIONS + HEADER + TRINITY_ROWS + AFTER))
+        self.assertEqual((apart["H.112"], apart["H.126"]), ("735526", "3104361"))
+
+    def test_a_number_inside_a_label_is_not_a_lone_amount(self) -> None:
+        rows = TRINITY_ROWS.replace(
+            line("Parent Loans", "", "$3,104,361"),
+            line("Parent Loans (about 2,500 families)", "", "$3,104,361"),
+        )
+        values = h1(read(INSTRUCTIONS + HEADER + rows + AFTER))
+        self.assertNotIn("H.115", values)  # 2,500 ends left of the need-based column
+        self.assertEqual(values["H.126"], "3104361")
+
+    def test_a_lone_amount_about_as_near_to_both_columns_is_dropped(self) -> None:
+        mid = (NEED_END + NON_NEED_END) // 2
+        rows = TRINITY_ROWS.replace(
+            line("Athletic Awards", "$0", "$0"), line("Athletic Awards", "$5,000", ends=(mid, mid))
+        )
+        values = h1(read(INSTRUCTIONS + HEADER + rows + AFTER))
+        self.assertNotIn("H.117", values)
+        self.assertNotIn("H.128", values)
+
+    def test_a_missing_self_help_block_refuses_the_reading(self) -> None:
+        start = TRINITY_ROWS.index(line("Student loans from all sources", "$2,308,770", "$7,214,427"))
+        end = TRINITY_ROWS.index(line("Parent Loans", "", "$3,104,361"))
+        rows = TRINITY_ROWS[:start] + TRINITY_ROWS[end:]
+        self.assertEqual(_h_layout_h1_rows_by_column(HEADER + rows), {})
+
+    def test_a_row_labelled_twice_is_refused(self) -> None:
+        # The same amounts again, so the sums cannot tell.
+        rows = TRINITY_ROWS + line("Federal", "$1,973,493", "$265,723")
+        self.assertEqual(_h_layout_h1_rows_by_column(HEADER + rows), {})
+
+    def test_2025_26_numbering_extracts_and_replaces(self) -> None:
+        # 2025-26 ids start one lower: Federal need-based is H.105, work-study
+        # H.111, state and other H.112.
+        markdown = "| Question | Value |\n|---|---|\n| H.112 | 735526 |\n"
+        text = INSTRUCTIONS + HEADER + TRINITY_ROWS + AFTER
+        self.assertEqual(h1(read("", markdown, "2025-26"))["H.112"], "735526")
+        values = h1(read(text, markdown, "2025-26"))
+        self.assertEqual(values["H.105"], "1973493")
+        self.assertEqual(values["H.111"], "735526")
+        self.assertNotIn("H.112", values)
+        self.assertEqual(values["H.127"], "0")  # Athletic Awards, non-need-based
 
     def test_text_layer_replaces_the_markdown_h1_block(self) -> None:
         # The markdown reading put the work-study amount in H.113 ("State and

@@ -7367,27 +7367,37 @@ _H1_AMOUNT_RE = re.compile(
 _H1_CONTINUATION_RE = re.compile(r"excludes|captured above|reported below|not awarded by|excluding|which", re.IGNORECASE)
 
 
-def _h_layout_h1_rows_by_column(block: str) -> dict[str, dict]:
+def _h_layout_h1_reading(block: str) -> tuple[dict[str, dict], list[tuple[str, str, set[float]]]]:
     """H1 dollar amounts from the PDF text layer, placed by column.
+
+    Returns the claims (2025-26 numbering) and, per row label found, the two
+    field ids of that row with every number printed on the row's lines, so the
+    caller can keep a markdown value the text reading did not re-read but the
+    row prints. ({}, []) unless the reading is complete and adds up.
 
     ``_h_layout_h1_rows`` takes the first two dollar amounts in a six-line
     window, so a row whose need-based cell is blank puts its non-need-based
     amount in the need-based field. Here a row is the label that starts it and
-    the amount lines up to the next label. A row with two amounts holds
-    (need-based, non-need-based) in print order, whatever the cell alignment;
-    a lone amount goes to the column median it is nearer, and is dropped when
-    it is near neither or both. A label wrapped over lines is one row, and the
-    wrapped fragments that read like another row ("excluding athletic aid and
-    tuition waivers (which are reported below)") are not row labels.
+    the amount lines under it up to the next label. A row with two amounts is
+    (need-based, non-need-based) in print order, whatever the cell alignment.
+    A number that ends more than 20 columns left of the need-based column is
+    label text and is not an amount. A lone amount is placed only by column:
+    against the medians of the two-amount rows of its own block (grants,
+    self-help, other aid), only when those medians are 12 or more columns
+    apart, and not when it is about as near to both.
+    A label wrapped over lines is one row; the wrapped fragments that read
+    like another row ("excluding athletic aid and tuition waivers (which are
+    reported below)") are not row labels.
 
-    Returns {} unless the reading adds up (``_h1_amounts_add_up``): a table
-    this reader cannot place is refused whole, so the caller falls back to the
-    old reader and the markdown reading rather than publish a guess.
+    Refused whole (so the caller keeps the old reading) when: the amounts do
+    not add up; a total has none of its rows, or rows have no total; the
+    grants or the self-help block is missing; three or more amounts sit under
+    one label; or one row is labelled twice apart from its own wrapped lines.
     """
     if "|" in block:
-        return {}
+        return {}, []
     lines = block.splitlines()
-    markers = []  # (line idx, nb_qn, nn_qn)
+    markers: list[tuple[int, str, str]] = []  # (line idx, nb_qn, nn_qn)
     for li, line in enumerate(lines):
         norm = _normalize_label(line)
         if not norm:
@@ -7401,6 +7411,9 @@ def _h_layout_h1_rows_by_column(block: str) -> dict[str, dict]:
             if at < 0:
                 continue
             if wrapped and at >= wrapped.start() and not substr.startswith("total"):
+                continue
+            # The same row named again within three lines is its wrapped label.
+            if markers and markers[-1][1:] == (nb_qn, nn_qn) and li - markers[-1][0] <= 3:
                 break
             markers.append((li, nb_qn, nn_qn))
             break
@@ -7409,32 +7422,59 @@ def _h_layout_h1_rows_by_column(block: str) -> dict[str, dict]:
             # own with no field; its amounts are not Athletic Awards'.
             if re.match(r"total\b", norm):
                 markers.append((li, "", ""))
-    if not markers:
-        return {}
+    if not any(m[1] for m in markers):
+        return {}, []
     per_row: dict[int, list[tuple[int, str]]] = {}
+    printed: dict[int, set[float]] = {}
     for li, line in enumerate(lines):
         prior = [m for m in markers if m[0] <= li]
         if not prior:
             continue
+        row = prior[-1][0]
         for m in _H1_AMOUNT_RE.finditer(line):
-            per_row.setdefault(prior[-1][0], []).append((m.end(), (m.group(1) or m.group(2)).replace(",", "")))
-    lefts = sorted(a[0][0] for a in per_row.values() if len(a) == 2)
-    rights = sorted(a[1][0] for a in per_row.values() if len(a) == 2)
-    if len(lefts) < 3:
-        return {}
-    left_med, right_med = lefts[len(lefts) // 2], rights[len(rights) // 2]
-    by_marker = {m[0]: m for m in markers}
+            per_row.setdefault(row, []).append((m.end(), (m.group(1) or m.group(2)).replace(",", "")))
+        for token in re.findall(r"\d[\d,]*(?:\.\d+)?", line):
+            try:
+                printed.setdefault(row, set()).add(float(token.replace(",", "")))
+            except ValueError:
+                pass
+    # Row names in the section's instructions carry no amounts; two labelled
+    # rows with amounts that name the same row would overwrite each other.
+    named = [m[1:] for m in markers if m[1] and per_row.get(m[0])]
+    if len(set(named)) != len(named):
+        return {}, []
+    two = [m for m in markers if len(per_row.get(m[0], ())) == 2]
+    if len(two) < 3:
+        return {}, []
+
+    def medians(rows: list[tuple[int, str, str]]) -> tuple[int, int] | None:
+        pairs = [per_row[m[0]] for m in rows if len(per_row.get(m[0], ())) == 2]
+        if not pairs:
+            return None
+        lefts, rights = sorted(p[0][0] for p in pairs), sorted(p[1][0] for p in pairs)
+        return lefts[len(lefts) // 2], rights[len(rights) // 2]
+
+    overall = medians(markers)
+    # Blocks of the table: grants (to Total Scholarships), self-help (to Total
+    # Self-Help), then parent loans, tuition waivers and athletic awards.
+    blocks: list[list[tuple[int, str, str]]] = [[]]
+    for m in markers:
+        blocks[-1].append(m)
+        if m[1] in ("H.109", "H.113"):
+            blocks.append([])
+    block_medians = {m[0]: (medians(blk) or overall) for blk in blocks for m in blk}
     claimed: dict[str, dict] = {}
-    for li, amts in per_row.items():
-        _, nb_qn, nn_qn = by_marker[li]
+    for li, nb_qn, nn_qn in markers:
+        left_med, right_med = block_medians[li]
+        # A number that ends left of the need-based column is label text.
+        amts = [a for a in per_row.get(li, []) if a[0] >= left_med - 20]
         if len(amts) == 2:
             pairs = [(nb_qn, amts[0][1]), (nn_qn, amts[1][1])]
         elif len(amts) == 1:
             end, val = amts[0]
             dl, dr = abs(end - left_med), abs(end - right_med)
-            # Beyond either column's median there is only one column it can
-            # be in. Between them it goes to the nearer, unless it is about as
-            # near to both.
+            if right_med - left_med < 12:
+                continue
             if end >= right_med:
                 pairs = [(nn_qn, val)]
             elif end <= left_med:
@@ -7443,38 +7483,45 @@ def _h_layout_h1_rows_by_column(block: str) -> dict[str, dict]:
                 continue
             else:
                 pairs = [(nb_qn, val)] if dl < dr else [(nn_qn, val)]
-        elif by_marker[li][1]:
+        elif len(amts) > 2 and nb_qn:
             # Three or more amounts under one label: two rows printed as one
             # (Boston College 2024-25 prints Athletic Awards' amounts above
-            # its label). Which belongs where is not known, and a reading
-            # that skipped them would replace the markdown's.
-            return {}
+            # its label). Which belongs where is not known.
+            return {}, []
         else:
             continue
         for qn, val in pairs:
             if qn:
                 claimed[qn] = {"value": val, "source": "tier4_cleaner"}
     if not _h1_amounts_add_up(claimed):
-        return {}
+        return {}, []
     # The sum does not check a total whose rows were not read, nor rows whose
     # total was not read. Either means the block was not placed (Lenoir-Rhyne
-    # prints "Total Self-Help" under its amounts), and a reading that lost a
-    # block of rows or put a total in a row would replace the markdown's.
+    # prints "Total Self-Help" under its amounts).
     for parts, total_qn in _H1_SUMS:
         total = claimed.get(total_qn)
         if total and float(total["value"]) != 0 and not any(qn in claimed for qn in parts):
-            return {}
+            return {}, []
         if not total and any(qn in claimed for qn in parts):
-            return {}
-    return claimed
+            return {}, []
+    # A block of the table that is missing altogether (an unreadable page
+    # break) leaves the sums of the other block to vouch for the reading.
+    if not ({"H.109", "H.121"} & set(claimed) and {"H.113", "H.124"} & set(claimed)):
+        return {}, []
+    rows = [(nb, nn, printed.get(li, set())) for li, nb, nn in markers if nb]
+    return claimed, rows
+
+
+def _h_layout_h1_rows_by_column(block: str) -> dict[str, dict]:
+    return _h_layout_h1_reading(block)[0]
 
 
 _H1_TEXT_SECTION_END = r"(?:^|\n)[ \t]*H2\.?[ \t]+Number\b"
 
 
-def _h1_text_layer_claims(text: str, schema: SchemaIndex) -> dict[str, dict]:
-    """H1 as read by column from a text layer, numbered by ``schema``; {} when
-    the table is absent or its amounts do not add up.
+def _h1_text_layer_reading(text: str, schema: SchemaIndex) -> tuple[dict[str, dict], list[tuple[str, str, set[float]]]]:
+    """H1 as read by column from a text layer, numbered by ``schema``, with
+    the rows' printed numbers; ({}, []) when the table is absent or refused.
 
     The section runs to the H2 heading. The form's own line "Indicate the
     academic year ... for items H1, H2, H2A, and H6" comes before the table,
@@ -7482,10 +7529,23 @@ def _h1_text_layer_claims(text: str, schema: SchemaIndex) -> dict[str, dict]:
     """
     h_block = _section_between(text, r"(?:H\.\s*FINANCIAL AID|H1\b)", r"(?:I\.\s*INSTRUCTIONAL FACULTY|CDS-I|$)")
     if not h_block:
-        return {}
+        return {}, []
     section = _section_between(h_block, r"Aid Awarded", _H1_TEXT_SECTION_END)
-    claims = _h_layout_h1_rows_by_column(section)
-    return _h1_fields_with_same_question_in_schema(claims, schema) if claims else {}
+    claims, rows = _h_layout_h1_reading(section)
+    if not claims:
+        return {}, []
+    # The ids of rows follow the claims into the schema's numbering.
+    ids = {qn for _, nb, nn in _H1_ROWS for qn in (nb, nn) if qn}
+    moved = {qn: next(iter(_h1_fields_with_same_question_in_schema({qn: {"value": qn}}, schema)), None) for qn in ids}
+    rows = [(moved.get(nb) or "", moved.get(nn) or "", printed) for nb, nn, printed in rows]
+    return _h1_fields_with_same_question_in_schema(claims, schema), rows
+
+
+def _h1_number(record: dict | None) -> float | None:
+    try:
+        return float(str(record["value"]).replace(",", "").replace("$", "").strip())
+    except (TypeError, KeyError, ValueError):
+        return None
 
 
 def _h1_amount_qns(schema: SchemaIndex) -> set[str]:
@@ -9153,14 +9213,32 @@ def clean(
             resolve_f_student_life,
         ) and supplemental_text:
             supplemental_new = resolver(tables, supplemental_text, idx)
-            if resolver is resolve_h_financial_aid and (h1_by_column := _h1_text_layer_claims(supplemental_text, idx)):
+            if resolver is resolve_h_financial_aid and (h1_reading := _h1_text_layer_reading(supplemental_text, idx))[0]:
                 # The text layer printed the whole table and its amounts add
-                # up: it replaces the H1 block. Markdown rows left beside it
-                # are another assignment of the same table and would be
-                # summed with it (work-study in H.113 and H.112).
+                # up: it replaces the H1 block, from every source (the direct
+                # question-number paths fill `values` before any resolver).
+                # Markdown rows left beside it are another assignment of the
+                # same table and would be summed with it (work-study in H.113
+                # and H.112). A markdown value the text reading did not
+                # re-read stays when its row prints that number and the number
+                # is not already taken by the row's other field.
+                h1_by_column, h1_rows = h1_reading
                 h1_qns = _h1_amount_qns(idx)
+                kept: dict[str, dict] = {}
+                for nb_qn, nn_qn, printed in h1_rows:
+                    taken = {_h1_number(h1_by_column.get(qn)) for qn in (nb_qn, nn_qn)}
+                    for qn in (nb_qn, nn_qn):
+                        if not qn or qn in h1_by_column:
+                            continue
+                        old = values.get(qn) or new.get(qn) or supplemental_new.get(qn)
+                        number = _h1_number(old)
+                        if number is not None and number in printed and number not in taken:
+                            kept[qn] = old
+                for qn in h1_qns:
+                    values.pop(qn, None)
                 new = {qn: rec for qn, rec in new.items() if qn not in h1_qns}
                 supplemental_new = {qn: rec for qn, rec in supplemental_new.items() if qn not in h1_qns}
+                supplemental_new.update(kept)
                 supplemental_new.update(h1_by_column)
             if resolver in (resolve_a_general, resolve_b1_enrollment) and supplemental_new:
                 if resolver is resolve_b1_enrollment:
