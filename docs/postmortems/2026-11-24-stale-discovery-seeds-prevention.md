@@ -231,6 +231,19 @@ Three rounds. In round 1, Gemini 4 Neon (xhigh) and Fable each answered, indepen
 | R11 | Re-probe "fixes" are judged before the seed PR merges and before an archive run | Fable | **Accepted risk**: renewal still catches the outcome a day after the archive runs |
 | R12 | Schools outside every denominator: no document, undated only, or the newest year 2022-23 or older | both | **Partly addressed**: #495 searched the 156 older schools and moved 38 seeds; the rest stay accepted |
 
+### Round 2 (on the controls after #493)
+
+| # | Scenario | Found by | Outcome |
+|---|---|---|---|
+| R13 | **The alarm latches per year.** Once a year's issue is open, nothing more is pushed for that year. Replaying 2026, the issue opens on 2026-04-19, then seven silent months follow while the gap grows from 8 to 28 points | both | **Fixed** in #499 (D16): an open issue below the floor is superseded by a new assigned issue and a Discord post every 30 days, and at once on a 5-point worsening. The 2026 replay now gives 8 notifications for 2025-26 between April and November |
+| R14 | **A total stop takes 35–135 days to cross a floor**: the next-year check is off from September to February, and its margin widens in summer | both | **Fixed** in #499 (D17): an arrivals check. It fires when schools gaining a current- or next-year document in 30 days fall below a quarter of what the curve predicts, over 60 days in winter. Replayed, it would have fired 2026-08-15; a frozen archive fires within about 30 days (by about January 19 from December 1). An open arrivals breach is held until 30-day arrivals really recover |
+| R15 | An old year's issue that never reaches the mature floor keeps the lamp red forever and mutes later board alerts | Gemini | **Fixed** in #499: years two or more cycles old are retired with one post and never count as outstanding |
+| R16 | A real-mode test dispatch reads `outstanding` from the test label and can turn the lamp green | Gemini | **Fixed** in #499: it always reads the real label |
+| R17 | A crash in a `continue-on-error` step leaves the job green | Gemini | **Fixed** in #499: a final step fails the job |
+| R18 | Unknown `data_quality_flag` values count as renewing | Gemini | **Fixed** in #499: any non-null flag doesn't count |
+| R19 | Unextracted current-year documents count as renewing (21 today; a broken extractor would stay green) | both | **Reported**, not fixed: `unextracted_current_docs` is in the summary and on the board. Extraction is downstream (#477, #480) |
+| R20 | The hand-check workflow has no staleness watch | Fable | **Fixed** in #499: 35 days |
+
 ## Accepted risks (what is still not covered)
 
 1. **Small losses.** A mechanism that costs fewer than about 5 points of current-year renewal, or about 25% of the expected next-year share, does not cross a floor.
