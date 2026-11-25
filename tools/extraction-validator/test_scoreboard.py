@@ -796,6 +796,16 @@ class Renewal(unittest.TestCase):
         self.assertEqual((block["two_year_previous"], block["two_year_both"]), (400, 300))
         self.assertEqual(block["as_of"], "2026-11-25")
 
+    def test_a_flagged_current_year_document_is_not_a_renewal(self) -> None:
+        # The block uses the alarm's numerator (PRD 040 amendment, #493).
+        rows = self.rows(300, 100, 20)
+        for row in rows:
+            if row["school_id"] in {"b0", "b1", "b2"} and row["canonical_year"] == "2025-26":
+                row["data_quality_flag"] = "blank_template"
+        block = scoreboard.renewal_block(rows, dt.date(2026, 11, 25))
+        self.assertEqual((block["previous"], block["both"]), (400, 297))
+        self.assertEqual((block["two_year_previous"], block["two_year_both"]), (400, 297))
+
     def test_two_year_figures_count_schools_that_only_have_the_older_year(self) -> None:
         rows = self.rows(300, 100, 20)
         for i in range(60):       # schools with 2023-24 only: in the two-year denominator, not the one-year

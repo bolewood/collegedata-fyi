@@ -603,8 +603,11 @@ def renewal_block(rows: list[dict[str, Any]], as_of: dt.date, sql_floor: Optiona
     if year is None:
         raise SystemExit(f"cds_freshness_floor({as_of}) = {floor!r} is not a CDS year")
     by_school = discovery_renewal.school_years(rows)
-    one = discovery_renewal.renewal(by_school, year)
-    two = discovery_renewal.two_year_renewal(by_school, year)
+    # The same numerator as the alarm: a flagged current-year document
+    # (wrong file, blank template, low coverage) is not a renewal.
+    good = discovery_renewal.school_years(rows, exclude_flagged=True)
+    one = discovery_renewal.renewal(by_school, year, good)
+    two = discovery_renewal.two_year_renewal(by_school, year, good)
     for label, schools in (("one-year", one.prev_schools), ("two-year", two.prev_schools)):
         if len(schools) < discovery_renewal.MIN_PREV_SCHOOLS:
             raise SystemExit(

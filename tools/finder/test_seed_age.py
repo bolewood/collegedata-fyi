@@ -81,6 +81,23 @@ class BehindCycleTests(unittest.TestCase):
         ages = by_id(sa.compute_seed_ages(schools(x=LISTING), rows, AS_OF))
         self.assertTrue(ages["x"].behind_cycle)
 
+    def test_flagged_documents_are_not_a_new_year(self):
+        # Same rule as the renewal numerator: a wrong file, blank template or
+        # low-coverage file does not show that the seed produced a new year.
+        for flag in ("wrong_file", "blank_template", "low_coverage"):
+            rows = [doc("x", "2024-25"), doc("x", "2025-26", data_quality_flag=flag)]
+            ages = by_id(sa.compute_seed_ages(schools(x=LISTING), rows, AS_OF))
+            self.assertEqual(ages["x"].newest_year, "2024-25", flag)
+            self.assertTrue(ages["x"].behind_cycle, flag)
+        rows = [doc("x", "2024-25"), doc("x", "2025-26", data_quality_flag="some_other_flag")]
+        self.assertFalse(by_id(sa.compute_seed_ages(schools(x=LISTING), rows, AS_OF))["x"].behind_cycle)
+
+    def test_a_sub_institution_document_does_not_date_the_main_seed(self):
+        rows = [doc("x", "2024-25"), doc("x", "2025-26", sub_institutional="general-studies")]
+        ages = by_id(sa.compute_seed_ages(schools(x=LISTING), rows, AS_OF))
+        self.assertEqual(ages["x"].newest_year, "2024-25")
+        self.assertTrue(ages["x"].behind_cycle)
+
     def test_no_seed_school_is_not_dated(self):
         sc = {"x": {"id": "x"}, "y": {"id": "y", "discovery_seed_url": LISTING}}
         self.assertEqual([a.school_id for a in sa.compute_seed_ages(sc, [], AS_OF)], ["y"])
