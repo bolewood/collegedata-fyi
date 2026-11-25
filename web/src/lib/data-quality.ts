@@ -15,9 +15,9 @@ import { formatLabel } from "./format-labels";
  * link, CSV downloads and CSV routes). A build made before it stays closed,
  * whatever the clock says later.
  */
-// The gate opens at 00:00 UTC on this date (6 pm Central on Nov 26, 2026). The first production build made after that
-// time launches every surface; an earlier build stays closed whatever the clock says later.
-export const DATA_QUALITY_LAUNCH_DATE = "2026-11-27";
+// The gate opened at 00:00 UTC on this date, and the owner chose to launch the day the fresh snapshot (#550) merged, so
+// it opened when the build that merged this ran. A build made before that time stays closed whatever the clock says later.
+export const DATA_QUALITY_LAUNCH_DATE = "2026-11-25";
 
 /** The pure rule the build config and tests use. */
 export function isDataQualityLaunched(now: Date): boolean {
