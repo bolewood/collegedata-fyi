@@ -9,8 +9,7 @@
    are the minimum widths minus one; a test keeps them in step. */
 .dq-scroll { container-type: inline-size; }
 /* The width lives here, not inline, so the container rules below can override it. */
-.dq-table { width: 100%; }
-.dq-table { min-width: 640px; }
+.dq-table { width: 100%; min-width: 640px; }
 .dq-table--c { min-width: 820px; }
 .dq-scroll-hint { display: none; }
 @container (max-width: 639px) { .dq-scroll .dq-scroll-hint { display: block; } }

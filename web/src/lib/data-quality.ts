@@ -193,7 +193,7 @@ const sumH = (o: AidOutcomes) => o.adds_up + o.doesnt + o.cant_check;
  * equals the sum of the rows in every summed count (so the rows' statuses give the live count), federal
  * matches + no value + differs = values, values <= 3 per report, federal reports <= published, B1, C1 and H1
  * outcomes = totals.reports = published, set-aside reasons = set aside, and, for a year with federal figures,
- * checked + left out = published. Not checked here: live + removed + no file = manifest (the snapshot has no
+ * checked + left out = published, and (for a year with no federal figures) every federal count zero. Not checked here: live + removed + no file = manifest (the snapshot has no
  * manifest count) and the run-level agreement with `aggregate()`. Counts are already known to be non-negative
  * integers. Returns the first problem or null.
  */
@@ -202,8 +202,14 @@ function arithmeticProblem(year: QualityYear): string | null {
   for (const r of year.rows) {
     for (const [k, v] of Object.entries(summedCounts(r))) rowSums[k] = (rowSums[k] ?? 0) + v;
   }
+  // A year with no live documents has no rows, so a missing row sum is zero, not "undefined".
   for (const [k, v] of Object.entries(summedCounts(year.total))) {
-    if (v !== rowSums[k]) return `total ${k} is ${v}, but the rows add up to ${rowSums[k] ?? 0}`;
+    if (v !== (rowSums[k] ?? 0)) return `total ${k} is ${v}, but the rows add up to ${rowSums[k] ?? 0}`;
+  }
+  if (!year.federal_fall_loaded) {
+    for (const r of [...year.rows, year.total]) {
+      if (Object.values(r.federal).some((n) => n !== 0)) return "federal counts are not zero for a year with no federal figures";
+    }
   }
   const check = (name: string, r: QualityRow): string | null => {
     const f = r.federal;

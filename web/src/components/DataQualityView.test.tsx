@@ -10,7 +10,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/data-quality",
 }));
 
-import { FIXTURE_SNAPSHOT } from "@/lib/__fixtures__/data-quality-snapshot";
+import { FIXTURE_SNAPSHOT, emptyYear } from "@/lib/__fixtures__/data-quality-snapshot";
 import { DATA_LICENSE_NAME, DATA_LICENSE_URL } from "@/lib/data-license";
 import {
   type QualitySnapshot,
@@ -329,7 +329,7 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
   it("keeps the CSS hint's breakpoints one pixel under the tables' minimum widths", () => {
     const text = css();
     expect(text).toContain("container-type: inline-size");
-    const min = (sel: string) => Number(new RegExp(`${sel} \\{ min-width: (\\d+)px`).exec(text)![1]);
+    const min = (sel: string) => Number(new RegExp(`${sel} \\{[^}]*min-width: (\\d+)px`).exec(text)![1]);
     expect(text).toContain(`@container (max-width: ${min("\\.dq-table")  - 1}px) { .dq-scroll .dq-scroll-hint`);
     expect(text).toContain(`@container (max-width: ${min("\\.dq-table--c") - 1}px) { .dq-scroll--wide .dq-scroll-hint`);
   });
@@ -354,6 +354,21 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
     expect(cols.length).toBeGreaterThan(0);
   });
 
+  it("renders a year with no documents as dashes, not 0%", () => {
+    const snap: QualitySnapshot = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT));
+    snap.years.push(emptyYear("2026-27"));
+    currentParams = new URLSearchParams("year=2026-27");
+    const html = renderToStaticMarkup(<DataQualityView snapshot={snap} />);
+    expect(html).toContain("Table A, 2026-27");
+    for (const id of ["dq-table-b", "dq-table-c"]) expect(table(html, id)).not.toMatch(PCT);
+    expect(table(html, "dq-table-c")).toContain("(–)");
+    // The glance row: match rate and the three adds-up rates are dashes (no reports, so no denominator).
+    const row = html.match(/<tr><th scope="row"[^>]*>2026-27<\/th>[\s\S]*?<\/tr>/)![0];
+    expect(row.match(/>–</g)).toHaveLength(4);
+    expect(row).not.toMatch(/\d+%/);
+    expect(html).toContain("1 removed, 1 with no file");
+  });
+
   it("keeps each table's width out of its inline style, so the container rules can set it", () => {
     const html = render("year=2024-25");
     for (const id of ["dq-glance", "dq-table-a", "dq-table-b", "dq-table-c"]) {
@@ -363,11 +378,15 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
   });
 
   it.each([
-    ["glance", 9, "\\.dq-table--glance"],
-    ["a", 7, "\\.dq-table--a"],
-    ["b", 7, "\\.dq-table--b"],
-    ["c", 5, "\\.dq-table--c"],
-  ])("sizes Table %s's phone columns to end the first screen on a column edge", (_, cols, sel) => {
+    ["glance", "dq-glance", "\\.dq-table--glance"],
+    ["a", "dq-table-a", "\\.dq-table--a"],
+    ["b", "dq-table-b", "\\.dq-table--b"],
+    ["c", "dq-table-c", "\\.dq-table--c"],
+  ])("sizes Table %s's phone columns to end the first screen on a column edge", (_, id, sel) => {
+    // The column count is the rendered header's, so a new column without a CSS rule for it fails here.
+    const whole = render("year=2024-25").match(new RegExp(`<table[^>]*id="${id}"[\\s\\S]*?</table>`))![0];
+    const cols = (whole.match(/<thead>[\s\S]*?<\/tr>/)![0].match(/<th\b/g) ?? []).length;
+    expect(cols).toBeGreaterThan(0);
     const text = css();
     const width = new RegExp(`${sel} \\{[^}]*width: calc\\(100cqw \\+ (\\d+)px\\)`).exec(text);
     expect(width).not.toBeNull();

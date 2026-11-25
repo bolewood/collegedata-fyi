@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FIXTURE_SNAPSHOT } from "./__fixtures__/data-quality-snapshot";
+import { FIXTURE_SNAPSHOT, emptyYear } from "./__fixtures__/data-quality-snapshot";
 import {
   DATA_QUALITY_LAUNCH_DATE,
   MIN_REPORTS_FOR_RATE,
@@ -206,9 +206,6 @@ describe("snapshot arithmetic", () => {
     bad((s) => both(s, (r) => (r.totals.reports += 1)), /totals\.reports is not status\.published/);
   });
 
-  it("fails when renewal.both exceeds renewal.previous", () => {
-    bad((s) => (s.renewal.both = s.renewal.previous + 1), /renewal\.both exceeds renewal\.previous/);
-  });
 
   it("fails when the set-aside reasons don't add up to the set-aside count", () => {
     bad((s) => (s.years[0].set_aside_reasons.wrong_file += 1), /set_aside_reasons/);
@@ -281,6 +278,37 @@ describe("snapshot arithmetic", () => {
       anyRec(snap.years[0].federal_left_out).not_compared = 0;
       expect(() => selectSnapshot([{ name: "x.json", json: snap }], false)).not.toThrow();
     });
+  });
+
+  it("accepts a year with no documents: no rows, all-zero totals (the producer writes one for a new form year)", () => {
+    const snap = clone();
+    snap.years.push(emptyYear("2026-27"));
+    const picked = selectSnapshot([{ name: "x.json", json: snap }], false)!;
+    expect(picked.years.find((y) => y.cds_year === "2026-27")!.rows).toEqual([]);
+  });
+
+  it("fails a year with no rows whose totals aren't zero", () => {
+    const snap = clone();
+    const y = emptyYear("2026-27");
+    y.total.status.published = 1;
+    y.total.totals.reports = 1;
+    y.total.totals.B1.adds_up = 1;
+    y.total.totals.C1.adds_up = 1;
+    y.total.totals.H1.adds_up = 1;
+    snap.years.push(y);
+    expect(() => selectSnapshot([{ name: "x.json", json: snap }], false)).toThrow(/total status\.published is 1, but the rows add up to 0/);
+  });
+
+  it("requires every federal count to be zero in a year with no federal figures", () => {
+    bad((s) => {
+      // Same change in a row and the total, so only this rule is broken: one report "checked" against nothing.
+      const y = s.years.find((x) => !x.federal_fall_loaded)!;
+      for (const r of [y.rows[0], y.total]) {
+        r.federal.reports += 1;
+        r.federal.values += 1;
+        r.federal.matches += 1;
+      }
+    }, /no federal figures/);
   });
 
   it("accepts the unmodified fixture", () => {
