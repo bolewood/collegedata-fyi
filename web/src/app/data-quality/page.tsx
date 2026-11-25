@@ -87,7 +87,7 @@ export default function DataQualityPage() {
           </p>
         ))}
         <noscript>
-          <p style={{ margin: "24px 0 0", fontSize: 14, color: "var(--ink-3)" }}>Switching years needs JavaScript. Each year has its own link above.</p>
+          <p style={{ margin: "24px 0 0", fontSize: 14, color: "var(--ink-3)" }}>Showing {defaultYear}. Switching years needs JavaScript.</p>
         </noscript>
         <div id="dq-body" suppressHydrationWarning>
           {/* useSearchParams (the year picker) needs a Suspense boundary to keep the page static. */}
