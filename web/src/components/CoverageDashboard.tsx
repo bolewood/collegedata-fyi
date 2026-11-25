@@ -1,6 +1,6 @@
 "use client";
 
-// PRD 015 M6 — interactive accountability dashboard for the /coverage
+// PRD 015 M6: interactive accountability dashboard for the /coverage
 // page. Receives all in-scope coverage rows server-side, then handles
 // histogram + filters + virtualized table client-side so toggling
 // filters is instant. URL search params persist filter state so any
@@ -478,7 +478,7 @@ export function CoverageDashboard({
                       </ListLink>
                     </span>
                     <span role="cell" className="mono" style={{ fontSize: 12, color: "var(--ink-2)" }}>
-                      {r.state ?? "—"}
+                      {r.state ?? "\u2013"}
                     </span>
                     <span
                       role="cell"
@@ -487,7 +487,7 @@ export function CoverageDashboard({
                     >
                       {r.undergraduate_enrollment != null
                         ? r.undergraduate_enrollment.toLocaleString()
-                        : "—"}
+                        : "\u2013"}
                     </span>
                     <span role="cell" style={{ minWidth: 0 }}>
                       <CoverageBadge status={r.coverage_status} label={COVERAGE_STATUS_LABELS[r.coverage_status] ?? r.coverage_label} />

@@ -617,7 +617,7 @@ both states. M2's improvements to `/coverage` don't depend on the gate.
     `check_numbers`. No database reads are needed.
   - Sample 10 admissions "off by more" reports against their source files, to
     see how many are our reading errors.
-  - Sample 20 of the 215 2023-24 financial-aid "can't check" reports against
+  - Sample 20 of the 215 (217 in the 2026-11-25 runs) 2023-24 financial-aid "can't check" reports against
     their source files. Record each cause (blank in the school's file,
     unfilled automatic total, our miss, different year's numbering) in this
     PRD. If most are our misses, open a fix issue and decide whether it lands

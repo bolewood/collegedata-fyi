@@ -300,6 +300,31 @@ export function isProjectedYear(year: string): boolean {
   return start !== null && start >= PROJECTED_FROM_YEAR_START;
 }
 
+// ── Hand checks (PRD 040 "M0 samples", 2026-11-25) ────────────────
+// Each note is tied to the CDS years its sample covered and shows only there.
+
+export const HAND_CHECK_DATE = "November 25, 2026";
+
+/** 20 of the 2023-24 financial aid "can't check" reports, read against the schools' files: 19 were our misses. */
+export const AID_CANT_CHECK_SAMPLE = { years: ["2023-24"], checked: 20, ours: 19 } as const;
+
+/** 10 admissions "differs" reports from 2023-24 and 2024-25: 8 had our number in the school's file, 2 were ours. */
+export const FEDERAL_DIFFERS_SAMPLE = { years: ["2023-24", "2024-25"], checked: 10, sameInFile: 8, ours: 2 } as const;
+
+/** The 2023-24 financial aid sample. Null for a year it didn't cover, or when that year has no financial aid "can't check" reports left to describe. */
+export function aidCantCheckNote(year: QualityYear): string | null {
+  const s = AID_CANT_CHECK_SAMPLE;
+  if (!(s.years as readonly string[]).includes(year.cds_year) || year.total.totals.H1.cant_check === 0) return null;
+  return `For financial aid in ${year.cds_year}, most of the can’t-check reports are ours. In a hand check of ${s.checked} of them against the schools’ files, sampled on ${HAND_CHECK_DATE}, ${s.ours} had the financial aid table filled in and we hadn’t stored it in full. A fix is in progress.`;
+}
+
+/** The admissions "differs" sample. Null for a year it didn't cover, or with no differing values to describe. */
+export function federalDiffersNote(year: QualityYear): string | null {
+  const s = FEDERAL_DIFFERS_SAMPLE;
+  if (!(s.years as readonly string[]).includes(year.cds_year) || !year.federal_fall_loaded || year.total.federal.differs === 0) return null;
+  return `In a hand check of ${s.checked} differing reports (${s.years.join(" and ")}, sampled on ${HAND_CHECK_DATE}), ${s.sameInFile} had the same number in the school’s file that we compared, so for those the difference lies on the federal side or in how the two filings line up. The other ${s.ours} were ours.`;
+}
+
 const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
 
 /** The two-sentence lede: what the page measures, the snapshot date, the populations. */

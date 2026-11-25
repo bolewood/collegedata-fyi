@@ -45,6 +45,15 @@ describe("/data-quality launch gate", () => {
     expect(html).toContain("<h1");
   });
 
+  it("whole page: no operator words and at most one em dash, in the metadata too", () => {
+    mocks.loadLatestSnapshot.mockReturnValue(FIXTURE_SNAPSHOT);
+    const meta = generateMetadata();
+    const html = renderToStaticMarkup(<DataQualityPage />) + String(meta.title) + String(meta.description);
+    const text = html.replace(/<[^>]*>/g, " ");
+    expect(text).not.toMatch(/\b(extract(ed|or|ion|s)?|docling|tier ?\d?|drain(ed)?|manifest|projection|pipeline|overlay)\b/i);
+    expect((html.match(/\u2014|&mdash;|&#8212;/g) ?? []).length).toBeLessThanOrEqual(1);
+  });
+
   it("is a 404, not an empty page, when no snapshot exists", () => {
     mocks.loadLatestSnapshot.mockReturnValue(null);
     expect(() => renderToStaticMarkup(<DataQualityPage />)).toThrow("NEXT_NOT_FOUND");

@@ -56,7 +56,7 @@ export default function DataQualityPage() {
           {lede.populations} {lede.meaning}
         </p>
         <p className="meta" style={{ marginTop: 12 }}>
-          Scoreboard run {snapshot.scoreboard_run}
+          Source: {snapshot.scoreboard_run}
         </p>
       </header>
 
