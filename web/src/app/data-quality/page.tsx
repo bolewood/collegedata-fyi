@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import "./data-quality.css";
 import { ArchiveStatusHeader } from "@/components/ArchiveStatusHeader";
 import { DataQualityView } from "@/components/DataQualityView";
-import { yearsNewestFirst, formatSnapshotDate, formatSnapshotTime, isDataQualityLaunched, qualityLede, snapshotDay, type QualitySnapshot } from "@/lib/data-quality";
+import { resolveYear, yearsNewestFirst, formatSnapshotDate, formatSnapshotTime, isDataQualityLaunched, qualityLede, snapshotDay, type QualitySnapshot } from "@/lib/data-quality";
 import { pendingYearScript } from "@/lib/data-quality-pending";
 import { buildTrend } from "@/lib/data-quality-trend";
 import { loadAllSnapshots, loadReportsFor } from "@/lib/data-quality-snapshots";
@@ -32,6 +32,10 @@ export default function DataQualityPage() {
   // even before launch; the page only links to them once launched, and the client fetches the file on the first click.
   const reports = loadReportsFor(snapshot);
   const reportsUrl = reports && isDataQualityLaunched() ? `/data-quality/reports/${snapshotDay(snapshot)}` : null;
+
+  // The year the static HTML shows is the newest; the others are the ones a direct link can ask for.
+  const defaultYear = resolveYear(snapshot, null).cds_year;
+  const otherYears = yearsNewestFirst(snapshot).map((y) => y.cds_year).filter((y) => y !== defaultYear);
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
@@ -69,26 +73,30 @@ export default function DataQualityPage() {
       </header>
 
       {/* A direct ?year= link shows the default year until the browser hydrates (the HTML is static). Say so: an inline
-          script, which runs before hydration, sets an attribute; CSS then dims the body and shows the matching "Loading"
-          line below, and YearStatus clears the attribute once hydrated. */}
+          script, which runs before hydration, sets data-dq-pending on #dq-shell and aria-busy on #dq-body; CSS then dims
+          the body and shows the matching "Loading" line, and YearStatus clears both once hydrated. Those two attributes
+          are the only things the script touches, and they are not in the elements' props, so exactly these two elements
+          carry suppressHydrationWarning (React would otherwise report them as a mismatch in development). */}
       <style>
-        {yearsNewestFirst(snapshot)
-          .slice(1)
-          .map((y) => `html[data-dq-pending="${y.cds_year}"] .dq-pending[data-year="${y.cds_year}"]{display:block}`)
-          .join("")}
+        {otherYears.map((y) => `#dq-shell[data-dq-pending="${y}"] .dq-pending[data-year="${y}"]{display:block}`).join("")}
       </style>
-      {yearsNewestFirst(snapshot).slice(1).map((y) => (
-        <p key={y.cds_year} role="status" className="dq-pending" data-year={y.cds_year}>
-          Loading {y.cds_year}…
-        </p>
-      ))}
-      <div id="dq-body">
-        {/* useSearchParams (the year picker) needs a Suspense boundary to keep the page static. */}
-        <Suspense fallback={<div className="mono" style={{ padding: "32px 0", color: "var(--ink-3)" }}>LOADING…</div>}>
-          <DataQualityView snapshot={snapshot} reportsUrl={reportsUrl} trend={trend} />
-        </Suspense>
+      <div id="dq-shell" suppressHydrationWarning>
+        {otherYears.map((y) => (
+          <p key={y} role="status" className="dq-pending" data-year={y}>
+            Loading {y}…
+          </p>
+        ))}
+        <noscript>
+          <p style={{ margin: "24px 0 0", fontSize: 14, color: "var(--ink-3)" }}>Switching years needs JavaScript. Each year has its own link above.</p>
+        </noscript>
+        <div id="dq-body" suppressHydrationWarning>
+          {/* useSearchParams (the year picker) needs a Suspense boundary to keep the page static. */}
+          <Suspense fallback={<div className="mono" style={{ padding: "32px 0", color: "var(--ink-3)" }}>LOADING…</div>}>
+            <DataQualityView snapshot={snapshot} reportsUrl={reportsUrl} trend={trend} />
+          </Suspense>
+        </div>
       </div>
-      <script dangerouslySetInnerHTML={{ __html: pendingYearScript(yearsNewestFirst(snapshot).slice(1).map((y) => y.cds_year)) }} />
+      <script dangerouslySetInnerHTML={{ __html: pendingYearScript(otherYears) }} />
     </div>
   );
 }

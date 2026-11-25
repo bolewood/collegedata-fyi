@@ -186,10 +186,15 @@ describe("hydration safety (the server formats in UTC and en-US; a browser elsew
   // No bare toLocaleString() and no date formatting without a time zone in the launched pages' components: either differs
   // between the server and a browser in another locale or zone, which is a React hydration mismatch (error #418).
   it("formats numbers with an explicit locale and dates in UTC", () => {
-    for (const file of ["CoverageDashboard.tsx", "DataQualityView.tsx", "CoverageDownloads.tsx"]) {
+    for (const file of ["CoverageDashboard.tsx", "DataQualityView.tsx", "CoverageDownloads.tsx", "DataQualityDrill.tsx", "YearStatus.tsx"]) {
       const src = readFileSync(resolve(__dirname, file), "utf8");
-      expect(src, file).not.toMatch(/toLocaleString\(\)/);
+      expect(src, file).not.toMatch(/toLocaleString\(\s*\)/);
+      expect(src, file).not.toMatch(/toLocale\w*String\(\s*undefined/);
+      // Any locale-aware formatting names en-US, and a date or time names UTC.
+      for (const m of src.matchAll(/toLocale(?:Date|Time)?String\([^)]*\)/g)) expect(m[0], file).toContain("en-US");
       for (const m of src.matchAll(/toLocale(?:Date|Time)String\([^)]*\)/g)) expect(m[0], file).toContain("UTC");
+      for (const m of src.matchAll(/Intl\.(?:NumberFormat|DateTimeFormat)\([^)]*\)/g)) expect(m[0], file).toContain("en-US");
+      for (const m of src.matchAll(/Intl\.DateTimeFormat\([^)]*\)/g)) expect(m[0], file).toContain("UTC");
     }
   });
 });

@@ -6,7 +6,7 @@ import { pendingYearScript } from "./data-quality-pending";
 function run(search: string, others: string[]) {
   const html = { attrs: {} as Record<string, string>, setAttribute(k: string, v: string) { this.attrs[k] = v; } };
   const body = { attrs: {} as Record<string, string>, setAttribute(k: string, v: string) { this.attrs[k] = v; } };
-  const doc = { documentElement: html, getElementById: (id: string) => (id === "dq-body" ? body : null) };
+  const doc = { getElementById: (id: string) => (id === "dq-body" ? body : id === "dq-shell" ? html : null) };
   new Function("document", "location", "URLSearchParams", pendingYearScript(others))(doc, { search }, URLSearchParams);
   return { html: html.attrs, body: body.attrs };
 }

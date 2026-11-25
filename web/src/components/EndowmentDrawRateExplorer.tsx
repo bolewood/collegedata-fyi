@@ -249,7 +249,7 @@ function ThresholdTable() {
             {ENDOWMENT_DRAW_RATE_YEAR_SUMMARIES.map((summary) => (
               <tr key={summary.year}>
                 <th>FY{summary.year}</th>
-                <td>{summary.eligible.toLocaleString()} / {summary.reporters.toLocaleString()}</td>
+                <td>{summary.eligible.toLocaleString("en-US")} / {summary.reporters.toLocaleString("en-US")}</td>
                 <td>{formatPct(summary.median)}</td>
                 {THRESHOLD_BUCKETS.map((bucket) => {
                   const thresholdLabel = Math.round(bucket.threshold * 100);
@@ -267,7 +267,7 @@ function ThresholdTable() {
                         className="endowment-bucket-toggle"
                         aria-expanded={isOpen}
                         aria-controls={panelId}
-                        aria-label={`${formatPct(bucket.share(summary))} (${count.toLocaleString()}) of eligible schools above ${thresholdLabel}% in FY${summary.year}. ${isOpen ? "Hide" : "Show"} schools`}
+                        aria-label={`${formatPct(bucket.share(summary))} (${count.toLocaleString("en-US")}) of eligible schools above ${thresholdLabel}% in FY${summary.year}. ${isOpen ? "Hide" : "Show"} schools`}
                         onClick={() => setActiveBucket(
                           isOpen
                             ? null
@@ -275,7 +275,7 @@ function ThresholdTable() {
                         )}
                       >
                         {formatPct(bucket.share(summary))}{" "}
-                        <span>({count.toLocaleString()})</span>
+                        <span>({count.toLocaleString("en-US")})</span>
                         <span className="endowment-bucket-toggle__action" aria-hidden="true">
                           {isOpen ? "hide" : "view"}
                         </span>
@@ -303,7 +303,7 @@ function ThresholdTable() {
                 Schools above {activeThresholdLabel}% in FY{activeBucket.year}
               </h3>
             </div>
-            <span className="cd-chip">{activeMembers.length.toLocaleString()} schools</span>
+            <span className="cd-chip">{activeMembers.length.toLocaleString("en-US")} schools</span>
           </div>
           <p className="endowment-bucket-disclaimer">
             <span className="endowment-bucket-disclaimer__copy">{BUCKET_DISCLAIMER}</span>
@@ -650,7 +650,7 @@ export function EndowmentDrawRateExplorer() {
             <div className="meta">§ Pick a school</div>
             <h2>Compare a school to the sector</h2>
           </div>
-          <span className="cd-chip">{ENDOWMENT_DRAW_RATE_SCHOOLS.length.toLocaleString()} schools</span>
+          <span className="cd-chip">{ENDOWMENT_DRAW_RATE_SCHOOLS.length.toLocaleString("en-US")} schools</span>
         </div>
         <label className="endowment-school-picker">
           <span className="meta">School</span>
