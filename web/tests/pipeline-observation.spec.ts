@@ -6,7 +6,7 @@ test("dispatch tiles explain themselves on hover and focus", async ({
 }) => {
   await page.goto("/pipeline-observation");
   await expect(
-    page.getByRole("heading", { name: /The clocks/i }),
+    page.getByRole("heading", { name: "Pipeline status", level: 1 }),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Recent extraction activity" }),
@@ -33,7 +33,7 @@ test("dispatch tiles explain themselves on hover and focus", async ({
   await expect(finderTip).toContainText("Brave Search");
   await expect(finderTip).toContainText("What this does");
 
-  await page.getByRole("heading", { name: /The clocks/i }).hover();
+  await page.getByRole("heading", { name: "Pipeline status", level: 1 }).hover();
   await expect(finderTip).toBeHidden();
 
   await scorecard.focus();

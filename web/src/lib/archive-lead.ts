@@ -155,21 +155,43 @@ export function archiveLead(facts: ArchiveLeadFacts): ArchiveLead | null {
 
   const paragraphs: LeadPart[][] = [];
 
-  const first: LeadPart[] = [
-    {
-      type: "text",
-      text: `The ${facts.schoolName} Common Data Set is the yearly report the college publishes about itself.`,
-    },
-  ];
-  if (range && latest) {
-    first.push({
-      type: "text",
-      text: ` ${countLabel} on file, ${range}; the latest is ${latest}.`,
-    });
+  const first: LeadPart[] = [];
+  if (years.length >= 2 && range && latest) {
+    first.push(
+      {
+        type: "text",
+        text: `The ${facts.schoolName} Common Data Set archive collects ${countLabel} (${range}), through the `,
+      },
+      {
+        type: "link",
+        href: `/schools/${facts.schoolId}/${latest}`,
+        text: `${latest} report`,
+      },
+      {
+        type: "text",
+        text: ". Open any year below for full section tables and original files, or scroll for federal cost, debt, and earnings data.",
+      },
+    );
+  } else if (years.length === 1 && latest) {
+    first.push(
+      {
+        type: "text",
+        text: `The ${facts.schoolName} Common Data Set archive has the `,
+      },
+      {
+        type: "link",
+        href: `/schools/${facts.schoolId}/${latest}`,
+        text: `${latest} report`,
+      },
+      {
+        type: "text",
+        text: " on file alongside federal enrollment, cost, and post-college outcome records.",
+      },
+    );
   } else {
     first.push({
       type: "text",
-      text: ` ${countLabel} on file.`,
+      text: `The ${facts.schoolName} Common Data Set archive has ${countLabel} on file alongside federal enrollment, cost, and outcome records.`,
     });
   }
   const formats = formatLabels(facts.documents);
@@ -193,6 +215,36 @@ export function archiveLead(facts: ArchiveLeadFacts): ArchiveLead | null {
         part.type === "text" ? linkFirstPhrase(part.text, "GPA", facts.gpaHref) : [part],
       ),
     );
+  } else {
+    const trendLinks: Array<{ href: string; text: string }> = [];
+    if (facts.acceptanceRateHref) {
+      trendLinks.push({ href: facts.acceptanceRateHref, text: "acceptance rate" });
+    }
+    if (facts.earlyDecisionHref) {
+      trendLinks.push({ href: facts.earlyDecisionHref, text: "early decision" });
+    }
+    if (facts.gpaHref) {
+      trendLinks.push({ href: facts.gpaHref, text: "entering GPA" });
+    }
+    if (trendLinks.length > 0) {
+      const parts: LeadPart[] = [{ type: "text", text: "Multi-year trends: " }];
+      trendLinks.forEach((item, index) => {
+        if (index > 0) {
+          parts.push({
+            type: "text",
+            text:
+              trendLinks.length === 2
+                ? " and "
+                : index === trendLinks.length - 1
+                  ? ", and "
+                  : ", ",
+          });
+        }
+        parts.push({ type: "link", href: item.href, text: item.text });
+      });
+      parts.push({ type: "text", text: "." });
+      paragraphs.push(parts);
+    }
   }
 
   const official = officialSource(facts.schoolId, facts.ipedsId);

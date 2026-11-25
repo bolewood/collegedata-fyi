@@ -19,14 +19,11 @@ import {
   fetchExtract,
 } from "@/lib/queries";
 import {
-  factsForYear,
-  metaFactFragment,
   servedFacts,
   usableFacts,
-  yearOverYearSentence,
-  yearSummarySentences,
   type SchoolYearFacts,
 } from "@/lib/school-summary";
+import { hubMetadataDescription, hubMetadataTitle } from "@/lib/school-seo";
 import { OutcomesSection } from "@/components/OutcomesSection";
 import { PositioningCard } from "@/components/PositioningCard";
 import { AdmissionStrategyCard } from "@/components/AdmissionStrategyCard";
@@ -100,31 +97,14 @@ export async function generateMetadata({
     return { title: "School Not Found" };
   }
 
-  const name = docs[0].school_name;
+  const name = docs[0].school_name ?? "Unknown school";
   const years = docs
     .map((d) => d.canonical_year)
     .filter(isCanonicalCdsYear)
     .sort();
   const path = `/schools/${resolvedSchoolId}`;
-  const yearsOnFile = years.length > 0 ? yearRange(years[0], years[years.length - 1]) : "none";
-  const [metaYearFacts, metaFederalFacts] = await Promise.all([
-    fetchSchoolYearFacts(resolvedSchoolId),
-    fetchSchoolFederalFacts(resolvedSchoolId),
-  ]);
-  const latestFacts = await gatedYearFacts(
-    latestUsableFacts(servedFacts(metaYearFacts, docs.map((doc) => doc.document_id))),
-    docs,
-    {
-      schoolId: resolvedSchoolId,
-      ipedsId: docs.find((d) => d.ipeds_id)?.ipeds_id ?? null,
-      federalFacts: metaFederalFacts,
-    },
-  );
-  const fragment = metaFactFragment(latestFacts);
-  const description = fragment && latestFacts
-    ? `${name} Common Data Set, ${yearsOnFile}. ${latestFacts.canonical_year} report: ${fragment}. Download the original file.`
-    : `${name} Common Data Set — the yearly report the college publishes on admissions, cost, and aid, plus federal numbers. Years on file: ${yearsOnFile}. Download the original file.`;
-  const title = `${name} Common Data Set`;
+  const title = hubMetadataTitle(name);
+  const description = hubMetadataDescription({ schoolName: name, years });
 
   return {
     title,
@@ -324,14 +304,6 @@ export default async function SchoolDetailPage({ params }: {
           latestFacts.applied && latestFacts.admitted != null ? latestFacts.admitted / latestFacts.applied : null,
       }
     : projectedPositioning;
-  const summary = [
-    ...yearSummarySentences(name, latestFacts),
-    yearOverYearSentence(
-      latestFacts,
-      latestFacts ? factsForYear(shownFacts, latestFacts.canonical_year).prior : null,
-    ),
-    gpaPageServed ? "GPA among enrolled first-years who reported one is published with the file." : null,
-  ].filter((sentence): sentence is string => Boolean(sentence));
 
   const jsonLd = [
     {
@@ -387,7 +359,6 @@ export default async function SchoolDetailPage({ params }: {
     schoolName: name,
     ipedsId,
     documents: docs,
-    summary,
     acceptanceRateHref: acceptancePageServed ? acceptanceRatePath(school_id) : null,
     earlyDecisionHref: earlyDecisionPageServed ? earlyDecisionPath(school_id) : null,
     gpaHref: gpaPageServed ? gpaPath(school_id) : null,
@@ -577,7 +548,7 @@ export default async function SchoolDetailPage({ params }: {
       })()}
 
       <SchoolDocumentsLedger groups={groups} />
-      {uniqueYears.length > 3 && (
+      {uniqueYears.length > 0 && (
         <nav
           aria-label={`All ${name} Common Data Set years`}
           className="meta"

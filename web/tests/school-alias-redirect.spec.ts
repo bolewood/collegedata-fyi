@@ -28,7 +28,7 @@ test.describe("retired school aliases", () => {
     expect(url.pathname).toBe("/schools/tufts/2024-25");
     expect(url.searchParams.get("download")).toBe("1");
     await expect(
-      page.getByRole("heading", { name: "Tufts University", exact: true, level: 1 }),
+      page.getByRole("heading", { name: "Tufts University 2024-25 Common Data Set", exact: true, level: 1 }),
     ).toBeVisible();
   });
 
