@@ -98,6 +98,10 @@ TWO_YEAR_MARGIN_PTS = 8.0
 # for the current or next year in the last 30 days and compare with what the
 # posting curve expects for a month.
 ARRIVALS_WINDOW_DAYS = 30
+# From about December to February the curve expects under 10 arrivals a month,
+# so a 30-day window cannot judge. It then looks over 60 days (still needing
+# 10 expected; otherwise the check says it was not made, and why).
+ARRIVALS_LONG_WINDOW_DAYS = 60
 ARRIVALS_MIN_EXPECTED = 10.0  # below this the curve says too little arrives to judge
 ARRIVALS_FLOOR_SHARE = 0.25  # alarm when arrivals fall under this share of expected
 
@@ -311,16 +315,23 @@ class Result:
 class Arrivals:
     """Schools that gained a usable current- or next-year document recently."""
 
-    count: int
+    count: int  # in the window that was judged
     expected: float
     schools: set[str]
+    window_days: int = ARRIVALS_WINDOW_DAYS
+    count_30: int | None = None
+    expected_30: float | None = None
+    count_60: int | None = None
+    expected_60: float | None = None
+
+    @property
+    def checked(self) -> bool:
+        """False when even the longest window expects too few to judge."""
+        return self.expected >= ARRIVALS_MIN_EXPECTED
 
     @property
     def below_floor(self) -> bool:
-        return (
-            self.expected >= ARRIVALS_MIN_EXPECTED
-            and self.count < ARRIVALS_FLOOR_SHARE * self.expected
-        )
+        return self.checked and self.count < ARRIVALS_FLOOR_SHARE * self.expected
 
 
 @dataclass
@@ -404,9 +415,16 @@ def year_summary(check: YearCheck, arrivals: "Arrivals | None" = None) -> dict[s
 
 
 def arrivals_keys(arrivals: Arrivals) -> dict[str, Any]:
+    def pick(value: Any, fallback: Any) -> Any:
+        return fallback if value is None else value
+
     return {
-        "arrivals_30d": arrivals.count,
-        "arrivals_expected_30d": round(arrivals.expected, 1),
+        "arrivals_30d": pick(arrivals.count_30, arrivals.count),
+        "arrivals_expected_30d": round(pick(arrivals.expected_30, arrivals.expected), 1),
+        "arrivals_60d": pick(arrivals.count_60, arrivals.count),
+        "arrivals_expected_60d": round(pick(arrivals.expected_60, arrivals.expected), 1),
+        "arrivals_window_days": arrivals.window_days,
+        "arrivals_checked": arrivals.checked,
         "arrivals_below_floor": arrivals.below_floor,
     }
 
@@ -450,14 +468,12 @@ def compute_arrivals(
     filed under the current or next year with `discovered_at` in the last
     ARRIVALS_WINDOW_DAYS days, against what the posting curve expects in a
     month: for each of the two years, its previous-year cohort times the curve's
-    gain over the last month.
+    gain over the last month. When that expects under ARRIVALS_MIN_EXPECTED
+    (December to February), the same is judged over 60 days and two months.
 
     A school gained a year when the earliest such document it has for that
     year is inside the window; a school that already had the year (an undated
     document counts as old) does not count again for a second file."""
-    start = datetime.combine(
-        as_of - timedelta(days=ARRIVALS_WINDOW_DAYS), datetime.min.time(), tzinfo=timezone.utc
-    )
     wanted = {current, current + 1}
     earliest: dict[tuple[str, int], datetime | None] = {}
     for row in rows:
@@ -475,13 +491,34 @@ def compute_arrivals(
             earliest[key] = datetime.min.replace(tzinfo=timezone.utc)  # old, undated
         elif key not in earliest or ts < earliest[key]:  # type: ignore[operator]
             earliest[key] = ts
-    gained = {school for (school, _year), ts in earliest.items() if ts is not None and ts >= start}
-    expected = 0.0
-    for year in wanted:
-        months = months_since_fall(year, as_of)
-        gain = expected_pct(months) - expected_pct(months - 1.0)
-        expected += len(checks[year].one.prev_schools) * gain / 100.0
-    return Arrivals(count=len(gained), expected=expected, schools=gained)
+
+    def window(days: int) -> tuple[set[str], float]:
+        start = datetime.combine(
+            as_of - timedelta(days=days), datetime.min.time(), tzinfo=timezone.utc
+        )
+        gained = {school for (school, _y), ts in earliest.items() if ts is not None and ts >= start}
+        expected = 0.0
+        span = days / ARRIVALS_WINDOW_DAYS  # months of the curve the window covers
+        for year in wanted:
+            months = months_since_fall(year, as_of)
+            gain = expected_pct(months) - expected_pct(months - span)
+            expected += len(checks[year].one.prev_schools) * gain / 100.0
+        return gained, expected
+
+    gained_30, expected_30 = window(ARRIVALS_WINDOW_DAYS)
+    gained_60, expected_60 = window(ARRIVALS_LONG_WINDOW_DAYS)
+    use_long = expected_30 < ARRIVALS_MIN_EXPECTED
+    gained, expected = (gained_60, expected_60) if use_long else (gained_30, expected_30)
+    return Arrivals(
+        count=len(gained),
+        expected=expected,
+        schools=gained,
+        window_days=ARRIVALS_LONG_WINDOW_DAYS if use_long else ARRIVALS_WINDOW_DAYS,
+        count_30=len(gained_30),
+        expected_30=expected_30,
+        count_60=len(gained_60),
+        expected_60=expected_60,
+    )
 
 
 def unextracted_current_docs(rows: Iterable[dict[str, Any]], year: int) -> int:
@@ -691,10 +728,11 @@ def check_descriptor(summary: dict[str, Any], kind: str) -> dict[str, Any]:
     if kind == "arrivals":
         # No percentages: `renewed` is the schools that arrived, `total` what
         # the curve expected (rounded); the alarm words this check itself.
+        window = summary.get("arrivals_window_days", ARRIVALS_WINDOW_DAYS)
         return {"kind": kind, "name": "arrivals", "prev": prev, "year": summary["current_year"],
-                "renewed": summary["arrivals_30d"],
-                "total": round(summary["arrivals_expected_30d"]),
-                "pct": None, "floor": None}
+                "renewed": summary[f"arrivals_{window}d"],
+                "total": round(summary[f"arrivals_expected_{window}d"]),
+                "window": window, "pct": None, "floor": None}
     raise ValueError(kind)
 
 
@@ -773,6 +811,22 @@ def _check_line(d: dict[str, Any], below: bool | None) -> str:
         f"{d['renewed']} of {d['total']} schools ({_pct(d['pct'])}) with {d['prev']} "
         f"have {d['year']}; floor {_pct(d['floor'])}, {state}"
     )
+
+
+def _arrivals_line(s: dict[str, Any], cur: str, nxt: str) -> list[str]:
+    window = s["arrivals_window_days"]
+    got, expected = s[f"arrivals_{window}d"], s[f"arrivals_expected_{window}d"]
+    if not s["arrivals_checked"]:
+        return [
+            f"- Arrivals: not checked. The posting curve expects about {expected:.0f} new "
+            f"{cur} or {nxt} documents in {window} days, under the {ARRIVALS_MIN_EXPECTED:.0f} "
+            "needed to judge."
+        ]
+    verdict = "below its floor" if s["arrivals_below_floor"] else "above its floor"
+    return [
+        f"- Arrivals: {got} schools gained a {cur} or {nxt} document in the last {window} "
+        f"days; the curve expects about {expected:.0f}, {verdict}."
+    ]
 
 
 def _notes_lines(result: Result, schools: dict[str, dict[str, Any]] | None) -> list[str]:
@@ -901,8 +955,8 @@ def render_report(
     why = {
         "arrivals": (
             f"the schools that gained a usable {cur} or {format_year(result.current_year + 1)} "
-            f"document in the last {ARRIVALS_WINDOW_DAYS} days, against about what the posting "
-            f"curve expects in a month. Fewer than {ARRIVALS_FLOOR_SHARE:.0%} of that means new "
+            f"document in the last {s['arrivals_window_days']} days, against about what the "
+            f"posting curve expects in that time. Fewer than {ARRIVALS_FLOOR_SHARE:.0%} of that means new "
             "documents have nearly stopped arriving, even if the renewal percentages still look "
             "fine."
         ),
@@ -927,7 +981,7 @@ def render_report(
         headline = (
             f"**Only {d['renewed']} schools gained a {cur} or "
             f"{format_year(result.current_year + 1)} document in the last "
-            f"{ARRIVALS_WINDOW_DAYS} days; the posting curve expects about {d['total']}.** "
+            f"{d['window']} days; the posting curve expects about {d['total']}.** "
             f"The alarm fires under {ARRIVALS_FLOOR_SHARE:.0%} of that."
         )
     else:
@@ -958,12 +1012,7 @@ def render_report(
         + ("" if result.next_active else
            f" (the curve says under {NEXT_YEAR_ACTIVE_FROM_PCT:.0f}% of files exist this early)")
         + ".",
-        f"- Arrivals: {s['arrivals_30d']} schools gained a {cur} or "
-        f"{format_year(result.current_year + 1)} document in the last {ARRIVALS_WINDOW_DAYS} "
-        f"days; the curve expects about {s['arrivals_expected_30d']:.0f}"
-        + (" (too few to judge)" if s["arrivals_expected_30d"] < ARRIVALS_MIN_EXPECTED
-           else (", below its floor" if s["arrivals_below_floor"] else ", above its floor"))
-        + ".",
+        *_arrivals_line(s, cur, format_year(result.current_year + 1)),
         "",
         *(
             [f"{s['unextracted_current_docs']} current-year documents are filed but not extracted "

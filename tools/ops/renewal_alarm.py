@@ -204,7 +204,7 @@ def issue_title(ysum: dict[str, Any], *, test_mode: bool) -> str:
     if d["kind"] == "arrivals":
         title = (
             f"Discovery is behind: only {d['renewed']} schools gained a {d['year']} or later "
-            f"document in 30 days (expected about {d['total']})"
+            f"document in {d['window']} days (expected about {d['total']})"
         )
     else:
         title = (

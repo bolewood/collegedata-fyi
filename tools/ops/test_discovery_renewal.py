@@ -166,6 +166,8 @@ class ComputeTests(unittest.TestCase):
                 "lapsed_schools", "same_year_duplicates", "flagged_current_docs",
                 "sub_institutional_excluded", "outstanding_below_floor", "outstanding_years",
                 "arrivals_30d", "arrivals_expected_30d", "arrivals_below_floor",
+                "arrivals_60d", "arrivals_expected_60d", "arrivals_window_days",
+                "arrivals_checked",
                 "unextracted_current_docs",
                 "floor_overridden", "alarm_issue", "run_url",
                 "seeds_with_seed", "seeds_without_new_year",
@@ -646,11 +648,64 @@ class ArrivalsTests(unittest.TestCase):
         self.assertGreaterEqual(res.arrivals.expected, 10)
         self.assertFalse(res.arrivals.below_floor)
 
-    def test_it_is_inactive_when_the_curve_expects_almost_nothing(self) -> None:
-        # Mature curve, no next year yet: expected is ~0, so no verdict.
-        res = dr.compute(self.archive("2026-05-01T12:00:00+00:00"), date(2026, 12, 20))
+    def test_it_says_not_checked_when_even_sixty_days_expect_almost_nothing(self) -> None:
+        # A small archive in early January: the mature year expects nothing and
+        # the next year has barely started, so there is no verdict, and the
+        # report says why.
+        res = dr.compute(self.archive("2026-05-01T12:00:00+00:00", schools=100, renewed=50),
+                         date(2027, 1, 5), enforce_min_prev=False)
+        self.assertEqual(res.arrivals.window_days, 60)
         self.assertLess(res.arrivals.expected, dr.ARRIVALS_MIN_EXPECTED)
+        self.assertFalse(res.arrivals.checked)
         self.assertFalse(res.arrivals.below_floor)
+        summary = dr.summary_dict(res)
+        self.assertIs(summary["arrivals_checked"], False)
+        self.assertIs(summary["arrivals_below_floor"], False)
+        text = dr.render_report(res, [])
+        self.assertIn("Arrivals: not checked", text)
+        self.assertIn("in 60 days", text)
+
+    def test_winter_uses_a_sixty_day_window_and_thirty_otherwise(self) -> None:
+        archive = self.archive("2026-12-01T12:00:00+00:00", schools=400, renewed=300)
+        winter = dr.compute(archive, date(2027, 1, 10))
+        self.assertEqual(winter.arrivals.window_days, 60)
+        self.assertGreaterEqual(winter.arrivals.expected, dr.ARRIVALS_MIN_EXPECTED)
+        self.assertEqual(dr.summary_dict(winter)["arrivals_window_days"], 60)
+        # The 30-day figures stay in the summary beside the 60-day ones.
+        summary = dr.summary_dict(winter)
+        self.assertLess(summary["arrivals_expected_30d"], dr.ARRIVALS_MIN_EXPECTED)
+        self.assertGreaterEqual(summary["arrivals_expected_60d"], dr.ARRIVALS_MIN_EXPECTED)
+        spring = dr.compute(self.archive("2026-05-01T12:00:00+00:00"), date(2026, 6, 2))
+        self.assertEqual(spring.arrivals.window_days, 30)
+
+    def test_a_frozen_archive_from_december_first_fires_by_early_february(self) -> None:
+        # 300 schools arrive on 2026-12-01 and then nothing does.
+        archive = self.archive("2026-12-01T12:00:00+00:00", schools=400, renewed=300)
+        fired = None
+        for offset in range(0, 90):
+            day = date(2026, 12, 1) + timedelta(days=offset)
+            res = dr.compute(archive, day)
+            if res.arrivals.below_floor:
+                fired = day
+                break
+        self.assertIsNotNone(fired)
+        self.assertLessEqual(fired, date(2027, 2, 5))
+        self.assertGreater(fired, date(2027, 1, 5))
+        # Before that the 60-day window still holds December's arrivals.
+        quiet = dr.compute(archive, date(2027, 1, 10))
+        self.assertEqual(quiet.arrivals.window_days, 60)
+        self.assertFalse(quiet.arrivals.below_floor)
+        self.assertEqual(quiet.arrivals.count, 300)
+
+    def test_the_sixty_day_alarm_words_its_own_window(self) -> None:
+        archive = self.archive("2026-10-01T12:00:00+00:00", schools=400, renewed=300)
+        res = dr.compute(archive, date(2026, 12, 20))
+        self.assertEqual(res.arrivals.window_days, 60)
+        self.assertTrue(res.arrivals.below_floor)
+        text = dr.render_report(res, [], lead="arrivals")
+        self.assertIn("in the last 60 days", text)
+        ys = dr.year_summary(res.year_checks[res.current_year], res.arrivals)
+        self.assertEqual(dr.check_descriptor(ys, "arrivals")["window"], 60)
 
     def test_the_threshold_is_a_quarter_of_expected(self) -> None:
         for count, below in ((7, True), (8, False)):

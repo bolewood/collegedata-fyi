@@ -600,6 +600,15 @@ class RenotifyTests(unittest.TestCase):
         self.assertEqual(gh.verbs(), ["issue list"])
         self.assertIn("renotify", buf.getvalue())
 
+    def test_the_arrivals_title_names_the_window(self) -> None:
+        ys = {**ysum("2025-26", one=90.0, one_floor=80.0, two=90.0, two_floor=70.0),
+              "arrivals_30d": 5, "arrivals_expected_30d": 3.0, "arrivals_60d": 4,
+              "arrivals_expected_60d": 24.0, "arrivals_window_days": 60,
+              "arrivals_checked": True, "arrivals_below_floor": True}
+        self.assertEqual(ra.issue_title(ys, test_mode=False),
+                         "Discovery is behind: only 4 schools gained a 2025-26 or later "
+                         "document in 60 days (expected about 24)")
+
     def test_the_arrivals_check_alone_renotifies_by_age(self) -> None:
         ys = {**ysum("2025-26", one=90.0, one_floor=80.0, two=90.0, two_floor=70.0),
               "arrivals_30d": 2, "arrivals_expected_30d": 30.0, "arrivals_below_floor": True}
