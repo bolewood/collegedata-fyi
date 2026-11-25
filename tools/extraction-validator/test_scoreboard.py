@@ -1039,6 +1039,51 @@ class FederalExtraChecks(unittest.TestCase):
         self.assertFalse(scoreboard.federal_check_year("2023-24", [self.d(3)], "enrollment", False)["loaded"])
         self.assertEqual(self.counts(docs, "tuition", loaded=False)["reports"], 0)
 
+    def real_record(self, g102, g108, g109, federal: str, year: str = "2023-24") -> dict:
+        """The tuition fields of a real 2023-24 report as the run records them."""
+        extra = extra_for(year, tuition=(None, federal))
+        for name, ours in (("g1_private_undergraduates", g102), ("g1_in_state_undergraduates", g108), ("g1_out_of_state_undergraduates", g109)):
+            extra[name]["ours"] = ours
+        return self.d(9, federal_extra=extra)
+
+    def test_real_2023_24_records_where_the_private_row_is_not_the_in_state_price(self) -> None:
+        pair = scoreboard.federal_check_pair
+        cases = [
+            # Oregon Tech: G.102 34,899 is the out-of-state rate (= G.109); G.108 10,964 is IPEDS' in-state tuition.
+            ("oregon-institute-of-technology", ("34899", "10964", "34899", "10964"), (Decimal("10964"), Decimal("10964")), "m"),
+            # West Chester: G.102 19,290 = G.109; G.108 7,716 = IPEDS in-state.
+            ("west-chester-university-of-pennsylvania", ("19290", "7716", "19290", "7716"), (Decimal("7716"), Decimal("7716")), "m"),
+            # Mississippi and Chico leave G.102 at 0 beside the real in-state figure.
+            ("university-of-mississippi", ("0.00", "9612.00", "28440.00", "9612"), (Decimal("9612.00"), Decimal("9612")), "m"),
+            ("california-state-university-chico", ("0", "6084", "18552", "6084"), (Decimal("6084"), Decimal("6084")), "m"),
+            # Southern Mississippi has no G.102 and a G.108 3.9% under IPEDS: a real difference, by the in-state row.
+            ("university-of-southern-mississippi", (None, "9508", "11904", "9888"), (Decimal("9508"), Decimal("9888")), "s"),
+        ]
+        for school, (g102, g108, g109, fed), expected, code in cases:
+            with self.subTest(school):
+                record = self.real_record(g102, g108, g109, fed)
+                self.assertEqual(pair(record, "tuition"), expected)
+                ours, fed = pair(record, "tuition")
+                got = {"match": "m", "different": scoreboard.federal_difference_band(ours, fed)}[scoreboard.classify_federal(ours, fed)]
+                self.assertEqual(got, {"m": "m", "s": "2_to_10"}[code])
+
+    def test_the_selected_candidate_must_be_the_field_and_key_the_check_is_defined_on(self) -> None:
+        wrong_key = extra_for("2023-24")
+        wrong_key["g1_in_state_undergraduates"]["federal_key"] = "tuition_out_of_state"
+        with self.assertRaisesRegex(SystemExit, "g1_in_state_undergraduates is field 'G.108' against 'tuition_out_of_state'"):
+            scoreboard.federal_check_pair(self.d(1, federal_extra=wrong_key), "tuition")
+        wrong_field = extra_for("2023-24")
+        wrong_field["g1_private_undergraduates"]["cds_field"] = "G.109"
+        with self.assertRaisesRegex(SystemExit, "g1_private_undergraduates is field 'G.109'"):
+            scoreboard.federal_check_pair(self.d(2, federal_extra=wrong_field), "tuition")
+        # The year guard follows the candidate in use: G.102 empty, G.108 looked up in the wrong IPEDS year.
+        wrong_year = extra_for("2023-24")
+        wrong_year["g1_private_undergraduates"]["ours"] = None
+        wrong_year["g1_in_state_undergraduates"]["ours"] = "9500"
+        wrong_year["g1_in_state_undergraduates"]["federal_data_year"] = 2023
+        with self.assertRaisesRegex(SystemExit, "tuition for IPEDS year"):
+            scoreboard.federal_check_year("2023-24", [self.d(3, federal_extra=wrong_year)], "tuition", True)
+
     def test_a_tuition_of_zero_is_no_value_and_the_next_candidate_is_used(self) -> None:
         # A school's in-state row left at 0 beside its real private figure (and the other way round): never compare $0
         # with the federal tuition.

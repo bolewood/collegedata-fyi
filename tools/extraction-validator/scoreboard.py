@@ -1577,6 +1577,14 @@ def federal_check_pair(d: dict[str, Any], check: str) -> tuple[Optional[Decimal]
     chosen = next((extra[n] for n in names if extra[n]["ours"] is not None and Decimal(extra[n]["ours"]) > 0), extra[names[0]])
     if chosen["ours"] is not None and Decimal(chosen["ours"]) <= 0:
         chosen = {**chosen, "ours": None}
+    # The selected candidate must be the field and IPEDS key this check is defined on (a renamed or swapped field is a bug here).
+    fields = {"b1_undergraduates": ("B.193", "B.176", "undergraduate_enrollment"), "g1_in_state_undergraduates": ("G.108", None, "tuition_in_state"),
+              "g1_private_undergraduates": ("G.102", None, "tuition_in_state")}
+    for n in names:
+        want = fields[n]
+        if extra[n]["federal_key"] != want[2] or (extra[n]["cds_field"] is not None and extra[n]["cds_field"] not in want[:2]):
+            raise SystemExit(f"--public: {d['document_id']}: {n} is field {extra[n]['cds_field']!r} against {extra[n]['federal_key']!r}, "
+                             f"not {want[0]!r} against {want[2]!r}")
     federal = {extra[n]["federal"] for n in names}
     if len(federal) != 1:
         raise SystemExit(f"--public: {d['document_id']}: the {check} candidates carry different IPEDS figures")

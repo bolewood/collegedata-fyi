@@ -312,8 +312,16 @@ describe("enrollment and tuition against federal figures (public_format 4)", () 
     expect(buildQualityCsv("enrollment", y2425).split("\r\n").filter(Boolean)).toEqual([
       head, "standard PDF,49,36,9,4,2,2", "fillable PDF,25,18,5,2,1,1", "spreadsheet,3,3,0,0,0,0", "All formats,77,57,14,6,3,3",
     ]);
-    expect(buildQualityCsv("tuition", y2425).split("\r\n")[1]).toBe("standard PDF,,,,,,");
-    expect(buildQualityCsv("tuition", y(FIXTURE_SNAPSHOT)).split("\r\n").slice(0, 2)).toEqual([head, "standard PDF,269,136,80,53,31,22"]);
+    expect(buildQualityCsv("tuition", y2425).split("\r\n").filter(Boolean)).toEqual([
+      head, "standard PDF,,,,,,", "fillable PDF,,,,,,", "spreadsheet,,,,,,", "All formats,,,,,,",
+    ]);
+    // 2023-24 (300 + 100 + 3 published; 299 + 100 + 3 checked by Table B; tuition on 90% of them, 30% no value, 20% differing).
+    expect(buildQualityCsv("tuition", y(FIXTURE_SNAPSHOT)).split("\r\n").filter(Boolean)).toEqual([
+      head, "standard PDF,269,136,80,53,31,22", "fillable PDF,90,45,27,18,10,8", "spreadsheet,2,2,0,0,0,0", "All formats,361,183,107,71,41,30",
+    ]);
+    expect(buildQualityCsv("enrollment", y(FIXTURE_SNAPSHOT)).split("\r\n").filter(Boolean)).toEqual([
+      head, "standard PDF,299,211,59,29,17,12", "fillable PDF,100,70,20,10,6,4", "spreadsheet,3,3,0,0,0,0", "All formats,402,284,79,39,23,16",
+    ]);
   });
 });
 
