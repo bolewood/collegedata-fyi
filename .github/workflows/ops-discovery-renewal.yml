@@ -103,6 +103,29 @@ jobs:
             "${args[@]}"
           cat renewal/report.md >> "$GITHUB_STEP_SUMMARY"
 
+      # Schools whose listing is known but whose current-year file could not be
+      # fetched, by cause (#468). Reads archive_queue with the service role key,
+      # read only, so the key is in this step's env and nowhere else but the
+      # heartbeat. The step may fail without hiding the renewal alarm: the
+      # heartbeat reports error when it does. Without the key it says SKIPPED
+      # and the summary gets no fetch_failures keys (never 0).
+      - id: fetch_failures
+        name: Fetch failures by cause
+        if: steps.compute.outcome == 'success'
+        continue-on-error: true
+        env:
+          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzZHV3bXlndm1kb3pocHZ6YWl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDk3NTksImV4cCI6MjA5MTY4NTc1OX0.fYZOIHyrOWzidgc-CVxWCY5Fe9pQk12-6YjDIS6y9qs
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          python tools/ops/fetch_failures.py \
+            --heading-level 2 \
+            --merge-summary renewal/summary.json \
+            --out-report renewal/fetch_failures.md \
+            --out-worklist renewal/fetch_failures.json
+          cat renewal/fetch_failures.md >> "$GITHUB_STEP_SUMMARY"
+
       - id: alarm
         name: Open, update or close the alarm issue
         if: steps.compute.outcome == 'success'
@@ -135,6 +158,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           COMPUTE_OUTCOME: ${{ steps.compute.outcome }}
           ALARM_OUTCOME: ${{ steps.alarm.outcome }}
+          FETCH_OUTCOME: ${{ steps.fetch_failures.outcome }}
           DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || inputs.dry_run }}
         run: |
           # A dry run changes nothing, including the board.
@@ -144,7 +168,8 @@ jobs:
           fi
           status=ok
           error=none
-          if [[ "${COMPUTE_OUTCOME}" != "success" || "${ALARM_OUTCOME}" != "success" ]]; then
+          # A skipped fetch-failures step (compute failed) is already an error above.
+          if [[ "${COMPUTE_OUTCOME}" != "success" || "${ALARM_OUTCOME}" != "success" || "${FETCH_OUTCOME}" == "failure" ]]; then
             status=error
             error=job_failed
           fi

@@ -545,9 +545,35 @@ function renewalDetailLine(summary: Record<string, unknown>): string {
     ["fetch_failures", "fetch failures"],
   ];
   for (const [key, label] of counts) {
-    if (summary[key] != null) parts.push(`${num(summary[key])} ${label}`);
+    if (key === "fetch_failures") {
+      const part = fetchFailuresPart(summary);
+      if (part) parts.push(part);
+    } else if (summary[key] != null) {
+      parts.push(`${num(summary[key])} ${label}`);
+    }
   }
   return parts.join(" · ");
+}
+
+const FETCH_FAILURE_CAUSES: Array<[string, string]> = [
+  ["fetch_failures_blocked", "blocked"],
+  ["fetch_failures_viewer", "viewer"],
+  ["fetch_failures_section_files", "section files"],
+  ["fetch_failures_dead_link", "dead link"],
+  ["fetch_failures_other", "other"],
+];
+
+/** "158 fetch failures (blocked 28 · viewer 7 · dead link 17 · other 106)". A cause that is
+ *  absent is left out, never shown as 0; a present 0 is dropped to keep the line short. */
+function fetchFailuresPart(summary: Record<string, unknown>): string {
+  if (summary.fetch_failures == null) return "";
+  const causes: string[] = [];
+  for (const [key, label] of FETCH_FAILURE_CAUSES) {
+    const value = finiteOrNull(summary[key]);
+    if (value != null && value > 0) causes.push(`${label} ${num(value)}`);
+  }
+  const head = `${num(summary.fetch_failures)} fetch failures`;
+  return causes.length ? `${head} (${causes.join(" · ")})` : head;
 }
 
 /** Strip wording for a down/late lamp whose clock is fine but whose result failed. */
