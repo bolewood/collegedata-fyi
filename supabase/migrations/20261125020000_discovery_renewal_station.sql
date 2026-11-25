@@ -36,6 +36,14 @@ insert into public.pipeline_stations (
     'arrivals_30d', 'arrivals_expected_30d', 'arrivals_below_floor',
     'arrivals_window_days', 'unextracted_current_docs',
     'arrivals_checked', 'arrivals_60d', 'arrivals_expected_60d',
+    'arrivals_current_30d', 'arrivals_current_60d',
+    'arrivals_expected_current_30d', 'arrivals_expected_current_60d',
+    'arrivals_current_window_days', 'arrivals_current_checked',
+    'arrivals_current_below_floor', 'arrivals_next_30d',
+    'arrivals_next_60d', 'arrivals_expected_next_30d',
+    'arrivals_expected_next_60d', 'arrivals_next_window_days',
+    'arrivals_next_checked', 'arrivals_next_below_floor',
+    'unextracted_next_docs',
     'fetch_failures', 'fetch_failures_blocked', 'fetch_failures_viewer',
     'fetch_failures_section_files', 'fetch_failures_dead_link', 'fetch_failures_other',
     'run_url'
@@ -245,7 +253,15 @@ begin
     'sub_institutional_excluded', 'outstanding_below_floor', 'outstanding_years',
     'arrivals_30d', 'arrivals_expected_30d', 'arrivals_below_floor',
     'arrivals_window_days', 'unextracted_current_docs',
-    'arrivals_checked', 'arrivals_60d', 'arrivals_expected_60d'
+    'arrivals_checked', 'arrivals_60d', 'arrivals_expected_60d',
+    'arrivals_current_30d', 'arrivals_current_60d',
+    'arrivals_expected_current_30d', 'arrivals_expected_current_60d',
+    'arrivals_current_window_days', 'arrivals_current_checked',
+    'arrivals_current_below_floor', 'arrivals_next_30d',
+    'arrivals_next_60d', 'arrivals_expected_next_30d',
+    'arrivals_expected_next_60d', 'arrivals_next_window_days',
+    'arrivals_next_checked', 'arrivals_next_below_floor',
+    'unextracted_next_docs'
   ]) then
     raise exception 'discovery_renewal allowed_keys missing seed keys: %', keys;
   end if;
