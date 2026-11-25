@@ -316,7 +316,7 @@ def extra_for(year: str, enrollment: tuple = ("1000", "1000"), tuition: tuple = 
     IPEDS figure loaded."""
     start = int(year[:4])
     loaded = start < 2025
-    extra = {"b1_undergraduates": {"cds_field": "B.193", "ours": enrollment[0], "federal_key": "undergraduate_enrollment",
+    extra = {"b1_undergraduates": {"cds_field": "B.176" if start >= 2025 else "B.193", "ours": enrollment[0], "federal_key": "undergraduate_enrollment",
                                    "federal": enrollment[1] if loaded else None, "federal_data_year": start}}
     for name, (field, key) in TUITION_NAMES.items():
         mine = name == "g1_private_undergraduates"
@@ -515,6 +515,7 @@ def synthetic_run() -> dict:
     documents[0]["hold"] = "tier4_field_regression"
     other_year = "2023-24" if documents[1]["year"] != "2023-24" else "2025-26"
     documents[1]["schema_version"] = other_year     # numbered by another year's form
+    documents[1]["federal_extra"]["b1_undergraduates"]["cds_field"] = "B.176" if other_year == "2025-26" else "B.193"
     return {
         "run_format": 3, "sum_check_version": 2, "limit": None, "generated_at": "2026-11-25T01:15:08Z",
         "years": YEARS, "current_tier4_version": "0.3.43", "projected_years": ["2024-25", "2025-26"],
@@ -1056,6 +1057,8 @@ class FederalExtraChecks(unittest.TestCase):
             # Mississippi and Chico leave G.102 at 0 beside the real in-state figure.
             ("university-of-mississippi", ("0.00", "9612.00", "28440.00", "9612"), (Decimal("9612.00"), Decimal("9612")), "m"),
             ("california-state-university-chico", ("0", "6084", "18552", "6084"), (Decimal("6084"), Decimal("6084")), "m"),
+            # Rollins: the reverse, G.108 at 0.00 beside the real private figure G.102 60,580 (= IPEDS): the private row is used.
+            ("rollins-college", ("60580.00", "0.00", None, "60580"), (Decimal("60580.00"), Decimal("60580")), "m"),
             # Southern Mississippi has no G.102 and a G.108 3.9% under IPEDS: a real difference, by the in-state row.
             ("university-of-southern-mississippi", (None, "9508", "11904", "9888"), (Decimal("9508"), Decimal("9888")), "s"),
         ]
@@ -1083,6 +1086,43 @@ class FederalExtraChecks(unittest.TestCase):
         wrong_year["g1_in_state_undergraduates"]["federal_data_year"] = 2023
         with self.assertRaisesRegex(SystemExit, "tuition for IPEDS year"):
             scoreboard.federal_check_year("2023-24", [self.d(3, federal_extra=wrong_year)], "tuition", True)
+
+    def test_a_b1_total_of_zero_is_no_value(self) -> None:
+        # 2024-25 had one in practice: a school with a 0 in B1 has no undergraduate total, not a total of nobody.
+        zero = self.d(1, federal_extra=extra_for("2023-24", enrollment=("0", "1000")))
+        self.assertEqual(scoreboard.federal_check_pair(zero, "enrollment"), (None, Decimal("1000")))
+        self.assertEqual(self.counts([zero], "enrollment"), {
+            "reports": 1, "matches": 0, "no_value": 1, "differs": 0, "differs_2_to_10pct": 0, "differs_over_10pct": 0})
+        self.assertEqual(scoreboard.federal_check_pair(self.d(2, federal_extra=extra_for("2023-24", enrollment=("0.00", "1000"))), "enrollment")[0], None)
+
+    def test_b1_must_be_the_field_of_the_documents_own_numbering_and_a_compared_year_must_have_its_fields(self) -> None:
+        pair = scoreboard.federal_check_pair
+        # B.193 on the 2023-24 and 2024-25 forms, B.176 on 2025-26: never either one.
+        wrong = extra_for("2023-24")
+        wrong["b1_undergraduates"]["cds_field"] = "B.176"
+        with self.assertRaisesRegex(SystemExit, "b1_undergraduates is field 'B.176' against 'undergraduate_enrollment', not 'B.193'"):
+            pair(self.d(1, schema_version="2023-24", federal_extra=wrong), "enrollment")
+        other_numbered = extra_for("2023-24")
+        other_numbered["b1_undergraduates"]["cds_field"] = "B.176"   # a 2023-24 report numbered by the 2025-26 form
+        self.assertEqual(pair(self.d(2, schema_version="2025-26", federal_extra=other_numbered), "enrollment")[1], Decimal("1000"))
+        with self.assertRaisesRegex(SystemExit, "not 'B.176'"):
+            pair(self.d(3, schema_version="2025-26", federal_extra=extra_for("2023-24")), "enrollment")
+        # A missing field in a compared year fails loudly; in a year with no comparison it is expected.
+        missing = extra_for("2023-24")
+        missing["g1_in_state_undergraduates"]["cds_field"] = None
+        with self.assertRaisesRegex(SystemExit, "g1_in_state_undergraduates is field None"):
+            pair(self.d(4, federal_extra=missing), "tuition")
+        for name in ("b1_undergraduates", "g1_in_state_undergraduates", "g1_private_undergraduates"):
+            missing[name]["cds_field"] = None
+        self.assertEqual(pair(self.d(5, federal_extra=missing, federal_compared=False), "tuition")[0], Decimal("30000"))
+        # ...and a field present where nothing was compared is as wrong.
+        with self.assertRaisesRegex(SystemExit, "is field 'G.108'"):
+            pair(self.d(6, federal_extra=extra_for("2023-24"), federal_compared=False), "tuition")
+
+    def test_federal_check_year_refuses_a_null_federal_extra(self) -> None:
+        broken = self.d(1, federal_extra=None)
+        with self.assertRaisesRegex(SystemExit, "x1 has no federal_extra"):
+            scoreboard.federal_check_year("2023-24", [broken], "enrollment", True)
 
     def test_a_tuition_of_zero_is_no_value_and_the_next_candidate_is_used(self) -> None:
         # A school's in-state row left at 0 beside its real private figure (and the other way round): never compare $0

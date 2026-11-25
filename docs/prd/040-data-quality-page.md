@@ -391,8 +391,8 @@ path").
   - **Tuition:** one figure per report, the all-undergraduates in-state figure
     (G.108) when filled, else the private single figure (G.102), a 0 counting
     as no value, against IPEDS `TUITION2` (in-state average tuition for
-    full-time undergraduates, table IC<year>_AY, labelled COST1_<year> in our
-    facts, academic year starting the fall after the CDS year,
+    full-time undergraduates, table COST1_<year> from IPEDS data year 2024 on
+    and IC<year>_AY before, academic year starting the fall after the CDS year,
     because the form asks for the following year's price). Neither includes
     required fees (IPEDS FEE2, CDS G.111). Out-of-state (G.109/TUITION3) and
     first-year rows are not compared: one figure per report keeps a school that

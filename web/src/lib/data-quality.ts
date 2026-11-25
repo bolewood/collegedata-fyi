@@ -765,6 +765,14 @@ const TABLE_SLUG: Record<QualityTableId, string> = {
   totals: "totals-add-up",
 };
 
+/**
+ * The IPEDS table the federal tuition comes from, by data year, as tools/ipeds/mappings.py names it: the COST1 table
+ * from data year 2024 on and the institutional characteristics academic-year table (IC<year>_AY) before.
+ */
+export function ipedsTuitionTable(dataYear: number): string {
+  return dataYear >= 2024 ? `COST1_${dataYear}` : `IC${dataYear}_AY`;
+}
+
 /** True when the year has the enrollment and tuition checks (public_format 4). */
 export function hasFederalChecks(year: QualityYear): boolean {
   return year.federal_checks !== undefined;

@@ -204,9 +204,9 @@ the All formats row too.
   > federal fall undergraduate enrollment (IPEDS table DRVEF{year}, variable
   > EFUG, fall {year}). Both count undergraduates on a fall census date, and the
   > dates can differ. A school may also count a different group of students in
-  > each. {Only when some reports are numbered by another year's form:} Many of
-  > the reports with no value are among the {n} numbered by a different year's
-  > form, where the B1 total is harder for us to find.
+  > each. {Only when some reports are numbered by another year's form and some
+  > have no value:} {n} published {report is or reports are} numbered by a
+  > different year's form, where the B1 total can be harder for us to find.
 - > Left out: {n} {report or reports} we've marked as filed for one campus or
   > unit and {n} whose school has no federal undergraduate enrollment figure.
   > **No value** means no usable CDS number was available to compare: the
@@ -221,8 +221,7 @@ the All formats row too.
 - > **Tuition** compares the report's tuition for all undergraduates (CDS G1:
   > the in-state figure when the school gives one, else the single private
   > figure) with the federal in-state average tuition for full-time
-  > undergraduates (IPEDS table IC{year}_AY, which our federal
-  > facts label COST1_{year}, variable TUITION2, academic year {academic
+  > undergraduates (IPEDS table {table}, variable TUITION2, academic year {academic
   > year}). The CDS form for {cds year} asks for that following year's tuition.
   > Neither includes required fees, which each lists separately. A report can
   > differ for reasons that aren't errors: per-credit or program-specific
@@ -250,7 +249,7 @@ in-state 7,716). Likewise a B1 total of 0 is no value.
 > one compared here.
 
 Why these two pairings: enrollment lines up well. Of the reports with both a B1
-total and a federal figure (so leaving out "no value"), 90% in 2023-24 and 2024-25 are
+total and a federal figure (so leaving out "no value"), 91% in 2023-24 (317 of 349) and 90% in 2024-25 (378 of 420) are
 within 2%, with a median ratio of 1.00; the table's own match rate is lower
 (74% in 2023-24, 77% in 2024-25) because it counts "no value" reports too.
 Tuition is noisier: 68% of the reports with both numbers match in 2023-24

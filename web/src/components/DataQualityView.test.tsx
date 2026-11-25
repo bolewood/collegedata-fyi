@@ -17,6 +17,7 @@ import {
   type QualityYear,
   FEDERAL_DIFFERS_SAMPLE,
   hasSections,
+  ipedsTuitionTable,
   aidPoolBounds,
   differsPoolBounds,
   pooledDiffers,
@@ -415,7 +416,7 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
       }
       expect(html.match(/final or provisional/g)).toHaveLength(1);
       const tui = text("dq-note-tuition");
-      expect(tui).toContain("IC2024_AY, which our federal facts label COST1_2024, variable TUITION2");
+      expect(tui).toContain("IPEDS table COST1_2024, variable TUITION2");
       expect(tui).toContain("academic year 2024-25");
       expect(tui).toContain("CDS form for 2023-24 asks for that following year’s tuition");
       expect(tui).toMatch(/Neither includes required fees/);
@@ -435,12 +436,30 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
       expect(cells(s, "dq-table-tuition", "spreadsheet")).toEqual(["2", "2", "0", "0", "0", "0", "–"]);   // 2 reports: no rate
     });
 
-    it("says where no-value reports come from only for a year with reports numbered by another year's form", () => {
+    it("states only what the snapshot knows about reports numbered by another year's form, with singular and plural", () => {
       const note = (html: string) => (html.match(/<p id="dq-note-enrollment"[^>]*>[\s\S]*?<\/p>/)![0]).replace(/<[^>]+>/g, "").replace(/\s+/g, " ");
-      expect(note(b2(render("year=2023-24"))!)).toContain("Many of the reports with no value are among the 12 numbered by a different year’s form, where the B1 total is harder for us to find.");
-      expect(note(b2(render("year=2024-25"))!)).not.toContain("Many of the reports with no value");
-      // Tuition's note makes no such claim: it was measured for enrollment only.
-      expect(b2(render("year=2023-24"))!.match(/<p id="dq-note-tuition"[^>]*>[\s\S]*?<\/p>/)![0]).not.toContain("Many of the reports");
+      expect(note(b2(render("year=2023-24"))!)).toContain("12 published reports are numbered by a different year’s form, where the B1 total can be harder for us to find.");
+      expect(note(b2(render("year=2024-25"))!)).not.toContain("numbered by a different year’s form");
+      const one = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT)) as QualitySnapshot;
+      one.years.find((x) => x.cds_year === "2023-24")!.other_form_numbering = 1;
+      expect(note(b2(render("year=2023-24", one))!)).toContain("1 published report is numbered by a different year’s form");
+      // No claim about causes or how many no-value reports they hold, and none when there are no no-value reports.
+      expect(note(b2(render("year=2023-24"))!)).not.toMatch(/\bMany\b|\bmost\b/i);
+      const none = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT)) as QualitySnapshot;
+      const y = none.years.find((x) => x.cds_year === "2023-24")!;
+      for (const r of [...y.rows, y.total]) { r.checks!.enrollment.matches += r.checks!.enrollment.no_value; r.checks!.enrollment.no_value = 0; }
+      expect(note(b2(render("year=2023-24", none))!)).not.toContain("numbered by a different year’s form");
+      // Tuition's note makes no such statement.
+      expect(b2(render("year=2023-24"))!.match(/<p id="dq-note-tuition"[^>]*>[\s\S]*?<\/p>/)![0]).not.toContain("numbered by a different year’s form");
+    });
+
+    it("names the IPEDS tuition table by data year: COST1 from 2024 on, IC<year>_AY before", () => {
+      expect([2023, 2024, 2025].map(ipedsTuitionTable)).toEqual(["IC2023_AY", "COST1_2024", "COST1_2025"]);
+      const early = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT)) as QualitySnapshot;
+      early.years.find((x) => x.cds_year === "2023-24")!.federal_checks!.tuition.data_year = 2023;
+      const tui = b2(render("year=2023-24", early))!.match(/<p id="dq-note-tuition"[^>]*>[\s\S]*?<\/p>/)![0].replace(/<[^>]+>/g, "").replace(/\s+/g, " ");
+      expect(tui).toContain("IPEDS table IC2023_AY, variable TUITION2");
+      expect(tui).not.toContain("COST1_2023");
     });
 
     it("describes the in-state figure as the one used first, and the federal figure by its IPEDS name", () => {

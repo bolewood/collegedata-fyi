@@ -1578,13 +1578,18 @@ def federal_check_pair(d: dict[str, Any], check: str) -> tuple[Optional[Decimal]
     if chosen["ours"] is not None and Decimal(chosen["ours"]) <= 0:
         chosen = {**chosen, "ours": None}
     # The selected candidate must be the field and IPEDS key this check is defined on (a renamed or swapped field is a bug here).
-    fields = {"b1_undergraduates": ("B.193", "B.176", "undergraduate_enrollment"), "g1_in_state_undergraduates": ("G.108", None, "tuition_in_state"),
-              "g1_private_undergraduates": ("G.102", None, "tuition_in_state")}
+    # B1's total is B.176 on the 2025-26 form and B.193 on the 2023-24 and 2024-25 forms: by the document's own numbering.
+    b1 = "B.176" if d.get("schema_version") == "2025-26" else "B.193"
+    fields = {"b1_undergraduates": (b1, "undergraduate_enrollment"), "g1_in_state_undergraduates": ("G.108", "tuition_in_state"),
+              "g1_private_undergraduates": ("G.102", "tuition_in_state")}
+    # Only a document with no comparison (a year with no full field schema) may have no field: in a compared year a missing
+    # field means a broken schema lookup, which must not quietly turn a loaded year into "no value".
+    compared = d.get("federal_compared", True)
     for n in names:
-        want = fields[n]
-        if extra[n]["federal_key"] != want[2] or (extra[n]["cds_field"] is not None and extra[n]["cds_field"] not in want[:2]):
+        field, key = fields[n]
+        if extra[n]["federal_key"] != key or extra[n]["cds_field"] != (field if compared else None):
             raise SystemExit(f"--public: {d['document_id']}: {n} is field {extra[n]['cds_field']!r} against {extra[n]['federal_key']!r}, "
-                             f"not {want[0]!r} against {want[2]!r}")
+                             f"not {(field if compared else None)!r} against {key!r}")
     federal = {extra[n]["federal"] for n in names}
     if len(federal) != 1:
         raise SystemExit(f"--public: {d['document_id']}: the {check} candidates carry different IPEDS figures")
@@ -1619,7 +1624,7 @@ def federal_check_year(year: str, published: list[dict[str, Any]], check: str, c
     the following year), and the reports left out."""
     start = int(year[:4]) + (1 if check == "tuition" else 0)
     for d in published:
-        if "federal_extra" not in d:
+        if d.get("federal_extra") is None:
             raise SystemExit(f"--public: {d['document_id']} has no federal_extra; run the scoreboard again")
     candidates = ["b1_undergraduates"] if check == "enrollment" else ["g1_private_undergraduates", "g1_in_state_undergraduates"]
     recorded = {d["federal_extra"][n]["federal_data_year"] for d in published for n in candidates}
