@@ -1,6 +1,42 @@
 [
   {
+    "alias": "california-institute-of-technology",
+    "school_id": "caltech"
+  },
+  {
+    "alias": "georgia-institute-of-technology-main-campus",
+    "school_id": "georgia-tech"
+  },
+  {
+    "alias": "rutgers-university-new-brunswick",
+    "school_id": "rutgers"
+  },
+  {
+    "alias": "texas-a-and-m-university-college-station",
+    "school_id": "texas-am"
+  },
+  {
     "alias": "tufts-university",
     "school_id": "tufts"
+  },
+  {
+    "alias": "tulane-university-of-louisiana",
+    "school_id": "tulane-university"
+  },
+  {
+    "alias": "university-of-chicago",
+    "school_id": "uchicago"
+  },
+  {
+    "alias": "university-of-virginia-main-campus",
+    "school_id": "uva"
+  },
+  {
+    "alias": "university-of-washington-seattle-campus",
+    "school_id": "uw"
+  },
+  {
+    "alias": "virginia-polytechnic-institute-and-state-university",
+    "school_id": "virginia-tech"
   }
 ]

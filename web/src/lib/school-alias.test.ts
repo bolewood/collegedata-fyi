@@ -91,8 +91,8 @@ describe("buildRetiredSchoolRedirects", () => {
         permanent: true,
       },
       {
-        source: "/schools/tufts-university/:year",
-        destination: "/schools/tufts/:year",
+        source: "/schools/tufts-university/:path*",
+        destination: "/schools/tufts/:path*",
         permanent: true,
       },
     ]);
