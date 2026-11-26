@@ -166,6 +166,12 @@ class UserAgentTest(unittest.TestCase):
             "python-httpx/0.27 quadfile-pipeline/archive",
             "quadfile-scholarships/0.1 (https://example.test/contact)",
             "Quadfile-Finder/0.2",
+            "quadfile-ops-discord/1.0",
+            "quadfile-ops-discord",
+            "quadfile-extraction-worker/0.1",
+            "quadfile-extraction-worker",
+            "collegedata-fyi-ops-discord",
+            "collegedata-extraction-worker",
             "quadfile-finder/0.1 (https://example.test/contact)",
         ):
             with self.subTest(ua=ua):
@@ -180,6 +186,8 @@ class UserAgentTest(unittest.TestCase):
             "quadfile/1.0",
             "quadfile-scraper/1.0",
             "quadfile-cli/0.1",
+            "quadfile-ops-discordx/1",
+            "quadfile-extraction-workers/1",
             "python-httpx/0.27 quadfile-scraper/1.0",
         ):
             with self.subTest(ua=ua):
