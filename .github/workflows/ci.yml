@@ -211,7 +211,7 @@ jobs:
         with:
           node-version: "22"
       - name: Run MCP stdio tests
-        run: node --test packages/mcp-server/collegedata-mcp.test.js
+        run: node --test packages/mcp-server/collegedata-mcp.test.js packages/cli/collegedata.test.js tools/snapshots/build_public_snapshots.test.mjs
 
   web:
     name: Next.js build

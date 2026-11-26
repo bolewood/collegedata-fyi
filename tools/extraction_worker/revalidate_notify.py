@@ -4,8 +4,8 @@ School pages are ISR-cached for 7 days. After the worker finishes, POST the
 affected ``school_id`` values to ``/api/revalidate`` so only those pages are
 regenerated. ``tools/ops/revalidate_pages.py`` reuses this for the daily sweep.
 
-Best effort by design: no-op unless both ``COLLEGEDATA_REVALIDATE_URL`` and
-``REVALIDATE_SECRET`` are set, short timeout, never raises, never changes the
+Best effort by design: no-op unless both ``QUADFILE_REVALIDATE_URL`` (or the
+older ``COLLEGEDATA_REVALIDATE_URL``) and ``REVALIDATE_SECRET`` are set, short timeout, never raises, never changes the
 worker exit code.
 """
 
@@ -19,11 +19,17 @@ import urllib.error
 import urllib.request
 from typing import Iterable, Mapping, Optional
 
-URL_ENV = "COLLEGEDATA_REVALIDATE_URL"
+URL_ENV = "QUADFILE_REVALIDATE_URL"
+LEGACY_URL_ENV = "COLLEGEDATA_REVALIDATE_URL"  # read when URL_ENV is unset
 SECRET_ENV = "REVALIDATE_SECRET"
 BATCH_SIZE = 100  # must stay <= MAX_SCHOOL_IDS in web/src/lib/revalidate-schools.ts
 TIMEOUT_SECONDS = 5
 MAX_BATCHES = 20  # bound total added runtime (~2,000 schools)
+
+
+def revalidate_url(env: Mapping[str, str]) -> str:
+    """The new variable wins; the old name still works."""
+    return (env.get(URL_ENV) or "").strip() or (env.get(LEGACY_URL_ENV) or "").strip()
 
 
 def notify_school_revalidation(
@@ -43,7 +49,7 @@ def notify_school_revalidation(
     between batches.
     """
     env = os.environ if env is None else env
-    url = (env.get(URL_ENV) or "").strip()
+    url = revalidate_url(env)
     secret = env.get(SECRET_ENV) or ""
     result = {"enabled": bool(url and secret), "sent": 0, "batches": 0, "errors": 0}
     if not result["enabled"]:
@@ -107,7 +113,7 @@ def notify_all_revalidation(
 ) -> dict:
     """POST ``{"all": true}``: expire every school page. Swallows every error."""
     env = os.environ if env is None else env
-    url = (env.get(URL_ENV) or "").strip()
+    url = revalidate_url(env)
     secret = env.get(SECRET_ENV) or ""
     result = {"enabled": bool(url and secret), "sent": 0, "batches": 0, "errors": 0}
     if not result["enabled"]:

@@ -502,6 +502,26 @@ class QueryTest(unittest.TestCase):
             group = sql.split(" group by ")[1].split(" order by ")[0]
             self.assertEqual(group, sql.split(" order by ")[1])
 
+    def test_queries_know_the_new_identity_and_the_proxy_header(self):
+        t0 = datetime(2026, 10, 2, 14, 25, tzinfo=timezone.utc)
+        for sql in (queries.edge_schools_sql(t0), queries.edge_clients_sql(t0)):
+            for token in ("quadfile-web", "quadfile-friendly-api", "www.quadfile.org", "quadfile-[a-z0-9._-]+/"):
+                self.assertIn(token, sql)
+            self.assertIn("not log_attributes['request.headers.x_quadfile_proxied'] = '1'", sql)
+        self.assertIn("quadfile-friendly-api", queries.daily_downloads_sql(
+            datetime(2026, 10, 1, tzinfo=timezone.utc), datetime(2026, 10, 2, tzinfo=timezone.utc), 30))
+        self.assertIn("x_quadfile_proxied", queries.edge_rollup_sql())
+
+    def test_proxied_rows_are_third_party_through_the_rollup(self):
+        row = {
+            "h": 1_790_000_000, "svc": "rest", "seg4": "cds_documents", "method": "GET", "role": "anon",
+            "ci": "supabase-js-node/2", "aws": 1, "proxied": 1, "host": "api.quadfile.org",
+            "status": "200", "ua": "python-requests/2.32", "n": 3,
+        }
+        for proxied, expected in ((0, "first_party_site"), (1, "third_party")):
+            rows = aggregate.edge_rollups([{**row, "proxied": proxied}], datetime(2030, 1, 1, tzinfo=timezone.utc))
+            self.assertEqual([r["classification"] for r in rows], [expected])
+
     def test_only_the_client_query_reads_identifying_fields(self):
         for sql in (queries.edge_rollup_sql(), queries.edge_schools_sql(None), queries.function_rollup_sql()):
             self.assertNotIn("cf_connecting_ip", sql)

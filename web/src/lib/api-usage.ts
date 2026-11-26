@@ -21,6 +21,17 @@ function firstValue(headers: Headers, name: string): string | null {
   return value && value.trim() ? value.trim() : null;
 }
 
+// Rename prep: read the new x-quadfile-* header and qf_* query name first,
+// then the old x-collegedata-* / cd_* one, so old clients are still counted.
+function identity(request: Request, url: URL, header: string, param: string): string | null {
+  return (
+    firstValue(request.headers, `x-quadfile-${header}`) ??
+    firstValue(request.headers, `x-collegedata-${header}`) ??
+    url.searchParams.get(`qf_${param}`) ??
+    url.searchParams.get(`cd_${param}`)
+  );
+}
+
 function cleanToken(value: string | null, maxLength = MAX_TOKEN_LENGTH): string | null {
   if (!value) return null;
   const cleaned = value
@@ -139,9 +150,7 @@ export function routeKindFromPath(pathname: string): string {
 export function buildApiUsageEvent(request: Request): ApiUsageEvent {
   const url = new URL(request.url);
   const routeKind = routeKindFromPath(url.pathname);
-  const clientName = cleanToken(
-    firstValue(request.headers, "x-collegedata-client") ?? url.searchParams.get("cd_client"),
-  );
+  const clientName = cleanToken(identity(request, url, "client", "client"));
   const userAgent = firstValue(request.headers, "user-agent");
   const parts = url.pathname.split("/").filter(Boolean);
 
@@ -152,12 +161,14 @@ export function buildApiUsageEvent(request: Request): ApiUsageEvent {
     http_method: request.method.toUpperCase(),
     client_family: clientFamily(clientName, userAgent),
     client_name: clientName,
-    client_version: cleanToken(
-      firstValue(request.headers, "x-collegedata-client-version") ?? url.searchParams.get("cd_client_version"),
-    ),
+    client_version: cleanToken(identity(request, url, "client-version", "client_version")),
     client_tool: cleanToken(
-      firstValue(request.headers, "x-collegedata-mcp-tool") ??
+      firstValue(request.headers, "x-quadfile-mcp-tool") ??
+        firstValue(request.headers, "x-quadfile-cli-command") ??
+        firstValue(request.headers, "x-collegedata-mcp-tool") ??
         firstValue(request.headers, "x-collegedata-cli-command") ??
+        url.searchParams.get("qf_tool") ??
+        url.searchParams.get("qf_command") ??
         url.searchParams.get("cd_tool") ??
         url.searchParams.get("cd_command"),
     ),

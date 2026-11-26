@@ -12,10 +12,11 @@ from datetime import datetime
 from tools.api_usage.classify import (
     ARCHIVE_PREFIX,
     FIRST_PARTY_REFERER_HOSTS,
-    FRIENDLY_CLIENT_INFO_PREFIX,
+    FRIENDLY_CLIENT_INFO_PREFIXES,
     INTERNAL_UA_MARKERS,
+    INTERNAL_UA_PATTERN,
     NON_BROWSER_PATTERN,
-    SITE_CLIENT_INFO_PREFIX,
+    SITE_CLIENT_INFO_PREFIXES,
     t0_hour,
 )
 
@@ -37,13 +38,15 @@ _ROLE = "log_attributes['request.sb.jwt.apikey.payload.role']"
 _KEY_PREFIX = "substring(log_attributes['request.sb.apikey.apikey.prefix'], 1, 16)"
 _CLIENT_INFO = "substring(log_attributes['request.headers.x_client_info'], 1, 80)"
 _REFERER = "lower(domain(log_attributes['request.headers.referer']))"
+_PROXIED = "log_attributes['request.headers.x_quadfile_proxied'] = '1'"
 _AWS = "position(lower(log_attributes['request.cf.asOrganization']), 'amazon') > 0"
 _UA_BROWSER = (
     f"(startsWith({_UA}, 'Mozilla/') and position({_UA}, '(') > 0"
     f" and not match(lower({_UA}), '{NON_BROWSER_PATTERN}'))"
 )
 _UA_INTERNAL = "(" + " or ".join(
-    f"position(lower({_UA}), '{marker}') > 0" for marker in INTERNAL_UA_MARKERS
+    [f"position(lower({_UA}), '{marker}') > 0" for marker in INTERNAL_UA_MARKERS]
+    + [f"match(lower({_UA}), '{INTERNAL_UA_PATTERN}')"]
 ) + ")"
 _SCHOOL_RAW = (
     f"if({_IS_ARCHIVE}, splitByChar('/', {_PATH})[7], "
@@ -62,11 +65,16 @@ _EDGE_DIMS = [
     ("ci", _CLIENT_INFO),
     ("ref", _REFERER),
     ("aws", _AWS),
+    ("proxied", _PROXIED),
 ]
 
 
 def _sql_list(values: tuple[str, ...]) -> str:
     return ", ".join(f"'{value}'" for value in values)
+
+
+def _starts_with_any(expr: str, prefixes: tuple[str, ...]) -> str:
+    return "(" + " or ".join(f"startsWith({expr}, '{prefix}')" for prefix in prefixes) + ")"
 
 
 def _before_t0(t0: datetime | None) -> str:
@@ -83,17 +91,17 @@ def not_third_party_condition(t0: datetime | None) -> str:
     on every returned row, so this must stay a subset of those rules.
     """
     return (
-        "("
+        f"(not {_PROXIED} and ("
         f"{_ROLE} = 'service_role'"
         f" or startsWith({_KEY_PREFIX}, 'sb_secret_')"
         f" or {_UA_INTERNAL}"
-        f" or startsWith({_CLIENT_INFO}, '{SITE_CLIENT_INFO_PREFIX}')"
-        f" or startsWith({_CLIENT_INFO}, '{FRIENDLY_CLIENT_INFO_PREFIX}')"
+        f" or {_starts_with_any(_CLIENT_INFO, SITE_CLIENT_INFO_PREFIXES)}"
+        f" or {_starts_with_any(_CLIENT_INFO, FRIENDLY_CLIENT_INFO_PREFIXES)}"
         f" or {_REFERER} in ({_sql_list(FIRST_PARTY_REFERER_HOSTS)})"
         f" or ({_before_t0(t0)} and {_ROLE} = 'anon' and ("
         f"(startsWith({_CLIENT_INFO}, 'supabase-js-node') and {_AWS})"
         f" or startsWith({_CLIENT_INFO}, 'supabase-js-web')))"
-        ")"
+        "))"
     )
 
 
@@ -214,7 +222,7 @@ def daily_downloads_sql(
     """
     internal = (
         f"{_ROLE} = 'service_role' or startsWith({_KEY_PREFIX}, 'sb_secret_')"
-        f" or startsWith({_CLIENT_INFO}, '{FRIENDLY_CLIENT_INFO_PREFIX}')"
+        f" or {_starts_with_any(_CLIENT_INFO, FRIENDLY_CLIENT_INFO_PREFIXES)}"
     )
     first_party = f"{_REFERER} in ({_sql_list(FIRST_PARTY_REFERER_HOSTS)})"
     inner = (

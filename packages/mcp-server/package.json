@@ -1,9 +1,10 @@
 {
-  "name": "@collegedata-fyi/mcp-server",
+  "name": "quadfile-mcp",
   "version": "0.2.0",
   "type": "module",
   "bin": {
-    "collegedata-mcp": "./bin/collegedata-mcp.js"
+    "collegedata-mcp": "./bin/collegedata-mcp.js",
+    "quadfile-mcp": "./bin/collegedata-mcp.js"
   },
   "license": "MIT",
   "engines": {

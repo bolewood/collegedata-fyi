@@ -44,7 +44,8 @@ and slug-crosswalk reads are shared by every school, so only --all expires
 them). Those wait for the 7-day window at worst.
 
 Environment: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (sweep only),
-COLLEGEDATA_REVALIDATE_URL, REVALIDATE_SECRET.
+QUADFILE_REVALIDATE_URL (or the older COLLEGEDATA_REVALIDATE_URL),
+REVALIDATE_SECRET.
 
 Exit code: 0 on success or --dry-run; 1 when a required setting is missing, a
 read fails, or a refresh request fails. School ids are never printed: this
@@ -71,6 +72,7 @@ from revalidate_notify import (  # noqa: E402
     URL_ENV,
     notify_all_revalidation,
     notify_school_revalidation,
+    revalidate_url,
 )
 
 PAGE_SIZE = 1000  # PostgREST max_rows
@@ -225,7 +227,7 @@ def find_changed_schools(fetch: Fetch, since: datetime) -> dict:
 
 
 def _require_revalidate_env(env: Mapping[str, str]) -> None:
-    if not (env.get(URL_ENV) or "").strip() or not env.get(SECRET_ENV):
+    if not revalidate_url(env) or not env.get(SECRET_ENV):
         raise SweepError(f"{URL_ENV} and {SECRET_ENV} are required to refresh pages")
 
 
