@@ -24,6 +24,7 @@ from typing import Any, Iterable, Mapping
 if __package__ is None or __package__ == "":
     sys.path.append(str(Path(__file__).resolve().parents[2]))
 
+from tools.common.site import API_ORIGIN
 from tools.ipeds.load_release import load_env
 from tools.ipeds.reconcile_endowment_scorecard import postgrest_get_all
 from tools.finder.identity_guard import (
@@ -46,7 +47,7 @@ FINANCE_FIELDS = (
 )
 IDENTITY_FIELDS = ("institution_name", "control", "state")
 DRAW_RATE_THRESHOLDS = (Decimal("0.05"), Decimal("0.07"), Decimal("0.15"))
-SOURCE_API_URL = "https://api.collegedata.fyi"
+SOURCE_API_URL = API_ORIGIN  # display: recorded in generated data
 
 
 @dataclass(frozen=True)

@@ -41,9 +41,8 @@ if str(REPO_ROOT) not in sys.path:
 import yaml  # noqa: E402
 
 from tools.finder.stuck_pdf_seeds import is_direct_doc_seed  # noqa: E402
-from tools.common.site import API_ORIGIN, SITE_ORIGIN  # noqa: E402
+from tools.common.site import SITE_ORIGIN, runtime_api_origin  # noqa: E402
 
-DEFAULT_API = API_ORIGIN
 # PRD 033: pipeline traffic to the public API identifies itself.
 USER_AGENT = "collegedata-pipeline/discovery-renewal"
 DEFAULT_SCHOOLS_YAML = REPO_ROOT / "tools" / "finder" / "schools.yaml"
@@ -1618,7 +1617,7 @@ def write_json(path: Path | None, data: Any) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--api-url", default=os.environ.get("CDS_API_URL", DEFAULT_API))
+    parser.add_argument("--api-url", default=os.environ.get("CDS_API_URL") or runtime_api_origin())
     parser.add_argument("--anon-key", default=os.environ.get("SUPABASE_ANON_KEY", ""))
     parser.add_argument("--as-of", help="YYYY-MM-DD; default today (UTC)")
     parser.add_argument("--manifest-json", type=Path, help="compute from a local snapshot, no network")

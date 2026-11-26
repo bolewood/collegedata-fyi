@@ -23,7 +23,7 @@ from tools.fsa.match import (
     match_fsa_rows,
 )
 from tools.fsa.opeid import normalize_opeid8, restore_fsa_opeid
-from tools.common.site import API_ORIGIN
+from tools.common.site import runtime_api_origin
 from tools.fsa.parse import ParsedWorkbook, parse_workbook, sha256_file, SOURCE_URL, LISTING_PAGE
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -36,7 +36,12 @@ DEFAULT_HD = Path(
     "/Users/santhonys/Projects/Owen/colleges/collegedata-fyi/scratch/"
     "ipeds/2024-25-final/HD2024.zip"
 )
-DIRECTORY_URL = f"{API_ORIGIN}/rest/v1/institution_directory"
+
+
+def directory_url() -> str:
+    return f"{runtime_api_origin()}/rest/v1/institution_directory"
+
+
 CANARIES = {
     "uf": "University of Florida",
     "uei": "UEI",
@@ -332,7 +337,7 @@ def main() -> int:
 
     parsed = parse_workbook(args.xlsx)
     scorecard = read_scorecard(args.csv)
-    directory = attach_directory(fetch_directory(DIRECTORY_URL, anon), scorecard)
+    directory = attach_directory(fetch_directory(directory_url(), anon), scorecard)
     hd = read_hd_opeid(args.hd) if args.hd.exists() else {}
     report = build_report(parsed, directory, scorecard, hd, sha256_file(args.xlsx))
     json_path = REPO_ROOT / "scratch" / "fsa" / "2026-05" / "join-report.json"

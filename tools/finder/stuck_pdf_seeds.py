@@ -37,8 +37,11 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent
 REPO_ROOT = ROOT.parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from tools.common.site import runtime_api_origin  # noqa: E402
 DOCUMENT_EXT_RE = re.compile(r"\.(pdf|xlsx|docx)(\?|#|$)", re.I)
-DEFAULT_API = "https://api.collegedata.fyi"
 YEAR_RE = re.compile(r"^\d{4}-\d{2}$")
 
 
@@ -399,7 +402,7 @@ def render_markdown(
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.strip().split("\n\n")[0])
     ap.add_argument("--schools-yaml", type=Path, default=ROOT / "schools.yaml")
-    ap.add_argument("--api-url", default=os.environ.get("NEXT_PUBLIC_SUPABASE_URL") or DEFAULT_API)
+    ap.add_argument("--api-url", default=runtime_api_origin())
     ap.add_argument(
         "--anon-key",
         default=os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY") or "",

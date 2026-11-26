@@ -53,8 +53,8 @@ if str(REPO_ROOT) not in sys.path:
 # One copy of the mechanism: the year parser, the freshness floor, the
 # manifest paging helpers and the seed-kind rule all live in the renewal
 # module (PR #474). This file imports only once that module is on main.
+from tools.common.site import runtime_api_origin  # noqa: E402
 from tools.ops.discovery_renewal import (  # noqa: E402
-    DEFAULT_API,
     DEFAULT_SCHOOLS_YAML,
     VALID_PARTICIPATION,
     is_flagged,
@@ -263,7 +263,7 @@ def run_seed_age(
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.strip().split("\n\n")[0])
     ap.add_argument("--schools-yaml", type=Path, default=DEFAULT_SCHOOLS_YAML)
-    ap.add_argument("--api-url", default=os.environ.get("NEXT_PUBLIC_SUPABASE_URL") or DEFAULT_API)
+    ap.add_argument("--api-url", default=runtime_api_origin())
     ap.add_argument("--anon-key", default=os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY") or "")
     ap.add_argument("--manifest-json", type=Path, help="local manifest snapshot instead of the API")
     ap.add_argument("--as-of", help="YYYY-MM-DD; default today (UTC)")

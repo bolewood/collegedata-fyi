@@ -23,7 +23,10 @@ from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-API = "https://api.collegedata.fyi/rest/v1"
+sys.path.insert(0, str(ROOT))
+from tools.common.site import runtime_api_origin  # noqa: E402
+
+API = f"{runtime_api_origin()}/rest/v1"
 
 # CDS field id -> card_id(s) the field backs (2024-25 schema ids; see
 # web/src/lib/labels-2024-25.ts for labels).

@@ -92,6 +92,8 @@ jobs:
           fi
       - name: Run shared polite fetcher tests
         run: python -m pytest tools/common -q
+      - name: Check runtime code does not name the custom API host
+        run: python tools/ops/check_runtime_api_host.py && python -m unittest tools.ops.test_check_runtime_api_host
       # The Tier 2 suite renders PDF pages and takes far longer than every
       # other step combined. On pull requests and branch pushes it runs only
       # when something it depends on changed. Pushes to main and manual

@@ -28,6 +28,7 @@ from typing import Any, Mapping
 if __package__ is None or __package__ == "":
     sys.path.append(str(Path(__file__).resolve().parents[2]))
 
+from tools.common.site import API_ORIGIN, runtime_api_origin
 from tools.finder.identity_guard import (
     resolve_canonical_school_id,
     validated_canonical_alias_slug_map,
@@ -36,7 +37,7 @@ from tools.finder.identity_guard import (
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUTPUT = REPO_ROOT / "web/src/lib/alignment-gap-recipe-data.ts"
-SOURCE_API_URL = "https://api.collegedata.fyi"
+SOURCE_API_URL = API_ORIGIN  # display: recorded in generated data
 CDS_YEARS = ("2024-25", "2025-26")
 PAGE_SIZE = 1000
 
@@ -105,7 +106,7 @@ def main() -> int:
         parser.error("--generated-at must be an ISO date (YYYY-MM-DD)")
 
     load_env(REPO_ROOT / ".env")
-    supabase_url = os.environ.get("SUPABASE_URL", "").strip() or SOURCE_API_URL
+    supabase_url = runtime_api_origin()
     api_key = (
         os.environ.get("SUPABASE_ANON_KEY", "").strip()
         or os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY", "").strip()
