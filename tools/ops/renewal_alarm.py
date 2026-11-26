@@ -817,7 +817,7 @@ def main(argv: list[str] | None = None, *, runner: Runner = run_gh) -> int:
                         help="directory of <year>.md renewal bodies and arrivals-<year>.md arrivals bodies")
     parser.add_argument("--summary", type=Path, required=True,
                         help="heartbeat summary JSON; rewritten with alarm_issue")
-    parser.add_argument("--repo", default=os.environ.get("GITHUB_REPOSITORY", "bolewood/quadfile"))
+    parser.add_argument("--repo", default=os.environ.get("GITHUB_REPOSITORY") or "bolewood/quadfile")
     parser.add_argument("--assignee", default=DEFAULT_ASSIGNEE)
     parser.add_argument("--test-mode", action="store_true")
     parser.add_argument("--dry-run", action="store_true")

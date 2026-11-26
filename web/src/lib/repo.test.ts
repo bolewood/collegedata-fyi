@@ -3,8 +3,6 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { REPO_SLUG, REPO_URL } from "./repo";
 
-const OLD_REPO = "bolewood/collegedata-fyi";
-
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
     const path = join(dir, name);
@@ -19,10 +17,11 @@ describe("repository link", () => {
     expect(REPO_URL).toBe("https://github.com/bolewood/quadfile");
   });
 
-  it("is the only place web/src names the repository (tests may use the old name as a fixture)", () => {
+  it("is the only non-test file in web/src that hard-codes a bolewood repository", () => {
     const offenders = sourceFiles(__dirname + "/..")
       .filter((f) => !/\.test\.tsx?$/.test(f))
-      .filter((f) => readFileSync(f, "utf8").includes(OLD_REPO));
+      .filter((f) => !f.endsWith("/lib/repo.ts"))
+      .filter((f) => /github\.com\/bolewood|bolewood\/(collegedata|quadfile)/.test(readFileSync(f, "utf8")));
     expect(offenders).toEqual([]);
   });
 });

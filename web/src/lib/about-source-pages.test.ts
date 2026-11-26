@@ -46,7 +46,9 @@ describe("Wave 1 product copy", () => {
     expect(home).toContain("Recently added");
     expect(home).toContain('className="serif"');
     expect(home).not.toContain("Latest drain");
-    expect(home).not.toContain("github.com/bolewood/quadfile");
+    // No repo link on the home page, whether written out or via lib/repo.
+    expect(home).not.toContain("github.com/bolewood");
+    expect(home).not.toMatch(/REPO_URL|REPO_SLUG|lib\/repo/);
     expect(home).not.toMatch(/\bextracted\b/);
     expect(home).not.toMatch(/field schema/);
     expect(home).not.toMatch(/Browser rows/);

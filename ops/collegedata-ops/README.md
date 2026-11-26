@@ -5,7 +5,7 @@ home Mac `spoke-ops`. Public contributors cannot open a pull request that
 GitHub will schedule onto that machine.
 
 This directory is the source tree. It is **not** a live workflow in
-`bolewood/collegedata-fyi`. Copy it to a **private** repository
+`bolewood/quadfile`. Copy it to a **private** repository
 `bolewood/collegedata-ops`.
 
 The cloud agent that wrote this could not create that GitHub repo (org
@@ -31,7 +31,7 @@ Default school is `nyu` (the only id on the sticky residential
 allowlist). Cloudflare/Drive ingest stays on the public
 `ops-headless-archive.yml` hosted job.
 
-The workflow checks out `bolewood/collegedata-fyi` `main` by default.
+The workflow checks out `bolewood/quadfile` `main` by default.
 Scheduled runs start at **10:00 UTC** so they consume that morning's
 hosted archive (08:00 UTC), not the day before. Cap is 5 school ids per
 run, enforced in Python (`--require-only --max-only 5`). Adding a
@@ -49,7 +49,7 @@ default browser for the pipeline and not a finder/Brave re-checker.
 
 Dispatch on **this private repo only**, workflow **Residential headless
 archive**, `only=<school_id>`. Fetch stays secretless; hosted jobs hold
-Supabase. Never register this runner on `bolewood/collegedata-fyi`.
+Supabase. Never register this runner on `bolewood/quadfile`.
 
 **Use spoke-ops when** the hosted headless job (or a residential curl from
 a laptop) records `waf_captcha` / CloudFront visual puzzle, and a person
@@ -75,7 +75,7 @@ lane has fetched.
    to create or approve pull requests.
 4. Secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (same values as the
    public repo; they are only injected into hosted jobs).
-5. Do not add a self-hosted runner to `bolewood/collegedata-fyi`.
+5. Do not add a self-hosted runner to `bolewood/quadfile`.
 
 ## spoke-ops host (required)
 

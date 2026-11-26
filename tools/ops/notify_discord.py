@@ -993,7 +993,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--event-name", required=True)
     parser.add_argument("--event-path", type=Path)
-    parser.add_argument("--repo", default=os.environ.get("GITHUB_REPOSITORY", "bolewood/quadfile"))
+    parser.add_argument("--repo", default=os.environ.get("GITHUB_REPOSITORY") or "bolewood/quadfile")
     parser.add_argument("--state-path", type=Path, default=Path(".discord-notify-state.json"))
     parser.add_argument("--pipeline-url", default=PIPELINE_JSON_URL)
     parser.add_argument("--dry-run", action="store_true")
