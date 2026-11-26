@@ -10,7 +10,7 @@ import { buildTrend } from "@/lib/data-quality-trend";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FIXTURE_SNAPSHOT } from "./__fixtures__/data-quality-snapshot";
-import { DATA_QUALITY_LAUNCH_DATE, aidCantCheckNote, federalDiffersNote, formatSnapshotDate, selectSnapshot } from "./data-quality";
+import { DATA_QUALITY_LAUNCH_DATE, aidCantCheckNote, aidPoolBounds, federalDiffersNote, formatSnapshotDate, selectSnapshot } from "./data-quality";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/data-quality",
@@ -214,9 +214,16 @@ describe("the real pages against the committed snapshot", () => {
     const snap = selectSnapshot([{ name: "2026-11-25.json", json }]);
     const aid = snap.years.filter((y) => aidCantCheckNote(y));
     const differs = snap.years.filter((y) => federalDiffersNote(y, snap));
-    expect(aid.map((y) => y.cds_year)).toEqual(["2023-24"]);
+    // The 2023-24 financial aid re-clean took the can't-check pool from 223 to 74, below the sample's band (196 to 238), so
+    // that note drops out and the page keeps the plain can't-check definition.
+    expect(aid).toEqual([]);
+    const y2324 = snap.years.find((y) => y.cds_year === "2023-24")!;
+    expect(y2324.total.totals.H1.cant_check).toBeLessThan(aidPoolBounds().low);
+    const aidHtml = renderToStaticMarkup(<DataQualityBody snapshot={snap} trend={buildTrend([snap])} year={y2324} />);
+    expect(aidHtml).not.toContain('id="dq-note-aid-sample"');
+    expect(aidHtml).toContain('id="dq-note-aid-adds-up"');
+    expect(aidHtml).toContain("Can’t check can be a blank in the school’s file");
     expect(differs.map((y) => y.cds_year)).toEqual(["2023-24", "2024-25"]);
-    expect(renderToStaticMarkup(<DataQualityBody snapshot={snap} trend={buildTrend([snap])} year={aid[0]} />)).toContain('id="dq-note-aid-sample"');
     for (const y of differs) {
       expect(renderToStaticMarkup(<DataQualityBody snapshot={snap} trend={buildTrend([snap])} year={y} />)).toContain('id="dq-differs-sample"');
     }
@@ -266,8 +273,8 @@ describe("gate: the real snapshot loader", () => {
 
   it("pins the provenance of the 2026-11-25 snapshot", () => {
     const first = JSON.parse(fs.readFileSync(path.join(SNAPSHOT_DIR, "2026-11-25.json"), "utf8"));
-    expect(first.scoreboard_run).toBe("scoreboard-20261125T140926Z.json");
-    expect(first.renewal.both).toBe(373);
+    expect(first.scoreboard_run).toBe("scoreboard-20261125T233202Z.json");
+    expect(first.renewal.both).toBe(374);
     expect(first.renewal.previous).toBe(498);
   });
 
@@ -279,9 +286,9 @@ describe("gate: the real snapshot loader", () => {
         [y.total.federal.differs, y.total.federal.differs_2_to_10pct, y.total.federal.differs_over_10pct],
       ]),
     );
-    // [differs, over 2% to 10%, over 10%], from scoreboard-20261125T140926Z.json. Pinned in two parts so a balanced
+    // [differs, over 2% to 10%, over 10%], from scoreboard-20261125T233202Z.json. Pinned in two parts so a balanced
     // transcription error (one part up, the other down) fails here even though the arithmetic checks still pass.
-    expect(split).toEqual({ "2023-24": [116, 70, 46], "2024-25": [112, 60, 52], "2025-26": [0, 0, 0] });
+    expect(split).toEqual({ "2023-24": [115, 71, 44], "2024-25": [112, 60, 52], "2025-26": [0, 0, 0] });
   });
 
   it("pins the committed snapshot's sections per year (reports, then section, questions, fields stored, usable answers)", () => {
@@ -292,11 +299,11 @@ describe("gate: the real snapshot loader", () => {
         [y.sections.reports, y.sections.rows.map((r) => [r.section, r.questions, r.stored_median, r.usable_median])],
       ]),
     );
-    // From scoreboard-20261125T140926Z.json. Pinned for every year so a balanced transcription error fails here.
+    // From scoreboard-20261125T233202Z.json. Pinned for every year so a balanced transcription error fails here.
     expect(got).toEqual({
-      "2023-24": [365, [["A", 51, 6, 6], ["B", 196, 143, 143], ["C", 274, 112, 112], ["D", 70, 15, 14], ["E", 32, 0, 0], ["F", 60, 16, 16], ["G", 47, 20, 20], ["H", 154, 52, 52], ["I", 49, 31, 31], ["J", 120, 27, 27]]],
+      "2023-24": [383, [["A", 51, 6, 6], ["B", 196, 142, 142], ["C", 274, 111, 111], ["D", 70, 15, 14], ["E", 32, 0, 0], ["F", 60, 16, 16], ["G", 47, 20, 20], ["H", 154, 61, 60], ["I", 49, 31, 31], ["J", 120, 27, 27]]],
       "2024-25": [487, [["A", 51, 11, 11], ["B", 219, 157, 156], ["C", 278, 122, 121], ["D", 73, 27, 25], ["E", 32, 19, 19], ["F", 60, 35, 35], ["G", 47, 23, 22], ["H", 154, 92, 91], ["I", 49, 41, 41], ["J", 120, 26, 26]]],
-      "2025-26": [421, [["A", 63, 26, 23], ["B", 204, 152, 152], ["C", 278, 142, 141], ["D", 88, 27, 23], ["E", 34, 21, 21], ["F", 58, 37, 37], ["G", 46, 24, 23], ["H", 165, 108, 107], ["I", 49, 42, 42], ["J", 120, 27, 27]]],
+      "2025-26": [422, [["A", 63, 26, 23], ["B", 204, 152, 152], ["C", 278, 142, 141], ["D", 88, 27, 22], ["E", 34, 21, 21], ["F", 58, 37, 37], ["G", 46, 23, 23], ["H", 165, 108, 107], ["I", 49, 42, 42], ["J", 120, 27, 27]]],
     });
   });
 
@@ -321,9 +328,9 @@ describe("gate: the real snapshot loader", () => {
         Object.fromEntries(["enrollment", "tuition"].map((n) => [n, [y.federal_checks[n].loaded, y.federal_checks[n].data_year, ...Object.values(y.total.checks[n])]])),
       ]),
     );
-    // [loaded, IPEDS year, reports, matches, no value, differs, over 2% to 10%, over 10%], from scoreboard-20261125T140926Z.json.
+    // [loaded, IPEDS year, reports, matches, no value, differs, over 2% to 10%, over 10%], from scoreboard-20261125T233202Z.json.
     expect(got).toEqual({
-      "2023-24": { enrollment: [true, 2023, 429, 315, 82, 32, 21, 11], tuition: [true, 2024, 428, 210, 117, 101, 63, 38] },
+      "2023-24": { enrollment: [true, 2023, 429, 330, 66, 33, 22, 11], tuition: [true, 2024, 428, 212, 115, 101, 63, 38] },
       "2024-25": { enrollment: [true, 2024, 484, 375, 70, 39, 24, 15], tuition: [false, 2025, 0, 0, 0, 0, 0, 0] },
       "2025-26": { enrollment: [false, 2025, 0, 0, 0, 0, 0, 0], tuition: [false, 2026, 0, 0, 0, 0, 0, 0] },
     });
