@@ -7,7 +7,7 @@ export const PRICING_POWER_ANNOTATION_IPEDS_ID = "196413" as const;
 
 export const PRICING_POWER_META = {
   "generatedAt": "2026-11-18",
-  "sourceApiUrl": "https://api.collegedata.fyi",
+  "sourceApiUrl": "https://api.quadfile.org",
   "ipedsCycle": "fall 2024 (ADM2024)",
   "scorecardYears": [
     "2022-23"

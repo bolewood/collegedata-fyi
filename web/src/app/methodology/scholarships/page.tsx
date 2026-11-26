@@ -40,7 +40,7 @@ function Term({ lead, children }: { lead: string; children: ReactNode }) {
 }
 
 const APA = `${SITE_NAME}. (2026). Scholarship program data [Data set]. https://${APEX_HOST}/scholarships. CC BY-SA 4.0.`;
-const BIBTEX = `@misc{collegedatafyi2026scholarships,
+const BIBTEX = `@misc{quadfile2026scholarships,
   author       = {{${SITE_NAME}}},
   title        = {Scholarship program data},
   year         = {2026},

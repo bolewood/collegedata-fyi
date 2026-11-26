@@ -1,6 +1,7 @@
 import { isUsageLaunched } from "@/lib/usage";
 import { dataQualityLaunched } from "@/lib/data-quality";
 import { CommunityLink } from "./CommunityInvitation";
+import { FORMER_NAME, SITE_NAME } from "@/lib/site";
 import { Wordmark } from "./Wordmark";
 
 export function Footer() {
@@ -29,6 +30,9 @@ export function Footer() {
             Open-source college data with source-linked school publications,
             NCES/IPEDS baselines, College Scorecard context, and public APIs.
             Code: MIT License. Data: <a href="/api#credit">CC BY 4.0</a>.
+          </div>
+          <div style={{ marginTop: 6 }}>
+            {SITE_NAME} is a project of Bolewood Group, LLC. Formerly {FORMER_NAME}.
           </div>
         </div>
         <div className="cd-footer-links" style={{ display: "flex", gap: 24, alignSelf: "end", flexWrap: "wrap" }}>

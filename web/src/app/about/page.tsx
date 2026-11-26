@@ -141,7 +141,7 @@ export default function AboutPage() {
         </p>
 
         <h2>Project Sponsors</h2>
-        <p>collegedata.fyi is supported by:</p>
+        <p>Quadfile is supported by:</p>
         <ul>
           <li>
             <a href="https://bolewood.com" target="_blank" rel="noopener noreferrer">

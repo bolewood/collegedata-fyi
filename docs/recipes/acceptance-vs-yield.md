@@ -7,7 +7,7 @@ financial outcomes do its students experience afterward?
 number this page computes. The charts do not estimate how enrollment would
 change if a college changed its price.
 
-Open [`/recipes/acceptance-vs-yield`](https://www.collegedata.fyi/recipes/acceptance-vs-yield)
+Open [`/recipes/acceptance-vs-yield`](https://www.quadfile.org/recipes/acceptance-vs-yield)
 for two interactive scatters. Panel A plots IPEDS fall 2024 acceptance rate
 against yield for 1,417 schools with entering classes of at least 100 students.
 Panel B keeps yield and adds College Scorecard
@@ -344,39 +344,39 @@ PostgREST `max-rows` is 1,000. `limit=5000` and `Range: 0-4999` both return
 HTTP 206 with `Content-Range: 0-999/…` and no error body. Page with
 `limit=1000&offset=0`, then `offset=1000`, then `offset=2000` until a page is
 short. Repeat the ADM count query for each of the three field keys. The
-anonymous API key is on [`/api`](https://www.collegedata.fyi/api).
+anonymous API key is on [`/api`](https://www.quadfile.org/api).
 
 ```bash
 # ADM2024 applicant counts. Repeat for admissions_total and enrolled_total.
 # Do not plot admit_rate_total or yield_rate_total (integer-rounded DRVADM).
-curl 'https://api.collegedata.fyi/rest/v1/school_facts_unified?select=school_id,school_name,ipeds_id,in_scope,field_key,value_numeric,source_table,data_year,quality_flag&field_key=eq.applicants_total&source_table=eq.ADM2024&order=ipeds_id.asc&limit=1000&offset=0' \
+curl 'https://api.quadfile.org/rest/v1/school_facts_unified?select=school_id,school_name,ipeds_id,in_scope,field_key,value_numeric,source_table,data_year,quality_flag&field_key=eq.applicants_total&source_table=eq.ADM2024&order=ipeds_id.asc&limit=1000&offset=0' \
   -H 'apikey: <anon key>' \
   -H 'Authorization: Bearer <anon key>'
-curl 'https://api.collegedata.fyi/rest/v1/school_facts_unified?select=school_id,school_name,ipeds_id,in_scope,field_key,value_numeric,source_table,data_year,quality_flag&field_key=eq.applicants_total&source_table=eq.ADM2024&order=ipeds_id.asc&limit=1000&offset=1000' \
+curl 'https://api.quadfile.org/rest/v1/school_facts_unified?select=school_id,school_name,ipeds_id,in_scope,field_key,value_numeric,source_table,data_year,quality_flag&field_key=eq.applicants_total&source_table=eq.ADM2024&order=ipeds_id.asc&limit=1000&offset=1000' \
   -H 'apikey: <anon key>' \
   -H 'Authorization: Bearer <anon key>'
-curl 'https://api.collegedata.fyi/rest/v1/school_facts_unified?select=school_id,school_name,ipeds_id,in_scope,field_key,value_numeric,source_table,data_year,quality_flag&field_key=eq.applicants_total&source_table=eq.ADM2024&order=ipeds_id.asc&limit=1000&offset=2000' \
+curl 'https://api.quadfile.org/rest/v1/school_facts_unified?select=school_id,school_name,ipeds_id,in_scope,field_key,value_numeric,source_table,data_year,quality_flag&field_key=eq.applicants_total&source_table=eq.ADM2024&order=ipeds_id.asc&limit=1000&offset=2000' \
   -H 'apikey: <anon key>' \
   -H 'Authorization: Bearer <anon key>'
 
 # Directory scope (paginate the same way)
-curl 'https://api.collegedata.fyi/rest/v1/institution_directory?select=ipeds_id,school_id,school_name,in_scope&order=ipeds_id.asc&limit=1000&offset=0' \
+curl 'https://api.quadfile.org/rest/v1/institution_directory?select=ipeds_id,school_id,school_name,in_scope&order=ipeds_id.asc&limit=1000&offset=0' \
   -H 'apikey: <anon key>' \
   -H 'Authorization: Bearer <anon key>'
 
 # Scorecard 2022-23 join fields
-curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,scorecard_data_year,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,instructional_expenditure_fte&order=ipeds_id.asc&limit=1000&offset=0' \
+curl 'https://api.quadfile.org/rest/v1/scorecard_summary?select=ipeds_id,scorecard_data_year,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,instructional_expenditure_fte&order=ipeds_id.asc&limit=1000&offset=0' \
   -H 'apikey: <anon key>' \
   -H 'Authorization: Bearer <anon key>'
-curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,scorecard_data_year,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,instructional_expenditure_fte&order=ipeds_id.asc&limit=1000&offset=1000' \
+curl 'https://api.quadfile.org/rest/v1/scorecard_summary?select=ipeds_id,scorecard_data_year,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,instructional_expenditure_fte&order=ipeds_id.asc&limit=1000&offset=1000' \
   -H 'apikey: <anon key>' \
   -H 'Authorization: Bearer <anon key>'
-curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,scorecard_data_year,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,instructional_expenditure_fte&order=ipeds_id.asc&limit=1000&offset=2000' \
+curl 'https://api.quadfile.org/rest/v1/scorecard_summary?select=ipeds_id,scorecard_data_year,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,instructional_expenditure_fte&order=ipeds_id.asc&limit=1000&offset=2000' \
   -H 'apikey: <anon key>' \
   -H 'Authorization: Bearer <anon key>'
 
 # CDS 2024-25 C1 cross-check only (do not mix into plotted series)
-curl 'https://api.collegedata.fyi/rest/v1/school_browser_rows?select=school_id,ipeds_id,canonical_year,sub_institutional,acceptance_rate,yield_rate,updated_at&canonical_year=eq.2024-25&sub_institutional=is.null&acceptance_rate=not.is.null&yield_rate=not.is.null&order=updated_at.desc&limit=1000&offset=0' \
+curl 'https://api.quadfile.org/rest/v1/school_browser_rows?select=school_id,ipeds_id,canonical_year,sub_institutional,acceptance_rate,yield_rate,updated_at&canonical_year=eq.2024-25&sub_institutional=is.null&acceptance_rate=not.is.null&yield_rate=not.is.null&order=updated_at.desc&limit=1000&offset=0' \
   -H 'apikey: <anon key>' \
   -H 'Authorization: Bearer <anon key>'
 ```

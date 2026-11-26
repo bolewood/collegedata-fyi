@@ -18,7 +18,7 @@ posts `FormData` directly from the visitor's browser to Formspree (`fetch(endpoi
   first and falls back to `NEXT_PUBLIC_FORMSPREE_ENDPOINT` (already configured
   on Vercel for Production and Preview).
 - **Distinct email subjects:** Each submission sets `_subject` to
-  `[Feedback] collegedata.fyi`, `[Story] collegedata.fyi`, or
+  `[Feedback] Quadfile`, `[Story] Quadfile`, or
   `[Data issue] <school> (<year>)` so feedback, stories, and CDS link submissions
   are easy to filter even when sharing a Formspree endpoint.
 - **Fallback:** If neither env var is set, `/feedback` displays an unavailable

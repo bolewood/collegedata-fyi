@@ -7,7 +7,7 @@ export const revalidate = 3600;
 
 const FACT_CATEGORIES = "identity, admissions, enrollment, cost, aid, finance, outcomes, sources";
 const CLIENT_HEADER = {
-  name: "X-CollegeData-Client",
+  name: "X-Quadfile-Client",
   in: "header",
   required: false,
   schema: { type: "string" },

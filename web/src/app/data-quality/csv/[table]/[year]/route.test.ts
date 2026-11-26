@@ -53,7 +53,7 @@ describe("/data-quality/csv/[table]/[year]", () => {
     expect(res.headers.get("Link")).toBe(DATA_LICENSE_LINK_HEADER);
     expect(res.headers.get("Content-Type")).toBe("text/csv; charset=utf-8");
     expect(res.headers.get("Content-Disposition")).toBe(
-      'attachment; filename="collegedata-data-quality-totals-add-up-2024-25-2026-11-24.csv"',
+      'attachment; filename="quadfile-data-quality-totals-add-up-2024-25-2026-11-24.csv"',
     );
     const text = await raw(res);
     expect(text.charCodeAt(0)).toBe(0xfeff);
@@ -70,7 +70,7 @@ describe("/data-quality/csv/[table]/[year]", () => {
     expect(res.status).toBe(200);
     expect(res.headers.get("Link")).toBe(DATA_LICENSE_LINK_HEADER);
     expect(res.headers.get("Content-Disposition")).toBe(
-      'attachment; filename="collegedata-data-quality-sections-2024-25-2026-11-24.csv"',
+      'attachment; filename="quadfile-data-quality-sections-2024-25-2026-11-24.csv"',
     );
     const text = await raw(res);
     expect(text.charCodeAt(0)).toBe(0xfeff);
@@ -101,7 +101,7 @@ describe("/data-quality/csv/[table]/[year]", () => {
       const res = await get(table, "2023-24");
       expect(res.status).toBe(200);
       expect(res.headers.get("Link")).toBe(DATA_LICENSE_LINK_HEADER);
-      expect(res.headers.get("Content-Disposition")).toBe(`attachment; filename="collegedata-data-quality-${slug}-2023-24-2026-11-24.csv"`);
+      expect(res.headers.get("Content-Disposition")).toBe(`attachment; filename="quadfile-data-quality-${slug}-2023-24-2026-11-24.csv"`);
       expect((await raw(res)).charCodeAt(0)).toBe(0xfeff);
     }
     writeSnapshot(FIXTURE_SNAPSHOT_V3);

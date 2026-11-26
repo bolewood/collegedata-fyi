@@ -1,6 +1,6 @@
 # Data Extraction Pipeline Map
 
-This is the operational map for how collegedata.fyi turns decentralized Common
+This is the operational map for how Quadfile turns decentralized Common
 Data Set files into public, queryable rows, plus the adjacent federal baseline
 path that now supplies NCES/IPEDS facts for schools without a public CDS. It
 focuses on where each step lives, how often it runs, what it writes, and the
@@ -98,7 +98,7 @@ flowchart TD
 | Pipeline observation | `tools/ops/record_heartbeat.py`, `tools/ops/automation_health.py`, `/pipeline-observation` | `pipeline_stations`, `pipeline_heartbeats`, extraction activity ledger (service-role) | Heartbeats from each job; the page renders live | Public board of station lamps and the last 14 days of extraction finishes. Document IDs, hashes, and raw worker errors are never shown. |
 | API usage ingest | `.github/workflows/ops-api-usage-ingest.yml`, `tools/api_usage/` | `api_gateway_*`, `api_usage_downloads_daily`, `usage_public_*` | Minutes 20 and 50 of every hour | Reads Supabase gateway logs (90-day retention) and publishes aggregates to `/usage`. Counts only; see [`api-usage-attribution.md`](api-usage-attribution.md). |
 | Discord notifications | `.github/workflows/ops-discord-notify.yml`, `tools/ops/notify_discord.py` | none (GitHub secrets for webhooks) | Hourly at :13 plus workflow-run triggers | Posts failures and recoveries to `#alerts` and production deploys to `#deploys`. See [`ops-discord.md`](ops-discord.md). |
-| Public API/frontend | PostgREST at `api.collegedata.fyi`, `browser-search`, the friendly JSON API and MCP on the Next.js app | The anon-readable views and tables listed under [Served views](ARCHITECTURE.md#served-views) | On demand | Frontend surfaces curated browser rows, archive downloads, IPEDS federal baseline facts, and reviewed change events. Unreviewed PRD 019 events remain operator-only. |
+| Public API/frontend | PostgREST at `api.quadfile.org`, `browser-search`, the friendly JSON API and MCP on the Next.js app | The anon-readable views and tables listed under [Served views](ARCHITECTURE.md#served-views) | On demand | Frontend surfaces curated browser rows, archive downloads, IPEDS federal baseline facts, and reviewed change events. Unreviewed PRD 019 events remain operator-only. |
 
 ## Tier Routing Summary
 

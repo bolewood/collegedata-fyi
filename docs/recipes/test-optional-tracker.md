@@ -10,7 +10,7 @@
 
 ## The demo
 
-Open [`/recipes/test-optional-tracker`](https://www.collegedata.fyi/recipes/test-optional-tracker) for the interactive line chart. It shows SAT-submission percentage over time for seven schools pulled directly from the collegedata.fyi corpus: Yale (2009-10 → 2024-25), Caltech (2002-03 → 2020-21), MIT, Princeton, Stanford, Harvard, and Wake Forest. Hover over a point to see the underlying year, SAT submission rate, and (where reported) ACT submission rate. Dashed horizontal reference lines mark the thresholds we use to classify a school's effective policy.
+Open [`/recipes/test-optional-tracker`](https://www.quadfile.org/recipes/test-optional-tracker) for the interactive line chart. It shows SAT-submission percentage over time for seven schools pulled directly from the Quadfile corpus: Yale (2009-10 → 2024-25), Caltech (2002-03 → 2020-21), MIT, Princeton, Stanford, Harvard, and Wake Forest. Hover over a point to see the underlying year, SAT submission rate, and (where reported) ACT submission rate. Dashed horizontal reference lines mark the thresholds we use to classify a school's effective policy.
 
 The chart tells three stories that no single school's admissions page would:
 
@@ -34,12 +34,12 @@ The seed data in the demo is hand-verified for each of the seven charted schools
 
 ```bash
 # 1) List every manifest entry for the years you care about
-curl 'https://api.collegedata.fyi/rest/v1/cds_manifest?canonical_year=in.(2018-19,2019-20,2020-21,2021-22,2022-23,2023-24,2024-25)&extraction_status=eq.extracted&select=document_id,ipeds_id,school_id,school_name,canonical_year' \
+curl 'https://api.quadfile.org/rest/v1/cds_manifest?canonical_year=in.(2018-19,2019-20,2020-21,2021-22,2022-23,2023-24,2024-25)&extraction_status=eq.extracted&select=document_id,ipeds_id,school_id,school_name,canonical_year' \
   -H 'apikey: <anon key>' -H 'Authorization: Bearer <anon key>' \
   > manifest.json
 
 # 2) For each document, pull the canonical artifact and read values.C.901 and values.C.902
-curl 'https://api.collegedata.fyi/rest/v1/cds_artifacts?document_id=eq.<uuid>&kind=eq.canonical&select=notes' \
+curl 'https://api.quadfile.org/rest/v1/cds_artifacts?document_id=eq.<uuid>&kind=eq.canonical&select=notes' \
   -H 'apikey: <anon key>' -H 'Authorization: Bearer <anon key>'
 ```
 
@@ -48,7 +48,7 @@ The artifact's `notes.values["C.901"].value` is the SAT submission percentage, a
 Treat `document_id` as the CDS join key and retain its `ipeds_id` and `school_id` for provenance.
 Any federal enrichment must join on a guarded `ipeds_id`, never on the display slug.
 
-If you want a single blob rather than per-document queries, the /api page at [collegedata.fyi/api](https://www.collegedata.fyi/api) has the full PostgREST auth and query reference, including how to use `in.(…)` to fetch many documents at once.
+If you want a single blob rather than per-document queries, the /api page at [Quadfile/api](https://www.quadfile.org/api) has the full PostgREST auth and query reference, including how to use `in.(…)` to fetch many documents at once.
 
 ## Known caveats
 
@@ -66,4 +66,4 @@ If you want a single blob rather than per-document queries, the /api page at [co
 
 ## Attribution
 
-Every trajectory in the demo is drawn directly from the collegedata.fyi public API; no number is estimated, interpolated, or summarized. Where a school has no CDS for a given year in our archive, the line is broken (gap), not smoothed. Yale's 2009-10 → 2024-25 continuous series is the richest ground-truth arc in the current corpus.
+Every trajectory in the demo is drawn directly from the Quadfile public API; no number is estimated, interpolated, or summarized. Where a school has no CDS for a given year in our archive, the line is broken (gap), not smoothed. Yale's 2009-10 → 2024-25 continuous series is the richest ground-truth arc in the current corpus.

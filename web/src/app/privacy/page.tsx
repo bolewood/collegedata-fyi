@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Privacy",
   description:
-    "Privacy policy for collegedata.fyi: no accounts, no student profiles, private optional feedback, and aggregate analytics.",
+    "Privacy policy for Quadfile: no accounts, no student profiles, private optional feedback, and aggregate analytics.",
   alternates: { canonical: "/privacy" },
   openGraph: { url: "/privacy" },
 };
@@ -32,7 +32,7 @@ export default function PrivacyPage() {
         </p>
 
         <p>
-          collegedata.fyi is designed to work without accounts, logins, or
+          Quadfile is designed to work without accounts, logins, or
           saved student profiles. You can browse school pages, read source
           documents, use the public API, and use the current planning tools
           without submitting personal information to us.
@@ -111,7 +111,8 @@ export default function PrivacyPage() {
           <code>/api/compare</code>, <code>/api/facts</code>, and the other
           simple endpoints) are also recorded one row per request, with the
           route and HTTP method, the client name your app sends in the{" "}
-          <code>X-CollegeData-Client</code> header, its version and the tool
+          <code>X-Quadfile-Client</code> header (or the older{" "}
+          <code>X-CollegeData-Client</code>), its version and the tool
           or command name if it sends them, a coarse client type (such as
           browser, script, or AI agent), the referring site's hostname,
           your country, the school asked about, and for comparisons how many

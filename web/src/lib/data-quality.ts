@@ -850,7 +850,7 @@ export function qualityCsvPath(table: QualityTableId, year: string): string {
 }
 
 export function qualityCsvFilename(table: QualityTableId, year: string, snapshotOf: string): string {
-  return `collegedata-data-quality-${TABLE_SLUG[table]}-${year}-${snapshotOf.slice(0, 10)}.csv`;
+  return `quadfile-data-quality-${TABLE_SLUG[table]}-${year}-${snapshotOf.slice(0, 10)}.csv`;
 }
 
 /** CSV of one table for one year: header, one line per format, then the year total. */

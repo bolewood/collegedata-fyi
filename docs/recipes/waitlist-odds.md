@@ -2,7 +2,7 @@
 
 **Who this is for:** enrollment managers and IR. C2 offer / accept / admit, bucketed by C1 selectivity and by federal control, size, and Carnegie class. Counselors and reporters are welcome.
 
-**Inspiration:** Roshan Fernandez's May 10, 2026 Wall Street Journal story, ["The Only Thing Harder Than Getting Into College Is Getting Off the Wait List"](https://www.wsj.com/us-news/education/college-waitlists-national-decision-day-4cb7b5d8), described wait lists that have grown into thousands of students while some schools admit few or none from the pool. This recipe uses that question as the prompt, then recomputes the answer from collegedata.fyi's Common Data Set corpus.
+**Inspiration:** Roshan Fernandez's May 10, 2026 Wall Street Journal story, ["The Only Thing Harder Than Getting Into College Is Getting Off the Wait List"](https://www.wsj.com/us-news/education/college-waitlists-national-decision-day-4cb7b5d8), described wait lists that have grown into thousands of students while some schools admit few or none from the pool. This recipe uses that question as the prompt, then recomputes the answer from Quadfile's Common Data Set corpus.
 
 **CDS sections used:** C2 wait-list counts (`C.201`-`C.204`), C1 application/admission/enrollment totals, plus College Scorecard context for size/control/Carnegie buckets.
 
@@ -10,7 +10,7 @@
 
 ## The demo
 
-Open [`/recipes/waitlist-odds`](https://www.collegedata.fyi/recipes/waitlist-odds) for the interactive chart.
+Open [`/recipes/waitlist-odds`](https://www.quadfile.org/recipes/waitlist-odds) for the interactive chart.
 
 The recipe reads the current `school_browser_rows` table and keeps every school-year row that exposes wait-list data. A row is counted in the rate analysis only when it has all three C2 counts and the math is internally valid:
 
@@ -70,7 +70,7 @@ python tools/scorecard/build_waitlist_recipe.py
 The builder needs only the public anon key, read from `SUPABASE_ANON_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY` in the environment, the repo-root `.env`, or `web/.env.local`. It keeps school-year rows that publish at least one of the three C2 counts, skips sub-institutional rows and malformed year labels, and excludes rows whose counts cannot all be true (more admitted from the wait list than accepted a spot, more accepted than offered, more admitted than offered). The excluded rows are listed in the generated file's header. To pull the underlying fields by hand, start from:
 
 ```bash
-curl 'https://api.collegedata.fyi/rest/v1/school_browser_rows?select=document_id,ipeds_id,school_id,school_name,canonical_year,acceptance_rate,wait_list_policy,wait_list_offered,wait_list_accepted,wait_list_admitted&wait_list_offered=not.is.null'
+curl 'https://api.quadfile.org/rest/v1/school_browser_rows?select=document_id,ipeds_id,school_id,school_name,canonical_year,acceptance_rate,wait_list_policy,wait_list_offered,wait_list_accepted,wait_list_admitted&wait_list_offered=not.is.null'
 ```
 
 For the page's bucket analysis, join by `ipeds_id` to:

@@ -117,14 +117,14 @@ describe("coverage CSV buttons", () => {
     expect(text).toBe(CSV_BOM + buildCoverageCsv(view));
     expect(text.slice(1).startsWith("ipeds_id,school_id,school_name,")).toBe(true);
     expect(text.split("\r\n").filter(Boolean)).toHaveLength(1 + view.length);
-    expect(filename).toMatch(/^collegedata-coverage-view-\d{4}-\d{2}-\d{2}\.csv$/);
+    expect(filename).toMatch(/^quadfile-coverage-view-\d{4}-\d{2}-\d{2}\.csv$/);
   });
 
   it("'all colleges' saves every row and is the only one named all-colleges", async () => {
     const view = coverageViewRows(ROWS, "all=1&state=NM", "name", "asc");
     const { text, filename } = await download(CoverageDownloads({ viewRows: view, allRows: ROWS }) as ReactElement, "Download all colleges");
     expect(text.split("\r\n").filter(Boolean)).toHaveLength(1 + ROWS.length);
-    expect(filename).toMatch(/^collegedata-coverage-all-colleges-/);
+    expect(filename).toMatch(/^quadfile-coverage-all-colleges-/);
   });
 
   it("round-trips a name with a comma and a quote", async () => {
@@ -138,7 +138,7 @@ describe("coverage CSV buttons", () => {
     expect(html).toContain("College Scorecard and IPEDS, which our license doesn");
     expect(html).toContain(`href="${DATA_LICENSE_URL}"`);
     // Small sentence-case text like the /data-quality licence line, not the uppercase .meta label, and it carries the credit.
-    expect(html).toContain("Credit collegedata.fyi.");
+    expect(html).toContain("Credit Quadfile.");
     expect(html).not.toContain('class="meta"');
     expect(html).toContain("latest_year_found is the latest year of any file we hold");
     // The licensed sentence names only our columns, and links the license.

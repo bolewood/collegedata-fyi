@@ -209,7 +209,7 @@ function readmeSheet(
     [],
     ["Data & attribution"],
     [
-      `Data originates from ${input.schoolName}'s published Common Data Set, which belongs to the school. The structured transcription is licensed ${DATA_LICENSE_NAME} by collegedata.fyi.`,
+      `Data originates from ${input.schoolName}'s published Common Data Set, which belongs to the school. The structured transcription is licensed ${DATA_LICENSE_NAME} by Quadfile.`,
     ],
     [`Credit line: ${DATA_ATTRIBUTION}`],
     [

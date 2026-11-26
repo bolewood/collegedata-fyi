@@ -10,7 +10,7 @@ const ANON_KEY =
 export const metadata: Metadata = {
   title: "Merit and need aid methodology",
   description:
-    "How collegedata.fyi reads merit-aid and need-aid from Common Data Set Section H, with federal College Scorecard net-price and outcome context. Not a personalized price estimate.",
+    "How Quadfile reads merit-aid and need-aid from Common Data Set Section H, with federal College Scorecard net-price and outcome context. Not a personalized price estimate.",
   alternates: { canonical: "/methodology/merit-profile" },
   openGraph: { url: "/methodology/merit-profile" },
 };

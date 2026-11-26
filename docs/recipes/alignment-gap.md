@@ -4,7 +4,7 @@
 and with an institution's financial resources when College Scorecard, CDS
 H2A, and IPEDS are joined?
 
-Open [`/recipes/alignment-gap`](https://www.collegedata.fyi/recipes/alignment-gap)
+Open [`/recipes/alignment-gap`](https://www.quadfile.org/recipes/alignment-gap)
 for two interactive scatters. Panel A plots the alignment gap (Scorecard)
 against estimated non-need merit aid per first-year student (CDS H2A).
 Schools that award no non-need merit aid sit on a dedicated `$0` rail on the left,

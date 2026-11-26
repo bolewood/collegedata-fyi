@@ -18,9 +18,9 @@ const DATA_LICENSE_FIELDS = {
     license: "CC-BY-4.0",
     license_url: "https://creativecommons.org/licenses/by/4.0/",
     scope:
-      "Covers the structured Common Data Set extracts, field documentation and derived-metric definitions authored by collegedata.fyi. Does not cover the schools' Common Data Set documents, CDS Initiative template text, or federal IPEDS, College Scorecard and FSA facts. Say so if you changed the data.",
+      "Covers the structured Common Data Set extracts, field documentation and derived-metric definitions authored by Quadfile. Does not cover the schools' Common Data Set documents, CDS Initiative template text, or federal IPEDS, College Scorecard and FSA facts. Say so if you changed the data.",
     attribution:
-      "Common Data Set extracts from collegedata.fyi (https://www.collegedata.fyi), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Figures as published in each school's Common Data Set.",
+      "Common Data Set extracts from Quadfile (https://www.quadfile.org), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Figures as published in each school's Common Data Set.",
   },
 };
 

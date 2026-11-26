@@ -304,7 +304,7 @@ export const COVERAGE_CSV_DEFINITION_NOTE =
   "latest_year_with_numbers is the latest year whose numbers we read; latest_year_found is the latest year of any file we hold.";
 
 export function coverageCsvFilename(scope: "view" | "all", day: string): string {
-  return `collegedata-coverage-${scope === "all" ? "all-colleges" : "view"}-${day}.csv`;
+  return `quadfile-coverage-${scope === "all" ? "all-colleges" : "view"}-${day}.csv`;
 }
 
 export function buildCoverageCsv(rows: InstitutionCoverage[]): string {

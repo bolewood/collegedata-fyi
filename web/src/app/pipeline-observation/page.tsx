@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Pipeline status",
   description:
-    "Live schedule status for automated jobs on collegedata.fyi, when each last ran on time, and recent extraction activity.",
+    "Live schedule status for automated jobs on Quadfile, when each last ran on time, and recent extraction activity.",
   alternates: { canonical: "/pipeline-observation" },
 };
 
@@ -82,7 +82,7 @@ export default async function PipelineObservationPage() {
             maxWidth: 720,
           }}
         >
-          Scheduled jobs on collegedata.fyi, when each last ran on time, and
+          Scheduled jobs on Quadfile, when each last ran on time, and
           what it produced. Any job that misses its schedule turns red until a
           scheduled run succeeds.
         </p>

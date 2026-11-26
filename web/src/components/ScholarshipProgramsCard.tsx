@@ -68,7 +68,7 @@ function Offers({ row }: { row: ScholarshipDirectoryRow }) {
             {summary.quotedTotals.map((t, i) => (
               <p key={i} className="sch-line sch-quote">
                 As the school quotes the total: “{t.quote}”
-                {t.scope ? <> ({t.scope})</> : null}. Not added up by collegedata.fyi.
+                {t.scope ? <> ({t.scope})</> : null}. Not added up by Quadfile.
               </p>
             ))}
             <div className="meta sch-gap">§ How you are considered</div>

@@ -1,11 +1,11 @@
-# collegedata.fyi Frontend
+# Quadfile Frontend
 
 How the frontend works, what's in each file, and how the data flows from
 Supabase to the browser. Complements [`docs/prd/002-frontend.md`](prd/002-frontend.md)
 (the original plan and review decisions) and [`docs/ARCHITECTURE.md`](ARCHITECTURE.md)
 (the full system architecture).
 
-**Live site:** [collegedata.fyi](https://collegedata.fyi)
+**Live site:** [Quadfile](https://www.quadfile.org)
 **Source:** [`web/`](../web/)
 
 ---
@@ -296,7 +296,7 @@ predictions.
 
 Public API reference. Covers the friendly JSON API (`/api/schools*`,
 `/api/compare`, `/api/fields`, `/api/snapshots`), the hosted MCP endpoint and
-CLI, rate limits and the `X-CollegeData-Client` header, `llms.txt` and
+CLI, rate limits and the `X-Quadfile-Client` header, `llms.txt` and
 `openapi.json`, the snapshot files, and the raw PostgREST resources (anon-key
 headers, `browser-search`, `school_merit_profile`, and the other served views
 listed in [`ARCHITECTURE.md`](ARCHITECTURE.md#served-views)). Per-route

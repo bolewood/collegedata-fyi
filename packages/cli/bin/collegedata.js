@@ -5,7 +5,7 @@ const CLIENT_NAME = "cli";
 const CLIENT_VERSION = "0.1.0";
 // Keep in step with DATA_ATTRIBUTION in web/src/lib/data-license.ts (a web test pins it).
 const DATA_ATTRIBUTION =
-  "Common Data Set extracts from collegedata.fyi (https://www.collegedata.fyi), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Figures as published in each school's Common Data Set.";
+  "Common Data Set extracts from Quadfile (https://www.quadfile.org), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Figures as published in each school's Common Data Set.";
 
 // Table and CSV output drop the JSON envelope's attribution field, so print the
 // credit line once on stderr. Never on stdout: that would corrupt piped CSV.

@@ -57,7 +57,7 @@ Prints a per-row log (`school_id / cds_year → source_format`) and a final dist
 ## Source-format distribution
 
 The live distribution changes with every archive run; see
-[/pipeline-observation](https://www.collegedata.fyi/pipeline-observation) or
+[/pipeline-observation](https://www.quadfile.org/pipeline-observation) or
 query `cds_manifest.source_format` through the public API. Order of magnitude as
 of Nov 2026: mostly `pdf_flat`, a few hundred `xlsx`, a couple hundred
 `pdf_fillable`, and small numbers of `pdf_scanned`, `html`, `docx` and `other`.

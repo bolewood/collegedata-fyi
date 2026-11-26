@@ -22,11 +22,11 @@ export const DATA_LICENSE_EFFECTIVE_DATE = "2026-11-23";
 
 /** The canonical credit line. Includes the license link, which CC BY requires. */
 export const DATA_ATTRIBUTION =
-  "Common Data Set extracts from collegedata.fyi (https://www.collegedata.fyi), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Figures as published in each school's Common Data Set.";
+  "Common Data Set extracts from Quadfile (https://www.quadfile.org), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Figures as published in each school's Common Data Set.";
 
 /** What the data license covers, for machine-readable envelopes. */
 export const DATA_LICENSE_SCOPE =
-  "Covers the structured Common Data Set extracts, field documentation and derived-metric definitions authored by collegedata.fyi. Does not cover the schools' Common Data Set documents, CDS Initiative template text, or federal IPEDS, College Scorecard and FSA facts. Say so if you changed the data.";
+  "Covers the structured Common Data Set extracts, field documentation and derived-metric definitions authored by Quadfile. Does not cover the schools' Common Data Set documents, CDS Initiative template text, or federal IPEDS, College Scorecard and FSA facts. Say so if you changed the data.";
 
 /** Our code and the structured CDS extracts we derive. */
 export const DERIVED_DATA_LICENSE_SENTENCE =

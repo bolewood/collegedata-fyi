@@ -486,7 +486,7 @@ function CsvButton({ table, year }: { table: QualityTableId; year: QualityYear }
         <a href={DATA_LICENSE_URL} style={{ textDecoration: "underline" }}>
           {DATA_LICENSE_NAME}
         </a>
-        . Credit collegedata.fyi.
+        . Credit Quadfile.
       </p>
     </div>
   );

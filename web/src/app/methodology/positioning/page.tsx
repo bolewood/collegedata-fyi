@@ -10,7 +10,7 @@ const ANON_KEY =
 export const metadata: Metadata = {
   title: "Academic profile methodology",
   description:
-    "How collegedata.fyi compares a student's scores to a school's published Common Data Set score bands for enrolled first-years. Not a chance-me.",
+    "How Quadfile compares a student's scores to a school's published Common Data Set score bands for enrolled first-years. Not a chance-me.",
   alternates: { canonical: "/methodology/positioning" },
   openGraph: { url: "/methodology/positioning" },
 };

@@ -74,7 +74,7 @@ describe("Wave 4 methodology and API copy", () => {
     expect(page).toContain("Add custom connector");
     expect(page).toContain("claude_desktop_config.json");
     expect(page).toContain(
-      "/absolute/path/to/collegedata-fyi/packages/mcp-server/bin/collegedata-mcp.js",
+      "/absolute/path/to/quadfile/packages/mcp-server/bin/collegedata-mcp.js",
     );
     expect(page).not.toMatch(/"args": \["packages\/mcp-server\/bin\/collegedata-mcp\.js"\]/);
     expect(page).not.toMatch(/from the repository root/);

@@ -4,7 +4,7 @@ build_crosswalk.py — bootstrap a brand-color scouting queue for US colleges
 by cross-referencing three public sources instead of searching each school
 from scratch.
 
-Part of collegedata.fyi (https://collegedata.fyi), an open-source archive of
+Part of Quadfile (https://www.quadfile.org), an open-source archive of
 US college Common Data Set documents. This tool exists because manually
 searching ~2,900 schools one at a time for a stated brand-color hex is the
 slow part of populating a "brand_colors" field — this collapses that search

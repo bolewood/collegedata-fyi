@@ -17,7 +17,7 @@ from typing import Any, Dict, Iterable, List, Optional, Set
 # One canonical attribution string. LICENSE, README, the migration, the view
 # contract and every download carry it; test_load.py fails if any drifts.
 ATTRIBUTION = (
-    "Scholarship program data from collegedata.fyi (https://collegedata.fyi/scholarships), "
+    "Scholarship program data from Quadfile (https://www.quadfile.org/scholarships), "
     "CC BY-SA 4.0. Terms as published by each school; see the source link on each record."
 )
 LICENSE_ID = "CC-BY-SA-4.0"

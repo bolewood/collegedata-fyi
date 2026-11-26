@@ -5,7 +5,7 @@
 **Source:** NCES IPEDS Finance form F2, Part H. The interactive recipe is an independent estimate
 from public federal data; it is not a reproduction of audited-financial-statement analysis.
 
-Open [`/recipes/endowment-draw-rate`](https://www.collegedata.fyi/recipes/endowment-draw-rate) for
+Open [`/recipes/endowment-draw-rate`](https://www.quadfile.org/recipes/endowment-draw-rate) for
 the fiscal-year distribution and school picker.
 
 ## What the recipe computes
@@ -87,7 +87,7 @@ source-release records.
 The underlying finance query shape is:
 
 ```bash
-curl 'https://api.collegedata.fyi/rest/v1/ipeds_facts?field_key=eq.endowment_spending_distribution&data_year=gte.2020&and=(data_year.lte.2024,source_table.like.F*_F2)&public_visible=eq.true&select=release_id,ipeds_id,data_year,field_key,value_numeric,quality_flag,release_type,source_table,source_variable&order=ipeds_id.asc,data_year.asc,release_id.asc' \
+curl 'https://api.quadfile.org/rest/v1/ipeds_facts?field_key=eq.endowment_spending_distribution&data_year=gte.2020&and=(data_year.lte.2024,source_table.like.F*_F2)&public_visible=eq.true&select=release_id,ipeds_id,data_year,field_key,value_numeric,quality_flag,release_type,source_table,source_variable&order=ipeds_id.asc,data_year.asc,release_id.asc' \
   -H 'apikey: <anon key>' \
   -H 'Authorization: Bearer <anon key>'
 ```

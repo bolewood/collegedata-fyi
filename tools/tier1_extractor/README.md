@@ -100,7 +100,7 @@ Same shape as Tier 2's output (keyed by canonical `question_number`) so downstre
 | Aims Community College 2022-23 | 274 / 1105 (25%) | Drain pass |
 | Adelphi University (multiple years) | 36-58 | Drain pass, older template years |
 
-Corpus-wide, several hundred XLSX source rows are routed through Tier 1 (live counts: [/pipeline-observation](https://www.collegedata.fyi/pipeline-observation)). In the `2024+` projection the median populated field count was 521 and the max 782 at the time of the last audit. Older template years and partial fills remain lower.
+Corpus-wide, several hundred XLSX source rows are routed through Tier 1 (live counts: [/pipeline-observation](https://www.quadfile.org/pipeline-observation)). In the `2024+` projection the median populated field count was 521 and the max 782 at the time of the last audit. Older template years and partial fills remain lower.
 
 ## Known gaps
 

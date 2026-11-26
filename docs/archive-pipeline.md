@@ -950,9 +950,9 @@ basic regression coverage for the `NULLS NOT DISTINCT` constraint.
 ### Current status
 
 Live counts go stale quickly, so this section no longer quotes them. Use
-[`/coverage`](https://collegedata.fyi/coverage) for how many schools and
+[`/coverage`](https://www.quadfile.org/coverage) for how many schools and
 years are archived and extracted, and
-[`/pipeline-observation`](https://collegedata.fyi/pipeline-observation) for
+[`/pipeline-observation`](https://www.quadfile.org/pipeline-observation) for
 whether each job is running. Dated snapshots: the May 3, 2026 state is in
 [`extraction-quality.md`](extraction-quality.md) and the August 6, 2026
 integrity audit is in [`docs/plans/audit-2026-08-06-final/`](plans/audit-2026-08-06-final/README.md).

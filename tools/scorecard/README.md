@@ -21,9 +21,9 @@ is below.
 - **`cds_scorecard` view — joins live**. One row per CDS document with the Scorecard outcome slice attached. NULLs on the Scorecard side mean either the school has no IPEDS match or the school dropped out of the federal Title-IV list.
 - **`school_merit_profile`**: joins latest primary Section H CDS merit/need-aid facts to selected Scorecard affordability and outcome fields.
 
-Row counts change with every refresh; see [/coverage](https://www.collegedata.fyi/coverage) for current numbers.
+Row counts change with every refresh; see [/coverage](https://www.quadfile.org/coverage) for current numbers.
 
-Row counts change with every refresh; see [/coverage](https://www.collegedata.fyi/coverage) for current numbers.
+Row counts change with every refresh; see [/coverage](https://www.quadfile.org/coverage) for current numbers.
 
 ## Files
 
@@ -121,19 +121,19 @@ The same `--only-cds` flag scopes the upsert to just the IPEDS IDs referenced by
 ANON=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...   # public anon key
 
 # Top earners among CDS-archived schools
-curl "https://api.collegedata.fyi/rest/v1/cds_scorecard?select=school_name,cds_year,earnings_10yr_median,graduation_rate_6yr,avg_net_price&earnings_10yr_median=not.is.null&extraction_status=eq.extracted&order=earnings_10yr_median.desc&limit=25" \
+curl "https://api.quadfile.org/rest/v1/cds_scorecard?select=school_name,cds_year,earnings_10yr_median,graduation_rate_6yr,avg_net_price&earnings_10yr_median=not.is.null&extraction_status=eq.extracted&order=earnings_10yr_median.desc&limit=25" \
   -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
 
 # Net price by income bracket for one school
-curl "https://api.collegedata.fyi/rest/v1/cds_scorecard?school_id=eq.harvard&select=school_name,net_price_0_30k,net_price_30k_48k,net_price_48k_75k,net_price_75k_110k,net_price_110k_plus&limit=1" \
+curl "https://api.quadfile.org/rest/v1/cds_scorecard?school_id=eq.harvard&select=school_name,net_price_0_30k,net_price_30k_48k,net_price_48k_75k,net_price_75k_110k,net_price_110k_plus&limit=1" \
   -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
 
 # Full Scorecard subset (every institution, not just CDS-archived ones)
-curl "https://api.collegedata.fyi/rest/v1/scorecard_summary?ipeds_id=eq.166027&select=*" \
+curl "https://api.quadfile.org/rest/v1/scorecard_summary?ipeds_id=eq.166027&select=*" \
   -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
 
 # Latest CDS merit/need-aid profile plus Scorecard context
-curl "https://api.collegedata.fyi/rest/v1/school_merit_profile?school_id=eq.yale&select=school_name,canonical_year,merit_profile_quality,avg_non_need_grant_first_year_ft,avg_net_price,earnings_10yr_median" \
+curl "https://api.quadfile.org/rest/v1/school_merit_profile?school_id=eq.yale&select=school_name,canonical_year,merit_profile_quality,avg_non_need_grant_first_year_ft,avg_net_price,earnings_10yr_median" \
   -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
 ```
 
@@ -168,6 +168,6 @@ pip install pandas supabase python-dotenv pyyaml
 `.env` at repo root (`load_directory.py` also accepts `--search-nicknames`, `--identity-exceptions` and `--summary-out`; run it with `--help`):
 
 ```
-SUPABASE_URL=https://api.collegedata.fyi
+SUPABASE_URL=https://api.quadfile.org
 SUPABASE_SERVICE_ROLE_KEY=...   # for --apply paths only; never check in
 ```

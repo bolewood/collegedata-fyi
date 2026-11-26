@@ -1,4 +1,4 @@
-# Contributing to collegedata.fyi
+# Contributing to Quadfile
 
 Thanks for thinking about contributing. This project is designed around community help from day one, and there are a few specific ways you can make a real difference.
 
@@ -6,7 +6,7 @@ Thanks for thinking about contributing. This project is designed around communit
 
 ### 1. Add a school we don't yet track
 
-If `collegedata.fyi` doesn't know about a school's CDS, it's almost always because the school's website doesn't match our default URL patterns. The fix is usually one entry in [`tools/finder/schools.yaml`](tools/finder/schools.yaml).
+If `Quadfile` doesn't know about a school's CDS, it's almost always because the school's website doesn't match our default URL patterns. The fix is usually one entry in [`tools/finder/schools.yaml`](tools/finder/schools.yaml).
 
 Minimum entry:
 
@@ -80,7 +80,7 @@ The hardest part of the pipeline is extracting structured data from flattened PD
 - Architecture overview: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 - Schema reference: [`schemas/`](schemas/) (canonical 1,105-field CDS schema, keyed by stable question IDs).
 - Frontend: see [`web/README.md`](web/README.md).
-- **Visual system** (read before touching any UI): [`web/DESIGN_SYSTEM.md`](web/DESIGN_SYSTEM.md). Canonical tokens in [`web/src/app/tokens.css`](web/src/app/tokens.css); live reference page at [`/design-system/`](https://collegedata.fyi/design-system/); handoff source archive in [`docs/design/`](docs/design/).
+- **Visual system** (read before touching any UI): [`web/DESIGN_SYSTEM.md`](web/DESIGN_SYSTEM.md). Canonical tokens in [`web/src/app/tokens.css`](web/src/app/tokens.css); live reference page at [`/design-system/`](https://www.quadfile.org/design-system/); handoff source archive in [`docs/design/`](docs/design/).
 
 ## Pull request conventions
 
@@ -129,7 +129,7 @@ A dedicated succession ADR will be written if the project grows to a scale where
 
 The archive preserves publicly-published CDS documents on the presumption that they are public-accountability records. If your school's IR office needs a document removed (accidental publish, FERPA-adjacent content, version dispute, etc.), the protocol is documented in [ADR 0008](docs/decisions/0008-takedown-process.md).
 
-Briefly: email `contact@bolewood.com` (also shown on the [privacy page](https://collegedata.fyi/privacy)) from a `.edu` address matching your school's domain and specify `school_id`, `cds_year`, and reason. Catalog removal is immediate; bytes removal is available on request. Every takedown is logged in [`docs/takedowns.md`](docs/takedowns.md) as a public transparency measure (no requester PII).
+Briefly: email `contact@bolewood.com` (also shown on the [privacy page](https://www.quadfile.org/privacy)) from a `.edu` address matching your school's domain and specify `school_id`, `cds_year`, and reason. Catalog removal is immediate; bytes removal is available on request. Every takedown is logged in [`docs/takedowns.md`](docs/takedowns.md) as a public transparency measure (no requester PII).
 
 ## Questions
 

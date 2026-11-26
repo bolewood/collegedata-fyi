@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://collegedata.fyi/schemas/scholarship-program.schema.json",
-  "title": "collegedata.fyi named scholarship program (PRD 036 M1)",
+  "$id": "https://www.quadfile.org/schemas/scholarship-program.schema.json",
+  "title": "Quadfile named scholarship program (PRD 036 M1)",
   "description": "One file per program under data/scholarships/programs/<school_id>/<program_id>.yaml. Program-level fields plus one immutable version per entering class. Unknown is never false: use null, unknown, not_published or a conflicting field_evidence entry.",
   "type": "object",
   "additionalProperties": false,

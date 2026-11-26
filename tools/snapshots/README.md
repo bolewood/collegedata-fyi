@@ -4,8 +4,8 @@
 
 ```bash
 # Node 20+; no install needed
-COLLEGEDATA_API_BASE=https://www.collegedata.fyi \
-COLLEGEDATA_SNAPSHOT_DATE=2026-11-09 \
+QUADFILE_API_BASE=https://www.quadfile.org \
+QUADFILE_SNAPSHOT_DATE=2026-11-09 \
   node tools/snapshots/build_public_snapshots.mjs
 ```
 
