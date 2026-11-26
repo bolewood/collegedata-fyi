@@ -30,7 +30,6 @@ if str(REPO_ROOT) not in sys.path:
 from tools.common.site import runtime_api_origin  # noqa: E402
 
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
 OUT_DIR = REPO_ROOT / ".context" / "reports"
 CSV_OUT = OUT_DIR / "prd019_admissions_reporting_spike.csv"
 MD_OUT = OUT_DIR / "prd019_admissions_reporting_spike.md"

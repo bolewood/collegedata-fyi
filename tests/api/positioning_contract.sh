@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_URL="${CDFYI_API_BASE_URL:-https://isduwmygvmdozhpvzaix.supabase.co}"
+BASE_URL="${CDFYI_API_BASE_URL:-${SUPABASE_URL:-https://isduwmygvmdozhpvzaix.supabase.co}}"
 ANON_KEY="${SUPABASE_ANON_KEY:-${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}}"
 
 if [[ -z "${ANON_KEY}" ]]; then

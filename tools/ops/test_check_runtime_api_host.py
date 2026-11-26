@@ -58,6 +58,36 @@ class GateTests(unittest.TestCase):
         violations, _ = gate.check([listed], read=lambda p: text)
         self.assertEqual(len(violations), 1, violations)
 
+    def test_uppercase_literal_is_flagged(self):
+        violations, _ = run({"tools/x/a.py": 'API = "https://API.CollegeData.FYI"\n'})
+        self.assertEqual(len(violations), 1)
+
+    def test_a_trailing_statement_on_an_allowed_line_is_flagged(self):
+        listed = "tools/scorecard/build_waitlist_recipe.py"
+        for line in (
+            "SOURCE_API_URL = API_ORIGIN; url = API_ORIGIN",
+            "SOURCE_API_URL = API_ORIGIN + '/rest/v1'",
+            "from tools.common.site import API_ORIGIN; use(API_ORIGIN)",
+        ):
+            violations, _ = gate.check([listed], read=lambda p, line=line: line + "\n")
+            self.assertEqual(len(violations), 1, line)
+        ok, _ = gate.check([listed], read=lambda p: "SOURCE_API_URL = API_ORIGIN  # display\n")
+        self.assertEqual(ok, [])
+
+    def test_a_violation_past_the_print_limit_is_still_found(self):
+        listed = "web/src/lib/alignment-gap-recipe-data.ts"
+        line = '  "sourceApiUrl": "https://api.collegedata.fyi",' + " " * 200 + "; fetch(API_ORIGIN)"
+        violations, _ = gate.check([listed], read=lambda p: line + "\n")
+        self.assertEqual(len(violations), 1)
+        self.assertIn("[...truncated]", violations[0])
+
+    def test_identifiers_are_flagged_in_web_lib_and_api_routes_but_not_pages(self):
+        for path in ("web/src/lib/q.ts", "web/src/app/api/route.ts"):
+            violations, _ = run({path: "const u = API_ORIGIN;\n"})
+            self.assertEqual(len(violations), 1, path)
+        violations, _ = run({"web/src/app/methodology/x/page.tsx": "const BASE = API_ORIGIN;\n"})
+        self.assertEqual(violations, [])
+
     def test_the_repository_is_clean(self):
         violations, stale = gate.check(gate.tracked_files())
         self.assertEqual(violations, [])

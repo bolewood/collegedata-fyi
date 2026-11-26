@@ -18,7 +18,7 @@ PROJECT_ORIGIN = "https://isduwmygvmdozhpvzaix.supabase.co"
 
 def runtime_api_origin(env: Optional[Mapping[str, str]] = None) -> str:
     """API origin for a runtime call: SUPABASE_URL, then NEXT_PUBLIC_SUPABASE_URL,
-    then PROJECT_ORIGIN. Never the custom API host."""
+    then PROJECT_ORIGIN. Never defaults to the custom API host."""
     if env is None:
         import os
 

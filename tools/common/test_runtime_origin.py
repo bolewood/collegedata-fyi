@@ -9,8 +9,11 @@ import argparse
 import importlib
 import importlib.util
 import os
+import subprocess
 import sys
+import tempfile
 import unittest
+from pathlib import Path
 from unittest import mock
 
 from tools.common.site import PROJECT_ORIGIN, runtime_api_origin
@@ -93,15 +96,10 @@ class OtherRuntimeDefaultTests(unittest.TestCase):
             self.assertEqual(m0.directory_url(), f"{ENV_URL}/rest/v1/institution_directory")
 
     def test_card_coverage_api_base(self):
-        name = "tools.discovery.cds_card_coverage"
+        module = importlib.import_module("tools.discovery.cds_card_coverage")
         for env, want in (({}, PROJECT_ORIGIN), ({"SUPABASE_URL": ENV_URL}, ENV_URL)):
             with self.subTest(env=env), mock.patch.dict(os.environ, env, clear=True):
-                sys.modules.pop(name, None)
-                try:
-                    module = importlib.import_module(name)
-                    self.assertEqual(module.API, f"{want}/rest/v1")
-                finally:
-                    sys.modules.pop(name, None)
+                self.assertEqual(module.api_base(), f"{want}/rest/v1")
 
     def test_prd019_spike_requests_the_project_origin(self):
         module = importlib.import_module("tools.change_intelligence.prd019_spike_admissions_reporting")
@@ -137,7 +135,8 @@ class OtherRuntimeDefaultTests(unittest.TestCase):
         ), mock.patch.object(
             module, "validated_canonical_alias_slug_map", lambda **k: {}
         ), mock.patch.object(module, patched, fake):
-            module.main()
+            result = module.main()
+        self.assertEqual(result, 2, "builder should stop at the patched fetch step")
         return seen[0]
 
     def test_recipe_builders_fetch_from_the_project_origin(self):
@@ -149,6 +148,36 @@ class OtherRuntimeDefaultTests(unittest.TestCase):
             for env, want in (({}, PROJECT_ORIGIN), ({"SUPABASE_URL": ENV_URL}, ENV_URL)):
                 with self.subTest(module=name, env=env):
                     self.assertEqual(self._builder_url(name, patched, env), want)
+
+
+
+class ContractScriptTests(unittest.TestCase):
+    """tests/api/*.sh run offline here: a fake curl on PATH records its URL."""
+
+    SCRIPTS = ("positioning_contract.sh", "admission_strategy_contract.sh")
+
+    def curl_url(self, script: str, env: dict[str, str]) -> str:
+        root = Path(__file__).resolve().parents[2]
+        with tempfile.TemporaryDirectory() as tmp:
+            record = Path(tmp) / "url"
+            fake = Path(tmp) / "curl"
+            fake.write_text('#!/bin/sh\nfor a in "$@"; do case "$a" in http*) echo "$a" > "$RECORD";; esac; done\n')
+            fake.chmod(0o755)
+            full_env = {"PATH": f"{tmp}:/usr/bin:/bin", "RECORD": str(record), **env}
+            subprocess.run(["bash", str(root / "tests" / "api" / script)], env=full_env, check=True, capture_output=True)
+            return record.read_text().strip()
+
+    def test_default_is_the_project_origin(self):
+        for script in self.SCRIPTS:
+            with self.subTest(script=script):
+                self.assertTrue(self.curl_url(script, {}).startswith(f"{PROJECT_ORIGIN}/rest/v1/"))
+
+    def test_supabase_url_then_explicit_base_url_win(self):
+        for script in self.SCRIPTS:
+            with self.subTest(script=script):
+                self.assertTrue(self.curl_url(script, {"SUPABASE_URL": ENV_URL}).startswith(f"{ENV_URL}/rest/v1/"))
+                env = {"SUPABASE_URL": ENV_URL, "CDFYI_API_BASE_URL": "http://explicit"}
+                self.assertTrue(self.curl_url(script, env).startswith("http://explicit/rest/v1/"))
 
 
 if __name__ == "__main__":

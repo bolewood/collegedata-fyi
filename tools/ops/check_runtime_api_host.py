@@ -8,8 +8,9 @@ reads SUPABASE_URL / NEXT_PUBLIC_SUPABASE_URL and defaults to PROJECT_ORIGIN
 (tools/common/site.py, web/src/lib/site.ts).
 
 This scans tracked code files and exits non-zero if one contains the literal
-`api.collegedata.fyi`, or (outside web/src, where pages use API_ORIGIN for
-display strings) the identifiers API_ORIGIN or API_HOST, unless the file is on
+`api.collegedata.fyi` (any case), or the identifiers API_ORIGIN or API_HOST
+(everywhere except web pages and components outside web/src/lib and
+web/src/app/api, which use them for display strings), unless the file is on
 ALLOWLIST with a reason. An allowlist entry whose file no longer matches also
 fails, so the list cannot rot. Test files and non-code files (markdown, CSV,
 SQL) are not scanned.
@@ -29,33 +30,55 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 ROOTS = ("tools/", "web/src/", "supabase/functions/", ".github/workflows/", "packages/", "tests/")
 CODE_SUFFIXES = {".py", ".ts", ".tsx", ".js", ".mjs", ".sh", ".yml", ".yaml"}
 TEST_FILE = re.compile(r"(^|/)(test_[^/]*|[^/]*_test\.[a-z]+|[^/]*\.test\.[a-z]+|[^/]*\.spec\.[a-z]+)$")
-LITERAL = re.compile(r"api\.collegedata\.fyi")
+LITERAL = re.compile(r"api\.collegedata\.fyi", re.I)
 IDENTIFIER = re.compile(r"\b(API_ORIGIN|API_HOST)\b")
+WEB_RUNTIME_DIRS = ("web/src/lib/", "web/src/app/api/")
+MAX_PRINT = 160
 
-# path -> (reason, regex every matching line in that file must satisfy).
+# path -> (reason, regex the WHOLE stripped line must match).
 # Line-level on purpose: a new runtime use inside an allowlisted file is still
-# flagged.
-_BUILDER = r"^(from tools\.common\.site import API_ORIGIN\b.*|SOURCE_API_URL = API_ORIGIN\b.*)$"
+# flagged. Several entries per file are written as alternatives.
+_BUILDER = (
+    r"from tools\.common\.site import API_ORIGIN(, runtime_api_origin)?"
+    r"|SOURCE_API_URL = API_ORIGIN(\s+#.*)?"
+)
 _GENERATED = (
-    r'^(\s*"sourceApiUrl": "https://api\.collegedata\.fyi",'
-    r"|// Source: .*\(https://api\.collegedata\.fyi\)\.)$"
+    r'"sourceApiUrl": "https://api\.collegedata\.fyi",'
+    r"|// Source: .*\(https://api\.collegedata\.fyi\)\."
 )
 ALLOWLIST: dict[str, tuple[str, str]] = {
     "tools/common/site.py": (
         "defines API_ORIGIN, the display origin; runtime uses runtime_api_origin()",
-        r'^(API_ORIGIN = "https://api\.collegedata\.fyi"|# .*API_ORIGIN.*)$',
+        r'API_ORIGIN = "https://api\.collegedata\.fyi"'
+        r"|# Runtime default only; display \(docs, examples, generated data\) uses API_ORIGIN\.",
     ),
     "web/src/lib/site.ts": (
         "defines API_ORIGIN and API_HOST, the display origin",
-        r'^(export const API_(ORIGIN|HOST) = "(https://)?api\.collegedata\.fyi";|\*? ?.*API_ORIGIN.*)$',
+        r'export const API_(ORIGIN|HOST) = "(https://)?api\.collegedata\.fyi";'
+        r"|\* Runtime default only; display uses API_ORIGIN\. A runtime call that falls back",
     ),
     "web/src/lib/client-info.ts": (
         "own-host check must keep accepting the old host (links to it still exist)",
-        r'^const ownHost = host === "api\.collegedata\.fyi" \|\| host\.endsWith\("\.supabase\.co"\);$',
+        r'const ownHost = host === "api\.collegedata\.fyi" \|\| host\.endsWith\("\.supabase\.co"\);',
+    ),
+    "web/src/lib/llms-txt.ts": (
+        "display: llms.txt names the API host for readers",
+        r'import \{ API_HOST, SITE_NAME_CAPS \} from "\./site";'
+        r"|- \[PostgREST archive docs\]\(\$\{SITE_URL\}/api\): The full read-only database API at \$\{API_HOST\} .*",
+    ),
+    "web/src/lib/spreadsheet.ts": (
+        "display: README sheet of the downloadable workbook shows the API URL",
+        r'import \{ API_ORIGIN, SITE_ORIGIN \} from "\./site";'
+        r"|`\$\{API_ORIGIN\}/rest/v1/cds_fields\?school_id=eq\.\$\{input\.schoolId\}&canonical_year=eq\.\$\{input\.year\}`,",
+    ),
+    "web/src/app/api/page.tsx": (
+        "display: the API docs page",
+        r'import \{ API_HOST, API_ORIGIN, SITE_ORIGIN \} from "@/lib/site";'
+        r"|const BASE = API_ORIGIN;|\{API_HOST\}",
     ),
     "tools/api_usage/classify.py": (
         "classifies gateway log lines by request host; the old host stays in the list",
-        r'^"api\.collegedata\.fyi", "api\.quadfile\.org", "isduwmygvmdozhpvzaix\.supabase\.co",$',
+        r'"api\.collegedata\.fyi", "api\.quadfile\.org", "isduwmygvmdozhpvzaix\.supabase\.co",',
     ),
     "tools/ipeds/build_endowment_draw_rate_recipe.py": ("display: records sourceApiUrl in generated recipe data", _BUILDER),
     "tools/ipeds/build_pricing_power_recipe.py": ("display: records sourceApiUrl in generated recipe data", _BUILDER),
@@ -87,12 +110,20 @@ def is_scanned(path: str) -> bool:
 
 
 def hits_in(path: str, text: str) -> list[tuple[int, str]]:
-    patterns = [LITERAL] if path.startswith("web/src/") else [LITERAL, IDENTIFIER]
+    # Pages and components outside lib/ and app/api/ use API_ORIGIN for display
+    # strings; only the literal is checked there.
+    scan_identifiers = not path.startswith("web/src/") or path.startswith(WEB_RUNTIME_DIRS)
+    patterns = [LITERAL, IDENTIFIER] if scan_identifiers else [LITERAL]
     found = []
     for n, line in enumerate(text.splitlines(), 1):
         if any(p.search(line) for p in patterns):
-            found.append((n, line.strip()[:120]))
+            found.append((n, line.strip()))
     return found
+
+
+def shorten(text: str) -> str:
+    """Truncate for printing only, with a visible marker."""
+    return text if len(text) <= MAX_PRINT else text[:MAX_PRINT] + " [...truncated]"
 
 
 def check(files: list[str], read=lambda p: (REPO_ROOT / p).read_text(encoding="utf-8")):
@@ -108,8 +139,8 @@ def check(files: list[str], read=lambda p: (REPO_ROOT / p).read_text(encoding="u
         if path in ALLOWLIST:
             matched.add(path)
             allowed = re.compile(ALLOWLIST[path][1])
-            hits = [(n, text) for n, text in hits if not allowed.search(text)]
-        violations.extend(f"{path}:{n}: {text}" for n, text in hits)
+            hits = [(n, text) for n, text in hits if not allowed.fullmatch(text)]
+        violations.extend(f"{path}:{n}: {shorten(text)}" for n, text in hits)
     stale = [p for p in ALLOWLIST if p not in matched]
     return violations, stale
 
