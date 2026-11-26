@@ -41,11 +41,11 @@ revoke all on function public.community_notification_sender_name(text), public.c
 grant execute on function public.community_notification_sender_name(text), public.community_claim_notification(text,text) to service_role;
 
 do $$ begin
-  assert public.community_notification_sender_name('CollegeData.fyi <feedback@notify.collegedata.fyi>') = 'CollegeData.fyi', 'old sender';
-  assert public.community_notification_sender_name('Quadfile <feedback@notify.quadfile.org>') = 'Quadfile', 'new sender';
-  assert public.community_notification_sender_name('Quadfile <feedback@notify.quadfile.org.evil.com>') is null, 'suffix look-alike';
-  assert public.community_notification_sender_name('quadfile <feedback@notify.quadfile.org>') is null, 'lowercase name';
-  assert public.community_notification_sender_name('Quadfile <Feedback@notify.quadfile.org>') is null, 'uppercase local part';
-  assert public.community_notification_sender_name('') is null, 'empty';
-  assert public.community_notification_sender_name(null) is null, 'null';
+  if not coalesce(public.community_notification_sender_name('CollegeData.fyi <feedback@notify.collegedata.fyi>') = 'CollegeData.fyi', false) then raise exception 'community_notification_sender_name self-test failed: old sender'; end if;
+  if not coalesce(public.community_notification_sender_name('Quadfile <feedback@notify.quadfile.org>') = 'Quadfile', false) then raise exception 'community_notification_sender_name self-test failed: new sender'; end if;
+  if not coalesce(public.community_notification_sender_name('Quadfile <feedback@notify.quadfile.org.evil.com>') is null, false) then raise exception 'community_notification_sender_name self-test failed: suffix look-alike'; end if;
+  if not coalesce(public.community_notification_sender_name('quadfile <feedback@notify.quadfile.org>') is null, false) then raise exception 'community_notification_sender_name self-test failed: lowercase name'; end if;
+  if not coalesce(public.community_notification_sender_name('Quadfile <Feedback@notify.quadfile.org>') is null, false) then raise exception 'community_notification_sender_name self-test failed: uppercase local part'; end if;
+  if not coalesce(public.community_notification_sender_name('') is null, false) then raise exception 'community_notification_sender_name self-test failed: empty'; end if;
+  if not coalesce(public.community_notification_sender_name(null) is null, false) then raise exception 'community_notification_sender_name self-test failed: null'; end if;
 end $$;
