@@ -2,7 +2,7 @@ import { SITE_ORIGIN } from "./site";
 
 /**
  * Requests for the old site hosts, apex and www. Next anchors host values as
- * `^...$`, so this group does not match `api.collegedata.fyi` (that host is
+ * `^...$`, so this group does not match the old API host (that host is
  * handled by old-api-host.ts). Kept for the 12-month sunset of the old hosts.
  */
 export const OLD_SITE_HOST_PATTERN = "(www\\.)?collegedata\\.fyi";

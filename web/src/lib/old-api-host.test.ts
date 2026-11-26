@@ -166,22 +166,22 @@ function matchersFor(matcher: Matcher[]) {
 
 describe("next.config redirects never match the old API hosts", () => {
   // The real old-site host rule, as shipped in next.config.ts.
-  const FUTURE_HOST_RULE = { type: "host", value: OLD_SITE_HOST_PATTERN } as const;
+  const OLD_SITE_HOST_RULE = { type: "host", value: OLD_SITE_HOST_PATTERN } as const;
 
   it("matchHas anchors host values (^...$), lower-cases and strips the port", () => {
     const req = fakeReq;
-    expect(matchHas(req("api.collegedata.fyi"), {}, [FUTURE_HOST_RULE] as never)).toBe(false);
-    expect(matchHas(req("www.collegedata.fyi"), {}, [FUTURE_HOST_RULE] as never)).not.toBe(false);
-    expect(matchHas(req("COLLEGEDATA.fyi:443"), {}, [FUTURE_HOST_RULE] as never)).not.toBe(false);
+    expect(matchHas(req("api.collegedata.fyi"), {}, [OLD_SITE_HOST_RULE] as never)).toBe(false);
+    expect(matchHas(req("www.collegedata.fyi"), {}, [OLD_SITE_HOST_RULE] as never)).not.toBe(false);
+    expect(matchHas(req("COLLEGEDATA.fyi:443"), {}, [OLD_SITE_HOST_RULE] as never)).not.toBe(false);
     // Substring would match; an anchored regex does not.
-    expect(matchHas(req("notcollegedata.fyi"), {}, [FUTURE_HOST_RULE] as never)).toBe(false);
+    expect(matchHas(req("notcollegedata.fyi"), {}, [OLD_SITE_HOST_RULE] as never)).toBe(false);
   });
 
   it("no redirect in next.config.ts, today's or the planned host rule, matches the probed API-host paths (including an unknown one) on either old API host", async () => {
     const redirects = await nextConfig.redirects!();
     expect(redirects.length).toBeGreaterThan(0);
     const paths = ["/", "/rest/v1/schools", "/functions/v1/browser-search", "/auth/v1/token", STORAGE, "/some/unknown/path"];
-    const planned = [{ source: "/:path*", has: [FUTURE_HOST_RULE] }, { source: "/", has: [FUTURE_HOST_RULE] }];
+    const planned = [{ source: "/:path*", has: [OLD_SITE_HOST_RULE] }, { source: "/", has: [OLD_SITE_HOST_RULE] }];
     for (const host of OLD_API_HOSTS) {
       const req = fakeReq(host);
       for (const rule of [...(redirects as Redirect[]), ...planned] as Redirect[]) {

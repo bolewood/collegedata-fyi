@@ -22,6 +22,11 @@ class SiteParityTests(unittest.TestCase):
             self.assertIn(name, ts, f"{name} not found in site.ts")
             self.assertEqual(getattr(site, name), ts[name], name)
 
+    def test_python_constants_are_the_post_rename_values(self):
+        self.assertEqual(site.SITE_NAME, "Quadfile")
+        self.assertEqual(site.SITE_ORIGIN, "https://www.quadfile.org")
+        self.assertEqual(site.API_ORIGIN, "https://api.quadfile.org")
+
 
 if __name__ == "__main__":
     unittest.main()

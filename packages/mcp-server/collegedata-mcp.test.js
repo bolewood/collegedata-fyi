@@ -152,12 +152,24 @@ describe("collegedata MCP identity", () => {
   });
 });
 
+// No spaces in the preload: NODE_OPTIONS splits on them. fetch is replaced by
+// a stub that prints the URL and answers with an empty result, so nothing
+// reaches the network.
+const STUB_FETCH_PRELOAD =
+  "--import=data:text/javascript,globalThis.fetch=async(u)=>{console.error('FETCH:'+u);return(new(globalThis.Response)('{\"results\":[]}',{headers:{'content-type':'application/json'}}))}";
+
 describe("collegedata MCP default origin", () => {
-  it("reports and uses https://www.quadfile.org when no API base is set", async () => {
-    const server = startServer({});
+  it("a tool call fetches from https://www.quadfile.org when no API base is set", async () => {
+    const server = startServer({ NODE_OPTIONS: STUB_FETCH_PRELOAD });
     try {
-      server.send({ jsonrpc: "2.0", id: 1, method: "ping" });
-      await server.readJson();
+      server.send({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "tools/call",
+        params: { name: "search_schools", arguments: { query: "mit" } },
+      });
+      await server.readJson(5000);
+      assert.match(server.getStderr(), /^FETCH:https:\/\/www\.quadfile\.org\/api\//m);
       assert.match(server.getStderr(), / https:\/\/www\.quadfile\.org\n/);
     } finally {
       await server.close();

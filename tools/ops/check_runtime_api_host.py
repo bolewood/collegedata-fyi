@@ -61,11 +61,6 @@ ALLOWLIST: dict[str, tuple[str, str]] = {
         "own-host check accepts both API hosts (stored links use either)",
         r'const ARCHIVE_FILE_HOSTS = new Set\(\["api\.quadfile\.org", "api\.collegedata\.fyi"\]\);',
     ),
-    "web/src/lib/old-api-host.ts": (
-        "the old-host handler names both API hosts by design",
-        r"\* Today no request reaches the app with these hosts \(api\.collegedata\.fyi is a"
-        r'|"api\.collegedata\.fyi": "https://api\.quadfile\.org",',
-    ),
     "web/src/lib/llms-txt.ts": (
         "display: llms.txt names the API host for readers",
         r'import \{ API_HOST, SITE_NAME \} from "\./site";'
