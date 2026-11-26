@@ -20,7 +20,7 @@ import {
   hasFederalChecks,
   ipedsTuitionTable,
   hasSections,
-  isDataQualityLaunched,
+  dataQualityLaunched,
   isProjectedYear,
   ON_FILE_NOTE,
   liveCount,
@@ -475,7 +475,7 @@ function Notices({ year }: { year: QualityYear }) {
 
 function CsvButton({ table, year }: { table: QualityTableId; year: QualityYear }) {
   // Gated with the page.
-  if (!isDataQualityLaunched()) return null;
+  if (!dataQualityLaunched()) return null;
   return (
     <div style={{ marginTop: 14 }}>
       <a href={qualityCsvPath(table, year.cds_year)} download className="cd-btn cd-btn--ghost" style={{ display: "inline-block" }}>

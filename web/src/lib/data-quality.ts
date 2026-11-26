@@ -6,15 +6,31 @@ import { isCanonicalCdsYear } from "./format";
 import { formatLabel } from "./format-labels";
 
 /**
- * Launch gate, on the isUsageLaunched pattern. It stays far in the future
- * until the owner decides to launch; flipping it is a one-line change that
- * turns on the header tab, nav and footer labels, sitemap entry and indexing
- * in one build. Do not set a date that has already passed without the owner.
+ * Launch gate, on the isUsageLaunched pattern, decided once per build.
+ * `next.config.ts` calls `isDataQualityLaunched(new Date())` when the build
+ * starts and inlines the answer as `process.env.DATA_QUALITY_LAUNCHED`, so the
+ * server pages, the sitemap and the client components all read one value. The
+ * first production build on or after the date launches every surface together
+ * (header tab, nav and footer labels, sitemap entry, indexing, methodology
+ * link, CSV downloads and CSV routes). A build made before it stays closed,
+ * whatever the clock says later.
  */
-export const DATA_QUALITY_LAUNCH_DATE = "2099-01-01";
+// The gate opened at 00:00 UTC on this date, and the owner chose to launch the day the fresh snapshot (#550) merged, so
+// it opened when the build that merged this ran. A build made before that time stays closed whatever the clock says later.
+export const DATA_QUALITY_LAUNCH_DATE = "2026-11-25";
 
-export function isDataQualityLaunched(now: Date = new Date()): boolean {
+/** The pure rule the build config and tests use. */
+export function isDataQualityLaunched(now: Date): boolean {
   return now.getTime() >= Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`);
+}
+
+/**
+ * What every consumer reads: the answer the build was made with. Unset (a
+ * bare script or test) means closed. Keep `process.env.DATA_QUALITY_LAUNCHED`
+ * written out in full: Next replaces that exact text at build.
+ */
+export function dataQualityLaunched(): boolean {
+  return process.env.DATA_QUALITY_LAUNCHED === "1";
 }
 
 /** A rate over fewer reports than this isn't meaningful; the row shows counts only. */
@@ -717,7 +733,7 @@ export function qualityLede(snapshot: QualitySnapshot): { populations: string; m
   const years = count < NUMBER_WORDS.length ? NUMBER_WORDS[count] : String(count);
   return {
     populations: `Snapshot of ${formatSnapshotDate(snapshot.snapshot_of)}: ${published} reports published with numbers across ${years} ${count === 1 ? "year" : "years"}, checked against their own printed totals${federalYearsClause(snapshot)}.`,
-    meaning: "Data quality here means the quality of what this archive publishes, not the quality of any school’s own data.",
+    meaning: `Data quality here means the quality of what this archive publishes, not the quality of any school’s own data. These count reports across ${years} ${count === 1 ? "year" : "years"}, from a snapshot taken on ${formatSnapshotDate(snapshot.snapshot_of)}, and a school can have more than one report in a year (for example a spreadsheet and a PDF, or campuses filed separately), so they won’t match the school counts on Coverage by school, which come from the live archive.`,
   };
 }
 

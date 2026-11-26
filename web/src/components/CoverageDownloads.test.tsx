@@ -3,7 +3,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { COVERAGE_CSV_LICENSED_LEAD, buildCoverageCsv, coverageViewRows } from "@/lib/coverage-model";
 import { DATA_LICENSE_URL } from "@/lib/data-license";
-import { CSV_BOM, DATA_QUALITY_LAUNCH_DATE } from "@/lib/data-quality";
+import { setLaunchGate } from "@/lib/__fixtures__/data-quality-gate";
+import { CSV_BOM } from "@/lib/data-quality";
 import type { InstitutionCoverage } from "@/lib/types";
 
 let currentParams = new URLSearchParams();
@@ -136,6 +137,9 @@ describe("coverage CSV buttons", () => {
     const html = renderToStaticMarkup(<CoverageDownloads viewRows={[]} allRows={[]} />);
     expect(html).toContain("College Scorecard and IPEDS, which our license doesn");
     expect(html).toContain(`href="${DATA_LICENSE_URL}"`);
+    // Small sentence-case text like the /data-quality licence line, not the uppercase .meta label, and it carries the credit.
+    expect(html).toContain("Credit collegedata.fyi.");
+    expect(html).not.toContain('class="meta"');
     expect(html).toContain("latest_year_found is the latest year of any file we hold");
     // The licensed sentence names only our columns, and links the license.
     const licensed = html.match(/The school ID[^<]*<a [^>]*>[^<]*<\/a>/)?.[0] ?? "";
@@ -145,16 +149,14 @@ describe("coverage CSV buttons", () => {
   });
 
   it("is on the page only after launch", () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`) - 1000);
+    setLaunchGate(false);
     expect(renderToStaticMarkup(<CoverageDashboard rows={ROWS} />)).not.toContain("(CSV)");
-    vi.setSystemTime(Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`));
+    setLaunchGate(true);
     expect(renderToStaticMarkup(<CoverageDashboard rows={ROWS} />)).toContain("Download this view (CSV)");
   });
 
   it("the dashboard hands its own filtered, sorted rows to 'this view' and every row to 'all colleges'", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`));
+    setLaunchGate(true);
     sortStart.on = true; // sorted by undergraduates, largest first
     currentParams = new URLSearchParams("all=1&state=NY");
     const html = renderToStaticMarkup(<CoverageDashboard rows={ROWS} />);

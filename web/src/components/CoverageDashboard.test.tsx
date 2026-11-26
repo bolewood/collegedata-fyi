@@ -11,6 +11,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 import { FIXTURE_SNAPSHOT } from "@/lib/__fixtures__/data-quality-snapshot";
+import { setLaunchGate } from "@/lib/__fixtures__/data-quality-gate";
 import { renewalTile } from "@/lib/data-quality";
 import type { InstitutionCoverage } from "@/lib/types";
 import { CoverageDashboard } from "./CoverageDashboard";
@@ -157,6 +158,7 @@ describe("filters bar", () => {
   });
 
   it("shows the two year columns, and no CSV links before launch", () => {
+    setLaunchGate(false);
     const html = render();
     expect(html).not.toContain("(CSV)");
     expect(html).toContain("With numbers");

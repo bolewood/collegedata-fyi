@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V1, FIXTURE_SNAPSHOT_V2, FIXTURE_SNAPSHOT_V3,
   FIXTURE_SNAPSHOT_V4, emptyYear } from "./__fixtures__/data-quality-snapshot";
@@ -704,9 +706,23 @@ describe("rates and small groups", () => {
   });
 });
 
+describe("lede: the report-vs-school gap is real in the committed data", () => {
+  it("has more published reports than distinct school-years (a spreadsheet and a PDF, or campuses, in one year)", () => {
+    const dir = path.join(process.cwd(), "src", "data", "data-quality", "reports");
+    const file = fs.readdirSync(dir).filter((n) => n.endsWith(".json")).sort().at(-1)!;
+    const reports = JSON.parse(fs.readFileSync(path.join(dir, file), "utf8")) as { years: Record<string, { school: string | null; status: string }[]> };
+    const published = Object.entries(reports.years).flatMap(([year, rows]) => rows.filter((r) => r.status === "published" && r.school !== null).map((r) => `${r.school}|${year}`));
+    expect(new Set(published).size).toBeLessThan(published.length);
+  });
+});
+
 describe("lede", () => {
   it("states the snapshot date and the published population from the snapshot", () => {
     const lede = qualityLede(FIXTURE_SNAPSHOT);
+    // Bridges the two tabs: report counts here are not the school counts on Coverage by school.
+    expect(lede.meaning).toContain("These count reports across three years, from a snapshot taken on November 24, 2026,");
+    expect(lede.meaning).toContain("a school can have more than one report in a year (for example a spreadsheet and a PDF, or campuses filed separately)");
+    expect(lede.meaning).toContain("school counts on Coverage by school, which come from the live archive.");
     expect(lede.populations).toContain("November 24, 2026");
     expect(lede.populations).toContain(`${publishedTotal(FIXTURE_SNAPSHOT)} reports published`);
     expect(lede.populations).toContain("three years");

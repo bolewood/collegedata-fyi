@@ -1,3 +1,4 @@
+import { setLaunchGate } from "@/lib/__fixtures__/data-quality-gate";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -24,7 +25,6 @@ import {
   differsPoolBounds,
   pooledDiffers,
   AID_CANT_CHECK_SAMPLE,
-  DATA_QUALITY_LAUNCH_DATE,
   aidCantCheckNote,
   federalDiffersNote,
 } from "@/lib/data-quality";
@@ -175,7 +175,6 @@ describe("launch gate: header, nav and methodology link", () => {
 });
 
 
-const LAUNCH_MS = Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`);
 /** Every spelling of an em dash: the character, and the three entity forms. */
 const EM_DASH = /\u2014|&mdash;|&#8212;|&#x2014;/gi;
 const BANNED =
@@ -196,13 +195,8 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
   const years = ["2025-26", "2024-25", "2023-24"];
   /** Rendered with the gate open, so the download buttons and licence lines are in the text too. */
   const openHtml = (y: string) => {
-    vi.useFakeTimers();
-    try {
-      vi.setSystemTime(LAUNCH_MS);
-      return render(`year=${y}`);
-    } finally {
-      vi.useRealTimers();
-    }
+    setLaunchGate(true);
+    return render(`year=${y}`);
   };
   // The trend labels each snapshot with its run's file name, the one element allowed to say "scoreboard" (checked to be that name).
   const RUN_NAME = /<span class="dq-trend-run"[^>]*>([^<]*)<\/span>/g;
@@ -579,6 +573,7 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
 
     it("links the CSV for the selected year, once launched, and says '1 report' for one", () => {
       expect(openHtml("2024-25")).toContain('href="/data-quality/csv/sections/2024-25"');
+      setLaunchGate(false);
       expect(render("year=2024-25")).not.toContain("/data-quality/csv/sections/");
       const one = JSON.parse(JSON.stringify(FIXTURE_SNAPSHOT)) as QualitySnapshot;
       const y = one.years.find((x) => x.cds_year === "2024-25")!;
@@ -598,13 +593,8 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
       expect(hasSections(y)).toBe(false);
       expect(render("year=2024-25", none)).not.toContain("dq-sections-heading");
       expect(render("year=2024-25", none)).not.toContain("dq-table-sections");
-      vi.useFakeTimers();
-      try {
-        vi.setSystemTime(LAUNCH_MS);
-        expect(render("year=2024-25", none)).not.toContain("/data-quality/csv/sections/");
-      } finally {
-        vi.useRealTimers();
-      }
+      setLaunchGate(true);
+      expect(render("year=2024-25", none)).not.toContain("/data-quality/csv/sections/");
     });
 
     it("is absent for a snapshot written before public_format 3", () => {
@@ -816,21 +806,18 @@ describe("copy invariants (PRD 040 M3, VOICE.md)", () => {
   });
 
   it("renders the licence note beside the downloads only when launched, built from the license constants", () => {
-    vi.useFakeTimers();
-    try {
-      vi.setSystemTime(LAUNCH_MS - 1000);
+    {
+      setLaunchGate(false);
       const before = render("year=2024-25");
       expect(before).not.toContain(DATA_LICENSE_URL);
       expect(before).not.toContain("Download 2024-25 table as CSV");
-      vi.setSystemTime(LAUNCH_MS);
+      setLaunchGate(true);
       const after = render("year=2024-25");
       expect(after).toContain(`href="${DATA_LICENSE_URL}"`);
       expect(after).toContain(`>${DATA_LICENSE_NAME}</a>`);
       expect(after).toContain("Download 2024-25 table as CSV");
       // A sentence, not a label: not set in the uppercase `.meta` style.
       expect(after).not.toMatch(/class="meta"[^>]*>\s*This table is licensed/);
-    } finally {
-      vi.useRealTimers();
     }
   });
 

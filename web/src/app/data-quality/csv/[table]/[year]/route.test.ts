@@ -4,7 +4,8 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V2, FIXTURE_SNAPSHOT_V3 } from "@/lib/__fixtures__/data-quality-snapshot";
 import { DATA_LICENSE_LINK_HEADER } from "@/lib/data-license";
-import { DATA_QUALITY_LAUNCH_DATE, TABLE_TITLES, buildQualityCsv, qualityCsvPath, type QualityTableId } from "@/lib/data-quality";
+import { setLaunchGate } from "@/lib/__fixtures__/data-quality-gate";
+import { TABLE_TITLES, buildQualityCsv, qualityCsvPath, type QualityTableId } from "@/lib/data-quality";
 
 // The real loader, pointed at a temp directory instead of src/data/data-quality.
 const dirs = vi.hoisted(() => ({ current: "" }));
@@ -15,14 +16,11 @@ vi.mock("@/lib/data-quality-snapshots", async (importOriginal) => {
 
 import { GET, generateStaticParams } from "./route";
 
-const LAUNCH_MS = Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`);
-
 beforeEach(() => {
   dirs.current = fs.mkdtempSync(path.join(os.tmpdir(), "dq-snap-"));
 });
 
 afterEach(() => {
-  vi.useRealTimers();
   fs.rmSync(dirs.current, { recursive: true, force: true });
 });
 
@@ -30,12 +28,7 @@ function writeSnapshot(snapshot: unknown = FIXTURE_SNAPSHOT) {
   fs.writeFileSync(path.join(dirs.current, "2026-11-24.json"), JSON.stringify(snapshot));
 }
 
-function at(ms: number) {
-  vi.useFakeTimers();
-  vi.setSystemTime(ms);
-}
-
-const open = () => at(LAUNCH_MS);
+const open = () => setLaunchGate(true);
 
 const get = (table: string, year: string) =>
   GET(new Request("https://collegedata.fyi/x"), { params: Promise.resolve({ table, year }) });
@@ -45,7 +38,7 @@ const raw = async (res: Response) => new TextDecoder("utf-8", { ignoreBOM: true 
 
 describe("/data-quality/csv/[table]/[year]", () => {
   it("is a 404 before the launch date, builds no static pages, and never reads the directory", async () => {
-    at(LAUNCH_MS - 1000);
+    setLaunchGate(false);
     writeSnapshot();
     fs.rmSync(dirs.current, { recursive: true });
     expect((await get("reports", "2024-25")).status).toBe(404);

@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import "./data-quality.css";
 import { ArchiveStatusHeader } from "@/components/ArchiveStatusHeader";
 import { DataQualityView } from "@/components/DataQualityView";
-import { resolveYear, yearsNewestFirst, formatSnapshotDate, formatSnapshotTime, isDataQualityLaunched, qualityLede, snapshotDay, type QualitySnapshot } from "@/lib/data-quality";
+import { resolveYear, yearsNewestFirst, formatSnapshotDate, formatSnapshotTime, dataQualityLaunched, qualityLede, snapshotDay, type QualitySnapshot } from "@/lib/data-quality";
 import { pendingYearScript } from "@/lib/data-quality-pending";
 import { buildTrend } from "@/lib/data-quality-trend";
 import { loadAllSnapshots, loadReportsFor } from "@/lib/data-quality-snapshots";
@@ -18,7 +18,7 @@ export function generateMetadata(): Metadata {
     description:
       "How well this archive reads the Common Data Set reports it publishes: how they compare with federal figures, and whether their printed totals add up.",
     alternates: { canonical: "/data-quality" },
-    robots: isDataQualityLaunched() ? undefined : { index: false, follow: false },
+    robots: dataQualityLaunched() ? undefined : { index: false, follow: false },
   };
 }
 
@@ -31,7 +31,7 @@ export default function DataQualityPage() {
   // The reports behind each count (written with the snapshot). Loaded here so the build checks them against the snapshot
   // even before launch; the page only links to them once launched, and the client fetches the file on the first click.
   const reports = loadReportsFor(snapshot);
-  const reportsUrl = reports && isDataQualityLaunched() ? `/data-quality/reports/${snapshotDay(snapshot)}` : null;
+  const reportsUrl = reports && dataQualityLaunched() ? `/data-quality/reports/${snapshotDay(snapshot)}` : null;
 
   // The year the static HTML shows is the newest; the others are the ones a direct link can ask for.
   const defaultYear = resolveYear(snapshot, null).cds_year;

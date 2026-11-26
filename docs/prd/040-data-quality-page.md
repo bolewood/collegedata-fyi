@@ -1,6 +1,6 @@
 # PRD 040: Archive status — coverage and data quality
 
-**Status:** Final draft rev 4 (2026-11-24), amended the same day for the [stale-seeds postmortem](../postmortems/2026-11-24-stale-discovery-seeds.md) (see [Amendment](#amendment-2026-11-24-current-year-renewal)). **Build status (2026-11-25):** M0 (#492, #510: `run_format` 3, `--public`, the `renewal` block, the near-miss split; hand samples #485; everything but the first committed snapshot, #496), M1 (#487: `/data-quality`) and M2 (#487: `/coverage` rework) are merged. The launch gate is still off (`DATA_QUALITY_LAUNCH_DATE` is `2099-01-01`): `/data-quality` is `noindex` and unlinked, and the CSV downloads wait for it. The first committed snapshot is open as #496 (held, because it would publish the ungated `/coverage` tile under the old renewal definition). M3 is done except the gate flip: copy and sample results (#517), CSVs (#512), snapshot arithmetic checks, phone tables, the copy-deck drift test, docs and the success-criteria test map (the M3 PR). The flip PR, which comes next, changes the launch date and the launched-state expectations in `smoke.spec.ts`, `sitemap-static.test.ts` and `data-license.test.ts`. Launch is the owner's call.
+**Status:** Final draft rev 4 (2026-11-24), amended the same day for the [stale-seeds postmortem](../postmortems/2026-11-24-stale-discovery-seeds.md) (see [Amendment](#amendment-2026-11-24-current-year-renewal)). **Build status (2026-11-25):** M0 (#492, #510: `run_format` 3, `--public`, the `renewal` block, the near-miss split; hand samples #485; the first committed snapshot, #524), M1 (#487: `/data-quality`) and M2 (#487: `/coverage` rework) are merged. M3 is done except the owner's launch date: copy and sample results (#517), CSVs (#512), snapshot arithmetic checks, phone tables, the copy-deck drift test, docs and the success-criteria test map (the M3 PR). The flip PR (#529) sets `DATA_QUALITY_LAUNCH_DATE` to the owner's date, 2026-11-25 (00:00 UTC; one line in `web/src/lib/data-quality.ts`) and decides the gate once per build: `next.config.ts` evaluates the date when the build starts and inlines the result, so every surface (server pages, the sitemap, client components) reads one value. The first production build on or after the date launches everything together; a build before it stays closed, whatever the clock says later. Launch is the owner's call.
 **Author:** Anthony Showalter (with Claude)
 **URLs (planned):** `https://www.collegedata.fyi/coverage` (existing, reworked) and `https://www.collegedata.fyi/data-quality` (new)
 **Related:** [scoreboard script](../../tools/extraction-validator/scoreboard.py) (#432, #447, the data source), extraction scoreboard issue #431, [PRD 015](015-institution-directory-and-cds-coverage.md) (institution directory and coverage), [PRD 033](033-public-usage-page.md) (public usage page: the launch-gate pattern), [PRD 030](030-pipeline-observation.md) (pipeline board, which stays), [design system](../../web/DESIGN_SYSTEM.md), [voice](../../web/VOICE.md)
@@ -388,8 +388,8 @@ path").
     (DRVEF, fall of the CDS year). Both count degree-seeking and
     non-degree-seeking, full-time and part-time undergraduates on a fall census
     date. Expected differences: the census date, and a school counting a
-    different group. In the 2026-11-25 run 90% of the reports that have both a B1
-    total and a federal figure are within 2% (the table's match rate, 74% and
+    different group. In the 2026-11-25 run 91% of the reports that have both a B1
+    total and a federal figure are within 2% (the table's match rate, 77% and
     77%, also counts the reports with no usable B1 total).
   - **Tuition:** one figure per report, the all-undergraduates in-state figure
     (G.108) when filled, else the private single figure (G.102), a 0 counting
@@ -719,7 +719,7 @@ admissions match where IPEDS figures are missing.
 
 ## Launch gate
 
-One gate, `isDataQualityLaunched()`, on the `isUsageLaunched` pattern
+One gate, `dataQualityLaunched()` (decided once per build), on the `isUsageLaunched` pattern
 (`web/src/lib/usage.ts`). Before the launch date:
 
 - `/data-quality` has `robots: noindex` and canonical metadata.
@@ -728,8 +728,10 @@ One gate, `isDataQualityLaunched()`, on the `isUsageLaunched` pattern
 - `/methodology` doesn't link to the new page.
 - The sitemap leaves it out.
 
-After the date, all of these flip together in one build. Gate tests cover
-both states. M2's improvements to `/coverage` don't depend on the gate.
+After the date, all of these flip together in the first build made on or after
+it: the gate is decided once per build (`next.config.ts` inlines it as
+`DATA_QUALITY_LAUNCHED`) and no surface reads the clock itself. Gate tests cover
+both states through that same value. M2's improvements to `/coverage` don't depend on the gate.
 
 ## Milestones
 

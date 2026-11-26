@@ -4,7 +4,8 @@ import { buildTrend } from "@/lib/data-quality-trend";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FIXTURE_SNAPSHOT, FIXTURE_SNAPSHOT_V3 } from "@/lib/__fixtures__/data-quality-snapshot";
-import { DATA_QUALITY_LAUNCH_DATE, type QualitySnapshot } from "@/lib/data-quality";
+import { setLaunchGate } from "@/lib/__fixtures__/data-quality-gate";
+import type { QualitySnapshot } from "@/lib/data-quality";
 import { cellLabel, snapshotCells, type CellRef, type ReportsFile } from "@/lib/data-quality-reports";
 import { DrillPanelView, cachedReports, loadReports } from "./DataQualityDrill";
 
@@ -19,16 +20,13 @@ vi.mock("next/navigation", () => ({
 
 import { DataQualityView } from "./DataQualityView";
 
-const LAUNCH_MS = Date.parse(`${DATA_QUALITY_LAUNCH_DATE}T00:00:00Z`);
 afterEach(() => {
-  vi.useRealTimers();
   currentParams = new URLSearchParams();
 });
 
 function render(year: string, reportsUrl: string | null, snapshot: QualitySnapshot = FIXTURE_SNAPSHOT) {
   currentParams = new URLSearchParams(`year=${year}`);
-  vi.useFakeTimers();
-  vi.setSystemTime(LAUNCH_MS);
+  setLaunchGate(true);
   return renderToStaticMarkup(<DataQualityView snapshot={snapshot} trend={buildTrend([snapshot])} reportsUrl={reportsUrl} />);
 }
 
@@ -67,10 +65,9 @@ describe("count buttons", () => {
     expect(buttons(html).filter((b) => b.text === "0")).toEqual([]);
     expect(html).not.toMatch(/aria-label="List the 0 /);
     expect(render("2024-25", null)).not.toContain("dq-count");
-    // A count is a button whatever the clock says: the page decides by passing a reports URL or not.
-    for (const clock of [LAUNCH_MS - 1000, LAUNCH_MS + 1e12]) {
-      vi.useFakeTimers();
-      vi.setSystemTime(clock);
+    // A count is a button whatever the gate says: the page decides by passing a reports URL or not.
+    for (const launched of [false, true]) {
+      setLaunchGate(launched);
       currentParams = new URLSearchParams("year=2023-24");
       expect(renderToStaticMarkup(<DataQualityView snapshot={FIXTURE_SNAPSHOT} trend={buildTrend([FIXTURE_SNAPSHOT])} reportsUrl="/x" />)).toContain("dq-count");
     }

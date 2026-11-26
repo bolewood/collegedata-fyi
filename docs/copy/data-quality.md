@@ -6,7 +6,7 @@ should sound like a calm person explaining what was checked and what wasn't.
 
 Mirrors `web/src/components/DataQualityView.tsx`, `web/src/app/data-quality/page.tsx`
 and `web/src/lib/data-quality.ts`. Everything is behind the launch gate
-(`isDataQualityLaunched()`). Figures in `{braces}` come from the committed
+(`dataQualityLaunched()`). Figures in `{braces}` come from the committed
 snapshot. Sample results are from the hand checks of 2026-11-25 (PRD 040,
 "M0 samples"). Em dashes on the page: 0.
 
@@ -16,9 +16,13 @@ Awaiting Anthony's read.
 
 **Data quality**
 
-> Snapshot of {November 25, 2026}: {1,338} reports published with numbers
+> Snapshot of {November 25, 2026}: {1,339} reports published with numbers
 > across {three} years, checked against their own printed totals{ and, for 2023-24 and 2024-25, against federal figures}. Data quality here means the quality of what this archive
-> publishes, not the quality of any school's own data.
+> publishes, not the quality of any school's own data. These count reports across
+> {three} years, from a snapshot taken on {November 25, 2026}, and a school can have
+> more than one report in a year (for example a spreadsheet and a PDF, or campuses
+> filed separately), so they won't match the school counts on Coverage by school,
+> which come from the live archive.
 
 Small normal-case line under it (the PRD wants the run named on the page, so the file name stays):
 
@@ -63,7 +67,7 @@ With several:
 
 ## Notices (only when they apply)
 
-- > {65} of the {430} published 2023-24 reports are numbered by a different
+- > {47} of the {430} published 2023-24 reports are numbered by a different
   > year's form. These are our older readings, stored under another year's
   > numbering, not the school's choice. Some question numbers in them point at
   > a different question than the 2023-24 form's.
@@ -284,11 +288,11 @@ in-state 7,716). Likewise a B1 total of 0 is no value.
 > one compared here.
 
 Why these two pairings: enrollment lines up well. Of the reports with both a B1
-total and a federal figure (so leaving out "no value"), 91% in 2023-24 (315 of 347) and 91% in 2024-25 (375 of 414) are
+total and a federal figure (so leaving out "no value"), 91% in 2023-24 (330 of 363) and 91% in 2024-25 (375 of 414) are
 within 2%, with a median ratio of 1.00; the table's own match rate is lower
-(73% in 2023-24, 77% in 2024-25) because it counts "no value" reports too.
+(77% in 2023-24, 77% in 2024-25) because it counts "no value" reports too.
 Tuition is noisier: 68% of the reports with both numbers match in 2023-24
-(210 of 311), with differences on both sides, and the table's match rate is 49%
+(212 of 313), with differences on both sides, and the table's match rate is 50%
 with "no value" counted. So the page says what can differ and does not call a
 difference an error.
 
