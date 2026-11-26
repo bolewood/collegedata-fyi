@@ -27,6 +27,7 @@ import {
 } from "@/lib/queries";
 import { legacyAdmissions, legacyRaw, legacyRawNote } from "@/lib/legacy-facts";
 import { schoolRedirectUrl } from "@/lib/school-alias";
+import { SITE_ORIGIN } from "@/lib/site";
 
 export const revalidate = 3600; // hourly — matches the rest of the app
 
@@ -103,7 +104,7 @@ export async function GET(
     acceptance_rate_pct: admissions.acceptance_rate_pct,
     yield_rate_pct: admissions.yield_rate_pct,
     source_url: extracted.source_url,
-    archive_url: `https://www.collegedata.fyi/schools/${school_id}/${extracted.canonical_year}`,
+    archive_url: `${SITE_ORIGIN}/schools/${school_id}/${extracted.canonical_year}`,
     raw: legacyRaw(templateYear, (q) => readValue(mergedValues, q)),
     raw_note: legacyRawNote(school_id),
     deprecated: true,

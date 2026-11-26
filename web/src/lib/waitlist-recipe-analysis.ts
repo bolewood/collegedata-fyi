@@ -5,6 +5,7 @@ import {
   type WaitlistBucketSummary,
   type WaitlistRecipeRow,
 } from "@/lib/waitlist-recipe-data";
+import { SITE_ORIGIN } from "./site";
 
 export type WaitlistBucketKey = "selectivity" | "control" | "size" | "carnegie";
 
@@ -46,7 +47,7 @@ export const BERKELEY_WAITLIST_HISTORY: readonly BerkeleyWaitlistHistoryRow[] = 
     waitListAdmitted: 1340,
     waitListSuccessRate: 1340 / 2445,
     sourceKind: "pdf",
-    archiveUrl: "https://www.collegedata.fyi/schools/uc-berkeley/2015-16",
+    archiveUrl: `${SITE_ORIGIN}/schools/uc-berkeley/2015-16`,
   },
   {
     year: "2018-19",
@@ -56,7 +57,7 @@ export const BERKELEY_WAITLIST_HISTORY: readonly BerkeleyWaitlistHistoryRow[] = 
     waitListAdmitted: 1536,
     waitListSuccessRate: 1536 / 4127,
     sourceKind: "xlsx",
-    archiveUrl: "https://www.collegedata.fyi/schools/uc-berkeley/2018-19",
+    archiveUrl: `${SITE_ORIGIN}/schools/uc-berkeley/2018-19`,
   },
   {
     year: "2019-20",
@@ -66,7 +67,7 @@ export const BERKELEY_WAITLIST_HISTORY: readonly BerkeleyWaitlistHistoryRow[] = 
     waitListAdmitted: 1098,
     waitListSuccessRate: 1098 / 3975,
     sourceKind: "pdf",
-    archiveUrl: "https://www.collegedata.fyi/schools/uc-berkeley/2019-20",
+    archiveUrl: `${SITE_ORIGIN}/schools/uc-berkeley/2019-20`,
   },
   {
     year: "2020-21",
@@ -76,7 +77,7 @@ export const BERKELEY_WAITLIST_HISTORY: readonly BerkeleyWaitlistHistoryRow[] = 
     waitListAdmitted: 1651,
     waitListSuccessRate: 1651 / 5043,
     sourceKind: "xlsx",
-    archiveUrl: "https://www.collegedata.fyi/schools/uc-berkeley/2020-21",
+    archiveUrl: `${SITE_ORIGIN}/schools/uc-berkeley/2020-21`,
   },
   {
     year: "2021-22",
@@ -86,7 +87,7 @@ export const BERKELEY_WAITLIST_HISTORY: readonly BerkeleyWaitlistHistoryRow[] = 
     waitListAdmitted: 359,
     waitListSuccessRate: 359 / 6871,
     sourceKind: "xlsx",
-    archiveUrl: "https://www.collegedata.fyi/schools/uc-berkeley/2021-22",
+    archiveUrl: `${SITE_ORIGIN}/schools/uc-berkeley/2021-22`,
   },
   {
     year: "2022-23",
@@ -96,7 +97,7 @@ export const BERKELEY_WAITLIST_HISTORY: readonly BerkeleyWaitlistHistoryRow[] = 
     waitListAdmitted: 44,
     waitListSuccessRate: 44 / 4655,
     sourceKind: "xlsx",
-    archiveUrl: "https://www.collegedata.fyi/schools/uc-berkeley/2022-23",
+    archiveUrl: `${SITE_ORIGIN}/schools/uc-berkeley/2022-23`,
   },
   {
     year: "2023-24",
@@ -106,7 +107,7 @@ export const BERKELEY_WAITLIST_HISTORY: readonly BerkeleyWaitlistHistoryRow[] = 
     waitListAdmitted: 1191,
     waitListSuccessRate: 1191 / 4820,
     sourceKind: "pdf",
-    archiveUrl: "https://www.collegedata.fyi/schools/uc-berkeley/2023-24",
+    archiveUrl: `${SITE_ORIGIN}/schools/uc-berkeley/2023-24`,
   },
   {
     year: "2024-25",
@@ -116,7 +117,7 @@ export const BERKELEY_WAITLIST_HISTORY: readonly BerkeleyWaitlistHistoryRow[] = 
     waitListAdmitted: 26,
     waitListSuccessRate: 26 / 7853,
     sourceKind: "xlsx",
-    archiveUrl: "https://www.collegedata.fyi/schools/uc-berkeley/2024-25",
+    archiveUrl: `${SITE_ORIGIN}/schools/uc-berkeley/2024-25`,
   },
   {
     year: "2025-26",
@@ -126,7 +127,7 @@ export const BERKELEY_WAITLIST_HISTORY: readonly BerkeleyWaitlistHistoryRow[] = 
     waitListAdmitted: 1,
     waitListSuccessRate: 1 / 6479,
     sourceKind: "xlsx",
-    archiveUrl: "https://www.collegedata.fyi/schools/uc-berkeley/2025-26",
+    archiveUrl: `${SITE_ORIGIN}/schools/uc-berkeley/2025-26`,
   },
 ];
 

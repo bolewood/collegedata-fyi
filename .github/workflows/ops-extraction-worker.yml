@@ -104,7 +104,7 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       # Optional: after a run, tell the web app which school pages changed so
       # their 24 h ISR cache is refreshed. No-op when either is unset.
-      COLLEGEDATA_REVALIDATE_URL: ${{ vars.COLLEGEDATA_REVALIDATE_URL || secrets.COLLEGEDATA_REVALIDATE_URL }}
+      QUADFILE_REVALIDATE_URL: ${{ vars.QUADFILE_REVALIDATE_URL || vars.COLLEGEDATA_REVALIDATE_URL }}
       REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
     steps:
       - uses: actions/checkout@v5

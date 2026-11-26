@@ -7,6 +7,7 @@ import {
   MCP_SERVER_VERSION,
   MCP_TOOL_NAMES,
 } from "@/lib/mcp/tools";
+import { SITE_ORIGIN } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -63,9 +64,9 @@ export async function GET(request: Request) {
     version: MCP_SERVER_VERSION,
     transport: "streamable-http",
     auth: "none",
-    endpoint: "https://www.collegedata.fyi/api/mcp",
+    endpoint: `${SITE_ORIGIN}/api/mcp`,
     tools: MCP_TOOL_NAMES,
-    docs: "https://www.collegedata.fyi/api",
+    docs: `${SITE_ORIGIN}/api`,
   });
 }
 

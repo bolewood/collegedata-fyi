@@ -2,6 +2,7 @@ import { dataLicenseFields } from "./data-license";
 import { fetchCoverageRows, fetchManifest } from "./queries";
 import { friendlyApiSupabase as supabase } from "./supabase-friendly-api";
 import { FRIENDLY_FACT_FIELDS, publicFieldDefinitions } from "./public-data";
+import { SITE_ORIGIN } from "./site";
 
 type UntypedSupabase = {
   from: (table: string) => any;
@@ -16,7 +17,7 @@ export function snapshotDate(now: Date = new Date()): string {
 }
 
 export function snapshotBase(date: string = snapshotDate()): string {
-  return `https://www.collegedata.fyi/snapshots/v1/${date}`;
+  return `${SITE_ORIGIN}/snapshots/v1/${date}`;
 }
 
 async function fetchPagedRows<T>(
@@ -59,7 +60,7 @@ export async function snapshotManifest() {
       { name: "sources.jsonl", format: "jsonl", url: `${SNAPSHOT_BASE}/sources.jsonl` },
       { name: "field_dictionary.json", format: "json", url: `${SNAPSHOT_BASE}/field_dictionary.json` },
     ],
-    latest_alias: "https://www.collegedata.fyi/snapshots/latest/manifest.json",
+    latest_alias: `${SITE_ORIGIN}/snapshots/latest/manifest.json`,
   };
 }
 

@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { SCHOLARSHIP_ATTRIBUTION, SCHOLARSHIP_CORRECTION_URL } from "@/lib/scholarships";
+import { APEX_HOST, API_ORIGIN, SITE_NAME } from "@/lib/site";
 
-const BASE = "https://api.collegedata.fyi";
+const BASE = API_ORIGIN;
 
 export const metadata: Metadata = {
   title: "Scholarship programs methodology",
@@ -38,13 +39,12 @@ function Term({ lead, children }: { lead: string; children: ReactNode }) {
   );
 }
 
-const APA =
-  "collegedata.fyi. (2026). Scholarship program data [Data set]. https://collegedata.fyi/scholarships. CC BY-SA 4.0.";
+const APA = `${SITE_NAME}. (2026). Scholarship program data [Data set]. https://${APEX_HOST}/scholarships. CC BY-SA 4.0.`;
 const BIBTEX = `@misc{collegedatafyi2026scholarships,
-  author       = {{collegedata.fyi}},
+  author       = {{${SITE_NAME}}},
   title        = {Scholarship program data},
   year         = {2026},
-  howpublished = {\\url{https://collegedata.fyi/scholarships}},
+  howpublished = {\\url{https://${APEX_HOST}/scholarships}},
   note         = {CC BY-SA 4.0. Terms as published by each school.}
 }`;
 

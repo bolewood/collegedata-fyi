@@ -58,6 +58,7 @@ from typing import Any, Iterable, Mapping
 if __package__ is None or __package__ == "":
     sys.path.append(str(Path(__file__).resolve().parents[2]))
 
+from tools.common.site import API_ORIGIN, runtime_api_origin
 from tools.finder.identity_guard import (
     canonicalize_school_url,
     resolve_canonical_school_id,
@@ -67,7 +68,7 @@ from tools.finder.identity_guard import (
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUTPUT = REPO_ROOT / "web/src/lib/waitlist-recipe-data.ts"
-SOURCE_API_URL = "https://api.collegedata.fyi"
+SOURCE_API_URL = API_ORIGIN  # display: recorded in generated data
 GENERATED_FROM = "school_browser_rows joined to institution_directory and scorecard_summary"
 PAGE_SIZE = 1000
 USER_AGENT = "collegedata-pipeline/waitlist-recipe"
@@ -718,7 +719,7 @@ def main() -> int:
     # Only the public anon key is read from these files; nothing else is used.
     for env_path in (REPO_ROOT / ".env", REPO_ROOT / "web/.env.local"):
         load_env(env_path)
-    supabase_url = os.environ.get("SUPABASE_URL", "").strip() or SOURCE_API_URL
+    supabase_url = runtime_api_origin()
     api_key = (
         os.environ.get("SUPABASE_ANON_KEY", "").strip()
         or os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY", "").strip()

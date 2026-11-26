@@ -4,6 +4,7 @@ import { formatCount, formatShortDate } from "@/lib/format";
 import type { ManifestRow } from "@/lib/types";
 import { SchoolSearch } from "@/components/SchoolSearch";
 import { SchoolGlyph } from "@/components/SchoolGlyph";
+import { SITE_NAME, SITE_ORIGIN } from "@/lib/site";
 
 export const revalidate = 3600; // ISR: revalidate every hour
 
@@ -13,8 +14,8 @@ const HOME_DESCRIPTION =
 const homeJsonLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "collegedata.fyi",
-  url: "https://www.collegedata.fyi",
+  name: SITE_NAME,
+  url: SITE_ORIGIN,
   description: HOME_DESCRIPTION,
 };
 

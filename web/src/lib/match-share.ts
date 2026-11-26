@@ -7,6 +7,7 @@
 // profile.
 
 import type { AcademicFit } from "./positioning";
+import { SITE_NAME_CAMEL, SITE_ORIGIN } from "./site";
 
 export type MatchFitCounts = Record<AcademicFit, number>;
 
@@ -20,7 +21,7 @@ const ROWS: { fit: AcademicFit; label: string }[] = [
 
 const BAR_CHAR = "█";
 const MAX_BAR = 10;
-export const MATCH_SUMMARY_URL = "https://www.collegedata.fyi/match";
+export const MATCH_SUMMARY_URL = `${SITE_ORIGIN}/match`;
 
 export function countsFromGroups(
   groups: Record<AcademicFit, readonly unknown[]>,
@@ -41,7 +42,7 @@ function bar(count: number, max: number): string {
 
 export function formatMatchSummary(counts: MatchFitCounts): string {
   const total = ROWS.reduce((sum, { fit }) => sum + counts[fit], 0);
-  const head = "CollegeData.fyi Match";
+  const head = `${SITE_NAME_CAMEL} Match`;
   if (total === 0) {
     return [head, "No schools ranked yet", "", MATCH_SUMMARY_URL].join("\n");
   }

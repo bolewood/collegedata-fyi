@@ -21,13 +21,14 @@ import { deriveInks } from "@/lib/derive-inks";
 import { SchoolGlyph } from "@/components/SchoolGlyph";
 import { GpaChart } from "@/components/GpaChart";
 import { GpaTable, gpaTableRows } from "@/components/GpaTable";
+import { SITE_ORIGIN } from "@/lib/site";
 
 export const dynamic = "force-static";
 export const revalidate = 604800;
 
 type Params = { school_id: string };
 
-const SITE = "https://www.collegedata.fyi";
+const SITE = SITE_ORIGIN;
 
 async function loadServedPage(schoolId: string) {
   if (!isGpaSchool(schoolId)) return null;

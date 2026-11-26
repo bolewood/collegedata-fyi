@@ -19,10 +19,16 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from tools.common.site import SITE_ORIGIN  # noqa: E402
+
 
 PROJECT_NAME = "CollegeData.fyi"
-PIPELINE_BOARD_URL = "https://www.collegedata.fyi/pipeline-observation"
-PIPELINE_JSON_URL = "https://www.collegedata.fyi/pipeline-observation.json"
+PIPELINE_BOARD_URL = SITE_ORIGIN + "/pipeline-observation"
+PIPELINE_JSON_URL = SITE_ORIGIN + "/pipeline-observation.json"
 COLOR_FAILURE = 0xD7263D
 COLOR_SUCCESS = 0x1F7A4D
 
