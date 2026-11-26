@@ -23,6 +23,7 @@ from tools.fsa.match import (
     match_fsa_rows,
 )
 from tools.fsa.opeid import normalize_opeid8, restore_fsa_opeid
+from tools.common.site import API_ORIGIN
 from tools.fsa.parse import ParsedWorkbook, parse_workbook, sha256_file, SOURCE_URL, LISTING_PAGE
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -35,7 +36,7 @@ DEFAULT_HD = Path(
     "/Users/santhonys/Projects/Owen/colleges/collegedata-fyi/scratch/"
     "ipeds/2024-25-final/HD2024.zip"
 )
-DIRECTORY_URL = "https://api.collegedata.fyi/rest/v1/institution_directory"
+DIRECTORY_URL = f"{API_ORIGIN}/rest/v1/institution_directory"
 CANARIES = {
     "uf": "University of Florida",
     "uei": "UEI",

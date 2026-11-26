@@ -41,12 +41,13 @@ if str(REPO_ROOT) not in sys.path:
 import yaml  # noqa: E402
 
 from tools.finder.stuck_pdf_seeds import is_direct_doc_seed  # noqa: E402
+from tools.common.site import API_ORIGIN, SITE_ORIGIN  # noqa: E402
 
-DEFAULT_API = "https://api.collegedata.fyi"
+DEFAULT_API = API_ORIGIN
 # PRD 033: pipeline traffic to the public API identifies itself.
 USER_AGENT = "collegedata-pipeline/discovery-renewal"
 DEFAULT_SCHOOLS_YAML = REPO_ROOT / "tools" / "finder" / "schools.yaml"
-SCHOOL_PAGE_URL = "https://www.collegedata.fyi/schools/{school_id}"
+SCHOOL_PAGE_URL = SITE_ORIGIN + "/schools/{school_id}"
 PAGE_SIZE = 1000
 HTTP_TIMEOUT_SEC = 60
 MANIFEST_QUERY = (

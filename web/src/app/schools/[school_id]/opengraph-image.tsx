@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 import { fetchCanonicalSchoolId, fetchSchoolDocuments } from "@/lib/queries";
 import { isCanonicalCdsYear, yearRange } from "@/lib/format";
 import { cachedSchoolInks, schoolOgColors } from "@/lib/school-inks";
+import { SITE_NAME } from "@/lib/site";
 
 export const alt = "School Common Data Set archive";
 export const size = { width: 1200, height: 630 };
@@ -34,7 +35,7 @@ export default async function Image({
             fontSize: 48,
           }}
         >
-          collegedata.fyi
+          {SITE_NAME}
         </div>
       ),
       { ...size }
@@ -70,7 +71,7 @@ export default async function Image({
             letterSpacing: 1,
           }}
         >
-          collegedata.fyi
+          {SITE_NAME}
         </div>
 
         {/* School name */}

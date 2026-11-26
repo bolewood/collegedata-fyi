@@ -1,5 +1,6 @@
-export const APEX_HOST = "collegedata.fyi";
-export const CANONICAL_ORIGIN = "https://www.collegedata.fyi";
+import { APEX_HOST, SITE_ORIGIN } from "./site";
+export { APEX_HOST };
+export const CANONICAL_ORIGIN = SITE_ORIGIN;
 
 /** Apex → www must be a 301. Next.js `permanent: true` would emit 308. */
 export const APEX_TO_WWW_REDIRECTS = [

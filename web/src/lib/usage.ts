@@ -1,3 +1,4 @@
+import { SITE_ORIGIN } from "./site";
 // PRD 033: model for /usage and /usage.json. Pure functions over the rows in
 // usage_public_daily and usage_public_school_months; the privacy rules are
 // applied when those rows are published, not here.
@@ -410,7 +411,7 @@ export function toUsageJson(
   return {
     license: "CC0-1.0",
     generated_at: now.toISOString(),
-    method_url: "https://www.collegedata.fyi/usage#how-we-count",
+    method_url: `${SITE_ORIGIN}/usage#how-we-count`,
     site_tagging_t0: SITE_TAGGING_T0,
     heavy_client_files_per_day: HEAVY_CLIENT_FILES_PER_DAY,
     school_floor: SCHOOL_FLOOR,

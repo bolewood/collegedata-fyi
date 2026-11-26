@@ -6,6 +6,7 @@ import { ShareButton } from "@/components/ShareButton";
 import { CoverageDashboard } from "@/components/CoverageDashboard";
 import { ArchiveStatusHeader } from "@/components/ArchiveStatusHeader";
 import { loadLatestSnapshot } from "@/lib/data-quality-snapshots";
+import { SITE_NAME_CAMEL } from "@/lib/site";
 
 // ISR: the page re-reads every 15 minutes, but the coverage table itself is
 // rebuilt hourly (refresh-coverage cron at minute 17). The copy below says hourly.
@@ -70,7 +71,7 @@ export default async function CoveragePage() {
         </p>
         <div style={{ marginTop: 18 }}>
           {/* No path: shares the address bar as it is, filter params included. */}
-          <ShareButton surface="coverage" align="start" title="CollegeData.fyi CDS coverage view" />
+          <ShareButton surface="coverage" align="start" title={`${SITE_NAME_CAMEL} CDS coverage view`} />
         </div>
       </header>
 

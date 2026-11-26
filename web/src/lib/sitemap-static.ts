@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
+import { SITE_ORIGIN } from "./site";
 
-export const SITE_URL = "https://www.collegedata.fyi";
+export const SITE_URL = SITE_ORIGIN;
 
 type StaticEntry = {
   path: string;

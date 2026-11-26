@@ -16,13 +16,14 @@ import { UsageSchoolSearch } from "./UsageSchoolSearch";
 import "./usage.css";
 import { CommunityInvitation } from "@/components/CommunityInvitation";
 import { CommunityProjects } from "@/components/CommunityProjects";
+import { SITE_NAME } from "@/lib/site";
 
 export const revalidate = 3600;
 
 export function generateMetadata(): Metadata {
   const launched = isUsageLaunched();
   return {
-    title: "Usage — collegedata.fyi",
+    title: `Usage — ${SITE_NAME}`,
     description:
       "How often the Common Data Set reports in this archive are downloaded, by web browsers and by programs, with bots and crawlers kept out of the total.",
     alternates: { canonical: "/usage" },

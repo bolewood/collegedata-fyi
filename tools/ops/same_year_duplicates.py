@@ -48,6 +48,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from tools.finder.academic_year import normalize_academic_year  # noqa: E402
+from tools.common.site import API_ORIGIN  # noqa: E402
 from tools.finder.stuck_pdf_seeds import is_section_seed  # noqa: E402
 
 from tools.ops.discovery_renewal import (  # noqa: E402
@@ -59,7 +60,7 @@ from tools.ops.discovery_renewal import (  # noqa: E402
     parse_year,
 )
 
-DEFAULT_API = "https://api.collegedata.fyi"
+DEFAULT_API = API_ORIGIN
 DOCUMENT_COLUMNS = (
     "id,school_id,sub_institutional,cds_year,detected_year,source_url,source_sha256,"
     "source_format,discovered_at"

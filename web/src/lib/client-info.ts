@@ -1,3 +1,4 @@
+import { API_HOST } from "./site";
 const BUILD_ID = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || "dev";
 
 // Gateway logs record X-Client-Info but not custom headers; the PRD 032 usage
@@ -18,7 +19,7 @@ export function isArchiveFileUrl(href: string | null | undefined): boolean {
   try {
     const url = new URL(href);
     const host = url.hostname.toLowerCase();
-    const ownHost = host === "api.collegedata.fyi" || host.endsWith(".supabase.co");
+    const ownHost = host === API_HOST || host.endsWith(".supabase.co");
     return ownHost && url.pathname.startsWith(ARCHIVE_FILE_PATH);
   } catch {
     return false;

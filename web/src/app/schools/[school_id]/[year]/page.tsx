@@ -46,6 +46,7 @@ import { schemaFallbackNoteFromArtifact } from "@/lib/schema-fallback";
 import { SchoolGlyph } from "@/components/SchoolGlyph";
 import { ShareButton } from "@/components/ShareButton";
 import { externalLinkRel } from "@/lib/client-info";
+import { SITE_NAME, SITE_NAME_CAMEL, SITE_ORIGIN } from "@/lib/site";
 
 export const dynamic = "force-static";
 export const revalidate = 604800;
@@ -159,7 +160,7 @@ export default async function SchoolYearPage({ params }: {
     yearOverYear: yearOverYearSentence(currentFacts, priorFacts),
   });
 
-  const canonicalUrl = `https://www.collegedata.fyi/schools/${school_id}/${year}`;
+  const canonicalUrl = `${SITE_ORIGIN}/schools/${school_id}/${year}`;
   const jsonLd = [
     {
       "@context": "https://schema.org",
@@ -172,8 +173,8 @@ export default async function SchoolYearPage({ params }: {
       isAccessibleForFree: true,
       provider: {
         "@type": "Organization",
-        name: "collegedata.fyi",
-        url: "https://www.collegedata.fyi",
+        name: SITE_NAME,
+        url: SITE_ORIGIN,
       },
     },
     ...(docs.some((doc) => doc.extraction_status === "extracted")
@@ -184,7 +185,7 @@ export default async function SchoolYearPage({ params }: {
             name: `${schoolName} Common Data Set ${year}: structured extract`,
             description: `Values from ${schoolName}'s Common Data Set ${year}, extracted and keyed to canonical CDS field IDs by collegedata.fyi.`,
             url: canonicalUrl,
-            creator: { "@type": "Organization", name: "collegedata.fyi", url: "https://www.collegedata.fyi" },
+            creator: { "@type": "Organization", name: SITE_NAME, url: SITE_ORIGIN },
             isBasedOn: docs[0]?.source_url ?? canonicalUrl,
             temporalCoverage: year,
             license: DATA_LICENSE_URL,
@@ -202,8 +203,8 @@ export default async function SchoolYearPage({ params }: {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Schools", item: "https://www.collegedata.fyi/schools" },
-        { "@type": "ListItem", position: 2, name: schoolName, item: `https://www.collegedata.fyi/schools/${school_id}` },
+        { "@type": "ListItem", position: 1, name: "Schools", item: `${SITE_ORIGIN}/schools` },
+        { "@type": "ListItem", position: 2, name: schoolName, item: `${SITE_ORIGIN}/schools/${school_id}` },
         { "@type": "ListItem", position: 3, name: year, item: canonicalUrl },
       ],
     },
@@ -259,7 +260,7 @@ export default async function SchoolYearPage({ params }: {
           <ShareButton
             surface="school_year"
             title={`${schoolName} Common Data Set ${year}`}
-            text="Source-linked admissions, enrollment, aid, and CDS documents from CollegeData.fyi."
+            text={`Source-linked admissions, enrollment, aid, and CDS documents from ${SITE_NAME_CAMEL}.`}
             path={`/schools/${school_id}/${year}`}
           />
         </div>

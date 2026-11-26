@@ -5,6 +5,7 @@ import {
 import { parsePublicFactCategories } from "@/lib/public-fact-category";
 import { fetchCanonicalSchoolId } from "@/lib/queries";
 import { schoolRedirectUrl } from "@/lib/school-alias";
+import { SITE_NAME_CAPS } from "@/lib/site";
 
 export const revalidate = 3600;
 
@@ -45,7 +46,7 @@ export async function GET(
       {
         error: "school_not_found",
         school_id,
-        message: "No public CollegeData.FYI school, CDS, or federal baseline row was found for this school_id.",
+        message: `No public ${SITE_NAME_CAPS} school, CDS, or federal baseline row was found for this school_id.`,
       },
       { status: 404 },
     );
