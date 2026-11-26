@@ -1,3 +1,4 @@
+import { REPO_URL } from "@/lib/repo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TestOptionalChart } from "@/components/TestOptionalChart";
@@ -256,7 +257,7 @@ export default function TestOptionalTrackerPage() {
         >
           <TrackedLink
             external
-            href="https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/test-optional-tracker.md"
+            href={`${REPO_URL}/blob/main/docs/recipes/test-optional-tracker.md`}
             target="_blank"
             rel="noopener noreferrer"
             analyticsEvent="recipe_writeup_opened"

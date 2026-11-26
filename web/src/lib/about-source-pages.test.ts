@@ -46,7 +46,7 @@ describe("Wave 1 product copy", () => {
     expect(home).toContain("Recently added");
     expect(home).toContain('className="serif"');
     expect(home).not.toContain("Latest drain");
-    expect(home).not.toContain("github.com/bolewood/collegedata-fyi");
+    expect(home).not.toContain("github.com/bolewood/quadfile");
     expect(home).not.toMatch(/\bextracted\b/);
     expect(home).not.toMatch(/field schema/);
     expect(home).not.toMatch(/Browser rows/);

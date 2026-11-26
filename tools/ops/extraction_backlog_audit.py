@@ -29,7 +29,7 @@ from tools.ops import directory_enqueue_batches as batches
 
 
 DEFAULT_OUT_DIR = Path("scratch/extraction-backlog-audits")
-DEFAULT_GITHUB_REPO = (os.environ.get("GITHUB_REPOSITORY") or "bolewood/collegedata-fyi")
+DEFAULT_GITHUB_REPO = (os.environ.get("GITHUB_REPOSITORY") or "bolewood/quadfile")
 DEFAULT_GITHUB_WORKFLOW = "Ops extraction worker"
 HIGH_ENROLLMENT_THRESHOLD = 10_000
 

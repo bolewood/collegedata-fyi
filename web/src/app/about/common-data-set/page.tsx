@@ -1,3 +1,4 @@
+import { REPO_URL } from "@/lib/repo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -94,7 +95,7 @@ export default function CommonDataSetPage() {
           IR / researchers: the dataset preserves the template's official
           field IDs; the <Link href="/api">API</Link> and{" "}
           <a
-            href="https://github.com/bolewood/collegedata-fyi"
+            href={REPO_URL}
             target="_blank"
             rel="noopener noreferrer"
           >

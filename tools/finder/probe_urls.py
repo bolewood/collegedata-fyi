@@ -78,7 +78,7 @@ SCHOOLS_YAML = ROOT / "schools.yaml"
 
 # ── Config ──────────────────────────────────────────────────────────────────
 
-_UA = "collegedata-fyi-finder/0.1 (https://github.com/bolewood/collegedata-fyi)"
+_UA = "collegedata-fyi-finder/0.1 (https://github.com/bolewood/quadfile)"
 
 # Lenient SSL context — some school sites have dodgy certs
 _SSL_CTX = ssl.create_default_context()

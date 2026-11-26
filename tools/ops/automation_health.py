@@ -19,7 +19,7 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_ENV = REPO_ROOT / ".env"
 DEFAULT_POOLER_URL = Path("supabase/.temp/pooler-url")
-DEFAULT_REPO = (os.environ.get("GITHUB_REPOSITORY") or "bolewood/collegedata-fyi")
+DEFAULT_REPO = (os.environ.get("GITHUB_REPOSITORY") or "bolewood/quadfile")
 CRON_JOBS = (
     "archive-enqueue-daily",
     "archive-process-every-30s",

@@ -1,3 +1,4 @@
+import { REPO_URL } from "@/lib/repo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { fetchSiteStats } from "@/lib/queries";
@@ -311,7 +312,7 @@ COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegeda
             , Node 20 or newer. File:{" "}
             <a
               className={API_LINK_CLASS}
-              href="https://github.com/bolewood/collegedata-fyi/blob/main/packages/mcp-server/bin/collegedata-mcp.js"
+              href={`${REPO_URL}/blob/main/packages/mcp-server/bin/collegedata-mcp.js`}
             >
               packages/mcp-server/bin/collegedata-mcp.js
             </a>
@@ -1735,7 +1736,7 @@ const { data } = await supabase
         into the repo at{" "}
         <a
           className={API_LINK_CLASS}
-          href="https://github.com/bolewood/collegedata-fyi/blob/main/schemas"
+          href={`${REPO_URL}/blob/main/schemas`}
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -1776,7 +1777,7 @@ const { data } = await supabase
         Found something missing or wrong? Open an issue on{" "}
         <a
           className={API_LINK_CLASS}
-          href="https://github.com/bolewood/collegedata-fyi/issues"
+          href={`${REPO_URL}/issues`}
           target="_blank"
           rel="noopener noreferrer"
         >

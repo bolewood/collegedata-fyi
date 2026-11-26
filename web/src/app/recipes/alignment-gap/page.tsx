@@ -1,3 +1,4 @@
+import { REPO_URL } from "@/lib/repo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AlignmentGapChart } from "@/components/AlignmentGapChart";
@@ -630,7 +631,7 @@ curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,earn
         <div style={{ marginTop: 14, display: "flex", gap: 16, flexWrap: "wrap", fontSize: 13 }}>
           <TrackedLink
             external
-            href="https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/alignment-gap.md"
+            href={`${REPO_URL}/blob/main/docs/recipes/alignment-gap.md`}
             target="_blank"
             rel="noopener noreferrer"
             analyticsEvent="recipe_writeup_opened"
