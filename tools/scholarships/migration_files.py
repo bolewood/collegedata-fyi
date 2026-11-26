@@ -15,11 +15,15 @@ MIGRATIONS_DIR = Path(__file__).resolve().parents[2] / "supabase" / "migrations"
 
 _VIEW = re.compile(r"create\s+(or\s+replace\s+)?view\s+public\.scholarship_directory\b", re.I)
 _CACHE = re.compile(r"create\s+materialized\s+view\s+public\.scholarship_directory_cache\b", re.I)
-_OBJECT = re.compile(r"create\s+(or\s+replace\s+)?(materialized\s+view|view|table|function)\s+public\.scholarship_", re.I)
+_OBJECT = re.compile(
+    r"(create\s+(or\s+replace\s+)?|alter\s+)(materialized\s+view|view|table|function)\s+public\.scholarship_", re.I
+)
+_COMMENT = re.compile(r"--[^\n]*")
 
 
 def _matching(pattern: "re.Pattern[str]", directory: Path = MIGRATIONS_DIR) -> List[Path]:
-    return [p for p in sorted(directory.glob("*.sql")) if pattern.search(p.read_text(encoding="utf-8"))]
+    # Line comments are stripped first: a comment that quotes a statement does not define anything.
+    return [p for p in sorted(directory.glob("*.sql")) if pattern.search(_COMMENT.sub("", p.read_text(encoding="utf-8")))]
 
 
 def view_migrations(directory: Path = MIGRATIONS_DIR) -> List[Path]:

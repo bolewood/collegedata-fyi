@@ -23,8 +23,6 @@ is below.
 
 Row counts change with every refresh; see [/coverage](https://www.quadfile.org/coverage) for current numbers.
 
-Row counts change with every refresh; see [/coverage](https://www.quadfile.org/coverage) for current numbers.
-
 ## Files
 
 - [`backfill_ipeds_ids.py`](./backfill_ipeds_ids.py) — one-shot fill of `cds_documents.ipeds_id` for rows inserted before the migration shipped. New rows pick up `ipeds_id` automatically via the archive edge functions (`_shared/archive.ts` reads it off `SchoolInput`).
@@ -168,6 +166,6 @@ pip install pandas supabase python-dotenv pyyaml
 `.env` at repo root (`load_directory.py` also accepts `--search-nicknames`, `--identity-exceptions` and `--summary-out`; run it with `--help`):
 
 ```
-SUPABASE_URL=https://api.quadfile.org
+SUPABASE_URL=https://<project-ref>.supabase.co   # the project origin: a credentialed call must not depend on a redirect from the custom API host
 SUPABASE_SERVICE_ROLE_KEY=...   # for --apply paths only; never check in
 ```

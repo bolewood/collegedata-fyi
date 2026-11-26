@@ -915,13 +915,26 @@ def test_other_info_migration_recreates_cache_and_view_with_the_same_access():
     assert "short_excerpt" not in sql
 
 
-def test_migration_helper_finds_the_newest_view_by_content():
+def test_migration_helper_finds_the_newest_view_by_content(tmp_path):
     # Guards a filename glob (`*_scholarship_directory*.sql`) silently reading an older view definition.
+    files = {
+        "001_base.sql": "create table public.scholarship_programs (id int);\ncreate view public.scholarship_directory as select 1;",
+        "002_text.sql": "-- rename text\nCREATE OR REPLACE VIEW public.scholarship_directory AS select 2;",
+        "003_mention.sql": "-- create view public.scholarship_directory as select 3;\nselect 1;",
+        "004_alter.sql": "alter table public.scholarship_programs add column x int;",
+        "005_other.sql": "create table public.unrelated (id int);",
+    }
+    for name, text in files.items():
+        (tmp_path / name).write_text(text, encoding="utf-8")
+    names = lambda paths: [p.name for p in paths]
+    assert names(mf.view_migrations(tmp_path)) == ["001_base.sql", "002_text.sql"]
+    assert mf.newest_view_migration(tmp_path).name == "002_text.sql"  # not named after the view
+    assert mf.base_migration(tmp_path).name == "001_base.sql"
+    assert names(mf.all_scholarship_migrations(tmp_path)) == ["001_base.sql", "002_text.sql", "004_alter.sql"]
+
+
+def test_migration_helper_reads_the_real_newest_view():
     newest = mf.newest_view_migration()
-    assert newest.name == "20261126140000_rename_text_scholarship_view_and_comments.sql" or "scholarship_directory" not in newest.name
     assert mf.base_migration() == MIGRATION and mf.view_migrations()[-1] == newest
     assert newest in mf.all_scholarship_migrations()
-    # Every migration that defines the view is found, whatever it is called.
-    named = {p for p in (REPO / "supabase" / "migrations").glob("*_scholarship_directory*.sql")}
-    assert named <= set(mf.view_migrations())
     assert f"'{model.ATTRIBUTION}'::text as attribution" in newest.read_text(encoding="utf-8")

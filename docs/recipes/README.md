@@ -1,6 +1,6 @@
 # Recipes
 
-Worked examples that show what you can do with the CDS and federal data in this repo. Each recipe pairs a short write-up (Markdown, in this directory) with a reproducible artifact — an interactive route, an XLSX template, or a checked-in generated dataset — served from [Quadfile/recipes](https://www.quadfile.org/recipes). Recipe inputs are reviewable and designed to be reproduced or extended through the public API.
+Worked examples that show what you can do with the CDS and federal data in this repo. Each recipe pairs a short write-up (Markdown, in this directory) with a reproducible artifact — an interactive route, an XLSX template, or a checked-in generated dataset — served from [quadfile.org/recipes](https://www.quadfile.org/recipes). Recipe inputs are reviewable and designed to be reproduced or extended through the public API.
 
 ## Conventions
 

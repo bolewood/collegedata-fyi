@@ -272,7 +272,7 @@ Implementation surfaces that must share this rule:
 ## Consumer integration
 
 The frontend merges cleaner + fallback values via `fetchExtract()` in
-`web/src/lib/queries.ts`. Any consumer hitting `api.Quadfile` can do
+`web/src/lib/queries.ts`. Any consumer hitting `api.quadfile.org` can do
 the same with two parallel requests:
 
 ```bash
