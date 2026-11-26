@@ -81,6 +81,11 @@ ALLOWLIST: dict[str, tuple[str, str]] = {
         r'import \{ API_HOST, API_ORIGIN, SITE_ORIGIN \} from "@/lib/site";'
         r"|const BASE = API_ORIGIN;|\{API_HOST\}",
     ),
+    "web/src/lib/old-api-host.ts": (
+        "old-host handler, removed at month +12",
+        r"\* Today no request reaches the app with these hosts \(api\.collegedata\.fyi is a"
+        r'|"api\.collegedata\.fyi": "https://api\.quadfile\.org",',
+    ),
     "tools/api_usage/classify.py": (
         "classifies gateway log lines by request host; the old host stays in the list",
         r'"api\.collegedata\.fyi", "api\.quadfile\.org", "isduwmygvmdozhpvzaix\.supabase\.co",',
