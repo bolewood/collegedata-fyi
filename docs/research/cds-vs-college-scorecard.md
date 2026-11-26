@@ -3,7 +3,7 @@
 > **Purpose.** This document maps the overlap and differences between the
 > Common Data Set (CDS) and the U.S. Department of Education's
 > [College Scorecard](https://collegescorecard.ed.gov/data/api-documentation/)
-> so that downstream consumers of collegedata.fyi can understand what each
+> so that downstream consumers of Quadfile can understand what each
 > dataset uniquely provides and where a join between the two creates the most
 > complete picture of a U.S. college.
 >
@@ -69,7 +69,7 @@ CDS template letter; "Scorecard category" references the API namespace.
 **Key takeaway.** Scorecard is the authoritative institutional-identity
 dataset with federal IDs, Carnegie codes, and MSI flags. CDS adds
 calendar system and a richer degree-offerings checklist. The two join
-cleanly on IPEDS UNITID (which collegedata.fyi already carries in
+cleanly on IPEDS UNITID (which Quadfile already carries in
 `schools.yaml`).
 
 ### 2.2 Admissions
@@ -99,7 +99,7 @@ the raw funnel counts (applied/admitted/enrolled), yield, ED/EA data,
 waitlist stats, GPA distributions, class rank, and the qualitative
 "basis for selection" rubric. Scorecard reduces all of this to a single
 admission rate and test score ranges. **This is one of the highest-value
-areas for CDS data and a primary reason collegedata.fyi exists.**
+areas for CDS data and a primary reason Quadfile exists.**
 
 ### 2.3 Enrollment and student demographics
 
@@ -287,7 +287,7 @@ The natural join key between CDS and Scorecard is the **IPEDS Unit ID**
 (UNITID), a six-digit identifier assigned to every Title IV institution.
 
 - **Scorecard** uses UNITID as its primary key (`id` field).
-- **CDS** does not include UNITID in the template, but collegedata.fyi's
+- **CDS** does not include UNITID in the template, but Quadfile's
   `schools.yaml` corpus already carries UNITID for every school (sourced
   from the IPEDS HD file). The `school_id` slug in `cds_documents` maps
   to UNITID via `schools.yaml`.
@@ -374,13 +374,13 @@ The natural join key between CDS and Scorecard is the **IPEDS Unit ID**
 
 ---
 
-## 7. Implications for collegedata.fyi
+## 7. Implications for Quadfile
 
 1. **The CDS fills Scorecard's blind spots in admissions.** Scorecard
    has 32 admissions fields; CDS has 278. Application counts, yield,
    ED/EA, waitlist, GPA, class rank, and selection criteria are available
    nowhere else in a structured, cross-institutional format. This is the
-   core value proposition of collegedata.fyi.
+   core value proposition of Quadfile.
 
 2. **Scorecard fills CDS's blind spots in outcomes.** Earnings,
    repayment, and debt data (2,473 fields combined) do not exist in CDS.
@@ -398,7 +398,7 @@ The natural join key between CDS and Scorecard is the **IPEDS Unit ID**
    or CSV imports.
 
 5. **CDS requires extraction; Scorecard does not.** The entire
-   engineering challenge of collegedata.fyi (tiered PDF extraction,
+   engineering challenge of Quadfile (tiered PDF extraction,
    archival, schema normalization) exists because CDS data is locked in
    PDFs. Scorecard data is already in a clean API. The hard problem is
    the CDS side.
@@ -419,5 +419,5 @@ The natural join key between CDS and Scorecard is the **IPEDS Unit ID**
 - **Scorecard institution documentation**: https://collegescorecard.ed.gov/files/InstitutionDataDocumentation.pdf
 - **IPEDS**: https://nces.ed.gov/ipeds/ (source for both CDS corpus and
   Scorecard institution data)
-- **collegedata.fyi schema**: `schemas/cds_schema_2025_26.json` (1,105
+- **Quadfile schema**: `schemas/cds_schema_2025_26.json` (1,105
   fields, programmatically extracted)

@@ -136,7 +136,7 @@ export async function snapshotFile(file: string): Promise<{ body: string; conten
     };
   }
 
-  if (file === "collegedata.duckdb") {
+  if (file === "quadfile.duckdb" || file === "collegedata.duckdb") {
     return {
       body: "DuckDB snapshot generation is available through tools/snapshots/build_public_snapshots.mjs when duckdb is installed.\n",
       contentType: "text/plain; charset=utf-8",

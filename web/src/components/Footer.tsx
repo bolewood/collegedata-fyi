@@ -18,7 +18,7 @@ export function Footer() {
         style={{
           padding: "32px 24px 56px",
           display: "grid",
-          gridTemplateColumns: "1fr auto",
+          gridTemplateColumns: "minmax(16rem, 1fr) auto",
           gap: 32,
           fontSize: 13,
           color: "var(--ink-3)",

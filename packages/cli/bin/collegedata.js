@@ -22,12 +22,14 @@ function printCreditOnExit() {
 
 function usage() {
   console.error(`Usage:
-  collegedata search <query> [--format json]
-  collegedata facts <school_id> [--categories admissions,cost,outcomes] [--format json|table]
-  collegedata compare <school_id...> [--categories admissions,cost,outcomes] [--fields applied,admitted] [--format json|csv|table]
-  collegedata sources <school_id> [--format json]
-  collegedata fields [--category admissions] [--format json|table]
-  collegedata export <snapshot> [--format jsonl|json|duckdb]`);
+  quadfile search <query> [--format json]
+  quadfile facts <school_id> [--categories admissions,cost,outcomes] [--format json|table]
+  quadfile compare <school_id...> [--categories admissions,cost,outcomes] [--fields applied,admitted] [--format json|csv|table]
+  quadfile sources <school_id> [--format json]
+  quadfile fields [--category admissions] [--format json|table]
+  quadfile export <snapshot> [--format jsonl|json|duckdb]
+
+(\`collegedata\` still works as an alias for \`quadfile\`.)`);
 }
 
 function parseOptions(args) {

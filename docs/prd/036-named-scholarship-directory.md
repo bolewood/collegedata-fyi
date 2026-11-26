@@ -279,7 +279,7 @@ It does not cover the schools' own pages, PDFs, trademarks or quoted excerpts; t
 
 **Attribution string** (one canonical form, used everywhere):
 
-> Scholarship program data from collegedata.fyi (https://collegedata.fyi/scholarships), CC BY-SA 4.0. Terms as published by each school; see the source link on each record.
+> Scholarship program data from Quadfile (https://www.quadfile.org/scholarships), CC BY-SA 4.0. Terms as published by each school; see the source link on each record.
 
 **Where attribution travels with the data:**
 - **`data/scholarships/LICENSE`:** CC BY-SA 4.0, adapted from `data/discovery/LICENSE`, with the canonical string and the list of exclusions.

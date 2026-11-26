@@ -32,6 +32,9 @@ export function Wordmark({
       QUADFILE
     </span>
   );
+  // The four-square mark scales with the wordmark: 4px squares at size 20.
+  const mark = Math.max(3, Math.round(size * 0.2));
+  const markGap = Math.max(2, Math.round(size * 0.1));
   const base: React.CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
@@ -117,11 +120,10 @@ export function Wordmark({
   if (variant === "dotted") {
     return (
       <span style={{ ...base, gap: 6 }}>
-        <span style={{ display: "inline-grid", gridTemplateColumns: "4px 4px", gap: 2, alignItems: "center" }}>
-          <span style={{ width: 4, height: 4, background: ink }} />
-          <span style={{ width: 4, height: 4, background: ink }} />
-          <span style={{ width: 4, height: 4, background: ink }} />
-          <span style={{ width: 4, height: 4, background: ink }} />
+        <span style={{ display: "inline-grid", gridTemplateColumns: `${mark}px ${mark}px`, gap: markGap, alignItems: "center" }}>
+          {[0, 1, 2, 3].map((i) => (
+            <span key={i} style={{ width: mark, height: mark, background: ink }} />
+          ))}
         </span>
         {name}
       </span>

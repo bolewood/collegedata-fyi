@@ -55,7 +55,7 @@ async function main() {
 
   const duckdb = spawnSync("duckdb", ["--version"], { encoding: "utf8" });
   if (duckdb.status === 0) {
-    const dbPath = join(OUT_DIR, "collegedata.duckdb");
+    const dbPath = join(OUT_DIR, "quadfile.duckdb");
     const sql = `
       create table schools as select * from read_json_auto('${join(OUT_DIR, "schools.jsonl")}');
       create table school_facts as select * from read_json_auto('${join(OUT_DIR, "school_facts.jsonl")}');
@@ -63,9 +63,9 @@ async function main() {
     `;
     const build = spawnSync("duckdb", [dbPath, sql], { encoding: "utf8" });
     if (build.status !== 0) throw new Error(build.stderr || "duckdb build failed");
-    files.push({ name: "collegedata.duckdb", status: "generated" });
+    files.push({ name: "quadfile.duckdb", status: "generated" });
   } else {
-    files.push({ name: "collegedata.duckdb", status: "skipped_duckdb_cli_not_installed" });
+    files.push({ name: "quadfile.duckdb", status: "skipped_duckdb_cli_not_installed" });
   }
 
   const manifest = {

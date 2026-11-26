@@ -10,7 +10,7 @@ const COMPARE_CATEGORIES = "identity, admissions, enrollment, cost, aid, outcome
 const tools = [
   {
     name: "search_schools",
-    description: "Find canonical CollegeData.FYI school IDs by name, alias, city, or state.",
+    description: "Find canonical Quadfile school IDs by name, alias, city, or state.",
     inputSchema: {
       type: "object",
       properties: {
@@ -22,7 +22,7 @@ const tools = [
   },
   {
     name: "get_school_facts",
-    description: "Get source-labeled CollegeData.FYI facts for one school. Preserve source metadata when citing values.",
+    description: "Get source-labeled Quadfile facts for one school. Preserve source metadata when citing values.",
     inputSchema: {
       type: "object",
       properties: {
@@ -208,7 +208,7 @@ function drain() {
   }
 }
 
-process.stderr.write(`collegedata-mcp ${CLIENT_VERSION} ${API_BASE}\n`);
+process.stderr.write(`quadfile-mcp ${CLIENT_VERSION} ${API_BASE}\n`);
 process.stdin.setEncoding("utf8");
 process.stdin.on("data", (chunk) => {
   buffer += chunk;

@@ -1,4 +1,4 @@
-"""Polite, synchronous HTTP fetcher shared by collegedata.fyi monitors.
+"""Polite, synchronous HTTP fetcher shared by Quadfile monitors.
 
 Behaviour (PRD 036 M4):
 

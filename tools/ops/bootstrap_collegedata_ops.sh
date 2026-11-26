@@ -24,7 +24,7 @@ if gh repo view "$FULL" >/dev/null 2>&1; then
   echo "repo $FULL already exists; pushing bundle to origin main" >&2
 else
   gh repo create "$FULL" --private \
-    --description "Private residential-IP Playwright fetch for collegedata.fyi. Do not attach this runner to public repos." \
+    --description "Private residential-IP Playwright fetch for Quadfile. Do not attach this runner to public repos." \
     --disable-wiki --disable-issues
 fi
 

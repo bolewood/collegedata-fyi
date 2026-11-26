@@ -40,7 +40,7 @@ invalid.
 ### Step 1: Verify
 
 1. The request must arrive via email to the contact link on
-   [collegedata.fyi](https://collegedata.fyi) or as a GitHub issue on
+   [Quadfile](https://www.quadfile.org) or as a GitHub issue on
    the [bolewood/collegedata-fyi](https://github.com/bolewood/collegedata-fyi)
    repository.
 2. The requesting email must originate from a `.edu` address matching
@@ -84,7 +84,7 @@ so the withdrawn document:
 - Returns 404 if the URL is hit directly (the year page's
   `fetchDocumentsBySchoolAndYear` returns zero rows, `notFound()` fires)
 
-The PostgREST API at `api.collegedata.fyi` still exposes the row because
+The PostgREST API at `api.quadfile.org` still exposes the row because
 it's a direct table query. Consumers who query the raw API get the row
 with `participation_status='withdrawn'` and can choose whether to filter.
 This is intentional: transparency about what was withdrawn is part of
@@ -192,4 +192,4 @@ withdrawn and why-in-a-category.
 
 ## Addendum (2026-11-09): where the contact lives
 
-Step 1 refers to "the contact link on collegedata.fyi". There is no standalone contact page. The takedown contact is `contact@bolewood.com`, shown on the [privacy page](https://collegedata.fyi/privacy) and the [feedback page](https://collegedata.fyi/feedback). GitHub issues on the repository remain a valid channel. The protocol itself is unchanged.
+Step 1 refers to "the contact link on Quadfile". There is no standalone contact page. The takedown contact is `contact@bolewood.com`, shown on the [privacy page](https://www.quadfile.org/privacy) and the [feedback page](https://collegedata.fyi/feedback). GitHub issues on the repository remain a valid channel. The protocol itself is unchanged.
