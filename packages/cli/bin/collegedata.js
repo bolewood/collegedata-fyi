@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const API_BASE = (process.env.COLLEGEDATA_API_BASE ?? "https://www.collegedata.fyi").replace(/\/$/, "");
+const API_BASE = (process.env.QUADFILE_API_BASE || process.env.COLLEGEDATA_API_BASE || "https://www.collegedata.fyi").replace(/\/$/, "");
 const CLIENT_NAME = "cli";
 const CLIENT_VERSION = "0.1.0";
 // Keep in step with DATA_ATTRIBUTION in web/src/lib/data-license.ts (a web test pins it).
@@ -61,6 +61,10 @@ function withClientParams(path, command) {
 async function getJson(path, command) {
   const res = await fetch(`${API_BASE}${withClientParams(path, command)}`, {
     headers: {
+      "X-Quadfile-Client": CLIENT_NAME,
+      "X-Quadfile-Client-Version": CLIENT_VERSION,
+      ...(command ? { "X-Quadfile-CLI-Command": command } : {}),
+      // Old name, same values, for servers that predate the new header.
       "X-CollegeData-Client": CLIENT_NAME,
       "X-CollegeData-Client-Version": CLIENT_VERSION,
       ...(command ? { "X-CollegeData-CLI-Command": command } : {}),

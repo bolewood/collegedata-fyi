@@ -192,6 +192,20 @@ class SweepTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("REVALIDATE_SECRET", err.getvalue())
 
+    def test_either_url_variable_satisfies_the_requirement(self):
+        base = {k: v for k, v in ENV.items() if k != "COLLEGEDATA_REVALIDATE_URL"}
+        for name in ("COLLEGEDATA_REVALIDATE_URL", "QUADFILE_REVALIDATE_URL"):
+            with self.subTest(name=name):
+                opener = Recorder()
+                env = {**base, name: "https://example.test/api/revalidate"}
+                code, _ = run(["--school-id", "yale"], env=env, opener=opener)
+                self.assertEqual(code, 0)
+                self.assertEqual(len(opener.bodies), 1)
+        with redirect_stderr(io.StringIO()) as err:
+            code, _ = run(["--school-id", "yale"], env=base)
+        self.assertEqual(code, 1)
+        self.assertIn("QUADFILE_REVALIDATE_URL", err.getvalue())
+
     def test_failed_read_exits_nonzero(self):
         def broken(table, params):
             raise rp.SweepError(f"read of {table} failed: HTTP 503")
