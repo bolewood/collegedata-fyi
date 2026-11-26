@@ -272,7 +272,7 @@ Implementation surfaces that must share this rule:
 ## Consumer integration
 
 The frontend merges cleaner + fallback values via `fetchExtract()` in
-`web/src/lib/queries.ts`. Any consumer hitting `api.collegedata.fyi` can do
+`web/src/lib/queries.ts`. Any consumer hitting `api.Quadfile` can do
 the same with two parallel requests:
 
 ```bash
@@ -280,11 +280,11 @@ DOC=0e482995-83a3-4dcf-92f1-296ca4e8cf94   # harvard 2024-25
 
 # Cleaner (canonical) artifact
 curl -sH "apikey: $ANON" \
-  "https://api.collegedata.fyi/rest/v1/cds_artifacts?document_id=eq.$DOC&producer=eq.tier4_docling&kind=eq.canonical"
+  "https://api.quadfile.org/rest/v1/cds_artifacts?document_id=eq.$DOC&producer=eq.tier4_docling&kind=eq.canonical"
 
 # Fallback artifact
 curl -sH "apikey: $ANON" \
-  "https://api.collegedata.fyi/rest/v1/cds_artifacts?document_id=eq.$DOC&producer=eq.tier4_llm_fallback"
+  "https://api.quadfile.org/rest/v1/cds_artifacts?document_id=eq.$DOC&producer=eq.tier4_llm_fallback"
 ```
 
 Merge rule for Mode B: after the compatibility gate passes, start with the

@@ -146,7 +146,7 @@ Quadfile sits between official higher-education data systems and the document-pr
 
 This project is designed around community contribution from day one. Two especially valuable ways to help right now:
 
-**Add a school to the discovery scraper.** If `Quadfile` doesn't know about a school's CDS, it's usually because the school's website doesn't match our default URL patterns. PR a new entry to `schools.yaml` with a known-good URL or search pattern.
+**Add a school to the discovery scraper.** If Quadfile doesn't know about a school's CDS, it's usually because the school's website doesn't match our default URL patterns. PR a new entry to `schools.yaml` with a known-good URL or search pattern.
 
 **Write a cleanup tool.** Our in-tree cleaner handles the high-value 2024-25/2025-26 browser and school-page surfaces well, including admissions, SAT/ACT, Section H aid, and several large enrollment grids, but Docling markdown still has a long tail of format variants we don't cover (see [`docs/known-issues/`](docs/known-issues/), [`docs/extraction-quality.md`](docs/extraction-quality.md), and the corpus survey). Raw Docling markdown lives at `cds_artifacts.notes.markdown` on every Tier 4 artifact, keyed by document. A cleanup tool reads the markdown, normalizes its target fields, and publishes the result as a new artifact with its own `producer` tag. Register your tool in `cleaners.yaml`; the CI workflow that will run registered cleaners against the corpus is coming soon (tracked in M4), so for now registration only records it. Per [ADR 0002](docs/decisions/0002-publish-raw-over-clean.md), we don't pick a winner — every contributor's artifact is published alongside the primary ones.
 

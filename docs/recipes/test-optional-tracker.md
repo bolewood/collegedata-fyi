@@ -48,7 +48,7 @@ The artifact's `notes.values["C.901"].value` is the SAT submission percentage, a
 Treat `document_id` as the CDS join key and retain its `ipeds_id` and `school_id` for provenance.
 Any federal enrichment must join on a guarded `ipeds_id`, never on the display slug.
 
-If you want a single blob rather than per-document queries, the /api page at [Quadfile/api](https://www.quadfile.org/api) has the full PostgREST auth and query reference, including how to use `in.(…)` to fetch many documents at once.
+If you want a single blob rather than per-document queries, the /api page at [quadfile.org/api](https://www.quadfile.org/api) has the full PostgREST auth and query reference, including how to use `in.(…)` to fetch many documents at once.
 
 ## Known caveats
 

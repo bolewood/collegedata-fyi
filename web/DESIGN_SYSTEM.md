@@ -174,7 +174,7 @@ None of these break functionality; they are palette-consistency debt. Re-run the
 
 Two ways to look at the system:
 
-1. **Live page:** run `npm --prefix web run dev`, open [http://localhost:3000/design-system/](http://localhost:3000/design-system/). Same file that ships to production at `Quadfile/design-system/`.
+1. **Live page:** run `npm --prefix web run dev`, open [http://localhost:3000/design-system/](http://localhost:3000/design-system/). Same file that ships to production at `www.quadfile.org/design-system/`.
 2. **Source handoff:** [`docs/design/`](../docs/design/) holds the original Claude Design export — HTML prototypes, JSX reference components, screenshots, the handoff README. Read [`docs/design/HANDOFF_README.md`](../docs/design/HANDOFF_README.md) first.
 
 If the live page and `tokens.css` disagree with a prototype, `tokens.css` is the authority. If `tokens.css` and this document disagree, `tokens.css` is still the authority — update the doc.

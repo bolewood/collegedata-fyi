@@ -6,7 +6,7 @@ Thanks for thinking about contributing. This project is designed around communit
 
 ### 1. Add a school we don't yet track
 
-If `Quadfile` doesn't know about a school's CDS, it's almost always because the school's website doesn't match our default URL patterns. The fix is usually one entry in [`tools/finder/schools.yaml`](tools/finder/schools.yaml).
+If Quadfile doesn't know about a school's CDS, it's almost always because the school's website doesn't match our default URL patterns. The fix is usually one entry in [`tools/finder/schools.yaml`](tools/finder/schools.yaml).
 
 Minimum entry:
 

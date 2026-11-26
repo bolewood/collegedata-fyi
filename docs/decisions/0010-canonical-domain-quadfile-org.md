@@ -21,9 +21,11 @@
    - `api.collegedata.fyi`: handled by `web/src/lib/old-api-host.ts` (public
      storage objects redirect to `api.quadfile.org`; other requests are proxied
      to the project origin).
-5. Compatibility accepted for the sunset period: the `X-CollegeData-Client`
-   header family, `COLLEGEDATA_API_BASE` / `COLLEGEDATA_SNAPSHOT_DATE`, and the
-   `collegedata-*` client identities and User-Agents. New code sends the
+5. Old-host redirects (point 4) stay for the 12-month sunset. Separately, the
+   old client identities are accepted for 30 days after cutover and then
+   removed: the `X-CollegeData-Client` header family,
+   `COLLEGEDATA_API_BASE` / `COLLEGEDATA_SNAPSHOT_DATE`, and the `collegedata-*`
+   `X-Client-Info` values and User-Agents. New code sends the
    `X-Quadfile-Client` header, `QUADFILE_*` variables and `quadfile-*` identities.
 6. Package names: `@quadfile/cli` and `quadfile-mcp`. The MCP server reports the
    name `quadfile`.

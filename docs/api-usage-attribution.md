@@ -1,7 +1,7 @@
 # API usage attribution
 
 This document describes the lightweight usage signal shipped for the public
-friendly API at `https://www.collegedata.fyi/api/...`. It answers operational
+friendly API at `https://www.quadfile.org/api/...`. It answers operational
 questions like:
 
 - Are first-party MCP clients calling the API?
@@ -25,7 +25,7 @@ The attribution layer covers the friendly Next.js API routes:
 - `/api/snapshots`
 - `/api/mcp` (the hosted MCP endpoint; recorded as `client_family = 'mcp'`, `client_name = 'mcp-http'`, with the tool name in `client_tool`)
 
-Raw PostgREST requests to `https://api.collegedata.fyi/rest/v1` and Supabase
+Raw PostgREST requests to `https://api.quadfile.org/rest/v1` and Supabase
 Storage requests bypass the Vercel app. PRD 032 covers them separately from
 Supabase gateway logs; see [Gateway usage (PRD 032)](#gateway-usage-prd-032).
 
@@ -75,9 +75,9 @@ First-party wrappers identify themselves on every friendly API call.
 The MCP server sends:
 
 ```http
-X-CollegeData-Client: mcp
-X-CollegeData-Client-Version: 0.2.0
-X-CollegeData-MCP-Tool: search_schools
+X-Quadfile-Client: mcp
+X-Quadfile-Client-Version: 0.2.0
+X-Quadfile-MCP-Tool: search_schools
 ```
 
 It also appends query markers:
@@ -89,9 +89,9 @@ cd_client=mcp&cd_client_version=0.2.0&cd_tool=search_schools
 The CLI sends:
 
 ```http
-X-CollegeData-Client: cli
-X-CollegeData-Client-Version: 0.1.0
-X-CollegeData-CLI-Command: search
+X-Quadfile-Client: cli
+X-Quadfile-Client-Version: 0.1.0
+X-Quadfile-CLI-Command: search
 ```
 
 It also appends query markers:
@@ -103,8 +103,8 @@ cd_client=cli&cd_client_version=0.1.0&cd_command=search
 External builders are encouraged to send a short client marker:
 
 ```bash
-curl 'https://www.collegedata.fyi/api/schools/search?q=mit' \
-  -H 'X-CollegeData-Client: my-app-name'
+curl 'https://www.quadfile.org/api/schools/search?q=mit' \
+  -H 'X-Quadfile-Client: my-app-name'
 ```
 
 These labels are self-declared and untrusted. They are useful for product and
@@ -131,7 +131,7 @@ token lists in sync.
 
 The user-agent classification stores only the family bucket, not the raw header.
 
-The version numbers shown in the marker examples are the current package versions (`@collegedata-fyi/mcp-server` 0.2.0, `@collegedata-fyi/cli` 0.1.0) and change with each release.
+The version numbers shown in the marker examples are the current package versions (`quadfile-mcp` 0.2.0, `@quadfile/cli` 0.1.0) and change with each release.
 
 ## Required production configuration
 
@@ -243,9 +243,9 @@ limit 50;
 Send a marked request:
 
 ```bash
-curl 'https://www.collegedata.fyi/api/schools/search?q=mit&cd_client=deploy-canary&cd_client_version=YYYY-MM-DD&cd_tool=post_deploy_canary' \
-  -H 'X-CollegeData-Client: deploy-canary' \
-  -H 'X-CollegeData-Client-Version: YYYY-MM-DD'
+curl 'https://www.quadfile.org/api/schools/search?q=mit&cd_client=deploy-canary&cd_client_version=YYYY-MM-DD&cd_tool=post_deploy_canary' \
+  -H 'X-Quadfile-Client: deploy-canary' \
+  -H 'X-Quadfile-Client-Version: YYYY-MM-DD'
 ```
 
 Then verify the event:
@@ -315,11 +315,11 @@ link across days.
 `tools/api_usage/classify.py`, first match wins:
 
 1. `internal_pipeline`: service-role JWT, `sb_secret_` key, a
-   `collegedata-pipeline` user agent, or an internal Edge Function
+   `quadfile-pipeline` (or the older `collegedata-pipeline`) user agent, or an internal Edge Function
    (archive, discover, directory, coverage).
-2. `friendly_api_upstream`: `X-Client-Info: collegedata-friendly-api/<sha>`.
-3. `first_party_site`: `X-Client-Info: collegedata-web/<sha>`, or a
-   `collegedata.fyi` referer (archive PDF links keep the origin-only referer).
+2. `friendly_api_upstream`: `X-Client-Info: quadfile-friendly-api/<sha>` (or the older `collegedata-friendly-api`).
+3. `first_party_site`: `X-Client-Info: quadfile-web/<sha>` (or the older `collegedata-web`), or a
+   `quadfile.org` (or the older `collegedata.fyi`) referer (archive PDF links keep the origin-only referer).
 4. Hours up to the tagged-build deploy (`SITE_TAGGING_T0`) use inference,
    flagged `inferred = true`: anon `supabase-js-node` from AWS and anon
    `supabase-js-web` count as the site; browser downloads from Storage count as
@@ -329,7 +329,7 @@ link across days.
 
 The gateway logs `X-Client-Info` but not custom headers, which is why first-party
 code sets that header (`web/src/lib/client-info.ts`) and Python tools send
-`User-Agent: collegedata-pipeline/<tool>`.
+`User-Agent: quadfile-pipeline/<tool>`.
 `tools/api_usage/test_pipeline_identity.py` fails CI when a tool under `tools/`
 fetches public Storage or uses the anon key without that user agent.
 
@@ -363,7 +363,7 @@ older than a week need a `daily` or `backfill` run.
   `HEAVY_CLIENT_FILES` = 30 distinct files that day); `bots_crawlers`
   (`declared_bot`, `ai_crawler`); `excluded` (service role, secret key,
   friendly API, pipeline user agent).
-- `from_site` marks fetches with a `collegedata.fyi` referer;
+- `from_site` marks fetches with a `quadfile.org` (or the older `collegedata.fyi`) referer;
   `raw_downloads` counts every fetch.
 - `method_version` (`DOWNLOADS_METHOD_VERSION` in `classify.py`) changes with
   any rule that changes these counts. A day is replaced per
