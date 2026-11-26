@@ -606,7 +606,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--extraction-max-pending-count", type=int)
     parser.add_argument("--extraction-audit-sample-limit", type=int, default=15)
     parser.add_argument("--extraction-audit-github", action="store_true")
-    parser.add_argument("--extraction-audit-github-repo", default=os.environ.get("GITHUB_REPOSITORY", "bolewood/collegedata-fyi"))
+    parser.add_argument("--extraction-audit-github-repo", default=(os.environ.get("GITHUB_REPOSITORY") or "bolewood/collegedata-fyi"))
     parser.add_argument("--extraction-audit-github-workflow", default="Ops extraction worker")
     parser.add_argument("--extraction-max-github-success-age-hours", type=float, default=30.0)
     parser.add_argument("--fail-on-extraction-pending-growth", action="store_true")
