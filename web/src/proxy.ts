@@ -4,6 +4,7 @@ import { buildApiUsageEvent, recordApiUsageEvent } from "@/lib/api-usage";
 import { isAcceptanceRateGone } from "@/lib/acceptance-pilot";
 import { isEarlyDecisionGone } from "@/lib/early-decision-pilot";
 import { isGpaGone } from "@/lib/gpa-pilot";
+import { oldApiHostAction } from "@/lib/old-api-host";
 
 const NON_PRINTABLE_ASCII = /[^\x21-\x7E]/;
 
@@ -24,7 +25,18 @@ export function isUnroutableSchoolPath(pathname: string): boolean {
 }
 
 export function proxy(request: NextRequest, event: NextFetchEvent) {
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
+  // Rename prep: the old API host is answered here, before the site's own
+  // logic and before API usage is recorded.
+  const oldApi = oldApiHostAction(request.headers.get("host"), request.method, pathname, search);
+  if (oldApi?.kind === "redirect") {
+    return new NextResponse(null, { status: 308, headers: { Location: oldApi.location, ...oldApi.headers } });
+  }
+  if (oldApi?.kind === "proxy") {
+    const headers = new Headers(request.headers);
+    headers.set("x-quadfile-proxied", "1");
+    return NextResponse.rewrite(oldApi.url, { request: { headers } });
+  }
   const schoolPage = pathname === "/schools" || pathname.startsWith("/schools/");
   if (schoolPage && isUnroutableSchoolPath(pathname)) {
     return new NextResponse("Not found", { status: 404 });
@@ -61,5 +73,11 @@ export const config = {
     "/api/schools/:path*",
     "/api/snapshots",
     "/schools/:path*",
+    // Rename prep: every path on the old API hosts. Next anchors the host
+    // value as ^...$, so the alternation needs its group.
+    {
+      source: "/:path*",
+      has: [{ type: "host", value: "(api\\.collegedata\\.fyi|api-test\\.quadfile\\.org)" }],
+    },
   ],
 };
