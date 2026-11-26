@@ -379,6 +379,11 @@
   .cd-nav-links { justify-content: flex-start; gap: 18px; font-size: 13px; flex-wrap: wrap; align-items: center; }
   .cd-nav-more > div { right: 0; }
 }
+.cd-footer-inner {
+  display: grid;
+  grid-template-columns: minmax(16rem, 1fr) auto;
+  gap: 32px;
+}
 .cd-footer-links {
   flex-wrap: wrap;
 }

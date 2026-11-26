@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { SCHOLARSHIP_ATTRIBUTION, SCHOLARSHIP_CORRECTION_URL } from "@/lib/scholarships";
-import { APEX_HOST, API_ORIGIN, SITE_NAME } from "@/lib/site";
+import { API_ORIGIN, SITE_NAME, SITE_ORIGIN } from "@/lib/site";
 
 const BASE = API_ORIGIN;
 
@@ -39,12 +39,12 @@ function Term({ lead, children }: { lead: string; children: ReactNode }) {
   );
 }
 
-const APA = `${SITE_NAME}. (2026). Scholarship program data [Data set]. https://${APEX_HOST}/scholarships. CC BY-SA 4.0.`;
+const APA = `${SITE_NAME}. (2026). Scholarship program data [Data set]. ${SITE_ORIGIN}/scholarships. CC BY-SA 4.0.`;
 const BIBTEX = `@misc{quadfile2026scholarships,
   author       = {{${SITE_NAME}}},
   title        = {Scholarship program data},
   year         = {2026},
-  howpublished = {\\url{https://${APEX_HOST}/scholarships}},
+  howpublished = {\\url{${SITE_ORIGIN}/scholarships}},
   note         = {CC BY-SA 4.0. Terms as published by each school.}
 }`;
 
