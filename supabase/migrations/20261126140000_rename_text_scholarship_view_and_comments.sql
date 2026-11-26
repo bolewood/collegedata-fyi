@@ -1,3 +1,5 @@
+-- Rename the timestamp to the cutover date before merging.
+--
 -- Rename text in the scholarship view and in three comments.
 --
 -- Prepared for the rename cutover; apply from main after the old hosts
@@ -110,16 +112,17 @@ begin
   if v_attr is not null and v_attr not like '%https://www.quadfile.org/scholarships%' then
     raise exception 'scholarship_directory row attribution not renamed: %', v_attr;
   end if;
-  if v_c1 like '%collegedata.fyi%'
-     or v_c1 not like '%X-Quadfile-Client (or the older X-CollegeData-Client)%' then
+  if v_c1 is null or v_c1 like '%collegedata.fyi%'
+     or v_c1 not like '%X-Quadfile-Client (or the older X-CollegeData-Client)%'
+     or v_c1 not like '%qf_client%' then
     raise exception 'client_name comment not renamed: %', v_c1;
   end if;
   -- The one collegedata.fyi kept on purpose: "a Quadfile or collegedata.fyi referer".
-  if v_c2 not like '%a Quadfile or collegedata.fyi referer%'
+  if v_c2 is null or v_c2 not like '%a Quadfile or collegedata.fyi referer%'
      or replace(v_c2, 'a Quadfile or collegedata.fyi referer', '') like '%collegedata.fyi%' then
     raise exception 'api_usage_downloads_daily comment not renamed: %', v_c2;
   end if;
-  if v_c3 like '%collegedata.fyi%'
+  if v_c3 is null or v_c3 like '%collegedata.fyi%'
      or v_c3 not like '%link on Quadfile%' or v_c3 not like '%the Quadfile /api routes%' then
     raise exception 'usage_public_daily comment not renamed: %', v_c3;
   end if;
