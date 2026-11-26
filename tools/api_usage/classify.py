@@ -35,10 +35,17 @@ FIRST_PARTY_REFERER_HOSTS = (
 )
 # Plain substrings (old identity).
 INTERNAL_UA_MARKERS = ("collegedata-pipeline", "collegedata-fyi")
-# New identity: a product token "quadfile-<tool>/" that starts the user agent
-# or follows a space or "(". A bare "quadfile" mention does not match.
-# RE2-compatible; the SQL builder embeds it.
-INTERNAL_UA_PATTERN = r"(^|[ (])quadfile-[a-z0-9._-]+/"
+# New identity: the exact product tokens our tools send after the rename,
+# mirroring today's collegedata-pipeline/ and collegedata-fyi-<tool>/ user
+# agents. A token must start the user agent or follow a space or "(".
+# Anything else, including a bare "quadfile" or "quadfile-<other>/", stays
+# third-party. Add a tool here when it gets a new user agent.
+INTERNAL_UA_TOOLS = (
+    "pipeline", "finder", "scholarships", "builder", "ops",
+    "ipeds-release-probe", "ipeds-loader", "debug",
+)
+# RE2-compatible; the SQL builder embeds it. Tools are [a-z0-9-] only.
+INTERNAL_UA_PATTERN = r"(^|[ (])quadfile-(" + "|".join(INTERNAL_UA_TOOLS) + r")/"
 _INTERNAL_UA_RE = re.compile(INTERNAL_UA_PATTERN)
 KNOWN_HOSTS = frozenset({
     "api.collegedata.fyi", "api.quadfile.org", "isduwmygvmdozhpvzaix.supabase.co",

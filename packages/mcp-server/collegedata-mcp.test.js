@@ -145,7 +145,8 @@ describe("collegedata MCP identity", () => {
     const [{ headers }] = await requestsSeen((origin) => ({ QUADFILE_API_BASE: origin }));
     assert.equal(headers["x-quadfile-client"], "mcp");
     assert.equal(headers["x-collegedata-client"], "mcp");
-    assert.equal(headers["x-quadfile-client-version"], headers["x-collegedata-client-version"]);
+    assert.equal(headers["x-quadfile-client-version"], "0.2.0");
+    assert.equal(headers["x-collegedata-client-version"], "0.2.0");
     assert.equal(headers["x-quadfile-mcp-tool"], "search_schools");
     assert.equal(headers["x-collegedata-mcp-tool"], "search_schools");
   });

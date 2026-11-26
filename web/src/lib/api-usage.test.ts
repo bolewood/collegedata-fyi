@@ -80,6 +80,22 @@ describe("api usage attribution", () => {
     expect(buildApiUsageEvent(both)).toMatchObject({ client_name: "cli", client_version: "0.3.0" });
   });
 
+  it("reads the new MCP tool header and the qf_tool param", () => {
+    const header = new Request("https://www.collegedata.fyi/api/schools/mit/facts", {
+      headers: { "x-quadfile-mcp-tool": "get_school_facts", "x-collegedata-mcp-tool": "old_tool" },
+    });
+    expect(buildApiUsageEvent(header).client_tool).toBe("get_school_facts");
+    const query = new Request("https://www.collegedata.fyi/api/schools/mit/facts?qf_tool=get_school_facts&cd_tool=old_tool");
+    expect(buildApiUsageEvent(query).client_tool).toBe("get_school_facts");
+  });
+
+  it("falls back to the old param when the new one is empty", () => {
+    const request = new Request(
+      "https://www.collegedata.fyi/api/schools/mit/facts?qf_client=&cd_client=mcp&qf_tool=%20&cd_tool=get_school_facts",
+    );
+    expect(buildApiUsageEvent(request)).toMatchObject({ client_name: "mcp", client_tool: "get_school_facts" });
+  });
+
   it("keeps search queries out of logged events", () => {
     const request = new Request("https://www.collegedata.fyi/api/schools/search?q=stanford");
     expect(buildApiUsageEvent(request)).toMatchObject({

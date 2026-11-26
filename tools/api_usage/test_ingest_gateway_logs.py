@@ -505,12 +505,23 @@ class QueryTest(unittest.TestCase):
     def test_queries_know_the_new_identity_and_the_proxy_header(self):
         t0 = datetime(2026, 10, 2, 14, 25, tzinfo=timezone.utc)
         for sql in (queries.edge_schools_sql(t0), queries.edge_clients_sql(t0)):
-            for token in ("quadfile-web", "quadfile-friendly-api", "www.quadfile.org", "quadfile-[a-z0-9._-]+/"):
+            for token in ("quadfile-web", "quadfile-friendly-api", "www.quadfile.org", "quadfile-(pipeline|finder|"):
                 self.assertIn(token, sql)
-            self.assertIn("not log_attributes['request.headers.x_quadfile_proxied'] = '1'", sql)
+            self.assertIn("not (log_attributes['request.headers.x_quadfile_proxied'] = '1')", sql)
         self.assertIn("quadfile-friendly-api", queries.daily_downloads_sql(
             datetime(2026, 10, 1, tzinfo=timezone.utc), datetime(2026, 10, 2, tzinfo=timezone.utc), 30))
         self.assertIn("x_quadfile_proxied", queries.edge_rollup_sql())
+
+    def test_proxied_never_excludes_a_service_key_from_the_third_party_path(self):
+        proxied = "not (log_attributes['request.headers.x_quadfile_proxied'] = '1')"
+        for sql in (queries.edge_schools_sql(None), queries.edge_clients_sql(None)):
+            # The key checks sit before the proxied guard, outside it.
+            self.assertLess(sql.index("= 'service_role'"), sql.index(proxied))
+            self.assertLess(sql.index("startsWith(substring(log_attributes['request.sb.apikey.apikey.prefix'], 1, 16), 'sb_secret_')"), sql.index(proxied))
+            self.assertIn("or (" + proxied, sql)
+        daily = queries.daily_downloads_sql(
+            datetime(2026, 10, 1, tzinfo=timezone.utc), datetime(2026, 10, 2, tzinfo=timezone.utc), 30)
+        self.assertEqual(daily.count(proxied), 2)
 
     def test_proxied_rows_are_third_party_through_the_rollup(self):
         row = {

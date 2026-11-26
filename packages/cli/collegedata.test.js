@@ -50,7 +50,8 @@ describe("collegedata CLI identity", () => {
     const [{ headers }] = await requestsSeen((origin) => ({ QUADFILE_API_BASE: origin }));
     assert.equal(headers["x-quadfile-client"], "cli");
     assert.equal(headers["x-collegedata-client"], "cli");
-    assert.equal(headers["x-quadfile-client-version"], headers["x-collegedata-client-version"]);
+    assert.equal(headers["x-quadfile-client-version"], "0.1.0");
+    assert.equal(headers["x-collegedata-client-version"], "0.1.0");
     assert.equal(headers["x-quadfile-cli-command"], "search");
     assert.equal(headers["x-collegedata-cli-command"], "search");
   });

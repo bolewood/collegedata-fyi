@@ -178,6 +178,9 @@ class UserAgentTest(unittest.TestCase):
             "my-quadfile-scraper/1.0",
             "Mozilla/5.0 (compatible; quadfile.example)",
             "quadfile/1.0",
+            "quadfile-scraper/1.0",
+            "quadfile-cli/0.1",
+            "python-httpx/0.27 quadfile-scraper/1.0",
         ):
             with self.subTest(ua=ua):
                 self.assertFalse(c.ua_is_internal(ua))

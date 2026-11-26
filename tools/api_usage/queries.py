@@ -38,7 +38,7 @@ _ROLE = "log_attributes['request.sb.jwt.apikey.payload.role']"
 _KEY_PREFIX = "substring(log_attributes['request.sb.apikey.apikey.prefix'], 1, 16)"
 _CLIENT_INFO = "substring(log_attributes['request.headers.x_client_info'], 1, 80)"
 _REFERER = "lower(domain(log_attributes['request.headers.referer']))"
-_PROXIED = "log_attributes['request.headers.x_quadfile_proxied'] = '1'"
+_PROXIED = "(log_attributes['request.headers.x_quadfile_proxied'] = '1')"
 _AWS = "position(lower(log_attributes['request.cf.asOrganization']), 'amazon') > 0"
 _UA_BROWSER = (
     f"(startsWith({_UA}, 'Mozilla/') and position({_UA}, '(') > 0"
@@ -91,17 +91,17 @@ def not_third_party_condition(t0: datetime | None) -> str:
     on every returned row, so this must stay a subset of those rules.
     """
     return (
-        f"(not {_PROXIED} and ("
-        f"{_ROLE} = 'service_role'"
+        f"({_ROLE} = 'service_role'"
         f" or startsWith({_KEY_PREFIX}, 'sb_secret_')"
-        f" or {_UA_INTERNAL}"
+        f" or (not {_PROXIED} and ("
+        f"{_UA_INTERNAL}"
         f" or {_starts_with_any(_CLIENT_INFO, SITE_CLIENT_INFO_PREFIXES)}"
         f" or {_starts_with_any(_CLIENT_INFO, FRIENDLY_CLIENT_INFO_PREFIXES)}"
         f" or {_REFERER} in ({_sql_list(FIRST_PARTY_REFERER_HOSTS)})"
         f" or ({_before_t0(t0)} and {_ROLE} = 'anon' and ("
         f"(startsWith({_CLIENT_INFO}, 'supabase-js-node') and {_AWS})"
         f" or startsWith({_CLIENT_INFO}, 'supabase-js-web')))"
-        "))"
+        ")))"
     )
 
 
@@ -222,9 +222,9 @@ def daily_downloads_sql(
     """
     internal = (
         f"{_ROLE} = 'service_role' or startsWith({_KEY_PREFIX}, 'sb_secret_')"
-        f" or {_starts_with_any(_CLIENT_INFO, FRIENDLY_CLIENT_INFO_PREFIXES)}"
+        f" or (not {_PROXIED} and {_starts_with_any(_CLIENT_INFO, FRIENDLY_CLIENT_INFO_PREFIXES)})"
     )
-    first_party = f"{_REFERER} in ({_sql_list(FIRST_PARTY_REFERER_HOSTS)})"
+    first_party = f"(not {_PROXIED} and {_REFERER} in ({_sql_list(FIRST_PARTY_REFERER_HOSTS)}))"
     inner = (
         f"select splitByChar('/', {_PATH})[7] as school_raw, {_PATH} as obj, {_IP} as ip, {_UA} as ua,"
         f" max({first_party}) as fp, max({internal}) as internal, count() as fetches"
