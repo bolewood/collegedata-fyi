@@ -52,7 +52,9 @@ except ImportError:  # pragma: no cover - script / sys.path layouts
         import overlay_serving as _overlay  # type: ignore[no-redef]
         import sanity_rules as _sanity  # type: ignore[no-redef]
 SCHEMA_DIR = REPO_ROOT / "schemas"
-SITE_BASE_URL = "https://www.collegedata.fyi"
+if str(REPO_ROOT) not in sys.path:  # run as a script, `tools` is not importable yet
+    sys.path.insert(0, str(REPO_ROOT))
+from tools.common.site import SITE_ORIGIN as SITE_BASE_URL  # noqa: E402
 DEFAULT_SCHEMA_VERSION = "2025-26"
 MIN_YEAR_START = 2024
 

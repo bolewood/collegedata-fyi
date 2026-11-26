@@ -140,7 +140,7 @@ describe("gpa gating", () => {
   it("lists served pages in the sitemap", () => {
     expect(gpaSitemapEntries(["harvard", "yale"])).toEqual([
       {
-        url: "https://www.collegedata.fyi/schools/harvard/gpa",
+        url: "https://www.quadfile.org/schools/harvard/gpa",
         changeFrequency: "monthly",
         priority: 0.6,
       },
@@ -172,7 +172,7 @@ describe("submitted GPA URLs never silently 404", () => {
 
   it("the proxy answers 410 only for retired URLs", () => {
     const event = { waitUntil: vi.fn() } as never;
-    const res = proxy(new NextRequest("https://www.collegedata.fyi/schools/harvard/gpa"), event);
+    const res = proxy(new NextRequest("https://www.quadfile.org/schools/harvard/gpa"), event);
     expect(res.status).not.toBe(410);
   });
 });

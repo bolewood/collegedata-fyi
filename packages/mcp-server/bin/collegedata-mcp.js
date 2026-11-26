@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const API_BASE = (process.env.QUADFILE_API_BASE || process.env.COLLEGEDATA_API_BASE || "https://www.collegedata.fyi").replace(/\/$/, "");
+const API_BASE = (process.env.QUADFILE_API_BASE || process.env.COLLEGEDATA_API_BASE || "https://www.quadfile.org").replace(/\/$/, "");
 const CLIENT_NAME = "mcp";
 const CLIENT_VERSION = "0.2.0";
 
@@ -77,7 +77,7 @@ const tools = [
 ];
 
 function withClientParams(path, toolName) {
-  const url = new URL(path, "https://collegedata.fyi");
+  const url = new URL(path, "https://www.quadfile.org");
   url.searchParams.set("cd_client", CLIENT_NAME);
   url.searchParams.set("cd_client_version", CLIENT_VERSION);
   if (toolName) url.searchParams.set("cd_tool", toolName);
@@ -151,7 +151,7 @@ async function handleMessage(message) {
     sendResult(message.id, {
       protocolVersion: requested || "2024-11-05",
       capabilities: { tools: {} },
-      serverInfo: { name: "collegedata-fyi", version: CLIENT_VERSION },
+      serverInfo: { name: "quadfile", version: CLIENT_VERSION },
     });
     return;
   }

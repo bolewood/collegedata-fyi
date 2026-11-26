@@ -3,6 +3,7 @@ import { withSentryConfig } from "@sentry/nextjs/config";
 import retiredSchoolAliases from "./src/data/school-redirects.json";
 import { isDataQualityLaunched } from "./src/lib/data-quality";
 import { APEX_TO_WWW_REDIRECTS } from "./src/lib/apex-redirect";
+import { OLD_SITE_REDIRECTS } from "./src/lib/old-site-redirect";
 import { PIPELINE_OBSERVATION_REDIRECTS } from "./src/lib/pipeline-redirect";
 import { buildRetiredSchoolRedirects } from "./src/lib/school-alias";
 import {
@@ -36,6 +37,8 @@ export const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // Old hosts first: nothing else may answer a request for them.
+      ...OLD_SITE_REDIRECTS,
       ...APEX_TO_WWW_REDIRECTS,
       ...PIPELINE_OBSERVATION_REDIRECTS,
       ...buildRetiredSchoolRedirects(retiredSchoolAliases),

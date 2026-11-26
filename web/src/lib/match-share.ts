@@ -7,7 +7,7 @@
 // profile.
 
 import type { AcademicFit } from "./positioning";
-import { SITE_NAME_CAMEL, SITE_ORIGIN } from "./site";
+import { SITE_NAME, SITE_ORIGIN } from "./site";
 
 export type MatchFitCounts = Record<AcademicFit, number>;
 
@@ -42,7 +42,7 @@ function bar(count: number, max: number): string {
 
 export function formatMatchSummary(counts: MatchFitCounts): string {
   const total = ROWS.reduce((sum, { fit }) => sum + counts[fit], 0);
-  const head = `${SITE_NAME_CAMEL} Match`;
+  const head = `${SITE_NAME} Match`;
   if (total === 0) {
     return [head, "No schools ranked yet", "", MATCH_SUMMARY_URL].join("\n");
   }

@@ -250,7 +250,7 @@ def postgrest_get_all(
             headers={
                 "apikey": api_key,
                 "Authorization": f"Bearer {api_key}",
-                "User-Agent": "collegedata-pipeline/ipeds-recipes",
+                "User-Agent": "quadfile-pipeline/ipeds-recipes",
             },
         )
         try:

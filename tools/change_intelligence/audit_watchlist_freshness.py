@@ -113,7 +113,7 @@ def create_supabase_client(env: dict[str, str]) -> Client:
     if not url or not key:
         raise SystemExit("Missing SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY/ANON key")
     return create_client(
-        url, key, options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/audit-watchlist-freshness"})
+        url, key, options=ClientOptions(headers={"User-Agent": "quadfile-pipeline/audit-watchlist-freshness"})
     )
 
 

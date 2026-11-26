@@ -39,10 +39,10 @@ describe("robots.txt", () => {
 
 describe("llms.txt", () => {
   it("follows the llmstxt.org heading and blockquote shape", () => {
-    expect(LLMS_TXT.startsWith("# CollegeData.FYI\n\n> ")).toBe(true);
+    expect(LLMS_TXT.startsWith("# Quadfile\n\n> ")).toBe(true);
     expect(LLMS_TXT).toContain("## API");
     expect(LLMS_TXT).toContain("## Optional");
-    expect(LLMS_TXT).toMatch(/- \[API docs\]\(https:\/\/www\.collegedata\.fyi\/api\)/);
+    expect(LLMS_TXT).toMatch(/- \[API docs\]\(https:\/\/www\.quadfile\.org\/api\)/);
   });
 
   it("lists only friendly endpoints that exist in OpenAPI", () => {

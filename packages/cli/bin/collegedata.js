@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const API_BASE = (process.env.QUADFILE_API_BASE || process.env.COLLEGEDATA_API_BASE || "https://www.collegedata.fyi").replace(/\/$/, "");
+const API_BASE = (process.env.QUADFILE_API_BASE || process.env.COLLEGEDATA_API_BASE || "https://www.quadfile.org").replace(/\/$/, "");
 const CLIENT_NAME = "cli";
 const CLIENT_VERSION = "0.1.0";
 // Keep in step with DATA_ATTRIBUTION in web/src/lib/data-license.ts (a web test pins it).
@@ -51,7 +51,7 @@ function parseOptions(args) {
 }
 
 function withClientParams(path, command) {
-  const url = new URL(path, "https://collegedata.fyi");
+  const url = new URL(path, "https://www.quadfile.org");
   url.searchParams.set("cd_client", CLIENT_NAME);
   url.searchParams.set("cd_client_version", CLIENT_VERSION);
   if (command) url.searchParams.set("cd_command", command);

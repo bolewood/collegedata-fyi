@@ -157,7 +157,7 @@ def main() -> int:
     env = load_env(args.env)
     url, key = supabase_config(env)
     client = create_client(
-        url, key, options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/select-docling-spike-fixtures"})
+        url, key, options=ClientOptions(headers={"User-Agent": "quadfile-pipeline/select-docling-spike-fixtures"})
     )
 
     print(

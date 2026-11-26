@@ -89,7 +89,7 @@ class LogsClient:
             f"{self._url}?{params}",
             headers={
                 "Authorization": f"Bearer {self._token}",
-                "User-Agent": "collegedata-pipeline/api-usage-ingest",
+                "User-Agent": "quadfile-pipeline/api-usage-ingest",
             },
         )
         for attempt in range(self._max_retries + 1):

@@ -181,7 +181,7 @@ def supabase_client(env_path: Path | None):
     if not key:
         raise SystemExit("SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY is required")
     return create_client(
-        url, key, options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/prd018-section-h-audit"})
+        url, key, options=ClientOptions(headers={"User-Agent": "quadfile-pipeline/prd018-section-h-audit"})
     )
 
 

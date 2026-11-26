@@ -80,7 +80,7 @@ def main():
                f"&limit=1000&offset={offset}")
         req = urllib.request.Request(
             url,
-            headers={"apikey": key, "User-Agent": "collegedata-pipeline/cds-card-coverage"},
+            headers={"apikey": key, "User-Agent": "quadfile-pipeline/cds-card-coverage"},
         )
         batch = json.load(urllib.request.urlopen(req))
         rows.extend(batch)

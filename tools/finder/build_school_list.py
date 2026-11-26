@@ -76,7 +76,7 @@ def download_ipeds(year: int) -> list[dict]:
     """
     url = IPEDS_URL.format(year=year)
     print(f"Downloading IPEDS HD{year} from {url} ...")
-    req = Request(url, headers={"User-Agent": "collegedata-fyi-builder/0.1"})
+    req = Request(url, headers={"User-Agent": "quadfile-builder/0.1"})
     resp = urlopen(req, timeout=60)
     data = resp.read()
     print(f"  Downloaded {len(data):,} bytes")

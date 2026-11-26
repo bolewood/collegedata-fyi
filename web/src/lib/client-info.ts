@@ -4,13 +4,16 @@ const BUILD_ID = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || "
 // ingest classifies first-party traffic by these tokens. The key must keep
 // supabase-js's exact casing so it replaces the default value instead of
 // being merged into a second, comma-joined value.
-export const SITE_CLIENT_INFO = `collegedata-web/${BUILD_ID}`;
-export const FRIENDLY_API_CLIENT_INFO = `collegedata-friendly-api/${BUILD_ID}`;
+export const SITE_CLIENT_INFO = `quadfile-web/${BUILD_ID}`;
+export const FRIENDLY_API_CLIENT_INFO = `quadfile-friendly-api/${BUILD_ID}`;
 
 export function clientInfoHeaders(clientInfo: string = SITE_CLIENT_INFO): Record<string, string> {
   return { "X-Client-Info": clientInfo };
 }
 
+// Archive links may carry either API host: files stored before the rename
+// were linked on the old one, and it keeps answering for the sunset window.
+const ARCHIVE_FILE_HOSTS = new Set(["api.quadfile.org", "api.collegedata.fyi"]);
 const ARCHIVE_FILE_PATH = "/storage/v1/object/public/sources/";
 
 export function isArchiveFileUrl(href: string | null | undefined): boolean {
@@ -18,7 +21,7 @@ export function isArchiveFileUrl(href: string | null | undefined): boolean {
   try {
     const url = new URL(href);
     const host = url.hostname.toLowerCase();
-    const ownHost = host === "api.collegedata.fyi" || host.endsWith(".supabase.co");
+    const ownHost = ARCHIVE_FILE_HOSTS.has(host) || host.endsWith(".supabase.co");
     return ownHost && url.pathname.startsWith(ARCHIVE_FILE_PATH);
   } catch {
     return false;

@@ -36,7 +36,7 @@ def main():
     url = os.environ["SUPABASE_URL"]
     key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ["SUPABASE_ANON_KEY"]
     sb = create_client(
-        url, key, options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/audit-manifest"})
+        url, key, options=ClientOptions(headers={"User-Agent": "quadfile-pipeline/audit-manifest"})
     )
 
     # Fetch canonical artifacts in small batches to avoid statement timeout.

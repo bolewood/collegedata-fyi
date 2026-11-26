@@ -29,7 +29,30 @@ def offenders() -> list[str]:
     return found
 
 
+QUADFILE_UA = re.compile(r"[\"'(\s]quadfile-([a-z0-9-]+)/[0-9a-z]")
+
+
+def sent_user_agents() -> list[tuple[str, str]]:
+    found = []
+    for path in sorted(TOOLS.rglob("*.py")):
+        if path.name.startswith("test_") or "api_usage" in path.parts:
+            continue
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        for m in QUADFILE_UA.finditer(text):
+            found.append((str(path.relative_to(TOOLS.parent)), m.group(0)[1:] + "x"))
+    return found
+
+
 class PipelineIdentityTest(unittest.TestCase):
+    def test_every_quadfile_user_agent_is_classified_internal(self):
+        # A tool token missing from INTERNAL_UA_TOOLS would be counted as third-party traffic.
+        from tools.api_usage import classify as c
+
+        sent = sent_user_agents()
+        self.assertGreater(len(sent), 20)
+        bad = [(path, ua) for path, ua in sent if not c.ua_is_internal(ua)]
+        self.assertEqual(bad, [])
+
     def test_public_surface_callers_send_pipeline_user_agent(self):
         self.assertEqual(offenders(), [])
 

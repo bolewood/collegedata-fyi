@@ -392,7 +392,7 @@ class FetchTests(unittest.TestCase):
 class IdentityTests(unittest.TestCase):
     def test_api_requests_identify_as_the_pipeline(self) -> None:
         # PRD 033: pipeline traffic to the public API sends this User-Agent.
-        self.assertIn("collegedata-pipeline/", dr._headers("k")["User-Agent"])
+        self.assertIn("quadfile-pipeline/", dr._headers("k")["User-Agent"])
 
 
 class BacktestTests(unittest.TestCase):

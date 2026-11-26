@@ -315,7 +315,7 @@ def fetch_harvey_mudd_tier2(definitions: dict[str, Any], env_path: Path) -> dict
     from supabase import ClientOptions, create_client  # noqa: WPS433
 
     client = create_client(
-        url, key, options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/prd014-validation"})
+        url, key, options=ClientOptions(headers={"User-Agent": "quadfile-pipeline/prd014-validation"})
     )
     docs = (
         client.table("cds_documents")

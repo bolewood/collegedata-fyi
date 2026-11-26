@@ -95,7 +95,7 @@ class Db:
             "apikey": self._key,
             "Authorization": f"Bearer {self._key}",
             "Content-Type": "application/json",
-            "User-Agent": "collegedata-pipeline/api-usage-ingest",
+            "User-Agent": "quadfile-pipeline/api-usage-ingest",
         }
         if prefer:
             headers["Prefer"] = prefer

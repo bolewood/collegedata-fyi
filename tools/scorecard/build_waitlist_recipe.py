@@ -71,7 +71,7 @@ DEFAULT_OUTPUT = REPO_ROOT / "web/src/lib/waitlist-recipe-data.ts"
 SOURCE_API_URL = API_ORIGIN  # display: recorded in generated data
 GENERATED_FROM = "school_browser_rows joined to institution_directory and scorecard_summary"
 PAGE_SIZE = 1000
-USER_AGENT = "collegedata-pipeline/waitlist-recipe"
+USER_AGENT = "quadfile-pipeline/waitlist-recipe"
 MIN_ROWS = 100
 
 # Hand-picked (school_id, canonical_year) pairs for the page's "Case studies

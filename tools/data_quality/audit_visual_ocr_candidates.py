@@ -235,7 +235,7 @@ def main() -> int:
     client = create_client(
         os.environ["SUPABASE_URL"],
         os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ["SUPABASE_ANON_KEY"],
-        options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/audit-visual-ocr-candidates"}),
+        options=ClientOptions(headers={"User-Agent": "quadfile-pipeline/audit-visual-ocr-candidates"}),
     )
 
     docs = fetch_all(

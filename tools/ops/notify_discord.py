@@ -26,7 +26,7 @@ if str(REPO_ROOT) not in sys.path:
 from tools.common.site import SITE_ORIGIN  # noqa: E402
 
 
-PROJECT_NAME = "CollegeData.fyi"
+PROJECT_NAME = "Quadfile"
 PIPELINE_BOARD_URL = SITE_ORIGIN + "/pipeline-observation"
 PIPELINE_JSON_URL = SITE_ORIGIN + "/pipeline-observation.json"
 COLOR_FAILURE = 0xD7263D

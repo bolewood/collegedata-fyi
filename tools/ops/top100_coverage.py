@@ -385,7 +385,7 @@ def main(argv: list[str] | None = None) -> int:
     if not url or not key:
         raise SystemExit("SUPABASE_URL and a Supabase key are required to score")
     sb = create_client(
-        url, key, options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/top100-coverage"})
+        url, key, options=ClientOptions(headers={"User-Agent": "quadfile-pipeline/top100-coverage"})
     )
     byte_coverage = fetch_year_byte_coverage(sb, cohort_ids, years)
     allowlist = load_allowlist(args.allowlist)

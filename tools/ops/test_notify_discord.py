@@ -118,7 +118,7 @@ class NotifyDiscordTests(unittest.TestCase):
         self.assertEqual(channel, "alerts")
         self.assertEqual(body["title"], "CI failed")
         self.assertEqual(body["color"], nd.COLOR_FAILURE)
-        self.assertEqual(body["author"]["name"], "CollegeData.fyi")
+        self.assertEqual(body["author"]["name"], "Quadfile")
         names = {field["name"]: field["value"] for field in body["fields"]}
         self.assertEqual(names["Workflow"], "CI")
         self.assertEqual(names["Job"], "Python unit tests")

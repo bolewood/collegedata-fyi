@@ -12,6 +12,7 @@ vi.mock("@/lib/api-usage", () => ({
   recordApiUsageEvent,
 }));
 
+import { OLD_SITE_HOST_PATTERN } from "./old-site-redirect";
 import { oldApiHostAction, OLD_API_HOSTS, SUPABASE_ORIGIN } from "./old-api-host";
 import { config, proxy } from "../proxy";
 import { nextConfig } from "../../next.config";
@@ -164,8 +165,8 @@ function matchersFor(matcher: Matcher[]) {
 }
 
 describe("next.config redirects never match the old API hosts", () => {
-  // The current rules plus the planned rename rule, written exactly as planned.
-  const FUTURE_HOST_RULE = { type: "host", value: "(www\\.)?collegedata\\.fyi" } as const;
+  // The real old-site host rule, as shipped in next.config.ts.
+  const FUTURE_HOST_RULE = { type: "host", value: OLD_SITE_HOST_PATTERN } as const;
 
   it("matchHas anchors host values (^...$), lower-cases and strips the port", () => {
     const req = fakeReq;

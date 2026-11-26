@@ -10,14 +10,14 @@
 import { DOMParser, type Element as DomElement } from "jsr:@b-fuze/deno-dom";
 import { normalizeYear } from "./year.ts";
 
-// Mozilla-compatible UA. The plain "collegedata.fyi/0.1" UA was getting
+// Mozilla-compatible UA. A plain "<name>/0.1" UA was getting
 // 403'd by Bepress-hosted Digital Commons sites (Fairfield, others) and
 // likely by other WAFs tuned to block non-browser UAs. Keeping the
 // project identity in the comment so we're honest about who we are
 // while passing naive UA filters. The format (Mozilla/5.0 (compatible;
 // name/version; +url)) is the convention used by most crawler bots.
 export const USER_AGENT =
-  "Mozilla/5.0 (compatible; collegedata.fyi/0.1; +https://collegedata.fyi)";
+  "Mozilla/5.0 (compatible; Quadfile/0.1; +https://www.quadfile.org)";
 export const LANDING_TIMEOUT_MS = 30_000;
 export const SUBPAGE_TIMEOUT_MS = 15_000;
 const MAX_SUBPAGES_PER_SCHOOL = 25;

@@ -119,7 +119,7 @@ def fetch_rows() -> list[dict[str, Any]]:
             headers={
                 "apikey": anon_key,
                 "Authorization": f"Bearer {anon_key}",
-                "User-Agent": "collegedata-pipeline/prd019-spike",
+                "User-Agent": "quadfile-pipeline/prd019-spike",
                 "Range-Unit": "items",
                 "Range": f"{offset}-{offset + page_size - 1}",
             },

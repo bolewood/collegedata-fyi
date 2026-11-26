@@ -8,7 +8,7 @@ describe("apex → www redirects", () => {
       expect(redirect.statusCode).toBe(301);
       expect(redirect.destination.startsWith(CANONICAL_ORIGIN)).toBe(true);
       expect(redirect.has).toEqual([
-        { type: "host", value: "collegedata.fyi" },
+        { type: "host", value: "quadfile.org" },
       ]);
     }
   });
