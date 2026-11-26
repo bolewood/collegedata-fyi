@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -15,9 +16,10 @@ from pathlib import Path
 from typing import Any
 
 
-DEFAULT_ENV = Path("/Users/santhonys/Projects/Owen/colleges/collegedata-fyi/.env")
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_ENV = REPO_ROOT / ".env"
 DEFAULT_POOLER_URL = Path("supabase/.temp/pooler-url")
-DEFAULT_REPO = "bolewood/collegedata-fyi"
+DEFAULT_REPO = os.environ.get("GITHUB_REPOSITORY", "bolewood/collegedata-fyi")
 CRON_JOBS = (
     "archive-enqueue-daily",
     "archive-process-every-30s",
