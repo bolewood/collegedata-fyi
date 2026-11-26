@@ -94,7 +94,7 @@ describe("proxy on the old API hosts", () => {
     recordApiUsageEvent.mockClear();
     const res = run("https://api.collegedata.fyi/rest/v1/schools?limit=1", {
       method: "POST",
-      headers: { host: "api.collegedata.fyi", apikey: "k", prefer: "count=exact" },
+      headers: { host: "api.collegedata.fyi", "x-forwarded-host": "api.collegedata.fyi", apikey: "k", prefer: "count=exact" },
       body: "{}",
     });
     expect(res.headers.get("x-middleware-rewrite")).toBe(`${ORIGIN}/rest/v1/schools?limit=1`);
@@ -102,6 +102,10 @@ describe("proxy on the old API hosts", () => {
     expect(res.headers.get("x-middleware-request-x-quadfile-proxied")).toBe("1");
     expect(res.headers.get("x-middleware-request-apikey")).toBe("k");
     expect(res.headers.get("x-middleware-request-prefer")).toBe("count=exact");
+    // The old host must not be forwarded as the origin's Host.
+    expect(res.headers.get("x-middleware-request-host")).toBeNull();
+    expect(res.headers.get("x-middleware-request-x-forwarded-host")).toBeNull();
+    expect(res.headers.get("x-middleware-override-headers")).not.toMatch(/(^|,)(host|x-forwarded-host)(,|$)/);
     expect(recordApiUsageEvent).not.toHaveBeenCalled();
   });
 
@@ -172,10 +176,10 @@ describe("next.config redirects never match the old API hosts", () => {
     expect(matchHas(req("notcollegedata.fyi"), {}, [FUTURE_HOST_RULE] as never)).toBe(false);
   });
 
-  it("no redirect in next.config.ts, today's or the planned host rule, applies to api.collegedata.fyi or api-test.quadfile.org", async () => {
+  it("no redirect in next.config.ts, today's or the planned host rule, matches the probed API-host paths (including an unknown one) on either old API host", async () => {
     const redirects = await nextConfig.redirects!();
     expect(redirects.length).toBeGreaterThan(0);
-    const paths = ["/", "/rest/v1/schools", "/functions/v1/browser-search", "/auth/v1/token", STORAGE];
+    const paths = ["/", "/rest/v1/schools", "/functions/v1/browser-search", "/auth/v1/token", STORAGE, "/some/unknown/path"];
     const planned = [{ source: "/:path*", has: [FUTURE_HOST_RULE] }, { source: "/", has: [FUTURE_HOST_RULE] }];
     for (const host of OLD_API_HOSTS) {
       const req = fakeReq(host);

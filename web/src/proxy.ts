@@ -35,6 +35,9 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
   if (oldApi?.kind === "proxy") {
     const headers = new Headers(request.headers);
     headers.set("x-quadfile-proxied", "1");
+    // The origin must see its own host, not the old API host the caller used.
+    headers.delete("host");
+    headers.delete("x-forwarded-host");
     return NextResponse.rewrite(oldApi.url, { request: { headers } });
   }
   const schoolPage = pathname === "/schools" || pathname.startsWith("/schools/");
