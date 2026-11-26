@@ -183,7 +183,7 @@ export default async function SchoolYearPage({ params }: {
             "@context": "https://schema.org",
             "@type": "Dataset",
             name: `${schoolName} Common Data Set ${year}: structured extract`,
-            description: `Values from ${schoolName}'s Common Data Set ${year}, extracted and keyed to canonical CDS field IDs by collegedata.fyi.`,
+            description: `Values from ${schoolName}'s Common Data Set ${year}, extracted and keyed to canonical CDS field IDs by ${SITE_NAME}.`,
             url: canonicalUrl,
             creator: { "@type": "Organization", name: SITE_NAME, url: SITE_ORIGIN },
             isBasedOn: docs[0]?.source_url ?? canonicalUrl,

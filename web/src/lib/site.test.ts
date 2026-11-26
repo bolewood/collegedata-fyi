@@ -14,8 +14,9 @@ import {
   SITE_ORIGIN,
 } from "./site";
 
-// Rename prep is a no-op: these pin today's values and that every consumer
-// reads them from site.ts rather than keeping its own copy.
+// Rename prep is a no-op: these pin today's values and that apex-redirect,
+// sitemap-static and mcp/tools read them from site.ts. Other call sites are
+// covered by the route comparison in the PR, not by this test.
 describe("site constants", () => {
   it("keeps today's values", () => {
     expect(SITE_NAME).toBe("collegedata.fyi");
