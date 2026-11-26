@@ -388,8 +388,8 @@ path").
     (DRVEF, fall of the CDS year). Both count degree-seeking and
     non-degree-seeking, full-time and part-time undergraduates on a fall census
     date. Expected differences: the census date, and a school counting a
-    different group. In the 2026-11-25 run 90% of the reports that have both a B1
-    total and a federal figure are within 2% (the table's match rate, 74% and
+    different group. In the 2026-11-25 run 91% of the reports that have both a B1
+    total and a federal figure are within 2% (the table's match rate, 77% and
     77%, also counts the reports with no usable B1 total).
   - **Tuition:** one figure per report, the all-undergraduates in-state figure
     (G.108) when filled, else the private single figure (G.102), a 0 counting
