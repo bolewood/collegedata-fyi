@@ -16,14 +16,19 @@ from tools.api_usage.classify import (
     INTERNAL_UA_MARKERS,
     INTERNAL_UA_PATTERN,
     NON_BROWSER_PATTERN,
+    PROXIED_FORWARDED_HOSTS,
     SITE_CLIENT_INFO_PREFIXES,
     t0_hour,
 )
 
 PAGE_SIZE = 1000
 
+
+def _sql_list(values: tuple[str, ...]) -> str:
+    return ", ".join(f"'{value}'" for value in values)
+
+
 _PATH = "log_attributes['request.path']"
-_IP = "log_attributes['request.headers.cf_connecting_ip']"
 _UA_RAW = "log_attributes['request.headers.user_agent']"
 # Python classifies on this same 300-character prefix.
 _UA = f"substring({_UA_RAW}, 1, 300)"
@@ -38,7 +43,21 @@ _ROLE = "log_attributes['request.sb.jwt.apikey.payload.role']"
 _KEY_PREFIX = "substring(log_attributes['request.sb.apikey.apikey.prefix'], 1, 16)"
 _CLIENT_INFO = "substring(log_attributes['request.headers.x_client_info'], 1, 80)"
 _REFERER = "lower(domain(log_attributes['request.headers.referer']))"
-_PROXIED = "(log_attributes['request.headers.x_quadfile_proxied'] = '1')"
+# Proxied (old API host) traffic. Vercel does not forward the proxied header on
+# an external rewrite, so also match the forwarded host. The header check stays
+# for the day it is forwarded.
+_PROXIED = (
+    "(log_attributes['request.headers.x_quadfile_proxied'] = '1'"
+    f" or lower(log_attributes['request.headers.x_forwarded_host']) in ({_sql_list(PROXIED_FORWARDED_HOSTS)}))"
+)
+# Behind the proxy cf_connecting_ip is a Vercel egress address, so a proxied
+# caller is the first x-forwarded-for entry. A blank first entry (empty,
+# whitespace, leading comma) falls back to cf_connecting_ip.
+_XFF_FIRST = "trimBoth(splitByChar(',', log_attributes['request.headers.x_forwarded_for'])[1])"
+_IP = (
+    f"if({_PROXIED} and {_XFF_FIRST} != '', {_XFF_FIRST},"
+    " log_attributes['request.headers.cf_connecting_ip'])"
+)
 _AWS = "position(lower(log_attributes['request.cf.asOrganization']), 'amazon') > 0"
 _UA_BROWSER = (
     f"(startsWith({_UA}, 'Mozilla/') and position({_UA}, '(') > 0"
@@ -67,10 +86,6 @@ _EDGE_DIMS = [
     ("aws", _AWS),
     ("proxied", _PROXIED),
 ]
-
-
-def _sql_list(values: tuple[str, ...]) -> str:
-    return ", ".join(f"'{value}'" for value in values)
 
 
 def _starts_with_any(expr: str, prefixes: tuple[str, ...]) -> str:
