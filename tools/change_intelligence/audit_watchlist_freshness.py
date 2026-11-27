@@ -76,7 +76,6 @@ def load_env(path: Path | None) -> dict[str, str]:
     for candidate in (
         path,
         REPO_ROOT / ".env",
-        Path("/Users/santhonys/Projects/Owen/colleges/collegedata-fyi/.env"),
     ):
         if candidate:
             for key, value in read_env_file(candidate).items():

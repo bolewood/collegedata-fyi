@@ -63,7 +63,7 @@ The Berkeley history panel, inspired by a chart idea from [@neetu_arnold](https:
 The checked-in dataset (`web/src/lib/waitlist-recipe-data.ts`) is generated from the public API by `tools/scorecard/build_waitlist_recipe.py`; its header and `generatedAt` say when. The page does not update on its own, so rebuild it after corpus corrections:
 
 ```bash
-cd ~/Projects/Owen/colleges/collegedata-fyi
+cd ~/Projects/quadfile
 python tools/scorecard/build_waitlist_recipe.py
 ```
 

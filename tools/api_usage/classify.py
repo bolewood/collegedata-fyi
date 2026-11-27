@@ -53,6 +53,11 @@ _INTERNAL_UA_RE = re.compile(INTERNAL_UA_PATTERN)
 KNOWN_HOSTS = frozenset({
     "api.collegedata.fyi", "api.quadfile.org", "isduwmygvmdozhpvzaix.supabase.co",
 })
+# Rename prep: the web app's old-API-host handler rewrites these hosts to the
+# Supabase origin. Vercel drops the x-quadfile-proxied header on an external
+# rewrite but sets x-forwarded-host to the host the caller used, so the log
+# queries recognise proxied traffic by that. Add the old host here.
+PROXIED_FORWARDED_HOSTS = ("api.collegedata.fyi", "api-test.quadfile.org")
 INTERNAL_FUNCTIONS = frozenset({
     "archive-enqueue",
     "archive-process",

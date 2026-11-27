@@ -14,7 +14,7 @@ import { parse as parseYaml } from "jsr:@std/yaml";
 import { USER_AGENT } from "./resolve.ts";
 
 const SCHOOLS_YAML_URL =
-  "https://raw.githubusercontent.com/bolewood/collegedata-fyi/main/tools/finder/schools.yaml";
+  "https://raw.githubusercontent.com/bolewood/quadfile/main/tools/finder/schools.yaml";
 
 // school_overrides.yaml is a separate committed file for hand-curated
 // per-school data that cannot live in schools.yaml because the latter
@@ -25,7 +25,7 @@ const SCHOOLS_YAML_URL =
 // hosting_override entries land on top of the schools.yaml entry,
 // keyed by school_id.
 const SCHOOL_OVERRIDES_YAML_URL =
-  "https://raw.githubusercontent.com/bolewood/collegedata-fyi/main/tools/finder/school_overrides.yaml";
+  "https://raw.githubusercontent.com/bolewood/quadfile/main/tools/finder/school_overrides.yaml";
 
 // Hard cap on how long we wait for the raw YAML fetch. Without this, a
 // hanging GitHub request could consume the whole edge function invocation

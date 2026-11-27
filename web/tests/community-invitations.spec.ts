@@ -21,7 +21,7 @@ test("usage references have sources and keep stats separate from stories", async
   ).toHaveCount(0);
   await expect(
     page.getByRole("link", { name: "Star on GitHub" }),
-  ).toHaveAttribute("href", "https://github.com/bolewood/collegedata-fyi");
+  ).toHaveAttribute("href", "https://github.com/bolewood/quadfile");
   await expect(
     page.getByRole("link", { name: "Feedback", exact: true }),
   ).toHaveAttribute("href", "/feedback?from=footer&kind=feedback");

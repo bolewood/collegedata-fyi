@@ -1202,5 +1202,15 @@ class NotSearchedTests(unittest.TestCase):
         self.assertEqual(payload["probed"], 4)
 
 
+class UserAgentTests(unittest.TestCase):
+    def test_user_agent_keeps_product_token_and_names_the_new_repo(self) -> None:
+        from tools.finder import probe_urls
+
+        self.assertEqual(
+            probe_urls._UA,
+            "collegedata-fyi-finder/0.1 (https://github.com/bolewood/quadfile)",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

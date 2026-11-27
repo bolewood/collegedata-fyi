@@ -55,6 +55,6 @@ connector URL.
 
 Tell us what you're building, researching, or using in your work.
 A link and a sentence are plenty: https://www.collegedata.fyi/feedback.
-You can also [open an issue](https://github.com/bolewood/collegedata-fyi/issues)
-or [star this repository](https://github.com/bolewood/collegedata-fyi).
+You can also [open an issue](https://github.com/bolewood/quadfile/issues)
+or [star this repository](https://github.com/bolewood/quadfile).
 No account or response is required to use the data.

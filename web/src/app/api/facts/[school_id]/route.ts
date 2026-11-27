@@ -18,6 +18,7 @@
  */
 
 import { dataLicenseFields } from "@/lib/data-license";
+import { REPO_URL } from "@/lib/repo";
 import { NextResponse } from "next/server";
 import {
   fetchCanonicalSchoolId,
@@ -111,7 +112,7 @@ export async function GET(
     replacement: `/api/schools/${school_id}/facts`,
     ...dataLicenseFields(),
     note:
-      "Values extracted from the school's own Common Data Set document. Pipeline source: https://github.com/bolewood/collegedata-fyi. For the full extract, query /rest/v1/cds_artifacts directly using the public anon-key instructions at /api.",
+      `Values extracted from the school's own Common Data Set document. Pipeline source: ${REPO_URL}. For the full extract, query /rest/v1/cds_artifacts directly using the public anon-key instructions at /api.`,
   };
 
   return NextResponse.json(body, {

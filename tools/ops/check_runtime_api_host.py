@@ -82,8 +82,10 @@ ALLOWLIST: dict[str, tuple[str, str]] = {
         r'|"api\.collegedata\.fyi": "https://api\.quadfile\.org",',
     ),
     "tools/api_usage/classify.py": (
-        "classifies gateway log lines by request host; the old host stays in the list",
-        r'"api\.collegedata\.fyi", "api\.quadfile\.org", "isduwmygvmdozhpvzaix\.supabase\.co",',
+        "classifies gateway log lines by request host and by the forwarded host of proxied "
+        "old-host requests; the old host stays in both lists",
+        r'(?:"api\.collegedata\.fyi", "api\.quadfile\.org", "isduwmygvmdozhpvzaix\.supabase\.co",'
+        r'|PROXIED_FORWARDED_HOSTS = \("api\.collegedata\.fyi", "api-test\.quadfile\.org"\))',
     ),
     "tools/ipeds/build_endowment_draw_rate_recipe.py": ("display: records sourceApiUrl in generated recipe data", _BUILDER),
     "tools/ipeds/build_pricing_power_recipe.py": ("display: records sourceApiUrl in generated recipe data", _BUILDER),

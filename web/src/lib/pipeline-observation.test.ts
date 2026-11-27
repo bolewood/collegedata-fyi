@@ -171,6 +171,26 @@ describe("pipeline observation JSON", () => {
     expect(blob).not.toMatch(/evil\.example|token=|document_id|failure_code/);
   });
 
+  it("keeps run URLs for both repo names and drops look-alikes", () => {
+    const urlFor = (run_url: string) =>
+      activityFromRows([activity({ run_url })], NOW)[0]?.run_url;
+    for (const repo of ["collegedata-fyi", "quadfile"]) {
+      const url = `https://github.com/bolewood/${repo}/actions/runs/123`;
+      expect(urlFor(url)).toBe(url);
+    }
+    for (const bad of [
+      "https://github.com/bolewood/quadfile-ops/actions/runs/1",
+      "https://github.com/bolewood/quadfilex/actions/runs/1",
+      "https://github.com/bolewood/quadfile/actions/runs/123?token=abc",
+      "https://github.com/bolewood/quadfile/actions/runs/123/",
+      "https://github.com/otherowner/quadfile/actions/runs/1",
+      "https://github.com/bolewood/quadfile/pull/99",
+      "https://github.com/bolewood/quadfile/issues/1",
+    ]) {
+      expect(urlFor(bad)).toBeNull();
+    }
+  });
+
   it("drops malformed vocabularies and bounds field counts", () => {
     const rows = [
       activity({ school_id: "bad-format", source_format: "exe" }),

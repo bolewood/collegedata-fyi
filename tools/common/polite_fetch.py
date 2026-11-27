@@ -39,7 +39,7 @@ from pathlib import Path
 from typing import Callable, Mapping, MutableMapping
 from urllib.parse import unquote, urljoin, urlsplit
 
-CONTACT_URL = "https://github.com/bolewood/collegedata-fyi"
+CONTACT_URL = "https://github.com/bolewood/quadfile"
 ROBOTS_TTL_SECONDS = 24 * 60 * 60
 ROBOTS_MAX_BYTES = 500 * 1024  # RFC 9309 s2.5: parse at least 500 KiB
 MAX_REDIRECTS = 5
