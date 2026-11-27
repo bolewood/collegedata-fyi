@@ -256,7 +256,7 @@ def main() -> int:
     }
 
     load_env(Path(args.env).expanduser())
-    parent = Path("/Users/santhonys/Projects/Owen/colleges/collegedata-fyi/.env")
+    parent = REPO_ROOT / ".env"
     load_env(parent)
 
     if not os.environ.get("SUPABASE_URL") or not os.environ.get("SUPABASE_SERVICE_ROLE_KEY"):

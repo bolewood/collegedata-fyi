@@ -82,7 +82,6 @@ def load_env() -> dict[str, str]:
     for path in (
         REPO_ROOT / ".env",
         REPO_ROOT / "web" / ".env.local",
-        Path("/Users/santhonys/Projects/Owen/colleges/collegedata-fyi/web/.env.local"),
     ):
         for key, value in read_env_file(path).items():
             env.setdefault(key, value)
