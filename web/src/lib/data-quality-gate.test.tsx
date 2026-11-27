@@ -134,9 +134,9 @@ describe("Data quality download links follow the selected year", () => {
 describe("gate: sitemap", () => {
   it("lists /data-quality only after launch", async () => {
     at(CLOSED);
-    expect((await sitemap()).map((e) => e.url)).not.toContain("https://www.collegedata.fyi/data-quality");
+    expect((await sitemap()).map((e) => e.url)).not.toContain("https://www.quadfile.org/data-quality");
     at(OPEN);
-    expect((await sitemap()).map((e) => e.url)).toContain("https://www.collegedata.fyi/data-quality");
+    expect((await sitemap()).map((e) => e.url)).toContain("https://www.quadfile.org/data-quality");
   });
 });
 

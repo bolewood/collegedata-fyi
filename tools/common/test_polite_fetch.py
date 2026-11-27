@@ -51,10 +51,10 @@ PAGE = "https://a.edu/page"
 
 def test_user_agent_form():
     f = Fake({ROBOTS: [R(404)], PAGE: [R(200, b"x")]}).fetcher()
-    assert f.user_agent == "collegedata-fyi-scholarships/0.1 (https://github.com/bolewood/quadfile)"
+    assert f.user_agent == "quadfile-scholarships/0.1 (https://github.com/bolewood/quadfile)"
     fk = Fake({ROBOTS: [R(404)], PAGE: [R(200, b"x")]})
     fk.fetcher().fetch(PAGE)
-    assert all(c[2]["User-Agent"].startswith("collegedata-fyi-scholarships/") for c in fk.calls)
+    assert all(c[2]["User-Agent"].startswith("quadfile-scholarships/") for c in fk.calls)
 
 
 def test_ok_and_robots_4xx_allows():
@@ -71,7 +71,7 @@ def test_robots_disallow_blocks_without_fetching_page():
 
 
 def test_robots_specific_agent_beats_star_and_allow_longest_wins():
-    txt = b"User-agent: *\nDisallow: /\n\nUser-agent: collegedata-fyi-scholarships\nDisallow: /private\nAllow: /private/ok$\n"
+    txt = b"User-agent: *\nDisallow: /\n\nUser-agent: quadfile-scholarships\nDisallow: /private\nAllow: /private/ok$\n"
     fk = Fake({ROBOTS: [R(200, txt)], PAGE: [R(200)], "https://a.edu/private/ok": [R(200)], "https://a.edu/private/x": [R(200)]})
     f = fk.fetcher()
     assert f.fetch(PAGE).status == OK
@@ -298,7 +298,7 @@ import pytest
 
 from tools.common.polite_fetch import RobotsPolicy
 
-TOKEN = "collegedata-fyi-scholarships"
+TOKEN = "quadfile-scholarships"
 
 
 def test_m1_utf8_bom_in_robots_does_not_drop_first_group():
@@ -466,7 +466,7 @@ def test_s6_rfc9309_matching_rules():
     pol = _pol(f"User-agent: {TOKEN}\nDisallow: /a\n\nUser-agent: *\nDisallow: /z\n\nUser-agent: {TOKEN}\nDisallow: /b\n")
     assert not pol.allowed(u("/a")) and not pol.allowed(u("/b")) and pol.allowed(u("/z"))
     # agent names are case-insensitive
-    assert not _pol("User-agent: CollegeData-FYI-Scholarships\nDisallow: /\n").allowed(u("/x"))
+    assert not _pol("User-agent: Quadfile-Scholarships\nDisallow: /\n").allowed(u("/x"))
     assert not _pol("USER-AGENT: *\nDISALLOW: /\n").allowed(u("/x"))
     # percent-encoding equivalence
     assert not _pol("User-agent: *\nDisallow: /%7Euser\n").allowed(u("/~user"))

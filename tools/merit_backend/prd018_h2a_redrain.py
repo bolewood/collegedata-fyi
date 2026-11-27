@@ -57,7 +57,7 @@ def supabase_client(env_path: Path | None, require_service_role: bool):
     if not url or not key:
         raise SystemExit(f"{'SUPABASE_URL and ' if not url else ''}{key_name} required")
     return create_client(
-        url, key, options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/prd018-h2a-redrain"})
+        url, key, options=ClientOptions(headers={"User-Agent": "quadfile-pipeline/prd018-h2a-redrain"})
     )
 
 

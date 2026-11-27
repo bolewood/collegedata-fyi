@@ -267,7 +267,7 @@ def fetch_years_by_school(
         )
     headers = {
         "Accept": "application/json",
-        "User-Agent": "collegedata-pipeline/stuck-pdf-seeds",
+        "User-Agent": "quadfile-pipeline/stuck-pdf-seeds",
         "apikey": anon_key,
         "Authorization": f"Bearer {anon_key}",
         "Prefer": "count=exact",

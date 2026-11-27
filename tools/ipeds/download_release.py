@@ -224,7 +224,7 @@ def build_opener() -> urllib.request.OpenerDirector:
 
 
 def download(opener: urllib.request.OpenerDirector, url: str, path: Path) -> None:
-    req = urllib.request.Request(url, headers={"User-Agent": "collegedata-fyi-ipeds-loader/1.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "quadfile-ipeds-loader/1.0"})
     try:
         with opener.open(req, timeout=DOWNLOAD_TIMEOUT_SECONDS) as response, path.open("wb") as f:
             total = 0

@@ -7,7 +7,7 @@ Behaviour (PRD 036 M4):
   blocks every fetch to that host (the unreachable state is not cached, so the next call retries).
 * ``Crawl-delay`` is honoured; requests to one host are strictly serialised and
   spaced by ``max(min_spacing, crawl_delay)``.
-* ``User-Agent`` follows the repo form ``collegedata-fyi-<token>/<ver> (<url>)``.
+* ``User-Agent`` follows the repo form ``quadfile-<token>/<ver> (<url>)``.
 * Conditional GET (ETag / Last-Modified) from a caller-supplied dict or JSON file.
 * Login walls and CAPTCHAs are refused and never retried.
 * 429/5xx/network errors are retried a bounded number of times, honouring
@@ -276,8 +276,8 @@ def parse_retry_after(value: str | None, now: float) -> float | None:
 
 
 def make_user_agent(product_token: str, version: str = "0.1", contact_url: str = CONTACT_URL) -> str:
-    token = product_token.removeprefix("collegedata-fyi-")
-    return f"collegedata-fyi-{token}/{version} ({contact_url})"
+    token = product_token.removeprefix("collegedata-fyi-").removeprefix("quadfile-")
+    return f"quadfile-{token}/{version} ({contact_url})"
 
 
 class PoliteFetcher:

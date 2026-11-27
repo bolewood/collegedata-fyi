@@ -52,11 +52,15 @@ class GateTests(unittest.TestCase):
         self.assertIn(":2:", violations[0])
         listed = "web/src/lib/client-info.ts"
         text = (
-            'const ownHost = host === "api.collegedata.fyi" || host.endsWith(".supabase.co");\n'
-            'fetch("https://api.collegedata.fyi/x")\n'
+            'const ARCHIVE_FILE_HOSTS = new Set(["api.quadfile.org", "api.collegedata.fyi"]);\n'
+            'fetch("https://api.quadfile.org/x")\n'
         )
         violations, _ = gate.check([listed], read=lambda p: text)
         self.assertEqual(len(violations), 1, violations)
+
+    def test_the_new_api_host_is_flagged_too(self):
+        violations, _ = run({"tools/x/a.py": 'API = "https://api.quadfile.org"\n'})
+        self.assertEqual(len(violations), 1)
 
     def test_uppercase_literal_is_flagged(self):
         violations, _ = run({"tools/x/a.py": 'API = "https://API.CollegeData.FYI"\n'})

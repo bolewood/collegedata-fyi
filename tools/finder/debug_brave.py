@@ -37,7 +37,7 @@ import urllib.request
 
 
 BRAVE_ENDPOINT = "https://api.search.brave.com/res/v1/web/search"
-UA = "collegedata-fyi-debug/0.1"
+UA = "quadfile-debug/0.1"
 
 _SSL_CTX = ssl.create_default_context()
 _SSL_CTX.check_hostname = False

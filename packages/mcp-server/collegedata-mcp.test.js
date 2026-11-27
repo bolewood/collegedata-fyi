@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 const root = dirname(fileURLToPath(import.meta.url));
 const script = join(root, "bin", "collegedata-mcp.js");
 
-function startServer(env = { COLLEGEDATA_API_BASE: "https://www.collegedata.fyi" }) {
+function startServer(env = { COLLEGEDATA_API_BASE: "https://www.quadfile.org" }) {
   const base = { ...process.env };
   delete base.QUADFILE_API_BASE;
   delete base.COLLEGEDATA_API_BASE;
@@ -73,7 +73,7 @@ describe("collegedata MCP stdio", () => {
       const init = await server.readJson();
       assert.equal(init.id, 0);
       assert.equal(init.result.protocolVersion, "2025-03-26");
-      assert.equal(init.result.serverInfo.name, "collegedata-fyi");
+      assert.equal(init.result.serverInfo.name, "quadfile");
       assert.ok(init.result.capabilities.tools);
 
       server.send({ jsonrpc: "2.0", method: "notifications/initialized" });
@@ -149,5 +149,30 @@ describe("collegedata MCP identity", () => {
     assert.equal(headers["x-collegedata-client-version"], "0.2.0");
     assert.equal(headers["x-quadfile-mcp-tool"], "search_schools");
     assert.equal(headers["x-collegedata-mcp-tool"], "search_schools");
+  });
+});
+
+// No spaces in the preload: NODE_OPTIONS splits on them. fetch is replaced by
+// a stub that prints the URL and answers with an empty result, so nothing
+// reaches the network.
+const STUB_FETCH_PRELOAD =
+  "--import=data:text/javascript,globalThis.fetch=async(u)=>{console.error('FETCH:'+u);return(new(globalThis.Response)('{\"results\":[]}',{headers:{'content-type':'application/json'}}))}";
+
+describe("collegedata MCP default origin", () => {
+  it("a tool call fetches from https://www.quadfile.org when no API base is set", async () => {
+    const server = startServer({ NODE_OPTIONS: STUB_FETCH_PRELOAD });
+    try {
+      server.send({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "tools/call",
+        params: { name: "search_schools", arguments: { query: "mit" } },
+      });
+      await server.readJson(5000);
+      assert.match(server.getStderr(), /^FETCH:https:\/\/www\.quadfile\.org\/api\//m);
+      assert.match(server.getStderr(), / https:\/\/www\.quadfile\.org\n/);
+    } finally {
+      await server.close();
+    }
   });
 });

@@ -56,3 +56,18 @@ describe("collegedata CLI identity", () => {
     assert.equal(headers["x-collegedata-cli-command"], "search");
   });
 });
+
+// With no env set, the default origin is the new site. The preload replaces
+// fetch, prints the first URL and exits (no spaces: NODE_OPTIONS splits on them), so nothing reaches the network.
+const FIRST_FETCH_PRELOAD =
+  "--import=data:text/javascript,globalThis.fetch=async(u)=>{console.error('FETCH:'+u);process.exit(0)}";
+
+describe("collegedata CLI default origin", () => {
+  it("fetches from https://www.quadfile.org when no API base is set", async () => {
+    const base = { ...process.env, NODE_OPTIONS: FIRST_FETCH_PRELOAD };
+    delete base.QUADFILE_API_BASE;
+    delete base.COLLEGEDATA_API_BASE;
+    const { stderr } = await run("node", [script, "search", "mit", "--format", "json"], { env: base });
+    assert.match(stderr, /^FETCH:https:\/\/www\.quadfile\.org\/api\//m);
+  });
+});

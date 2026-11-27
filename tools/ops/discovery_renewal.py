@@ -44,7 +44,7 @@ from tools.finder.stuck_pdf_seeds import is_direct_doc_seed  # noqa: E402
 from tools.common.site import SITE_ORIGIN, runtime_api_origin  # noqa: E402
 
 # PRD 033: pipeline traffic to the public API identifies itself.
-USER_AGENT = "collegedata-pipeline/discovery-renewal"
+USER_AGENT = "quadfile-pipeline/discovery-renewal"
 DEFAULT_SCHOOLS_YAML = REPO_ROOT / "tools" / "finder" / "schools.yaml"
 SCHOOL_PAGE_URL = SITE_ORIGIN + "/schools/{school_id}"
 PAGE_SIZE = 1000

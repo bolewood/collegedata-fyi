@@ -54,7 +54,7 @@ def download_ipeds_hd(year: int) -> dict[str, dict]:
     else:
         url = IPEDS_URL.format(year=year)
         print(f"  downloading IPEDS HD{year} from {url}", file=sys.stderr)
-        req = Request(url, headers={"User-Agent": "collegedata-fyi-builder/0.1"})
+        req = Request(url, headers={"User-Agent": "quadfile-builder/0.1"})
         data = urlopen(req, timeout=60).read()
         cache_path.write_bytes(data)
         print(f"  cached {len(data):,} bytes → {cache_path}", file=sys.stderr)

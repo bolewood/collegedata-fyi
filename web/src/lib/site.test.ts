@@ -10,26 +10,24 @@ import {
   MCP_SERVER_NAME,
   SITE_HOST,
   SITE_NAME,
-  SITE_NAME_CAMEL,
-  SITE_NAME_CAPS,
+  FORMER_NAME,
   SITE_ORIGIN,
 } from "./site";
 
-// Rename prep is a no-op: these pin today's values and that apex-redirect,
+// These pin the rename values and that apex-redirect,
 // sitemap-static and mcp/tools read them from site.ts. Other call sites are
 // covered by the route comparison in the PR, not by this test.
 describe("site constants", () => {
-  it("keeps today's values", () => {
-    expect(SITE_NAME).toBe("collegedata.fyi");
-    expect(SITE_NAME_CAMEL).toBe("CollegeData.fyi");
-    expect(SITE_NAME_CAPS).toBe("CollegeData.FYI");
-    expect(SITE_ORIGIN).toBe("https://www.collegedata.fyi");
-    expect(SITE_HOST).toBe("www.collegedata.fyi");
-    expect(APEX_HOST).toBe("collegedata.fyi");
-    expect(API_ORIGIN).toBe("https://api.collegedata.fyi");
-    expect(API_HOST).toBe("api.collegedata.fyi");
+  it("pins the post-rename values", () => {
+    expect(SITE_NAME).toBe("Quadfile");
+    expect(FORMER_NAME).toBe("collegedata.fyi");
+    expect(SITE_ORIGIN).toBe("https://www.quadfile.org");
+    expect(SITE_HOST).toBe("www.quadfile.org");
+    expect(APEX_HOST).toBe("quadfile.org");
+    expect(API_ORIGIN).toBe("https://api.quadfile.org");
+    expect(API_HOST).toBe("api.quadfile.org");
     expect(PROJECT_ORIGIN).toBe("https://isduwmygvmdozhpvzaix.supabase.co");
-    expect(MCP_SERVER_NAME).toBe("collegedata-fyi");
+    expect(MCP_SERVER_NAME).toBe("quadfile");
   });
 
   it("derives hosts from origins", () => {

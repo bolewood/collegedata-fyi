@@ -56,7 +56,7 @@ import { schemaFallbackNoteFromArtifact } from "@/lib/schema-fallback";
 import { ShareButton } from "@/components/ShareButton";
 import { combinedFilingNote, notIncludedLead } from "@/lib/campus-filings";
 import type { ArtifactNotes, ManifestRow, InstitutionCoverage } from "@/lib/types";
-import { SITE_NAME, SITE_NAME_CAMEL, SITE_ORIGIN } from "@/lib/site";
+import { SITE_NAME, SITE_ORIGIN } from "@/lib/site";
 
 export const dynamic = "force-static";
 export const revalidate = 604800;
@@ -506,7 +506,7 @@ export default async function SchoolDetailPage({ params }: {
           <ShareButton
             surface="school"
             title={`${name} Common Data Set archive`}
-            text={`Source-linked admissions, enrollment, aid, and CDS documents from ${SITE_NAME_CAMEL}.`}
+            text={`Source-linked admissions, enrollment, aid, and CDS documents from ${SITE_NAME}.`}
             path={`/schools/${school_id}`}
           />
         </div>
@@ -724,7 +724,7 @@ async function DirectoryOnlySchoolPage({
           <ShareButton
             surface="school"
             title={`${coverage.school_name} Common Data Set archive`}
-            text={`Source-linked admissions, enrollment, aid, and CDS documents from ${SITE_NAME_CAMEL}.`}
+            text={`Source-linked admissions, enrollment, aid, and CDS documents from ${SITE_NAME}.`}
             path={`/schools/${school_id}`}
           />
         </div>

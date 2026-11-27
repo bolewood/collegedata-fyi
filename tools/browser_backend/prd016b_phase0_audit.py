@@ -383,7 +383,7 @@ def make_read_client() -> Any:
         or PUBLIC_SUPABASE_ANON_KEY
     )
     return create_client(
-        url, key, options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/prd016b-phase0-audit"})
+        url, key, options=ClientOptions(headers={"User-Agent": "quadfile-pipeline/prd016b-phase0-audit"})
     )
 
 

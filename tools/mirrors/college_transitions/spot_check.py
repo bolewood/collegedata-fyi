@@ -130,7 +130,7 @@ def main() -> int:
     sb = create_client(
         os.environ["SUPABASE_URL"],
         os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ["SUPABASE_ANON_KEY"],
-        options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/college-transitions-spot-check"}),
+        options=ClientOptions(headers={"User-Agent": "quadfile-pipeline/college-transitions-spot-check"}),
     )
 
     ct = load_ct()

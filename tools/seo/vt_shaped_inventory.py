@@ -82,7 +82,7 @@ def classify_html(text: str) -> str:
 def fetch(url: str) -> tuple[int | str, str]:
     req = urllib.request.Request(
         url,
-        headers={"User-Agent": "collegedata.fyi inventory (PRD 028 M2.5)"},
+        headers={"User-Agent": "Quadfile inventory (PRD 028 M2.5)"},
     )
     try:
         with urllib.request.urlopen(req, timeout=20) as response:

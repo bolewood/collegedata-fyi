@@ -59,7 +59,7 @@ def main() -> int:
     sb = create_client(
         os.environ["SUPABASE_URL"],
         os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ["SUPABASE_ANON_KEY"],
-        options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/active-schools-missing-recent"}),
+        options=ClientOptions(headers={"User-Agent": "quadfile-pipeline/active-schools-missing-recent"}),
     )
 
     schools = load_active_schools()

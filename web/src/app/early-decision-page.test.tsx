@@ -157,7 +157,7 @@ describe("early-decision gating", () => {
   it("lists served pages in the sitemap", () => {
     expect(earlyDecisionSitemapEntries(["bowdoin", "dartmouth"])).toEqual([
       {
-        url: "https://www.collegedata.fyi/schools/bowdoin/early-decision",
+        url: "https://www.quadfile.org/schools/bowdoin/early-decision",
         changeFrequency: "monthly",
         priority: 0.6,
       },
@@ -171,7 +171,7 @@ describe("early-decision gating", () => {
     const entries = await earlyDecisionSitemap();
     expect(entries).toHaveLength(EARLY_DECISION_SCHOOLS.length);
     expect(entries.map((entry) => entry.url)).toContain(
-      "https://www.collegedata.fyi/schools/bowdoin/early-decision",
+      "https://www.quadfile.org/schools/bowdoin/early-decision",
     );
   });
 
@@ -200,7 +200,7 @@ describe("submitted early-decision URLs never silently 404", () => {
 
   it("the proxy answers 410 only for retired URLs", () => {
     const event = { waitUntil: vi.fn() } as never;
-    const res = proxy(new NextRequest("https://www.collegedata.fyi/schools/bowdoin/early-decision"), event);
+    const res = proxy(new NextRequest("https://www.quadfile.org/schools/bowdoin/early-decision"), event);
     expect(res.status).not.toBe(410);
   });
 });

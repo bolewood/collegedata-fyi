@@ -190,7 +190,7 @@ def looks_like_doc_url(url: str) -> bool:
 def fetch_bytes(url: str, *, read_bytes: int = 0, timeout: int = 20) -> tuple[int, dict[str, str], bytes]:
     request = urllib.request.Request(
         url,
-        headers={"User-Agent": "collegedata-fyi-ops/0.1"},
+        headers={"User-Agent": "quadfile-ops/0.1"},
     )
     try:
         with urllib.request.urlopen(request, timeout=timeout, context=probe_urls._SSL_CTX) as response:

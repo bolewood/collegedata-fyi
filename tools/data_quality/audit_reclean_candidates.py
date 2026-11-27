@@ -106,7 +106,7 @@ def make_client(env_path: Path | None) -> Any:
             "Missing SUPABASE_ANON_KEY, NEXT_PUBLIC_SUPABASE_ANON_KEY, or SUPABASE_SERVICE_ROLE_KEY"
         )
     return create_client(
-        url, key, options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/audit-reclean-candidates"})
+        url, key, options=ClientOptions(headers={"User-Agent": "quadfile-pipeline/audit-reclean-candidates"})
     )
 
 

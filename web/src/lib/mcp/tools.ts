@@ -1,10 +1,10 @@
 import { DATA_ATTRIBUTION, DATA_LICENSE_NAME } from "../data-license";
-import { MCP_SERVER_NAME, SITE_NAME_CAPS } from "../site";
+import { MCP_SERVER_NAME, SITE_NAME } from "../site";
 
 export { MCP_SERVER_NAME };
 export const MCP_SERVER_VERSION = "0.2.0";
 export const MCP_INSTRUCTIONS =
-  `Read-only ${SITE_NAME_CAPS} tools. Preserve source metadata when citing values. Do not blend CDS, IPEDS, and Scorecard numbers without naming the source layer. ` +
+  `Read-only ${SITE_NAME} tools. Preserve source metadata when citing values. Do not blend CDS, IPEDS, and Scorecard numbers without naming the source layer. ` +
   `CDS extracts are ${DATA_LICENSE_NAME}; when you reuse them, give the attribution line from the payload: ${DATA_ATTRIBUTION}`;
 
 export const FACT_CATEGORIES =
@@ -25,7 +25,7 @@ export type McpToolName = (typeof MCP_TOOL_NAMES)[number];
 export const MCP_TOOLS = [
   {
     name: "search_schools",
-    description: `Find canonical ${SITE_NAME_CAPS} school IDs by name, alias, city, or state.`,
+    description: `Find canonical ${SITE_NAME} school IDs by name, alias, city, or state.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -38,7 +38,7 @@ export const MCP_TOOLS = [
   {
     name: "get_school_facts",
     description:
-      `Get source-labeled ${SITE_NAME_CAPS} facts for one school. Preserve source metadata when citing values.`,
+      `Get source-labeled ${SITE_NAME} facts for one school. Preserve source metadata when citing values.`,
     inputSchema: {
       type: "object",
       properties: {

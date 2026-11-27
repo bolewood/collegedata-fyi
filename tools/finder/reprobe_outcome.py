@@ -67,7 +67,7 @@ except ImportError:  # pragma: no cover - package import path
 FIXED = ("fixed_newer_year", "fixed_listing_matches")
 OUTCOMES = FIXED + ("listing_unverified", "still_one_file", "unchanged")
 
-USER_AGENT = "collegedata-pipeline/stuck-pdf-verify"
+USER_AGENT = "quadfile-pipeline/stuck-pdf-verify"
 FETCH_TIMEOUT_SEC = 15
 MAX_PAGES = 250
 MAX_PAGE_BYTES = 2_000_000

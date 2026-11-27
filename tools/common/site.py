@@ -6,9 +6,9 @@ the constants in step with web/src/lib/site.ts.
 
 from typing import Mapping, Optional
 
-SITE_NAME = "collegedata.fyi"
-SITE_ORIGIN = "https://www.collegedata.fyi"
-API_ORIGIN = "https://api.collegedata.fyi"
+SITE_NAME = "Quadfile"
+SITE_ORIGIN = "https://www.quadfile.org"
+API_ORIGIN = "https://api.quadfile.org"
 
 # Runtime default only; display (docs, examples, generated data) uses API_ORIGIN.
 # Runtime calls go to the project origin so a credentialed request never

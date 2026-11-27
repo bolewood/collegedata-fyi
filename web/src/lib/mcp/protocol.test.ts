@@ -15,7 +15,7 @@ describe("hosted MCP protocol", () => {
     if (init.kind !== "response") return;
     expect(init.body.result).toMatchObject({
       protocolVersion: "2025-03-26",
-      serverInfo: { name: "collegedata-fyi" },
+      serverInfo: { name: "quadfile" },
     });
 
     const listed = await handleMcpMessage({

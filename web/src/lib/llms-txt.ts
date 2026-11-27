@@ -1,12 +1,12 @@
 import { DATA_ATTRIBUTION, DERIVED_DATA_LICENSE_SENTENCE, SOURCE_OWNERSHIP_SENTENCE } from "./data-license";
 import { SITE_URL } from "./sitemap-static";
-import { API_HOST, SITE_NAME_CAPS } from "./site";
+import { API_HOST, SITE_NAME } from "./site";
 
 /**
  * /llms.txt body in the llmstxt.org format.
  * Endpoint list is the no-auth friendly surface from openapi.json — do not invent paths.
  */
-export const LLMS_TXT = `# ${SITE_NAME_CAPS}
+export const LLMS_TXT = `# ${SITE_NAME}
 
 > Each college’s annual Common Data Set alongside federal IPEDS and College Scorecard records, linked to the original files, free with no account.
 

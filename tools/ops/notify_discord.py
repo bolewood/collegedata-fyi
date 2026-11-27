@@ -26,7 +26,7 @@ if str(REPO_ROOT) not in sys.path:
 from tools.common.site import SITE_ORIGIN  # noqa: E402
 
 
-PROJECT_NAME = "CollegeData.fyi"
+PROJECT_NAME = "Quadfile"
 PIPELINE_BOARD_URL = SITE_ORIGIN + "/pipeline-observation"
 PIPELINE_JSON_URL = SITE_ORIGIN + "/pipeline-observation.json"
 COLOR_FAILURE = 0xD7263D
@@ -267,7 +267,7 @@ def post_webhook(url: str, payload: dict[str, Any], timeout_sec: float = 20) -> 
         method="POST",
         headers={
             "Content-Type": "application/json",
-            "User-Agent": "collegedata-fyi-ops-discord",
+            "User-Agent": "quadfile-ops-discord",
         },
     )
     try:
@@ -283,7 +283,7 @@ def post_webhook(url: str, payload: dict[str, Any], timeout_sec: float = 20) -> 
 def fetch_json(url: str, timeout_sec: float = 20) -> dict[str, Any]:
     request = urllib.request.Request(
         url,
-        headers={"User-Agent": "collegedata-fyi-ops-discord", "Accept": "application/json"},
+        headers={"User-Agent": "quadfile-ops-discord", "Accept": "application/json"},
     )
     with urllib.request.urlopen(request, timeout=timeout_sec) as response:
         return json.loads(response.read().decode("utf-8"))

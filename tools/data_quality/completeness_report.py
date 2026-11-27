@@ -129,7 +129,7 @@ def main() -> int:
     url = os.environ["SUPABASE_URL"]
     key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ["SUPABASE_ANON_KEY"]
     sb = create_client(
-        url, key, options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/completeness-report"})
+        url, key, options=ClientOptions(headers={"User-Agent": "quadfile-pipeline/completeness-report"})
     )
 
     corpus = load_corpus(policy_filter)

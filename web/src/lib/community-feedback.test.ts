@@ -92,7 +92,7 @@ describe("private feedback contract", () => {
       ...emptyFeedback("feedback", "footer"),
       message: "Helpful archive",
     });
-    expect(plain.get("_subject")).toBe("[Feedback] collegedata.fyi");
+    expect(plain.get("_subject")).toBe("[Feedback] Quadfile");
     expect(plain.get("kind")).toBe("feedback");
     expect(plain.get("from")).toBe("footer");
     expect(plain.get("message")).toBe("Helpful archive");
@@ -106,7 +106,7 @@ describe("private feedback contract", () => {
       projectUrl: "https://example.test/explorer",
       featureInterest: true,
     });
-    expect(story.get("_subject")).toBe("[Story] collegedata.fyi");
+    expect(story.get("_subject")).toBe("[Story] Quadfile");
     expect(story.get("email")).toBe("author@example.test");
     expect(story.get("project_url")).toBe("https://example.test/explorer");
     expect(story.get("feature_interest")).toBe("yes");
@@ -127,7 +127,7 @@ describe("private feedback contract", () => {
     expect(issue.get("expected")).toBe("1,100");
     expect(issue.get("source_url")).toBe("https://ir.mit.edu/cds");
     expect(feedbackSubject({ ...emptyFeedback("data_issue"), message: "x" })).toBe(
-      "[Data issue] collegedata.fyi",
+      "[Data issue] Quadfile",
     );
     expect(safeSource("gpa=4.0")).toBe("direct");
     expect(safeKind(["story"])).toBe("feedback");

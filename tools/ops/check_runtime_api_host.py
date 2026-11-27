@@ -8,7 +8,7 @@ reads SUPABASE_URL / NEXT_PUBLIC_SUPABASE_URL and defaults to PROJECT_ORIGIN
 (tools/common/site.py, web/src/lib/site.ts).
 
 This scans tracked code files and exits non-zero if one contains the literal
-`api.collegedata.fyi` (any case), or the identifiers API_ORIGIN or API_HOST
+`api.quadfile.org` or `api.collegedata.fyi` (any case), or the identifiers API_ORIGIN or API_HOST
 (everywhere except web pages and components outside web/src/lib and
 web/src/app/api, which use them for display strings), unless the file is on
 ALLOWLIST with a reason. An allowlist entry whose file no longer matches also
@@ -30,7 +30,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 ROOTS = ("tools/", "web/src/", "supabase/functions/", ".github/workflows/", "packages/", "tests/")
 CODE_SUFFIXES = {".py", ".ts", ".tsx", ".js", ".mjs", ".sh", ".yml", ".yaml"}
 TEST_FILE = re.compile(r"(^|/)(test_[^/]*|[^/]*_test\.[a-z]+|[^/]*\.test\.[a-z]+|[^/]*\.spec\.[a-z]+)$")
-LITERAL = re.compile(r"api\.collegedata\.fyi", re.I)
+LITERAL = re.compile(r"api\.(quadfile\.org|collegedata\.fyi)", re.I)
 IDENTIFIER = re.compile(r"\b(API_ORIGIN|API_HOST)\b")
 WEB_RUNTIME_DIRS = ("web/src/lib/", "web/src/app/api/")
 MAX_PRINT = 160
@@ -43,27 +43,27 @@ _BUILDER = (
     r"|SOURCE_API_URL = API_ORIGIN(\s+#.*)?"
 )
 _GENERATED = (
-    r'"sourceApiUrl": "https://api\.collegedata\.fyi",'
-    r"|// Source: .*\(https://api\.collegedata\.fyi\)\."
+    r'"sourceApiUrl": "https://api\.(quadfile\.org|collegedata\.fyi)",'
+    r"|// Source: .*\(https://api\.(quadfile\.org|collegedata\.fyi)\)\."
 )
 ALLOWLIST: dict[str, tuple[str, str]] = {
     "tools/common/site.py": (
         "defines API_ORIGIN, the display origin; runtime uses runtime_api_origin()",
-        r'API_ORIGIN = "https://api\.collegedata\.fyi"'
+        r'API_ORIGIN = "https://api\.quadfile\.org"'
         r"|# Runtime default only; display \(docs, examples, generated data\) uses API_ORIGIN\.",
     ),
     "web/src/lib/site.ts": (
         "defines API_ORIGIN and API_HOST, the display origin",
-        r'export const API_(ORIGIN|HOST) = "(https://)?api\.collegedata\.fyi";'
+        r'export const API_(ORIGIN|HOST) = "(https://)?api\.quadfile\.org";'
         r"|\* Runtime default only; display uses API_ORIGIN\. A runtime call that falls back",
     ),
     "web/src/lib/client-info.ts": (
-        "own-host check must keep accepting the old host (links to it still exist)",
-        r'const ownHost = host === "api\.collegedata\.fyi" \|\| host\.endsWith\("\.supabase\.co"\);',
+        "own-host check accepts both API hosts (stored links use either)",
+        r'const ARCHIVE_FILE_HOSTS = new Set\(\["api\.quadfile\.org", "api\.collegedata\.fyi"\]\);',
     ),
     "web/src/lib/llms-txt.ts": (
         "display: llms.txt names the API host for readers",
-        r'import \{ API_HOST, SITE_NAME_CAPS \} from "\./site";'
+        r'import \{ API_HOST, SITE_NAME \} from "\./site";'
         r"|- \[PostgREST archive docs\]\(\$\{SITE_URL\}/api\): The full read-only database API at \$\{API_HOST\} .*",
     ),
     "web/src/lib/spreadsheet.ts": (

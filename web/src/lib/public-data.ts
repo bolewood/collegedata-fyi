@@ -18,7 +18,7 @@ import {
   federalCategory,
   type PublicFactCategory,
 } from "./public-fact-category";
-import { SITE_NAME_CAPS, SITE_ORIGIN } from "./site";
+import { SITE_NAME, SITE_ORIGIN } from "./site";
 
 export type { PublicFactCategory } from "./public-fact-category";
 
@@ -114,7 +114,7 @@ export const FRIENDLY_FACT_FIELDS: FactDefinitionInput[] = [
     source_layer: "directory",
     unit: null,
     value_type: "string",
-    definition: `${SITE_NAME_CAPS} public coverage status for the school's Common Data Set availability.`,
+    definition: `${SITE_NAME} public coverage status for the school's Common Data Set availability.`,
     path: "coverage.coverage_status",
   },
   {
@@ -551,7 +551,7 @@ function sourceForDefinition(
   if (definition.source_layer === "directory") {
     return {
       layer: "directory",
-      name: `${SITE_NAME_CAPS} institution directory`,
+      name: `${SITE_NAME} institution directory`,
       url: `${SITE_URL}/schools/${context.schoolId}`,
     };
   }

@@ -336,7 +336,7 @@ def main() -> int:
     if args.mode in {"requeue", "rollback"} and not is_service_role_key(key):
         raise SystemExit("mutating modes require a Supabase service_role key")
     client = create_client(
-        url, key, options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/prd014-m5-drain"})
+        url, key, options=ClientOptions(headers={"User-Agent": "quadfile-pipeline/prd014-m5-drain"})
     )
 
     if args.mode in {"plan", "requeue"}:

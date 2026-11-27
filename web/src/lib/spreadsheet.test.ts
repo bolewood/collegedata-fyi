@@ -311,7 +311,7 @@ describe("buildCdsWorkbook", () => {
     );
     expect(readme).not.toContain("LLM fallback");
     expect(readme).toContain("Data &amp; attribution");
-    expect(readme).toContain("api.collegedata.fyi");
+    expect(readme).toContain("api.quadfile.org");
 
     const withFallback = readZipEntry(
       buildCdsWorkbook(

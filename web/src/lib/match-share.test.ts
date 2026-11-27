@@ -12,17 +12,17 @@ const EMPTY: MatchFitCounts = {
 describe("formatMatchSummary", () => {
   it("empty result set", () => {
     expect(formatMatchSummary(EMPTY)).toMatchInlineSnapshot(`
-      "CollegeData.fyi Match
+      "Quadfile Match
       No schools ranked yet
 
-      https://www.collegedata.fyi/match"
+      https://www.quadfile.org/match"
     `);
   });
   it("small result set", () => {
     expect(
       formatMatchSummary({ ...EMPTY, strong_academic_fit: 1, in_range: 2 }),
     ).toMatchInlineSnapshot(`
-      "CollegeData.fyi Match
+      "Quadfile Match
       3 schools ranked
       Counts use the default filters.
 
@@ -32,7 +32,7 @@ describe("formatMatchSummary", () => {
       Below range              0
       Unknown                  0
 
-      https://www.collegedata.fyi/match"
+      https://www.quadfile.org/match"
     `);
   });
   it("large result set", () => {
@@ -45,7 +45,7 @@ describe("formatMatchSummary", () => {
         unknown: 5,
       }),
     ).toMatchInlineSnapshot(`
-      "CollegeData.fyi Match
+      "Quadfile Match
       42 schools ranked
       Counts use the default filters.
 
@@ -55,7 +55,7 @@ describe("formatMatchSummary", () => {
       Below range  ██████       9
       Unknown      ███          5
 
-      https://www.collegedata.fyi/match"
+      https://www.quadfile.org/match"
     `);
   });
   it("singular school", () => {

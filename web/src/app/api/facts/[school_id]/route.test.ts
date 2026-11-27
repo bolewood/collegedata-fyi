@@ -58,7 +58,7 @@ function setup(f: Fixture, row: Row | null = f.row) {
 
 async function get(id: string) {
   mocks.fetchCanonicalSchoolId.mockResolvedValue(id);
-  const res = await GET(new Request(`https://www.collegedata.fyi/api/facts/${id}`), {
+  const res = await GET(new Request(`https://www.quadfile.org/api/facts/${id}`), {
     params: Promise.resolve({ school_id: id }),
   });
   return { res, body: await res.json() };
@@ -148,7 +148,7 @@ describe("GET /api/facts/{school_id} (legacy)", () => {
     const { body } = await get("amherst");
     expect(body.cds_year).toBe("2024-25");
     expect(body.applied).toBe(AMHERST_2024.row.applied);
-    expect(body.archive_url).toBe("https://www.collegedata.fyi/schools/amherst/2024-25");
+    expect(body.archive_url).toBe("https://www.quadfile.org/schools/amherst/2024-25");
   });
 
   it("falls back to the first extracted document when none is a dated whole-institution filing", async () => {

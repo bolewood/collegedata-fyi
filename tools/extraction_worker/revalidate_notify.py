@@ -72,7 +72,7 @@ def notify_school_revalidation(
             headers={
                 "Authorization": f"Bearer {secret}",
                 "Content-Type": "application/json",
-                "User-Agent": "collegedata-extraction-worker",
+                "User-Agent": "quadfile-extraction-worker",
             },
         )
         try:
@@ -125,7 +125,7 @@ def notify_all_revalidation(
         headers={
             "Authorization": f"Bearer {secret}",
             "Content-Type": "application/json",
-            "User-Agent": "collegedata-extraction-worker",
+            "User-Agent": "quadfile-extraction-worker",
         },
     )
     try:

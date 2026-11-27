@@ -79,7 +79,7 @@ def fetch_head(base_url: str, row: Mapping[str, Any]) -> dict[str, Any]:
             url,
             headers={
                 "Range": f"bytes=0-{requested_end}",
-                "User-Agent": "collegedata-pipeline/probe-source-corpus",
+                "User-Agent": "quadfile-pipeline/probe-source-corpus",
             },
         )
         try:

@@ -46,7 +46,7 @@ import { schemaFallbackNoteFromArtifact } from "@/lib/schema-fallback";
 import { SchoolGlyph } from "@/components/SchoolGlyph";
 import { ShareButton } from "@/components/ShareButton";
 import { externalLinkRel } from "@/lib/client-info";
-import { SITE_NAME, SITE_NAME_CAMEL, SITE_ORIGIN } from "@/lib/site";
+import { SITE_NAME, SITE_ORIGIN } from "@/lib/site";
 
 export const dynamic = "force-static";
 export const revalidate = 604800;
@@ -260,7 +260,7 @@ export default async function SchoolYearPage({ params }: {
           <ShareButton
             surface="school_year"
             title={`${schoolName} Common Data Set ${year}`}
-            text={`Source-linked admissions, enrollment, aid, and CDS documents from ${SITE_NAME_CAMEL}.`}
+            text={`Source-linked admissions, enrollment, aid, and CDS documents from ${SITE_NAME}.`}
             path={`/schools/${school_id}/${year}`}
           />
         </div>

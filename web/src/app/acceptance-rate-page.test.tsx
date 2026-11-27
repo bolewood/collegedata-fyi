@@ -202,7 +202,7 @@ describe("pilot gating", () => {
   it("lists served pilot pages in the sitemap", () => {
     expect(acceptanceSitemapEntries(["duke", "cornell"])).toEqual([
       {
-        url: "https://www.collegedata.fyi/schools/duke/acceptance-rate",
+        url: "https://www.quadfile.org/schools/duke/acceptance-rate",
         changeFrequency: "monthly",
         priority: 0.6,
       },
@@ -211,7 +211,7 @@ describe("pilot gating", () => {
       acceptanceSitemapEntries(["virginia-polytechnic-institute-and-state-university"]),
     ).toEqual([
       {
-        url: "https://www.collegedata.fyi/schools/virginia-tech/acceptance-rate",
+        url: "https://www.quadfile.org/schools/virginia-tech/acceptance-rate",
         changeFrequency: "monthly",
         priority: 0.6,
       },
@@ -222,7 +222,7 @@ describe("pilot gating", () => {
     const entries = await acceptanceRateSitemap();
     expect(entries).toHaveLength(ACCEPTANCE_PILOT_SCHOOLS.length);
     expect(entries.map((entry) => entry.url)).toContain(
-      "https://www.collegedata.fyi/schools/virginia-tech/acceptance-rate",
+      "https://www.quadfile.org/schools/virginia-tech/acceptance-rate",
     );
   });
 
@@ -257,10 +257,10 @@ describe("submitted URLs never silently 404", () => {
 
   it("the proxy answers 410 only for retired URLs", () => {
     const event = { waitUntil: vi.fn() } as never;
-    const res = proxy(new NextRequest("https://www.collegedata.fyi/schools/duke/acceptance-rate"), event);
+    const res = proxy(new NextRequest("https://www.quadfile.org/schools/duke/acceptance-rate"), event);
     expect(res.status).toBe(200);
     for (const path of ACCEPTANCE_RATE_GONE_PATHS) {
-      expect(proxy(new NextRequest(`https://www.collegedata.fyi${path}`), event).status).toBe(410);
+      expect(proxy(new NextRequest(`https://www.quadfile.org${path}`), event).status).toBe(410);
     }
   });
 });

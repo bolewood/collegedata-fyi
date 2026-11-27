@@ -60,3 +60,18 @@ describe("public snapshot builder env names", () => {
     assert.equal(manifest.api_base, origin);
   });
 });
+
+// With no env set, the default origin is the new site. The preload replaces
+// fetch, prints the first URL and exits (no spaces: NODE_OPTIONS splits on them), so nothing reaches the network.
+const FIRST_FETCH_PRELOAD =
+  "--import=data:text/javascript,globalThis.fetch=async(u)=>{console.error('FETCH:'+u);process.exit(0)}";
+
+describe("public snapshot builder default origin", () => {
+  it("fetches from https://www.quadfile.org when no API base is set", async () => {
+    const base = { ...process.env, PATH: dirname(process.execPath), NODE_OPTIONS: FIRST_FETCH_PRELOAD };
+    delete base.QUADFILE_API_BASE;
+    delete base.COLLEGEDATA_API_BASE;
+    const { stderr } = await run(process.execPath, [script], { env: base });
+    assert.match(stderr, /^FETCH:https:\/\/www\.quadfile\.org\//m);
+  });
+});

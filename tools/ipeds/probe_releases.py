@@ -75,7 +75,7 @@ def fetch_loaded_releases() -> list[dict[str, Any]]:
     client = create_client(
         supabase_url,
         key,
-        options=ClientOptions(headers={"User-Agent": "collegedata-pipeline/ipeds-release-probe"}),
+        options=ClientOptions(headers={"User-Agent": "quadfile-pipeline/ipeds-release-probe"}),
     )
     response = (
         client.table("ipeds_releases")
@@ -88,7 +88,7 @@ def fetch_loaded_releases() -> list[dict[str, Any]]:
 def fetch_remote_releases() -> list[dict[str, Any]]:
     request = urllib.request.Request(
         NCES_IPEDS_ACCESS_PAGE,
-        headers={"User-Agent": "collegedata-fyi-ipeds-release-probe/1.0"},
+        headers={"User-Agent": "quadfile-ipeds-release-probe/1.0"},
     )
     with urllib.request.urlopen(request, timeout=30) as response:
         html = response.read().decode("utf-8", errors="replace")

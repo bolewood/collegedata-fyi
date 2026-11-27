@@ -141,7 +141,7 @@ test("browser posts FormData directly to Formspree and shows thank-you confirmat
     page.getByRole("heading", { name: "Thanks. Your message reached us." }),
   ).toBeVisible();
   expect(acceptHeader).toBe("application/json");
-  expect(submittedBody).toContain("[Feedback] collegedata.fyi");
+  expect(submittedBody).toContain("[Feedback] Quadfile");
   expect(submittedBody).toContain(message);
   expect(await page.evaluate(() => ({ ...localStorage }))).toEqual({});
 });

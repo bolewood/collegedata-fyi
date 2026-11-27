@@ -319,7 +319,7 @@ class WorklistTests(unittest.TestCase):
         worklist = dr.missing_worklist(result, schools)
         self.assertEqual([w["seed_kind"] for w in worklist], ["one_file", "listing_page", "no_seed"])
         text = dr.render_report(result, worklist, run_url="https://run")
-        self.assertIn("[One File U](https://www.collegedata.fyi/schools/s497)", text)
+        self.assertIn("[One File U](https://www.quadfile.org/schools/s497)", text)
         self.assertLess(text.index("One File U"), text.index("Listing U"))
         self.assertIn("497 of 500 schools (99.4%)", text)
         self.assertIn("https://run", text)
@@ -392,7 +392,7 @@ class FetchTests(unittest.TestCase):
 class IdentityTests(unittest.TestCase):
     def test_api_requests_identify_as_the_pipeline(self) -> None:
         # PRD 033: pipeline traffic to the public API sends this User-Agent.
-        self.assertIn("collegedata-pipeline/", dr._headers("k")["User-Agent"])
+        self.assertIn("quadfile-pipeline/", dr._headers("k")["User-Agent"])
 
 
 class BacktestTests(unittest.TestCase):
@@ -624,7 +624,7 @@ class FlaggedAndSubInstitutionTests(unittest.TestCase):
         result = dr.compute(rows, date(2026, 11, 24))
         text = dr.render_report(result, [], schools={"s0": {"id": "s0", "name": "Zero U"}})
         self.assertIn("1 current-year documents not counted (flagged)", text)
-        self.assertIn("[Zero U](https://www.collegedata.fyi/schools/s0) (blank_template)", text)
+        self.assertIn("[Zero U](https://www.quadfile.org/schools/s0) (blank_template)", text)
 
     def test_sub_institution_rows_do_not_mask_a_missing_main_campus_file(self) -> None:
         rows = self.base()
