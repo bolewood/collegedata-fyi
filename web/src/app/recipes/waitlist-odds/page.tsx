@@ -1,3 +1,4 @@
+import { REPO_URL } from "@/lib/repo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { WaitlistOddsExplorer } from "@/components/WaitlistOddsExplorer";
@@ -170,7 +171,7 @@ export default function WaitlistOddsPage() {
         <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontSize: 13, marginTop: 14 }}>
           <TrackedLink
             external
-            href="https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/waitlist-odds.md"
+            href={`${REPO_URL}/blob/main/docs/recipes/waitlist-odds.md`}
             target="_blank"
             rel="noopener noreferrer"
             analyticsEvent="recipe_writeup_opened"

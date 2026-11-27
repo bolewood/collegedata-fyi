@@ -22,7 +22,7 @@ ATTRIBUTION = (
 )
 LICENSE_ID = "CC-BY-SA-4.0"
 LICENSE_URL = "https://creativecommons.org/licenses/by-sa/4.0/"
-SOURCE_REPOSITORY = "https://github.com/bolewood/collegedata-fyi"
+SOURCE_REPOSITORY = "https://github.com/bolewood/quadfile"
 # Bump when the download shape changes or a release is cut. Names the files:
 # scholarships-v<N>.json and scholarships-v<N>.csv.zip.
 DATASET_VERSION = 1

@@ -1,3 +1,4 @@
+import { REPO_URL } from "@/lib/repo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TrackedLink } from "@/components/TrackedLink";
@@ -31,7 +32,7 @@ const RECIPES: Recipe[] = [
       "IR and enrollment managers comparing peer yield and federal-loan burden; analysts joining IPEDS ADM counts to College Scorecard.",
     demoPath: "/recipes/acceptance-vs-yield",
     writeupUrl:
-      "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/acceptance-vs-yield.md",
+      `${REPO_URL}/blob/main/docs/recipes/acceptance-vs-yield.md`,
     sourceLabel: "IPEDS · College Scorecard · CDS C1 cross-check",
     extras: [
       {
@@ -49,7 +50,7 @@ const RECIPES: Recipe[] = [
       "IR and policy analysts reading effective policy from C9 submission rates; C8 is the written version.",
     demoPath: "/recipes/test-optional-tracker",
     writeupUrl:
-      "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/test-optional-tracker.md",
+      `${REPO_URL}/blob/main/docs/recipes/test-optional-tracker.md`,
     sourceLabel: "CDS C8 · C9",
   },
   {
@@ -61,7 +62,7 @@ const RECIPES: Recipe[] = [
       "Enrollment managers and IR. C2 offer / accept / admit, bucketed.",
     demoPath: "/recipes/waitlist-odds",
     writeupUrl:
-      "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/waitlist-odds.md",
+      `${REPO_URL}/blob/main/docs/recipes/waitlist-odds.md`,
     sourceLabel: "CDS C2 · C1 · Scorecard",
   },
   {
@@ -73,7 +74,7 @@ const RECIPES: Recipe[] = [
       "IR, college-finance reporters, trustees. IPEDS F2 Part H estimate.",
     demoPath: "/recipes/endowment-draw-rate",
     writeupUrl:
-      "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/endowment-draw-rate.md",
+      `${REPO_URL}/blob/main/docs/recipes/endowment-draw-rate.md`,
     sourceLabel: "IPEDS F2 · PART H",
   },
   {
@@ -85,7 +86,7 @@ const RECIPES: Recipe[] = [
       "IR, college-finance reporters, and analysts joining CDS H2A merit aid to Scorecard earnings and debt, and IPEDS endowment.",
     demoPath: "/recipes/alignment-gap",
     writeupUrl:
-      "https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/alignment-gap.md",
+      `${REPO_URL}/blob/main/docs/recipes/alignment-gap.md`,
     sourceLabel: "CDS H2A · Scorecard · IPEDS",
   },
 ];
@@ -244,7 +245,7 @@ export default function RecipesPage() {
         <p style={{ marginTop: 14, fontSize: 12, color: "var(--ink-3)" }}>
           Want to build one of these?{" "}
           <a
-            href="https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/README.md"
+            href={`${REPO_URL}/blob/main/docs/recipes/README.md`}
             target="_blank"
             rel="noopener noreferrer"
           >

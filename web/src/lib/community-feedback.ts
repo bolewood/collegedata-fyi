@@ -1,3 +1,4 @@
+import { REPO_URL } from "./repo";
 import { SITE_NAME } from "./site";
 /** Public, bounded contract. Never add free text to community analytics. */
 export const feedbackKinds = ["feedback", "story", "data_issue"] as const;
@@ -15,7 +16,7 @@ export const feedbackSources = [
 ] as const;
 export type FeedbackKind = (typeof feedbackKinds)[number];
 export type FeedbackSource = (typeof feedbackSources)[number];
-export const GITHUB_REPOSITORY = "https://github.com/bolewood/collegedata-fyi";
+export const GITHUB_REPOSITORY = REPO_URL;
 export const FEEDBACK_EMAIL = "mailto:contact@bolewood.com";
 export type FeedbackPayload = {
   kind: FeedbackKind;

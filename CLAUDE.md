@@ -77,13 +77,13 @@ fresh `supabase db reset` for everyone else — don't do this.
 a migration PR is merged, the agent's standard sequence is:
 
 ```
-cd /Users/santhonys/Projects/Owen/colleges/collegedata-fyi
+cd /Users/santhonys/Projects/quadfile
 git switch main && git pull --ff-only
 supabase db push --linked
 ```
 
 (`supabase` CLI is at `/opt/homebrew/bin/supabase`; the project is
-already linked. Credentials live in `~/Projects/Owen/colleges/collegedata-fyi/.env`
+already linked. Credentials live in `~/Projects/quadfile/.env`
 as `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`.)
 
 The user shouldn't need to drive `supabase db push` manually — that's

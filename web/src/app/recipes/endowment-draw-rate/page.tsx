@@ -1,3 +1,4 @@
+import { REPO_URL } from "@/lib/repo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EndowmentDrawRateExplorer } from "@/components/EndowmentDrawRateExplorer";
@@ -126,7 +127,7 @@ export default function EndowmentDrawRatePage() {
         <div className="endowment-recipe-links">
           <TrackedLink
             external
-            href="https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/endowment-draw-rate.md"
+            href={`${REPO_URL}/blob/main/docs/recipes/endowment-draw-rate.md`}
             target="_blank"
             rel="noopener noreferrer"
             analyticsEvent="recipe_writeup_opened"

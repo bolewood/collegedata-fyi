@@ -1,3 +1,5 @@
+import { REPO_URL } from "./repo";
+
 /**
  * The one place web code states what our licenses cover. Every public surface
  * (site copy, llms.txt, API envelopes, OpenAPI, MCP, snapshots, spreadsheets)
@@ -16,7 +18,7 @@ export const CODE_LICENSE_URL = "https://opensource.org/licenses/MIT";
 export const DATA_LICENSE = "CC-BY-4.0";
 export const DATA_LICENSE_NAME = "CC BY 4.0";
 export const DATA_LICENSE_URL = "https://creativecommons.org/licenses/by/4.0/";
-export const DATA_LICENSE_DOC_URL = "https://github.com/bolewood/collegedata-fyi/blob/main/DATA_LICENSE.md";
+export const DATA_LICENSE_DOC_URL = `${REPO_URL}/blob/main/DATA_LICENSE.md`;
 /** Releases before this date were published under MIT and stay reusable under MIT. */
 export const DATA_LICENSE_EFFECTIVE_DATE = "2026-11-23";
 

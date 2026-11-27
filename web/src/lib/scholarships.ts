@@ -1,3 +1,5 @@
+import { REPO_URL } from "./repo";
+
 /**
  * PRD 036 M3: types and pure text builders for the scholarship pages.
  * Copy lives in docs/copy/036-scholarships.md; keep the two in step.
@@ -14,7 +16,7 @@ export const SCHOLARSHIP_ATTRIBUTION =
 export const SCHOLARSHIP_LICENSE = "CC-BY-SA-4.0";
 export const SCHOLARSHIP_LICENSE_LINE = "Data CC BY-SA 4.0 · Quadfile · how to cite";
 export const SCHOLARSHIP_CORRECTION_URL =
-  "https://github.com/bolewood/collegedata-fyi/issues/new?template=scholarship-correction.yml";
+  `${REPO_URL}/issues/new?template=scholarship-correction.yml`;
 
 // ------------------------------------------------------------------ types
 

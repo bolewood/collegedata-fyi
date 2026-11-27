@@ -4,7 +4,7 @@ title: "Quadfile: Common Data Set archive and named scholarship directory"
 type: software
 authors:
   - name: "Anthony S. and Bolewood Group, LLC"
-repository-code: "https://github.com/bolewood/collegedata-fyi"
+repository-code: "https://github.com/bolewood/quadfile"
 url: "https://www.quadfile.org"
 license: MIT
 abstract: "Open-source archive of U.S. college Common Data Set documents, with a CC BY-SA 4.0 directory of named merit scholarship programs. Code is MIT. The scholarship data under data/scholarships is CC BY-SA 4.0. Attribution string for the scholarship data: Scholarship program data from Quadfile (https://www.quadfile.org/scholarships), CC BY-SA 4.0. Terms as published by each school; see the source link on each record."
@@ -20,6 +20,6 @@ references:
     authors:
       - name: "Anthony S. and Bolewood Group, LLC"
     url: "https://www.quadfile.org/scholarships"
-    repository-code: "https://github.com/bolewood/collegedata-fyi"
+    repository-code: "https://github.com/bolewood/quadfile"
     license: CC-BY-SA-4.0
     notes: "Terms as published by each school; see the source link on each record."

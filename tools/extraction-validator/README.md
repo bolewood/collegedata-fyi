@@ -23,7 +23,7 @@ Read-only. For each live, extracted document of 2023-24, 2024-25 and 2025-26 it 
 - Years the projection covers (2024-25 on) are read from `cds_fields` and `school_browser_rows`.
 - Earlier years are read from `cds_artifacts`, picking the artifact with the projection's own ordering (`sort_base_candidates`). These reads fetch only the keys needed, run one at a time a few seconds apart, wait when the database host is short of memory, and are cached by artifact id in `scratch/extraction-scoreboard/cache/`, so a later run reads only what changed. Run one copy at a time.
 
-Output: `scratch/extraction-scoreboard/scoreboard-<UTC>.json` (one record per document, for drill-down and deltas) and `.md`. Post the Markdown as a comment on [issue #431](https://github.com/bolewood/collegedata-fyi/issues/431) after every re-extraction batch or cleaner merge. `--from-json` re-renders a saved run; `--limit N` is a smoke test.
+Output: `scratch/extraction-scoreboard/scoreboard-<UTC>.json` (one record per document, for drill-down and deltas) and `.md`. Post the Markdown as a comment on [issue #431](https://github.com/bolewood/quadfile/issues/431) after every re-extraction batch or cleaner merge. `--from-json` re-renders a saved run; `--limit N` is a smoke test.
 
 Federal figures come from `ipeds_facts` (the unified view keeps only each school's latest year). 2023-24 is not projected, so its figures are computed here the way the projection computes 2024-25; a school's year page shows the newest extraction, which section 4 compares with the projection's pick.
 

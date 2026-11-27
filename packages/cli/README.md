@@ -5,8 +5,8 @@ Thin command-line wrapper for the public Quadfile friendly API (`/api/schools/se
 **Install:** the package (`@quadfile/cli`, version 0.1.0) is not published to npm. Run it from a clone of this repository:
 
 ```bash
-git clone https://github.com/bolewood/collegedata-fyi.git
-cd collegedata-fyi
+git clone https://github.com/bolewood/quadfile.git
+cd quadfile
 node packages/cli/bin/collegedata.js search mit
 ```
 
@@ -35,6 +35,6 @@ Set `QUADFILE_API_BASE` (default `https://www.quadfile.org`) to point at a previ
 
 Tell us what you're building, researching, or using in your work.
 A link and a sentence are plenty: https://www.quadfile.org/feedback.
-You can also [open an issue](https://github.com/bolewood/collegedata-fyi/issues)
-or [star this repository](https://github.com/bolewood/collegedata-fyi).
+You can also [open an issue](https://github.com/bolewood/quadfile/issues)
+or [star this repository](https://github.com/bolewood/quadfile).
 No account or response is required to use the data.
