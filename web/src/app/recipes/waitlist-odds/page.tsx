@@ -4,6 +4,7 @@ import Link from "next/link";
 import { WaitlistOddsExplorer } from "@/components/WaitlistOddsExplorer";
 import { TrackedLink } from "@/components/TrackedLink";
 import { WAITLIST_ANALYSIS_SUMMARY } from "@/lib/waitlist-recipe-analysis";
+import { API_ORIGIN } from "@/lib/site";
 
 const WSJ_URL =
   "https://www.wsj.com/us-news/education/college-waitlists-national-decision-day-4cb7b5d8";
@@ -165,7 +166,7 @@ export default function WaitlistOddsPage() {
             padding: "20px 24px",
           }}
         >
-{`curl 'https://api.collegedata.fyi/rest/v1/school_browser_rows?select=school_id,school_name,canonical_year,acceptance_rate,wait_list_policy,wait_list_offered,wait_list_accepted,wait_list_admitted&wait_list_offered=not.is.null'`}
+{`curl '${API_ORIGIN}/rest/v1/school_browser_rows?select=school_id,school_name,canonical_year,acceptance_rate,wait_list_policy,wait_list_offered,wait_list_accepted,wait_list_admitted&wait_list_offered=not.is.null'`}
         </pre>
         <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontSize: 13, marginTop: 14 }}>
           <TrackedLink

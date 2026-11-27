@@ -5,6 +5,7 @@ import {
   SourceStoryLayout,
   StoryTable,
 } from "@/components/about/SourceStoryLayout";
+import { SITE_NAME, SITE_ORIGIN } from "@/lib/site";
 
 const CANONICAL = "/about/common-data-set";
 const TITLE = "What is the Common Data Set";
@@ -27,13 +28,13 @@ const jsonLd = {
   datePublished: "2026-08-26",
   dateModified: REVIEWED,
   author: { "@type": "Organization", name: "Bolewood Group", url: "https://bolewood.com" },
-  publisher: { "@type": "Organization", name: "collegedata.fyi", url: "https://www.collegedata.fyi" },
+  publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_ORIGIN },
   about: {
     "@type": "Organization",
     name: "Common Data Set Initiative",
     url: "https://commondataset.org/",
   },
-  mainEntityOfPage: `https://www.collegedata.fyi${CANONICAL}`,
+  mainEntityOfPage: `${SITE_ORIGIN}${CANONICAL}`,
 };
 
 export default function CommonDataSetPage() {

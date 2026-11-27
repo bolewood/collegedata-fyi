@@ -7,6 +7,7 @@ import {
   ENDOWMENT_DRAW_RATE_META,
   ENDOWMENT_DRAW_RATE_YEAR_SUMMARIES,
 } from "@/lib/endowment-draw-rate-recipe-data";
+import { API_ORIGIN } from "@/lib/site";
 
 const latest = ENDOWMENT_DRAW_RATE_YEAR_SUMMARIES.at(-1)!;
 const fiscalYearCount = ENDOWMENT_DRAW_RATE_META.maxYear - ENDOWMENT_DRAW_RATE_META.minYear + 1;
@@ -114,7 +115,7 @@ export default function EndowmentDrawRatePage() {
       <section className="endowment-query-section">
         <div className="meta">§ Pull the fields yourself</div>
         <pre tabIndex={0}>
-{`curl 'https://api.collegedata.fyi/rest/v1/ipeds_facts?ipeds_id=eq.152080&field_key=in.(endowment_value_begin,endowment_value_end,endowment_new_gifts,endowment_investment_return,endowment_spending_distribution,endowment_other_change)&data_year=gte.${ENDOWMENT_DRAW_RATE_META.minYear}&data_year=lte.${ENDOWMENT_DRAW_RATE_META.maxYear}&select=ipeds_id,data_year,field_key,value_numeric,quality_flag,source_table,source_variable,release_type&order=data_year.asc,field_key.asc' \\
+{`curl '${API_ORIGIN}/rest/v1/ipeds_facts?ipeds_id=eq.152080&field_key=in.(endowment_value_begin,endowment_value_end,endowment_new_gifts,endowment_investment_return,endowment_spending_distribution,endowment_other_change)&data_year=gte.${ENDOWMENT_DRAW_RATE_META.minYear}&data_year=lte.${ENDOWMENT_DRAW_RATE_META.maxYear}&select=ipeds_id,data_year,field_key,value_numeric,quality_flag,source_table,source_variable,release_type&order=data_year.asc,field_key.asc' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'`}
         </pre>

@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { dirname, join } from "node:path";
+import { createServer } from "node:http";
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
@@ -8,10 +9,13 @@ import { fileURLToPath } from "node:url";
 const root = dirname(fileURLToPath(import.meta.url));
 const script = join(root, "bin", "collegedata-mcp.js");
 
-function startServer() {
+function startServer(env = { COLLEGEDATA_API_BASE: "https://www.collegedata.fyi" }) {
+  const base = { ...process.env };
+  delete base.QUADFILE_API_BASE;
+  delete base.COLLEGEDATA_API_BASE;
   const proc = spawn("node", [script], {
     stdio: ["pipe", "pipe", "pipe"],
-    env: { ...process.env, COLLEGEDATA_API_BASE: "https://www.collegedata.fyi" },
+    env: { ...base, ...env },
   });
   proc.stdout.setEncoding("utf8");
   proc.stderr.setEncoding("utf8");
@@ -92,5 +96,58 @@ describe("collegedata MCP stdio", () => {
     } finally {
       await server.close();
     }
+  });
+});
+
+// Rename prep: QUADFILE_API_BASE wins, COLLEGEDATA_API_BASE still works, and
+// every request carries both the new and the old client headers.
+async function requestsSeen(env) {
+  const seen = [];
+  const http = createServer((req, res) => {
+    seen.push({ url: req.url, headers: req.headers });
+    res.setHeader("content-type", "application/json");
+    res.end(JSON.stringify({ results: [] }));
+  });
+  http.listen(0, "127.0.0.1");
+  await once(http, "listening");
+  const origin = `http://127.0.0.1:${http.address().port}`;
+  const server = startServer(env(origin));
+  try {
+    server.send({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "tools/call",
+      params: { name: "search_schools", arguments: { query: "mit" } },
+    });
+    await server.readJson(5000);
+  } finally {
+    await server.close();
+    http.close();
+  }
+  return seen;
+}
+
+describe("collegedata MCP identity", () => {
+  it("QUADFILE_API_BASE wins over COLLEGEDATA_API_BASE", async () => {
+    const seen = await requestsSeen((origin) => ({
+      QUADFILE_API_BASE: origin,
+      COLLEGEDATA_API_BASE: "http://127.0.0.1:1",
+    }));
+    assert.equal(seen.length, 1);
+  });
+
+  it("COLLEGEDATA_API_BASE still works alone", async () => {
+    const seen = await requestsSeen((origin) => ({ COLLEGEDATA_API_BASE: origin }));
+    assert.equal(seen.length, 1);
+  });
+
+  it("sends the new and the old client headers with the same values", async () => {
+    const [{ headers }] = await requestsSeen((origin) => ({ QUADFILE_API_BASE: origin }));
+    assert.equal(headers["x-quadfile-client"], "mcp");
+    assert.equal(headers["x-collegedata-client"], "mcp");
+    assert.equal(headers["x-quadfile-client-version"], "0.2.0");
+    assert.equal(headers["x-collegedata-client-version"], "0.2.0");
+    assert.equal(headers["x-quadfile-mcp-tool"], "search_schools");
+    assert.equal(headers["x-collegedata-mcp-tool"], "search_schools");
   });
 });

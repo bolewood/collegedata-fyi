@@ -48,6 +48,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from tools.finder.academic_year import normalize_academic_year  # noqa: E402
+from tools.common.site import runtime_api_origin  # noqa: E402
 from tools.finder.stuck_pdf_seeds import is_section_seed  # noqa: E402
 
 from tools.ops.discovery_renewal import (  # noqa: E402
@@ -59,7 +60,6 @@ from tools.ops.discovery_renewal import (  # noqa: E402
     parse_year,
 )
 
-DEFAULT_API = "https://api.collegedata.fyi"
 DOCUMENT_COLUMNS = (
     "id,school_id,sub_institutional,cds_year,detected_year,source_url,source_sha256,"
     "source_format,discovered_at"
@@ -343,7 +343,7 @@ def run(api_url: str, anon_key: str, *, get: Callable[..., Any] = http_json) -> 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("--api-url", default=os.environ.get("CDS_API_URL", DEFAULT_API))
+    parser.add_argument("--api-url", default=os.environ.get("CDS_API_URL") or runtime_api_origin())
     parser.add_argument("--anon-key", default=os.environ.get("SUPABASE_ANON_KEY", ""))
     parser.add_argument("--from-json", type=Path, help="Classify a saved list of document rows instead of reading the API.")
     parser.add_argument("--json-out", type=Path)

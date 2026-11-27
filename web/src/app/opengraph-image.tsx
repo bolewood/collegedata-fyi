@@ -1,7 +1,8 @@
 import { ImageResponse } from "next/og";
 import { fetchManifest, computeStats } from "@/lib/queries";
+import { SITE_NAME } from "@/lib/site";
 
-export const alt = "collegedata.fyi - Open-source college data";
+export const alt = `${SITE_NAME} - Open-source college data`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const revalidate = 3600;
@@ -34,7 +35,7 @@ export default async function Image() {
             marginBottom: 12,
           }}
         >
-          collegedata.fyi
+          {SITE_NAME}
         </div>
 
         {/* Tagline */}

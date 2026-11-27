@@ -46,6 +46,21 @@ class NotifyTests(unittest.TestCase):
             self.assertFalse(out["enabled"])
         self.assertEqual(rec.calls, [])
 
+    def test_new_url_variable_wins_and_old_one_still_works(self):
+        secret = {rn.SECRET_ENV: "s3cret"}
+        cases = (
+            ({rn.URL_ENV: "https://new.test/r"}, "https://new.test/r"),
+            ({rn.LEGACY_URL_ENV: "https://old.test/r"}, "https://old.test/r"),
+            ({rn.URL_ENV: "https://new.test/r", rn.LEGACY_URL_ENV: "https://old.test/r"}, "https://new.test/r"),
+            ({rn.URL_ENV: "  ", rn.LEGACY_URL_ENV: "https://old.test/r"}, "https://old.test/r"),
+        )
+        for env, expected in cases:
+            with self.subTest(env=env):
+                rec = Recorder()
+                out = rn.notify_school_revalidation(["a"], {**env, **secret}, opener=rec)
+                self.assertTrue(out["enabled"])
+                self.assertEqual(rec.calls[0][0].full_url, expected)
+
     def test_posts_deduped_sorted_ids_with_auth(self):
         rec = Recorder()
         out = rn.notify_school_revalidation(["b", "a", "b", None, " "], ENV, opener=rec)

@@ -25,6 +25,7 @@ import { matchSharePath } from "@/lib/share";
 import { countsFromGroups, formatMatchSummary } from "@/lib/match-share";
 import { ShareButton } from "./ShareButton";
 import { SchoolListItem } from "./SchoolListItem";
+import { SITE_NAME_CAMEL } from "@/lib/site";
 
 const SHARE_NOTICE = "Anyone with this link can open this Match profile.";
 const STORAGE_KEY = "cdfyi.matchProfile.v1";
@@ -307,7 +308,7 @@ export function MatchListBuilder({
           </button>
           <ShareButton
             surface="match"
-            title="CollegeData.fyi match list"
+            title={`${SITE_NAME_CAMEL} match list`}
             path={shareCode ? matchSharePath(shareCode) : undefined}
             onLinkShared={() => trackEvent("match_share_copied", { ranked_count: ranked.length })}
             align="start"

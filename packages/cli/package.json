@@ -1,9 +1,10 @@
 {
-  "name": "@collegedata-fyi/cli",
+  "name": "@quadfile/cli",
   "version": "0.1.0",
   "type": "module",
   "bin": {
-    "collegedata": "./bin/collegedata.js"
+    "collegedata": "./bin/collegedata.js",
+    "quadfile": "./bin/collegedata.js"
   },
   "license": "MIT",
   "engines": {

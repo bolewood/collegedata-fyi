@@ -14,6 +14,7 @@ import {
   type StationLampInput,
   type StripLamp,
 } from "./pipeline-lamps";
+import { SITE_ORIGIN } from "./site";
 
 export type PipelineFactRow = {
   station_id: string;
@@ -886,7 +887,7 @@ export function snapshotFromFacts(
         last_finished_at: station.last_finished_at,
         ago_label: formatAgo(station.last_finished_at, now),
       })),
-    methodology_url: "https://www.collegedata.fyi/pipeline-observation#methodology",
+    methodology_url: `${SITE_ORIGIN}/pipeline-observation#methodology`,
   };
 }
 

@@ -14,6 +14,7 @@ import {
   SOURCE_OWNERSHIP_SENTENCE,
 } from "@/lib/data-license";
 import { isUsageLaunched } from "@/lib/usage";
+import { API_HOST, API_ORIGIN, SITE_ORIGIN } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "API",
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
 const ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzZHV3bXlndm1kb3pocHZ6YWl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDk3NTksImV4cCI6MjA5MTY4NTc1OX0.fYZOIHyrOWzidgc-CVxWCY5Fe9pQk12-6YjDIS6y9qs";
 
-const BASE = "https://api.collegedata.fyi";
+const BASE = API_ORIGIN;
 const API_LINK_CLASS = "text-[var(--forest)] underline hover:text-[var(--forest-ink)]";
 const API_LINK_SMALL_CLASS = "text-xs text-[var(--forest)] underline hover:text-[var(--forest-ink)]";
 
@@ -101,19 +102,19 @@ export default async function ApiDocsPage() {
         next to facts so agents can cite values without guessing where they came
         from.
       </p>
-      <CodeBlock>{`curl 'https://www.collegedata.fyi/api/schools/search?q=mit'
+      <CodeBlock>{`curl '${SITE_ORIGIN}/api/schools/search?q=mit'
 
-curl 'https://www.collegedata.fyi/api/schools/mit/facts?categories=admissions,cost,outcomes'
+curl '${SITE_ORIGIN}/api/schools/mit/facts?categories=admissions,cost,outcomes'
 
-curl 'https://www.collegedata.fyi/api/schools/university-of-notre-dame/facts?categories=finance'
+curl '${SITE_ORIGIN}/api/schools/university-of-notre-dame/facts?categories=finance'
 
-curl 'https://www.collegedata.fyi/api/schools/mit/sources'
+curl '${SITE_ORIGIN}/api/schools/mit/sources'
 
-curl 'https://www.collegedata.fyi/api/compare?schools=mit,yale,university-of-chicago&categories=admissions,cost,outcomes'
+curl '${SITE_ORIGIN}/api/compare?schools=mit,yale,university-of-chicago&categories=admissions,cost,outcomes'
 
-curl 'https://www.collegedata.fyi/api/fields'
+curl '${SITE_ORIGIN}/api/fields'
 
-curl 'https://www.collegedata.fyi/openapi.json'`}</CodeBlock>
+curl '${SITE_ORIGIN}/openapi.json'`}</CodeBlock>
       <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
         <code>GET /api/facts/{"{school_id}"}</code> is deprecated. It is an
         older flat summary of one school's latest filing. Its counts come
@@ -160,13 +161,13 @@ curl 'https://www.collegedata.fyi/openapi.json'`}</CodeBlock>
       <CodeBlock>{`library(httr2)
 library(jsonlite)
 
-facts <- request("https://www.collegedata.fyi/api/schools/mit/facts") |>
+facts <- request("${SITE_ORIGIN}/api/schools/mit/facts") |>
   req_url_query(categories = "admissions,cost,outcomes") |>
   req_headers(\`X-CollegeData-Client\` = "r-httr2") |>
   req_perform() |>
   resp_body_json()
 
-compare <- request("https://www.collegedata.fyi/api/compare") |>
+compare <- request("${SITE_ORIGIN}/api/compare") |>
   req_url_query(
     schools = "mit,yale,university-of-chicago",
     fields = "acceptance_rate,avg_net_price"
@@ -184,7 +185,7 @@ compare <- request("https://www.collegedata.fyi/api/compare") |>
       <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
         The hosted MCP endpoint is{" "}
         <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
-          https://www.collegedata.fyi/api/mcp
+          {`${SITE_ORIGIN}/api/mcp`}
         </code>
         . The CLI and the stdio MCP file (local dev / Claude Code) live in the repo under{" "}
         <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
@@ -249,9 +250,9 @@ compare <- request("https://www.collegedata.fyi/api/compare") |>
             Start with search, facts, and compare. If these three work, the
             friendly API surface is healthy enough for most agent and CLI use.
           </p>
-          <CodeBlock>{`curl 'https://www.collegedata.fyi/api/schools/search?q=mit'
-curl 'https://www.collegedata.fyi/api/schools/mit/facts?fields=avg_net_price,graduation_rate_6yr'
-curl 'https://www.collegedata.fyi/api/compare?schools=mit,yale,university-of-chicago&fields=acceptance_rate,avg_net_price'`}</CodeBlock>
+          <CodeBlock>{`curl '${SITE_ORIGIN}/api/schools/search?q=mit'
+curl '${SITE_ORIGIN}/api/schools/mit/facts?fields=avg_net_price,graduation_rate_6yr'
+curl '${SITE_ORIGIN}/api/compare?schools=mit,yale,university-of-chicago&fields=acceptance_rate,avg_net_price'`}</CodeBlock>
         </section>
 
         <section>
@@ -264,12 +265,12 @@ curl 'https://www.collegedata.fyi/api/compare?schools=mit,yale,university-of-chi
             </code>
             .
           </p>
-          <CodeBlock>{`COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegedata.js search mit
-COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegedata.js facts mit --categories admissions,cost
-COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegedata.js compare mit yale university-of-chicago --format csv
-COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegedata.js sources mit
-COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegedata.js fields --category admissions
-COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegedata.js export schools --format jsonl`}</CodeBlock>
+          <CodeBlock>{`COLLEGEDATA_API_BASE=${SITE_ORIGIN} node packages/cli/bin/collegedata.js search mit
+COLLEGEDATA_API_BASE=${SITE_ORIGIN} node packages/cli/bin/collegedata.js facts mit --categories admissions,cost
+COLLEGEDATA_API_BASE=${SITE_ORIGIN} node packages/cli/bin/collegedata.js compare mit yale university-of-chicago --format csv
+COLLEGEDATA_API_BASE=${SITE_ORIGIN} node packages/cli/bin/collegedata.js sources mit
+COLLEGEDATA_API_BASE=${SITE_ORIGIN} node packages/cli/bin/collegedata.js fields --category admissions
+COLLEGEDATA_API_BASE=${SITE_ORIGIN} node packages/cli/bin/collegedata.js export schools --format jsonl`}</CodeBlock>
           <p className="mt-2">
             Six subcommands: <code>search</code>, <code>facts</code>,{" "}
             <code>compare</code>, <code>sources</code>, <code>fields</code>,
@@ -286,7 +287,7 @@ COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegeda
             tools as the stdio server. In Claude: Settings → Connectors → Add custom connector, then paste the URL. That works on web, desktop,
             mobile, and Cowork — no Node, no config file, no restart.
           </p>
-          <CodeBlock>{`https://www.collegedata.fyi/api/mcp`}</CodeBlock>
+          <CodeBlock>{`${SITE_ORIGIN}/api/mcp`}</CodeBlock>
           <p className="mt-2">
             Tools: <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">search_schools</code>,{" "}
             <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">get_school_facts</code>,{" "}
@@ -295,7 +296,7 @@ COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegeda
             <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">get_field_dictionary</code>
             . Auth: none. The PostgREST host at{" "}
             <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
-              api.collegedata.fyi
+              {API_HOST}
             </code>{" "}
             is not an MCP endpoint.
           </p>
@@ -354,11 +355,11 @@ COLLEGEDATA_API_BASE=https://www.collegedata.fyi node packages/cli/bin/collegeda
             alias for the same current data, not a frozen copy, so download and
             store a file if you need it to stay fixed.
           </p>
-          <CodeBlock>{`curl 'https://www.collegedata.fyi/snapshots/latest/manifest.json'
-curl 'https://www.collegedata.fyi/snapshots/latest/schools.jsonl'
-curl 'https://www.collegedata.fyi/snapshots/latest/school_facts.jsonl'
-curl 'https://www.collegedata.fyi/snapshots/latest/sources.jsonl'
-curl 'https://www.collegedata.fyi/snapshots/latest/field_dictionary.json'`}</CodeBlock>
+          <CodeBlock>{`curl '${SITE_ORIGIN}/snapshots/latest/manifest.json'
+curl '${SITE_ORIGIN}/snapshots/latest/schools.jsonl'
+curl '${SITE_ORIGIN}/snapshots/latest/school_facts.jsonl'
+curl '${SITE_ORIGIN}/snapshots/latest/sources.jsonl'
+curl '${SITE_ORIGIN}/snapshots/latest/field_dictionary.json'`}</CodeBlock>
         </section>
 
         <section>
@@ -370,9 +371,9 @@ curl 'https://www.collegedata.fyi/snapshots/latest/field_dictionary.json'`}</Cod
             and was withheld. The sources endpoint shows the document and the
             federal release behind the page.
           </p>
-          <CodeBlock>{`curl 'https://www.collegedata.fyi/api/schools/mit/sources'
-curl 'https://www.collegedata.fyi/api/fields?category=admissions'
-curl 'https://www.collegedata.fyi/llms.txt'`}</CodeBlock>
+          <CodeBlock>{`curl '${SITE_ORIGIN}/api/schools/mit/sources'
+curl '${SITE_ORIGIN}/api/fields?category=admissions'
+curl '${SITE_ORIGIN}/llms.txt'`}</CodeBlock>
         </section>
       </div>
 

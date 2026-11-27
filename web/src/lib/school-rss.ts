@@ -1,4 +1,5 @@
 import { SITE_URL } from "./sitemap-static";
+import { SITE_NAME } from "./site";
 
 export type SchoolFeedEvent = {
   id: number | string;
@@ -58,14 +59,14 @@ export function buildSchoolRss(args: {
     .join("\n");
 
   const channelDescription =
-    `School-published Common Data Set files for ${args.schoolName}, archived by collegedata.fyi. ` +
+    `School-published Common Data Set files for ${args.schoolName}, archived by ${SITE_NAME}. ` +
     `Entries appear when the school publishes or replaces a file — not when this archive re-checks an unchanged file, and not for third-party mirrors.`;
 
   return [
     `<?xml version="1.0" encoding="UTF-8"?>`,
     `<rss version="2.0">`,
     "  <channel>",
-    `    <title>${xmlEscape(`${args.schoolName} Common Data Set — collegedata.fyi`)}</title>`,
+    `    <title>${xmlEscape(`${args.schoolName} Common Data Set — ${SITE_NAME}`)}</title>`,
     `    <link>${xmlEscape(hub)}</link>`,
     `    <description>${xmlEscape(channelDescription)}</description>`,
     items,

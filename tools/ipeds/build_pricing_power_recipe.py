@@ -24,6 +24,7 @@ from typing import Any, Iterable, Mapping
 if __package__ is None or __package__ == "":
     sys.path.append(str(Path(__file__).resolve().parents[2]))
 
+from tools.common.site import API_ORIGIN
 from tools.finder.identity_guard import (
     resolve_canonical_school_id,
     validated_canonical_alias_slug_map,
@@ -34,7 +35,7 @@ from tools.ipeds.reconcile_endowment_scorecard import postgrest_get_all
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUTPUT = REPO_ROOT / "web/src/lib/pricing-power-recipe-data.ts"
-SOURCE_API_URL = "https://api.collegedata.fyi"
+SOURCE_API_URL = API_ORIGIN  # display: recorded in generated data
 IPEDS_CYCLE = "fall 2024 (ADM2024)"
 ADM_SOURCE_TABLE = "ADM2024"
 CDS_YEAR = "2024-25"

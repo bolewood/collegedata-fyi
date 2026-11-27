@@ -1,4 +1,5 @@
 import unittest
+from dataclasses import replace
 from datetime import datetime, timezone
 
 from tools.api_usage import classify as c
@@ -30,6 +31,38 @@ class ClassifyTest(unittest.TestCase):
             c.classify(c.Signals(referer_host="www.collegedata.fyi", ua_browser=True, surface="storage", **POST)),
             (c.FIRST_PARTY, False),
         )
+
+    def test_new_identity_markers(self):
+        self.assertEqual(
+            c.classify(c.Signals(role="anon", client_info="quadfile-friendly-api/abc", **POST)),
+            (c.FRIENDLY, False),
+        )
+        self.assertEqual(
+            c.classify(c.Signals(role="anon", client_info="quadfile-web/abc", **POST)),
+            (c.FIRST_PARTY, False),
+        )
+        for host in ("quadfile.org", "www.quadfile.org"):
+            self.assertEqual(
+                c.classify(c.Signals(referer_host=host, ua_browser=True, surface="storage", **POST)),
+                (c.FIRST_PARTY, False),
+            )
+
+    def test_proxied_requests_are_not_first_party_or_internal(self):
+        # The proxy runs on AWS and forwards third-party calls; every
+        # heuristic below would otherwise call them ours.
+        for signals in (
+            c.Signals(role="anon", client_info="supabase-js-node/2", aws=True, before_t0=True),
+            c.Signals(role="anon", client_info="quadfile-web/abc", **POST),
+            c.Signals(role="anon", client_info="collegedata-web/abc", **POST),
+            c.Signals(referer_host="www.quadfile.org", **POST),
+            c.Signals(ua_internal=True, **POST),
+        ):
+            with self.subTest(signals=signals):
+                self.assertEqual(c.classify(replace(signals, proxied=True)), (c.THIRD_PARTY, False))
+        self.assertEqual(c.classify(c.Signals(proxied=True, ua_browser=True, **POST)), (c.BROWSER, False))
+        # A service-role or secret key is authoritative and stays internal.
+        self.assertEqual(c.classify(c.Signals(role="service_role", proxied=True, **POST)), (c.INTERNAL, False))
+        self.assertEqual(c.classify(c.Signals(key_prefix="sb_secret_x", proxied=True, **POST)), (c.INTERNAL, False))
 
     def test_lookalike_markers_are_third_party(self):
         self.assertEqual(
@@ -127,6 +160,39 @@ class UserAgentTest(unittest.TestCase):
         self.assertTrue(c.ua_is_internal("collegedata-pipeline/cds-card-coverage"))
         self.assertFalse(c.ua_is_internal("python-requests/2.32"))
 
+    def test_new_identity_internal_markers(self):
+        for ua in (
+            "quadfile-pipeline/cds-card-coverage",
+            "python-httpx/0.27 quadfile-pipeline/archive",
+            "quadfile-scholarships/0.1 (https://example.test/contact)",
+            "Quadfile-Finder/0.2",
+            "quadfile-ops-discord/1.0",
+            "quadfile-ops-discord",
+            "quadfile-extraction-worker/0.1",
+            "quadfile-extraction-worker",
+            "collegedata-fyi-ops-discord",
+            "collegedata-extraction-worker",
+            "quadfile-finder/0.1 (https://example.test/contact)",
+        ):
+            with self.subTest(ua=ua):
+                self.assertTrue(c.ua_is_internal(ua))
+
+    def test_third_party_mentioning_quadfile_stays_third_party(self):
+        for ua in (
+            "quadfile",
+            "SomeCrawler/1.0 (+https://example.com/quadfile)",
+            "my-quadfile-scraper/1.0",
+            "Mozilla/5.0 (compatible; quadfile.example)",
+            "quadfile/1.0",
+            "quadfile-scraper/1.0",
+            "quadfile-cli/0.1",
+            "quadfile-ops-discordx/1",
+            "quadfile-extraction-workers/1",
+            "python-httpx/0.27 quadfile-scraper/1.0",
+        ):
+            with self.subTest(ua=ua):
+                self.assertFalse(c.ua_is_internal(ua))
+
 
 class RouteTest(unittest.TestCase):
     def test_edge_routes(self):
@@ -154,6 +220,7 @@ class RouteTest(unittest.TestCase):
         self.assertEqual(c.status_class(404), "4xx")
         self.assertEqual(c.status_class(""), "other")
         self.assertEqual(c.normalize_host("API.collegedata.fyi"), "api.collegedata.fyi")
+        self.assertEqual(c.normalize_host("api.quadfile.org"), "api.quadfile.org")
         self.assertEqual(c.normalize_host("evil.example"), "other")
 
     def test_client_hash_is_salted_and_short(self):

@@ -7,6 +7,7 @@ import {
 import { c1HeadlineTotals, fieldNumber } from "@/lib/c1-headline-totals";
 import type { FieldValue } from "@/lib/types";
 import { cachedSchoolInks, schoolOgColors } from "@/lib/school-inks";
+import { SITE_NAME } from "@/lib/site";
 
 export const alt = "Common Data Set year detail";
 export const size = { width: 1200, height: 630 };
@@ -48,7 +49,7 @@ export default async function Image({
             fontSize: 48,
           }}
         >
-          collegedata.fyi
+          {SITE_NAME}
         </div>
       ),
       { ...size }
@@ -119,7 +120,7 @@ export default async function Image({
             letterSpacing: 1,
           }}
         >
-          collegedata.fyi
+          {SITE_NAME}
         </div>
 
         {/* School name */}
