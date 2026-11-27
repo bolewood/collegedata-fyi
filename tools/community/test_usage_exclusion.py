@@ -9,6 +9,7 @@ class UsageExclusionTests(unittest.TestCase):
             "community_claim_notification",
             "community_finish_notification",
             "community_notification_health",
+            "community_notification_sender_name",
             "community_expire",
             "community_submissions",
             "community_rate_limits",

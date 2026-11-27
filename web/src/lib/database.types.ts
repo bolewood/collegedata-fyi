@@ -827,6 +827,7 @@ export type Database = {
       community_claim_notification: { Args: { p_sender: string; p_inbox_url: string }; Returns: Json }
       community_finish_notification: { Args: { p_id: string; p_token: string; p_error?: string | null }; Returns: boolean }
       community_notification_health: { Args: never; Returns: Json }
+      community_notification_sender_name: { Args: { p_sender: string }; Returns: string }
       community_expire: { Args: never; Returns: undefined }
 
       claim_archive_queue_row: {
