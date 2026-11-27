@@ -67,9 +67,10 @@ describe("Wave 4 methodology and API copy", () => {
     expect(page).toContain("public");
     expect(page).toContain("API.");
     expect(page).toContain("Two ways in");
-    expect(page).toContain("api.collegedata.fyi");
+    // The page reads the host and origin from lib/site.ts (pinned in site.test.ts).
+    expect(page).toContain("{API_HOST}");
     expect(page).toContain("Start here");
-    expect(page).toContain("https://www.collegedata.fyi/api/mcp");
+    expect(page).toContain("${SITE_ORIGIN}/api/mcp");
     expect(page).toContain("Add custom connector");
     expect(page).toContain("claude_desktop_config.json");
     expect(page).toContain(

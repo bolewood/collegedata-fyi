@@ -83,7 +83,6 @@ def load_env(path: Path | None = None) -> dict[str, str]:
     for candidate in (
         path,
         REPO_ROOT / ".env",
-        Path("/Users/santhonys/Projects/Owen/colleges/collegedata-fyi/.env"),
     ):
         if candidate:
             env.update({k: v for k, v in read_env_file(candidate).items() if k not in env})

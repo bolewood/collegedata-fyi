@@ -11,6 +11,7 @@ import {
   parsePublicFactCategories,
 } from "@/lib/public-fact-category";
 import { MCP_TOOL_NAMES, type McpToolName } from "./tools";
+import { SITE_NAME_CAPS } from "../site";
 
 export class McpToolError extends Error {
   constructor(message: string) {
@@ -65,7 +66,7 @@ export async function callMcpTool(name: string, rawArgs: unknown): Promise<unkno
     const payload = await getSchoolFacts(schoolId, { categories });
     if (!payload) {
       throw new McpToolError(
-        "No public CollegeData.FYI school, CDS, or federal baseline row was found for this school_id.",
+        `No public ${SITE_NAME_CAPS} school, CDS, or federal baseline row was found for this school_id.`,
       );
     }
     return payload;

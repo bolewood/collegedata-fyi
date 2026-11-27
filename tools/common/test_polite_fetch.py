@@ -51,7 +51,7 @@ PAGE = "https://a.edu/page"
 
 def test_user_agent_form():
     f = Fake({ROBOTS: [R(404)], PAGE: [R(200, b"x")]}).fetcher()
-    assert f.user_agent == "collegedata-fyi-scholarships/0.1 (https://github.com/bolewood/collegedata-fyi)"
+    assert f.user_agent == "collegedata-fyi-scholarships/0.1 (https://github.com/bolewood/quadfile)"
     fk = Fake({ROBOTS: [R(404)], PAGE: [R(200, b"x")]})
     fk.fetcher().fetch(PAGE)
     assert all(c[2]["User-Agent"].startswith("collegedata-fyi-scholarships/") for c in fk.calls)

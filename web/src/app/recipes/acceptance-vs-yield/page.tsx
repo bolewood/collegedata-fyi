@@ -1,3 +1,4 @@
+import { REPO_URL } from "@/lib/repo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AcceptanceYieldChart } from "@/components/AcceptanceYieldChart";
@@ -18,6 +19,7 @@ import {
   PRICING_POWER_META,
   PRICING_POWER_SCHOOLS,
 } from "@/lib/pricing-power-recipe-data";
+import { API_ORIGIN } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "College Pricing Power",
@@ -737,23 +739,23 @@ export default function AcceptanceVsYieldPage() {
 # Repeat for field_key=eq.admissions_total and field_key=eq.enrolled_total.
 # PostgREST max-rows is 1,000. limit=5000 and Range: 0-4999 are both capped
 # at 1,000 with HTTP 206. Page with offset:
-curl 'https://api.collegedata.fyi/rest/v1/school_facts_unified?select=school_id,school_name,ipeds_id,in_scope,field_key,value_numeric,source_table,data_year,quality_flag&field_key=eq.applicants_total&source_table=eq.ADM2024&order=ipeds_id.asc&limit=1000&offset=0' \\
+curl '${API_ORIGIN}/rest/v1/school_facts_unified?select=school_id,school_name,ipeds_id,in_scope,field_key,value_numeric,source_table,data_year,quality_flag&field_key=eq.applicants_total&source_table=eq.ADM2024&order=ipeds_id.asc&limit=1000&offset=0' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'
-curl 'https://api.collegedata.fyi/rest/v1/school_facts_unified?select=school_id,school_name,ipeds_id,in_scope,field_key,value_numeric,source_table,data_year,quality_flag&field_key=eq.applicants_total&source_table=eq.ADM2024&order=ipeds_id.asc&limit=1000&offset=1000' \\
+curl '${API_ORIGIN}/rest/v1/school_facts_unified?select=school_id,school_name,ipeds_id,in_scope,field_key,value_numeric,source_table,data_year,quality_flag&field_key=eq.applicants_total&source_table=eq.ADM2024&order=ipeds_id.asc&limit=1000&offset=1000' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'
 
 # Panel B — College Scorecard join fields
-curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,scorecard_data_year,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,instructional_expenditure_fte&order=ipeds_id.asc&limit=1000&offset=0' \\
+curl '${API_ORIGIN}/rest/v1/scorecard_summary?select=ipeds_id,scorecard_data_year,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,instructional_expenditure_fte&order=ipeds_id.asc&limit=1000&offset=0' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'
-curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,scorecard_data_year,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,instructional_expenditure_fte&order=ipeds_id.asc&limit=1000&offset=1000' \\
+curl '${API_ORIGIN}/rest/v1/scorecard_summary?select=ipeds_id,scorecard_data_year,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,instructional_expenditure_fte&order=ipeds_id.asc&limit=1000&offset=1000' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'
 
 # CDS C1 2024-25 tooltip cross-check (complete rows; under the 1,000-row cap)
-curl 'https://api.collegedata.fyi/rest/v1/school_browser_rows?select=school_id,ipeds_id,canonical_year,sub_institutional,acceptance_rate,yield_rate&canonical_year=eq.2024-25&sub_institutional=is.null&acceptance_rate=not.is.null&yield_rate=not.is.null' \\
+curl '${API_ORIGIN}/rest/v1/school_browser_rows?select=school_id,ipeds_id,canonical_year,sub_institutional,acceptance_rate,yield_rate&canonical_year=eq.2024-25&sub_institutional=is.null&acceptance_rate=not.is.null&yield_rate=not.is.null' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'`}
         </pre>
@@ -789,7 +791,7 @@ curl 'https://api.collegedata.fyi/rest/v1/school_browser_rows?select=school_id,i
         <div style={{ marginTop: 14, display: "flex", gap: 16, flexWrap: "wrap", fontSize: 13 }}>
           <TrackedLink
             external
-            href="https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/acceptance-vs-yield.md"
+            href={`${REPO_URL}/blob/main/docs/recipes/acceptance-vs-yield.md`}
             target="_blank"
             rel="noopener noreferrer"
             analyticsEvent="recipe_writeup_opened"

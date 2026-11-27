@@ -12,17 +12,23 @@ from datetime import datetime
 from tools.api_usage.classify import (
     ARCHIVE_PREFIX,
     FIRST_PARTY_REFERER_HOSTS,
-    FRIENDLY_CLIENT_INFO_PREFIX,
+    FRIENDLY_CLIENT_INFO_PREFIXES,
     INTERNAL_UA_MARKERS,
+    INTERNAL_UA_PATTERN,
     NON_BROWSER_PATTERN,
-    SITE_CLIENT_INFO_PREFIX,
+    PROXIED_FORWARDED_HOSTS,
+    SITE_CLIENT_INFO_PREFIXES,
     t0_hour,
 )
 
 PAGE_SIZE = 1000
 
+
+def _sql_list(values: tuple[str, ...]) -> str:
+    return ", ".join(f"'{value}'" for value in values)
+
+
 _PATH = "log_attributes['request.path']"
-_IP = "log_attributes['request.headers.cf_connecting_ip']"
 _UA_RAW = "log_attributes['request.headers.user_agent']"
 # Python classifies on this same 300-character prefix.
 _UA = f"substring({_UA_RAW}, 1, 300)"
@@ -37,13 +43,29 @@ _ROLE = "log_attributes['request.sb.jwt.apikey.payload.role']"
 _KEY_PREFIX = "substring(log_attributes['request.sb.apikey.apikey.prefix'], 1, 16)"
 _CLIENT_INFO = "substring(log_attributes['request.headers.x_client_info'], 1, 80)"
 _REFERER = "lower(domain(log_attributes['request.headers.referer']))"
+# Proxied (old API host) traffic. Vercel does not forward the proxied header on
+# an external rewrite, so also match the forwarded host. The header check stays
+# for the day it is forwarded.
+_PROXIED = (
+    "(log_attributes['request.headers.x_quadfile_proxied'] = '1'"
+    f" or lower(log_attributes['request.headers.x_forwarded_host']) in ({_sql_list(PROXIED_FORWARDED_HOSTS)}))"
+)
+# Behind the proxy cf_connecting_ip is a Vercel egress address, so a proxied
+# caller is the first x-forwarded-for entry. A blank first entry (empty,
+# whitespace, leading comma) falls back to cf_connecting_ip.
+_XFF_FIRST = "trimBoth(splitByChar(',', log_attributes['request.headers.x_forwarded_for'])[1])"
+_IP = (
+    f"if({_PROXIED} and {_XFF_FIRST} != '', {_XFF_FIRST},"
+    " log_attributes['request.headers.cf_connecting_ip'])"
+)
 _AWS = "position(lower(log_attributes['request.cf.asOrganization']), 'amazon') > 0"
 _UA_BROWSER = (
     f"(startsWith({_UA}, 'Mozilla/') and position({_UA}, '(') > 0"
     f" and not match(lower({_UA}), '{NON_BROWSER_PATTERN}'))"
 )
 _UA_INTERNAL = "(" + " or ".join(
-    f"position(lower({_UA}), '{marker}') > 0" for marker in INTERNAL_UA_MARKERS
+    [f"position(lower({_UA}), '{marker}') > 0" for marker in INTERNAL_UA_MARKERS]
+    + [f"match(lower({_UA}), '{INTERNAL_UA_PATTERN}')"]
 ) + ")"
 _SCHOOL_RAW = (
     f"if({_IS_ARCHIVE}, splitByChar('/', {_PATH})[7], "
@@ -62,11 +84,12 @@ _EDGE_DIMS = [
     ("ci", _CLIENT_INFO),
     ("ref", _REFERER),
     ("aws", _AWS),
+    ("proxied", _PROXIED),
 ]
 
 
-def _sql_list(values: tuple[str, ...]) -> str:
-    return ", ".join(f"'{value}'" for value in values)
+def _starts_with_any(expr: str, prefixes: tuple[str, ...]) -> str:
+    return "(" + " or ".join(f"startsWith({expr}, '{prefix}')" for prefix in prefixes) + ")"
 
 
 def _before_t0(t0: datetime | None) -> str:
@@ -83,17 +106,17 @@ def not_third_party_condition(t0: datetime | None) -> str:
     on every returned row, so this must stay a subset of those rules.
     """
     return (
-        "("
-        f"{_ROLE} = 'service_role'"
+        f"({_ROLE} = 'service_role'"
         f" or startsWith({_KEY_PREFIX}, 'sb_secret_')"
-        f" or {_UA_INTERNAL}"
-        f" or startsWith({_CLIENT_INFO}, '{SITE_CLIENT_INFO_PREFIX}')"
-        f" or startsWith({_CLIENT_INFO}, '{FRIENDLY_CLIENT_INFO_PREFIX}')"
+        f" or (not {_PROXIED} and ("
+        f"{_UA_INTERNAL}"
+        f" or {_starts_with_any(_CLIENT_INFO, SITE_CLIENT_INFO_PREFIXES)}"
+        f" or {_starts_with_any(_CLIENT_INFO, FRIENDLY_CLIENT_INFO_PREFIXES)}"
         f" or {_REFERER} in ({_sql_list(FIRST_PARTY_REFERER_HOSTS)})"
         f" or ({_before_t0(t0)} and {_ROLE} = 'anon' and ("
         f"(startsWith({_CLIENT_INFO}, 'supabase-js-node') and {_AWS})"
         f" or startsWith({_CLIENT_INFO}, 'supabase-js-web')))"
-        ")"
+        ")))"
     )
 
 
@@ -214,9 +237,9 @@ def daily_downloads_sql(
     """
     internal = (
         f"{_ROLE} = 'service_role' or startsWith({_KEY_PREFIX}, 'sb_secret_')"
-        f" or startsWith({_CLIENT_INFO}, '{FRIENDLY_CLIENT_INFO_PREFIX}')"
+        f" or (not {_PROXIED} and {_starts_with_any(_CLIENT_INFO, FRIENDLY_CLIENT_INFO_PREFIXES)})"
     )
-    first_party = f"{_REFERER} in ({_sql_list(FIRST_PARTY_REFERER_HOSTS)})"
+    first_party = f"(not {_PROXIED} and {_REFERER} in ({_sql_list(FIRST_PARTY_REFERER_HOSTS)}))"
     inner = (
         f"select splitByChar('/', {_PATH})[7] as school_raw, {_PATH} as obj, {_IP} as ip, {_UA} as ua,"
         f" max({first_party}) as fp, max({internal}) as internal, count() as fetches"

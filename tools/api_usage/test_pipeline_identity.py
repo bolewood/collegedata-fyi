@@ -2,7 +2,7 @@
 
 Calls with the service-role key are classified as internal by role. Calls
 with the anon key, and plain fetches of public Storage URLs, look like
-third-party traffic unless they send a collegedata-pipeline User-Agent, and
+third-party traffic unless they send a collegedata-pipeline or quadfile-pipeline User-Agent, and
 would inflate the public usage numbers (PRD 033).
 """
 
@@ -15,7 +15,7 @@ from pathlib import Path
 TOOLS = Path(__file__).resolve().parents[1]
 PUBLIC_SURFACE = re.compile(r"object/public|ANON_KEY")
 MAKES_REQUESTS = re.compile(r"create_client\(|urlopen\(|requests\.(get|post|head|request)\(|httpx\.")
-MARKER = "collegedata-pipeline/"
+MARKERS = ("collegedata-pipeline/", "quadfile-pipeline/")
 
 
 def offenders() -> list[str]:
@@ -24,7 +24,7 @@ def offenders() -> list[str]:
         if path.name.startswith("test_") or "api_usage" in path.parts:
             continue
         text = path.read_text(encoding="utf-8", errors="ignore")
-        if PUBLIC_SURFACE.search(text) and MAKES_REQUESTS.search(text) and MARKER not in text:
+        if PUBLIC_SURFACE.search(text) and MAKES_REQUESTS.search(text) and not any(marker in text for marker in MARKERS):
             found.append(str(path.relative_to(TOOLS.parent)))
     return found
 

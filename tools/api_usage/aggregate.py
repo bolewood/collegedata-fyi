@@ -39,6 +39,7 @@ def _edge_signals(row: Mapping[str, object], surface: str, route: str, t0: datet
         referer_host=str(row.get("ref") or ""),
         ua_browser=ua_browser,
         ua_internal=ua_internal,
+        proxied=_flag(row.get("proxied")),
         aws=_flag(row.get("aws")),
         before_t0=c.is_before_t0(c.hour_from_epoch(row["h"]), t0),
         surface=surface,

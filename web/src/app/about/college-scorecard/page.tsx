@@ -1,3 +1,4 @@
+import { REPO_URL } from "@/lib/repo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -6,6 +7,7 @@ import {
   StoryFigure,
   StoryTable,
 } from "@/components/about/SourceStoryLayout";
+import { SITE_NAME, SITE_ORIGIN } from "@/lib/site";
 
 const CANONICAL = "/about/college-scorecard";
 const TITLE = "College Scorecard, and how it differs from the Common Data Set";
@@ -28,13 +30,13 @@ const jsonLd = {
   datePublished: SOURCE_STORY_REVIEWED,
   dateModified: REVIEWED,
   author: { "@type": "Organization", name: "Bolewood Group", url: "https://bolewood.com" },
-  publisher: { "@type": "Organization", name: "collegedata.fyi", url: "https://www.collegedata.fyi" },
+  publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_ORIGIN },
   about: {
     "@type": "Organization",
     name: "U.S. Department of Education College Scorecard",
     url: "https://collegescorecard.ed.gov/",
   },
-  mainEntityOfPage: `https://www.collegedata.fyi${CANONICAL}`,
+  mainEntityOfPage: `${SITE_ORIGIN}${CANONICAL}`,
 };
 
 export default function CollegeScorecardPage() {
@@ -71,7 +73,7 @@ export default function CollegeScorecardPage() {
         flags, and Census/OPE reference fields. We document the field-level
         comparison in{" "}
         <a
-          href="https://github.com/bolewood/collegedata-fyi/blob/main/docs/research/cds-vs-college-scorecard.md"
+          href={`${REPO_URL}/blob/main/docs/research/cds-vs-college-scorecard.md`}
           target="_blank"
           rel="noopener noreferrer"
         >

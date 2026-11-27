@@ -200,7 +200,7 @@ MAX_REPRINT_MISSING_VALUES_MATCH_RATIO = 0.10
 MIN_REPRINT_TEXT_CHARS = 100
 MAX_PRIOR_SOURCE_CANDIDATES = 5
 PIPELINE_RUN_URL_RE = re.compile(
-    r"^https://github\.com/bolewood/collegedata-fyi/actions/runs/[0-9]+$",
+    r"^https://github\.com/bolewood/(?:collegedata-fyi|quadfile)/actions/runs/[0-9]+$",
 )
 
 
@@ -1192,7 +1192,8 @@ def replay_extraction_ledger(client: Client, path: Path) -> bool:
 def notify_web_of_changed_schools(school_ids: set[str], dry_run: bool) -> None:
     """Best-effort ISR revalidation for schools whose data just changed.
 
-    No-op unless COLLEGEDATA_REVALIDATE_URL and REVALIDATE_SECRET are set;
+    No-op unless QUADFILE_REVALIDATE_URL (or the older
+    COLLEGEDATA_REVALIDATE_URL) and REVALIDATE_SECRET are set;
     never raises, so it cannot change the run's exit code.
     """
     if dry_run or not school_ids:

@@ -1,3 +1,4 @@
+import { REPO_URL } from "@/lib/repo";
 import { isUsageLaunched } from "@/lib/usage";
 import { dataQualityLaunched } from "@/lib/data-quality";
 import { CommunityLink } from "./CommunityInvitation";
@@ -32,7 +33,7 @@ export function Footer() {
           </div>
         </div>
         <div className="cd-footer-links" style={{ display: "flex", gap: 24, alignSelf: "end", flexWrap: "wrap" }}>
-          <a href="https://github.com/bolewood/collegedata-fyi" target="_blank" rel="noopener noreferrer">
+          <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
             GitHub
           </a>
           <CommunityLink surface="footer">Feedback</CommunityLink>

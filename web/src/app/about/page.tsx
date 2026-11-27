@@ -1,3 +1,4 @@
+import { REPO_URL } from "@/lib/repo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SOURCE_OWNERSHIP_SENTENCE } from "@/lib/data-license";
@@ -101,7 +102,7 @@ export default function AboutPage() {
         <p>
           Our code is open source under the MIT license on{" "}
           <a
-            href="https://github.com/bolewood/collegedata-fyi"
+            href={REPO_URL}
             target="_blank"
             rel="noopener noreferrer"
           >

@@ -1,3 +1,4 @@
+import { REPO_URL } from "@/lib/repo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AlignmentGapChart } from "@/components/AlignmentGapChart";
@@ -17,6 +18,7 @@ import {
   ALIGNMENT_GAP_META,
   ALIGNMENT_GAP_SCHOOLS,
 } from "@/lib/alignment-gap-recipe-data";
+import { API_ORIGIN } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Alignment gap",
@@ -573,7 +575,7 @@ export default function AlignmentGapPage() {
           }}
         >
 {`# Panel A — CDS H2A merit × Scorecard (${ALIGNMENT_GAP_MERIT_META.exclusions.universe} rows; under the 1,000-row cap)
-curl 'https://api.collegedata.fyi/rest/v1/school_merit_profile?select=school_id,school_name,canonical_year,merit_profile_quality,non_need_aid_share_first_year_ft,avg_non_need_grant_first_year_ft,avg_need_grant_first_year_ft,earnings_10yr_median,median_debt_completers,median_debt_monthly_payment,avg_net_price&limit=1000' \\
+curl '${API_ORIGIN}/rest/v1/school_merit_profile?select=school_id,school_name,canonical_year,merit_profile_quality,non_need_aid_share_first_year_ft,avg_non_need_grant_first_year_ft,avg_need_grant_first_year_ft,earnings_10yr_median,median_debt_completers,median_debt_monthly_payment,avg_net_price&limit=1000' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'
 
@@ -581,13 +583,13 @@ curl 'https://api.collegedata.fyi/rest/v1/school_merit_profile?select=school_id,
 # PostgREST max-rows is 1,000. limit=5000 and Range: 0-4999 are both capped
 # at 1,000 with HTTP 206 / Content-Range: 0-999/2158 — no error body.
 # Page with offset (or Range: 0-999, then 1000-1999, then 2000-2999):
-curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,endowment_end,instructional_expenditure_fte,enrollment&earnings_10yr_median=gt.0&median_debt_monthly_payment=gt.0&avg_net_price=gt.0&endowment_end=gt.0&limit=1000&offset=0' \\
+curl '${API_ORIGIN}/rest/v1/scorecard_summary?select=ipeds_id,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,endowment_end,instructional_expenditure_fte,enrollment&earnings_10yr_median=gt.0&median_debt_monthly_payment=gt.0&avg_net_price=gt.0&endowment_end=gt.0&limit=1000&offset=0' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'
-curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,endowment_end,instructional_expenditure_fte,enrollment&earnings_10yr_median=gt.0&median_debt_monthly_payment=gt.0&avg_net_price=gt.0&endowment_end=gt.0&limit=1000&offset=1000' \\
+curl '${API_ORIGIN}/rest/v1/scorecard_summary?select=ipeds_id,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,endowment_end,instructional_expenditure_fte,enrollment&earnings_10yr_median=gt.0&median_debt_monthly_payment=gt.0&avg_net_price=gt.0&endowment_end=gt.0&limit=1000&offset=1000' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'
-curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,endowment_end,instructional_expenditure_fte,enrollment&earnings_10yr_median=gt.0&median_debt_monthly_payment=gt.0&avg_net_price=gt.0&endowment_end=gt.0&limit=1000&offset=2000' \\
+curl '${API_ORIGIN}/rest/v1/scorecard_summary?select=ipeds_id,earnings_10yr_median,median_debt_monthly_payment,median_debt_completers,avg_net_price,endowment_end,instructional_expenditure_fte,enrollment&earnings_10yr_median=gt.0&median_debt_monthly_payment=gt.0&avg_net_price=gt.0&endowment_end=gt.0&limit=1000&offset=2000' \\
   -H 'apikey: <anon key>' \\
   -H 'Authorization: Bearer <anon key>'`}
         </pre>
@@ -630,7 +632,7 @@ curl 'https://api.collegedata.fyi/rest/v1/scorecard_summary?select=ipeds_id,earn
         <div style={{ marginTop: 14, display: "flex", gap: 16, flexWrap: "wrap", fontSize: 13 }}>
           <TrackedLink
             external
-            href="https://github.com/bolewood/collegedata-fyi/blob/main/docs/recipes/alignment-gap.md"
+            href={`${REPO_URL}/blob/main/docs/recipes/alignment-gap.md`}
             target="_blank"
             rel="noopener noreferrer"
             analyticsEvent="recipe_writeup_opened"

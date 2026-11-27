@@ -6,6 +6,7 @@ import {
   fetchSchoolDocuments,
 } from "@/lib/queries";
 import { buildSchoolRss, schoolFeedPath } from "@/lib/school-rss";
+import { SITE_ORIGIN } from "@/lib/site";
 
 export const revalidate = 3600;
 
@@ -19,7 +20,7 @@ export async function GET(
   const canonicalSchoolId = (await fetchCanonicalSchoolId(school_id)) ?? school_id;
   if (canonicalSchoolId !== school_id) {
     return NextResponse.redirect(
-      new URL(schoolFeedPath(canonicalSchoolId), "https://www.collegedata.fyi"),
+      new URL(schoolFeedPath(canonicalSchoolId), SITE_ORIGIN),
       301,
     );
   }

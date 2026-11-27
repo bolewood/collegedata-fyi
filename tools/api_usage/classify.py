@@ -27,11 +27,37 @@ CLASSIFICATIONS = (INTERNAL, FRIENDLY, FIRST_PARTY, BROWSER, THIRD_PARTY)
 # tagged build has not shipped yet, so every hour is pre-tagging.
 SITE_TAGGING_T0: datetime | None = datetime(2026, 10, 1, 19, 16, tzinfo=timezone.utc)
 
-SITE_CLIENT_INFO_PREFIX = "collegedata-web"
-FRIENDLY_CLIENT_INFO_PREFIX = "collegedata-friendly-api"
-FIRST_PARTY_REFERER_HOSTS = ("collegedata.fyi", "www.collegedata.fyi")
-INTERNAL_UA_MARKERS = ("collegedata-pipeline", "collegedata-fyi")
-KNOWN_HOSTS = frozenset({"api.collegedata.fyi", "isduwmygvmdozhpvzaix.supabase.co"})
+# Rename prep: both the old and the new identities are recognized.
+SITE_CLIENT_INFO_PREFIXES = ("collegedata-web", "quadfile-web")
+FRIENDLY_CLIENT_INFO_PREFIXES = ("collegedata-friendly-api", "quadfile-friendly-api")
+FIRST_PARTY_REFERER_HOSTS = (
+    "collegedata.fyi", "www.collegedata.fyi", "quadfile.org", "www.quadfile.org",
+)
+# Plain substrings (old identity).
+# "collegedata-extraction-worker" (the worker's revalidate calls) was never
+# covered by the first two, which only match pipeline and fyi- tokens.
+INTERNAL_UA_MARKERS = ("collegedata-pipeline", "collegedata-fyi", "collegedata-extraction-worker")
+# New identity: the exact product tokens our tools send after the rename,
+# mirroring today's collegedata-pipeline/ and collegedata-fyi-<tool>/ user
+# agents. A token must start the user agent or follow a space or "(", and end
+# with "/", a space or the end (two of our tools send a bare name).
+# Anything else, including a bare "quadfile" or "quadfile-<other>/", stays
+# third-party. Add a tool here when it gets a new user agent.
+INTERNAL_UA_TOOLS = (
+    "pipeline", "finder", "scholarships", "builder", "ops",
+    "ipeds-release-probe", "ipeds-loader", "debug", "ops-discord", "extraction-worker",
+)
+# RE2-compatible; the SQL builder embeds it. Tools are [a-z0-9-] only.
+INTERNAL_UA_PATTERN = r"(^|[ (])quadfile-(" + "|".join(INTERNAL_UA_TOOLS) + r")(/|$| )"
+_INTERNAL_UA_RE = re.compile(INTERNAL_UA_PATTERN)
+KNOWN_HOSTS = frozenset({
+    "api.collegedata.fyi", "api.quadfile.org", "isduwmygvmdozhpvzaix.supabase.co",
+})
+# Rename prep: the web app's old-API-host handler rewrites these hosts to the
+# Supabase origin. Vercel drops the x-quadfile-proxied header on an external
+# rewrite but sets x-forwarded-host to the host the caller used, so the log
+# queries recognise proxied traffic by that. Add the old host here.
+PROXIED_FORWARDED_HOSTS = ("api.collegedata.fyi", "api-test.quadfile.org")
 INTERNAL_FUNCTIONS = frozenset({
     "archive-enqueue",
     "archive-process",
@@ -122,6 +148,10 @@ class Signals:
     referer_host: str = ""
     ua_browser: bool = False
     ua_internal: bool = False
+    # The old-host proxy sets X-Quadfile-Proxied: 1 when it forwards a
+    # third-party call to Supabase. Those calls come from our servers (AWS,
+    # our referer) but are not first-party traffic.
+    proxied: bool = False
     aws: bool = False
     before_t0: bool = True
     surface: str = ""
@@ -153,21 +183,25 @@ def ua_is_browser(ua: str) -> bool:
 
 def ua_is_internal(ua: str) -> bool:
     low = ua.lower()
-    return any(marker in low for marker in INTERNAL_UA_MARKERS)
+    return any(marker in low for marker in INTERNAL_UA_MARKERS) or bool(_INTERNAL_UA_RE.search(low))
 
 
 def classify(s: Signals) -> tuple[str, bool]:
     """Return (classification, inferred). Order matters; see PRD 032."""
+    if s.role == "service_role" or s.key_prefix.startswith("sb_secret_"):
+        return INTERNAL, False
+    # After the key check (a service key is authoritative), before every
+    # heuristic: UA markers, client info, referer, and the AWS inference.
+    if s.proxied:
+        return (BROWSER if s.ua_browser else THIRD_PARTY), False
     if (
-        s.role == "service_role"
-        or s.key_prefix.startswith("sb_secret_")
-        or s.ua_internal
+        s.ua_internal
         or (s.surface == "edge_function" and s.route_kind in INTERNAL_FUNCTIONS)
     ):
         return INTERNAL, False
-    if s.client_info.startswith(FRIENDLY_CLIENT_INFO_PREFIX):
+    if s.client_info.startswith(FRIENDLY_CLIENT_INFO_PREFIXES):
         return FRIENDLY, False
-    if s.client_info.startswith(SITE_CLIENT_INFO_PREFIX) or s.referer_host in FIRST_PARTY_REFERER_HOSTS:
+    if s.client_info.startswith(SITE_CLIENT_INFO_PREFIXES) or s.referer_host in FIRST_PARTY_REFERER_HOSTS:
         return FIRST_PARTY, False
     if s.before_t0:
         if s.role == "anon" and s.client_info.startswith("supabase-js-node") and s.aws:

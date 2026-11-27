@@ -92,6 +92,8 @@ jobs:
           fi
       - name: Run shared polite fetcher tests
         run: python -m pytest tools/common -q
+      - name: Check runtime code does not name the custom API host
+        run: python tools/ops/check_runtime_api_host.py && python -m unittest tools.ops.test_check_runtime_api_host
       # The Tier 2 suite renders PDF pages and takes far longer than every
       # other step combined. On pull requests and branch pushes it runs only
       # when something it depends on changed. Pushes to main and manual
@@ -210,15 +212,15 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "22"
-      - name: Run MCP stdio tests
-        run: node --test packages/mcp-server/collegedata-mcp.test.js
+      - name: Run package and snapshot tests
+        run: node --test packages/mcp-server/collegedata-mcp.test.js packages/cli/collegedata.test.js tools/snapshots/build_public_snapshots.test.mjs
 
   web:
     name: Next.js build
     # Playwright 1.59 does not ship chromium for ubuntu-26.04 (current ubuntu-latest).
     runs-on: ubuntu-24.04
     env:
-      NEXT_PUBLIC_SUPABASE_URL: "https://api.collegedata.fyi"
+      NEXT_PUBLIC_SUPABASE_URL: "https://isduwmygvmdozhpvzaix.supabase.co"
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzZHV3bXlndm1kb3pocHZ6YWl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDk3NTksImV4cCI6MjA5MTY4NTc1OX0.fYZOIHyrOWzidgc-CVxWCY5Fe9pQk12-6YjDIS6y9qs"
       NEXT_PUBLIC_FEEDBACK_FORMSPREE_ENDPOINT: "https://formspree.io/f/testform"
     steps:

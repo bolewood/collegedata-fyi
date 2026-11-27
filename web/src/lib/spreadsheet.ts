@@ -3,6 +3,7 @@ import type { FieldValue } from "./types";
 import { groupBySection } from "./sections";
 import { getFieldDisplayLabel, getFieldValueType } from "./schema-labels";
 import { buildXlsx, type CellValue, type Sheet } from "./xlsx";
+import { API_ORIGIN, SITE_ORIGIN } from "./site";
 
 // Builds the per-school CDS spreadsheet (XLSX + CSV) served from
 // /schools/{school_id}/{year}/cds.xlsx and .csv (PRD 025). Rows come from
@@ -164,7 +165,7 @@ function readmeSheet(
   input: SpreadsheetInput,
   rows: SpreadsheetFieldRow[],
 ): Sheet {
-  const pageUrl = `https://www.collegedata.fyi/schools/${input.schoolId}/${input.year}`;
+  const pageUrl = `${SITE_ORIGIN}/schools/${input.schoolId}/${input.year}`;
   // Deterministic cleaner rows carry their producer name (tier2_cleaner,
   // tier4_cleaner, …); LLM gap-fill rows carry tier4_llm_fallback.
   const hasFallback = rows.some((r) => r.source.includes("llm"));
@@ -217,7 +218,7 @@ function readmeSheet(
     [],
     ["Same data over the API"],
     [
-      `https://api.collegedata.fyi/rest/v1/cds_fields?school_id=eq.${input.schoolId}&canonical_year=eq.${input.year}`,
+      `${API_ORIGIN}/rest/v1/cds_fields?school_id=eq.${input.schoolId}&canonical_year=eq.${input.year}`,
     ],
   );
 

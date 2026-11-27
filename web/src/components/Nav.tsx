@@ -1,5 +1,6 @@
 "use client";
 
+import { REPO_URL } from "@/lib/repo";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { HeaderSchoolSearch } from "./HeaderSchoolSearch";
@@ -66,7 +67,7 @@ export function Nav() {
                 </Link>
               ))}
               <a
-                href="https://github.com/bolewood/collegedata-fyi"
+                href={REPO_URL}
                 target="_blank"
                 rel="noopener noreferrer"
               >

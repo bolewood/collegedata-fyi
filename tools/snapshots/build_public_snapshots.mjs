@@ -7,8 +7,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const API_BASE = (process.env.COLLEGEDATA_API_BASE ?? "https://www.collegedata.fyi").replace(/\/$/, "");
-const SNAPSHOT_DATE = process.env.COLLEGEDATA_SNAPSHOT_DATE ?? new Date().toISOString().slice(0, 10);
+const API_BASE = (process.env.QUADFILE_API_BASE || process.env.COLLEGEDATA_API_BASE || "https://www.collegedata.fyi").replace(/\/$/, "");
+const SNAPSHOT_DATE = process.env.QUADFILE_SNAPSHOT_DATE || process.env.COLLEGEDATA_SNAPSHOT_DATE || new Date().toISOString().slice(0, 10);
 const OUT_DIR = join(ROOT, "web", "public", "snapshots", "v1", SNAPSHOT_DATE);
 // Keep in step with dataLicenseFields() in web/src/lib/data-license.ts (a web test pins it).
 // The license lives in the manifest only; never prepend non-record lines to JSONL.

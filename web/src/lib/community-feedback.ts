@@ -1,3 +1,5 @@
+import { REPO_URL } from "./repo";
+import { SITE_NAME } from "./site";
 /** Public, bounded contract. Never add free text to community analytics. */
 export const feedbackKinds = ["feedback", "story", "data_issue"] as const;
 export const feedbackSources = [
@@ -14,7 +16,7 @@ export const feedbackSources = [
 ] as const;
 export type FeedbackKind = (typeof feedbackKinds)[number];
 export type FeedbackSource = (typeof feedbackSources)[number];
-export const GITHUB_REPOSITORY = "https://github.com/bolewood/collegedata-fyi";
+export const GITHUB_REPOSITORY = REPO_URL;
 export const FEEDBACK_EMAIL = "mailto:contact@bolewood.com";
 export type FeedbackPayload = {
   kind: FeedbackKind;
@@ -148,14 +150,14 @@ export function emptyFeedback(
   };
 }
 export function feedbackSubject(payload: FeedbackPayload): string {
-  if (payload.kind === "story") return "[Story] collegedata.fyi";
+  if (payload.kind === "story") return `[Story] ${SITE_NAME}`;
   if (payload.kind === "data_issue") {
-    const target = payload.school || "collegedata.fyi";
+    const target = payload.school || SITE_NAME;
     return payload.year
       ? `[Data issue] ${target} (${payload.year})`
       : `[Data issue] ${target}`;
   }
-  return "[Feedback] collegedata.fyi";
+  return `[Feedback] ${SITE_NAME}`;
 }
 export function toFormspreeData(payload: FeedbackPayload): FormData {
   const formData = new FormData();

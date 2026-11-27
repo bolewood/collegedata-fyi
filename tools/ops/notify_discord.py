@@ -19,10 +19,16 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from tools.common.site import SITE_ORIGIN  # noqa: E402
+
 
 PROJECT_NAME = "CollegeData.fyi"
-PIPELINE_BOARD_URL = "https://www.collegedata.fyi/pipeline-observation"
-PIPELINE_JSON_URL = "https://www.collegedata.fyi/pipeline-observation.json"
+PIPELINE_BOARD_URL = SITE_ORIGIN + "/pipeline-observation"
+PIPELINE_JSON_URL = SITE_ORIGIN + "/pipeline-observation.json"
 COLOR_FAILURE = 0xD7263D
 COLOR_SUCCESS = 0x1F7A4D
 
@@ -993,7 +999,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--event-name", required=True)
     parser.add_argument("--event-path", type=Path)
-    parser.add_argument("--repo", default=os.environ.get("GITHUB_REPOSITORY", "bolewood/collegedata-fyi"))
+    parser.add_argument("--repo", default=os.environ.get("GITHUB_REPOSITORY") or "bolewood/quadfile")
     parser.add_argument("--state-path", type=Path, default=Path(".discord-notify-state.json"))
     parser.add_argument("--pipeline-url", default=PIPELINE_JSON_URL)
     parser.add_argument("--dry-run", action="store_true")

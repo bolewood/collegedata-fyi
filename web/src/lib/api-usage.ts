@@ -21,6 +21,22 @@ function firstValue(headers: Headers, name: string): string | null {
   return value && value.trim() ? value.trim() : null;
 }
 
+// Rename prep: read the new x-quadfile-* header and qf_* query name first,
+// then the old x-collegedata-* / cd_* one, so old clients are still counted.
+function param(url: URL, name: string): string | null {
+  const value = url.searchParams.get(name);
+  return value && value.trim() ? value : null;
+}
+
+function identity(request: Request, url: URL, header: string, name: string): string | null {
+  return (
+    firstValue(request.headers, `x-quadfile-${header}`) ??
+    firstValue(request.headers, `x-collegedata-${header}`) ??
+    param(url, `qf_${name}`) ??
+    param(url, `cd_${name}`)
+  );
+}
+
 function cleanToken(value: string | null, maxLength = MAX_TOKEN_LENGTH): string | null {
   if (!value) return null;
   const cleaned = value
@@ -139,9 +155,7 @@ export function routeKindFromPath(pathname: string): string {
 export function buildApiUsageEvent(request: Request): ApiUsageEvent {
   const url = new URL(request.url);
   const routeKind = routeKindFromPath(url.pathname);
-  const clientName = cleanToken(
-    firstValue(request.headers, "x-collegedata-client") ?? url.searchParams.get("cd_client"),
-  );
+  const clientName = cleanToken(identity(request, url, "client", "client"));
   const userAgent = firstValue(request.headers, "user-agent");
   const parts = url.pathname.split("/").filter(Boolean);
 
@@ -152,14 +166,16 @@ export function buildApiUsageEvent(request: Request): ApiUsageEvent {
     http_method: request.method.toUpperCase(),
     client_family: clientFamily(clientName, userAgent),
     client_name: clientName,
-    client_version: cleanToken(
-      firstValue(request.headers, "x-collegedata-client-version") ?? url.searchParams.get("cd_client_version"),
-    ),
+    client_version: cleanToken(identity(request, url, "client-version", "client_version")),
     client_tool: cleanToken(
-      firstValue(request.headers, "x-collegedata-mcp-tool") ??
+      firstValue(request.headers, "x-quadfile-mcp-tool") ??
+        firstValue(request.headers, "x-quadfile-cli-command") ??
+        firstValue(request.headers, "x-collegedata-mcp-tool") ??
         firstValue(request.headers, "x-collegedata-cli-command") ??
-        url.searchParams.get("cd_tool") ??
-        url.searchParams.get("cd_command"),
+        param(url, "qf_tool") ??
+        param(url, "qf_command") ??
+        param(url, "cd_tool") ??
+        param(url, "cd_command"),
     ),
     user_agent_family: userAgentFamily(userAgent),
     referer_host: refererHost(firstValue(request.headers, "referer")),

@@ -14,6 +14,7 @@ import {
   type StationLampInput,
   type StripLamp,
 } from "./pipeline-lamps";
+import { SITE_ORIGIN } from "./site";
 
 export type PipelineFactRow = {
   station_id: string;
@@ -388,7 +389,7 @@ const ACTIVITY_TRIGGERS = new Set<ExtractionActivityItem["trigger"]>([
 ]);
 
 const RUN_URL_RE =
-  /^https:\/\/github\.com\/bolewood\/collegedata-fyi\/actions\/runs\/[0-9]+$/;
+  /^https:\/\/github\.com\/bolewood\/(?:collegedata-fyi|quadfile)\/actions\/runs\/[0-9]+$/;
 
 export function formatAgo(iso: string | null | undefined, now: Date): string {
   if (!iso) return "no heartbeat";
@@ -886,7 +887,7 @@ export function snapshotFromFacts(
         last_finished_at: station.last_finished_at,
         ago_label: formatAgo(station.last_finished_at, now),
       })),
-    methodology_url: "https://www.collegedata.fyi/pipeline-observation#methodology",
+    methodology_url: `${SITE_ORIGIN}/pipeline-observation#methodology`,
   };
 }
 

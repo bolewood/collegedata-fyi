@@ -1,11 +1,12 @@
 import { DATA_ATTRIBUTION, DERIVED_DATA_LICENSE_SENTENCE, SOURCE_OWNERSHIP_SENTENCE } from "./data-license";
 import { SITE_URL } from "./sitemap-static";
+import { API_HOST, SITE_NAME_CAPS } from "./site";
 
 /**
  * /llms.txt body in the llmstxt.org format.
  * Endpoint list is the no-auth friendly surface from openapi.json — do not invent paths.
  */
-export const LLMS_TXT = `# CollegeData.FYI
+export const LLMS_TXT = `# ${SITE_NAME_CAPS}
 
 > Each college’s annual Common Data Set alongside federal IPEDS and College Scorecard records, linked to the original files, free with no account.
 
@@ -32,7 +33,7 @@ Endowment health (IPEDS Finance Part H, fiscal years 2020+): request categories=
 - [Field dictionary](${SITE_URL}/api/fields): V1 friendly field definitions
 - [Snapshots](${SITE_URL}/api/snapshots): Bulk files (schools, school_facts, sources, field dictionary), usually regenerated within the hour from live data; check generated_at
 - [Latest snapshot manifest](${SITE_URL}/snapshots/latest/manifest.json): Links to the JSONL and JSON files
-- [PostgREST archive docs](${SITE_URL}/api): The full read-only database API at api.collegedata.fyi (needs the public anon key; see the API docs)
+- [PostgREST archive docs](${SITE_URL}/api): The full read-only database API at ${API_HOST} (needs the public anon key; see the API docs)
 - [OpenAPI](${SITE_URL}/openapi.json): Machine-readable spec for the friendly endpoints
 
 ## Optional

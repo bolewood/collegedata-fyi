@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { MatchListBuilder } from "@/components/MatchListBuilder";
 import { fetchMatchBuilderSchools, fetchBrandColorIndex } from "@/lib/queries";
+import { SITE_NAME, SITE_NAME_CAMEL } from "@/lib/site";
 
 // Hourly ISR. Do not read searchParams here — that opts /match out of
 // static generation and re-runs the school query on every share-link hit.
@@ -14,15 +15,15 @@ export const metadata: Metadata = {
   // Generic on purpose (PRD 024 M1): never put a Match code or any profile
   // value in preview metadata.
   openGraph: {
-    title: "CollegeData.fyi Match List Builder",
+    title: `${SITE_NAME_CAMEL} Match List Builder`,
     description: "Build a college match list from the numbers schools publish.",
     url: "/match",
-    siteName: "collegedata.fyi",
+    siteName: SITE_NAME,
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "CollegeData.fyi Match List Builder",
+    title: `${SITE_NAME_CAMEL} Match List Builder`,
     description: "Build a college match list from the numbers schools publish.",
   },
 };

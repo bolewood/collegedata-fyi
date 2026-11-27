@@ -23,13 +23,17 @@ from typing import Any
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from tools.common.site import runtime_api_origin  # noqa: E402
+
+
 OUT_DIR = REPO_ROOT / ".context" / "reports"
 CSV_OUT = OUT_DIR / "prd019_admissions_reporting_spike.csv"
 MD_OUT = OUT_DIR / "prd019_admissions_reporting_spike.md"
 
-PUBLIC_SUPABASE_URL = "https://api.collegedata.fyi"
 YEARS = (2024, 2025)
 
 SELECT_COLUMNS = [
@@ -82,7 +86,6 @@ def load_env() -> dict[str, str]:
     for path in (
         REPO_ROOT / ".env",
         REPO_ROOT / "web" / ".env.local",
-        Path("/Users/santhonys/Projects/Owen/colleges/collegedata-fyi/web/.env.local"),
     ):
         for key, value in read_env_file(path).items():
             env.setdefault(key, value)
@@ -91,11 +94,7 @@ def load_env() -> dict[str, str]:
 
 def fetch_rows() -> list[dict[str, Any]]:
     env = load_env()
-    base_url = (
-        env.get("SUPABASE_URL")
-        or env.get("NEXT_PUBLIC_SUPABASE_URL")
-        or PUBLIC_SUPABASE_URL
-    ).rstrip("/")
+    base_url = runtime_api_origin(env)
     anon_key = env.get("SUPABASE_ANON_KEY") or env.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
     if not anon_key:
         raise SystemExit(

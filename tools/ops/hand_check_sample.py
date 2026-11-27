@@ -41,8 +41,13 @@ from urllib.parse import quote_plus
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from tools.common.site import SITE_ORIGIN  # noqa: E402
 SCHOOLS_YAML = REPO_ROOT / "tools" / "finder" / "schools.yaml"
-SITE = "https://www.collegedata.fyi"
+SITE = SITE_ORIGIN
 SAMPLE_SIZE = 20
 PAGE_SIZE = 1000
 YEAR_RE = re.compile(r"^(\d{4})-(\d{2})\Z")
