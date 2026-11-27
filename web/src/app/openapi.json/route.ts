@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { DATA_ATTRIBUTION, DATA_LICENSE, DATA_LICENSE_NAME } from "@/lib/data-license";
 import { selectableFactKeys } from "@/lib/public-data";
+import { SITE_NAME_CAPS, SITE_ORIGIN } from "@/lib/site";
 
 export const revalidate = 3600;
 
@@ -39,13 +40,13 @@ export async function GET() {
     {
       openapi: "3.1.0",
       info: {
-        title: "CollegeData.FYI friendly API",
+        title: `${SITE_NAME_CAPS} friendly API`,
         version: "0.2.0",
         description:
           `Task-oriented, no-auth JSON endpoints for source-linked college facts, school search, comparisons, sources, and field definitions. The structured CDS extracts are licensed ${DATA_LICENSE_NAME}; credit them with: ${DATA_ATTRIBUTION} Federal IPEDS, College Scorecard and FSA facts keep their own source credit. The code is MIT-licensed.`,
         license: { name: DATA_LICENSE_NAME, identifier: DATA_LICENSE },
       },
-      servers: [{ url: "https://www.collegedata.fyi" }],
+      servers: [{ url: SITE_ORIGIN }],
       paths: {
         "/api/schools/search": {
           get: {
@@ -192,7 +193,7 @@ export async function GET() {
           post: {
             summary: "MCP Streamable HTTP endpoint",
             description:
-              "JSON-RPC MCP server. Paste https://www.collegedata.fyi/api/mcp as a Claude custom connector. No API key.",
+              `JSON-RPC MCP server. Paste ${SITE_ORIGIN}/api/mcp as a Claude custom connector. No API key.`,
             requestBody: {
               required: true,
               content: {
