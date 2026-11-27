@@ -79,7 +79,7 @@ ALLOWLIST: dict[str, tuple[str, str]] = {
     "web/src/lib/old-api-host.ts": (
         "old-host handler, removed at month +12",
         r"\* Today no request reaches the app with these hosts \(api\.collegedata\.fyi is a"
-        r'|"api\.collegedata\.fyi": "https://api\.quadfile\.org",',
+        r'|"api\.collegedata\.fyi": SUPABASE_ORIGIN,',
     ),
     "tools/api_usage/classify.py": (
         "classifies gateway log lines by request host and by the forwarded host of proxied "
