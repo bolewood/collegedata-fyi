@@ -71,9 +71,8 @@ describe("footer", () => {
 const SRC = fileURLToPath(new URL("../", import.meta.url));
 const PUBLIC = fileURLToPath(new URL("../../public/", import.meta.url));
 
-const REPO_LINK = /github\.com(\/|\\\/)bolewood(\/|\\\/)collegedata-fyi|bolewood(\/|\\\/)collegedata-fyi/;
 const ALLOWED: Array<{ file: RegExp; line: RegExp; why: string }> = [
-  { file: /./, line: REPO_LINK, why: "repository links and run-URL patterns (PR B owns them)" },
+  { file: /^lib\/pipeline-observation\.ts$/, line: /bolewood\\\/\(\?:collegedata-fyi\|quadfile\)/, why: "run-URL pattern accepts both repo names (stored heartbeats keep the old one)" },
   { file: /^lib\/site\.ts$/, line: /FORMER_NAME = "collegedata\.fyi"/, why: "the footer's plain-text former name" },
   { file: /^lib\/(old-api-host|old-site-redirect|client-info)\.ts$/, line: /collegedata/i, why: "old hosts: redirect and archive-URL compatibility" },
   { file: /^proxy\.ts$/, line: /api\\\\\.collegedata\\\\\.fyi/, why: "old API host in the proxy matcher" },
