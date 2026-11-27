@@ -68,7 +68,7 @@ class RenderTests(unittest.TestCase):
 
     def test_block_has_links_and_three_boxes(self):
         body = h.render_issue(self.PICKS, "2026-11")
-        self.assertIn("https://www.collegedata.fyi/schools/alpha", body)
+        self.assertIn("https://www.quadfile.org/schools/alpha", body)
         self.assertIn("https://alpha.edu\n", body)
         self.assertIn("https://alpha.edu/cds", body)
         self.assertIn("site%3Aalpha.edu+%22common+data+set%22", body)
@@ -76,7 +76,7 @@ class RenderTests(unittest.TestCase):
         self.assertEqual(body.count("- [ ] "), 8)
         self.assertIn("none on file", body)
         # newest-year document link only for a school with a dated year
-        self.assertIn("https://www.collegedata.fyi/schools/alpha/2024-25", body)
+        self.assertIn("https://www.quadfile.org/schools/alpha/2024-25", body)
         self.assertNotIn("/schools/beta/", body)
         self.assertIn("not a full CDS", body)
 
