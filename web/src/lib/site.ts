@@ -26,5 +26,11 @@ export const APEX_HOST = "collegedata.fyi";
 export const API_ORIGIN = "https://api.collegedata.fyi";
 export const API_HOST = "api.collegedata.fyi";
 
+/**
+ * Runtime default only; display uses API_ORIGIN. A runtime call that falls back
+ * to this never depends on a redirect from the custom API host.
+ */
+export const PROJECT_ORIGIN = "https://isduwmygvmdozhpvzaix.supabase.co";
+
 /** Server name the hosted MCP endpoint reports. */
 export const MCP_SERVER_NAME = "collegedata-fyi";

@@ -23,7 +23,14 @@ from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-API = "https://api.collegedata.fyi/rest/v1"
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from tools.common.site import runtime_api_origin  # noqa: E402
+
+
+def api_base() -> str:
+    return f"{runtime_api_origin()}/rest/v1"
+
 
 # CDS field id -> card_id(s) the field backs (2024-25 schema ids; see
 # web/src/lib/labels-2024-25.ts for labels).
@@ -68,7 +75,7 @@ def main():
     ids = ",".join(FIELD_CARDS)
     rows, offset = [], 0
     while True:
-        url = (f"{API}/cds_fields?select=school_id,field_id"
+        url = (f"{api_base()}/cds_fields?select=school_id,field_id"
                f"&canonical_year=eq.{args.year}&field_id=in.({ids})"
                f"&limit=1000&offset={offset}")
         req = urllib.request.Request(

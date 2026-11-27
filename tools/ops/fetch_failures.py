@@ -55,8 +55,8 @@ import yaml  # noqa: E402
 
 # One copy of the mechanism: these come from the renewal module (PR #474).
 # This module imports only after #474 is on main.
+from tools.common.site import runtime_api_origin  # noqa: E402
 from tools.ops.discovery_renewal import (  # noqa: E402
-    DEFAULT_API,
     DEFAULT_SCHOOLS_YAML,
     PAGE_SIZE,
     SCHOOL_PAGE_URL,
@@ -501,7 +501,7 @@ def write_json(path: Path | None, data: Any) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--api-url", default=os.environ.get("CDS_API_URL", DEFAULT_API))
+    parser.add_argument("--api-url", default=os.environ.get("CDS_API_URL") or runtime_api_origin())
     parser.add_argument("--anon-key", default=os.environ.get("SUPABASE_ANON_KEY", ""))
     parser.add_argument(
         "--supabase-url",

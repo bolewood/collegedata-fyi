@@ -5,6 +5,7 @@ import { SITE_URL } from "./sitemap-static";
 import {
   API_HOST,
   API_ORIGIN,
+  PROJECT_ORIGIN,
   APEX_HOST,
   MCP_SERVER_NAME,
   SITE_HOST,
@@ -27,6 +28,7 @@ describe("site constants", () => {
     expect(APEX_HOST).toBe("collegedata.fyi");
     expect(API_ORIGIN).toBe("https://api.collegedata.fyi");
     expect(API_HOST).toBe("api.collegedata.fyi");
+    expect(PROJECT_ORIGIN).toBe("https://isduwmygvmdozhpvzaix.supabase.co");
     expect(MCP_SERVER_NAME).toBe("collegedata-fyi");
   });
 
