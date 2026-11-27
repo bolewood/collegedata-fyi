@@ -251,7 +251,7 @@ test("hosted MCP Streamable HTTP handshake and search", async ({ request }) => {
   });
   expect(init.ok()).toBeTruthy();
   const initBody = await init.json();
-  expect(initBody.result.serverInfo.name).toBe("collegedata-fyi");
+  expect(initBody.result.serverInfo.name).toBe("quadfile");
   expect(initBody.result.capabilities.tools).toBeTruthy();
 
   const listed = await request.post("/api/mcp", {
