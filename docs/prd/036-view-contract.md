@@ -175,7 +175,7 @@ Every row carries `license` and `attribution`. The API docs page shows the
 string and asks API users to display it; the card footer links to the
 methodology page.
 
-> Scholarship program data from collegedata.fyi (https://collegedata.fyi/scholarships), CC BY-SA 4.0. Terms as published by each school; see the source link on each record.
+> Scholarship program data from Quadfile (https://www.quadfile.org/scholarships), CC BY-SA 4.0. Terms as published by each school; see the source link on each record.
 
 ## Example row
 
@@ -607,6 +607,6 @@ program data. It shows a full cost-of-attendance offer with an advertised total,
   "last_check_result": null,
   "needs_review": null,
   "license": "CC-BY-SA-4.0",
-  "attribution": "Scholarship program data from collegedata.fyi (https://collegedata.fyi/scholarships), CC BY-SA 4.0. Terms as published by each school; see the source link on each record."
+  "attribution": "Scholarship program data from Quadfile (https://www.quadfile.org/scholarships), CC BY-SA 4.0. Terms as published by each school; see the source link on each record."
 }
 ```

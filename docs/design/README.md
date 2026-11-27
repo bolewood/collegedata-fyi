@@ -1,13 +1,13 @@
 # docs/design/
 
-Source-of-truth archive for the collegedata.fyi visual system.
+Source-of-truth archive for the Quadfile visual system.
 
 This folder holds the original export from a Claude Design session (April 2026) that produced the current design language. It's kept here so future designers and coding agents can see the intent behind every palette choice, component, and layout decision without guessing from the shipped code.
 
 ## What's here
 
 - [`HANDOFF_README.md`](HANDOFF_README.md) — the original read-me from the design session, explaining how the bundle was assembled and how a coding agent should interpret it.
-- [`reference/design-system.html`](../../web/public/design-system/index.html) (served at [`/design-system/`](https://collegedata.fyi/design-system/)) — the canonical visual reference page. Also mirrored under [`web/public/design-system/`](../../web/public/design-system/) so it ships to production.
+- [`reference/design-system.html`](../../web/public/design-system/index.html) (served at [`/design-system/`](https://www.quadfile.org/design-system/)) — the canonical visual reference page. Also mirrored under [`web/public/design-system/`](../../web/public/design-system/) so it ships to production.
 - [`reference/`](reference/) — the full set of HTML/JSX prototypes the designer built during the handoff session. **Prototypes, not production code.** They illustrate intent; the actual production implementation is in `web/src/`.
   - `design-system.html` — source for the live reference page
   - `collegedata-redesign.html` — the first unified visual concept

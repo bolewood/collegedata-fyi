@@ -8,7 +8,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Use this when collegedata.fyi is missing a school, has the wrong Common Data Set URL, or needs a sub-institutional CDS variant added.
+        Use this when Quadfile is missing a school, has the wrong Common Data Set URL, or needs a sub-institutional CDS variant added.
   - type: input
     id: school_name
     attributes:

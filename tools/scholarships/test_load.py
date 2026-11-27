@@ -19,17 +19,19 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import load  # noqa: E402
+import migration_files as mf  # noqa: E402
 import model  # noqa: E402
 import validate as v  # noqa: E402
 
 REPO = v.REPO_ROOT
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "valid"
-_MATCHES = sorted((REPO / "supabase" / "migrations").glob("*_scholarship_directory.sql"))
-assert len(_MATCHES) == 1, _MATCHES  # resolved by name so a timestamp change at merge does not break the tests
-MIGRATION = _MATCHES[0]
+# Found by content (migration_files.py), so a timestamp or file-name change at merge cannot make a
+# test read an older definition.
+MIGRATION = mf.base_migration()
 # The migration that last (re)defined the cache and the view: a materialized view cannot gain a
 # column in place, so the other_info migration recreates both. Column and cache pins read this one.
-VIEW_MIGRATION = sorted((REPO / "supabase" / "migrations").glob("*_scholarship_directory*.sql"))[-1]
+VIEW_MIGRATION = mf.newest_cache_migration()
+LIVE_VIEW_MIGRATION = mf.newest_view_migration()  # the view body that is live: attribution, license, columns
 CONTRACT = REPO / "docs" / "prd" / "036-view-contract.md"
 FOUNDATION = "fixture-foundation-program"
 PARENT = "fixture-parent-program"
@@ -621,7 +623,7 @@ def table_columns(sql: str, table: str) -> Tuple[set, set]:
 
 
 def view_columns(sql: str) -> List[str]:
-    block = sql.split("create view public.scholarship_directory", 1)[1].split("from public.scholarship_directory_cache c;", 1)[0]
+    block = re.split(r"create (?:or replace )?view public\.scholarship_directory", sql, maxsplit=1, flags=re.I)[1].split("from public.scholarship_directory_cache c;", 1)[0]
     names = []
     for line in block.splitlines():
         m = re.match(r"^  c\.([a-z_]+),?$", line) or re.search(r"\bas ([a-z_]+),?\s*$", line)
@@ -685,13 +687,13 @@ def contract_columns(text: str) -> List[str]:
 
 def test_contract_lists_exactly_the_view_columns_in_order():
     sql = MIGRATION.read_text(encoding="utf-8")
-    assert contract_columns(CONTRACT.read_text(encoding="utf-8")) == view_columns(VIEW_MIGRATION.read_text(encoding="utf-8"))
+    assert contract_columns(CONTRACT.read_text(encoding="utf-8")) == view_columns(LIVE_VIEW_MIGRATION.read_text(encoding="utf-8"))
 
 
 def test_contract_example_row_matches_the_view_columns():
     text = CONTRACT.read_text(encoding="utf-8")
     example = json.loads(text.split("```json\n", 1)[1].split("\n```", 1)[0])
-    assert sorted(example) == sorted(view_columns(VIEW_MIGRATION.read_text(encoding="utf-8")))
+    assert sorted(example) == sorted(view_columns(LIVE_VIEW_MIGRATION.read_text(encoding="utf-8")))
     assert example["license"] == model.LICENSE_ID
     assert example["attribution"] == model.ATTRIBUTION
     assert example["freshness_status"] in {
@@ -716,7 +718,7 @@ def test_contract_example_row_agrees_with_the_loader_output(ds):
     text = CONTRACT.read_text(encoding="utf-8")
     example = json.loads(text.split("```json\n", 1)[1].split("\n```", 1)[0])
     assert example == full_row(ds, dt.date(2026, 11, 14))
-    assert list(example) == view_columns(VIEW_MIGRATION.read_text(encoding="utf-8"))  # same order as the view
+    assert list(example) == view_columns(LIVE_VIEW_MIGRATION.read_text(encoding="utf-8"))  # same order as the view
 
 
 def test_freshness_rule_is_stated_in_the_migration_and_the_contract():
@@ -803,7 +805,7 @@ def test_helper_functions_pin_their_search_path():
 
 
 def test_view_pins_the_attribution_and_license_literals():
-    sql = MIGRATION.read_text(encoding="utf-8")
+    sql = LIVE_VIEW_MIGRATION.read_text(encoding="utf-8")
     assert f"'{model.ATTRIBUTION}'::text as attribution" in sql
     assert f"'{model.LICENSE_ID}'::text as license" in sql
 
@@ -906,6 +908,33 @@ def test_other_info_migration_recreates_cache_and_view_with_the_same_access():
     for idx in ("scholarship_directory_cache_program_school_uidx", "scholarship_directory_cache_school_idx",
                 "scholarship_directory_cache_coverages_idx", "scholarship_directory_cache_nm_idx"):
         assert f"create unique index {idx}" in sql or f"create index {idx}" in sql
-    assert f"'{model.ATTRIBUTION}'::text as attribution" in sql and f"'{model.LICENSE_ID}'::text as license" in sql
+    # The attribution is pinned by the newest view definition (test_view_pins_the_attribution...);
+    # this test is about the cache and access recreation in the migration that added other_info.
+    assert f"'{model.LICENSE_ID}'::text as license" in sql
     assert "coalesce(oi.other_info, '[]'::jsonb) as other_info" in sql
     assert "short_excerpt" not in sql
+
+
+def test_migration_helper_finds_the_newest_view_by_content(tmp_path):
+    # Guards a filename glob (`*_scholarship_directory*.sql`) silently reading an older view definition.
+    files = {
+        "001_base.sql": "create table public.scholarship_programs (id int);\ncreate view public.scholarship_directory as select 1;",
+        "002_text.sql": "-- rename text\nCREATE OR REPLACE VIEW public.scholarship_directory AS select 2;",
+        "003_mention.sql": "-- create view public.scholarship_directory as select 3;\nselect 1;",
+        "004_alter.sql": "alter table public.scholarship_programs add column x int;",
+        "005_other.sql": "create table public.unrelated (id int);",
+    }
+    for name, text in files.items():
+        (tmp_path / name).write_text(text, encoding="utf-8")
+    names = lambda paths: [p.name for p in paths]
+    assert names(mf.view_migrations(tmp_path)) == ["001_base.sql", "002_text.sql"]
+    assert mf.newest_view_migration(tmp_path).name == "002_text.sql"  # not named after the view
+    assert mf.base_migration(tmp_path).name == "001_base.sql"
+    assert names(mf.all_scholarship_migrations(tmp_path)) == ["001_base.sql", "002_text.sql", "004_alter.sql"]
+
+
+def test_migration_helper_reads_the_real_newest_view():
+    newest = mf.newest_view_migration()
+    assert mf.base_migration() == MIGRATION and mf.view_migrations()[-1] == newest
+    assert newest in mf.all_scholarship_migrations()
+    assert f"'{model.ATTRIBUTION}'::text as attribution" in newest.read_text(encoding="utf-8")

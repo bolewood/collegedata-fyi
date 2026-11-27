@@ -78,7 +78,7 @@ export default function IpedsPage() {
         >
           nces.ed.gov/ipeds
         </a>
-        . This guide explains how those federal tables appear on collegedata.fyi
+        . This guide explains how those federal tables appear on Quadfile
         and where they differ from a college's Common Data Set.
       </p>
 

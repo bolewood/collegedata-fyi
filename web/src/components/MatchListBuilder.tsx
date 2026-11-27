@@ -284,7 +284,7 @@ export function MatchListBuilder({
             className="cd-btn cd-btn--ghost"
             type="button"
             onClick={() => {
-              downloadCsv("collegedata-match-list.csv", rankedSchoolsCsv(ranked));
+              downloadCsv("quadfile-match-list.csv", rankedSchoolsCsv(ranked));
               trackDownload({
                 surface: "match_builder",
                 fileType: "csv",

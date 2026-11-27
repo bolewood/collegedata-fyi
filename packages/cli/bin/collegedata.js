@@ -5,7 +5,7 @@ const CLIENT_NAME = "cli";
 const CLIENT_VERSION = "0.1.0";
 // Keep in step with DATA_ATTRIBUTION in web/src/lib/data-license.ts (a web test pins it).
 const DATA_ATTRIBUTION =
-  "Common Data Set extracts from collegedata.fyi (https://www.collegedata.fyi), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Figures as published in each school's Common Data Set.";
+  "Common Data Set extracts from Quadfile (https://www.quadfile.org), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Figures as published in each school's Common Data Set.";
 
 // Table and CSV output drop the JSON envelope's attribution field, so print the
 // credit line once on stderr. Never on stdout: that would corrupt piped CSV.
@@ -22,12 +22,14 @@ function printCreditOnExit() {
 
 function usage() {
   console.error(`Usage:
-  collegedata search <query> [--format json]
-  collegedata facts <school_id> [--categories admissions,cost,outcomes] [--format json|table]
-  collegedata compare <school_id...> [--categories admissions,cost,outcomes] [--fields applied,admitted] [--format json|csv|table]
-  collegedata sources <school_id> [--format json]
-  collegedata fields [--category admissions] [--format json|table]
-  collegedata export <snapshot> [--format jsonl|json|duckdb]`);
+  quadfile search <query> [--format json]
+  quadfile facts <school_id> [--categories admissions,cost,outcomes] [--format json|table]
+  quadfile compare <school_id...> [--categories admissions,cost,outcomes] [--fields applied,admitted] [--format json|csv|table]
+  quadfile sources <school_id> [--format json]
+  quadfile fields [--category admissions] [--format json|table]
+  quadfile export <snapshot> [--format jsonl|json|duckdb]
+
+(\`collegedata\` still works as an alias for \`quadfile\`.)`);
 }
 
 function parseOptions(args) {

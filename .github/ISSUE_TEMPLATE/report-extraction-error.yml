@@ -8,7 +8,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Use this when the source CDS is correct but collegedata.fyi extracted, normalized, or displayed the wrong value.
+        Use this when the source CDS is correct but Quadfile extracted, normalized, or displayed the wrong value.
   - type: input
     id: school_id
     attributes:
@@ -26,8 +26,8 @@ body:
   - type: input
     id: page_url
     attributes:
-      label: collegedata.fyi page URL
-      placeholder: https://www.collegedata.fyi/schools/yale/2024-25
+      label: Quadfile page URL
+      placeholder: https://www.quadfile.org/schools/yale/2024-25
     validations:
       required: false
   - type: input
@@ -41,7 +41,7 @@ body:
   - type: textarea
     id: observed
     attributes:
-      label: What collegedata.fyi shows
+      label: What Quadfile shows
       placeholder: "Example: Applied = 3,210"
     validations:
       required: true

@@ -10,7 +10,7 @@ const ANON_KEY =
 export const metadata: Metadata = {
   title: "Admission rounds methodology",
   description:
-    "How collegedata.fyi reads Early Decision, Early Action, yield, wait-list, and admission-factor context from Common Data Set Section C — and which rates CDS will not support.",
+    "How Quadfile reads Early Decision, Early Action, yield, wait-list, and admission-factor context from Common Data Set Section C — and which rates CDS will not support.",
   alternates: { canonical: "/methodology/admission-strategy" },
   openGraph: { url: "/methodology/admission-strategy" },
 };

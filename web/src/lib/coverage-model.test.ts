@@ -308,8 +308,8 @@ describe("coverage CSV notes", () => {
   });
 
   it("names the view and all-colleges files differently", () => {
-    expect(coverageCsvFilename("view", "2026-11-25")).toBe("collegedata-coverage-view-2026-11-25.csv");
-    expect(coverageCsvFilename("all", "2026-11-25")).toBe("collegedata-coverage-all-colleges-2026-11-25.csv");
+    expect(coverageCsvFilename("view", "2026-11-25")).toBe("quadfile-coverage-view-2026-11-25.csv");
+    expect(coverageCsvFilename("all", "2026-11-25")).toBe("quadfile-coverage-all-colleges-2026-11-25.csv");
   });
 });
 

@@ -53,7 +53,7 @@ export function CoverageDownloads({ viewRows, allRows }: { viewRows: Institution
         <a href={DATA_LICENSE_URL} style={{ textDecoration: "underline" }}>
           {DATA_LICENSE_NAME}
         </a>
-        . Credit collegedata.fyi. {COVERAGE_CSV_DEFINITION_NOTE}
+        . Credit Quadfile. {COVERAGE_CSV_DEFINITION_NOTE}
       </p>
     </div>
   );

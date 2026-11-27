@@ -15,7 +15,7 @@ export default async function Image() {
     (
       <div
         style={{
-          background: "linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%)",
+          background: "#f1ece1",
           width: "100%",
           height: "100%",
           display: "flex",
@@ -25,17 +25,30 @@ export default async function Image() {
           padding: "60px",
         }}
       >
-        {/* Site name */}
+        {/* Wordmark: four forest squares, QUADFILE in tracked caps */}
         <div
           style={{
             display: "flex",
-            fontSize: 64,
-            fontWeight: 700,
-            color: "#ffffff",
-            marginBottom: 12,
+            alignItems: "center",
+            marginBottom: 20,
           }}
         >
-          {SITE_NAME}
+          <div style={{ display: "flex", flexWrap: "wrap", width: 64, gap: 8, marginRight: 28 }}>
+            <div style={{ width: 28, height: 28, background: "#3f5b3a" }} />
+            <div style={{ width: 28, height: 28, background: "#3f5b3a" }} />
+            <div style={{ width: 28, height: 28, background: "#3f5b3a" }} />
+            <div style={{ width: 28, height: 28, background: "#3f5b3a" }} />
+          </div>
+          <div
+            style={{
+              display: "flex",
+              fontSize: 72,
+              letterSpacing: "0.14em",
+              color: "#1c1e1b",
+            }}
+          >
+            QUADFILE
+          </div>
         </div>
 
         {/* Tagline */}
@@ -43,7 +56,7 @@ export default async function Image() {
           style={{
             display: "flex",
             fontSize: 28,
-            color: "#94a3b8",
+            color: "#65645d",
             marginBottom: 48,
           }}
         >
@@ -74,15 +87,16 @@ function StatPill({ label, value }: { label: string; value: string }) {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        background: "rgba(255,255,255,0.1)",
-        borderRadius: 16,
+        background: "#e9e3d4",
+        border: "1px solid rgba(28,30,27,0.28)",
+        borderRadius: 2,
         padding: "20px 40px",
       }}
     >
-      <div style={{ fontSize: 40, fontWeight: 700, color: "#ffffff" }}>
+      <div style={{ fontSize: 40, color: "#1c1e1b" }}>
         {value}
       </div>
-      <div style={{ fontSize: 18, color: "#94a3b8", marginTop: 4 }}>
+      <div style={{ fontSize: 18, color: "#65645d", marginTop: 4 }}>
         {label}
       </div>
     </div>

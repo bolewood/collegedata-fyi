@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Post CollegeData.fyi ops events to Bolewood Discord webhooks.
+"""Post Quadfile ops events to Bolewood Discord webhooks.
 
 Never fails the calling job. Missing webhook secrets skip the post.
 Webhook URLs are never written to stdout/stderr.

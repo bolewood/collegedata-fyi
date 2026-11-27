@@ -27,14 +27,15 @@ from typing import Any, Dict, List, Optional
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import migration_files as mf  # noqa: E402
 import model  # noqa: E402
 import validate as v  # noqa: E402
 
 REPO = v.REPO_ROOT
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "valid"
-# Every migration that defines the cache or the view, in order: the base one, then the one that
-# recreates both to add other_info.
-MIGRATIONS = sorted((REPO / "supabase" / "migrations").glob("*_scholarship_directory*.sql"))
+# Every migration that defines a scholarship table, function, cache or view, in order, found by
+# content so a later view redefinition is included whatever its file is called.
+MIGRATIONS = mf.all_scholarship_migrations()
 CONTRACT = REPO / "docs" / "prd" / "036-view-contract.md"
 
 
@@ -97,6 +98,11 @@ def pg():
         db.run(
             "alter default privileges in schema public grant all on tables to anon, authenticated, service_role;\n"
             "alter default privileges in schema public grant all on functions to anon, authenticated, service_role;\n"
+            # The rename migration also comments on three usage objects outside this feature; stub them
+            # so its statements and its own verification block run unchanged.
+            + "create table public.api_usage_events (client_name text);\n"
+            "create table public.api_usage_downloads_daily (id int);\n"
+            "create table public.usage_public_daily (id int);\n"
             + "\n".join(m.read_text(encoding="utf-8") for m in MIGRATIONS)
         )
         yield db

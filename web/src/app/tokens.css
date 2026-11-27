@@ -1,4 +1,4 @@
-/* collegedata.fyi — shared design tokens.
+/* Quadfile — shared design tokens.
    Paper + ink + forest. Newsreader display, Geist body, JetBrains Mono caption.
    All charts/recipes should import this file. */
 
@@ -378,6 +378,11 @@
   .cd-header-search__results { position: static; margin-top: 8px; }
   .cd-nav-links { justify-content: flex-start; gap: 18px; font-size: 13px; flex-wrap: wrap; align-items: center; }
   .cd-nav-more > div { right: 0; }
+}
+.cd-footer-inner {
+  display: grid;
+  grid-template-columns: minmax(16rem, 1fr) auto;
+  gap: 32px;
 }
 .cd-footer-links {
   flex-wrap: wrap;

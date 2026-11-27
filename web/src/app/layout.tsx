@@ -34,7 +34,7 @@ const jetbrains = localFont({
 });
 
 // metadataBase lets every route segment below use relative paths for
-// canonical / openGraph URLs. The apex (https://collegedata.fyi)
+// canonical / openGraph URLs. The apex (https://quadfile.org)
 // 301-redirects to www, so www is the canonical host.
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_ORIGIN),

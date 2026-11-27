@@ -1,6 +1,6 @@
-# collegedata.fyi web app
+# Quadfile web app
 
-Next.js 16 frontend for [collegedata.fyi](https://collegedata.fyi).
+Next.js 16 frontend for [Quadfile](https://www.quadfile.org).
 
 The full frontend architecture is documented in [`../docs/frontend.md`](../docs/frontend.md).
 Read [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) before changing UI.

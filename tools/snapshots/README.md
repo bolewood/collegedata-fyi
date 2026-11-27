@@ -4,12 +4,12 @@
 
 ```bash
 # Node 20+; no install needed
-COLLEGEDATA_API_BASE=https://www.collegedata.fyi \
-COLLEGEDATA_SNAPSHOT_DATE=2026-11-09 \
+QUADFILE_API_BASE=https://www.quadfile.org \
+QUADFILE_SNAPSHOT_DATE=2026-11-09 \
   node tools/snapshots/build_public_snapshots.mjs
 ```
 
-It downloads `schools.jsonl`, `school_facts.jsonl`, `sources.jsonl` and `field_dictionary.json` from `<api base>/snapshots/latest/`, writes them with a SHA-256 manifest to `web/public/snapshots/v1/<date>/manifest.json` (the date defaults to today, UTC), and builds `collegedata.duckdb` only if the `duckdb` CLI is installed. Both environment variables are optional.
+It downloads `schools.jsonl`, `school_facts.jsonl`, `sources.jsonl` and `field_dictionary.json` from `<api base>/snapshots/latest/`, writes them with a SHA-256 manifest to `web/public/snapshots/v1/<date>/manifest.json` (the date defaults to today, UTC), and builds `quadfile.duckdb` only if the `duckdb` CLI is installed. Both environment variables are optional.
 
 ## What the site serves today
 

@@ -4,7 +4,7 @@ import type { AlignmentGapMeritRow, AlignmentGapRow } from "./alignment-gap-reci
 
 export const ALIGNMENT_GAP_META = {
   "generatedAt": "2026-11-18",
-  "sourceApiUrl": "https://api.collegedata.fyi",
+  "sourceApiUrl": "https://api.quadfile.org",
   "scorecardYears": [
     "2022-23"
   ],
@@ -6699,7 +6699,7 @@ export const ALIGNMENT_GAP_SCHOOLS: readonly AlignmentGapRow[] = [
 
 export const ALIGNMENT_GAP_MERIT_META = {
   "generatedAt": "2026-11-18",
-  "sourceApiUrl": "https://api.collegedata.fyi",
+  "sourceApiUrl": "https://api.quadfile.org",
   "scorecardYears": [
     "2022-23"
   ],

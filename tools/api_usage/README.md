@@ -10,7 +10,7 @@ Privacy-preserving API usage capture (PRD 032) and the public `/usage` page's da
 | `classify.py` | Pure functions that classify log groups into `internal_pipeline`, `friendly_api_upstream`, `first_party_site`, `browser_unattributed` and `third_party`. Returns no IPs, full user agents, or query strings. |
 | `aggregate.py` | Turns grouped rows into the JSON payloads for `api_usage_replace_window()` and `api_usage_replace_downloads_day()`. |
 | `publish.py` | Publishes ready days and complete months into `usage_public_daily` and `usage_public_school_months` through `api_usage_publish_pending()`, then scans with `usage_public_violations()` and fails if a privacy rule is broken. |
-| `test_*.py` | Unit tests, including `test_pipeline_identity.py`: pipeline tools that reach public surfaces must send a `collegedata-pipeline` User-Agent so they are not counted as third-party traffic. |
+| `test_*.py` | Unit tests, including `test_pipeline_identity.py`: pipeline tools that reach public surfaces must send a `quadfile-pipeline` (or the older `collegedata-pipeline`) User-Agent so they are not counted as third-party traffic. |
 
 ## Running
 

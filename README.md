@@ -1,4 +1,4 @@
-# collegedata.fyi
+# Quadfile
 
 **College facts pulled from school-published Common Data Sets and source-labeled federal data.**
 
@@ -6,7 +6,7 @@ Open-source Common Data Set API, searchable college admissions dataset, federal 
 
 An open, reproducible library of US college data. We find each school's Common Data Set document, extract it into a canonical schema, and publish both the raw source file and the structured extract alongside a queryable manifest. For schools without a public CDS, we now publish a curated NCES/IPEDS federal baseline keyed by `ipeds_id` (zero-padded UNITID) and labeled as federal data. No hand-cleaned numbers, no unlabeled source blending: CDS remains the school-authored source, IPEDS and Scorecard remain federal context.
 
-> **Status: V1 live at [collegedata.fyi](https://collegedata.fyi).** Current coverage is at [`/coverage`](https://collegedata.fyi/coverage) and pipeline health at [`/pipeline-observation`](https://collegedata.fyi/pipeline-observation). A dated snapshot: the August 6, 2026 integrity audit counted 6,322 institutions in the federal directory, 4,071 archived CDS documents, 262,537 public `cds_fields` rows, and 558 `school_browser_rows`. Five of six extraction tiers shipped: filled XLSX, fillable PDF, flattened PDF, image-only scan, and structured HTML. DOCX is the only remaining tier and is scoped in [PRD 007](docs/prd/007-tier3-docx-extraction.md). The live product now includes institution coverage transparency, source-labeled NCES/IPEDS baseline facts, academic positioning, admission strategy, match-list building, merit profile data, Scorecard outcomes, and a PRD 019 change-intelligence alpha for source-linked year-over-year CDS deltas. Public change events are explicitly review-gated. See the [August 2026 data-integrity audit](docs/plans/audit-2026-08-06-final/README.md), [`docs/extraction-quality.md`](docs/extraction-quality.md) for the May 2026 extraction-accuracy benchmark and the June to November 2026 repairs, and [`tools/ipeds/README.md`](tools/ipeds/README.md) for the IPEDS release pipeline.
+> **Status: V1 live at [Quadfile](https://www.quadfile.org).** Current coverage is at [`/coverage`](https://www.quadfile.org/coverage) and pipeline health at [`/pipeline-observation`](https://www.quadfile.org/pipeline-observation). A dated snapshot: the August 6, 2026 integrity audit counted 6,322 institutions in the federal directory, 4,071 archived CDS documents, 262,537 public `cds_fields` rows, and 558 `school_browser_rows`. Five of six extraction tiers shipped: filled XLSX, fillable PDF, flattened PDF, image-only scan, and structured HTML. DOCX is the only remaining tier and is scoped in [PRD 007](docs/prd/007-tier3-docx-extraction.md). The live product now includes institution coverage transparency, source-labeled NCES/IPEDS baseline facts, academic positioning, admission strategy, match-list building, merit profile data, Scorecard outcomes, and a PRD 019 change-intelligence alpha for source-linked year-over-year CDS deltas. Public change events are explicitly review-gated. See the [August 2026 data-integrity audit](docs/plans/audit-2026-08-06-final/README.md), [`docs/extraction-quality.md`](docs/extraction-quality.md) for the May 2026 extraction-accuracy benchmark and the June to November 2026 repairs, and [`tools/ipeds/README.md`](tools/ipeds/README.md) for the IPEDS release pipeline.
 
 ## Why this exists
 
@@ -23,68 +23,68 @@ We also archive source files on discovery, because some schools do occasionally 
 
 ## What's here
 
-- **[collegedata.fyi](https://collegedata.fyi)** — a public frontend for browsing, searching, and downloading archived CDS documents, plus an institution directory of every active Title-IV school whether or not we have a CDS for it
+- **[Quadfile](https://www.quadfile.org)** — a public frontend for browsing, searching, and downloading archived CDS documents, plus an institution directory of every active Title-IV school whether or not we have a CDS for it
 - **Source files** (PDF, XLSX, DOCX, and structured HTML) for each school + year combination we've found, archived on discovery
 - **Canonical structured extracts** keyed to the CDS Initiative's own field IDs (A.001, B.101, C.101, ...), with provenance linking every value back to the source
-- **An institution directory and coverage transparency layer** ([PRD 015](docs/prd/015-institution-directory-and-cds-coverage.md)) — every active, undergraduate-serving Title-IV institution gets a searchable identity page and an honest CDS coverage status (`CDS available` / `Older CDS available` / `No public CDS found` / `Not checked yet`). Curated identities are checked against an official NCES snapshot before they can be written, and retired school URLs permanently redirect to the canonical identity. The public coverage table at [`/coverage`](https://collegedata.fyi/coverage) makes the gap visible.
+- **An institution directory and coverage transparency layer** ([PRD 015](docs/prd/015-institution-directory-and-cds-coverage.md)) — every active, undergraduate-serving Title-IV institution gets a searchable identity page and an honest CDS coverage status (`CDS available` / `Older CDS available` / `No public CDS found` / `Not checked yet`). Curated identities are checked against an official NCES snapshot before they can be written, and retired school URLs permanently redirect to the canonical identity. The public coverage table at [`/coverage`](https://www.quadfile.org/coverage) makes the gap visible.
 - **A source-labeled NCES/IPEDS federal baseline** ([PRD 021](docs/prd/021-ipeds-coverage-layer.md)) — curated enrollment, admissions, cost, aid, and outcome-adjacent facts for in-scope institutions, especially schools where no public CDS is archived. Provisional/final release status, source table/variable, imputation status, and definition-alignment notes stay visible.
 - **Fit-data products on top of the raw CDS** — academic positioning ([PRD 016](docs/prd/016-academic-positioning-card.md)), admission strategy ([PRD 016B](docs/prd/016B-admission-strategy-card.md)), match-list building ([PRD 017](docs/prd/017-match-list-builder.md)), and merit profile data ([PRD 018](docs/prd/018-open-college-fit-data.md))
 - **Change intelligence alpha** ([PRD 019](docs/prd/019-cds-change-intelligence.md)) — deterministic year-over-year events for material deltas, newly missing/reported fields, producer or quality changes, and an operator review workflow before anything becomes public or reportable
-- **A public API** at `https://api.collegedata.fyi` that tracks discovery status, last-verified dates, participation status, per-document provenance, per-institution coverage state, browser-ready admissions/profile rows, source-labeled IPEDS baseline facts, Scorecard joins, FSA institutional nonpayment (`fsa_nonpayment_current`), and merit-aid profiles
+- **A public API** at `https://api.quadfile.org` that tracks discovery status, last-verified dates, participation status, per-document provenance, per-institution coverage state, browser-ready admissions/profile rows, source-labeled IPEDS baseline facts, Scorecard joins, FSA institutional nonpayment (`fsa_nonpayment_current`), and merit-aid profiles
 - **Per-school stat pages** ([PRD 031](docs/prd/031-school-stat-pages.md)): plain-English acceptance-rate, early-decision, and GPA pages at `/schools/{id}/acceptance-rate`, `/early-decision`, and `/gpa`, with a per-school RSS feed of new CDS publications at `/schools/{id}/feed.xml` ([PRD 029](docs/prd/029-discovery-freshness-and-publish-alerts.md)) and school pages themed with each school's brand colors
-- **Recipes**: worked analyses with live charts at [`/recipes`](https://collegedata.fyi/recipes): College Pricing Power, Alignment Gap, Endowment Draw Rate, Waitlist Odds, and a test-optional tracker. Written-up methods live in [`docs/recipes/`](docs/recipes/)
+- **Recipes**: worked analyses with live charts at [`/recipes`](https://www.quadfile.org/recipes): College Pricing Power, Alignment Gap, Endowment Draw Rate, Waitlist Odds, and a test-optional tracker. Written-up methods live in [`docs/recipes/`](docs/recipes/)
 - **Guided discovery** ([PRD 026](docs/prd/026-guided-college-discovery.md)): `/discover`, a soft-launched card-sort and six-school-rounds flow that runs in the browser (noindex, unlinked from navigation)
-- **Public operations pages**: [`/usage`](https://collegedata.fyi/usage) shows how often the archive is downloaded and used (PRDs 032, 033) and [`/pipeline-observation`](https://collegedata.fyi/pipeline-observation) is a live board of the discovery, extraction, and refresh jobs (PRD 030)
+- **Public operations pages**: [`/usage`](https://www.quadfile.org/usage) shows how often the archive is downloaded and used (PRDs 032, 033) and [`/pipeline-observation`](https://www.quadfile.org/pipeline-observation) is a live board of the discovery, extraction, and refresh jobs (PRD 030)
 - **An extensible artifact model** so community cleanup tools can publish their own extracts alongside the primary ones without replacing them
 
 ## Quick look
 
-**Browse the site:** [collegedata.fyi](https://collegedata.fyi) — search for a school, view archived CDS years, download archived source files or a per-school-year XLSX/CSV spreadsheet of the extracted values, or browse extracted field values.
+**Browse the site:** [Quadfile](https://www.quadfile.org) — search for a school, view archived CDS years, download archived source files or a per-school-year XLSX/CSV spreadsheet of the extracted values, or browse extracted field values.
 
 **Query the API:**
 
 Simple no-auth endpoints for agents, CLIs, and notebooks:
 
 ```bash
-curl 'https://www.collegedata.fyi/api/schools/search?q=mit'
-curl 'https://www.collegedata.fyi/api/schools/mit/facts?categories=admissions,cost,outcomes'
-curl 'https://www.collegedata.fyi/api/compare?schools=mit,yale,university-of-chicago'
-curl 'https://www.collegedata.fyi/openapi.json'
+curl 'https://www.quadfile.org/api/schools/search?q=mit'
+curl 'https://www.quadfile.org/api/schools/mit/facts?categories=admissions,cost,outcomes'
+curl 'https://www.quadfile.org/api/compare?schools=mit,yale,university-of-chicago'
+curl 'https://www.quadfile.org/openapi.json'
 ```
 
 Raw PostgREST remains available for power users:
 
 ```bash
-ANON_KEY="<copy the public anon key from https://www.collegedata.fyi/api>"
+ANON_KEY="<copy the public anon key from https://www.quadfile.org/api>"
 
 # List all live schools in the manifest
-curl 'https://api.collegedata.fyi/rest/v1/cds_manifest?removed_at=is.null&select=school_id,school_name,canonical_year&order=school_name' \
+curl 'https://api.quadfile.org/rest/v1/cds_manifest?removed_at=is.null&select=school_id,school_name,canonical_year&order=school_name' \
   -H "apikey: $ANON_KEY" \
   -H "Authorization: Bearer $ANON_KEY"
 
 # Find a specific school's documents
-curl 'https://api.collegedata.fyi/rest/v1/cds_manifest?school_id=eq.yale&removed_at=is.null&order=canonical_year.desc' \
+curl 'https://api.quadfile.org/rest/v1/cds_manifest?school_id=eq.yale&removed_at=is.null&order=canonical_year.desc' \
   -H "apikey: $ANON_KEY" \
   -H "Authorization: Bearer $ANON_KEY"
 
 # Get the structured extract for a document
-curl 'https://api.collegedata.fyi/rest/v1/cds_artifacts?document_id=eq.<uuid>&kind=eq.canonical' \
+curl 'https://api.quadfile.org/rest/v1/cds_artifacts?document_id=eq.<uuid>&kind=eq.canonical' \
   -H "apikey: $ANON_KEY" \
   -H "Authorization: Bearer $ANON_KEY"
 
 # Historical IPEDS facts: use ipeds_id, field_key, and a data_year range for fast reads
-curl 'https://api.collegedata.fyi/rest/v1/ipeds_facts?ipeds_id=eq.110635&field_key=in.(retention_rate_full_time,graduation_rate_6yr)&data_year=gte.2019&data_year=lte.2024&select=ipeds_id,data_year,field_key,value_numeric,source_table,source_variable&order=data_year.asc' \
+curl 'https://api.quadfile.org/rest/v1/ipeds_facts?ipeds_id=eq.110635&field_key=in.(retention_rate_full_time,graduation_rate_6yr)&data_year=gte.2019&data_year=lte.2024&select=ipeds_id,data_year,field_key,value_numeric,source_table,source_variable&order=data_year.asc' \
   -H "apikey: $ANON_KEY" \
   -H "Authorization: Bearer $ANON_KEY"
 ```
 
 ## For agents
 
-- **Hosted MCP:** `https://www.collegedata.fyi/api/mcp` (Streamable HTTP, no auth). A stdio server is published as `@collegedata-fyi/mcp-server` ([`packages/mcp-server`](packages/mcp-server/)) for local clients such as Claude Desktop and Claude Code.
-- **CLI:** `@collegedata-fyi/cli` ([`packages/cli`](packages/cli/)) installs the `collegedata` command, a thin wrapper over the JSON API.
-- **Machine-readable docs:** [`/llms.txt`](https://collegedata.fyi/llms.txt), [`/openapi.json`](https://collegedata.fyi/openapi.json), and the human-readable [`/api`](https://collegedata.fyi/api) reference. Per-school facts are also at `/api/facts/{school_id}`.
+- **Hosted MCP:** `https://www.quadfile.org/api/mcp` (Streamable HTTP, no auth). A stdio server is published as `@quadfile/mcp-server` (command `quadfile-mcp`) ([`packages/mcp-server`](packages/mcp-server/)) for local clients such as Claude Desktop and Claude Code.
+- **CLI:** `@quadfile/cli` ([`packages/cli`](packages/cli/)) installs the `quadfile` command, a thin wrapper over the JSON API.
+- **Machine-readable docs:** [`/llms.txt`](https://www.quadfile.org/llms.txt), [`/openapi.json`](https://www.quadfile.org/openapi.json), and the human-readable [`/api`](https://www.quadfile.org/api) reference. Per-school facts are also at `/api/facts/{school_id}`.
 - **Open-data files:** `/snapshots/latest/manifest.json` lists `schools.jsonl`, `school_facts.jsonl`, `sources.jsonl`, and `field_dictionary.json`. They are regenerated from live data, so a dated URL is not a frozen copy yet.
-- **Rate limits and etiquette:** school search, facts, sources, and compare allow 300 requests per minute per IP; over that you get `429`. Send an `X-CollegeData-Client` header naming your tool, follow `308` redirects (alias school slugs redirect to the canonical slug), and use the snapshots for bulk work. Usage is counted without storing IPs; see [`docs/api-usage-attribution.md`](docs/api-usage-attribution.md).
+- **Rate limits and etiquette:** school search, facts, sources, and compare allow 300 requests per minute per IP; over that you get `429`. Send an `X-Quadfile-Client` header naming your tool, follow `308` redirects (alias school slugs redirect to the canonical slug), and use the snapshots for bulk work. Usage is counted without storing IPs; see [`docs/api-usage-attribution.md`](docs/api-usage-attribution.md).
 
 ## How it works
 
@@ -93,7 +93,7 @@ curl 'https://api.collegedata.fyi/rest/v1/ipeds_facts?ipeds_id=eq.110635&field_k
 3. All extractors produce output keyed to CDS canonical field IDs using the schemas at [`schemas/`](schemas/). 2026-27, 2025-26 and 2024-25 are canonical template years; 2023-24 is supported by a synthesized canonical schema built from the official 2023-24 PDF form tags plus the 2024-25 field map. Older structural schemas remain available for audits and overlays.
 4. The IPEDS pipeline loads official NCES metadata workbooks and selected CSV table ZIPs into release, metadata, raw-row, and curated-fact tables. Historical releases from 2004-05 through 2024-25 can be loaded with Access fallback for older releases. `school_facts_unified` is the public serving view for source-labeled federal baseline facts; `ipeds_current_facts` is backed by a materialized cache; raw IPEDS rows are preserved for audit, not treated as the product API.
 5. An operator-run FSA pipeline loads the public institutional nonpayment workbook into `fsa_releases` and `fsa_nonpayment_facts`, stamps `school_id` at load, and serves `fsa_nonpayment_current`. School pages cite FSA on the number. This is not the official cohort default rate and is not a fourth named homepage source.
-6. PostgREST exposes the manifest, field substrate, browser rows, institution coverage, IPEDS facts, Scorecard joins, FSA nonpayment, and merit profiles as a public read-only API at `api.collegedata.fyi`. The `browser-search` Edge Function powers the queryable browser and match list; `school_merit_profile` joins Section H CDS facts with federal affordability/outcome fields.
+6. PostgREST exposes the manifest, field substrate, browser rows, institution coverage, IPEDS facts, Scorecard joins, FSA nonpayment, and merit profiles as a public read-only API at `api.quadfile.org`. The `browser-search` Edge Function powers the queryable browser and match list; `school_merit_profile` joins Section H CDS facts with federal affordability/outcome fields.
 7. PRD 019 projects selected year-over-year changes from comparable primary CDS rows into `cds_field_change_events`. Generated candidates are service-role/operator data by default; the school-page "What changed" card only reads events marked `public_visible=true` after verification.
 8. Community cleanup tools can register via `cleaners.yaml` and publish their own artifacts alongside the primary ones — see [ADR 0002](docs/decisions/0002-publish-raw-over-clean.md) for the rationale.
 
@@ -101,7 +101,7 @@ Full architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Ecosystem and related projects
 
-collegedata.fyi sits between official higher-education data systems and the document-processing tools needed to make decentralized CDS files queryable:
+Quadfile sits between official higher-education data systems and the document-processing tools needed to make decentralized CDS files queryable:
 
 - [Common Data Set Initiative](https://commondataset.org/) — the canonical CDS templates and field definitions this project follows.
 - [College Scorecard API](https://collegescorecard.ed.gov/data/api/) — federal outcomes, net-price, debt, completion, and earnings data; joined into `cds_scorecard`.
@@ -146,7 +146,7 @@ collegedata.fyi sits between official higher-education data systems and the docu
 
 This project is designed around community contribution from day one. Two especially valuable ways to help right now:
 
-**Add a school to the discovery scraper.** If `collegedata.fyi` doesn't know about a school's CDS, it's usually because the school's website doesn't match our default URL patterns. PR a new entry to `schools.yaml` with a known-good URL or search pattern.
+**Add a school to the discovery scraper.** If Quadfile doesn't know about a school's CDS, it's usually because the school's website doesn't match our default URL patterns. PR a new entry to `schools.yaml` with a known-good URL or search pattern.
 
 **Write a cleanup tool.** Our in-tree cleaner handles the high-value 2024-25/2025-26 browser and school-page surfaces well, including admissions, SAT/ACT, Section H aid, and several large enrollment grids, but Docling markdown still has a long tail of format variants we don't cover (see [`docs/known-issues/`](docs/known-issues/), [`docs/extraction-quality.md`](docs/extraction-quality.md), and the corpus survey). Raw Docling markdown lives at `cds_artifacts.notes.markdown` on every Tier 4 artifact, keyed by document. A cleanup tool reads the markdown, normalizes its target fields, and publishes the result as a new artifact with its own `producer` tag. Register your tool in `cleaners.yaml`; the CI workflow that will run registered cleaners against the corpus is coming soon (tracked in M4), so for now registration only records it. Per [ADR 0002](docs/decisions/0002-publish-raw-over-clean.md), we don't pick a winner — every contributor's artifact is published alongside the primary ones.
 
@@ -182,7 +182,7 @@ IPEDS, College Scorecard and FSA data.
 ## Using the data?
 
 Tell us what you're building, researching, or using in your work.
-A link and a sentence are plenty: https://www.collegedata.fyi/feedback.
+A link and a sentence are plenty: https://www.quadfile.org/feedback.
 You can also [open an issue](https://github.com/bolewood/quadfile/issues)
 or [star this repository](https://github.com/bolewood/quadfile).
 No account or response is required to use the data.

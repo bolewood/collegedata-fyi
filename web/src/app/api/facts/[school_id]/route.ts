@@ -8,7 +8,7 @@
  * school_browser_rows projection. Shape is flat and stable.
  *
  * Use cases:
- *   - ChatGPT / Claude tool-call: "curl https://www.collegedata.fyi/api/facts/mit"
+ *   - ChatGPT / Claude tool-call: "curl https://www.quadfile.org/api/facts/mit"
  *     and summarize it
  *   - Copy-paste into a notebook without parsing nested Dataset metadata
  *   - Server-side rendering where the full 1,105-field extract is overkill

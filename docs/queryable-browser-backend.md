@@ -14,7 +14,7 @@ that touches it: the extraction worker refreshes `cds_fields` and
 (acceptance rate, early decision, GPA) read multi-year history built from the
 same artifacts. The production counts in the tables below are dated snapshots
 from April and May 2026; for current coverage see
-[`/coverage`](https://collegedata.fyi/coverage).
+[`/coverage`](https://www.quadfile.org/coverage).
 
 ## Surfaces
 
@@ -174,7 +174,7 @@ cd web && npm run build
 
 Production smoke checks used:
 
-- `GET https://www.collegedata.fyi/browse`
+- `GET https://www.quadfile.org/browse`
 - `POST https://isduwmygvmdozhpvzaix.supabase.co/functions/v1/browser-search`
 - Playwright screenshot wait for a live browser result row on `/browse`
 

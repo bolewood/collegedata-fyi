@@ -12,7 +12,7 @@ This directory turns that problem into a reproducible pipeline. You run one comm
 
 | File | Purpose |
 |---|---|
-| `schools.yaml` | The corpus: about 3,000 in-scope 2-year and 4-year schools keyed by IPEDS ID (live counts: [/coverage](https://www.collegedata.fyi/coverage)), with `discovery_seed_url` (the resolver's seed URL; renamed from `cds_url_hint` in PR 5 of the URL hint refactor), optional `browse_url` (human-friendly URL for contributor tools), `scrape_policy`, `probe_state`. |
+| `schools.yaml` | The corpus: about 3,000 in-scope 2-year and 4-year schools keyed by IPEDS ID (live counts: [/coverage](https://www.quadfile.org/coverage)), with `discovery_seed_url` (the resolver's seed URL; renamed from `cds_url_hint` in PR 5 of the URL hint refactor), optional `browse_url` (human-friendly URL for contributor tools), `scrape_policy`, `probe_state`. |
 | `school_overrides.yaml` | Operator-supplied per-school overrides keyed by `school_id`. Hand-curated `browse_url`, `direct_archive_urls` (year-tagged for Box/Drive/SharePoint-hosted schools and Archive.org snapshots of taken-down school PDFs; use Wayback `id_` URLs, not toolbar captures), `hosting_override` (CMS/file_storage/auth_required/rendering/waf/notes). Read at edge-function runtime by `_shared/schools.ts`; NOT touched by `build_school_list.py`. |
 | `build_school_list.py` | Rebuilds `schools.yaml` from IPEDS HD data (ICLEVEL 1 and 2, degree-granting, nonprofit, US states+DC), preserving hand-curated overrides. Run rarely (once per IPEDS release). `--append-missing` adds new UNITIDs without rewriting `probe_state`. Includes `assert_no_duplicates()` build-time guard. |
 | `ir_hubs.py` | Shared IR/IE/fact-book link detection and the Brave name-collision guard. Used by the resolver, the monthly probe, and the review-only backfill. |
@@ -84,7 +84,7 @@ SIGINT during a run triggers a partial save, so Ctrl-C is always safe.
 
 ## The story: how we got from 68 to 840 active-with-hint in one day
 
-Historical narrative from the first days of the finder (April 2026). Counts in this section are point-in-time; the field `cds_url_hint` was later renamed `discovery_seed_url`. For current numbers see [/coverage](https://www.collegedata.fyi/coverage) and [/pipeline-observation](https://www.collegedata.fyi/pipeline-observation). This is what the first 48 hours of finder development actually looked like, kept honest because every one of these bugs is a landmine someone else will step on later.
+Historical narrative from the first days of the finder (April 2026). Counts in this section are point-in-time; the field `cds_url_hint` was later renamed `discovery_seed_url`. For current numbers see [/coverage](https://www.quadfile.org/coverage) and [/pipeline-observation](https://www.quadfile.org/pipeline-observation). This is what the first 48 hours of finder development actually looked like, kept honest because every one of these bugs is a landmine someone else will step on later.
 
 ### Stage 1: the overnight pattern ladder run — 68 hits out of 2,323
 
@@ -176,8 +176,8 @@ Fix: added a per-school wall-clock budget to `probe_school()`. When `time.monoto
 
 Live counts (active publishers, schools with a fetchable seed, coverage by
 year) change with every probe and archive run, so they are not kept here. See
-[/coverage](https://www.collegedata.fyi/coverage) and
-[/pipeline-observation](https://www.collegedata.fyi/pipeline-observation). To
+[/coverage](https://www.quadfile.org/coverage) and
+[/pipeline-observation](https://www.quadfile.org/pipeline-observation). To
 count `scrape_policy` values locally, load `schools.yaml` and tally them.
 
 At the end of the first day of work (April 2026) the probe had found a CDS URL

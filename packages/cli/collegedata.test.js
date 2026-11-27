@@ -71,3 +71,13 @@ describe("collegedata CLI default origin", () => {
     assert.match(stderr, /^FETCH:https:\/\/www\.quadfile\.org\/api\//m);
   });
 });
+
+describe("quadfile CLI usage text", () => {
+  it("advertises quadfile and mentions the old alias", async () => {
+    const result = await run("node", [script], { env: { ...process.env } }).catch((e) => e);
+    const text = String(result.stderr);
+    assert.match(text, /^  quadfile search /m);
+    assert.doesNotMatch(text, /^  collegedata /m);
+    assert.match(text, /`collegedata` still works as an alias/);
+  });
+});

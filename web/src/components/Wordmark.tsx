@@ -1,5 +1,5 @@
-// Wordmark — tightened spacing, seven glyph variants.
-// Each variant keeps the same domain type treatment; only the glyph/layout changes.
+// Wordmark — Quadfile shown in tracked serif caps (CSS text-transform; the text is "Quadfile"), seven glyph variants.
+// Each variant keeps the same name type treatment; only the glyph/layout changes.
 // Use: <Wordmark variant="stamp|corner|bracket|rule|dotted|monogram|plain" size={20} />
 
 type Variant =
@@ -20,12 +20,22 @@ export function Wordmark({
 }) {
   const ink = "var(--ink)";
   const paper = "var(--paper)";
-  const domain = (
-    <span style={{ whiteSpace: "nowrap", letterSpacing: "-0.015em" }}>
-      <span style={{ fontStyle: "italic", fontWeight: 400 }}>collegedata</span>
-      <span style={{ opacity: 0.7 }}>.fyi</span>
+  const name = (
+    <span
+      style={{
+        whiteSpace: "nowrap",
+        letterSpacing: "0.14em",
+        fontWeight: 400,
+        fontSize: "0.82em",
+        textTransform: "uppercase",
+      }}
+    >
+      Quadfile
     </span>
   );
+  // The four-square mark scales with the wordmark: 4px squares at size 20.
+  const mark = Math.max(3, Math.round(size * 0.2));
+  const markGap = Math.max(2, Math.round(size * 0.1));
   const base: React.CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
@@ -39,6 +49,7 @@ export function Wordmark({
     return (
       <span style={{ ...base, gap: 6 }}>
         <span
+          aria-hidden="true"
           style={{
             width: size * 1.05,
             height: size * 1.05,
@@ -56,7 +67,7 @@ export function Wordmark({
         >
           §
         </span>
-        {domain}
+        {name}
       </span>
     );
   }
@@ -64,6 +75,7 @@ export function Wordmark({
     return (
       <span style={{ ...base, gap: 6 }}>
         <span
+          aria-hidden="true"
           style={{
             width: size * 1.0,
             height: size * 1.0,
@@ -86,36 +98,37 @@ export function Wordmark({
             }}
           />
         </span>
-        {domain}
+        {name}
       </span>
     );
   }
   if (variant === "bracket") {
     return (
       <span style={{ ...base, gap: 5, fontVariantNumeric: "tabular-nums" }}>
-        <span style={{ fontSize: size * 0.95, color: "var(--ink-3)" }}>[</span>
-        <span style={{ fontFamily: "var(--serif)", fontStyle: "italic", fontSize: size * 0.95 }}>§</span>
-        <span style={{ fontSize: size * 0.95, color: "var(--ink-3)", marginRight: 2 }}>]</span>
-        {domain}
+        <span aria-hidden="true" style={{ fontSize: size * 0.95, color: "var(--ink-3)" }}>[</span>
+        <span aria-hidden="true" style={{ fontFamily: "var(--serif)", fontStyle: "italic", fontSize: size * 0.95 }}>§</span>
+        <span aria-hidden="true" style={{ fontSize: size * 0.95, color: "var(--ink-3)", marginRight: 2 }}>]</span>
+        {name}
       </span>
     );
   }
   if (variant === "rule") {
     return (
       <span style={{ ...base, gap: 8 }}>
-        <span style={{ width: size * 0.9, height: 1.5, background: ink, display: "inline-block" }} />
-        {domain}
+        <span aria-hidden="true" style={{ width: size * 0.9, height: 1.5, background: ink, display: "inline-block" }} />
+        {name}
       </span>
     );
   }
   if (variant === "dotted") {
     return (
       <span style={{ ...base, gap: 6 }}>
-        <span style={{ display: "inline-flex", gap: 3, alignItems: "center" }}>
-          <span style={{ width: 4, height: 4, borderRadius: "50%", background: ink }} />
-          <span style={{ width: 4, height: 4, borderRadius: "50%", background: ink }} />
+        <span aria-hidden="true" style={{ display: "inline-grid", gridTemplateColumns: `${mark}px ${mark}px`, gap: markGap, alignItems: "center" }}>
+          {[0, 1, 2, 3].map((i) => (
+            <span key={i} style={{ width: mark, height: mark, background: ink }} />
+          ))}
         </span>
-        {domain}
+        {name}
       </span>
     );
   }
@@ -123,6 +136,7 @@ export function Wordmark({
     return (
       <span style={{ ...base, gap: 6 }}>
         <span
+          aria-hidden="true"
           style={{
             width: size * 1.1,
             height: size * 1.1,
@@ -133,16 +147,15 @@ export function Wordmark({
             fontFamily: "var(--serif)",
             fontSize: size * 0.6,
             fontStyle: "italic",
-            letterSpacing: "-0.03em",
             flexShrink: 0,
           }}
         >
-          cd
+          Q
         </span>
-        {domain}
+        {name}
       </span>
     );
   }
   // plain
-  return <span style={base}>{domain}</span>;
+  return <span style={base}>{name}</span>;
 }

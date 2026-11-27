@@ -44,7 +44,7 @@ export const ENDOWMENT_DRAW_RATE_META = {
   "datasetVersion": "ipeds-endowment-283292ca75a4abda",
   "generatedAt": "2026-08-10",
   "source": "NCES IPEDS Finance, private not-for-profit F2 reporters",
-  "sourceApiUrl": "https://api.collegedata.fyi",
+  "sourceApiUrl": "https://api.quadfile.org",
   "minYear": 2020,
   "maxYear": 2024,
   "latestReleaseType": "provisional",

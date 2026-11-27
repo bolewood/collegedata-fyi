@@ -1,7 +1,7 @@
 # ADR 0004: Canonical domain is collegedata.fyi
 
 **Date:** 2026-04-11
-**Status:** Accepted
+**Status:** Superseded by [ADR 0010](0010-canonical-domain-quadfile-org.md)
 
 ## Context
 

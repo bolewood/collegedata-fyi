@@ -2,7 +2,7 @@
 
 The authored descriptions in `projects.ts` are licensed under
 [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
-Credit collegedata.fyi and link to this source file and the license when reusing
+Credit Quadfile and link to this source file and the license when reusing
 these write-ups; indicate changes. This does not license linked projects or
 private submissions. Application code remains MIT; usage statistics remain CC0.
 

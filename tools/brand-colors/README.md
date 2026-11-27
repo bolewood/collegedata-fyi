@@ -32,7 +32,7 @@ NCAA-affiliated schools.
 
 ## Why this exists
 
-Built for [collegedata.fyi](https://collegedata.fyi), an open-source
+Built for [Quadfile](https://www.quadfile.org), an open-source
 archive of US college Common Data Set documents, while populating an
 `institution_directory.brand_colors` field. Manually scouting one school at
 a time (open site, search for a brand page, read a PDF, confirm a hex) ran

@@ -154,7 +154,7 @@ curl '${SITE_ORIGIN}/openapi.json'`}</CodeBlock>
         <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">jsonlite</code>{" "}
         are enough. Send{" "}
         <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
-          X-CollegeData-Client
+          X-Quadfile-Client
         </code>{" "}
         so we can tell research scripts apart from other traffic.
       </p>
@@ -163,7 +163,7 @@ library(jsonlite)
 
 facts <- request("${SITE_ORIGIN}/api/schools/mit/facts") |>
   req_url_query(categories = "admissions,cost,outcomes") |>
-  req_headers(\`X-CollegeData-Client\` = "r-httr2") |>
+  req_headers(\`X-Quadfile-Client\` = "r-httr2") |>
   req_perform() |>
   resp_body_json()
 
@@ -172,7 +172,7 @@ compare <- request("${SITE_ORIGIN}/api/compare") |>
     schools = "mit,yale,university-of-chicago",
     fields = "acceptance_rate,avg_net_price"
   ) |>
-  req_headers(\`X-CollegeData-Client\` = "r-httr2") |>
+  req_headers(\`X-Quadfile-Client\` = "r-httr2") |>
   req_perform() |>
   resp_body_json()`}</CodeBlock>
       <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
@@ -200,14 +200,18 @@ compare <- request("${SITE_ORIGIN}/api/compare") |>
       <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
         If you build on these endpoints, send a short{" "}
         <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
-          X-CollegeData-Client
+          X-Quadfile-Client
         </code>{" "}
         header such as{" "}
         <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
           my-app-name
         </code>
         . It helps us understand API usage and keep the free public surface
-        healthy without requiring API keys.{" "}
+        healthy without requiring API keys. The older{" "}
+        <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
+          X-CollegeData-Client
+        </code>{" "}
+        header still works.{" "}
         {isUsageLaunched() ? (
           <>
             {" "}
@@ -261,16 +265,16 @@ curl '${SITE_ORIGIN}/api/compare?schools=mit,yale,university-of-chicago&fields=a
             From a checkout of the repo, the CLI can point at production,
             preview, or localhost with{" "}
             <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
-              COLLEGEDATA_API_BASE
+              QUADFILE_API_BASE
             </code>
             .
           </p>
-          <CodeBlock>{`COLLEGEDATA_API_BASE=${SITE_ORIGIN} node packages/cli/bin/collegedata.js search mit
-COLLEGEDATA_API_BASE=${SITE_ORIGIN} node packages/cli/bin/collegedata.js facts mit --categories admissions,cost
-COLLEGEDATA_API_BASE=${SITE_ORIGIN} node packages/cli/bin/collegedata.js compare mit yale university-of-chicago --format csv
-COLLEGEDATA_API_BASE=${SITE_ORIGIN} node packages/cli/bin/collegedata.js sources mit
-COLLEGEDATA_API_BASE=${SITE_ORIGIN} node packages/cli/bin/collegedata.js fields --category admissions
-COLLEGEDATA_API_BASE=${SITE_ORIGIN} node packages/cli/bin/collegedata.js export schools --format jsonl`}</CodeBlock>
+          <CodeBlock>{`QUADFILE_API_BASE=${SITE_ORIGIN} node packages/cli/bin/collegedata.js search mit
+QUADFILE_API_BASE=${SITE_ORIGIN} node packages/cli/bin/collegedata.js facts mit --categories admissions,cost
+QUADFILE_API_BASE=${SITE_ORIGIN} node packages/cli/bin/collegedata.js compare mit yale university-of-chicago --format csv
+QUADFILE_API_BASE=${SITE_ORIGIN} node packages/cli/bin/collegedata.js sources mit
+QUADFILE_API_BASE=${SITE_ORIGIN} node packages/cli/bin/collegedata.js fields --category admissions
+QUADFILE_API_BASE=${SITE_ORIGIN} node packages/cli/bin/collegedata.js export schools --format jsonl`}</CodeBlock>
           <p className="mt-2">
             Six subcommands: <code>search</code>, <code>facts</code>,{" "}
             <code>compare</code>, <code>sources</code>, <code>fields</code>,
@@ -303,7 +307,7 @@ COLLEGEDATA_API_BASE=${SITE_ORIGIN} node packages/cli/bin/collegedata.js export 
           <p className="mt-2">
             The stdio Node file is for local development and Claude Code. Point{" "}
             <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
-              COLLEGEDATA_API_BASE
+              QUADFILE_API_BASE
             </code>{" "}
             at localhost, use an{" "}
             <strong>absolute path</strong> in{" "}
@@ -333,9 +337,9 @@ COLLEGEDATA_API_BASE=${SITE_ORIGIN} node packages/cli/bin/collegedata.js export 
           </p>
           <CodeBlock>{`{
   "mcpServers": {
-    "collegedata": {
+    "quadfile": {
       "command": "node",
-      "args": ["/absolute/path/to/collegedata-fyi/packages/mcp-server/bin/collegedata-mcp.js"]
+      "args": ["/absolute/path/to/quadfile/packages/mcp-server/bin/collegedata-mcp.js"]
     }
   }
 }`}</CodeBlock>
@@ -396,7 +400,7 @@ curl '${SITE_ORIGIN}/llms.txt'`}</CodeBlock>
       <p className="mt-3 text-sm leading-relaxed text-[var(--ink-2)]">
         Custom headers like{" "}
         <code className="rounded bg-[var(--paper-2)] px-1.5 py-0.5 text-xs">
-          X-CollegeData-Client
+          X-Quadfile-Client
         </code>{" "}
         don't reach our logs on raw PostgREST and file downloads. To
         identify your app there, set a descriptive{" "}

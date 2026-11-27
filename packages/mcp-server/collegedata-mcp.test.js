@@ -176,3 +176,21 @@ describe("collegedata MCP default origin", () => {
     }
   });
 });
+
+describe("quadfile MCP naming", () => {
+  it("names the product Quadfile in tool descriptions and the stderr banner", async () => {
+    const server = startServer();
+    try {
+      server.send({ jsonrpc: "2.0", id: 0, method: "initialize", params: { protocolVersion: "2025-03-26", capabilities: {}, clientInfo: { name: "t", version: "1" } } });
+      await server.readJson();
+      server.send({ jsonrpc: "2.0", id: 1, method: "tools/list" });
+      const list = await server.readJson();
+      const text = JSON.stringify(list.result.tools);
+      assert.match(text, /Quadfile/);
+      assert.doesNotMatch(text, /CollegeData/i);
+      assert.match(server.getStderr(), /^quadfile-mcp /);
+    } finally {
+      server.close();
+    }
+  });
+});

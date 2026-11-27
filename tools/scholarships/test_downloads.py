@@ -14,15 +14,15 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import build_downloads as bd  # noqa: E402
+import migration_files as mf  # noqa: E402
 import model  # noqa: E402
 import validate as v  # noqa: E402
 
 REPO = v.REPO_ROOT
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "valid"
 ATTR = model.ATTRIBUTION
-_MATCHES = sorted((REPO / "supabase" / "migrations").glob("*_scholarship_directory.sql"))
-assert len(_MATCHES) == 1, _MATCHES
-MIGRATION = _MATCHES[0]
+MIGRATION = mf.base_migration()  # tables, functions, cache and the first view
+VIEW_MIGRATION = mf.newest_view_migration()  # the view body that is live
 
 
 def fixture_docs() -> Dict[str, Dict[str, Any]]:
@@ -205,7 +205,7 @@ def test_attribution_is_one_exact_string_everywhere(ds, tmp_path):
     surfaces = {
         "data/scholarships/LICENSE": (REPO / "data" / "scholarships" / "LICENSE").read_text(encoding="utf-8"),
         "data/scholarships/README.md": (REPO / "data" / "scholarships" / "README.md").read_text(encoding="utf-8"),
-        "migration": MIGRATION.read_text(encoding="utf-8"),
+        "migration": VIEW_MIGRATION.read_text(encoding="utf-8"),
         "docs/prd/036-view-contract.md": (REPO / "docs" / "prd" / "036-view-contract.md").read_text(encoding="utf-8"),
         "docs/prd/036-named-scholarship-directory.md": (REPO / "docs" / "prd" / "036-named-scholarship-directory.md").read_text(encoding="utf-8"),
         "json meta": json.loads(json_path.read_text(encoding="utf-8"))["meta"]["attribution"],

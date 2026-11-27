@@ -8,7 +8,7 @@ the school ties to the program.
 
 This directory holds the record format, the validator inputs and the records
 under `programs/`. They are published at
-[collegedata.fyi/scholarships](https://collegedata.fyi/scholarships) and through
+[quadfile.org/scholarships](https://www.quadfile.org/scholarships) and through
 the `scholarship_directory` API view.
 
 ## Licensing: read before contributing
@@ -30,7 +30,7 @@ the official URL.
 
 Use this string, unchanged, wherever the data or a summary of it appears:
 
-> Scholarship program data from collegedata.fyi (https://collegedata.fyi/scholarships), CC BY-SA 4.0. Terms as published by each school; see the source link on each record.
+> Scholarship program data from Quadfile (https://www.quadfile.org/scholarships), CC BY-SA 4.0. Terms as published by each school; see the source link on each record.
 
 Examples:
 

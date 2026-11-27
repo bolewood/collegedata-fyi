@@ -1,8 +1,8 @@
-# CollegeData.FYI CLI
+# Quadfile CLI
 
-Thin command-line wrapper for the public CollegeData.FYI friendly API (`/api/schools/search`, `/api/schools/{id}/facts`, `/api/compare`, `/api/schools/{id}/sources`, `/api/fields`, and the `/snapshots/latest/` files). One Node file, no dependencies, Node 20 or newer.
+Thin command-line wrapper for the public Quadfile friendly API (`/api/schools/search`, `/api/schools/{id}/facts`, `/api/compare`, `/api/schools/{id}/sources`, `/api/fields`, and the `/snapshots/latest/` files). One Node file, no dependencies, Node 20 or newer.
 
-**Install:** the package (`@collegedata-fyi/cli`, version 0.1.0) is not published to npm. Run it from a clone of this repository:
+**Install:** the package (`@quadfile/cli`, version 0.1.0) is not published to npm. Run it from a clone of this repository:
 
 ```bash
 git clone https://github.com/bolewood/quadfile.git
@@ -29,12 +29,12 @@ node packages/cli/bin/collegedata.js compare mit yale university-of-chicago --fo
 node packages/cli/bin/collegedata.js export schools > schools.jsonl
 ```
 
-Set `COLLEGEDATA_API_BASE` (default `https://www.collegedata.fyi`) to point at a preview or local server. Requests carry `cd_client=cli`, the CLI version and the command name so usage can be attributed (see `docs/api-usage-attribution.md`).
+Set `QUADFILE_API_BASE` (default `https://www.quadfile.org`) to point at a preview or local server. Requests carry `cd_client=cli`, the CLI version and the command name so usage can be attributed (see `docs/api-usage-attribution.md`).
 
 ## Using the data?
 
 Tell us what you're building, researching, or using in your work.
-A link and a sentence are plenty: https://www.collegedata.fyi/feedback.
+A link and a sentence are plenty: https://www.quadfile.org/feedback.
 You can also [open an issue](https://github.com/bolewood/quadfile/issues)
 or [star this repository](https://github.com/bolewood/quadfile).
 No account or response is required to use the data.

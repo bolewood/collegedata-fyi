@@ -1,10 +1,10 @@
-# collegedata.fyi — Design system
+# Quadfile — Design system
 
 > **Read this before touching any frontend UI.** Same spirit as `AGENTS.md`.
 > Public copy: [`VOICE.md`](VOICE.md).
 
 **Canonical tokens:** [`web/src/app/tokens.css`](src/app/tokens.css)
-**Live reference page:** [`/design-system/`](https://collegedata.fyi/design-system/) (also in repo at [`web/public/design-system/index.html`](public/design-system/index.html)). It is a static file in `public/`, so it is exempt from the no-Google-fonts rule below: it loads IBM Plex from Google Fonts for its own preview. Do not copy that into app code.
+**Live reference page:** [`/design-system/`](https://www.quadfile.org/design-system/) (also in repo at [`web/public/design-system/index.html`](public/design-system/index.html)). It is a static file in `public/`, so it is exempt from the no-Google-fonts rule below: it loads IBM Plex from Google Fonts for its own preview. Do not copy that into app code.
 **Source handoff archive:** [`docs/design/`](../docs/design/) — original HTML/JSX prototypes from the Claude Design session
 
 This system was hand-built in April 2026 from a Claude Design handoff. The short name for it is "paper, ink, and one quiet green."
@@ -153,7 +153,7 @@ None of these break functionality; they are palette-consistency debt. Re-run the
 
 ## Pipeline observation exception
 
-[`/pipeline-observation`](https://www.collegedata.fyi/pipeline-observation) is allowed to use page-local lamp colors. Site chrome (nav, footer, other routes) stays paper/ink/forest. The exception lives in [`web/src/app/pipeline-observation/pipeline-observation.css`](src/app/pipeline-observation/pipeline-observation.css) and must not leak teal or blue.
+[`/pipeline-observation`](https://www.quadfile.org/pipeline-observation) is allowed to use page-local lamp colors. Site chrome (nav, footer, other routes) stays paper/ink/forest. The exception lives in [`web/src/app/pipeline-observation/pipeline-observation.css`](src/app/pipeline-observation/pipeline-observation.css) and must not leak teal or blue.
 
 | Token | Hex | Role |
 |---|---|---|
@@ -174,7 +174,7 @@ None of these break functionality; they are palette-consistency debt. Re-run the
 
 Two ways to look at the system:
 
-1. **Live page:** run `npm --prefix web run dev`, open [http://localhost:3000/design-system/](http://localhost:3000/design-system/). Same file that ships to production at `collegedata.fyi/design-system/`.
+1. **Live page:** run `npm --prefix web run dev`, open [http://localhost:3000/design-system/](http://localhost:3000/design-system/). Same file that ships to production at `www.quadfile.org/design-system/`.
 2. **Source handoff:** [`docs/design/`](../docs/design/) holds the original Claude Design export — HTML prototypes, JSX reference components, screenshots, the handoff README. Read [`docs/design/HANDOFF_README.md`](../docs/design/HANDOFF_README.md) first.
 
 If the live page and `tokens.css` disagree with a prototype, `tokens.css` is the authority. If `tokens.css` and this document disagree, `tokens.css` is still the authority — update the doc.

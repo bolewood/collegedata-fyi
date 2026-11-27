@@ -1,6 +1,6 @@
 # Recipes
 
-Worked examples that show what you can do with the CDS and federal data in this repo. Each recipe pairs a short write-up (Markdown, in this directory) with a reproducible artifact — an interactive route, an XLSX template, or a checked-in generated dataset — served from [collegedata.fyi/recipes](https://collegedata.fyi/recipes). Recipe inputs are reviewable and designed to be reproduced or extended through the public API.
+Worked examples that show what you can do with the CDS and federal data in this repo. Each recipe pairs a short write-up (Markdown, in this directory) with a reproducible artifact — an interactive route, an XLSX template, or a checked-in generated dataset — served from [quadfile.org/recipes](https://www.quadfile.org/recipes). Recipe inputs are reviewable and designed to be reproduced or extended through the public API.
 
 ## Conventions
 
@@ -11,13 +11,13 @@ Worked examples that show what you can do with the CDS and federal data in this 
 
 ## Current recipes
 
-- [**College Pricing Power**](./acceptance-vs-yield.md) — IPEDS fall 2024 acceptance and yield joined to College Scorecard federal-loan burden and Title IV net price. Two median-divided scatters; not an elasticity estimate. Route remains [`/recipes/acceptance-vs-yield`](https://www.collegedata.fyi/recipes/acceptance-vs-yield). Artifact: [`acceptance-vs-yield-starter.xlsx`](../../web/public/recipes/acceptance-vs-yield-starter.xlsx).
-- [**Test-optional tracker**](./test-optional-tracker.md) — line chart of SAT submission percentage over time for seven well-documented schools (Yale 2009–2024, Caltech 2002–2020, MIT, Princeton, Stanford, Harvard, Wake Forest). Uses the submission rate as an honest proxy for effective test-optional policy: C8 states the rule; C9 counts what enrolled first-years did. Interactive route: [`/recipes/test-optional-tracker`](https://www.collegedata.fyi/recipes/test-optional-tracker).
+- [**College Pricing Power**](./acceptance-vs-yield.md) — IPEDS fall 2024 acceptance and yield joined to College Scorecard federal-loan burden and Title IV net price. Two median-divided scatters; not an elasticity estimate. Route remains [`/recipes/acceptance-vs-yield`](https://www.quadfile.org/recipes/acceptance-vs-yield). Artifact: [`acceptance-vs-yield-starter.xlsx`](../../web/public/recipes/acceptance-vs-yield-starter.xlsx).
+- [**Test-optional tracker**](./test-optional-tracker.md) — line chart of SAT submission percentage over time for seven well-documented schools (Yale 2009–2024, Caltech 2002–2020, MIT, Princeton, Stanford, Harvard, Wake Forest). Uses the submission rate as an honest proxy for effective test-optional policy: C8 states the rule; C9 counts what enrolled first-years did. Interactive route: [`/recipes/test-optional-tracker`](https://www.quadfile.org/recipes/test-optional-tracker).
 - [**Wait-list odds**](./waitlist-odds.md) — corpus-wide CDS C2 analysis of wait-list offers, accepted spots, and admitted students, bucketed by C1 selectivity and by federal control, size, and Carnegie class. Inspired by the May 2026 WSJ wait-list story; the numbers are from the filings, not the article.
 - [**Endowment draw-rate tracker**](./endowment-draw-rate.md) — FY2020–FY2024 distribution and per-school history for private nonprofit IPEDS Finance Part H reporters. Uses a paginated public-API generator and a versioned checked-in dataset; FY2024 is provisional.
 - [**Alignment gap**](./alignment-gap.md) — of schools whose graduates carry an above-median debt burden, how many already spend more per first-year on non-need merit aid than the annual gap. Two panels: CDS H2A merit spend versus the gap, then IPEDS endowment. Hover names every school.
 - **Agent/CLI starter.** Use the no-auth friendly API to search schools, fetch facts with citations, compare a short list, and list source documents:
-  `curl 'https://www.collegedata.fyi/api/schools/mit/facts?categories=admissions,cost,outcomes'`.
+  `curl 'https://www.quadfile.org/api/schools/mit/facts?categories=admissions,cost,outcomes'`.
 
 ## Ideas for future recipes
 

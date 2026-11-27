@@ -14,5 +14,5 @@ GSC URL inspect and the CDS query/page exports are done. Memo:
 
 Still off-page (PRD 028 M3): Show HN, citations, ask-for-links.
 
-Confirm `curl -I https://collegedata.fyi/schools/virginia-tech` stays
+Confirm `curl -I https://quadfile.org/schools/virginia-tech` stays
 **301** to the www host (true as of 2026-08-17; Next.js now pins it).

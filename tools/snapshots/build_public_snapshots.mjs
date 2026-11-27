@@ -18,9 +18,9 @@ const DATA_LICENSE_FIELDS = {
     license: "CC-BY-4.0",
     license_url: "https://creativecommons.org/licenses/by/4.0/",
     scope:
-      "Covers the structured Common Data Set extracts, field documentation and derived-metric definitions authored by collegedata.fyi. Does not cover the schools' Common Data Set documents, CDS Initiative template text, or federal IPEDS, College Scorecard and FSA facts. Say so if you changed the data.",
+      "Covers the structured Common Data Set extracts, field documentation and derived-metric definitions authored by Quadfile. Does not cover the schools' Common Data Set documents, CDS Initiative template text, or federal IPEDS, College Scorecard and FSA facts. Say so if you changed the data.",
     attribution:
-      "Common Data Set extracts from collegedata.fyi (https://www.collegedata.fyi), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Figures as published in each school's Common Data Set.",
+      "Common Data Set extracts from Quadfile (https://www.quadfile.org), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Figures as published in each school's Common Data Set.",
   },
 };
 
@@ -55,7 +55,7 @@ async function main() {
 
   const duckdb = spawnSync("duckdb", ["--version"], { encoding: "utf8" });
   if (duckdb.status === 0) {
-    const dbPath = join(OUT_DIR, "collegedata.duckdb");
+    const dbPath = join(OUT_DIR, "quadfile.duckdb");
     const sql = `
       create table schools as select * from read_json_auto('${join(OUT_DIR, "schools.jsonl")}');
       create table school_facts as select * from read_json_auto('${join(OUT_DIR, "school_facts.jsonl")}');
@@ -63,9 +63,9 @@ async function main() {
     `;
     const build = spawnSync("duckdb", [dbPath, sql], { encoding: "utf8" });
     if (build.status !== 0) throw new Error(build.stderr || "duckdb build failed");
-    files.push({ name: "collegedata.duckdb", status: "generated" });
+    files.push({ name: "quadfile.duckdb", status: "generated" });
   } else {
-    files.push({ name: "collegedata.duckdb", status: "skipped_duckdb_cli_not_installed" });
+    files.push({ name: "quadfile.duckdb", status: "skipped_duckdb_cli_not_installed" });
   }
 
   const manifest = {

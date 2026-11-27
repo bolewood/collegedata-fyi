@@ -215,7 +215,7 @@ def _readme_rows(
     return [
         ("College Pricing Power", ""),
         (
-            "Starter workbook for https://www.collegedata.fyi/recipes/acceptance-vs-yield",
+            "Starter workbook for https://www.quadfile.org/recipes/acceptance-vs-yield",
             "",
         ),
         (
@@ -359,7 +359,7 @@ def _readme_rows(
         ),
         (
             "Anon key",
-            "https://www.collegedata.fyi/api — school_facts_unified is "
+            "https://www.quadfile.org/api — school_facts_unified is "
             "anon-readable; PostgREST caps responses at 1,000 rows, so page "
             "with limit=1000&offset=0, then offset=1000, then offset=2000.",
         ),

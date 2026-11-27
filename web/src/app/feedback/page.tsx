@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: "Feedback",
   robots: { index: false, follow: true },
   description:
-    "Tell us what helped, what needs fixing, or how you use collegedata.fyi. No account required. Email is optional unless you'd like to discuss being featured.",
+    "Tell us what helped, what needs fixing, or how you use Quadfile. No account required. Email is optional unless you'd like to discuss being featured.",
   alternates: { canonical: "/feedback" },
   openGraph: { url: "/feedback" },
   referrer: "strict-origin-when-cross-origin",

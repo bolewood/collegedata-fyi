@@ -1,4 +1,4 @@
-# collegedata.fyi — Voice
+# Quadfile — Voice
 
 Editorial source of truth for public copy. Visual rules stay in
 [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md). If they conflict, this file wins

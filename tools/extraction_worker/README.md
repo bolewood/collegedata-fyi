@@ -245,7 +245,7 @@ Optional (web cache refresh):
 | Name | Kind | Purpose |
 |---|---|---|
 | `REVALIDATE_SECRET` | Secret | Shared secret for `POST /api/revalidate` (same value as the Vercel production env var). |
-| `COLLEGEDATA_REVALIDATE_URL` | Variable (or secret) | `https://www.collegedata.fyi/api/revalidate`. |
+| `COLLEGEDATA_REVALIDATE_URL` | Variable (or secret) | `https://www.quadfile.org/api/revalidate`. |
 
 When both are set, the worker POSTs the `school_id`s whose data changed
 (re-extracted + projected, or reconciled) in batches of 100 after the run, so
@@ -257,11 +257,11 @@ value is unset. See `revalidate_notify.py`.
 Manual revalidation:
 
 ```sh
-curl -sS -X POST https://www.collegedata.fyi/api/revalidate \
+curl -sS -X POST https://www.quadfile.org/api/revalidate \
   -H "Authorization: Bearer $REVALIDATE_SECRET" -H "Content-Type: application/json" \
   -d '{"school_ids": ["yale", "mit"]}'
 # everything (lazy: pages rebuild on next visit; use sparingly)
-curl -sS -X POST https://www.collegedata.fyi/api/revalidate \
+curl -sS -X POST https://www.quadfile.org/api/revalidate \
   -H "Authorization: Bearer $REVALIDATE_SECRET" -H "Content-Type: application/json" \
   -d '{"all": true}'
 ```

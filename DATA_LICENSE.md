@@ -2,7 +2,7 @@
 
 **Effective date:** 2026-11-23
 
-The structured data that collegedata.fyi authors is licensed under the
+The structured data that Quadfile authors is licensed under the
 [Creative Commons Attribution 4.0 International License (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
 The code in this repository stays under the MIT license in [`LICENSE`](LICENSE).
 
@@ -50,11 +50,11 @@ any use, including commercial use, as long as you give credit.
 CC BY 4.0 asks for three things: credit, a link to the license, and a note if
 you changed the data. Use this line:
 
-  Common Data Set extracts from collegedata.fyi (https://www.collegedata.fyi), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Figures as published in each school's Common Data Set.
+  Common Data Set extracts from Quadfile (https://www.quadfile.org), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Figures as published in each school's Common Data Set.
 
 If you changed, filtered or recomputed the data, say so (for example "adapted
 from…"). Where it's practical, please also link the school's page,
-`https://www.collegedata.fyi/schools/<school_id>`. That link is a request, not
+`https://www.quadfile.org/schools/<school_id>`. That link is a request, not
 a condition, and `nofollow` is fine.
 
 API responses, snapshot manifests and the MCP payloads carry the same line in

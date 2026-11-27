@@ -11,10 +11,10 @@ import { REPO_URL } from "./repo";
 
 /** The canonical credit string. The one place it is written in web code. A test pins it to data/scholarships/LICENSE. */
 export const SCHOLARSHIP_ATTRIBUTION =
-  "Scholarship program data from collegedata.fyi (https://collegedata.fyi/scholarships), CC BY-SA 4.0. Terms as published by each school; see the source link on each record.";
+  "Scholarship program data from Quadfile (https://www.quadfile.org/scholarships), CC BY-SA 4.0. Terms as published by each school; see the source link on each record.";
 
 export const SCHOLARSHIP_LICENSE = "CC-BY-SA-4.0";
-export const SCHOLARSHIP_LICENSE_LINE = "Data CC BY-SA 4.0 · collegedata.fyi · how to cite";
+export const SCHOLARSHIP_LICENSE_LINE = "Data CC BY-SA 4.0 · Quadfile · how to cite";
 export const SCHOLARSHIP_CORRECTION_URL =
   `${REPO_URL}/issues/new?template=scholarship-correction.yml`;
 
