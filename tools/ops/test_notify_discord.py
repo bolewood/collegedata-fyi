@@ -17,7 +17,7 @@ from tools.ops import notify_discord as nd
 
 NOW = datetime(2026, 10, 8, 15, 0, tzinfo=timezone.utc)
 WEBHOOK = "https://discord.com/api/webhooks/123/super-secret-token"
-REPO = "bolewood/collegedata-fyi"
+REPO = "bolewood/quadfile"
 
 
 def gh_result(stdout: str = "[]", returncode: int = 0) -> subprocess.CompletedProcess[str]:

@@ -1,3 +1,4 @@
+import { REPO_URL } from "@/lib/repo";
 import type { Metadata } from "next";
 import { FeedbackForm } from "@/components/FeedbackForm";
 import { TrackedLink } from "@/components/TrackedLink";
@@ -83,7 +84,7 @@ export default async function FeedbackPage({
         You can also{" "}
         <TrackedLink
           external
-          href="https://github.com/bolewood/collegedata-fyi/issues/new?template=report-extraction-error.yml"
+          href={`${REPO_URL}/issues/new?template=report-extraction-error.yml`}
           analyticsEvent="community_cta_clicked"
           analyticsProperties={{
             action: "github_issue",

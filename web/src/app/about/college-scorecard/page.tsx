@@ -1,3 +1,4 @@
+import { REPO_URL } from "@/lib/repo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -72,7 +73,7 @@ export default function CollegeScorecardPage() {
         flags, and Census/OPE reference fields. We document the field-level
         comparison in{" "}
         <a
-          href="https://github.com/bolewood/collegedata-fyi/blob/main/docs/research/cds-vs-college-scorecard.md"
+          href={`${REPO_URL}/blob/main/docs/research/cds-vs-college-scorecard.md`}
           target="_blank"
           rel="noopener noreferrer"
         >
