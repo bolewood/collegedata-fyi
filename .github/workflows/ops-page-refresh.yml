@@ -47,7 +47,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          COLLEGEDATA_REVALIDATE_URL: ${{ vars.COLLEGEDATA_REVALIDATE_URL || secrets.COLLEGEDATA_REVALIDATE_URL }}
+          QUADFILE_REVALIDATE_URL: ${{ vars.QUADFILE_REVALIDATE_URL || vars.COLLEGEDATA_REVALIDATE_URL }}
           REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
           SWEEP_HOURS: ${{ inputs.hours || '26' }}
           SWEEP_DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}

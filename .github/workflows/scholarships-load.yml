@@ -80,10 +80,10 @@ jobs:
         if: success()
         continue-on-error: true
         env:
-          COLLEGEDATA_REVALIDATE_URL: ${{ vars.COLLEGEDATA_REVALIDATE_URL || secrets.COLLEGEDATA_REVALIDATE_URL }}
+          QUADFILE_REVALIDATE_URL: ${{ vars.QUADFILE_REVALIDATE_URL || vars.COLLEGEDATA_REVALIDATE_URL }}
           REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
         run: |
-          if [[ -z "${COLLEGEDATA_REVALIDATE_URL:-}" || -z "${REVALIDATE_SECRET:-}" ]]; then
+          if [[ -z "${QUADFILE_REVALIDATE_URL:-}" || -z "${REVALIDATE_SECRET:-}" ]]; then
             echo "revalidate: URL or secret not set; skipping"
             exit 0
           fi
@@ -91,7 +91,7 @@ jobs:
           jq -c '(.school_ids // []) as $ids | range(0; $ids | length; 100) as $i | $ids[$i:$i+100]' scholarships-out/load-report.json | while read -r batch; do
             body=$(jq -c -n --argjson ids "$batch" '{school_ids: $ids, scholarships: true}')
             code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 \
-              -X POST "${COLLEGEDATA_REVALIDATE_URL}" \
+              -X POST "${QUADFILE_REVALIDATE_URL}" \
               -H "Authorization: Bearer ${REVALIDATE_SECRET}" \
               -H "Content-Type: application/json" \
               -d "$body" || echo "curl-failed")

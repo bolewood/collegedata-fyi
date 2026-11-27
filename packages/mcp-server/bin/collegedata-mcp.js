@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const API_BASE = (process.env.COLLEGEDATA_API_BASE ?? "https://www.collegedata.fyi").replace(/\/$/, "");
+const API_BASE = (process.env.QUADFILE_API_BASE || process.env.COLLEGEDATA_API_BASE || "https://www.collegedata.fyi").replace(/\/$/, "");
 const CLIENT_NAME = "mcp";
 const CLIENT_VERSION = "0.2.0";
 
@@ -87,6 +87,10 @@ function withClientParams(path, toolName) {
 async function getJson(path, toolName) {
   const res = await fetch(`${API_BASE}${withClientParams(path, toolName)}`, {
     headers: {
+      "X-Quadfile-Client": CLIENT_NAME,
+      "X-Quadfile-Client-Version": CLIENT_VERSION,
+      ...(toolName ? { "X-Quadfile-MCP-Tool": toolName } : {}),
+      // Old name, same values, for servers that predate the new header.
       "X-CollegeData-Client": CLIENT_NAME,
       "X-CollegeData-Client-Version": CLIENT_VERSION,
       ...(toolName ? { "X-CollegeData-MCP-Tool": toolName } : {}),
