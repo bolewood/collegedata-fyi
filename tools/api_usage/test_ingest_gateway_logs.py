@@ -507,13 +507,13 @@ class QueryTest(unittest.TestCase):
         for sql in (queries.edge_schools_sql(t0), queries.edge_clients_sql(t0)):
             for token in ("quadfile-web", "quadfile-friendly-api", "www.quadfile.org", "quadfile-(pipeline|finder|"):
                 self.assertIn(token, sql)
-            self.assertIn("not (log_attributes['request.headers.x_quadfile_proxied'] = '1')", sql)
+            self.assertIn("not " + queries._PROXIED, sql)
         self.assertIn("quadfile-friendly-api", queries.daily_downloads_sql(
             datetime(2026, 10, 1, tzinfo=timezone.utc), datetime(2026, 10, 2, tzinfo=timezone.utc), 30))
         self.assertIn("x_quadfile_proxied", queries.edge_rollup_sql())
 
     def test_proxied_never_excludes_a_service_key_from_the_third_party_path(self):
-        proxied = "not (log_attributes['request.headers.x_quadfile_proxied'] = '1')"
+        proxied = "not " + queries._PROXIED
         for sql in (queries.edge_schools_sql(None), queries.edge_clients_sql(None)):
             # The key checks sit before the proxied guard, outside it.
             self.assertLess(sql.index("= 'service_role'"), sql.index(proxied))
@@ -533,9 +533,37 @@ class QueryTest(unittest.TestCase):
             rows = aggregate.edge_rollups([{**row, "proxied": proxied}], datetime(2030, 1, 1, tzinfo=timezone.utc))
             self.assertEqual([r["classification"] for r in rows], [expected])
 
+    def test_proxied_matches_the_forwarded_host_and_keeps_the_header(self):
+        fwd = "lower(log_attributes['request.headers.x_forwarded_host']) in ('api.collegedata.fyi', 'api-test.quadfile.org')"
+        self.assertIn("log_attributes['request.headers.x_quadfile_proxied'] = '1'", queries._PROXIED)
+        self.assertIn(fwd, queries._PROXIED)
+        # The classifying queries embed the full condition, not the header alone.
+        for sql in (queries.edge_rollup_sql(), queries.edge_schools_sql(None), queries.edge_clients_sql(None)):
+            self.assertIn(fwd, sql)
+        self.assertEqual(c.PROXIED_FORWARDED_HOSTS, ("api.collegedata.fyi", "api-test.quadfile.org"))
+
+    def test_proxied_callers_are_keyed_by_the_first_forwarded_for_entry(self):
+        xff = "log_attributes['request.headers.x_forwarded_for']"
+        cf = "log_attributes['request.headers.cf_connecting_ip']"
+        expected = f"if({queries._PROXIED} and {xff} != '', trimBoth(splitByChar(',', {xff})[1]), {cf}) as ip"
+        self.assertIn(expected, queries.edge_clients_sql(None))
+        start = datetime(2026, 10, 1, tzinfo=timezone.utc)
+        self.assertIn(expected, queries.daily_downloads_sql(start, start + timedelta(days=1), 30))
+
+    def test_proxied_client_row_is_third_party_and_hashed_on_the_caller_ip(self):
+        base = {**edge_row(ci="supabase-js-node/2", aws=1, host="api.collegedata.fyi"),
+                "ja4": "", "org": "", "country": "", "schools": 0, "s4": 0, "s5": 0, "proxied": 1}
+        salt = lambda day: "cd" * 32  # noqa: E731
+        caller = aggregate.edge_clients([{**base, "ip": IPV4}], None, salt)
+        egress = aggregate.edge_clients([{**base, "ip": "76.76.21.21"}], None, salt)
+        self.assertEqual(len(caller), 1)
+        self.assertNotEqual(caller[0]["client_hash"], egress[0]["client_hash"])
+        self.assertNotIn(IPV4, json.dumps(caller))
+
     def test_only_the_client_query_reads_identifying_fields(self):
         for sql in (queries.edge_rollup_sql(), queries.edge_schools_sql(None), queries.function_rollup_sql()):
             self.assertNotIn("cf_connecting_ip", sql)
+            self.assertNotIn("x_forwarded_for", sql)
             self.assertNotIn("ja4", sql)
         self.assertIn("cf_connecting_ip", queries.edge_clients_sql(None))
 
