@@ -1208,7 +1208,7 @@ class UserAgentTests(unittest.TestCase):
 
         self.assertEqual(
             probe_urls._UA,
-            "collegedata-fyi-finder/0.1 (https://github.com/bolewood/quadfile)",
+            "quadfile-finder/0.1 (https://github.com/bolewood/quadfile)",
         )
 
 
