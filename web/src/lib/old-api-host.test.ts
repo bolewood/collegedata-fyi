@@ -22,11 +22,11 @@ const ORIGIN = SUPABASE_ORIGIN;
 const STORAGE = "/storage/v1/object/public/sources/yale/2024-25.pdf";
 
 describe("oldApiHostAction", () => {
-  it("redirects GET and HEAD of public storage objects, query kept, with CORS and a short cache", () => {
+  it("redirects GET and HEAD of public storage objects to the project origin, query kept, with CORS and a short cache", () => {
     for (const method of ["GET", "HEAD", "get"]) {
       expect(oldApiHostAction("api.collegedata.fyi", method, STORAGE, "?download=1")).toEqual({
         kind: "redirect",
-        location: `https://api.quadfile.org${STORAGE}?download=1`,
+        location: `${ORIGIN}${STORAGE}?download=1`,
         headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "public, max-age=3600" },
       });
     }
