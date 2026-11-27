@@ -131,7 +131,7 @@ token lists in sync.
 
 The user-agent classification stores only the family bucket, not the raw header.
 
-The version numbers shown in the marker examples are the current package versions (`quadfile-mcp` 0.2.0, `@quadfile/cli` 0.1.0) and change with each release.
+The version numbers shown in the marker examples are the current package versions (`@quadfile/mcp-server` 0.2.0, `@quadfile/cli` 0.1.0) and change with each release.
 
 ## Required production configuration
 

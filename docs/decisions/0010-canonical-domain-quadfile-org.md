@@ -27,7 +27,7 @@
    `COLLEGEDATA_API_BASE` / `COLLEGEDATA_SNAPSHOT_DATE`, and the `collegedata-*`
    `X-Client-Info` values and User-Agents. New code sends the
    `X-Quadfile-Client` header, `QUADFILE_*` variables and `quadfile-*` identities.
-6. Package names: `@quadfile/cli` and `quadfile-mcp`. The MCP server reports the
+6. Package names: `@quadfile/cli` and `@quadfile/mcp-server` (command `quadfile-mcp`). The MCP server reports the
    name `quadfile`.
 7. The owner of record is Bolewood Group, LLC. The footer carries a plain-text
    note that the site was formerly collegedata.fyi.

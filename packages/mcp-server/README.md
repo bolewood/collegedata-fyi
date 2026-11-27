@@ -7,7 +7,7 @@ custom connector (Settings → Connectors → Add custom connector). Streamable
 HTTP, no API key. That is the URL for web, desktop, mobile, and Cowork.
 
 This stdio file is for local development and Claude Code. One Node file, no
-install (the package `quadfile-mcp`, version 0.2.0, is not published
+install (the package `@quadfile/mcp-server`, version 0.2.0, is not published
 to npm; run it from a clone of this repository). Stdio is newline-delimited
 JSON-RPC.
 

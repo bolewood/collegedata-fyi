@@ -80,7 +80,7 @@ curl 'https://api.quadfile.org/rest/v1/ipeds_facts?ipeds_id=eq.110635&field_key=
 
 ## For agents
 
-- **Hosted MCP:** `https://www.quadfile.org/api/mcp` (Streamable HTTP, no auth). A stdio server is published as `quadfile-mcp` ([`packages/mcp-server`](packages/mcp-server/)) for local clients such as Claude Desktop and Claude Code.
+- **Hosted MCP:** `https://www.quadfile.org/api/mcp` (Streamable HTTP, no auth). A stdio server is published as `@quadfile/mcp-server` (command `quadfile-mcp`) ([`packages/mcp-server`](packages/mcp-server/)) for local clients such as Claude Desktop and Claude Code.
 - **CLI:** `@quadfile/cli` ([`packages/cli`](packages/cli/)) installs the `quadfile` command, a thin wrapper over the JSON API.
 - **Machine-readable docs:** [`/llms.txt`](https://www.quadfile.org/llms.txt), [`/openapi.json`](https://www.quadfile.org/openapi.json), and the human-readable [`/api`](https://www.quadfile.org/api) reference. Per-school facts are also at `/api/facts/{school_id}`.
 - **Open-data files:** `/snapshots/latest/manifest.json` lists `schools.jsonl`, `school_facts.jsonl`, `sources.jsonl`, and `field_dictionary.json`. They are regenerated from live data, so a dated URL is not a frozen copy yet.
