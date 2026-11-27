@@ -1,4 +1,3 @@
--- Rename the timestamp to the cutover date before merging.
 --
 -- Rename text in the scholarship view and in three comments.
 --
