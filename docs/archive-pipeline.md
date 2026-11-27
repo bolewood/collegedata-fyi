@@ -470,7 +470,7 @@ highest-enrollment remaining institutions in staged batches:
 drain, no pg_cron drain, and no automatic full-universe discovery.
 
 ```bash
-cd /Users/santhonys/Projects/Owen/colleges/collegedata-fyi
+cd /Users/santhonys/Projects/quadfile
 
 # Inspect baseline counts, current in-flight rows, and the next 25 picks.
 # This is dry-run-only; it never enqueues archive_queue rows.
@@ -606,7 +606,7 @@ Stop the rollout if any of these happen:
 Raw curl remains useful for debugging the Edge Function directly:
 
 ```bash
-cd /Users/santhonys/Projects/Owen/colleges/collegedata-fyi
+cd /Users/santhonys/Projects/quadfile
 set -a && source .env && set +a
 
 # Dry-run: see what the next batch of 50 high-enrollment schools would be.
@@ -652,7 +652,7 @@ hits this hourly; manual invocation is for after-batch debugging or when
 waiting for the next cron is too long):
 
 ```bash
-cd /Users/santhonys/Projects/Owen/colleges/collegedata-fyi
+cd /Users/santhonys/Projects/quadfile
 set -a && source .env && set +a
 
 curl -X POST "$SUPABASE_URL/functions/v1/refresh-coverage" \
