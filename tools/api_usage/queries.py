@@ -51,10 +51,11 @@ _PROXIED = (
     f" or lower(log_attributes['request.headers.x_forwarded_host']) in ({_sql_list(PROXIED_FORWARDED_HOSTS)}))"
 )
 # Behind the proxy cf_connecting_ip is a Vercel egress address, so a proxied
-# caller is the first x-forwarded-for entry.
-_XFF = "log_attributes['request.headers.x_forwarded_for']"
+# caller is the first x-forwarded-for entry. A blank first entry (empty,
+# whitespace, leading comma) falls back to cf_connecting_ip.
+_XFF_FIRST = "trimBoth(splitByChar(',', log_attributes['request.headers.x_forwarded_for'])[1])"
 _IP = (
-    f"if({_PROXIED} and {_XFF} != '', trimBoth(splitByChar(',', {_XFF})[1]),"
+    f"if({_PROXIED} and {_XFF_FIRST} != '', {_XFF_FIRST},"
     " log_attributes['request.headers.cf_connecting_ip'])"
 )
 _AWS = "position(lower(log_attributes['request.cf.asOrganization']), 'amazon') > 0"

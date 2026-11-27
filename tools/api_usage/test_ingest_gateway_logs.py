@@ -542,10 +542,23 @@ class QueryTest(unittest.TestCase):
             self.assertIn(fwd, sql)
         self.assertEqual(c.PROXIED_FORWARDED_HOSTS, ("api.collegedata.fyi", "api-test.quadfile.org"))
 
+    def test_proxied_is_one_parenthesised_group(self):
+        # "not " + _PROXIED must negate the whole OR, so the outer parens must enclose it.
+        text = queries._PROXIED
+        depth = 0
+        for i, ch in enumerate(text):
+            depth += (ch == "(") - (ch == ")")
+            if depth == 0:
+                self.assertEqual(i, len(text) - 1)
+        self.assertEqual(depth, 0)
+        self.assertTrue(text.startswith("(") and text.endswith(")"))
+        self.assertIn(" or ", text)
+
     def test_proxied_callers_are_keyed_by_the_first_forwarded_for_entry(self):
-        xff = "log_attributes['request.headers.x_forwarded_for']"
+        first = "trimBoth(splitByChar(',', log_attributes['request.headers.x_forwarded_for'])[1])"
         cf = "log_attributes['request.headers.cf_connecting_ip']"
-        expected = f"if({queries._PROXIED} and {xff} != '', trimBoth(splitByChar(',', {xff})[1]), {cf}) as ip"
+        # The guard tests the trimmed first entry, so blank or leading-comma xff falls back.
+        expected = f"if({queries._PROXIED} and {first} != '', {first}, {cf}) as ip"
         self.assertIn(expected, queries.edge_clients_sql(None))
         start = datetime(2026, 10, 1, tzinfo=timezone.utc)
         self.assertIn(expected, queries.daily_downloads_sql(start, start + timedelta(days=1), 30))
