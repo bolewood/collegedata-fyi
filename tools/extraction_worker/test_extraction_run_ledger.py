@@ -211,6 +211,21 @@ class ExtractionLedgerNormalizationTests(unittest.TestCase):
             sanitize_pipeline_run_url("https://evil.example/actions/runs/123"),
         )
 
+    def test_run_url_accepts_both_repo_names_and_rejects_lookalikes(self) -> None:
+        for repo in ("collegedata-fyi", "quadfile"):
+            url = f"https://github.com/bolewood/{repo}/actions/runs/123"
+            self.assertEqual(sanitize_pipeline_run_url(url), url)
+        for bad in (
+            "https://github.com/bolewood/quadfile-ops/actions/runs/1",
+            "https://github.com/bolewood/quadfilex/actions/runs/1",
+            "https://github.com/bolewood/quadfile/actions/runs/123?token=abc",
+            "https://github.com/bolewood/quadfile/actions/runs/123/",
+            "https://github.com/otherowner/quadfile/actions/runs/1",
+            "https://github.com/bolewood/quadfile/pull/99",
+            "https://github.com/bolewood/quadfile/issues/1",
+        ):
+            self.assertIsNone(sanitize_pipeline_run_url(bad), bad)
+
 
 class ExtractionLedgerWriterTests(unittest.TestCase):
     def summary(self) -> dict:

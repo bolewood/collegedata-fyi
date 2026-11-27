@@ -200,7 +200,7 @@ MAX_REPRINT_MISSING_VALUES_MATCH_RATIO = 0.10
 MIN_REPRINT_TEXT_CHARS = 100
 MAX_PRIOR_SOURCE_CANDIDATES = 5
 PIPELINE_RUN_URL_RE = re.compile(
-    r"^https://github\.com/bolewood/collegedata-fyi/actions/runs/[0-9]+$",
+    r"^https://github\.com/bolewood/(?:collegedata-fyi|quadfile)/actions/runs/[0-9]+$",
 )
 
 

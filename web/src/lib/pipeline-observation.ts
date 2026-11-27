@@ -389,7 +389,7 @@ const ACTIVITY_TRIGGERS = new Set<ExtractionActivityItem["trigger"]>([
 ]);
 
 const RUN_URL_RE =
-  /^https:\/\/github\.com\/bolewood\/collegedata-fyi\/actions\/runs\/[0-9]+$/;
+  /^https:\/\/github\.com\/bolewood\/(?:collegedata-fyi|quadfile)\/actions\/runs\/[0-9]+$/;
 
 export function formatAgo(iso: string | null | undefined, now: Date): string {
   if (!iso) return "no heartbeat";

@@ -28,14 +28,10 @@ from tools.fsa.parse import ParsedWorkbook, parse_workbook, sha256_file, SOURCE_
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_XLSX = REPO_ROOT / "scratch" / "fsa" / "2026-05" / "nonpayment-rates.xlsx"
-DEFAULT_SCORECARD = Path(
-    "/Users/santhonys/Projects/Owen/colleges/collegedata-fyi/scratch/"
-    "scorecard-reconciliation/Most-Recent-Cohorts-Institution.csv"
+DEFAULT_SCORECARD = (
+    REPO_ROOT / "scratch" / "scorecard-reconciliation" / "Most-Recent-Cohorts-Institution.csv"
 )
-DEFAULT_HD = Path(
-    "/Users/santhonys/Projects/Owen/colleges/collegedata-fyi/scratch/"
-    "ipeds/2024-25-final/HD2024.zip"
-)
+DEFAULT_HD = REPO_ROOT / "scratch" / "ipeds" / "2024-25-final" / "HD2024.zip"
 DIRECTORY_URL = f"{API_ORIGIN}/rest/v1/institution_directory"
 CANARIES = {
     "uf": "University of Florida",
@@ -323,7 +319,7 @@ def main() -> int:
     )
     args = parser.parse_args()
     _env(Path(args.env).expanduser())
-    parent_env = Path("/Users/santhonys/Projects/Owen/colleges/collegedata-fyi/.env")
+    parent_env = REPO_ROOT / ".env"
     _env(parent_env)
     anon = os.environ.get("SUPABASE_ANON_KEY") or os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
     if not anon:
