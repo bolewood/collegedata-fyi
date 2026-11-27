@@ -34,18 +34,21 @@ FIRST_PARTY_REFERER_HOSTS = (
     "collegedata.fyi", "www.collegedata.fyi", "quadfile.org", "www.quadfile.org",
 )
 # Plain substrings (old identity).
-INTERNAL_UA_MARKERS = ("collegedata-pipeline", "collegedata-fyi")
+# "collegedata-extraction-worker" (the worker's revalidate calls) was never
+# covered by the first two, which only match pipeline and fyi- tokens.
+INTERNAL_UA_MARKERS = ("collegedata-pipeline", "collegedata-fyi", "collegedata-extraction-worker")
 # New identity: the exact product tokens our tools send after the rename,
 # mirroring today's collegedata-pipeline/ and collegedata-fyi-<tool>/ user
-# agents. A token must start the user agent or follow a space or "(".
+# agents. A token must start the user agent or follow a space or "(", and end
+# with "/", a space or the end (two of our tools send a bare name).
 # Anything else, including a bare "quadfile" or "quadfile-<other>/", stays
 # third-party. Add a tool here when it gets a new user agent.
 INTERNAL_UA_TOOLS = (
     "pipeline", "finder", "scholarships", "builder", "ops",
-    "ipeds-release-probe", "ipeds-loader", "debug",
+    "ipeds-release-probe", "ipeds-loader", "debug", "ops-discord", "extraction-worker",
 )
 # RE2-compatible; the SQL builder embeds it. Tools are [a-z0-9-] only.
-INTERNAL_UA_PATTERN = r"(^|[ (])quadfile-(" + "|".join(INTERNAL_UA_TOOLS) + r")/"
+INTERNAL_UA_PATTERN = r"(^|[ (])quadfile-(" + "|".join(INTERNAL_UA_TOOLS) + r")(/|$| )"
 _INTERNAL_UA_RE = re.compile(INTERNAL_UA_PATTERN)
 KNOWN_HOSTS = frozenset({
     "api.collegedata.fyi", "api.quadfile.org", "isduwmygvmdozhpvzaix.supabase.co",
