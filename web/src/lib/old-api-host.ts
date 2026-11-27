@@ -9,9 +9,13 @@
 
 export const SUPABASE_ORIGIN = "https://isduwmygvmdozhpvzaix.supabase.co";
 
-/** Where public storage objects are redirected to, by request host. */
+/**
+ * Where public storage objects are redirected to, by request host. Both go to
+ * the project origin, which works whichever custom API hostname Supabase holds,
+ * so the old host can move to this app before the new API host is live.
+ */
 const STORAGE_REDIRECT_ORIGINS: Record<string, string> = {
-  "api.collegedata.fyi": "https://api.quadfile.org",
+  "api.collegedata.fyi": SUPABASE_ORIGIN,
   "api-test.quadfile.org": SUPABASE_ORIGIN,
 };
 
